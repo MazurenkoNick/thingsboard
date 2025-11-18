@@ -46,7 +46,7 @@
     <div class="tb-form-row space-between">
       <div translate>widget-config.units-short</div>
       <tb-unit-input
-        supportsUnitConversion
+        [supportsUnitConversion]="supportsUnitConversion"
         formControlName="units">
       </tb-unit-input>
     </div>
@@ -70,13 +70,15 @@
         </mat-form-field>
         <tb-font-settings formControlName="labelFont"
                           clearButton
+                          [allowedFontWeights]="reportMode ? ['normal', 'bold', '500'] : []"
+                          [allowedFontStyles]="reportMode ? ['normal', 'italic'] : []"
                           disabledLineHeight
                           forceSizeUnit="px"
                           [previewText]="labelPreviewFn">
         </tb-font-settings>
         <tb-color-input asBoxInput
                         colorClearButton
-                        useThemePalette
+                        [useThemePalette]="!reportMode"
                         formControlName="labelColor">
         </tb-color-input>
       </div>
@@ -96,7 +98,7 @@
         <div translate>widgets.time-series-chart.threshold.line-color</div>
         <tb-color-input asBoxInput
                         colorClearButton
-                        useThemePalette
+                        [useThemePalette]="!reportMode"
                         formControlName="lineColor">
         </tb-color-input>
       </div>

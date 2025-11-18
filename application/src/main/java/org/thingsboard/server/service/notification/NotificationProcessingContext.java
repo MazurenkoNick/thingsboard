@@ -105,7 +105,7 @@ public class NotificationProcessingContext {
         this.notificationTemplate = template;
         this.notificationType = template.getNotificationType();
         this.templates = new EnumMap<>(NotificationDeliveryMethod.class);
-        this.stats = new NotificationRequestStats();
+        this.stats = request.getStats() != null ? request.getStats() : new NotificationRequestStats();
         this.secretConfigurationService = secretConfigurationService;
         init();
     }

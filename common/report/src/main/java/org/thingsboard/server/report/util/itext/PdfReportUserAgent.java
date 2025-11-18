@@ -158,7 +158,7 @@ public class PdfReportUserAgent extends ITextUserAgent {
                         return new ImageResource(uriStr, image);
                     } else {
                         byte[] image = readBytes(cis);
-                        ITextFSImage itextImage = new ITextFSImage(image, ImageUtils.getOriginalImageSize(image), uriStr);
+                        ITextFSImage itextImage = new ITextFSImage(image, ImageUtils.getOriginalImageSize(image, this.dotsPerPixel), uriStr);
                         return new ImageResource(uriStr, itextImage);
                     }
                 }

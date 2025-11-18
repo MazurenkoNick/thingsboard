@@ -91,6 +91,7 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
         SchedulerEvent foundSchedulerEvent = doGet("/api/schedulerEvent/" + savedSchedulerEvent.getId().getId().toString(), SchedulerEvent.class);
         Assert.assertEquals(savedSchedulerEvent.getName(), foundSchedulerEvent.getName());
         Assert.assertTrue(savedSchedulerEvent.isEnabled());
+        Assert.assertNotNull(savedSchedulerEvent.getVersion());
     }
 
     @Test
@@ -236,32 +237,28 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
         ReportTemplate tenantTemplate = buildTemplate("CSV report template", ReportTemplateType.REPORT, TbReportFormat.CSV);
         tenantTemplate = doPost("/api/reportTemplate", tenantTemplate, ReportTemplate.class);
 
+        ReportTemplate tenantTemplate2 = buildTemplate("CSV report template 2", ReportTemplateType.REPORT, TbReportFormat.CSV);
+        tenantTemplate2 = doPost("/api/reportTemplate", tenantTemplate2, ReportTemplate.class);
+
         SchedulerEvent schedulerEvent = createReportSchedulerEvent(tenantTemplate.getId(), tenantAdminUserId);
         doPost("/api/schedulerEvent", schedulerEvent, SchedulerEvent.class);
-
-        loginCustomerAdminUser();
-        ReportTemplate customerTemplate = buildTemplate("CSV report template", ReportTemplateType.REPORT, TbReportFormat.CSV);
-        customerTemplate = doPost("/api/reportTemplate", customerTemplate, ReportTemplate.class);
-
-        SchedulerEvent schedulerEvent2 = createReportSchedulerEvent(customerTemplate.getId(), customerAdminUserId);
-        doPost("/api/schedulerEvent", schedulerEvent2, SchedulerEvent.class);
 
         // wait for reports
         loginTenantAdmin();
         await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() ->
                         doGetTypedWithPageLink("/api/v2/reportInfos/all?",  new TypeReference<PageData<ReportInfo>>() {
                         }, new PageLink(30)),
-                result -> result.getData().size() == 2);
+                result -> result.getData().size() == 1);
 
         // check report infos
-        PageData<ScheduledReportInfo> scheduledReportInfos = doGetTypedWithPageLink("/api/scheduledReports?includeCustomers=true&", new TypeReference<PageData<ScheduledReportInfo>>() {
+        PageData<ScheduledReportInfo> scheduledReportInfos = doGetTypedWithPageLink("/api/scheduledReports?", new TypeReference<PageData<ScheduledReportInfo>>() {
         }, new PageLink(30));
-        assertThat(scheduledReportInfos.getData()).hasSize(2);
+        assertThat(scheduledReportInfos.getData()).hasSize(1);
 
         // filter by report template id
-        PageData<ScheduledReportInfo> tenantReportInfos = doGetTypedWithPageLink("/api/scheduledReports?includeCustomers=true&reportTemplateId=" + tenantTemplate.getId().getId() + "&", new TypeReference<PageData<ScheduledReportInfo>>() {
+        PageData<ScheduledReportInfo> tenantReportInfos = doGetTypedWithPageLink("/api/scheduledReports?reportTemplateId=" + tenantTemplate2.getId().getId() + "&", new TypeReference<PageData<ScheduledReportInfo>>() {
         }, new PageLink(30));
-        assertThat(tenantReportInfos.getData()).hasSize(1);
+        assertThat(tenantReportInfos.getData()).hasSize(0);
     }
 
     private ReportTemplate buildTemplate(String templateName, ReportTemplateType report, TbReportFormat format) {
@@ -316,13 +313,12 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
         schedulerEvent.setType("Custom Type");
         ObjectNode schedule = JacksonUtil.newObjectNode();
         schedule.put("startTime", System.currentTimeMillis());
-        schedule.put("timezone", TimeZone.getDefault().getDisplayName());
+        schedule.put("timezone", TimeZone.getDefault().getID());
         MonthlyRepeat schedulerRepeat = new MonthlyRepeat();
         schedulerRepeat.setEndsOn(Long.MAX_VALUE);
         schedule.set("repeat", JacksonUtil.valueToTree(schedulerRepeat));
         schedulerEvent.setSchedule(schedule);
         return schedulerEvent;
     }
-
 
 }

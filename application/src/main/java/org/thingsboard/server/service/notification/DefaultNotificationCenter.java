@@ -104,6 +104,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.notification.NotificationDeliveryMethod.WEB;
@@ -185,6 +186,15 @@ public class DefaultNotificationCenter extends AbstractSubscriptionService imple
         });
         if (deliveryMethods.isEmpty()) {
             throw new IllegalArgumentException("No delivery methods to send notification with");
+        }
+
+        NotificationRequestStats stats = request.getStats();
+        if (stats == null) {
+            stats = new NotificationRequestStats();
+            for (NotificationDeliveryMethod deliveryMethod : deliveryMethods) {
+                stats.getSent().put(deliveryMethod, new AtomicInteger(0));
+            }
+            request.setStats(stats);
         }
 
         if (requestConfig != null) {
@@ -283,7 +293,7 @@ public class DefaultNotificationCenter extends AbstractSubscriptionService imple
                     processForTarget(target, ctx);
                 } catch (Exception e) {
                     log.error("[{}] Failed to process notification request for target {}", requestId, target.getId(), e);
-                    ctx.getStats().setError(e.getMessage());
+                    ctx.getStats().reportGeneralError(e);
                     updateRequestStats(ctx, requestId, ctx.getStats());
 
                     if (callback != null) {
@@ -295,7 +305,7 @@ public class DefaultNotificationCenter extends AbstractSubscriptionService imple
 
             NotificationRequestStats stats = ctx.getStats();
             long time = System.currentTimeMillis() - startTs;
-            int sent = stats.getTotalSent().get();
+            int sent = stats.getTotalSent();
             int errors = stats.getTotalErrors().get();
             if (errors > 0) {
                 log.debug("[{}][{}] Notification request processing finished in {} ms (sent: {}, errors: {})", ctx.getTenantId(), requestId, time, sent, errors);

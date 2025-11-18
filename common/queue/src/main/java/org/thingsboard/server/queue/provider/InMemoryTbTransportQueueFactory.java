@@ -93,7 +93,7 @@ public class InMemoryTbTransportQueueFactory implements TbTransportQueueFactory 
 
         templateBuilder.queueAdmin(new TbQueueAdmin() {
             @Override
-            public void createTopicIfNotExists(String topic, String properties) {}
+            public void createTopicIfNotExists(String topic, String properties, boolean force) {}
 
             @Override
             public void destroy() {}

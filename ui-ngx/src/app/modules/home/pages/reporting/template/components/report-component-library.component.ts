@@ -30,21 +30,25 @@
 ///
 
 import {
+  AfterViewInit,
   Component,
-  ElementRef,
+  ElementRef, HostBinding,
   Input,
-  OnChanges,
+  OnChanges, OnDestroy,
   OnInit,
-  SimpleChanges,
+  SimpleChanges, ViewChild,
   viewChild,
   ViewEncapsulation
 } from '@angular/core';
 import {
-  csvReportComponentTypes,
+  csvReportComponentTypes, ReportComponentContext,
+  reportComponentGroups,
+  ReportComponentLibraryGroup,
+  ReportComponentLibraryItem,
   reportComponentsLibrary,
   reportComponentTypes
 } from '@home/pages/reporting/template/components/report-component.models';
-import { CdkDragStart } from '@angular/cdk/drag-drop';
+import { CdkDragMove, CdkDragRelease, CdkDragStart, CdkDropList } from '@angular/cdk/drag-drop';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { ReportComponentType } from '@shared/models/report-component.models';
 import { TbReportFormat } from '@shared/models/report.models';
@@ -56,28 +60,45 @@ import { TranslateService } from '@ngx-translate/core';
   styleUrls: ['./report-component-library.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class ReportComponentLibraryComponent implements OnInit, OnChanges {
+export class ReportComponentLibraryComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
+
+  @ViewChild(CdkDropList) dropList?: CdkDropList;
+
+  @HostBinding('style.display')
+  get display() {
+    return this.reportComponentIds?.length ? 'block' : 'none';
+  }
 
   @Input()
   @coerceBoolean()
   subReport = false;
 
   @Input()
+  @coerceBoolean()
+  nestedLibrary = false;
+
+  @Input()
   format: TbReportFormat = TbReportFormat.PDF;
+
+  @Input()
+  group: ReportComponentLibraryGroup;
 
   @Input()
   filter: string;
 
+  @Input()
+  context: ReportComponentContext;
+
   libraryDragOriginList = viewChild('libraryDragOriginList', {
-    read: ElementRef,
+    read: ElementRef<HTMLElement>,
   });
 
   libraryDragActiveList = viewChild('libraryDragActiveList', {
-    read: ElementRef,
+    read: ElementRef<HTMLElement>,
   });
 
   reportComponentIds: string[];
-  reportComponentsLibrary = reportComponentsLibrary;
+  reportComponentsLibrary: Map<string, ReportComponentLibraryItem>;
 
   private reportComponentsTitleMap = new Map<string, string>();
 
@@ -86,7 +107,16 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
   constructor(private translate: TranslateService) {}
 
   ngOnInit() {
-    reportComponentsLibrary.forEach((item, id) => {
+    if (this.group) {
+      const ids = reportComponentGroups.get(this.group);
+      this.reportComponentsLibrary = new Map<string, ReportComponentLibraryItem>();
+      for (const id of ids) {
+        this.reportComponentsLibrary.set(id, reportComponentsLibrary.get(id));
+      }
+    } else {
+      this.reportComponentsLibrary = reportComponentsLibrary;
+    }
+    this.reportComponentsLibrary.forEach((item, id) => {
       this.reportComponentsTitleMap.set(id, (this.translate.instant(item.title) as string).toUpperCase());
     });
     this.updateReportComponentIds();
@@ -100,6 +130,18 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
           this.updateReportComponentIds();
         }
       }
+    }
+  }
+
+  ngAfterViewInit() {
+    if (this.dropList) {
+      this.context.dragDropCtx.register(this.dropList);
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.dropList) {
+      this.context.dragDropCtx.deregister(this.dropList);
     }
   }
 
@@ -124,7 +166,11 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
     this.itemDragEntered = true;
   }
 
-  dragReleased() {
+  dragMoved(event: CdkDragMove) {
+    this.context.dragDropCtx.dragMoved(event);
+  }
+
+  dragReleased(event: CdkDragRelease) {
     if (!this.itemDragEntered) {
       const origin = this.libraryDragOriginList();
       $('.tb-report-component-placeholder', origin.nativeElement).hide();
@@ -132,6 +178,7 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
       this.setActiveListVisibility(false);
     }
     this.itemDragEntered = false;
+    this.context.dragDropCtx.dragReleased(event);
   }
 
   private updateReportComponentIds() {
@@ -141,7 +188,7 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
       componentTypes = componentTypes.filter((type) => type !== ReportComponentType.SUB_REPORT );
     }
     const search = this.filter ? this.filter.trim().toUpperCase() : '';
-    reportComponentsLibrary.forEach((item, id) => {
+    this.reportComponentsLibrary.forEach((item, id) => {
       if (componentTypes.includes(item.type) && this.reportComponentsTitleMap.get(id).includes(search)) {
         this.reportComponentIds.push(id);
       }
@@ -166,7 +213,11 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
     if (!overlay || !origin) {
       return;
     }
+    const scrollTop = origin.nativeElement.scrollTop;
     overlay.nativeElement.style.display = visible ? 'flex' : 'none';
     origin.nativeElement.style.display = !visible ? 'flex' : 'none';
+    if (visible) {
+      overlay.nativeElement.scrollTop = scrollTop;
+    }
   }
 }

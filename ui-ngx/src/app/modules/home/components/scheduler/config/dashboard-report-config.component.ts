@@ -154,7 +154,7 @@ export class DashboardReportConfigComponent extends PageComponent implements Con
   ngOnInit() {
     this.reportConfigFormGroup = this.fb.group({
       baseUrl: [null, this.pdfReportMode ? [] : [Validators.required]],
-      dashboardId: [null, this.pdfReportMode ? [] : [Validators.required]],
+      dashboardId: [null, [Validators.required]],
       state: [null, []],
       timezone: [null, this.pdfReportMode ? [] : [Validators.required]],
       useDashboardTimewindow: [true, []],
@@ -278,13 +278,9 @@ export class DashboardReportConfigComponent extends PageComponent implements Con
   }
 
   private updateModel() {
-    if (this.reportConfigFormGroup.valid) {
-      const value = this.reportConfigFormGroup.getRawValue() as DashboardReportConfig;
-      this.modelValue = {...this.modelValue, ...value};
-      this.propagateChange(this.modelValue);
-    } else {
-      this.propagateChange(null);
-    }
+    const value = this.reportConfigFormGroup.getRawValue() as DashboardReportConfig;
+    this.modelValue = {...this.modelValue, ...value};
+    this.propagateChange(this.modelValue);
   }
 
 }

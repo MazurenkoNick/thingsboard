@@ -35,9 +35,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.thingsboard.rest.client.RestClient;
 import org.thingsboard.script.api.tbel.TbelInvokeService;
 import org.thingsboard.server.common.data.job.task.ReportTask;
@@ -68,9 +67,7 @@ public class RemoteTbReportCtxProvider implements TbReportCtxProvider {
                 .timeZone(task.getTimezone())
                 .accessToken(task.getAccessToken())
                 .accessTokenExpTs(task.getAccessTokenExpirationTs())
-                .restClient(new RestClient(new RestTemplateBuilder()
-                        .messageConverters(new MappingJackson2HttpMessageConverter())
-                        .build(), tbCoreBaseUrl, task.getAccessToken()))
+                .restClient(new RestClient(new RestTemplate(), tbCoreBaseUrl, task.getAccessToken()))
                 .reportCreatedTime(formatTimestamp(System.currentTimeMillis(), task.getReportTemplateConfig().getTimeDataPattern(), task.getTimezone()))
                 .build();
     }
@@ -106,6 +103,7 @@ public class RemoteTbReportCtxProvider implements TbReportCtxProvider {
 
             return copy;
         }
+
     }
 
 }

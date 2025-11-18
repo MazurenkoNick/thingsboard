@@ -79,7 +79,7 @@
   </div>
   <div *ngIf="!hideDataKeyColor" class="tb-color-field">
     <tb-color-input asBoxInput
-                    useThemePalette
+                    [useThemePalette]="!reportMode"
                     formControlName="color">
     </tb-color-input>
   </div>

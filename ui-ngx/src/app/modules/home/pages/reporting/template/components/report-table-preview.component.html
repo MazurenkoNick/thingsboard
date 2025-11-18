@@ -39,8 +39,13 @@
   <thead>
     @if (showTableHeading) {
       <tr [style.height]="headingHeight">
-        <th [attr.colspan]="columns.length" class="tb-report-table-heading" [style]="headingStyle" [innerHTML]="headingText | safe: 'html'">
-        </th>
+        @if (isPlainFormat) {
+          <th [attr.colspan]="columns.length" class="tb-report-table-heading" [style]="headingStyle" [innerText]="headingText">
+          </th>
+        } @else {
+          <th [attr.colspan]="columns.length" class="tb-report-table-heading" [style]="headingStyle" [innerHTML]="headingText | safe: 'html'">
+          </th>
+        }
       </tr>
     }
     <tr>
@@ -58,7 +63,7 @@
   <tbody>
     <tr>
       @for (column of columns; track column) {
-        <td [style]="cellStyle(column)">{{ cellContent(column) }}</td>
+        <td [style]="cellStyle(column)" [innerHTML]="cellContent(column) | safe: 'html'"></td>
       }
     </tr>
   </tbody>

@@ -1,9 +1,9 @@
 [
   {
     "name": "Tank Emulator",
-    "publishPeriodInDays": 34,
+    "publishPeriodInDays": 7,
     "publishFrequencyInSeconds": 3600,
-    "publishPauseInMillis": 100,
+    "publishPauseInMillis": 1,
     "activityPeriodInMillis": 720000,
     "telemetryProfiles": [
       {

@@ -62,17 +62,21 @@ import reactor.netty.http.client.HttpClient;
 import javax.net.ssl.SSLException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
 
 @Slf4j
 @Component
 public class WebReportClient {
+
+    public static final Pattern CONTENT_DISPOSITION_REGEX = Pattern.compile("(?i)^.*filename=\"?([^\"]+)\"?.*filename\\*=UTF-8''([^\"]+).*$");
 
     @Value("${reports.web_report.base_url}")
     private String webReportServerBaseUrl;
@@ -210,9 +214,16 @@ public class WebReportClient {
         reportData.setData(responseEntity.getBody());
         reportData.setContentType(responseEntity.getHeaders().getContentType().toString());
         String disposition = responseEntity.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION);
-        String fileName = disposition.replaceFirst("(?i)^.*filename=\"?([^\"]+)\"?.*$", "$1");
-        fileName = URLDecoder.decode(fileName, "ISO_8859_1");
-        reportData.setName(fileName);
+        Matcher matcher = CONTENT_DISPOSITION_REGEX.matcher(disposition);
+        if (matcher.find()) {
+            String utf8FileName = matcher.group(2);
+            if (!utf8FileName.isBlank()) {
+                reportData.setName(URLDecoder.decode(utf8FileName, StandardCharsets.UTF_8));
+            } else {
+                String fileName = matcher.group(1);
+                reportData.setName(URLDecoder.decode(fileName, "ISO_8859_1"));
+            }
+        }
         return reportData;
     }
 

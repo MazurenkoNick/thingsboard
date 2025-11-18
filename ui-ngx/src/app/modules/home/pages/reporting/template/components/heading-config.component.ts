@@ -31,7 +31,9 @@
 
 import { Component, ViewEncapsulation } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { AbstractReportComponentConfig } from '@home/pages/reporting/template/components/report-component-config.component';
+import {
+  AbstractReportComponentConfig
+} from '@home/pages/reporting/template/components/report-component-config.component';
 import { Heading, HeadingReportComponentConfig } from '@shared/models/report-component.models';
 
 @Component({

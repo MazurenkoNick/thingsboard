@@ -40,9 +40,6 @@ import io.netty.handler.ssl.SslHandler;
 import org.thingsboard.server.transport.mqtt.limits.IpFilter;
 import org.thingsboard.server.transport.mqtt.limits.ProxyIpFilter;
 
-/**
- * @author Andrew Shvayka
- */
 public class MqttTransportServerInitializer extends ChannelInitializer<SocketChannel> {
 
     private final MqttTransportContext context;

@@ -48,6 +48,7 @@ import {
 } from '@shared/models/window-message.model';
 import { CmdUpdateMsg, WebsocketCmd, WebsocketDataMsg } from '@shared/models/telemetry/telemetry.models';
 import { CmdWrapper } from '@shared/models/websocket/websocket.models';
+import { getFilenameFromHttpHeader } from '@core/utils';
 
 // @dynamic
 @Injectable({
@@ -419,21 +420,15 @@ export class DashboardReportService {
     }).pipe(
       map((response) => {
         const headers = response.headers;
-        const filename = headers.get('x-filename');
+        const filename = getFilenameFromHttpHeader(headers);
         const contentType = headers.get('content-type');
         const linkElement = this.document.createElement('a');
         const blob = new Blob([response.body], { type: contentType });
         const href = URL.createObjectURL(blob);
         linkElement.setAttribute('href', href);
         linkElement.setAttribute('download', filename);
-        const clickEvent = new MouseEvent('click',
-          {
-            view: this.window,
-            bubbles: true,
-            cancelable: false
-          }
-        );
-        linkElement.dispatchEvent(clickEvent);
+        linkElement.click();
+        setTimeout(() => URL.revokeObjectURL(href), 0);
         return null;
       })
     );

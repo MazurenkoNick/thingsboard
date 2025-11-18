@@ -52,7 +52,7 @@ public class UserFields extends AbstractEntityFields {
 
     @Override
     public String getName() {
-        return super.getEmail();
+        return getEmail();
     }
 
     public UserFields(UUID id, long createdTime, UUID tenantId, UUID customerId,

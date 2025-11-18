@@ -95,13 +95,6 @@ public class ThymeleafUtil {
         return htmlClassEngine.process(templateHtml, context);
     }
 
-    public static String renderFromHtmlString(String html, Map<String, Object> variables) {
-        Context context = new Context();
-        context.setVariables(variables);
-
-        return htmlStringEngine.process(convertToThymeleafInline(sanitize(html)), context);
-    }
-
     public static String renderFromTextString(String html, Map<String, Object> variables) {
         populateMissingImagePlaceholders(html, variables);
 
@@ -150,7 +143,7 @@ public class ThymeleafUtil {
                     break;
                 default:
                     String safeKey = normalizeVariableName(var);
-                    replacement = "[[${" + safeKey + "}]]";
+                    replacement = "[(${" + safeKey + "})]";
             }
 
             matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));

@@ -40,27 +40,33 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityKeyType;
+import org.thingsboard.server.common.data.query.TsValue;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.TableSortOrder;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartThreshold;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.TbReportCtx;
+import org.thingsboard.server.report.context.chart.TsChartThresholdItem;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -72,6 +78,8 @@ public class ReportUtils {
 
     public static final Pattern REPORT_NAME_DATE_PATTERN = Pattern.compile("%d\\{([^\\}]*)\\}");
     public static final String DEFAULT_REPORT_NAME_PATTERN = "report-%d{yyyy-MM-dd_HH:mm:ss}";
+    public static final Set<String> ENTITY_TIME_FIELDS = Set.of("ts", "createdTime", "startTime", "endTime", "ackTime", "clearTime", "assignTime");
+    public static final String RAW_TS_PREFIX = "rawTs_";
 
     public static String prepareReportName(String namePattern, Date reportDate, String timeZoneStr) {
         TimeZone timeZone = (timeZoneStr == null) ? TimeZone.getDefault() : TimeZone.getTimeZone(timeZoneStr);
@@ -116,28 +124,46 @@ public class ReportUtils {
     public static Optional<DataSource> getSingleDataSource(DataReportComponent component) {
         DataSource dataSource = null;
         if (ReportComponentType.ALARM_TABLE.equals(component.getType())) {
-            dataSource = ((AlarmTableComponent)component).getAlarmSource();
+            dataSource = ((AlarmTableComponent) component).getAlarmSource();
         } else {
             List<DataSource> dataSources = component.getDataSources();
             if (dataSources != null && !dataSources.isEmpty()) {
                 dataSource = dataSources.get(0);
             }
         }
-        if (dataSource == null) {
+        if (isDataSourceValid(dataSource)) {
+            return Optional.of(dataSource);
+        } else {
             return Optional.empty();
+        }
+    }
+
+    public static List<DataSource> getMultipleDataSources(DataReportComponent component) {
+        List<DataSource> dataSources = component.getDataSources();
+        if (dataSources == null) {
+            dataSources = new ArrayList<>();
+        } else {
+            dataSources = dataSources.stream().filter(ReportUtils::isDataSourceValid).toList();
+        }
+        return dataSources;
+    }
+
+    public static boolean isDataSourceValid(DataSource dataSource) {
+        if (dataSource == null) {
+            return false;
         }
         switch (dataSource.getType()) {
             case DEVICE:
                 if (dataSource.getDeviceId() == null) {
-                    return Optional.empty();
+                    return false;
                 }
                 break;
             case ENTITY:
                 if (dataSource.getEntityAliasId() == null) {
-                    return Optional.empty();
+                    return false;
                 }
         }
-        return Optional.of(dataSource);
+        return true;
     }
 
     public static String updateDashboardReportStateParamsWithEntity(String state, EntityData stateEntity) {
@@ -149,13 +175,14 @@ public class ReportUtils {
                 if (parsed.isArray() && !parsed.isEmpty()) {
                     stateObj = parsed;
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
         if (stateObj == null) {
             stateObj = JacksonUtil.newArrayNode();
             ObjectNode stateData = JacksonUtil.newObjectNode();
             stateData.set("id", NullNode.getInstance());
-            ((ArrayNode)stateObj).add(stateData);
+            ((ArrayNode) stateObj).add(stateData);
         }
 
         ObjectNode stateParams;
@@ -174,7 +201,32 @@ public class ReportUtils {
         entityName.ifPresent(s -> stateParams.put("entityName", s));
         entityLabel.ifPresent(s -> stateParams.put("entityLabel", s));
         String newStateJsonStr = JacksonUtil.toString(stateObj);
-        return new String(Base64.getEncoder().encode(newStateJsonStr.getBytes()));
+        String b64 = Base64.getEncoder().encodeToString(newStateJsonStr.getBytes(StandardCharsets.UTF_8));
+        return java.net.URLEncoder.encode(b64, StandardCharsets.UTF_8);
+    }
+
+    public static List<TsChartThresholdItem> collectThresholdItems(List<TimeSeriesChartThreshold> thresholds,
+                                                                   List<EntityData> entityDatas,
+                                                                   boolean latestElseEntity) {
+        List<TsChartThresholdItem> thresholdItems = new ArrayList<>();
+        if (!thresholds.isEmpty() && !entityDatas.isEmpty()) {
+            EntityData entity = entityDatas.get(0);
+            Map<EntityKeyType, Map<String, TsValue>> latestValues = entity.getLatest();
+            for (TimeSeriesChartThreshold threshold : thresholds) {
+                EntityKeyType keyType = EntityKeyType.fromName(latestElseEntity ? threshold.getLatestKeyType() : threshold.getEntityKeyType());
+                Map<String, TsValue> valuesByType = latestValues.get(keyType);
+                if (valuesByType != null) {
+                    TsValue tsValue = valuesByType.get(latestElseEntity ? threshold.getLatestKey() : threshold.getEntityKey());
+                    if (tsValue != null) {
+                        try {
+                            double doubleValue = Double.parseDouble(tsValue.getValue());
+                            thresholdItems.add(new TsChartThresholdItem(threshold, doubleValue));
+                        } catch (NumberFormatException ignored) {}
+                    }
+                }
+            }
+        }
+        return thresholdItems;
     }
 
     public static String formatValueWithPrecisionAndUnits(String value, DataKey dataKey) {
@@ -195,14 +247,18 @@ public class ReportUtils {
     }
 
     public static void sortRowsByTableSortOrder(List<Map<String, String>> rows, TableSortOrder tableSortOrder) {
-        if (tableSortOrder == null || tableSortOrder.getColumn() == null) {
+        if (tableSortOrder == null || tableSortOrder.getColumn() == null || rows.isEmpty()) {
             return;
         }
 
         String column = tableSortOrder.getColumn();
+        if (rows.get(0).containsKey(RAW_TS_PREFIX + column)) {
+            column = RAW_TS_PREFIX + column; // Handle timestamp columns
+        }
 
+        String finalColumn = column;
         Comparator<Map<String, String>> comparator = Comparator.comparing(
-                row -> row.getOrDefault(column, ""),
+                row -> row.getOrDefault(finalColumn, ""),
                 ReportUtils::compareMixedValuesNullFirst
         );
 
@@ -242,6 +298,9 @@ public class ReportUtils {
     }
 
     public static String formatTimestamp(long timestamp, String pattern, String timezone) {
+        if (timestamp == 0) {
+            return "";
+        }
         if (pattern == null || pattern.isEmpty() || pattern.equals("milliseconds")) {
             return String.valueOf(timestamp);
         }
@@ -258,21 +317,25 @@ public class ReportUtils {
         }
     }
 
-    public static String formatTimestamp(String timestampStr, String pattern, String timezone) {
+    public static String formatTimestamp(String timestampStr, String pattern, TbReportCtx ctx, String timezone) {
         try {
             long timestamp = Long.parseLong(timestampStr);
-            return formatTimestamp(timestamp, pattern, timezone);
+            return formatTimestamp(timestamp, pattern, ctx, timezone);
         } catch (NumberFormatException e) {
             return "Invalid timestamp string: " + timestampStr;
         }
     }
 
     public static String formatTimestamp(long timestamp, String pattern, TbReportCtx ctx) {
+        return formatTimestamp(timestamp, pattern, ctx, null);
+    }
+
+    public static String formatTimestamp(long timestamp, String pattern, TbReportCtx ctx, String timezone) {
         String effectivePattern = (pattern != null && !pattern.isEmpty())
                 ? pattern
                 : ctx.getConfiguration().getTimeDataPattern();
-
-        return formatTimestamp(timestamp, effectivePattern, ctx.getTimeZone());
+        String targetTimezone = StringUtils.isNotBlank(timezone) ? timezone : ctx.getTimeZone();
+        return formatTimestamp(timestamp, effectivePattern, targetTimezone);
     }
 
 }

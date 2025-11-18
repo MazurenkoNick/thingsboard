@@ -1215,7 +1215,7 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
     {
       id: MenuId.reporting,
       name: 'report.reporting',
-      type: 'toggle',
+      type: 'link',
       path: '/reporting',
       icon: 'mdi:chart-box-multiple',
       isNew: true
@@ -1560,15 +1560,18 @@ const menuFilters = new Map<MenuId, MenuFilter>([
   ],
   [
     MenuId.report_templates, (authState, userPermissionsService) =>
+            authState.authUser.authority === Authority.TENANT_ADMIN &&
             userPermissionsService.hasReadGenericPermission(Resource.REPORT_TEMPLATE)
   ],
   [
     MenuId.report_scheduling, (authState, userPermissionsService) =>
+            authState.authUser.authority === Authority.TENANT_ADMIN &&
             userPermissionsService.hasReadGenericPermission(Resource.REPORT_TEMPLATE) &&
             userPermissionsService.hasReadGenericPermission(Resource.SCHEDULER_EVENT)
   ],
   [
     MenuId.reports, (authState, userPermissionsService) =>
+            authState.authUser.authority === Authority.TENANT_ADMIN &&
             userPermissionsService.hasReadGenericPermission(Resource.REPORT)
   ],
   [
@@ -1855,14 +1858,6 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.dashboard_all},
           {id: MenuId.dashboard_groups},
           {id: MenuId.dashboard_shared}
-        ]
-      },
-      {
-        id: MenuId.reporting,
-        pages: [
-          {id: MenuId.report_templates},
-          {id: MenuId.report_scheduling},
-          {id: MenuId.reports}
         ]
       },
       {
@@ -2209,7 +2204,7 @@ export const menuItemToMenuSection = (authState: AuthState,
       result.pages = item.pages.map(page =>
         menuItemToMenuSection(authState, userPermissionsService, allowedMenuIds, customStateIds, page)).filter(page => !!page);
     }
-    if (result.type === 'toggle' && !result.pages?.length) {
+    if ((result.type === 'toggle' || result.type === 'link' && Array.isArray(item.pages)) && !result.pages?.length) {
       return undefined;
     }
     return result;

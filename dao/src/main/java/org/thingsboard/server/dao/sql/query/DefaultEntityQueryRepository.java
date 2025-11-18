@@ -52,6 +52,7 @@ import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.QueryContext;
 import org.thingsboard.server.common.data.permission.Resource;
+import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.ApiUsageStateFilter;
 import org.thingsboard.server.common.data.query.AssetSearchQueryFilter;
 import org.thingsboard.server.common.data.query.AssetTypeFilter;
@@ -940,7 +941,7 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
                 AlarmEntity aEntity = alarmRepository.findById(stateEntityId.getId()).orElse(null);
                 if (aEntity != null) {
                     StateEntityOwnerFilter newFilter = new StateEntityOwnerFilter();
-                    newFilter.setSingleEntity(EntityIdFactory.getByTypeAndUuid(aEntity.getOriginatorType(), aEntity.getOriginatorId()));
+                    newFilter.setSingleEntity(AliasEntityId.fromEntityId(EntityIdFactory.getByTypeAndUuid(aEntity.getOriginatorType(), aEntity.getOriginatorId())));
                     return getOwnerId(tenantId, newFilter);
                 }
                 break;

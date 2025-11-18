@@ -32,11 +32,11 @@ package org.thingsboard.server.dao.resource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.annotation.PostConstruct;
-import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
@@ -70,6 +70,7 @@ import org.thingsboard.server.dao.ImageContainerDao;
 import org.thingsboard.server.dao.asset.AssetProfileDao;
 import org.thingsboard.server.dao.dashboard.DashboardInfoDao;
 import org.thingsboard.server.dao.device.DeviceProfileDao;
+import org.thingsboard.server.dao.rule.RuleChainDao;
 import org.thingsboard.server.dao.domain.DomainDao;
 import org.thingsboard.server.dao.service.Validator;
 import org.thingsboard.server.dao.service.validator.ResourceDataValidator;
@@ -138,8 +139,9 @@ public class BaseImageService extends BaseResourceService implements ImageServic
 
     public BaseImageService(TbResourceDao resourceDao, TbResourceInfoDao resourceInfoDao, ResourceDataValidator resourceValidator,
                             AssetProfileDao assetProfileDao, DeviceProfileDao deviceProfileDao, WidgetsBundleDao widgetsBundleDao,
-                            WidgetTypeDao widgetTypeDao, DashboardInfoDao dashboardInfoDao, WhiteLabelingDao whiteLabelingDao, DomainDao domainDao) {
-        super(resourceDao, resourceInfoDao, resourceValidator, widgetTypeDao, dashboardInfoDao);
+                            WidgetTypeDao widgetTypeDao, DashboardInfoDao dashboardInfoDao, RuleChainDao ruleChainDao,
+                            WhiteLabelingDao whiteLabelingDao, DomainDao domainDao) {
+        super(resourceDao, resourceInfoDao, resourceValidator, widgetTypeDao, dashboardInfoDao, ruleChainDao);
         this.assetProfileDao = assetProfileDao;
         this.deviceProfileDao = deviceProfileDao;
         this.widgetsBundleDao = widgetsBundleDao;
@@ -419,8 +421,8 @@ public class BaseImageService extends BaseResourceService implements ImageServic
         imageName = imageName + type + " image";
         CustomerId customerId = entity instanceof HasCustomerId ? ((HasCustomerId) entity).getCustomerId() : null;
         UpdateResult result = convertToImageUrl(entity.getTenantId(), customerId, imageName, entity.getImage(), Collections.emptyMap());
-        entity.setImage(result.getValue());
-        return result.isUpdated();
+        entity.setImage(result.value());
+        return result.updated();
     }
 
     @Transactional(noRollbackFor = Exception.class) // we don't want transaction to rollback in case of an image processing failure
@@ -462,8 +464,8 @@ public class BaseImageService extends BaseResourceService implements ImageServic
         Map<String, String> imagesLinks = getResourcesLinks(widgetTypeDetails.getResources());
 
         UpdateResult result = convertToImageUrl(tenantId, null, prefix + " image", widgetTypeDetails.getImage(), imagesLinks);
-        boolean updated = result.isUpdated();
-        widgetTypeDetails.setImage(result.getValue());
+        boolean updated = result.updated();
+        widgetTypeDetails.setImage(result.value());
 
         if (widgetTypeDetails.getDescriptor().isObject()) {
             JsonNode defaultConfig = widgetTypeDetails.getDefaultConfig();
@@ -485,8 +487,8 @@ public class BaseImageService extends BaseResourceService implements ImageServic
         Map<String, String> imagesLinks = getResourcesLinks(dashboard.getResources());
 
         var result = convertToImageUrl(tenantId, dashboard.getCustomerId(), prefix + " image", dashboard.getImage(), imagesLinks);
-        boolean updated = result.isUpdated();
-        dashboard.setImage(result.getValue());
+        boolean updated = result.updated();
+        dashboard.setImage(result.value());
 
         updated |= convertToImageUrlsByMapping(tenantId, dashboard.getCustomerId(), DASHBOARD_BASE64_MAPPING, Collections.singletonMap("prefix", prefix), dashboard.getConfiguration(), imagesLinks);
         updated |= convertToImageUrls(tenantId, dashboard.getCustomerId(), prefix, dashboard.getConfiguration(), imagesLinks);
@@ -497,10 +499,10 @@ public class BaseImageService extends BaseResourceService implements ImageServic
         AtomicBoolean updated = new AtomicBoolean(false);
         JacksonUtil.replaceAllByMapping(configuration, mapping, templateParams, (name, value) -> {
             UpdateResult result = convertToImageUrl(tenantId, customerId, name, value, links);
-            if (result.isUpdated()) {
+            if (result.updated()) {
                 updated.set(true);
             }
-            return result.getValue();
+            return result.value();
         });
         return updated.get();
     }
@@ -608,10 +610,10 @@ public class BaseImageService extends BaseResourceService implements ImageServic
         AtomicBoolean updated = new AtomicBoolean(false);
         JacksonUtil.replaceAll(root, title, (path, value) -> {
             UpdateResult result = convertToImageUrl(tenantId, customerId, path, value, true, links);
-            if (result.isUpdated()) {
+            if (result.updated()) {
                 updated.set(true);
             }
-            return result.getValue();
+            return result.value();
         });
         return updated.get();
     }
@@ -778,16 +780,18 @@ public class BaseImageService extends BaseResourceService implements ImageServic
 
     private String getImageLink(String value) {
         if (value.startsWith(DataConstants.TB_IMAGE_PREFIX + "/api/images")) {
-            return StringUtils.removeStart(value, DataConstants.TB_IMAGE_PREFIX);
+            return Strings.CS.removeStart(value, DataConstants.TB_IMAGE_PREFIX);
         } else {
             return null;
         }
     }
 
-    @Data(staticConstructor = "of")
-    private static class UpdateResult {
-        private final boolean updated;
-        private final String value;
+    private record UpdateResult(boolean updated, String value) {
+
+        static UpdateResult of(boolean updated, String value) {
+            return new UpdateResult(updated, value);
+        }
+
     }
 
 }

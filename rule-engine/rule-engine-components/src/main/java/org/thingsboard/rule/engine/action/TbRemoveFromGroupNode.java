@@ -30,7 +30,6 @@
  */
 package org.thingsboard.rule.engine.action;
 
-import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.rule.engine.api.RuleNode;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbNodeConfiguration;
@@ -41,7 +40,6 @@ import org.thingsboard.server.common.data.plugin.ComponentType;
 import org.thingsboard.server.common.data.rule.RuleChainType;
 import org.thingsboard.server.common.msg.TbMsg;
 
-@Slf4j
 @RuleNode(
         type = ComponentType.ACTION,
         name = "remove from group",
@@ -50,7 +48,8 @@ import org.thingsboard.server.common.msg.TbMsg;
         nodeDetails = "Finds target Entity Group by group name pattern and then removes Originator Entity from this group.",
         configDirective = "tbActionNodeRemoveFromGroupConfig",
         icon = "remove_circle",
-        ruleChainTypes = RuleChainType.CORE
+        ruleChainTypes = RuleChainType.CORE,
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/action/remove-from-group/"
 )
 public class TbRemoveFromGroupNode extends TbAbstractGroupActionNode<TbRemoveFromGroupConfiguration> {
 
@@ -68,4 +67,5 @@ public class TbRemoveFromGroupNode extends TbAbstractGroupActionNode<TbRemoveFro
     protected void doProcessEntityGroupAction(TbContext ctx, TbMsg msg, EntityGroupId entityGroupId) {
         ctx.getPeContext().getEntityGroupService().removeEntityFromEntityGroup(ctx.getTenantId(), entityGroupId, msg.getOriginator());
     }
+
 }

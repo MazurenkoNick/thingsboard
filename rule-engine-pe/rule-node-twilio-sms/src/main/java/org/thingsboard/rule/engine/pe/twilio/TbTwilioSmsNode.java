@@ -47,9 +47,6 @@ import org.thingsboard.server.common.msg.TbMsg;
 
 import static org.thingsboard.common.util.DonAsynchron.withCallback;
 
-/**
- * Created by igor on 5/25/18.
- */
 @Slf4j
 @RuleNode(
         type = ComponentType.EXTERNAL,
@@ -60,7 +57,7 @@ import static org.thingsboard.common.util.DonAsynchron.withCallback;
         uiResources = {"static/rulenode/twilio-config.js"},
         configDirective = "tbActionNodeTwilioSmsConfig",
         icon = "sms",
-        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/external-nodes/#twilio-sms-node",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/external/twilio-sms/",
         hasSecrets = true
 )
 public class TbTwilioSmsNode implements TbNode {

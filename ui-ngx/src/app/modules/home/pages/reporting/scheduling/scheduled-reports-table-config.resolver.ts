@@ -51,7 +51,6 @@ import { ReportFilter, ReportQuery, ScheduledReportInfo } from '@shared/models/r
 import { map } from 'rxjs/operators';
 import { UtilsService } from '@core/services/utils.service';
 import { AuthUser } from '@shared/models/user.model';
-import { Authority } from '@shared/models/authority.enum';
 import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
@@ -90,16 +89,9 @@ export class ScheduledReportsTableConfigResolver  {
     this.configDefaults(config);
     const authUser = getCurrentAuthUser(this.store);
     config.componentsData = {
-      includeCustomers: true,
       reportFilter: {
         reportTemplateId: null,
         userId: null
-      },
-      includeCustomersChanged: (includeCustomers: boolean) => {
-        config.componentsData.includeCustomers = includeCustomers;
-        config.columns = this.configureColumns(authUser, config);
-        config.getTable().columnsUpdated();
-        config.getTable().resetSortAndFilter(true);
       },
       reportFilterChanged: (filter: ReportFilter) => {
         config.componentsData.reportFilter = filter;
@@ -107,7 +99,6 @@ export class ScheduledReportsTableConfigResolver  {
       }
     };
 
-    config.tableTitle = this.translate.instant('scheduled-report.scheduled-reports');
     config.columns = this.configureColumns(authUser, config);
     this.configureEntityFunctions(config);
     config.cellActionDescriptors = this.configureCellActions(config);
@@ -151,35 +142,26 @@ export class ScheduledReportsTableConfigResolver  {
     config.headerComponent = ScheduledReportTableHeaderComponent;
   }
 
-  private configureColumns(authUser: AuthUser, config: EntityTableConfig<ScheduledReportInfo>): Array<EntityColumn<ScheduledReportInfo>> {
-    const columns: Array<EntityColumn<ScheduledReportInfo>> = [
+  private configureColumns(_authUser: AuthUser, config: EntityTableConfig<ScheduledReportInfo>): Array<EntityColumn<ScheduledReportInfo>> {
+    return [
       new DateEntityTableColumn<ScheduledReportInfo>('createdTime', 'common.created-time', this.datePipe, '150px'),
-      new EntityTableColumn<ScheduledReportInfo>('name', 'scheduled-report.name',
-        config.componentsData.includeCustomers ? '20%' : '25%', config.entityTitle),
-      new EntityLinkTableColumn<ScheduledReportInfo>('reportTemplateName', 'report-template.report-template',
-        config.componentsData.includeCustomers ? '20%' : '25%',
+      new EntityTableColumn<ScheduledReportInfo>('name', 'scheduled-report.name', '25%', config.entityTitle),
+      new EntityLinkTableColumn<ScheduledReportInfo>('reportTemplateName', 'report-template.report-template', '25%',
         (scheduledReport) => scheduledReport.templateInfo.name,
         (scheduledReport) => getEntityDetailsPageURL(scheduledReport.templateInfo.id.id, EntityType.REPORT_TEMPLATE)),
-      new EntityTableColumn<ScheduledReportInfo>('userName', 'user.user',
-        config.componentsData.includeCustomers ? '20%' : '25%', (scheduledReport) => scheduledReport.userName),
+      new EntityTableColumn<ScheduledReportInfo>('userName', 'user.user', '25%',
+        (scheduledReport) => scheduledReport.userName),
+      new EntityTableColumn<ScheduledReportInfo>('schedule', 'scheduled-report.schedule',
+        '25%', (scheduledReport) => scheduleInfo(scheduledReport.schedule, this.translate),
+        () => ({}), false)
     ];
-    if (config.componentsData.includeCustomers) {
-      const title = (authUser.authority === Authority.CUSTOMER_USER)
-        ? 'entity.sub-customer-name' : 'entity.customer-name';
-      columns.push(new EntityTableColumn<ScheduledReportInfo>('customerTitle', title, '20%'));
-    }
-    columns.push(new EntityTableColumn<ScheduledReportInfo>('schedule', 'scheduled-report.schedule',
-      config.componentsData.includeCustomers ? '20%' : '25%', (scheduledReport) => scheduleInfo(scheduledReport.schedule, this.translate),
-      () => ({}), false));
-    return columns;
   }
 
   private configureEntityFunctions(config: EntityTableConfig<ScheduledReportInfo>): void {
     config.entitiesFetchFunction = pageLink => {
       const reportQuery = new ReportQuery(pageLink, {
         reportTemplateId: config.componentsData.reportFilter.reportTemplateId,
-        userId: config.componentsData.reportFilter.userId,
-        includeCustomers: config.componentsData.includeCustomers
+        userId: config.componentsData.reportFilter.userId
       });
       return this.schedulerEventService.getScheduledReports(reportQuery);
     };
@@ -297,7 +279,7 @@ export class ScheduledReportsTableConfigResolver  {
         renderer: config.getTable().renderer,
         hostView: config.getTable().viewContainerRef,
         componentType: VersionControlComponent,
-        preferredPlacement: ['leftTopOnly', 'leftOnly', 'leftBottomOnly'],
+        preferredPlacement: ['left', 'leftTop', 'leftBottom'],
         context: {
           detailsMode: true,
           active: true,
@@ -318,6 +300,4 @@ export class ScheduledReportsTableConfigResolver  {
   onScheduledReportAction(_action: EntityAction<ScheduledReportInfo>, _config: EntityTableConfig<ScheduledReportInfo>): boolean {
     return false;
   }
-
-
 }

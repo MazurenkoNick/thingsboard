@@ -30,13 +30,13 @@
  */
 package org.thingsboard.server.common.data.report.configuration;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.query.EntityDataSortOrder;
 
 import java.util.List;
 
@@ -46,6 +46,7 @@ import java.util.List;
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DataSource {
     private DataSourceType type;
     private String deviceId;
@@ -54,5 +55,4 @@ public class DataSource {
     private List<DataKey> dataKeys;
     private List<DataKey> latestDataKeys;
     private AlarmFilterConfig alarmFilterConfig;
-    private EntityDataSortOrder sortOrder;
 }

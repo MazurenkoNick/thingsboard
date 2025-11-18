@@ -44,6 +44,7 @@ import {
 } from '@core/api/entity-data-subscription';
 import { Observable, of } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { WidgetDataGenerationOptions } from '@core/api/widget-api.models';
 
 export interface EntityDataListener {
   subscriptionType: widgetType;
@@ -62,6 +63,7 @@ export interface EntityDataListener {
   updateRealtimeSubscription?: () => SubscriptionTimewindow;
   setRealtimeSubscription?: (subscriptionTimewindow: SubscriptionTimewindow) => void;
   subscriptionOptions?: EntityDataSubscriptionOptions;
+  dataGenerationOptions?: WidgetDataGenerationOptions;
   subscription?: EntityDataSubscription;
 }
 
@@ -101,6 +103,7 @@ export class EntityDataService {
       comparisonCustomIntervalValue: dataKey.comparisonCustomIntervalValue,
       comparisonResultType: dataKey.comparisonResultType,
       funcBody: dataKey.funcBody,
+      builtInFunc: dataKey.builtInFunc,
       postFuncBody: dataKey.postFuncBody,
       latest
     };

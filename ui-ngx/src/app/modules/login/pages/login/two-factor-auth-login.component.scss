@@ -87,11 +87,21 @@
   }
 
   ::ng-deep {
+    .tb-two-factor-auth-login-content {
+      .tb-two-factor-auth-login-card {
+        button.mat-mdc-icon-button {
+          .mat-icon {
+            color: inherit;
+          }
+        }
+      }
+    }
     button.provider {
       text-align: start;
       font-weight: 400;
+      color: inherit;
       &:not([disabled][disabled]) {
-        border-color: rgba(255, 255, 255, .8);
+        border-color: inherit;
       }
     }
 

@@ -143,7 +143,9 @@ import org.thingsboard.server.common.data.sync.vc.VersionCreationResult;
 import org.thingsboard.server.common.data.sync.vc.VersionLoadResult;
 import org.thingsboard.server.common.data.sync.vc.request.create.ComplexVersionCreateRequest;
 import org.thingsboard.server.common.data.sync.vc.request.create.EntityTypeVersionCreateConfig;
+import org.thingsboard.server.common.data.sync.vc.request.create.SingleEntityVersionCreateRequest;
 import org.thingsboard.server.common.data.sync.vc.request.create.SyncStrategy;
+import org.thingsboard.server.common.data.sync.vc.request.create.VersionCreateConfig;
 import org.thingsboard.server.common.data.sync.vc.request.create.VersionCreateRequest;
 import org.thingsboard.server.common.data.sync.vc.request.load.EntityTypeVersionLoadConfig;
 import org.thingsboard.server.common.data.sync.vc.request.load.EntityTypeVersionLoadRequest;
@@ -164,6 +166,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.thingsboard.server.controller.TbResourceControllerTest.JS_TEST_FILE_NAME;
@@ -309,7 +312,7 @@ public class VersionControlTest extends AbstractControllerTest {
         DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
         OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
         OtaPackage software = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.SOFTWARE);
-        Device device = createDevice(null, deviceProfile.getId(), "Device v1.0", "test1", newDevice -> {
+        Device device = createDevice(deviceProfile.getId(), "Device v1.0", "test1", newDevice -> {
             newDevice.setFirmwareId(firmware.getId());
             newDevice.setSoftwareId(software.getId());
         });
@@ -332,7 +335,7 @@ public class VersionControlTest extends AbstractControllerTest {
         createVersion("profiles", EntityType.DEVICE_PROFILE);
         OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
         OtaPackage software = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.SOFTWARE);
-        Device device = createDevice(null, deviceProfile.getId(), "Device of tenant 1", "test1", newDevice -> {
+        Device device = createDevice(deviceProfile.getId(), "Device of tenant 1", "test1", newDevice -> {
             newDevice.setFirmwareId(firmware.getId());
             newDevice.setSoftwareId(software.getId());
         });
@@ -568,7 +571,7 @@ public class VersionControlTest extends AbstractControllerTest {
     @Test
     public void testVcWithRelations_betweenTenants() throws Exception {
         Asset asset = createAsset(null, null, "Asset 1");
-        Device device = createDevice(null, null, "Device 1", "test1");
+        Device device = createDevice("Device 1", "test1");
         EntityRelation relation = createRelation(asset.getId(), device.getId());
         String versionId = createVersion("assets and devices", EntityType.ASSET, EntityType.DEVICE, EntityType.DEVICE_PROFILE, EntityType.ASSET_PROFILE);
 
@@ -594,11 +597,11 @@ public class VersionControlTest extends AbstractControllerTest {
     @Test
     public void testVcWithRelations_sameTenant() throws Exception {
         Asset asset = createAsset(null, null, "Asset 1");
-        Device device1 = createDevice(null, null, "Device 1", "test1");
+        Device device1 = createDevice("Device 1", "test1");
         EntityRelation relation1 = createRelation(device1.getId(), asset.getId());
         String versionId = createVersion("assets", EntityType.ASSET);
 
-        Device device2 = createDevice(null, null, "Device 2", "test2");
+        Device device2 = createDevice("Device 2", "test2");
         EntityRelation relation2 = createRelation(device2.getId(), asset.getId());
         List<EntityRelation> relations = findRelationsByTo(asset.getId());
         assertThat(relations).contains(relation1, relation2);
@@ -773,9 +776,40 @@ public class VersionControlTest extends AbstractControllerTest {
     }
 
     @Test
+    public void testDeviceGroupVcWithoutEntities_betweenTenants() throws Exception {
+        EntityGroup deviceGroup = createEntityGroup(tenantId1, EntityType.DEVICE, "Device group");
+        Device device = createDevice("Test device", "test1");
+        assignEntityToGroup(deviceGroup.getId(), device.getId());
+
+        SingleEntityVersionCreateRequest request = new SingleEntityVersionCreateRequest();
+        request.setEntityId(deviceGroup.getId());
+        VersionCreateConfig config = new VersionCreateConfig();
+        config.setSaveGroupEntities(false);
+        config.setSaveAttributes(true);
+        config.setSaveRelations(false);
+        config.setSavePermissions(false);
+        config.setSaveCredentials(false);
+        config.setSaveCalculatedFields(false);
+        request.setConfig(config);
+        request.setVersionName("device group without entities");
+        request.setBranch(branch);
+        String versionId = createVersion(request);
+
+        loginTenant2();
+        loadVersion(versionId, EntityType.DEVICE, EntityType.DEVICE_PROFILE);
+
+        EntityGroup importedDeviceGroup = findEntityGroup(deviceGroup.getName(), EntityType.DEVICE);
+        checkImportedEntity(tenantId1, tenantId1, deviceGroup, tenantId2, tenantId2, importedDeviceGroup);
+    }
+
+    private void assignEntityToGroup(EntityGroupId id, EntityId entityId) throws Exception {
+        doPost("/api/entityGroup/" + id.getId() + "/addEntities", List.of(entityId.getId().toString()));
+    }
+
+    @Test
     public void testVcWithCalculatedFields_betweenTenants() throws Exception {
         Asset asset = createAsset(null, null, "Asset 1");
-        Device device = createDevice(null, null, "Device 1", "test1");
+        Device device = createDevice("Device 1", "test1");
         CalculatedField calculatedField = createCalculatedField("CalculatedField1", device.getId(), asset.getId());
         String versionId = createVersion("calculated fields of asset and device", EntityType.ASSET, EntityType.DEVICE, EntityType.DEVICE_PROFILE, EntityType.ASSET_PROFILE);
 
@@ -801,7 +835,7 @@ public class VersionControlTest extends AbstractControllerTest {
     @Test
     public void testVcWithReferencedCalculatedFields_betweenTenants() throws Exception {
         Asset asset = createAsset(null, null, "Asset 1");
-        Device device = createDevice(null, null, "Device 1", "test1");
+        Device device = createDevice("Device 1", "test1");
         CalculatedField deviceCalculatedField = createCalculatedField("CalculatedField1", device.getId(), asset.getId());
         CalculatedField assetCalculatedField = createCalculatedField("CalculatedField2", asset.getId(), device.getId());
         String versionId = createVersion("calculated fields of asset and device", EntityType.ASSET, EntityType.DEVICE, EntityType.DEVICE_PROFILE, EntityType.ASSET_PROFILE);
@@ -822,7 +856,9 @@ public class VersionControlTest extends AbstractControllerTest {
             assertThat(importedField.getName()).isEqualTo(deviceCalculatedField.getName());
             assertThat(importedField.getType()).isEqualTo(deviceCalculatedField.getType());
             assertThat(importedField.getId()).isNotEqualTo(deviceCalculatedField.getId());
-            assertThat(importedField.getConfiguration().getArguments().get("T").getRefEntityId()).isEqualTo(importedAsset.getId());
+            assertThat(importedField.getConfiguration()).isInstanceOf(SimpleCalculatedFieldConfiguration.class);
+            SimpleCalculatedFieldConfiguration simpleCfg = (SimpleCalculatedFieldConfiguration) importedField.getConfiguration();
+            assertThat(simpleCfg.getArguments().get("T").getRefEntityId()).isEqualTo(importedAsset.getId());
         });
 
         List<CalculatedField> importedAssetCalculatedFields = findCalculatedFieldsByEntityId(importedAsset.getId());
@@ -831,7 +867,9 @@ public class VersionControlTest extends AbstractControllerTest {
             assertThat(importedField.getName()).isEqualTo(assetCalculatedField.getName());
             assertThat(importedField.getType()).isEqualTo(assetCalculatedField.getType());
             assertThat(importedField.getId()).isNotEqualTo(assetCalculatedField.getId());
-            assertThat(importedField.getConfiguration().getArguments().get("T").getRefEntityId()).isEqualTo(importedDevice.getId());
+            assertThat(importedField.getConfiguration()).isInstanceOf(SimpleCalculatedFieldConfiguration.class);
+            SimpleCalculatedFieldConfiguration simpleCfg = (SimpleCalculatedFieldConfiguration) importedField.getConfiguration();
+            assertThat(simpleCfg.getArguments().get("T").getRefEntityId()).isEqualTo(importedDevice.getId());
         });
     }
 
@@ -995,7 +1033,7 @@ public class VersionControlTest extends AbstractControllerTest {
     }
 
     @Test
-    public void testSchedulerEventOtaConfigForVc_betweenTenants() throws Exception {
+    public void testSchedulerEventOtaConfigForVcWithDeviceProfileOriginator_betweenTenants() throws Exception {
         DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
         OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
         OtaPackage software = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.SOFTWARE);
@@ -1025,8 +1063,79 @@ public class VersionControlTest extends AbstractControllerTest {
     }
 
     @Test
+    public void testSchedulerEventOtaConfigForVcWithDeviceGroupOriginator_betweenTenants() throws Exception {
+        DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
+        OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
+        OtaPackage software = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.SOFTWARE);
+
+        EntityGroup deviceGroup = createEntityGroup(tenantId1, EntityType.DEVICE, "Device group for OTA");
+        DeviceGroupOtaPackage deviceGroupOtaPackageFirmware = new DeviceGroupOtaPackage();
+        deviceGroupOtaPackageFirmware.setGroupId(deviceGroup.getId());
+        deviceGroupOtaPackageFirmware.setOtaPackageType(OtaPackageType.FIRMWARE);
+        deviceGroupOtaPackageFirmware.setOtaPackageId(firmware.getId());
+        doPost("/api/deviceGroupOtaPackage", deviceGroupOtaPackageFirmware, DeviceGroupOtaPackage.class);
+
+        DeviceGroupOtaPackage deviceGroupOtaPackageSoftware = new DeviceGroupOtaPackage();
+        deviceGroupOtaPackageSoftware.setGroupId(deviceGroup.getId());
+        deviceGroupOtaPackageSoftware.setOtaPackageType(OtaPackageType.SOFTWARE);
+        deviceGroupOtaPackageSoftware.setOtaPackageId(software.getId());
+        doPost("/api/deviceGroupOtaPackage", deviceGroupOtaPackageSoftware, DeviceGroupOtaPackage.class);
+
+        SchedulerEvent firmwareEvent = createSchedulerEventForOtaPackageType(tenantId1, deviceGroup.getId(), "Firmware", "updateFirmware", firmware.getId());
+        SchedulerEvent softwareEvent = createSchedulerEventForOtaPackageType(tenantId1, deviceGroup.getId(), "Software", "updateSoftware", software.getId());
+        String versionId = createVersion("scheduler event with ota", EntityType.DEVICE, EntityType.DEVICE_PROFILE, EntityType.OTA_PACKAGE, EntityType.SCHEDULER_EVENT);
+
+        OtaPackage firmwareOta = findOtaPackage(firmware.getTitle());
+        OtaPackage softwareOta = findOtaPackage(software.getTitle());
+
+        loginTenant2();
+        loadVersion(versionId, EntityType.DEVICE_PROFILE, EntityType.OTA_PACKAGE, EntityType.DEVICE, EntityType.SCHEDULER_EVENT);
+        OtaPackage importedFirmwareOta = findOtaPackage(firmwareOta.getTitle());
+        OtaPackage importedSoftwareOta = findOtaPackage(softwareOta.getTitle());
+        SchedulerEvent importedFirmwareEvent = findSchedulerEvent(firmwareEvent.getName());
+        SchedulerEvent importedSoftwareEvent = findSchedulerEvent(softwareEvent.getName());
+
+        checkImportedEntity(tenantId1, firmwareOta, tenantId2, importedFirmwareOta);
+        checkImportedOtaPackageData(firmwareOta, importedFirmwareOta);
+        checkImportedEntity(tenantId1, softwareOta, tenantId2, importedSoftwareOta);
+        checkImportedOtaPackageData(softwareOta, importedSoftwareOta);
+
+        checkImportedEntity(tenantId1, firmwareEvent, tenantId2, importedFirmwareEvent);
+        checkImportedSchedulerEventData(firmwareEvent, importedFirmwareEvent, importedFirmwareOta.getId());
+        checkImportedEntity(tenantId1, softwareEvent, tenantId2, importedSoftwareEvent);
+        checkImportedSchedulerEventData(softwareEvent, importedSoftwareEvent, importedSoftwareOta.getId());
+
+        EntityGroup importedDeviceGroup = findEntityGroup(deviceGroup.getName(), EntityType.DEVICE);
+        assertThat(importedFirmwareEvent.getOriginatorId()).isEqualTo(importedDeviceGroup.getId());
+        assertThat(importedSoftwareEvent.getOriginatorId()).isEqualTo(importedDeviceGroup.getId());
+        assertThat(deviceGroup.getId()).isNotEqualTo(importedDeviceGroup.getId());
+    }
+
+    @Test
+    public void testSchedulerEventWithoutExistingDeviceGroupOriginator_betweenTenants() throws Exception {
+        DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
+        OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
+
+        EntityGroup deviceGroup = createEntityGroup(tenantId1, EntityType.DEVICE, "Device group for OTA");
+        DeviceGroupOtaPackage deviceGroupOtaPackageFirmware = new DeviceGroupOtaPackage();
+        deviceGroupOtaPackageFirmware.setGroupId(deviceGroup.getId());
+        deviceGroupOtaPackageFirmware.setOtaPackageType(OtaPackageType.FIRMWARE);
+        deviceGroupOtaPackageFirmware.setOtaPackageId(firmware.getId());
+        doPost("/api/deviceGroupOtaPackage", deviceGroupOtaPackageFirmware, DeviceGroupOtaPackage.class);
+
+        createSchedulerEventForOtaPackageType(tenantId1, deviceGroup.getId(), "Firmware", "updateFirmware", firmware.getId());
+
+        String versionId = createVersion("scheduler event with ota", EntityType.DEVICE_PROFILE, EntityType.OTA_PACKAGE, EntityType.SCHEDULER_EVENT);
+
+        loginTenant2();
+        assertThatThrownBy(() -> loadVersion(versionId, EntityType.DEVICE_PROFILE, EntityType.OTA_PACKAGE, EntityType.SCHEDULER_EVENT))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageMatching("Failed to load version:.*MissingEntityException.*");
+    }
+
+    @Test
     public void testReportTemplateVc_sameTenant() throws Exception {
-        Device device = createDevice(null, null, "Device 1", "test1");
+        Device device = createDevice("Device 1", "test1");
         ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report", device.getId());
         String versionId = createVersion("report template", EntityType.REPORT_TEMPLATE);
 
@@ -1041,7 +1150,7 @@ public class VersionControlTest extends AbstractControllerTest {
 
     @Test
     public void testReportTemplateVc_betweenTenants() throws Exception {
-        Device device = createDevice(null, null, "Device 1", "test1");
+        Device device = createDevice("Device 1", "test1");
         ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report", device.getId());
         String versionId = createVersion("report template", EntityType.REPORT_TEMPLATE);
 
@@ -1057,13 +1166,12 @@ public class VersionControlTest extends AbstractControllerTest {
 
     @Test
     public void testSchedulerEventGenerateReportForVc_betweenTenants() throws Exception {
-        DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
         Dashboard dashboard = createDashboard(null, "Test Dashboard");
-        SchedulerEvent reportEvent = createSchedulerEventForGenerateReportType(tenantId1, deviceProfile.getId(), "Report", dashboard.getId());
-        String versionId = createVersion("scheduler event with report", EntityType.DEVICE_PROFILE, EntityType.DASHBOARD, EntityType.SCHEDULER_EVENT);
+        SchedulerEvent reportEvent = createSchedulerEventForGenerateReportType(tenantId1, null, "Report", dashboard.getId());
+        String versionId = createVersion("scheduler event with report", EntityType.DASHBOARD, EntityType.SCHEDULER_EVENT);
 
         loginTenant2();
-        loadVersion(versionId, EntityType.DEVICE_PROFILE, EntityType.DASHBOARD, EntityType.SCHEDULER_EVENT);
+        loadVersion(versionId, EntityType.DASHBOARD, EntityType.SCHEDULER_EVENT);
         Dashboard importedDashboard = findDashboard(dashboard.getTitle());
         SchedulerEvent importedReportEvent = findSchedulerEvent(reportEvent.getName());
 
@@ -1076,10 +1184,10 @@ public class VersionControlTest extends AbstractControllerTest {
 
     @Test
     public void testSchedulerEventGenerateReportV2ForVc_betweenTenants() throws Exception {
-        DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
-        Device device = createDevice(null, null, "Device 1", "test1");
+        createDeviceProfile(null, null, "Device profile v1.0");
+        Device device = createDevice("Device 1", "test1");
         ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report", device.getId());
-        SchedulerEvent reportEvent = createSchedulerEventForGenerateReportType(tenantId1, deviceProfile.getId(), "Report V2", reportTemplate.getId(), tenantAdminUserId);
+        SchedulerEvent reportEvent = createSchedulerEventForGenerateReportType(tenantId1, null, "Report V2", reportTemplate.getId(), tenantAdminUserId);
         String versionId = createVersion("scheduler event with report V2", EntityType.DEVICE_PROFILE, EntityType.DEVICE, EntityType.REPORT_TEMPLATE, EntityType.SCHEDULER_EVENT);
 
         loginTenant2();
@@ -1324,9 +1432,8 @@ public class VersionControlTest extends AbstractControllerTest {
         login(tenantAdmin2.getEmail(), tenantAdmin2.getEmail());
     }
 
-    private Device createDevice(CustomerId customerId, DeviceProfileId deviceProfileId, String name, String accessToken, Consumer<Device>... modifiers) {
+    private Device createDevice(DeviceProfileId deviceProfileId, String name, String accessToken, Consumer<Device>... modifiers) {
         Device device = new Device();
-        device.setCustomerId(customerId);
         device.setName(name);
         device.setLabel("lbl");
         device.setDeviceProfileId(deviceProfileId);

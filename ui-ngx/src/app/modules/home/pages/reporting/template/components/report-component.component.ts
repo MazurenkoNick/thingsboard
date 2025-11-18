@@ -33,13 +33,16 @@ import {
   AfterViewInit,
   ChangeDetectorRef,
   Component,
-  ComponentRef, DestroyRef,
+  ComponentRef,
+  DestroyRef,
   Directive,
   ElementRef,
   EventEmitter,
-  HostBinding, HostListener,
+  HostBinding,
+  HostListener,
   inject,
-  Input, OnChanges,
+  Input,
+  OnChanges,
   OnDestroy,
   OnInit,
   Output,
@@ -53,17 +56,24 @@ import {
 import { isLayoutReportComponentConfig, ReportComponentConfig } from '@shared/models/report-component.models';
 import {
   pointsToPixels,
+  ReportComponentContext,
   ReportComponentTypeData,
-  reportComponentTypeMap
+  reportComponentTypesData
 } from '@home/pages/reporting/template/components/report-component.models';
 import { TbAnchorComponent } from '@shared/components/tb-anchor.component';
 import { from } from 'rxjs';
 import { ReportComponentsComponent } from '@home/pages/reporting/template/components/report-components.component';
-import ITooltipsterInstance = JQueryTooltipster.ITooltipsterInstance;
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import ITooltipsterGeoHelper = JQueryTooltipster.ITooltipsterGeoHelper;
 import { TbReportFormat } from '@shared/models/report.models';
 import { coerceBoolean } from '@shared/decorators/coercion';
+import { isFunction } from '@core/utils';
+import ITooltipsterInstance = JQueryTooltipster.ITooltipsterInstance;
+import ITooltipsterGeoHelper = JQueryTooltipster.ITooltipsterGeoHelper;
+
+export interface IReportComponent {
+  selected: boolean;
+  componentUpdated(): void;
+}
 
 @Component({
   selector: 'tb-report-component',
@@ -71,7 +81,7 @@ import { coerceBoolean } from '@shared/decorators/coercion';
   styleUrls: ['./report-component.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class ReportComponentComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy {
+export class ReportComponentComponent implements IReportComponent, OnInit, AfterViewInit, OnChanges, OnDestroy {
 
   reportComponentElement = viewChild('reportComponentElement', {
     read: ElementRef<HTMLElement>,
@@ -132,10 +142,17 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
   format: TbReportFormat;
 
   @Input()
+  @coerceBoolean()
+  innerComponent = false;
+
+  @Input()
   dragging = false;
 
   @Input()
   scale = 1;
+
+  @Input()
+  parentScale = 1;
 
   @Input()
   width: number;
@@ -150,14 +167,26 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
   @coerceBoolean()
   last = false;
 
+  @Input()
+  context: ReportComponentContext;
+
   @Output()
-  edit = new EventEmitter();
+  edit = new EventEmitter<ReportComponentConfig>();
+
+  @Output()
+  childEdit = new EventEmitter<ReportComponentConfig>();
 
   @Output()
   makeCopy = new EventEmitter();
 
   @Output()
   remove = new EventEmitter();
+
+  @Output()
+  childRemove = new EventEmitter<ReportComponentConfig>();
+
+  @Output()
+  childrenChanged = new EventEmitter();
 
   @ViewChild('reportPreviewContainer', {static: true}) reportPreviewContainer: TbAnchorComponent;
 
@@ -170,6 +199,13 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
   @Input()
   selected = false;
 
+  @HostBinding('class.tb-child-selected')
+  @Input()
+  childSelected = false;
+
+  @HostBinding('class.tb-report-component-container')
+  reportComponentsContainer = false;
+
   public get isPlainFormat(): boolean {
     return this.format === TbReportFormat.CSV;
   }
@@ -180,25 +216,49 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
 
   private reportComponentHeight = 0;
 
+  private hostResize$: ResizeObserver;
+
   constructor(private reportComponents: ReportComponentsComponent,
-              private elementRef: ElementRef<HTMLElement>,
+              public elementRef: ElementRef<HTMLElement>,
               private container: ViewContainerRef,
               private renderer: Renderer2,
               private destroyRef: DestroyRef,
               private cd: ChangeDetectorRef) {}
 
   ngOnInit() {
-    const type = this.reportComponent.type;
-    this.typeData = reportComponentTypeMap.get(type);
+    this.typeData = reportComponentTypesData.getReportComponentTypeData(this.reportComponent.type,
+          this.reportComponent.subType);
     if (this.typeData) {
       const compRef = this.reportPreviewContainer.viewContainerRef.createComponent(this.typeData.previewComponent);
       this.reportComponentPreview = compRef.instance;
+      this.reportComponentPreview.context = this.context;
+      this.reportComponentPreview.scale = this.scale;
       this.reportComponentPreview.reportComponent = this.reportComponent;
       this.reportComponentPreview.format = this.format;
+      if (this.typeData.previewContext) {
+        for (const key of Object.keys(this.typeData.previewContext)) {
+          this.reportComponentPreview[key] = this.typeData.previewContext[key];
+        }
+      }
       this.reportComponentPreview.contentResized.pipe(
         takeUntilDestroyed(this.destroyRef)
       ).subscribe(() => {
         this.updateComponentLayout();
+      });
+    }
+    if (isReportComponentContainer(this.reportComponentPreview)) {
+      this.reportComponentsContainer = true;
+      this.reportComponentPreview.componentEdit.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((component) => {
+        this.childEdit.emit(component);
+      });
+      this.reportComponentPreview.componentRemoved.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((component) => {
+        this.childRemove.emit(component);
+      });
+      this.reportComponentPreview.componentsChanged.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.childrenChanged.emit();
       });
     }
     this.initEditReportComponentTooltip();
@@ -209,7 +269,10 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
     for (const propName of Object.keys(changes)) {
       const change = changes[propName];
       if (!change.firstChange && change.currentValue !== change.previousValue) {
-        if (['scale', 'width'].includes(propName)) {
+        if (['scale', 'parentScale', 'width'].includes(propName)) {
+          if (propName === 'scale') {
+            this.reportComponentPreview.scale = this.scale;
+          }
           this.updateComponentLayout();
         }
         if (['pageMarginLeft', 'pageMarginRight'].includes(propName)) {
@@ -223,11 +286,18 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
 
   ngAfterViewInit() {
     this.updateComponentLayout();
+    this.hostResize$ = new ResizeObserver(() => {
+      this.updateComponentSize();
+    });
+    this.hostResize$.observe(this.elementRef.nativeElement);
   }
 
   ngOnDestroy(): void {
     if (this.editReportComponentTooltip && !this.editReportComponentTooltip.status().destroyed) {
       this.editReportComponentTooltip.destroy();
+    }
+    if (this.hostResize$) {
+      this.hostResize$.disconnect();
     }
   }
 
@@ -236,7 +306,7 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
     if (event) {
       event.stopPropagation();
     }
-    this.edit.emit();
+    this.edit.emit(this.reportComponent);
   }
 
   onCopy(event: MouseEvent) {
@@ -249,6 +319,14 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
   onRemove(event: MouseEvent) {
     if (event) {
       event.stopPropagation();
+    }
+    if (this.reportComponentsContainer) {
+      if (isReportComponentContainer(this.reportComponentPreview)) {
+        const children = this.reportComponentPreview.getAllChildReportComponentConfigs();
+        for (const child of children) {
+          this.childRemove.emit(child);
+        }
+      }
     }
     this.remove.emit();
   }
@@ -266,16 +344,20 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
   }
 
   private updateComponentSize() {
-    const parentWidth = this.elementRef.nativeElement.getBoundingClientRect().width;
-    const border = pointsToPixels(this.borderWidth)*2;
-    const leftRightPaddings = pointsToPixels(this.paddingLeft) + pointsToPixels(this.paddingRight);
-    this.renderer.setStyle(this.reportComponentElement().nativeElement, 'width', ((parentWidth - leftRightPaddings - border) / this.scale) + 'px');
-    this.renderer.setStyle(this.reportComponentElement().nativeElement, 'transform', `scale(${this.scale})`);
-    const rect = this.reportComponentElement().nativeElement.getBoundingClientRect();
-    const targetHeight = rect.height > 0 ? rect.height : this.reportComponentHeight;
-    this.reportComponentHeight = targetHeight;
-    const topBottomPaddings = pointsToPixels(this.paddingTop) + pointsToPixels(this.paddingBottom);
-    this.renderer.setStyle(this.elementRef.nativeElement, 'height', (targetHeight + topBottomPaddings + border) + 'px');
+    const parentWidth = this.elementRef.nativeElement.getBoundingClientRect().width / this.parentScale;
+    if (parentWidth > 0) {
+      const border = pointsToPixels(this.borderWidth) * 2;
+      const leftRightPaddings = pointsToPixels(this.paddingLeft) + pointsToPixels(this.paddingRight);
+      this.renderer.setStyle(this.reportComponentElement().nativeElement, 'width', ((parentWidth - leftRightPaddings - border) / this.scale) + 'px');
+      if (!this.innerComponent) {
+        this.renderer.setStyle(this.reportComponentElement().nativeElement, 'transform', `scale(${this.scale})`);
+      }
+      const rect = this.reportComponentElement().nativeElement.getBoundingClientRect();
+      const targetHeight = rect.height > 0 ? rect.height / this.parentScale : this.reportComponentHeight;
+      this.reportComponentHeight = targetHeight;
+      const topBottomPaddings = pointsToPixels(this.paddingTop) + pointsToPixels(this.paddingBottom);
+      this.renderer.setStyle(this.elementRef.nativeElement, 'height', (targetHeight + topBottomPaddings + border) + 'px');
+    }
   }
 
   private updateComponentLayout() {
@@ -314,6 +396,29 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
     this.updateComponentLayout();
   }
 
+  public childComponentUpdated(component: ReportComponentConfig): boolean {
+    if (isReportComponentContainer(this.reportComponentPreview)) {
+      return this.reportComponentPreview.childComponentUpdated(component);
+    }
+    return false;
+  }
+
+  public childComponentSelected(component: ReportComponentConfig): boolean {
+    if (isReportComponentContainer(this.reportComponentPreview)) {
+      this.childSelected = this.reportComponentPreview.childComponentSelected(component);
+      return this.childSelected;
+    }
+    return false;
+  }
+
+  public deselect(): void {
+    this.selected = false;
+    this.childSelected = false;
+    if (isReportComponentContainer(this.reportComponentPreview)) {
+      this.reportComponentPreview.deselectChildren();
+    }
+  }
+
   private initEditReportComponentTooltip() {
     let componentRef: ComponentRef<EditReportComponentTooltipComponent>;
     const parent = this.reportComponents.element.nativeElement;
@@ -338,9 +443,14 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
         functionPosition: (instance, helper, position) => {
           const clientRect = helper.origin.getBoundingClientRect();
           const container = parent.getBoundingClientRect();
-          position.coord.left = Math.max(0,clientRect.right - position.size.width - container.left);
-          position.coord.top = position.coord.top - container.top;
+
+          position.coord.left = Math.max(0, clientRect.right - position.size.width - container.left);
           position.target = clientRect.right;
+          position.coord.top = position.coord.top - container.top;
+          if (this.innerComponent) {
+            position.coord.left -= (clientRect.width / 2 - position.size.width / 2);
+            position.coord.top += position.size.height;
+          }
           return position;
         },
         functionReady: (_instance, helper) => {
@@ -393,12 +503,14 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
                 matTooltipPosition="above">
           <tb-icon>edit</tb-icon>
         </button>
-        <button mat-icon-button class="tb-mat-20"
-                (click)="container.onCopy($event)"
-                matTooltip="{{ 'action.duplicate' | translate }}"
-                matTooltipPosition="above">
-          <tb-icon>content_copy</tb-icon>
-        </button>
+        @if (!container.innerComponent) {
+          <button mat-icon-button class="tb-mat-20"
+                  (click)="container.onCopy($event)"
+                  matTooltip="{{ 'action.duplicate' | translate }}"
+                  matTooltipPosition="above">
+            <tb-icon>content_copy</tb-icon>
+          </button>
+        }
         <button mat-icon-button class="tb-mat-20"
                 (click)="container.onRemove($event);"
                 matTooltip="{{ 'action.remove' | translate }}"
@@ -434,10 +546,16 @@ export abstract class AbstractReportComponentPreview<C extends ReportComponentCo
   width = '100%';
 
   @Input()
+  context: ReportComponentContext;
+
+  @Input()
   reportComponent: C;
 
   @Input()
   format: TbReportFormat;
+
+  @Input()
+  scale = 1;
 
   @Output()
   contentResized = new EventEmitter();
@@ -460,3 +578,55 @@ export abstract class AbstractReportComponentPreview<C extends ReportComponentCo
   protected onComponentUpdated() {}
 
 }
+
+@Directive()
+export abstract class AbstractReportComponentPreviewContainer<C extends ReportComponentConfig = ReportComponentConfig>
+  extends AbstractReportComponentPreview<C> {
+
+  @Output()
+  componentEdit = new EventEmitter<ReportComponentConfig>();
+
+  @Output()
+  componentsChanged = new EventEmitter();
+
+  @Output()
+  componentRemoved = new EventEmitter<ReportComponentConfig>();
+
+  childComponentUpdated(reportComponent: ReportComponentConfig): boolean {
+    const comp = this.findChildReportComponent(reportComponent);
+    if (comp) {
+      comp.componentUpdated();
+      return true;
+    }
+    return false;
+  }
+
+  deselectChildren(): void {
+    const reportComponents = this.getAllChildReportComponents();
+    for (const comp of reportComponents) {
+      comp.selected = false;
+    }
+  }
+
+  childComponentSelected(reportComponent: ReportComponentConfig): boolean {
+    const comp = this.findChildReportComponent(reportComponent);
+    if (comp) {
+      comp.selected = true;
+      return true;
+    }
+    return false;
+  }
+
+  public abstract getAllChildReportComponentConfigs(): ReportComponentConfig[];
+
+  protected abstract getAllChildReportComponents(): IReportComponent[];
+
+  protected abstract findChildReportComponent(reportComponent: ReportComponentConfig): IReportComponent | undefined;
+
+}
+
+export const isReportComponentContainer = (component: AbstractReportComponentPreview): component is AbstractReportComponentPreviewContainer => {
+  const previewComponent = (component as any);
+  return previewComponent &&
+    previewComponent.childComponentUpdated && isFunction(previewComponent.childComponentUpdated);
+};

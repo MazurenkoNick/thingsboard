@@ -36,11 +36,13 @@ import { reportTemplatesRoute } from '@home/pages/reporting/template/report-temp
 import { MenuId } from '@core/services/menu.models';
 import { scheduledReportsRoute } from '@home/pages/reporting/scheduling/scheduled-report-routing.module';
 import { reportsRoute } from '@home/pages/reporting/report/report-routing.module';
+import { RouterTabsComponent } from '@home/components/router-tabs.component';
 
 export const reportingRoute: Route = {
   path: 'reporting',
+  component: RouterTabsComponent,
   data: {
-    auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+    auth: [Authority.TENANT_ADMIN],
     breadcrumb: {
       menuId: MenuId.reporting
     }
@@ -50,7 +52,7 @@ export const reportingRoute: Route = {
       path: '',
       children: [],
       data: {
-        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+        auth: [Authority.TENANT_ADMIN],
         redirectTo: 'templates'
       }
     },

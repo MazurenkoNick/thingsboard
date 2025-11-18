@@ -258,7 +258,7 @@ public class DefaultOwnersCacheService implements OwnersCacheService {
                      Function<List<EntityGroupId>, PageData<E>> getEntitiesFunction) throws Exception {
         Resource resource = Resource.resourceFromEntityType(entityType);
         if (Authority.TENANT_ADMIN.equals(securityUser.getAuthority()) &&
-                securityUser.getUserPermissions().hasGenericPermission(resource, operation)) {
+            securityUser.getUserPermissions().hasGenericPermission(resource, operation)) {
             switch (entityType) {
                 case DEVICE:
                     return (PageData<E>) deviceService.findDevicesByTenantId(tenantId, pageLink);
@@ -297,7 +297,7 @@ public class DefaultOwnersCacheService implements OwnersCacheService {
         }
         Resource resource = Resource.resourceFromEntityType(entityType);
         if (securityUser.getUserPermissions().hasGenericPermission(resource, operation) ||
-                (groupTypePermissionInfo != null && !groupTypePermissionInfo.getEntityGroupIds().isEmpty())) {
+            (groupTypePermissionInfo != null && !groupTypePermissionInfo.getEntityGroupIds().isEmpty())) {
 
             Set<EntityGroupId> groupIds = new HashSet<>();
             if (securityUser.getUserPermissions().hasGenericPermission(resource, operation)) {
@@ -397,21 +397,30 @@ public class DefaultOwnersCacheService implements OwnersCacheService {
         entityGroupService.addEntityToEntityGroupAll(tenantId, targetOwnerId, entityId);
     }
 
-    @Override
     public Set<EntityId> getOwnedEntities(TenantId tenantId, EntityId ownerId) {
-        Set<EntityId> ownerEntities = new HashSet<>();
+        Set<EntityId> ownedEntities = new HashSet<>();
         if (EntityType.CUSTOMER.equals(ownerId.getEntityType())) {
             PageDataIterable<DeviceInfo> deviceIdInfos = new PageDataIterable<>(pageLink -> deviceService.findDeviceInfosByFilter(DeviceInfoFilter.builder().tenantId(tenantId).customerId((CustomerId) ownerId).build(), pageLink), 1000);
-            deviceIdInfos.forEach(deviceInfo -> ownerEntities.add(deviceInfo.getId()));
+            deviceIdInfos.forEach(deviceInfo -> ownedEntities.add(deviceInfo.getId()));
+
             PageDataIterable<Asset> assets = new PageDataIterable<>(pageLink -> assetService.findAssetsByTenantIdAndCustomerId(tenantId, (CustomerId) ownerId, pageLink), 1000);
-            assets.forEach(asset -> ownerEntities.add(asset.getId()));
+            assets.forEach(asset -> ownedEntities.add(asset.getId()));
+
+            PageDataIterable<Customer> customers = new PageDataIterable<>(pageLink ->
+                    customerService.findCustomersByTenantIdAndParentCustomerId(tenantId, (CustomerId) ownerId, pageLink), 1000);
+            customers.forEach(customer -> ownedEntities.add(customer.getId()));
         } else if (EntityType.TENANT.equals(ownerId.getEntityType())) {
             PageDataIterable<DeviceInfo> deviceIdInfos = new PageDataIterable<>(pageLink -> deviceService.findDeviceInfosByFilter(DeviceInfoFilter.builder().tenantId((TenantId) ownerId).customerId(new CustomerId(CustomerId.NULL_UUID)).build(), pageLink), 1000);
-            deviceIdInfos.forEach(deviceInfo -> ownerEntities.add(deviceInfo.getId()));
+            deviceIdInfos.forEach(deviceInfo -> ownedEntities.add(deviceInfo.getId()));
+
             PageDataIterable<Asset> assets = new PageDataIterable<>(pageLink -> assetService.findAssetsByTenantIdAndCustomerId((TenantId) ownerId, new CustomerId(CustomerId.NULL_UUID), pageLink), 1000);
-            assets.forEach(asset -> ownerEntities.add(asset.getId()));
+            assets.forEach(asset -> ownedEntities.add(asset.getId()));
+
+            PageDataIterable<Customer> customers = new PageDataIterable<>(pageLink ->
+                    customerService.findCustomersByTenantIdAndParentCustomerId(tenantId, null, pageLink), 1000);
+            customers.forEach(customer -> ownedEntities.add(customer.getId()));
         }
-        return ownerEntities;
+        return ownedEntities;
     }
 
 }

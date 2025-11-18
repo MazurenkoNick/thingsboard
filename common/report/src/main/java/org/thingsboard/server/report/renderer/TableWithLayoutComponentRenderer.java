@@ -61,7 +61,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.thingsboard.server.report.util.ReportUtils.formatValueWithPrecisionAndUnits;
+import static org.thingsboard.server.report.util.ReportUtils.ENTITY_TIME_FIELDS;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.sortRowsByTableSortOrder;
 
@@ -145,7 +145,7 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
 
     private void populateHeadingVariables(C component, ComponentData componentData, Map<String, Object> vars) {
         Heading heading = component.getTableHeading();
-        String headingText = ThymeleafUtil.renderFromHtmlString(heading.getText(), componentData.getVariables());
+        String headingText = ThymeleafUtil.renderFromTextString(heading.getText(), componentData.getVariables());
         Font font = getHeadingFont(heading);
 
         vars.put("headingText", headingText);
@@ -184,14 +184,13 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
         if (value == null || value.isBlank()) {
             return "";
         }
-        value = defaultValue(key, value);
-        if (dataKey != null && (dataKey.getDecimals() != null || dataKey.getUnits() != null)) {
-            value = formatValueWithPrecisionAndUnits(value, dataKey);
-        }
-        return value;
+        return defaultValue(key, value);
     }
 
     protected Float defaultFontSize(String key) {
+        if (ENTITY_TIME_FIELDS.contains(key)) {
+            return 9f;
+        }
         return null;
     }
 
@@ -226,12 +225,12 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
 
     protected CellVariables toCellVariables(String key, ColumnSettings columnSettings, boolean isHeader) {
         if (columnSettings != null) {
+            CellVariables cellVariables;
             CellSettings cellSettings = isHeader ? columnSettings.getHeader() : columnSettings.getCell();
             if (cellSettings != null) {
                 Font font = cellSettings.getFont();
-                return CellVariables.builder()
+                cellVariables = CellVariables.builder()
                         .key(key)
-                        .width(isHeader && !StringUtils.isBlank(columnSettings.getColumnWidth()) ? columnSettings.getColumnWidth() : null)
                         .color(cellSettings.getColor() != null ? ColorUtils.normalizeCssColor(cellSettings.getColor()) : null)
                         .backgroundColor(cellSettings.getBackgroundColor() != null ? ColorUtils.normalizeCssColor(cellSettings.getBackgroundColor()) : null)
                         .fontSize(font != null && font.getSize() != null && font.getSize() > 0 ? font.getSize() : null)
@@ -239,9 +238,15 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
                         .fontStyle(font != null && font.getStyle() != null ? font.getStyle().name() : null)
                         .fontFamily(font != null && font.getFamily() != null && !font.getFamily().isEmpty() ? font.getFamily() : null)
                         .textAlignment(cellSettings.getTextAlignment() != null ? cellSettings.getTextAlignment().name() : null)
-                        .verticalAlignment(cellSettings.getTextAlignment() != null ? cellSettings.getVerticalAlignment().name() : null)
+                        .verticalAlignment(cellSettings.getVerticalAlignment() != null ? cellSettings.getVerticalAlignment().name() : null)
                         .build();
+            } else {
+                cellVariables = new CellVariables(key);
             }
+            if (isHeader && !StringUtils.isBlank(columnSettings.getColumnWidth())) {
+                cellVariables.setWidth(columnSettings.getColumnWidth());
+            }
+            return cellVariables;
         }
         return new CellVariables(key);
     }

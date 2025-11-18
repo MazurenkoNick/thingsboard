@@ -44,6 +44,7 @@ import org.thingsboard.rule.engine.api.JobManager;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.DeviceProfile;
+import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.OtaPackageInfo;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.group.EntityGroup;
@@ -55,6 +56,7 @@ import org.thingsboard.server.common.data.id.OtaPackageId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.Job;
+import org.thingsboard.server.common.data.job.ReportJobConfiguration;
 import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
 import org.thingsboard.server.common.data.page.PageDataIterable;
@@ -266,98 +268,106 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
         log.debug("processEvent tenant {}, event {}", tenantId, eventId);
         SchedulerEventMetaData md = eventsMetaData.get(eventId);
         if (md != null) {
-            SchedulerEvent event = schedulerEventService.findSchedulerEventById(tenantId, eventId);
-            if (event != null) {
-                try {
-                    JsonNode configuration = event.getConfiguration();
-                    String msgType = getMsgType(event, configuration);
-                    EntityId originatorId = getOriginatorId(event);
+            try {
+                SchedulerEvent event = schedulerEventService.findSchedulerEventById(tenantId, eventId);
+                if (event != null) {
+                    try {
+                        JsonNode configuration = event.getConfiguration();
+                        String msgType = getMsgType(event, configuration);
+                        EntityId originatorId = getOriginatorId(event);
 
-                    boolean isFirmwareUpdate = UPDATE_FIRMWARE.equals(event.getType());
-                    boolean isSoftwareUpdate = UPDATE_SOFTWARE.equals(event.getType());
+                        boolean isFirmwareUpdate = UPDATE_FIRMWARE.equals(event.getType());
+                        boolean isSoftwareUpdate = UPDATE_SOFTWARE.equals(event.getType());
 
-                    if (isFirmwareUpdate || isSoftwareUpdate) {
-                        OtaPackageId firmwareId = JacksonUtil.convertValue(configuration.get("msgBody"), OtaPackageId.class);
+                        if (isFirmwareUpdate || isSoftwareUpdate) {
+                            OtaPackageId firmwareId = JacksonUtil.convertValue(configuration.get("msgBody"), OtaPackageId.class);
 
-                        OtaPackageInfo firmwareInfo = otaPackageService.findOtaPackageInfoById(tenantId, firmwareId);
+                            OtaPackageInfo firmwareInfo = otaPackageService.findOtaPackageInfoById(tenantId, firmwareId);
 
-                        if (firmwareInfo == null) {
-                            throw new RuntimeException("Failed to process event: OtaPackage with id [" + firmwareId + "] not found!");
+                            if (firmwareInfo == null) {
+                                throw new RuntimeException("Failed to process event: OtaPackage with id [" + firmwareId + "] not found!");
+                            }
+
+                            switch (originatorId.getEntityType()) {
+                                case DEVICE:
+                                    Device device = deviceService.findDeviceById(tenantId, (DeviceId) originatorId);
+                                    if (device == null) {
+                                        throw new RuntimeException("Failed to process event: Device with id [" + originatorId + "] not found!");
+                                    }
+                                    if (isFirmwareUpdate) {
+                                        device.setFirmwareId(firmwareId);
+                                    } else {
+                                        device.setSoftwareId(firmwareId);
+                                    }
+                                    deviceService.saveDevice(device);
+                                    break;
+                                case ENTITY_GROUP:
+                                    EntityGroup deviceGroup = entityGroupService.findEntityGroupById(tenantId, (EntityGroupId) originatorId);
+                                    if (deviceGroup == null) {
+                                        throw new RuntimeException("Failed to process event: Device group with id [" + originatorId + "] not found!");
+                                    }
+                                    DeviceGroupOtaPackage oldDgf = deviceGroupOtaPackageService.findDeviceGroupOtaPackageByGroupIdAndType(deviceGroup.getId(), firmwareInfo.getType());
+                                    DeviceGroupOtaPackage dgop = new DeviceGroupOtaPackage();
+                                    dgop.setOtaPackageType(firmwareInfo.getType());
+                                    dgop.setGroupId(deviceGroup.getId());
+                                    dgop.setOtaPackageId(firmwareId);
+                                    if (oldDgf != null) {
+                                        dgop.setId(oldDgf.getId());
+                                    }
+                                    firmwareStateService.update(tenantId, deviceGroupOtaPackageService.saveDeviceGroupOtaPackage(tenantId, dgop), oldDgf);
+                                    break;
+                                case DEVICE_PROFILE:
+                                    DeviceProfile deviceProfile = deviceProfileService.findDeviceProfileById(tenantId, (DeviceProfileId) originatorId);
+                                    if (deviceProfile == null) {
+                                        throw new RuntimeException("Failed to process event: Device profile with id [" + originatorId + "] not found!");
+                                    }
+                                    if (isFirmwareUpdate) {
+                                        deviceProfile.setFirmwareId(firmwareId);
+                                    } else {
+                                        deviceProfile.setSoftwareId(firmwareId);
+                                    }
+                                    firmwareStateService.update(deviceProfileService.saveDeviceProfile(deviceProfile), isFirmwareUpdate, isSoftwareUpdate);
+                                    break;
+                                default:
+                                    throw new RuntimeException("Not implemented!");
+                            }
                         }
-
-                        switch (originatorId.getEntityType()) {
-                            case DEVICE:
-                                Device device = deviceService.findDeviceById(tenantId, (DeviceId) originatorId);
-                                if (device == null) {
-                                    throw new RuntimeException("Failed to process event: Device with id [" + originatorId + "] not found!");
-                                }
-                                if (isFirmwareUpdate) {
-                                    device.setFirmwareId(firmwareId);
-                                } else {
-                                    device.setSoftwareId(firmwareId);
-                                }
-                                deviceService.saveDevice(device);
-                                break;
-                            case ENTITY_GROUP:
-                                EntityGroup deviceGroup = entityGroupService.findEntityGroupById(tenantId, (EntityGroupId) originatorId);
-                                if (deviceGroup == null) {
-                                    throw new RuntimeException("Failed to process event: Device group with id [" + originatorId + "] not found!");
-                                }
-                                DeviceGroupOtaPackage oldDgf = deviceGroupOtaPackageService.findDeviceGroupOtaPackageByGroupIdAndType(deviceGroup.getId(), firmwareInfo.getType());
-                                DeviceGroupOtaPackage dgop = new DeviceGroupOtaPackage();
-                                dgop.setOtaPackageType(firmwareInfo.getType());
-                                dgop.setGroupId(deviceGroup.getId());
-                                dgop.setOtaPackageId(firmwareId);
-                                if (oldDgf != null) {
-                                    dgop.setId(oldDgf.getId());
-                                }
-                                firmwareStateService.update(tenantId, deviceGroupOtaPackageService.saveDeviceGroupOtaPackage(tenantId, dgop), oldDgf);
-                                break;
-                            case DEVICE_PROFILE:
-                                DeviceProfile deviceProfile = deviceProfileService.findDeviceProfileById(tenantId, (DeviceProfileId) originatorId);
-                                if (deviceProfile == null) {
-                                    throw new RuntimeException("Failed to process event: Device profile with id [" + originatorId + "] not found!");
-                                }
-                                if (isFirmwareUpdate) {
-                                    deviceProfile.setFirmwareId(firmwareId);
-                                } else {
-                                    deviceProfile.setSoftwareId(firmwareId);
-                                }
-                                firmwareStateService.update(deviceProfileService.saveDeviceProfile(deviceProfile), isFirmwareUpdate, isSoftwareUpdate);
-                                break;
-                            default:
-                                throw new RuntimeException("Not implemented!");
+                        if (GENERATE_REPORT.equals(event.getType())) {
+                            ReportConfig reportConfig = JacksonUtil.treeToValue(configuration, ReportConfig.class);
+                            Job job = Job.newReportJob()
+                                    .tenantId(tenantId)
+                                    .reportTemplateId(reportConfig.getReportTemplateId())
+                                    .userId(reportConfig.getUserId())
+                                    .timezone(reportConfig.getTimezone())
+                                    .targets(reportConfig.getTargets())
+                                    .notificationTemplateId(reportConfig.getNotificationTemplateId())
+                                    .build();
+                            ReportJobConfiguration jobConfig = job.getConfiguration();
+                            jobConfig.setSchedulerEventInfo(new EntityInfo(eventId, event.getName()));
+                            jobManager.submitJob(job);
+                        } else {
+                            TbMsgMetaData tbMsgMD = getTbMsgMetaData(event, configuration);
+                            TbMsg tbMsg = TbMsg.newMsg()
+                                    .type(msgType)
+                                    .originator(originatorId)
+                                    .metaData(tbMsgMD)
+                                    .dataType(TbMsgDataType.JSON)
+                                    .data(getMsgBody(event.getConfiguration()))
+                                    .build();
+                            log.debug("pushing message to the rule engine tenant {}, originator {}, msg {}", tenantId, originatorId, tbMsg);
+                            clusterService.pushMsgToRuleEngine(tenantId, originatorId, tbMsg, null);
                         }
+                    } catch (Exception e) {
+                        log.error("[{}][{}] Failed to trigger event", event.getTenantId(), eventId, e);
                     }
-                    if (GENERATE_REPORT.equals(event.getType())) {
-                        ReportConfig reportConfig = JacksonUtil.treeToValue(configuration, ReportConfig.class);
-                        jobManager.submitJob(Job.newReportJob()
-                                .tenantId(tenantId)
-                                .reportTemplateId(reportConfig.getReportTemplateId())
-                                .userId(reportConfig.getUserId())
-                                .timezone(reportConfig.getTimezone())
-                                .targets(reportConfig.getTargets())
-                                .notificationTemplateId(reportConfig.getNotificationTemplateId())
-                                .build());
-                    } else {
-                        TbMsgMetaData tbMsgMD = getTbMsgMetaData(event, configuration);
-                        TbMsg tbMsg = TbMsg.newMsg()
-                                .type(msgType)
-                                .originator(originatorId)
-                                .metaData(tbMsgMD)
-                                .dataType(TbMsgDataType.JSON)
-                                .data(getMsgBody(event.getConfiguration()))
-                                .build();
-                        log.debug("pushing message to the rule engine tenant {}, originator {}, msg {}", tenantId, originatorId, tbMsg);
-                        clusterService.pushMsgToRuleEngine(tenantId, originatorId, tbMsg, null);
-                    }
-                } catch (Exception e) {
-                    log.error("[{}][{}] Failed to trigger event", event.getTenantId(), eventId, e);
+                    scheduleNextEvent(System.currentTimeMillis(), event, md);
+                } else {
+                    log.debug("[{}] Triggered event is not present in the database.", eventId);
+                    eventsMetaData.remove(eventId);
                 }
-                scheduleNextEvent(System.currentTimeMillis(), event, md);
-            } else {
-                log.debug("[{}] Triggered event is not present in the database.", eventId);
-                eventsMetaData.remove(eventId);
+            } catch (Exception e) {
+                log.error("[{}] Failed to findSchedulerEventById. Retrying to re-process this event in a moment", eventId, e);
+                md.setNextTaskFuture(scheduledExecutor.schedule(() -> processEvent(tenantId, eventId), 1, TimeUnit.MINUTES));
             }
         } else {
             log.debug("[{}] Triggered processing of removed event.", eventId);

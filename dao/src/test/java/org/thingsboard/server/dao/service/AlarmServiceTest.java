@@ -246,7 +246,7 @@ public class AlarmServiceTest extends AbstractServiceTest {
         Assert.assertNotNull(alarms.getData());
         Assert.assertEquals(0, alarms.getData().size());
 
-        alarmService.clearAlarm(tenantId, created.getId(), System.currentTimeMillis(), null);
+        alarmService.clearAlarm(tenantId, created.getId(), System.currentTimeMillis(), null, true);
         created = alarmService.findAlarmInfoById(tenantId, created.getId());
 
         alarms = alarmService.findAlarms(tenantId, AlarmQuery.builder()
@@ -354,7 +354,7 @@ public class AlarmServiceTest extends AbstractServiceTest {
         Assert.assertNotNull(alarms.getData());
         Assert.assertEquals(0, alarms.getData().size());
 
-        alarmService.clearAlarm(tenantId, created.getId(), System.currentTimeMillis(), null);
+        alarmService.clearAlarm(tenantId, created.getId(), System.currentTimeMillis(), null, true);
         created = alarmService.findAlarmInfoById(tenantId, created.getId());
 
         alarms = alarmService.findAlarmsV2(tenantId, AlarmQueryV2.builder()
@@ -705,7 +705,7 @@ public class AlarmServiceTest extends AbstractServiceTest {
                 .severity(AlarmSeverity.MAJOR)
                 .startTs(System.currentTimeMillis()).build());
         AlarmInfo alarm1 = result.getAlarm();
-        alarmService.clearAlarm(tenantId, alarm1.getId(), System.currentTimeMillis(), null);
+        alarmService.clearAlarm(tenantId, alarm1.getId(), System.currentTimeMillis(), null, true);
 
         result = alarmService.createAlarm(AlarmCreateOrUpdateActiveRequest.builder()
                 .tenantId(tenantId)
@@ -715,7 +715,7 @@ public class AlarmServiceTest extends AbstractServiceTest {
                 .startTs(System.currentTimeMillis()).build());
         AlarmInfo alarm2 = result.getAlarm();
         alarmService.acknowledgeAlarm(tenantId, alarm2.getId(), System.currentTimeMillis());
-        alarmService.clearAlarm(tenantId, alarm2.getId(), System.currentTimeMillis(), null);
+        alarmService.clearAlarm(tenantId, alarm2.getId(), System.currentTimeMillis(), null, true);
 
         result = alarmService.createAlarm(AlarmCreateOrUpdateActiveRequest.builder()
                 .tenantId(tenantId)
@@ -935,7 +935,7 @@ public class AlarmServiceTest extends AbstractServiceTest {
 
         Assert.assertEquals(1, alarmsCount);
 
-        alarmService.clearAlarm(tenantId, created.getId(), System.currentTimeMillis(), null);
+        alarmService.clearAlarm(tenantId, created.getId(), System.currentTimeMillis(), null, true);
         created = alarmService.findAlarmInfoById(tenantId, created.getId());
 
         alarmsCount = alarmService.countAlarmsByQuery(tenantId, null, mergedUserPermissions, countQuery);
@@ -1063,7 +1063,7 @@ public class AlarmServiceTest extends AbstractServiceTest {
         alarmsCount = alarmService.countAlarmsByQuery(tenantId, null, mergedUserPermissions, countQuery, List.of(childId));
         Assert.assertEquals(0, alarmsCount);
 
-        alarmService.clearAlarm(tenantId, created.getId(), System.currentTimeMillis(), null);
+        alarmService.clearAlarm(tenantId, created.getId(), System.currentTimeMillis(), null, true);
 
         countQuery.setStatusList(List.of(AlarmSearchStatus.CLEARED));
         alarmsCount = alarmService.countAlarmsByQuery(tenantId, null, mergedUserPermissions, countQuery, List.of(childId));

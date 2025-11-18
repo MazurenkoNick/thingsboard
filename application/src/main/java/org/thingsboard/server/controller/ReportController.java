@@ -34,7 +34,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -53,6 +55,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.JobManager;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -80,9 +83,13 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.model.token.AccessJwtToken;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
@@ -95,6 +102,7 @@ import static org.thingsboard.server.controller.ControllerConstants.REPORT_TEMPL
 import static org.thingsboard.server.controller.ControllerConstants.REPORT_USER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.TENANT_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 
 @RequiredArgsConstructor
@@ -102,6 +110,9 @@ import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CU
 @TbCoreComponent
 @RequestMapping("/api/v2")
 public class ReportController extends BaseController {
+
+    @Value("${reports.generation_timeout_ms:120000}")
+    private int timeoutMs;
 
     private static final String REPORT_DESCRIPTION = "The platform uses Report to store generated reports information.";
     private static final String INVALID_REPORT_ID = "Referencing non-existing Report Id will cause 'Not Found' error.";
@@ -128,8 +139,11 @@ public class ReportController extends BaseController {
         Report report = checkReportId(reportId, Operation.READ);
         byte[] data = reportService.getReportData(getTenantId(), reportId);
         ByteArrayResource resource = new ByteArrayResource(data);
+        ContentDisposition cd = ContentDisposition.attachment()
+                .filename(report.getName(), StandardCharsets.UTF_8)
+                .build();
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + report.getName())
+                .header(HttpHeaders.CONTENT_DISPOSITION, cd.toString())
                 .header("x-filename", report.getName())
                 .contentLength(resource.contentLength())
                 .header("Content-Type", report.getFormat().getContentType())
@@ -139,8 +153,8 @@ public class ReportController extends BaseController {
     @ApiOperation(value = "Get Report (getReportById)",
             notes = "Fetch the Report object based on the provided report Id. " +
                     REPORT_DESCRIPTION + INVALID_REPORT_ID +
-                    TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+                    TENANT_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/report/{reportId}")
     public Report getReportById(@Parameter(description = REPORT_ID_PARAM_DESCRIPTION, required = true)
                                 @PathVariable(REPORT_ID) String strReportId) throws ThingsboardException {
@@ -151,7 +165,7 @@ public class ReportController extends BaseController {
 
     @ApiOperation(value = "Delete Report (deleteReport)",
             notes = "Deletes the report. " + INVALID_REPORT_ID + "\n\n" + RBAC_DELETE_CHECK)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @DeleteMapping(value = "/report/{reportId}")
     public void deleteReport(
             @Parameter(description = REPORT_ID_PARAM_DESCRIPTION, required = true)
@@ -163,7 +177,7 @@ public class ReportController extends BaseController {
     }
 
     @GetMapping("/reports")
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     public PageData<Report> getReports(@Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
                                        @RequestParam int pageSize,
                                        @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true)
@@ -181,7 +195,7 @@ public class ReportController extends BaseController {
     }
 
     @GetMapping("/reportInfos")
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     public List<ReportInfo> getReports(
             @Parameter(description = "A list of report ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
             @RequestParam("strReportIds") String[] strReportIds) throws ThingsboardException {
@@ -197,7 +211,7 @@ public class ReportController extends BaseController {
     }
 
     @GetMapping("/reportInfos/all")
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     public PageData<ReportInfo> getReportInfos(
             @Parameter(description = REPORT_TEMPLATE_ID_DESCRIPTION)
             @RequestParam(required = false) UUID reportTemplateId,
@@ -234,8 +248,8 @@ public class ReportController extends BaseController {
     }
 
     @ApiOperation(value = "Download test report (downloadTestReport)",
-            notes = "Generate and download test report." + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+            notes = "Generate and download test report." + TENANT_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @PostMapping(value = "/report/test")
     public ResponseEntity<ByteArrayResource> testReportAndDownload(@RequestBody ReportRequest reportRequest) throws Exception {
         TenantId tenantId = getTenantId();
@@ -257,18 +271,24 @@ public class ReportController extends BaseController {
                 .accessToken(accessToken.getToken())
                 .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())
                 .build();
-        ReportData reportData = tbReportService.generateTestReport(reportTask);
 
-        ByteArrayResource resource = new ByteArrayResource(reportData.getData());
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + reportData.getName())
-                .header("x-filename", reportData.getName())
-                .contentLength(resource.contentLength())
-                .contentType(MediaType.parseMediaType(reportData.getContentType()))
-                .body(resource);
+        Future<ReportData> future = tbReportService.generateTestReport(reportTask);
+        try {
+            ReportData reportData = future.get(timeoutMs, TimeUnit.MILLISECONDS);
+            ByteArrayResource resource = new ByteArrayResource(reportData.getData());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=\"" + reportData.getName() + "\"")
+                    .header("x-filename", reportData.getName())
+                    .contentLength(resource.contentLength())
+                    .contentType(MediaType.parseMediaType(reportData.getContentType()))
+                    .body(resource);
+        } catch (TimeoutException e) {
+            future.cancel(true);
+            throw new ThingsboardException("Timeout for test report generation. Generation took more than " + timeoutMs + " milliseconds!", ThingsboardErrorCode.GENERAL);
+        }
     }
 
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @PostMapping(value = "/report/request")
     public Job requestReport(@RequestBody ReportRequest reportRequest) throws Exception {
         ReportTemplateId reportTemplateId = reportRequest.getReportTemplateId();

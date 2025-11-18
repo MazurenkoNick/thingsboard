@@ -32,15 +32,15 @@
 import { Component, ViewEncapsulation } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import {
+  AbstractReportComponentConfig
+} from '@home/pages/reporting/template/components/report-component-config.component';
+import {
   borderLengths,
   borderLengthTranslations,
   borderTypes,
   borderTypeTranslations,
   DividerReportComponentConfig
-} from '@app/shared/public-api';
-import {
-  AbstractReportComponentConfig
-} from '@home/pages/reporting/template/components/report-component-config.component';
+} from '@shared/models/report-component.models';
 
 @Component({
   selector: 'tb-report-divider-config',

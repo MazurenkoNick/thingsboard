@@ -55,6 +55,7 @@ import org.thingsboard.integration.api.data.IntegrationMetaData;
 import org.thingsboard.integration.api.data.ContentType;
 import org.thingsboard.integration.api.data.UplinkData;
 import org.thingsboard.integration.api.data.UplinkMetaData;
+import org.thingsboard.integration.tuya.mq.EncryptionMethod;
 import org.thingsboard.integration.tuya.mq.MessageVO;
 import org.thingsboard.integration.tuya.mq.MqConsumer;
 import org.thingsboard.integration.tuya.mq.TuyaMessageUtil;
@@ -73,6 +74,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -293,6 +295,10 @@ public class TuyaIntegration extends AbstractIntegration<TuyaIntegrationMsg> {
                 .env(tuyaIntegrationConfiguration.getEnv())
                 .messageListener((incomingData) -> {
                     MessageVO vo = JacksonUtil.fromBytes(incomingData.getData(), MessageVO.class);
+                    Map<String, String> props = incomingData.getProperties();
+                    EncryptionMethod em = Optional.ofNullable(props.get("em"))
+                            .map(EncryptionMethod::forCode)
+                            .orElse(EncryptionMethod.AES_ECB);
                     Map<String, String> metadata = new HashMap<>(metadataTemplate.getKvMap());
                     if (vo != null) {
                         String decryptedData = "";
@@ -302,7 +308,7 @@ public class TuyaIntegration extends AbstractIntegration<TuyaIntegrationMsg> {
                             metadata.put("sign", vo.getSign());
                             metadata.put("t", vo.getT().toString());
                             metadata.put("topic", incomingData.getTopicName());
-                            decryptedData = TuyaMessageUtil.decrypt(vo.getData(), accessKey.substring(8, 24));
+                            decryptedData = TuyaMessageUtil.decrypt(vo.getData(), accessKey.substring(8, 24), em);
                             JsonNode dataNode = JacksonUtil.fromString(decryptedData, JsonNode.class);
                             TuyaIntegrationMsg msg = new TuyaIntegrationMsg(dataNode, metadata);
                             this.process(msg);

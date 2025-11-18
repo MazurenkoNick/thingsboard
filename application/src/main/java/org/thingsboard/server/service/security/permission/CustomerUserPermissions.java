@@ -58,12 +58,13 @@ import org.thingsboard.server.dao.entity.EntityServiceRegistry;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
 import org.thingsboard.server.service.security.model.SecurityUser;
+import org.thingsboard.server.service.security.model.UserPrincipal;
 
 import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-@Component(value = "customerUserPermissions")
+@Component
 public class CustomerUserPermissions extends AbstractPermissions {
 
     @Autowired
@@ -80,7 +81,7 @@ public class CustomerUserPermissions extends AbstractPermissions {
 
     public CustomerUserPermissions() {
         super();
-        put(Resource.PROFILE, TenantAdminPermissions.genericPermissionChecker);
+        put(Resource.PROFILE, genericPermissionChecker);
         put(Resource.ALARM, customerAlarmPermissionChecker);
         put(Resource.ASSET, customerGroupEntityPermissionChecker);
         put(Resource.DEVICE, customerGroupEntityPermissionChecker);
@@ -94,7 +95,6 @@ public class CustomerUserPermissions extends AbstractPermissions {
         put(Resource.WIDGET_TYPE, widgetsPermissionChecker);
         put(Resource.SCHEDULER_EVENT, customerStandaloneEntityPermissionChecker);
         put(Resource.BLOB_ENTITY, customerStandaloneEntityPermissionChecker);
-        put(Resource.REPORT_TEMPLATE, customerStandaloneEntityPermissionChecker);
         put(Resource.CUSTOMER_GROUP, customerEntityGroupPermissionChecker);
         put(Resource.DEVICE_GROUP, customerEntityGroupPermissionChecker);
         put(Resource.ASSET_GROUP, customerEntityGroupPermissionChecker);
@@ -104,7 +104,7 @@ public class CustomerUserPermissions extends AbstractPermissions {
         put(Resource.DASHBOARD_GROUP, customerEntityGroupPermissionChecker);
         put(Resource.WHITE_LABELING, customerWhiteLabelingPermissionChecker);
         put(Resource.GROUP_PERMISSION, customerGroupPermissionEntityChecker);
-        put(Resource.AUDIT_LOG, TenantAdminPermissions.genericPermissionChecker);
+        put(Resource.AUDIT_LOG, genericPermissionChecker);
         put(Resource.DEVICE_PROFILE, profilePermissionChecker);
         put(Resource.ASSET_PROFILE, profilePermissionChecker);
         put(Resource.TB_RESOURCE, customerResourcePermissionChecker);
@@ -114,6 +114,7 @@ public class CustomerUserPermissions extends AbstractPermissions {
         put(Resource.OAUTH2_CLIENT, customerStandaloneEntityPermissionChecker);
         put(Resource.OAUTH2_CONFIGURATION_TEMPLATE, new PermissionChecker.GenericPermissionChecker(Operation.READ));
         put(Resource.DOMAIN, customerStandaloneEntityPermissionChecker);
+        put(Resource.REPORT_TEMPLATE, reportTemplatePermissionChecker);
         put(Resource.REPORT, customerStandaloneEntityPermissionChecker);
     }
 
@@ -226,6 +227,17 @@ public class CustomerUserPermissions extends AbstractPermissions {
             }
 
             if (entityId == null) {
+                if (user.isCustomerUser() && user.getUserPrincipal().getType() != UserPrincipal.Type.PUBLIC_ID) {
+                    EntityId ownerId = ((HasOwnerId) entity).getOwnerId();
+                    var customerId = user.getCustomerId();
+
+                    if (!customerId.equals(ownerId)) {
+                        var owners = ownersCacheService.getOwners(entity.getTenantId(), ownerId, null);
+                        if (!owners.contains(customerId)) {
+                            return false;
+                        }
+                    }
+                }
                 if (user.getUserPermissions().hasGenericPermission(resource, operation)) {
                     return true;
                 }
@@ -242,7 +254,7 @@ public class CustomerUserPermissions extends AbstractPermissions {
                     return user.getUserPermissions().hasGenericPermission(resource, operation);
                 }
                 if (entity.getEntityType() == EntityType.CUSTOMER && user.getCustomerId().equals(entityId) ||
-                        ownersCacheService.getOwners(user.getTenantId(), entityId, ((HasOwnerId) entity)).contains(user.getOwnerId())) {
+                    ownersCacheService.getOwners(user.getTenantId(), entityId, ((HasOwnerId) entity)).contains(user.getOwnerId())) {
                     // This entity does have groups, so we are checking generic level permissions and then group specific permissions
                     if (user.getUserPermissions().hasGenericPermission(resource, operation)) {
                         return true;
@@ -294,7 +306,7 @@ public class CustomerUserPermissions extends AbstractPermissions {
                 return false;
             }
             if (entity.getTenantId() != null && !entity.getTenantId().isNullUid() &&
-                    !user.getTenantId().equals(entity.getTenantId())) {
+                !user.getTenantId().equals(entity.getTenantId())) {
                 return false;
             }
             Resource resource = Resource.resourceFromEntityType(entity.getEntityType());
@@ -409,6 +421,32 @@ public class CustomerUserPermissions extends AbstractPermissions {
                 return false;
             }
             if (entity.getTenantId() != null && !entity.getTenantId().isNullUid() &&
+                !user.getTenantId().equals(entity.getTenantId())) {
+                return false;
+            }
+            Resource resource = Resource.resourceFromEntityType(entity.getEntityType());
+            // This entity does not have groups, so we are checking only generic level permissions
+            return user.getUserPermissions().hasGenericPermission(resource, operation);
+        }
+    };
+
+    private static final PermissionChecker reportTemplatePermissionChecker = new PermissionChecker.GenericPermissionChecker(Operation.READ) {
+
+        @Override
+        public boolean hasPermission(SecurityUser user, Resource resource, Operation operation) {
+            if (!super.hasPermission(user, resource, operation)) {
+                return false;
+            }
+            return user.getUserPermissions().hasGenericPermission(resource, operation);
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public boolean hasPermission(SecurityUser user, Operation operation, EntityId entityId, TenantEntity entity) {
+            if (!super.hasPermission(user, operation, entityId, entity)) {
+                return false;
+            }
+            if (entity.getTenantId() != null && !entity.getTenantId().isNullUid() &&
                     !user.getTenantId().equals(entity.getTenantId())) {
                 return false;
             }
@@ -435,7 +473,7 @@ public class CustomerUserPermissions extends AbstractPermissions {
                 return false;
             }
             if (entity.getTenantId() != null && !entity.getTenantId().isNullUid() &&
-                    !user.getTenantId().equals(entity.getTenantId())) {
+                !user.getTenantId().equals(entity.getTenantId())) {
                 return false;
             }
             Resource resource = Resource.resourceFromEntityType(entity.getEntityType());
@@ -456,14 +494,14 @@ public class CustomerUserPermissions extends AbstractPermissions {
         @Override
         public boolean hasCustomMenuPermission(SecurityUser user, Operation operation, CustomMenuInfo customMenu) {
             if (!whiteLabelingService.isWhiteLabelingAllowed(user.getTenantId(), user.getCustomerId()) ||
-                    !user.getUserPermissions().hasGenericPermission(Resource.WHITE_LABELING, operation)) {
+                !user.getUserPermissions().hasGenericPermission(Resource.WHITE_LABELING, operation)) {
                 return false;
             }
             if (operation == Operation.READ) {
                 return user.getTenantId().equals(customMenu.getTenantId()) && customMenu.getCustomerId() != null &&
-                        (user.getCustomerId().equals(customMenu.getCustomerId()) ||
-                                ownersCacheService.getOwners(customMenu.getTenantId(), customMenu.getCustomerId(), null)
-                                        .contains(user.getCustomerId()));
+                       (user.getCustomerId().equals(customMenu.getCustomerId()) ||
+                        ownersCacheService.getOwners(customMenu.getTenantId(), customMenu.getCustomerId(), null)
+                                .contains(user.getCustomerId()));
             } else {
                 return user.getTenantId().equals(customMenu.getTenantId()) && user.getCustomerId().equals(customMenu.getCustomerId());
             }

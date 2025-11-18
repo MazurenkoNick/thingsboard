@@ -44,7 +44,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.thingsboard.server.report.util.ReportUtils.formatValueWithPrecisionAndUnits;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.sortRowsByTableSortOrder;
 
@@ -69,7 +68,7 @@ public abstract class AbstractCsvComponentRenderer<C extends TableReportComponen
     private void addHeading(TableReportComponent component, ComponentData componentData, List<List<String>> content) {
         if (component.isShowTableHeading() && component.getTableHeading() != null) {
             Heading tableHeading = component.getTableHeading();
-            String headingText = ThymeleafUtil.renderFromHtmlString(tableHeading.getText(), componentData.getVariables());
+            String headingText = ThymeleafUtil.renderFromTextString(tableHeading.getText(), componentData.getVariables());
             content.add(List.of(headingText));
         }
     }
@@ -87,7 +86,7 @@ public abstract class AbstractCsvComponentRenderer<C extends TableReportComponen
 
         for (Map<String, String> row : entityDatas) {
             List<String> formattedValues = columns.stream()
-                    .map(col -> formatValueWithPrecisionAndUnits(row.get(col.getLabel()), col))
+                    .map(col -> row.get(col.getLabel()))
                     .collect(Collectors.toList());
             content.add(formattedValues);
         }

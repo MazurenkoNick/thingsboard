@@ -33,6 +33,7 @@ package org.thingsboard.server.dao.scheduler;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EdgeId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
@@ -89,4 +90,7 @@ public interface SchedulerEventService extends EntityDaoService {
     PageData<ScheduledReportInfo> findScheduledReportEvents(TenantId tenantId, ScheduledReportQuery query);
 
     PageData<ScheduledReportInfo> findScheduledReportEvents(TenantId tenantId, CustomerId customerId, ScheduledReportQuery query);
+
+    int countScheduledReportEventsByTemplateId(TenantId tenantId, ReportTemplateId reportTemplateId);
+
 }

@@ -166,6 +166,7 @@ export interface WidgetAction extends IWidgetAction {
 
 export interface IDashboardWidget {
   updateWidgetParams(): void;
+  updateParamsFromData(detectChanges?: boolean): void;
 }
 
 export class WidgetContext {
@@ -504,6 +505,10 @@ export class WidgetContext {
     }
   }
 
+  updateParamsFromData(detectChanges = false) {
+    this.dashboardWidget.updateParamsFromData(detectChanges);
+  }
+
   updateAliases(aliasIds?: Array<string>) {
     this.aliasController.updateAliases(aliasIds);
   }
@@ -616,6 +621,15 @@ export interface WidgetInfo extends WidgetTypeDescriptor, WidgetControllerDescri
   description?: string;
   tags?: string[];
   componentType?: Type<IDynamicWidgetComponent>;
+}
+
+export interface WidgetWithInfo extends Widget {
+  widgetInfo: WidgetInfo;
+}
+
+export const isWidgetWithInfo = (widget: Widget): widget is WidgetWithInfo => {
+  const widgetWithInfo = (widget as WidgetWithInfo);
+  return widgetWithInfo.widgetInfo !== undefined && typeof widgetWithInfo.widgetInfo === 'object';
 }
 
 export interface WidgetConfigComponentData {

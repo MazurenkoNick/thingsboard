@@ -42,7 +42,7 @@ import org.thingsboard.server.common.data.report.configuration.style.Insets;
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class AbstractLayoutReportComponent implements LayoutReportComponent {
+public abstract class AbstractLayoutReportComponent extends AbstractReportComponent implements LayoutReportComponent {
 
     private Insets margins;
     private Insets paddings;

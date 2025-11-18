@@ -58,7 +58,17 @@ import { EMPTY, Observable, of } from 'rxjs';
 import { ImagePipe } from '@shared/pipe/image.pipe';
 import { map } from 'rxjs/operators';
 import { DomSanitizer } from '@angular/platform-browser';
-import { AVG_MONTH, DAY, HOUR, Interval, IntervalMath, MINUTE, SECOND, YEAR } from '@shared/models/time/time.models';
+import {
+  AVG_MONTH,
+  calculateTsOffset,
+  DAY,
+  HOUR,
+  Interval,
+  IntervalMath,
+  MINUTE,
+  SECOND,
+  YEAR
+} from '@shared/models/time/time.models';
 import moment from 'moment';
 import tinycolor from 'tinycolor2';
 import { WidgetContext } from '@home/models/widget-component.models';
@@ -822,8 +832,11 @@ export const compareDateFormats = (df1: DateFormatSettings, df2: DateFormatSetti
   return false;
 };
 
-export const dateFormatPreview = (date: DatePipe, format: string): string => {
-  return format === 'milliseconds' ? `${Date.now()}` : date.transform(Date.now(), format);
+export const dateFormatPreview = (date: DatePipe, format: string, timezone?: string): string => {
+  if (timezone) {
+    timezone = moment.tz(timezone).zoneAbbr();
+  }
+  return format === 'milliseconds' ? `${Date.now()}` : date.transform(Date.now(), format, timezone);
 }
 
 export abstract class DateFormatProcessor {

@@ -240,4 +240,9 @@ public class JpaSchedulerEventInfoDao extends JpaAbstractDao<SchedulerEventInfoE
         }
     }
 
+    @Override
+    public int countScheduledReportEventsByTemplateId(UUID tenantId, UUID templateId) {
+        return scheduledReportInfoRepository.countScheduledReportEventsByTemplateId(tenantId, templateId);
+    }
+
 }

@@ -58,7 +58,7 @@ public class RuleEngineTbQueueAdminFactory {
         return new TbQueueAdmin() {
 
             @Override
-            public void createTopicIfNotExists(String topic, String properties) {
+            public void createTopicIfNotExists(String topic, String properties, boolean force) {
             }
 
             @Override

@@ -31,7 +31,6 @@
 package org.thingsboard.server.common.data.query;
 
 import lombok.Data;
-import org.thingsboard.server.common.data.id.EntityId;
 
 @Data
 public class StateEntityOwnerFilter implements EntityFilter {
@@ -41,7 +40,7 @@ public class StateEntityOwnerFilter implements EntityFilter {
         return EntityFilterType.STATE_ENTITY_OWNER;
     }
 
-    private EntityId singleEntity;
+    private AliasEntityId singleEntity;
     private AliasEntityId defaultStateEntity;
 
 }

@@ -31,8 +31,10 @@
 
 import { Component, ViewEncapsulation } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { RichTextReportComponentConfig } from '@app/shared/public-api';
-import { AbstractReportComponentConfig } from '@home/pages/reporting/template/components/report-component-config.component';
+import {
+  AbstractReportComponentConfig
+} from '@home/pages/reporting/template/components/report-component-config.component';
+import { RichTextReportComponentConfig } from '@shared/models/report-component.models';
 
 @Component({
   selector: 'tb-report-rich-text-config',

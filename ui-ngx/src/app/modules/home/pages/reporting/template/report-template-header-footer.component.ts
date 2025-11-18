@@ -36,13 +36,15 @@ import {
   Input,
   Output,
   Renderer2,
-  viewChild, viewChildren,
+  viewChild,
+  viewChildren,
   ViewEncapsulation
 } from '@angular/core';
 import { HeaderFooter, TbReportFormat } from '@shared/models/report.models';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { ReportComponentConfig } from '@shared/models/report-component.models';
 import { ReportComponentsComponent } from '@home/pages/reporting/template/components/report-components.component';
+import { ReportComponentContext } from '@home/pages/reporting/template/components/report-component.models';
 
 @Component({
   selector: 'tb-report-template-header-footer',
@@ -89,6 +91,9 @@ export class ReportTemplateHeaderFooterComponent {
 
   @Input()
   marginBottom: number;
+
+  @Input()
+  context: ReportComponentContext;
 
   @Output()
   componentsChanged = new EventEmitter();

@@ -40,4 +40,5 @@ public interface TrendzSettingsService {
     TrendzSettings findTrendzSettings(TenantId tenantId);
 
     void deleteTrendzSettings(TenantId tenantId);
+
 }

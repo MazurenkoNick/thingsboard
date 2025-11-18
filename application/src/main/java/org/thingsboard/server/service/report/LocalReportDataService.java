@@ -40,6 +40,7 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.kv.Aggregation;
+import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
@@ -55,6 +56,7 @@ import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.configuration.timewindow.Interval;
 import org.thingsboard.server.dao.alarm.AlarmService;
 import org.thingsboard.server.dao.report.ReportService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
@@ -86,7 +88,7 @@ public class LocalReportDataService implements ReportDataService {
     @Override
     public ReportTemplate findReportTemplate(ReportTemplateId templateId, TbReportCtx ctx) throws ThingsboardException {
         SecurityUser securityUser = getSecurityUser(ctx);
-        ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(securityUser.getTenantId(), templateId);
+        ReportTemplate reportTemplate = checkNotNull(reportTemplateService.findReportTemplateById(securityUser.getTenantId(), templateId));
         accessControlService.checkPermission(securityUser, Resource.REPORT_TEMPLATE, Operation.READ, templateId, reportTemplate);
         return reportTemplate;
     }
@@ -134,20 +136,19 @@ public class LocalReportDataService implements ReportDataService {
 
     @SneakyThrows
     @Override
-    public List<TsKvEntry> getTimeseries(EntityId entityId, List<String> keys, Long startTs, Long endTs, Long interval, Aggregation agg, SortOrder.Direction sortOrder,
+    public List<TsKvEntry> getTimeseries(EntityId entityId, List<String> keys, Long startTs, Long endTs, Interval interval, String timeZone, Aggregation agg, SortOrder.Direction sortOrder,
                                          Integer limit, boolean useStrictDataTypes, TbReportCtx ctx) {
-        return tbTelemetryService.getTimeseries(entityId, keys, startTs, endTs, null, interval, null, limit, agg, sortOrder.name(), useStrictDataTypes, getSecurityUser(ctx)).get(); // .get() will be interrupted on task processing timeout
+        return tbTelemetryService.getTimeseries(entityId, keys, startTs, endTs, interval.getIntervalType(), interval.getInterval(), timeZone, limit, agg, sortOrder.name(), useStrictDataTypes, getSecurityUser(ctx)).get(); // .get() will be interrupted on task processing timeout
     }
 
     @SneakyThrows
     @Override
-    public List<ReadTsKvQueryResult> findTimeseriesByQueries(EntityId entityId, List<ReadTsKvQuery> queries, TbReportCtx ctx) {
+    public List<ReadTsKvQueryResult> findTimeseriesByQueries(EntityId entityId, List<BaseReadTsKvQuery> queries, TbReportCtx ctx) {
         return tbTelemetryService.getTimeseriesByReadQueries(entityId, queries, getSecurityUser(ctx)).get();
     }
 
-    @SneakyThrows
     @Override
-    public Report createReport(Report report, byte[] data, TbReportCtx ctx) {
+    public Report createReport(Report report, byte[] data, TbReportCtx ctx) throws ThingsboardException {
         accessControlService.checkPermission(getSecurityUser(ctx), Resource.REPORT, Operation.CREATE);
         return reportService.createReport(report, data);
     }

@@ -48,7 +48,7 @@ import { PageComponent } from '@shared/components/page.component';
 import { AfterViewInit, DestroyRef, Directive, EventEmitter, inject, Inject, OnInit, Type } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
-import { AbstractControl, UntypedFormGroup } from '@angular/forms';
+import { AbstractControl, UntypedFormGroup, ValidatorFn } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { Dashboard } from '@shared/models/dashboard.models';
 import { IAliasController } from '@core/api/widget-api.models';
@@ -62,10 +62,11 @@ import {
   DataKeySettingsFunction
 } from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
 import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
-import { TbFunction } from '@shared/models/js-function.models';
+import { CompiledTbFunction, TbFunction } from '@shared/models/js-function.models';
 import { FormProperty, jsonFormSchemaToFormProperties } from '@shared/models/dynamic-form.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TbUnit } from '@shared/models/unit.models';
+import { ImageResourceInfo } from '@shared/models/resource.models';
 
 export enum widgetType {
   timeseries = 'timeseries',
@@ -388,6 +389,7 @@ export interface KeyInfo {
   label?: string;
   color?: string;
   funcBody?: TbFunction;
+  builtInFunc?: (time: number, prevValue: any) => any;
   postFuncBody?: TbFunction;
   units?: TbUnit;
   decimals?: number;
@@ -505,6 +507,14 @@ export const targetDeviceValid = (targetDevice?: TargetDevice): boolean =>
   !!targetDevice && !!targetDevice.type &&
     ((targetDevice.type === TargetDeviceType.device && !!targetDevice.deviceId) ||
       (targetDevice.type === TargetDeviceType.entity && !!targetDevice.entityAliasId));
+
+export const widgetTypeHasTimewindow = (type: widgetType): boolean => {
+  return type === widgetType.timeseries || type === widgetType.alarm;
+}
+
+export const widgetTypeCanHaveTimewindow = (type: widgetType): boolean => {
+  return widgetTypeHasTimewindow(type) || type === widgetType.latest;
+}
 
 export const datasourcesHasAggregation = (datasources?: Array<Datasource>): boolean => {
   if (datasources) {
@@ -639,11 +649,36 @@ export enum WidgetMobileActionType {
   deviceProvision = 'deviceProvision',
 }
 
+export interface ActionConfig {
+  title: string,
+  formControlName: string,
+  functionName: string,
+  functionArgs: string[],
+  helpId?: string
+}
+
+export enum ProvisionType {
+  auto = 'auto',
+  wiFi = 'wiFi',
+  ble = 'ble',
+  softAp = 'softAp'
+}
+
+export const provisionTypeTranslationMap = new Map<ProvisionType, string>(
+  [
+    [ ProvisionType.auto, 'widget-action.mobile.auto' ],
+    [ ProvisionType.wiFi, 'widget-action.mobile.wi-fi' ],
+    [ ProvisionType.ble, 'widget-action.mobile.ble' ],
+    [ ProvisionType.softAp, 'widget-action.mobile.soft-ap' ],
+  ]
+);
+
 export enum MapItemType {
   marker = 'marker',
   polygon = 'polygon',
   rectangle = 'rectangle',
-  circle = 'circle'
+  circle = 'circle',
+  polyline = 'polyline'
 }
 
 export const widgetActionTypes = Object.keys(WidgetActionType)
@@ -683,6 +718,7 @@ export const mapItemTypeTranslationMap = new Map<MapItemType, string>(
     [ MapItemType.polygon, 'widget-action.map-item.polygon' ],
     [ MapItemType.rectangle, 'widget-action.map-item.rectangle' ],
     [ MapItemType.circle, 'widget-action.map-item.circle' ],
+    [ MapItemType.polyline, 'widget-action.map-item.polyline' ]
   ]
 )
 
@@ -706,6 +742,7 @@ export interface MobileLaunchResult {
 
 export interface MobileImageResult {
   imageUrl: string;
+  imageInfo?: ImageResourceInfo;
 }
 
 export interface MobileQrCodeResult {
@@ -737,10 +774,12 @@ export interface WidgetMobileActionResult<T extends MobileActionResult> {
 
 export interface ProvisionSuccessDescriptor {
   handleProvisionSuccessFunction: TbFunction;
+  provisionType?: string;
 }
 
 export interface ProcessImageDescriptor {
   processImageFunction: TbFunction;
+  saveToGallery?: boolean;
 }
 
 export interface ProcessLaunchResultDescriptor {
@@ -774,6 +813,7 @@ export interface WidgetMobileActionDescriptor extends WidgetMobileActionDescript
   type: WidgetMobileActionType;
   handleErrorFunction?: TbFunction;
   handleEmptyResultFunction?: TbFunction;
+  handleNonMobileFallbackFunction?: TbFunction;
 }
 
 export interface CustomActionDescriptor {
@@ -820,6 +860,8 @@ export interface MapItemTooltips {
   finishRect?: string;
   startCircle?: string;
   finishCircle?: string;
+  startPolyline?: string;
+  finishPolyline?: string;
 }
 
 export const mapItemTooltipsTranslation: Required<MapItemTooltips> = Object.freeze({
@@ -830,7 +872,9 @@ export const mapItemTooltipsTranslation: Required<MapItemTooltips> = Object.free
   startRect: 'widgets.maps.data-layer.polygon.rectangle-place-first-point-hint',
   finishRect: 'widgets.maps.data-layer.polygon.finish-rectangle-hint',
   startCircle: 'widgets.maps.data-layer.circle.place-circle-center-hint',
-  finishCircle: 'widgets.maps.data-layer.circle.finish-circle-hint'
+  finishCircle: 'widgets.maps.data-layer.circle.finish-circle-hint',
+  startPolyline: 'widgets.maps.data-layer.polyline.polyline-place-first-point-hint',
+  finishPolyline: 'widgets.maps.data-layer.polyline.finish-polyline-hint'
 })
 
 export interface WidgetActionDescriptor extends WidgetAction {
@@ -972,6 +1016,7 @@ export interface WidgetInfo extends BaseWidgetInfo {
 
 export interface DynamicFormData {
   settingsForm?: FormProperty[];
+  settingsFormTrimDefaults?: boolean;
   model?: any;
   settingsDirective?: string;
 }
@@ -1000,6 +1045,7 @@ export interface IWidgetSettingsComponent {
   settings: WidgetSettings;
   settingsChanged: Observable<WidgetSettings>;
   validateSettings(): boolean;
+  reportMode: boolean;
   [key: string]: any;
 }
 
@@ -1019,6 +1065,8 @@ export abstract class WidgetSettingsComponent extends PageComponent implements
   dashboard: Dashboard;
 
   widget: Widget;
+
+  reportMode: boolean;
 
   widgetConfigValue: WidgetConfigComponentData;
 
@@ -1140,5 +1188,4 @@ export abstract class WidgetSettingsComponent extends PageComponent implements
 
   protected onWidgetConfigSet(widgetConfig: WidgetConfigComponentData) {
   }
-
 }

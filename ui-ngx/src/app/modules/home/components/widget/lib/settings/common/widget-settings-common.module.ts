@@ -289,6 +289,12 @@ import { AlignmentComponent } from '@home/components/widget/lib/settings/common/
 import {
   DynamicFormDialogComponent
 } from '@home/components/widget/lib/settings/common/dynamic-form/dynamic-form-dialog.component';
+import {
+  ComparisonKeysTableComponent
+} from '@home/components/widget/lib/settings/common/chart/comparison-keys-table.component';
+import {
+  ComparisonKeyRowComponent
+} from '@home/components/widget/lib/settings/common/chart/comparison-key-row.component';
 
 @NgModule({
   declarations: [
@@ -333,6 +339,8 @@ import {
     WidgetButtonToggleCustomStyleComponent,
     WidgetButtonCustomStylePanelComponent,
     WidgetButtonToggleCustomStylePanelComponent,
+    ComparisonKeyRowComponent,
+    ComparisonKeysTableComponent,
     TimeSeriesChartAxisSettingsComponent,
     TimeSeriesChartThresholdsPanelComponent,
     TimeSeriesChartThresholdRowComponent,
@@ -445,6 +453,8 @@ import {
     WidgetButtonToggleCustomStyleComponent,
     WidgetButtonCustomStylePanelComponent,
     WidgetButtonToggleCustomStylePanelComponent,
+    ComparisonKeyRowComponent,
+    ComparisonKeysTableComponent,
     TimeSeriesChartAxisSettingsComponent,
     TimeSeriesChartThresholdsPanelComponent,
     TimeSeriesChartThresholdRowComponent,

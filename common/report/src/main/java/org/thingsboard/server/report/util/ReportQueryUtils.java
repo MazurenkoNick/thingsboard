@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.report.util;
 
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityIdFactory;
@@ -59,6 +60,7 @@ import org.thingsboard.server.common.data.report.configuration.AlarmFilterConfig
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.DataSourceType;
+import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
@@ -66,6 +68,7 @@ import org.thingsboard.server.report.context.TbReportCtx;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.thingsboard.server.common.data.query.AliasEntityId.resolveAliasEntityId;
@@ -74,8 +77,9 @@ import static org.thingsboard.server.common.data.util.DataSourceUtils.setEntityK
 
 public class ReportQueryUtils {
 
-    private static final EntityDataSortOrder DEFAULT_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ENTITY_FIELD, "id"), EntityDataSortOrder.Direction.ASC);
-    private static final EntityDataSortOrder DEFAULT_ALARM_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ALARM_FIELD, "createdTime"), EntityDataSortOrder.Direction.DESC);
+    public static final EntityDataSortOrder DEFAULT_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ENTITY_FIELD, "id"), EntityDataSortOrder.Direction.ASC);
+    public static final EntityDataSortOrder DEFAULT_TS_CHART_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ENTITY_FIELD, "createdTime"), EntityDataSortOrder.Direction.DESC);
+    public static final EntityDataSortOrder DEFAULT_ALARM_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ALARM_FIELD, "createdTime"), EntityDataSortOrder.Direction.DESC);
 
     public static EntityCountQuery toEntityCountQuery(DataSource dataSource, TbReportCtx ctx) {
         EntityFilter entityFilter = buildEntityFilter(dataSource, ctx, null);
@@ -127,7 +131,10 @@ public class ReportQueryUtils {
         alarmDataPageLink.setPageSize(pageLink.getPageSize());
         alarmDataPageLink.setSortOrder(DEFAULT_ALARM_SORT_ORDER);
 
-        TimeIntervalCalculator.TimeRange timeRange = getTimeRange(component.getTimewindow());
+        String targetTimezone = StringUtils.isNotBlank(component.getTimewindow().getTimezone()) ?
+                component.getTimewindow().getTimezone() : ctx.getTimeZone();
+
+        TimeIntervalCalculator.TimeRange timeRange = getTimeRange(component.getTimewindow(), targetTimezone);
         alarmDataPageLink.setStartTs(timeRange.startTs);
         alarmDataPageLink.setEndTs(timeRange.endTs);
         alarmDataPageLink.setSearchPropagatedAlarms(alarmFilterConfig.isSearchPropagatedAlarms());
@@ -139,7 +146,11 @@ public class ReportQueryUtils {
     }
 
     public static EntityDataQuery toEntityDataQuery(DataSource dataSource, TbReportCtx ctx, EntityFilter filter, PageLink pageLink) {
-        EntityDataPageLink entityDataPageLink = new EntityDataPageLink(pageLink.getPageSize(), pageLink.getPage(), pageLink.getTextSearch(), DEFAULT_SORT_ORDER);
+        return toEntityDataQuery(dataSource, ctx, filter, pageLink, DEFAULT_SORT_ORDER);
+    }
+
+    public static EntityDataQuery toEntityDataQuery(DataSource dataSource, TbReportCtx ctx, EntityFilter filter, PageLink pageLink, EntityDataSortOrder sortOrder) {
+        EntityDataPageLink entityDataPageLink = new EntityDataPageLink(pageLink.getPageSize(), pageLink.getPage(), pageLink.getTextSearch(), sortOrder);
 
         List<KeyFilter> keyFilters = findKeyFilters(dataSource, ctx.getConfiguration());
 
@@ -172,6 +183,11 @@ public class ReportQueryUtils {
             return buildSingleEntityFilter(DeviceId.fromString(dataSource.getDeviceId()));
         }
         return buildAliasBasedFilter(dataSource, ctx, stateEntityId);
+    }
+
+    public static Optional<String> resolveAliasId(TbReportCtx ctx, String aliasName) {
+        return ctx.getConfiguration().getEntityAliases().stream()
+                .filter(alias -> alias.getAlias().equals(aliasName)).findFirst().map(EntityAlias::getId);
     }
 
     private static EntityFilter buildSingleEntityFilter(EntityId entityId) {

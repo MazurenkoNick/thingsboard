@@ -51,7 +51,7 @@ import { deepClone } from '@core/utils';
 import { fromEvent, Subscription } from 'rxjs';
 import { POSITION_MAP } from '@shared/models/overlay.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ReportTemplateType, ReportFilter, reportFiltersEquals } from '@shared/models/report.models';
+import { ReportFilter, reportFiltersEquals, ReportTemplateType } from '@shared/models/report.models';
 import { EntityType } from '@shared/models/entity-type.models';
 
 export const REPORT_FILTER_DATA = new InjectionToken<any>('ReportFilterData');

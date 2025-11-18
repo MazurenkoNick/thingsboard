@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.report;
 
+import com.google.common.util.concurrent.FluentFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -50,20 +51,23 @@ import org.thingsboard.server.dao.entity.EntityCountService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
+import org.thingsboard.server.dao.scheduler.SchedulerEventService;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.service.PaginatedRemover;
+import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validateIds;
 import static org.thingsboard.server.dao.service.Validator.validatePageLink;
 
-@Service("ReportTemplateDaoService")
 @Slf4j
 @RequiredArgsConstructor
+@Service("ReportTemplateDaoService")
 public class BaseReportTemplateService extends AbstractEntityService implements ReportTemplateService {
 
     public static final String INCORRECT_TENANT_ID = "Incorrect tenantId ";
@@ -74,6 +78,7 @@ public class BaseReportTemplateService extends AbstractEntityService implements 
     private final ReportTemplateInfoDao reportTemplateInfoDao;
     private final DataValidator<ReportTemplate> reportTemplateDataValidator;
     private final EntityCountService countService;
+    private final SchedulerEventService schedulerEventService;
 
     @Override
     public ReportTemplate findReportTemplateById(TenantId tenantId, ReportTemplateId reportTemplateId) {
@@ -113,6 +118,11 @@ public class BaseReportTemplateService extends AbstractEntityService implements 
     public void deleteReportTemplate(TenantId tenantId, ReportTemplateId reportTemplateId) {
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validateId(reportTemplateId, id -> INCORRECT_REPORT_TEMPLATE_ID + id);
+        int eventsByTemplateId = schedulerEventService.countScheduledReportEventsByTemplateId(tenantId, reportTemplateId);
+        if (eventsByTemplateId > 0) {
+            throw new DataValidationException("Cannot delete report template with id [" + reportTemplateId + "], because it is used in " +
+                    eventsByTemplateId + " scheduled reports. Please delete the scheduled reports first.");
+        }
         deleteEntity(tenantId, reportTemplateId, false);
     }
 
@@ -219,6 +229,12 @@ public class BaseReportTemplateService extends AbstractEntityService implements 
     }
 
     @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(reportTemplateDao.findByIdAsync(tenantId, entityId.getId()))
+                .transform(Optional::ofNullable, directExecutor());
+    }
+
+    @Override
     public long countByTenantId(TenantId tenantId) {
         return reportTemplateDao.countByTenantId(tenantId);
     }
@@ -227,4 +243,5 @@ public class BaseReportTemplateService extends AbstractEntityService implements 
     public EntityType getEntityType() {
         return EntityType.REPORT_TEMPLATE;
     }
+
 }

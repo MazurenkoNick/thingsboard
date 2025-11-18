@@ -47,6 +47,7 @@ import {
   TbReportFormat
 } from '@shared/models/report.models';
 import { coerceBoolean } from '@shared/decorators/coercion';
+import { deepTrim } from '@core/utils';
 
 @Component({
   selector: 'tb-report-template-settings',
@@ -167,6 +168,6 @@ export class ReportTemplateSettingsComponent implements OnInit, OnChanges, Contr
 
   private updateModel() {
     this.modelValue = this.settingsFormGroup.value;
-    this.propagateChange(this.modelValue);
+    this.propagateChange(deepTrim(this.modelValue));
   }
 }

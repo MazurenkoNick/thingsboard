@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.service.cf.ctx.state;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -79,8 +78,8 @@ public class RocksDBCalculatedFieldStateService extends AbstractCalculatedFieldS
         if (stateService.getPartitions().isEmpty()) {
             cfRocksDb.forEach((key, value) -> {
                 try {
-                    processRestoredState(CalculatedFieldStateProto.parseFrom(value));
-                } catch (InvalidProtocolBufferException e) {
+                    processRestoredState(CalculatedFieldStateProto.parseFrom(value), null);
+                } catch (Exception e) {
                     log.error("[{}] Failed to process restored state", key, e);
                 }
             });

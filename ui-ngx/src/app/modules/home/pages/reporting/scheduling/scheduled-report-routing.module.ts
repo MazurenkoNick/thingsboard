@@ -34,10 +34,10 @@ import { Route } from '@angular/router';
 
 import { EntitiesTableComponent } from '@home/components/entity/entities-table.component';
 import { Authority } from '@shared/models/authority.enum';
-import { MenuId } from '@core/public-api';
 import {
   ScheduledReportsTableConfigResolver
 } from '@home/pages/reporting/scheduling/scheduled-reports-table-config.resolver';
+import { MenuId } from '@core/services/menu.models';
 
 export const scheduledReportsRoute: Route = {
   path: 'scheduling',
@@ -51,7 +51,7 @@ export const scheduledReportsRoute: Route = {
       path: '',
       component: EntitiesTableComponent,
       data: {
-        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+        auth: [Authority.TENANT_ADMIN],
         title: 'scheduled-report.scheduled-reports'
       },
       resolve: {

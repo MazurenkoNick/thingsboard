@@ -32,14 +32,8 @@
 import { Component, inject, ViewEncapsulation } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import {
-  DataKey,
-  Datasource, ReportDataKeySettingsType,
-  TableReportColumnSettings,
-  TableReportColumnSettingsForm,
-  TimeseriesTableReportComponentConfig,
-  WidgetConfigMode
-} from '@app/shared/public-api';
-import { AbstractReportComponentConfig } from '@home/pages/reporting/template/components/report-component-config.component';
+  AbstractReportComponentConfig
+} from '@home/pages/reporting/template/components/report-component-config.component';
 import { deepClone } from '@core/utils';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
@@ -49,6 +43,18 @@ import {
 } from '@home/components/widget/lib/settings/common/dynamic-form/dynamic-form-dialog.component';
 import { TranslateService } from '@ngx-translate/core';
 import { merge } from 'rxjs';
+import {
+  ReportDataKeySettingsType,
+  TableReportColumnSettings,
+  TableReportColumnSettingsForm,
+  TimeColumnSettingsForm,
+  TimeseriesTableReportComponentConfig
+} from '@shared/models/report-component.models';
+import { DataKey, Datasource, WidgetConfigMode } from '@shared/models/widget.models';
+import {
+  DataKeySettingsFormFunction
+} from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
+import { FormProperty } from '@shared/models/dynamic-form.models';
 
 @Component({
   selector: 'tb-timeseries-table-config',
@@ -71,10 +77,17 @@ export class TimeseriesTableConfigComponent extends AbstractReportComponentConfi
 
   basicMode = WidgetConfigMode.basic;
 
-  TableReportColumnSettingsForm = TableReportColumnSettingsForm;
+  dataKeySettingsFormFunction: DataKeySettingsFormFunction = this.getDataKeySettingsForm.bind(this);
 
   private dialog =  inject(MatDialog);
   private translate = inject(TranslateService);
+
+  private getDataKeySettingsForm(key: DataKey): FormProperty[] {
+    if (['ts', 'createdTime'].includes(key.name)) {
+      return TimeColumnSettingsForm;
+    }
+    return TableReportColumnSettingsForm;
+  }
 
   protected buildForm(reportComponentConfig: TimeseriesTableReportComponentConfig): FormGroup {
     const form = this.fb.group({
@@ -112,7 +125,7 @@ export class TimeseriesTableConfigComponent extends AbstractReportComponentConfi
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
         title: this.translate.instant('report-template.component.timeseries-table.timestamp-column-settings'),
-        properties: TableReportColumnSettingsForm,
+        properties: TimeColumnSettingsForm,
         value: timestampColumnSettings
       }
     }).afterClosed().subscribe(

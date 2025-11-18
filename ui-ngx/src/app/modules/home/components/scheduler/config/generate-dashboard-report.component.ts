@@ -79,7 +79,7 @@ export class GenerateDashboardReportComponent implements ControlValueAccessor, O
     this.generateReportFormGroup = this.fb.group({
       msgBody: this.fb.group(
         {
-          reportConfig: [null, [Validators.required]],
+          reportConfig: [null, []],
           sendEmail: [false, []],
           emailConfig: [null, [Validators.required]]
         }

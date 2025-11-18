@@ -41,6 +41,7 @@ import {
   OnInit,
   QueryList,
   Renderer2,
+  SecurityContext,
   SkipSelf,
   ViewChild,
   ViewChildren,
@@ -114,6 +115,7 @@ import { EntityDebugSettings } from '@shared/models/entity.models';
 import Timeout = NodeJS.Timeout;
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { Operation, Resource } from '@shared/models/security.models';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
   selector: 'tb-rulechain-page',
@@ -293,6 +295,7 @@ export class RuleChainPageComponent extends PageComponent
               private renderer: Renderer2,
               private viewContainerRef: ViewContainerRef,
               private changeDetector: ChangeDetectorRef,
+              private sanitizer:DomSanitizer,
               public dialog: MatDialog,
               public dialogService: DialogService,
               public fb: FormBuilder) {
@@ -1394,9 +1397,13 @@ export class RuleChainPageComponent extends PageComponent
         name = node.name;
         desc = this.translate.instant(ruleNodeTypeDescriptors.get(node.component.type).name) + ' - ' + node.component.name;
         if (node.additionalInfo) {
-          details = node.additionalInfo.description;
+          details = this.sanitizer.sanitize(SecurityContext.HTML, node.additionalInfo.description);
         }
       }
+
+      name = this.sanitizer.sanitize(SecurityContext.HTML, name);
+      desc = this.sanitizer.sanitize(SecurityContext.HTML, desc);
+
       let tooltipContent = '<div class="tb-rule-node-tooltip">' +
         '<div id="tb-node-content">' +
         '<div class="tb-node-title">' + name + '</div>' +

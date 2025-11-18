@@ -10,18 +10,18 @@ This dashboard is intended to monitor the remaining fuel in the tanks, view cons
 
 
 
-- the section with an ***interactive map*** displays the location of the tanks with the help of markers. The marker also informs about the current status of the sensor, namely: green - the sensor is in a normal state, and the rules for triggering alarms are not applied;  yellow - low battery; red - at least one of the conditions for starting a warning, for example, a low level of fuel remaining or low/high temperature, is used; gray - the sensor is in mode offline. To get more information, click on the tank marker - a popup with detailed information will appear.
+  - the section with an ***interactive map*** displays the location of the tanks with the help of markers. The marker also informs about the current status of the sensor, namely: green - the sensor is in a normal state, and the rules for triggering alarms are not applied;  yellow - low battery; red - at least one of the conditions for starting a warning, for example, a low level of fuel remaining or low/high temperature, is used; gray - the sensor is in mode offline. To get more information, click on the tank marker - a popup with detailed information will appear.
 
 
     The user can use the map filter - map switches that will help sort the display according to requirements.	
 
 
-- the ***Tanks section*** is a list designed to display all existing tanks. You can delete or edit existing ones. The main list of “Tanks” contains the following data: “Total label”, “Remaining, %”, “Temperature”, “Battery”, “Connection” and action buttons. The user can create/add new sensors by clicking on the "+" button. To create a sensor, the user must go through the following steps: "General info", "Tank info," and "Set location". Note that we provided the ability to add and define nine types of tanks, which we can calculate based on their geometric parameters. See detailed information in the **"Tank Creation"** paragraph.
+  - the ***Tanks section*** is a list designed to display all existing tanks. You can delete or edit existing ones. The main list of “Tanks” contains the following data: “Total label”, “Remaining, %”, “Temperature”, “Battery”, “Connection” and action buttons. The user can create/add new sensors by clicking on the "+" button. To create a sensor, the user must go through the following steps: "General info", "Tank info," and "Set location". Note that we provided the ability to add and define nine types of tanks, which we can calculate based on their geometric parameters. See detailed information in the **"Tank Creation"** paragraph.
 
-- the ***Alarms section*** is designed to display all alarms related to the remaining fuel level, temperature, and battery level. You can set the conditions under which alarms will be triggered by clicking the “Alarm Rules” button. By default, the following types of alarms are defined: “Low battery level”, “Low temperature”, “High temperature”, “Low remaining level” and "Running out of fuel" (if Trendz connected).
+  - the ***Alarms section*** is designed to display all alarms related to the remaining fuel level, temperature, and battery level. You can set the conditions under which alarms will be triggered by clicking the “Alarm Rules” button. By default, the following types of alarms are defined: “Low battery level”, “Low temperature”, “High temperature” and “Low remaining level”.
 
 <div class="img-float" style="max-width:50%;margin: 10px auto">
-<img src="https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-1-v2.png" alt="Fuel level monitoring">
+<img src="https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-1.png" alt="Fuel level monitoring">
 </div>
 
 The user can go to the Tank state in several ways: click on the line in the Tanks section of a specific tank or click the "Details" button on the popup when clicking on the marker of the interactive map.
@@ -29,42 +29,13 @@ The user can go to the Tank state in several ways: click on the line in the Tank
 - **Tank state** is designed to display information about a specific tank. This page contains the following elements:
 
   - fuel remaining display widget;
-  - section for displaying detailed tank information: “Tank Name”, “Serial number”, “Liquid type”, “Tank temperature”, “Battery level”, "Running out of the fuel (Hours)" (if Trendz connected), “Connection” and “Last Update”. Also, using the functionality of this section, you can edit the main fields - for this, click the "Edit" button, as well as change the location of the tank, and the marker on the map - by clicking on the "Edit Map" button; There is also an "Analytic" button to go to the state with Trendz widgets (if Trendz connected).
+  - section for displaying detailed tank information: “Tank Name”, “Serial number”, “Liquid type”, “Tank temperature”, “Battery level”, “Connection” and “Last Update”. Also, using the functionality of this section, you can edit the main fields - for this, click the "Edit" button, as well as change the location of the tank, and the marker on the map - by clicking on the "Edit Map" button;
   - the Consumption and remaining fuel section is a table with a list of consumption, remaining, and fuel replenishment. The ability to monitor the duration of refueling or filling the tank with fuel and the timestamp of the action has also been added;
   - the Remaining chart is designed to display the statistics of the tank's remaining and fuel consumption in the form of a graph, which is shown in terms of volume/% and time intervals;
   - the Alarm section is a list of alarms for a specific tank.
 
 <div class="img-float" style="max-width:50%;margin: 10px auto">
-<img src="https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-2-v2.png" alt="Fuel level monitoring">
-</div>
-
-- if you do not use Trendz Analytic the sate with Trendz widget will be unavailable.
-
-<div class="img-float" style="max-width:50%;margin: 10px auto">
-<img src="https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-trendz-install.png" alt="Fuel level monitoring">
-</div>
-
-
-####  Tank Analytics Dashboard (if Trendz connected)
-
-This dashboard is designed to provide advanced analytics for a specific tank, including fuel level monitoring, consumption trends, empty time estimation, and fuel usage forecasts.
-
-The dashboard contains the following elements:
-- Fuel Level Prediction – a line chart displaying both actual and predicted fuel levels over time (in percentage). It helps identify usage patterns and forecast when the tank will be empty.
-- Fuel Consumption Prediction – a bar chart showing both actual and forecasted fuel consumption by date. This allows users to spot peak consumption days and plan accordingly.
-- Weekly Consumption Heatmap – a heatmap visualizing fuel consumption intensity across days of the week and hours of the day. It helps identify the most active periods of usage.
-- Forecast Summary in the top panel:
-  - Fuel Level – the current fuel level in percentage.
-  - Today Consumed – the amount of fuel consumed today.
-  - Hours Until Empty – estimated hours remaining before the tank is empty.
-  - Weekly Usage Forecast – projected fuel consumption for the current 7 days.
-  - Monthly Usage Forecast – projected fuel consumption for the current 30 days.
-
-This dashboard provides a comprehensive analytical view of tank usage, enabling users to make data-driven decisions for fuel management and refilling operations.
-
-<div class="img-float" style="max-width:50%; margin: 10px auto; display: flex; gap: 10px; justify-content: center;">
-  <img src="https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-2-v2.png" alt="Fuel level monitoring">
-<img src="https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-4-v2.png" alt="Fuel level monitoring">
+<img src="https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-3.png" alt="Fuel level monitoring">
 </div>
 
 #### Tank creation
@@ -72,7 +43,7 @@ This dashboard provides a comprehensive analytical view of tank usage, enabling 
 As we have already said, we created nine tanks of different geometric shapes for our template. This will allow easy use of ready-made templates to calculate the volume of your tank.
 
 <div class="img-float" style="max-width:45%;margin: 10px auto">
-<img style="border: 1px solid #d7d7d7;" src="https://img.thingsboard.io/solutions/fuel_level_monitoring/tank-shapes-v2.png" alt="Fuel level monitoring">
+<img style="border: 1px solid #d7d7d7;" src="https://img.thingsboard.io/solutions/fuel_level_monitoring/tank-shapes.png" alt="Fuel level monitoring">
 </div>
 
 To create a tank, the user needs to go through 3 main steps, namely:
@@ -107,8 +78,8 @@ In the **"Sensor Info" section**, the user will have the opportunity to choose t
 Various types of sensors can be used to calculate the volume of the tank, so we have provided the option of selecting the "level measurement type". This means we can connect most liquid-level measurement sensors, which offers unlimited flexibility in using the example.
 
 The measurement type has two parameters:
-- "Fill height" - the direct value of the height of the liquid in the tank (this space can be measured, for example, by a float sensor);
-- "Remaining space" - the value of the height of the empty space from the top of the tank to the beginning of the liquid (an ultrasonic sensor can measure this height).
+  - "Fill height" - the direct value of the height of the liquid in the tank (this space can be measured, for example, by a float sensor);
+  - "Remaining space" - the value of the height of the empty space from the top of the tank to the beginning of the liquid (an ultrasonic sensor can measure this height).
 
 
 <div class="img-float" style="max-width:35%; margin: 10px auto">
@@ -169,7 +140,7 @@ User may configure the alarm rules via the <a href="${MAIN_DASHBOARD_URL}" targe
 
 #### Devices
 
-We have already created nine sensors and loaded some demo data for them.
+We have already created nine sensors and loaded some demo data for them. 
 **The solution expects that the sensor device will upload temperature, fuel and battery level.  The most simple example of the expected payload is in JSON format:**
 
 ```json
@@ -211,14 +182,14 @@ ${all_entities}
 
 In the first example, we will eliminate all existing alarms outside the set alarm rules.
 
-As you can see on the screen (highlighted), we have alarms related to "Low Fuel Level" and "Low Battery Level".
+As you can see on the screen (highlighted), we have alarms related to "High temperature", "Low Fuel Level", and "Low Battery Level".
 
 
 <div class="img-float" style="max-width:60%;margin: 20px auto">
 <img style="border: 1px solid #d7d7d7;" src="https://img.thingsboard.io/solutions/fuel_level_monitoring/ex-1-2.png" alt="Fuel level monitoring">
 </div>
 
-In our case, we will consider a specific tank, namely "Tank 1113". Its current telemetry shows us that "Tank temperature" is 19 C, "Battery level" is 11%, and "Remaining" level is 5.43%(50014 L from 921061).
+In our case, we will consider a specific tank, namely "Tank 1273". Its current telemetry shows us that "Tank temperature" is 82 C, "Battery level" is 9%, and "Remaining" level is 5%(465 Gal from 9306).
 
 Since our main task is to eliminate alarms, let's simulate sending data that will not fall under the rules of alarms - accordingly, they will disappear.
 
@@ -231,6 +202,7 @@ Since our main task is to eliminate alarms, let's simulate sending data that wil
 Let's look at the configured alarm rules, which determine the rules for calling alarms.
 
 As you can see, the rules define the conditions, namely:
+- if the tank temperature is less than 0 C or more than 80 C;
 - if the remaining fuel is less than 10%;
 - if the battery level is less than 20%.
 
@@ -250,7 +222,7 @@ For example, "Tank temperature" - 25 C, "remaining" level - 100% (simulation of 
 To send the relevant data, you need to use the following command:
 
 ```bash
-curl -v -X POST -d "{\"battery\":  100, \"fuelLevel\":  100, \"temperature\": 25 }" ${BASE_URL}/api/v1/${001113ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
+curl -v -X POST -d "{\"battery\":  100, \"fuelLevel\":  100, \"temperature\": 25 }" ${BASE_URL}/api/v1/${001273ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
 ```
 
 <br>
@@ -282,17 +254,17 @@ As a basis, we will take the tank from the previous example, namely **"Tank 1273
 <img src="https://img.thingsboard.io/solutions/fuel_level_monitoring/ex-2-1.png" alt="Fuel level monitoring">
 </div>
 
-Next, we need to specify the height value that the sensor will send us. As we can see, the "height" of the tank is 8 ft, and the total volume calculated based on all parameters is 9306.29 gal. "Level measurement type" - "Fill height", "sensor reading units" - in.
+Next, we need to specify the height value that the sensor will send us. As we can see, the "height" of the tank is 200 cm, and the total volume calculated based on all parameters is 1570.8 L. "Level measurement type" - "Fill height", "sensor reading units" - cm.
 
-Next, we need to ground the height value that the sensor will send us. Let's use the value 48 in, half of the tank's height (96 in). To get this value, we need to use the following command:
+Next, we need to ground the height value that the sensor will send us. For the comfort of calculation, let's use the value - 100 cm, half of the tank's height (200 cm). To get this value, we need to use the following command:
 
 ```bash
-curl -v -X POST -d "{\"fuelHeight\":  48}" ${BASE_URL}/api/v1/${001273ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
+curl -v -X POST -d "{\"fuelHeight\":  100}" ${BASE_URL}/api/v1/${001273ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
 ```
 
 <br>
 
-As you can see, the data has been sent successfully, and the tank volume is 50% (4653 gal).
+As you can see, the data has been sent successfully, and the tank volume is 50% (785 L).
 
 <div class="img-float" style="max-width:65%;margin: 20px auto">
 <img style="border: 1px solid #d7d7d7;" src="https://img.thingsboard.io/solutions/fuel_level_monitoring/ex-2-2.png" alt="Fuel level monitoring">
@@ -312,7 +284,7 @@ We will also take **"Tank 1273"** as a basis. However, as you can see, we have a
 
 We repeat the same steps for height emulation, but do not forget about the "gap".
 
-We will use the value **58** in (48 in - "remaining space", 10 in - gap) for easy calculation.
+We will use the value **110** cm (100 cm - "remaining space", 10 cm - gap) for easy calculation.
 
 <br>
 
@@ -323,7 +295,7 @@ We will use the value **58** in (48 in - "remaining space", 10 in - gap) for eas
 To get this value, we need to use the following command:
 
 ```bash
-curl -v -X POST -d "{\"fuelHeight\":  58}" ${BASE_URL}/api/v1/${001273ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
+curl -v -X POST -d "{\"fuelHeight\":  110}" ${BASE_URL}/api/v1/${001273ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
 ```
 
 <div class="img-float" style="max-width:65%;margin: 20px auto">

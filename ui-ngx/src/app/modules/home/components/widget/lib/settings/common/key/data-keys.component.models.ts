@@ -34,6 +34,7 @@ import { DataKey } from '@shared/models/widget.models';
 import { Observable } from 'rxjs';
 import { FormProperty } from '@shared/models/dynamic-form.models';
 
+export type DataKeySettingsFormFunction = (key: DataKey) => FormProperty[];
 export type DataKeySettingsFunction = (key: DataKey, isLatestDataKey: boolean) => any;
 
 export interface DataKeysCallbacks {

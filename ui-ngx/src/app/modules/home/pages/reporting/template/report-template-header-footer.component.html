@@ -66,6 +66,7 @@
       </div>
     }
     <tb-report-components
+      [context]="context"
       [format]="format"
       [background]="background"
       [width]="width"
@@ -81,6 +82,7 @@
       (componentRemoved)="reportComponentRemoved($event)">
     </tb-report-components>
     <tb-report-components
+      [context]="context"
       [format]="format"
       [background]="background"
       [width]="width"

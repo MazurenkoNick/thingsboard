@@ -30,7 +30,7 @@
 ///
 
 import { Injectable } from '@angular/core';
-import { defaultHttpOptionsFromConfig, RequestConfig } from './http-utils';
+import { createDefaultHttpOptions, defaultHttpOptionsFromConfig, RequestConfig } from './http-utils';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { PageLink } from '@shared/models/page/page-link';
@@ -39,6 +39,7 @@ import { EntitySubtype } from '@app/shared/models/entity-type.models';
 import { EntityView, EntityViewInfo, EntityViewSearchQuery } from '@app/shared/models/entity-view.models';
 import { map } from 'rxjs/operators';
 import { sortEntitiesByIds } from '@shared/models/base-data';
+import { SaveEntityWithGroupParams, toSaveParams } from '@shared/models/entity.models';
 
 @Injectable({
   providedIn: 'root'
@@ -112,16 +113,11 @@ export class EntityViewService {
     return this.http.get<EntityViewInfo>(`/api/entityView/info/${entityViewId}`, defaultHttpOptionsFromConfig(config));
   }
 
-  public saveEntityView(entityView: EntityView, entityGroupIds?: string | string[], config?: RequestConfig): Observable<EntityView> {
-    let url = '/api/entityView';
-    if (entityGroupIds) {
-      if (Array.isArray(entityGroupIds)) {
-        url += `?entityGroupIds=${entityGroupIds.join(',')}`;
-      } else {
-        url += `?entityGroupId=${entityGroupIds}`;
-      }
-    }
-    return this.http.post<EntityView>(url, entityView, defaultHttpOptionsFromConfig(config));
+  public saveEntityView(entityView: EntityView, entityGroupIds?: string | string[], config?: RequestConfig): Observable<EntityView>;
+  public saveEntityView(entityView: EntityView, saveParams?: SaveEntityWithGroupParams, config?: RequestConfig): Observable<EntityView>;
+  public saveEntityView(entityView: EntityView, saveParams?: string | string[] | SaveEntityWithGroupParams, config?: RequestConfig): Observable<EntityView> {
+    const params = toSaveParams(saveParams);
+    return this.http.post<EntityView>('/api/entityView', entityView, createDefaultHttpOptions(params, config));
   }
 
   public deleteEntityView(entityViewId: string, config?: RequestConfig) {

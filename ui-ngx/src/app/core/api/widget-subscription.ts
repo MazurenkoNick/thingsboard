@@ -32,7 +32,7 @@
 import {
   IWidgetSubscription,
   SubscriptionEntityInfo,
-  SubscriptionMessage,
+  SubscriptionMessage, WidgetDataGenerationOptions,
   WidgetSubscriptionCallbacks,
   WidgetSubscriptionContext,
   WidgetSubscriptionOptions
@@ -187,6 +187,7 @@ export class WidgetSubscription implements IWidgetSubscription {
   pageSize: number;
   warnOnPageDataOverflow: boolean;
   ignoreDataUpdateOnIntervalTick: boolean;
+  dataGenerationOptions: WidgetDataGenerationOptions;
 
   get firstDatasource(): Datasource {
     if (this.type === widgetType.alarm) {
@@ -346,6 +347,7 @@ export class WidgetSubscription implements IWidgetSubscription {
       this.pageSize = options.pageSize;
       this.warnOnPageDataOverflow = options.warnOnPageDataOverflow;
       this.ignoreDataUpdateOnIntervalTick = options.ignoreDataUpdateOnIntervalTick;
+      this.dataGenerationOptions = options.dataGenerationOptions;
       this.datasourcePages = [];
       this.datasources = [];
       this.dataPages = [];
@@ -570,7 +572,8 @@ export class WidgetSubscription implements IWidgetSubscription {
         updateRealtimeSubscription: () => this.updateRealtimeSubscription(),
         setRealtimeSubscription: (subscriptionTimewindow) => {
           this.updateRealtimeSubscription(deepClone(subscriptionTimewindow));
-        }
+        },
+        dataGenerationOptions: this.dataGenerationOptions
       };
       this.entityDataListeners.push(listener);
       return this.ctx.entityDataService.prepareSubscription(listener, this.ignoreDataUpdateOnIntervalTick);
@@ -1029,7 +1032,8 @@ export class WidgetSubscription implements IWidgetSubscription {
         updateRealtimeSubscription: () => this.updateRealtimeSubscription(),
         setRealtimeSubscription: (subscriptionTimewindow) => {
           this.updateRealtimeSubscription(deepClone(subscriptionTimewindow));
-        }
+        },
+        dataGenerationOptions: this.dataGenerationOptions
       };
       this.entityDataListeners[datasourceIndex] = entityDataListener;
       return this.ctx.entityDataService.subscribeForPaginatedData(entityDataListener, pageLink, keyFilters,
@@ -1309,7 +1313,7 @@ export class WidgetSubscription implements IWidgetSubscription {
             const value = row[1];
             let tsRow = tsRows[tsKey];
             if (!tsRow) {
-              tsRow = this.latestData.length ? deepClone(latest[datasourceData.datasource.name]) : {};
+              tsRow = (this.latestData.length && latest[datasourceData.datasource.name]) ? deepClone(latest[datasourceData.datasource.name]) : {};
               tsRow.Timestamp = this.ctx.datePipe.transform(ts, 'yyyy-MM-dd HH:mm:ss');
               tsRow['Entity Name'] = datasourceData.datasource.entityName;
               tsRows[tsKey] = tsRow;

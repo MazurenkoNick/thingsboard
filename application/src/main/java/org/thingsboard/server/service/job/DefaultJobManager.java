@@ -102,25 +102,23 @@ public class DefaultJobManager implements JobManager {
     @Override
     public void onJobUpdate(Job job) {
         JobStatus status = job.getStatus();
-        switch (status) {
-            case PENDING -> {
-                executor.execute(() -> {
-                    try {
-                        processJob(job);
-                    } catch (Throwable e) {
-                        log.error("Failed to process job update: {}", job, e);
-                    }
-                });
-            }
-            case COMPLETED, FAILED -> {
-                executor.execute(() -> {
-                    try {
-                        getJobProcessor(job.getType()).onJobFinished(job);
-                    } catch (Throwable e) {
-                        log.error("Failed to process job update: {}", job, e);
-                    }
-                });
-            }
+        if (status == JobStatus.PENDING) {
+            executor.execute(() -> {
+                try {
+                    processJob(job);
+                } catch (Throwable e) {
+                    log.error("Failed to process job update: {}", job, e);
+                }
+            });
+        } else if (status.isOneOf(JobStatus.COMPLETED, JobStatus.FAILED) ||
+                   job.getResult().getCancellationTs() > 0) {
+            executor.execute(() -> {
+                try {
+                    getJobProcessor(job.getType()).onJobFinished(job);
+                } catch (Throwable e) {
+                    log.error("Failed to process job update: {}", job, e);
+                }
+            });
         }
     }
 

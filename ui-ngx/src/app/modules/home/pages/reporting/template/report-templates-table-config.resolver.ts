@@ -60,11 +60,12 @@ import { ReportTemplateService } from '@core/http/report-template.service';
 import { mergeMap } from 'rxjs/operators';
 import { UtilsService } from '@core/services/utils.service';
 import { AuthUser } from '@shared/models/user.model';
-import { Authority } from '@shared/models/authority.enum';
 import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
-import { ReportTemplateTableHeaderComponent } from '@home/pages/reporting/template/report-template-table-header.component';
+import {
+  ReportTemplateTableHeaderComponent
+} from '@home/pages/reporting/template/report-template-table-header.component';
 import { ReportTemplateTabsComponent } from '@home/pages/reporting/template/report-template-tabs.component';
 import { ReportTemplateFormComponent } from '@home/pages/reporting/template/report-template-form.component';
 import { ImportExportService } from '@shared/import-export/import-export.service';
@@ -97,16 +98,9 @@ export class ReportTemplatesTableConfigResolver  {
     this.configDefaults(config);
     const authUser = getCurrentAuthUser(this.store);
     config.componentsData = {
-      includeCustomers: true,
       reportTemplateFilter: {
         typeList: null,
         formatList: null
-      },
-      includeCustomersChanged: (includeCustomers: boolean) => {
-        config.componentsData.includeCustomers = includeCustomers;
-        config.columns = this.configureColumns(authUser, config);
-        config.getTable().columnsUpdated();
-        config.getTable().resetSortAndFilter(true);
       },
       reportTemplateFilterChanged: (filter: ReportTemplateFilter) => {
         config.componentsData.reportTemplateFilter = filter;
@@ -122,7 +116,6 @@ export class ReportTemplatesTableConfigResolver  {
       return true;
     };
 
-    config.tableTitle = this.translate.instant('report-template.report-templates');
     config.columns = this.configureColumns(authUser, config);
     this.configureEntityFunctions(config);
     config.cellActionDescriptors = this.configureCellActions(config);
@@ -163,30 +156,22 @@ export class ReportTemplatesTableConfigResolver  {
     };
   }
 
-  configureColumns(authUser: AuthUser, config: EntityTableConfig<ReportTemplateInfo>): Array<EntityColumn<ReportTemplateInfo>> {
-    const columns: Array<EntityColumn<ReportTemplateInfo>> = [
+  configureColumns(_authUser: AuthUser, config: EntityTableConfig<ReportTemplateInfo>): Array<EntityColumn<ReportTemplateInfo>> {
+    return [
       new DateEntityTableColumn<ReportTemplateInfo>('createdTime', 'common.created-time', this.datePipe, '150px'),
-      new EntityTableColumn<ReportTemplateInfo>('name', 'report-template.name',
-        config.componentsData.includeCustomers ? '30%' : '60%', config.entityTitle),
-      new EntityTableColumn<ReportTemplateInfo>( 'type', 'report-template.type', '20%', entity => {
+      new EntityTableColumn<ReportTemplateInfo>('name', 'report-template.name', '60%', config.entityTitle),
+      new EntityTableColumn<ReportTemplateInfo>('type', 'report-template.type', '20%', entity => {
         return this.translate.instant(reportTemplateTypeTranslationMap.get(entity.type))
       }),
-      new EntityTableColumn<ReportTemplateInfo>( 'format', 'report-template.format', '20%')
+      new EntityTableColumn<ReportTemplateInfo>('format', 'report-template.format', '20%')
     ];
-    if (config.componentsData.includeCustomers) {
-      const title = (authUser.authority === Authority.CUSTOMER_USER)
-        ? 'entity.sub-customer-name' : 'entity.customer-name';
-      columns.push(new EntityTableColumn<ReportTemplateInfo>('ownerName', title, '30%'));
-    }
-    return columns;
   }
 
   configureEntityFunctions(config: EntityTableConfig<ReportTemplateInfo>): void {
     config.entitiesFetchFunction = pageLink => {
       const reportTemplateQuery = new ReportTemplateQuery(pageLink, {
         typeList: config.componentsData.reportTemplateFilter.typeList,
-        formatList: config.componentsData.reportTemplateFilter.formatList,
-        includeCustomers: config.componentsData.includeCustomers
+        formatList: config.componentsData.reportTemplateFilter.formatList
       });
       return this.reportTemplateService.getAllReportTemplateInfos(reportTemplateQuery);
     };

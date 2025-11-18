@@ -34,7 +34,7 @@ import { DynamicComponentFactoryService } from '@core/services/dynamic-component
 import { WidgetService } from '@core/http/widget.service';
 import { forkJoin, from, Observable, of, ReplaySubject, Subject, throwError } from 'rxjs';
 import {
-  ErrorWidgetType,
+  ErrorWidgetType, isWidgetWithInfo,
   MissingWidgetType,
   toWidgetInfo,
   toWidgetType,
@@ -259,6 +259,9 @@ export class WidgetComponentService {
   }
 
   public getInstantWidgetInfo(widget: Widget): WidgetInfo {
+    if (isWidgetWithInfo(widget)) {
+      return widget.widgetInfo;
+    }
     const widgetInfo = this.widgetService.getWidgetInfoFromCache(widget.typeFullFqn);
     if (widgetInfo) {
       return widgetInfo;

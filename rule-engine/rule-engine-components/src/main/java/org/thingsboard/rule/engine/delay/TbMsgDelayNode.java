@@ -30,7 +30,6 @@
  */
 package org.thingsboard.rule.engine.delay;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.thingsboard.rule.engine.api.RuleNode;
 import org.thingsboard.rule.engine.api.TbContext;
@@ -49,7 +48,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-@Slf4j
 @RuleNode(
         type = ComponentType.ACTION,
         name = "delay (deprecated)",
@@ -60,7 +58,8 @@ import java.util.concurrent.TimeUnit;
                 "Deprecated because the acknowledged message still stays in memory (to be delayed) and this " +
                 "does not guarantee that message will be processed even if the \"retry failures and timeouts\" processing strategy will be chosen.",
         icon = "pause",
-        configDirective = "tbActionNodeMsgDelayConfig"
+        configDirective = "tbActionNodeMsgDelayConfig",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/action/delay/"
 )
 public class TbMsgDelayNode implements TbNode {
 
@@ -124,4 +123,5 @@ public class TbMsgDelayNode implements TbNode {
     public void destroy() {
         pendingMsgs.clear();
     }
+
 }

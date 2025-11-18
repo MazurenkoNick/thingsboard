@@ -46,9 +46,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
-public class EntitiesRelatedEntityIdAsyncLoader {
+public final class EntitiesRelatedEntityIdAsyncLoader {
+
+    private EntitiesRelatedEntityIdAsyncLoader() {}
 
     public static ListenableFuture<EntityId> findEntityAsync(
             TbContext ctx,
@@ -59,15 +60,17 @@ public class EntitiesRelatedEntityIdAsyncLoader {
         var query = buildQuery(originator, relationsQuery);
         var relationListFuture = relationService.findByQuery(ctx.getTenantId(), query);
         if (relationsQuery.getDirection() == EntitySearchDirection.FROM) {
-            return Futures.transformAsync(relationListFuture,
-                    relationList -> CollectionUtils.isNotEmpty(relationList) ?
-                            Futures.immediateFuture(relationList.get(0).getTo())
-                            : Futures.immediateFuture(null), ctx.getDbCallbackExecutor());
+            return Futures.transform(
+                    relationListFuture,
+                    relationList -> CollectionUtils.isNotEmpty(relationList) ? relationList.get(0).getTo() : null,
+                    ctx.getDbCallbackExecutor()
+            );
         } else if (relationsQuery.getDirection() == EntitySearchDirection.TO) {
-            return Futures.transformAsync(relationListFuture,
-                    relationList -> CollectionUtils.isNotEmpty(relationList) ?
-                            Futures.immediateFuture(relationList.get(0).getFrom())
-                            : Futures.immediateFuture(null), ctx.getDbCallbackExecutor());
+            return Futures.transform(
+                    relationListFuture,
+                    relationList -> CollectionUtils.isNotEmpty(relationList) ? relationList.get(0).getFrom() : null,
+                    ctx.getDbCallbackExecutor()
+            );
         }
         return Futures.immediateFailedFuture(new IllegalStateException("Unknown direction"));
     }
@@ -93,9 +96,9 @@ public class EntitiesRelatedEntityIdAsyncLoader {
             return Futures.immediateFailedFuture(new IllegalStateException("Unknown direction"));
         }
 
-        return Futures.transformAsync(asyncRelation, r -> CollectionUtils.isNotEmpty(r)
-                ? Futures.immediateFuture(r.stream().map(mapFunction).filter(entityFilter).collect(Collectors.toList()))
-                : Futures.immediateFuture(Collections.emptyList()), ctx.getDbCallbackExecutor());
+        return Futures.transform(asyncRelation, r -> CollectionUtils.isNotEmpty(r)
+                ? r.stream().map(mapFunction).filter(entityFilter).toList()
+                : Collections.emptyList(), ctx.getDbCallbackExecutor());
     }
 
     private static EntityRelationsQuery buildQuery(EntityId originator, RelationsQuery relationsQuery) {

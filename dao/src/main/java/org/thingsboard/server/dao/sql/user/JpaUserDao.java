@@ -41,6 +41,7 @@ import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.edqs.fields.UserFields;
 import org.thingsboard.server.common.data.id.CustomMenuId;
 import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.TenantProfileId;
@@ -174,13 +175,28 @@ public class JpaUserDao extends JpaAbstractDao<UserEntity, User> implements User
     }
 
     @Override
+    public boolean existsByTenantsIdsAndRoleIdAndUserId(List<TenantId> tenantsIds, RoleId roleId, UserId userId) {
+        return userRepository.existsByIdAndTenantsIdsAndRoleId(userId.getId(), DaoUtil.toUUIDs(tenantsIds), roleId.getId());
+    }
+
+    @Override
     public PageData<User> findUsersByTenantProfilesIdsAndRoleId(List<TenantProfileId> tenantProfilesIds, RoleId roleId, PageLink pageLink) {
         return DaoUtil.toPageData(userRepository.findByTenantProfilesIdsAndRoleId(DaoUtil.toUUIDs(tenantProfilesIds), roleId.getId(), DaoUtil.toPageable(pageLink)));
     }
 
     @Override
+    public boolean existsByTenantProfilesIdsAndRoleIdAndUserId(List<TenantProfileId> tenantProfilesIds, RoleId roleId, UserId userId) {
+        return userRepository.existsByIdAndTenantProfilesIdsAndRoleId(userId.getId(), DaoUtil.toUUIDs(tenantProfilesIds), roleId.getId());
+    }
+
+    @Override
     public PageData<User> findAllUsersByRoleId(RoleId roleId, PageLink pageLink) {
         return DaoUtil.toPageData(userRepository.findByRoleId(roleId.getId(), DaoUtil.toPageable(pageLink)));
+    }
+
+    @Override
+    public boolean existsByRoleIdAndUserId(RoleId roleId, UserId userId) {
+        return userRepository.existsByIdAndRoleId(userId.getId(), roleId.getId());
     }
 
     @Override
@@ -232,6 +248,11 @@ public class JpaUserDao extends JpaAbstractDao<UserEntity, User> implements User
         } else {
             userRepository.updateCustomMenuId(toUUIDs(userIds), customMenuId.getId());
         }
+    }
+
+    @Override
+    public boolean existsInEntityGroup(UserId id, EntityGroupId entityGroupId) {
+        return userRepository.existsInEntityGroup(id.getId(), entityGroupId.getId());
     }
 
     @Override

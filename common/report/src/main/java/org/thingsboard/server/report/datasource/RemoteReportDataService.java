@@ -30,15 +30,18 @@
  */
 package org.thingsboard.server.report.datasource;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientResponseException;
+import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rest.client.RestClient;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.kv.Aggregation;
-import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
@@ -51,6 +54,7 @@ import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.configuration.timewindow.Interval;
 import org.thingsboard.server.report.context.RemoteTbReportCtxProvider;
 import org.thingsboard.server.report.context.TbReportCtx;
 
@@ -64,7 +68,11 @@ public class RemoteReportDataService implements ReportDataService {
 
     @Override
     public ReportTemplate findReportTemplate(ReportTemplateId templateId, TbReportCtx ctx) {
-        return getRestClient(ctx).findReportTemplate(templateId);
+        try {
+            return getRestClient(ctx).findReportTemplate(templateId);
+        } catch (RestClientResponseException e) {
+            throw handleRestClientException(e);
+        }
     }
 
     @Override
@@ -74,6 +82,8 @@ public class RemoteReportDataService implements ReportDataService {
             return restClient.downloadImage(type, key);
         } catch (IOException e) {
             throw new ThingsboardException("Failed to download image", e, ThingsboardErrorCode.GENERAL);
+        } catch (RestClientResponseException e) {
+            throw handleRestClientException(e);
         }
     }
 
@@ -84,48 +94,98 @@ public class RemoteReportDataService implements ReportDataService {
             return restClient.downloadPublicImage(publicKey);
         } catch (IOException e) {
             throw new ThingsboardException("Failed to download public image", e, ThingsboardErrorCode.GENERAL);
+        } catch (RestClientResponseException e) {
+            throw handleRestClientException(e);
         }
     }
 
     @Override
     public PageData<EntityData> findEntityDataByQuery(EntityDataQuery query, TbReportCtx ctx) {
-        return getRestClient(ctx).findEntityDataByQuery(query);
+        try {
+            return getRestClient(ctx).findEntityDataByQuery(query);
+        } catch (RestClientResponseException e) {
+            throw handleRestClientException(e);
+        }
     }
 
     @Override
     public Long countEntitiesByQuery(EntityCountQuery query, TbReportCtx ctx) {
-        return getRestClient(ctx).countEntitiesByQuery(query);
+        try {
+            return getRestClient(ctx).countEntitiesByQuery(query);
+        } catch (RestClientResponseException e) {
+            throw handleRestClientException(e);
+        }
     }
 
     @Override
     public PageData<AlarmData> findAlarmDataByQuery(AlarmDataQuery query, TbReportCtx ctx) {
-        return getRestClient(ctx).findAlarmDataByQuery(query);
+        try {
+            return getRestClient(ctx).findAlarmDataByQuery(query);
+        } catch (RestClientResponseException e) {
+            throw handleRestClientException(e);
+        }
     }
 
     @Override
     public PageData<AlarmData> findAlarmDataByQueryForEntities(AlarmDataQuery query, Collection<EntityId> entityIds, TbReportCtx ctx) {
-        return getRestClient(ctx).findAlarmDataByQuery(query);
+        try {
+            return getRestClient(ctx).findAlarmDataByQuery(query);
+        } catch (RestClientResponseException e) {
+            throw handleRestClientException(e);
+        }
     }
 
     @Override
     public Long countAlarmsByQuery(AlarmCountQuery query, TbReportCtx ctx) {
-        return getRestClient(ctx).countAlarmsByQuery(query);
+        try {
+            return getRestClient(ctx).countAlarmsByQuery(query);
+        } catch (RestClientResponseException e) {
+            throw handleRestClientException(e);
+        }
     }
 
     @Override
-    public List<TsKvEntry> getTimeseries(EntityId entityId, List<String> keys, Long startTs, Long endTs, Long interval, Aggregation agg, SortOrder.Direction sortOrder,
+    public List<TsKvEntry> getTimeseries(EntityId entityId, List<String> keys, Long startTs, Long endTs, Interval interval, String timeZone, Aggregation agg, SortOrder.Direction sortOrder,
                                          Integer limit, boolean useStrictDataTypes, TbReportCtx ctx) {
-        return getRestClient(ctx).getTimeseries(entityId, keys, interval, agg, sortOrder, startTs, endTs, limit, useStrictDataTypes);
+        try {
+            return getRestClient(ctx).getTimeseries(entityId, keys, interval.getInterval(), interval.getIntervalType(), timeZone, agg, sortOrder, startTs, endTs, limit, useStrictDataTypes);
+        } catch (RestClientResponseException e) {
+            throw handleRestClientException(e);
+        }
     }
 
     @Override
-    public List<ReadTsKvQueryResult> findTimeseriesByQueries(EntityId entityId, List<ReadTsKvQuery> queries, TbReportCtx ctx) {
-        return getRestClient(ctx).getTimeseriesByQueries(entityId, queries);
+    public List<ReadTsKvQueryResult> findTimeseriesByQueries(EntityId entityId, List<BaseReadTsKvQuery> queries, TbReportCtx ctx) {
+        try {
+            return getRestClient(ctx).getTimeseriesByQueries(entityId, queries);
+        } catch (RestClientResponseException e) {
+            throw handleRestClientException(e);
+        }
     }
 
     @Override
     public Report createReport(Report report, byte[] data, TbReportCtx ctx) {
-        return getRestClient(ctx).createReport(report, data);
+        try {
+            return getRestClient(ctx).createReport(report, data);
+        } catch (RestClientResponseException e) {
+            throw handleRestClientException(e);
+        }
+    }
+
+    private RuntimeException handleRestClientException(RestClientResponseException e) {
+        return new RuntimeException(extractErrorMessage(e.getResponseBodyAsString()), e);
+    }
+
+    private String extractErrorMessage(String responseBody) {
+        try {
+            JsonNode root = JacksonUtil.toJsonNode(responseBody);
+            if (root != null && root.hasNonNull("message")) {
+                return root.path("message").asText(responseBody);
+            }
+            return responseBody;
+        } catch (Exception e) {
+            return responseBody;
+        }
     }
 
     private RestClient getRestClient(TbReportCtx ctx) {

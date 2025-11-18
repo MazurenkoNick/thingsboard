@@ -41,39 +41,68 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
+import org.thingsboard.server.common.data.kv.Aggregation;
+import org.thingsboard.server.common.data.kv.BasicTsKvEntry;
+import org.thingsboard.server.common.data.kv.TsKvEntry;
+import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.TbReportFormat;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.DataSourceType;
 import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
+import org.thingsboard.server.common.data.report.configuration.chart.ColorRange;
+import org.thingsboard.server.common.data.report.configuration.chart.ComparisonDuration;
+import org.thingsboard.server.common.data.report.configuration.chart.DataKeyComparisonSettings;
+import org.thingsboard.server.common.data.report.configuration.chart.ReportRangeChartSettings;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartKeySettings;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartThreshold;
+import org.thingsboard.server.common.data.report.configuration.chart.ValueSourceConfig;
+import org.thingsboard.server.common.data.report.configuration.chart.ValueSourceType;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DashboardComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ErrorComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ImageComponent;
+import org.thingsboard.server.common.data.report.configuration.components.LatestChartComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.SubReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.TimeseriesChartComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.SplitViewComponent;
 import org.thingsboard.server.common.data.report.configuration.image.ImageSourceType;
 import org.thingsboard.server.common.data.report.configuration.style.Insets;
 import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
 import org.thingsboard.server.common.data.report.configuration.style.PageSize;
+import org.thingsboard.server.common.data.report.configuration.timewindow.History;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.context.HeaderFooterRenderLayout;
 import org.thingsboard.server.report.context.TbReportCtx;
+import org.thingsboard.server.report.context.chart.DataPostProcessFunction;
+import org.thingsboard.server.report.context.chart.LatestChartData;
+import org.thingsboard.server.report.context.chart.LatestChartDataSource;
+import org.thingsboard.server.report.context.chart.TsChartData;
+import org.thingsboard.server.report.context.chart.TsChartDataSource;
+import org.thingsboard.server.report.context.chart.TsChartRangeItem;
+import org.thingsboard.server.report.context.chart.TsChartThresholdItem;
 import org.thingsboard.server.report.renderer.PdfReportComponentRenderer;
 import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.HtmlRenderUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 import org.thingsboard.server.report.util.WebReportClient;
+import org.w3c.dom.Document;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.awt.Dimension;
 import java.io.ByteArrayOutputStream;
+import java.text.NumberFormat;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -82,16 +111,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+import static org.thingsboard.server.common.data.report.configuration.chart.ReportComponentSubType.RANGE_CHART;
+import static org.thingsboard.server.common.data.report.configuration.chart.ReportComponentSubType.STATE_CHART;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.DASHBOARD;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.ERROR;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.SUB_REPORT;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
 import static org.thingsboard.server.common.data.report.configuration.style.PageSize.A4;
+import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getComparisonTimeRange;
+import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.entityDataFromEntityId;
+import static org.thingsboard.server.report.renderer.chart.ChartUtils.createValueFormatter;
+import static org.thingsboard.server.report.util.ReportQueryUtils.DEFAULT_TS_CHART_SORT_ORDER;
+import static org.thingsboard.server.report.util.ReportQueryUtils.resolveAliasId;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toEntityCountQuery;
+import static org.thingsboard.server.report.util.ReportUtils.collectThresholdItems;
+import static org.thingsboard.server.report.util.ReportUtils.getMultipleDataSources;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportComponent;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
@@ -137,9 +178,9 @@ public class PdfReportService extends AbstractReportService {
         reportVariables.put("pageContent", renderContent(usablePageWidthPx, ctx, configuration.getComponents(), stateEntity));
 
         String renderedHtmlContent = ThymeleafUtil.renderFromHtmlTemplate("html/report-template", reportVariables);
-        String xHtml = HtmlRenderUtils.convertToXhtml(renderedHtmlContent);
 
-        renderer.setDocumentFromString(xHtml);
+        Document doc = HtmlRenderUtils.parseDom(renderedHtmlContent);
+        renderer.setDocument(doc);
         renderer.layout();
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -204,7 +245,9 @@ public class PdfReportService extends AbstractReportService {
             return componentsRenderers.get(component.getType()).render(component, componentData);
         } catch (Exception e) {
             log.error("Failed to render component of type [{}]", component.getType(), e);
-            return renderError(usablePageWidthPx, "Failed to render component of type: " + component.getType(), e);
+            String componentSubType = component.getSubType() != null ? " [" + component.getSubType() + "]" : "";
+            return renderError(usablePageWidthPx, "Failed to render component of type: "
+                    + component.getType() + componentSubType, e);
         }
     }
 
@@ -212,10 +255,15 @@ public class PdfReportService extends AbstractReportService {
         ComponentData componentData = switch (component.getType()) {
             case TIME_SERIES_TABLE ->
                     buildTsComponentData(usablePageWidthPx, ctx, (TimeseriesTableComponent) component, stateEntity);
+            case TIME_SERIES_CHART ->
+                    buildTsChartComponentData(usablePageWidthPx, ctx, (TimeseriesChartComponent) component, stateEntity);
+            case LATEST_CHART ->
+                    buildLatestChartComponentData(usablePageWidthPx, ctx, (LatestChartComponent) component, stateEntity);
             case ALARM_TABLE ->
                     buildAlarmComponentData(usablePageWidthPx, ctx, (AlarmTableComponent) component, stateEntity);
             case DASHBOARD ->
                     buildDashboardComponentData(usablePageWidthPx, ctx, ((DashboardComponent) component), stateEntity);
+            case SPLIT_VIEW -> buildSplitViewComponentData(usablePageWidthPx, ctx, (SplitViewComponent) component, stateEntity);
             case IMAGE -> buildImageComponentData(usablePageWidthPx, ctx, ((ImageComponent) component));
             default -> buildMultipleDataSourceData(usablePageWidthPx, ctx, component, stateEntity);
         };
@@ -306,6 +354,243 @@ public class PdfReportService extends AbstractReportService {
         return componentsRenderers.get(ERROR).render(new ErrorComponent(errorMessage, e), new ComponentData(usablePageWidthPx));
     }
 
+    private ComponentData buildLatestChartComponentData(int usablePageWidthPx, TbReportCtx ctx, LatestChartComponent component, EntityData stateEntity) {
+        Optional<DataSource> dataSource = getSingleDataSource(component);
+        if (dataSource.isEmpty()) {
+            return new ComponentData(usablePageWidthPx, "Data source is not configured for the chart [" + component.getSubType() + "]");
+        }
+        DataSource ds = dataSource.get();
+        if (ds.getDataKeys().isEmpty()) {
+            return new ComponentData(usablePageWidthPx, "At least one series should be specified for the chart [" + component.getSubType() + "]");
+        }
+        List<EntityData> entityDatas = fetchEntities(ctx, ds, stateEntity != null ? stateEntity.getEntityId() : null, DEFAULT_TS_CHART_SORT_ORDER);
+        List<LatestChartDataSource> chartData = new ArrayList<>();
+        int dataIndex = 0;
+        DataPostProcessFunction dataPostProcessFunction = (dataKey, timestamp, value) -> this.postProcess(ctx, dataKey, timestamp, value, true);
+        for (EntityData entity : entityDatas) {
+            LatestChartDataSource chartDataSource = new LatestChartDataSource(ds, entity, dataPostProcessFunction, dataIndex);
+            chartData.add(chartDataSource);
+            dataIndex++;
+        }
+        int keyIndex = 0;
+
+        for (LatestChartDataSource chartDataSource : chartData) {
+            for (DataKey dataKey : chartDataSource.getDataKeys()) {
+                if (chartDataSource.isGenerated()) {
+                    dataKey.setColor(ColorUtils.getMaterialColor(keyIndex));
+                }
+                keyIndex++;
+            }
+        }
+        LatestChartData latestChartData = new LatestChartData(chartData);
+        Map<String, String> variables = new HashMap<>();
+        if (stateEntity != null) {
+            putEntityInfoData(stateEntity, variables);
+        } else if (!entityDatas.isEmpty()) {
+            putEntityInfoData(entityDatas.get(0), variables);
+        }
+        return new ComponentData(usablePageWidthPx, latestChartData, new HashMap<>(variables));
+    }
+
+    private ComponentData buildTsChartComponentData(int usablePageWidthPx, TbReportCtx ctx, TimeseriesChartComponent component, EntityData stateEntity) {
+        Optional<DataSource> dataSource = getSingleDataSource(component);
+        if (dataSource.isEmpty()) {
+            return new ComponentData(usablePageWidthPx, "Data source is not configured for time series chart [" + component.getSubType() + "]");
+        }
+        DataSource ds = dataSource.get();
+        if (ds.getDataKeys().isEmpty()) {
+            return new ComponentData(usablePageWidthPx, "At least one series should be specified for time series chart [" + component.getSubType() + "]");
+        }
+
+        List<TimeSeriesChartThreshold> thresholds = null;
+        boolean comparisonEnabled = false;
+        if (component.getTimeSeriesChartSettings() != null) {
+            thresholds = component.getTimeSeriesChartSettings().getThresholds();
+            comparisonEnabled = component.getTimeSeriesChartSettings().getComparisonEnabled() != null ?
+                    component.getTimeSeriesChartSettings().getComparisonEnabled() : false;
+        }
+        if (thresholds == null) {
+            thresholds = new ArrayList<>();
+        }
+        thresholds = thresholds.stream().filter(ValueSourceConfig::isValidSource).toList();
+
+        List<TsChartThresholdItem> thresholdItems = new ArrayList<>(thresholds.stream()
+                .filter(t -> ValueSourceType.constant.equals(t.getType())).map(t -> new TsChartThresholdItem(t, t.getValue())).toList());
+
+        DataSource latestDataSource = DataSource.builder()
+                .type(ds.getType())
+                .deviceId(ds.getDeviceId())
+                .entityAliasId(ds.getEntityAliasId())
+                .filterId(ds.getFilterId())
+                .dataKeys(ds.getLatestDataKeys()).build();
+
+        boolean singleEntity = RANGE_CHART == component.getSubType();
+
+        List<EntityData> entityDatas = fetchEntities(ctx, latestDataSource, stateEntity != null ? stateEntity.getEntityId() : null, DEFAULT_TS_CHART_SORT_ORDER, singleEntity);
+
+        List<TimeSeriesChartThreshold> latestKeyThresholds = thresholds.stream()
+                .filter(t -> ValueSourceType.latestKey.equals(t.getType())).toList();
+
+        List<TsChartThresholdItem> latestThresholdItems = collectThresholdItems(latestKeyThresholds, entityDatas, true);
+        thresholdItems.addAll(latestThresholdItems);
+
+        Map<String, List<TimeSeriesChartThreshold>> thresholdsByAlias = thresholds.stream().filter(t -> ValueSourceType.entity.equals(t.getType()))
+                .collect(Collectors.groupingBy(TimeSeriesChartThreshold::getEntityAlias));
+
+        thresholdsByAlias.forEach((alias, entityThresholds) -> {
+            Optional<String> aliasId = resolveAliasId(ctx, alias);
+            if (aliasId.isPresent()) {
+                List<DataKey> dataKeys = entityThresholds.stream().map(TimeSeriesChartThreshold::toEntityDataKey).distinct().toList();
+                DataSource thresholdDataSource = DataSource.builder().type(DataSourceType.ENTITY)
+                        .entityAliasId(aliasId.get())
+                        .dataKeys(dataKeys)
+                        .build();
+                List<EntityData> foundEntities = fetchEntities(ctx, thresholdDataSource, stateEntity != null ? stateEntity.getEntityId() : null, DEFAULT_TS_CHART_SORT_ORDER);
+                List<TsChartThresholdItem> entityThresholdItems = collectThresholdItems(entityThresholds, foundEntities, false);
+                thresholdItems.addAll(entityThresholdItems);
+            }
+        });
+
+        List<TsChartRangeItem> rangeItems = new ArrayList<>();
+        if (RANGE_CHART == component.getSubType()) {
+            if (component.getTimeSeriesChartSettings() != null) {
+                ReportRangeChartSettings rangeChartSettings = (ReportRangeChartSettings) component.getTimeSeriesChartSettings();
+                List<ColorRange> colorRanges = rangeChartSettings.getRangeColors();
+                if (colorRanges != null) {
+                    int decimals = rangeChartSettings.getRangeDecimals() != null ? rangeChartSettings.getRangeDecimals() : 2;
+                    String units = rangeChartSettings.getRangeUnits() != null ? rangeChartSettings.getRangeUnits() : "";
+                    NumberFormat valueFormat = createValueFormatter(decimals, "");
+                    rangeItems = TsChartRangeItem.toRangeItems(colorRanges, valueFormat);
+                    if (rangeChartSettings.getShowRangeThresholds() == null || rangeChartSettings.getShowRangeThresholds()) {
+                        TimeSeriesChartThreshold rangeThreshold = new TimeSeriesChartThreshold(rangeChartSettings.getRangeThreshold());
+                        rangeThreshold.setType(ValueSourceType.constant);
+                        rangeThreshold.setYAxisId("default");
+                        rangeThreshold.setDecimals(rangeThreshold.getDecimals() != null ? rangeThreshold.getDecimals() : decimals);
+                        rangeThreshold.setUnits(rangeThreshold.getUnits() != null ? rangeThreshold.getUnits() : units);
+                        thresholdItems.addAll(
+                            TsChartRangeItem.toMarkPoints(rangeItems).stream().map(item -> new TsChartThresholdItem(rangeThreshold, item)).toList()
+                        );
+                    }
+                }
+            }
+        }
+
+        List<TsChartDataSource> chartData = new ArrayList<>();
+        List<DataKey> dataKeys = ds.getDataKeys();
+        List<String> keys = dataKeys.stream().map(DataKey::getName).distinct().toList();
+
+        TimeWindowConfiguration timeWindowConf = component.getTimewindow();
+        History historyConf = timeWindowConf.getHistory();
+        String targetTimezone = StringUtils.isNotBlank(timeWindowConf.getTimezone()) ?
+                timeWindowConf.getTimezone() : ctx.getTimeZone();
+        TimeIntervalCalculator.TimeRange timeRange = getTimeRange(timeWindowConf, targetTimezone);
+        ZoneId zoneId = targetTimezone != null ? ZoneId.of(targetTimezone) : ZoneId.systemDefault();
+
+        int dataIndex = 0;
+        int startDataIndex = 0;
+        boolean stateData = STATE_CHART == component.getSubType();
+        DataPostProcessFunction dataPostProcessFunction = (dataKey, timestamp, value) -> this.postProcess(ctx, dataKey, timestamp, value, true);
+
+        for (EntityData entity : entityDatas) {
+            Aggregation aggregation = timeWindowConf.getAggregation().getType();
+            if (stateData) {
+                aggregation = Aggregation.NONE;
+            }
+            List<TsKvEntry> tsKvEntries = dataService.getTimeseries(entity.getEntityId(), keys, timeRange.startTs, timeRange.endTs,
+                    historyConf.getInterval(), targetTimezone, aggregation, SortOrder.Direction.ASC,
+                    timeWindowConf.getAggregation().getLimit(), false, ctx);
+            if (stateData) {
+                List<TsKvEntry> prevTsKvEntries = dataService.getTimeseries(entity.getEntityId(), keys, timeRange.startTs - TimeUnit.DAYS.toMillis(365), timeRange.startTs,
+                        historyConf.getInterval(), targetTimezone, aggregation, SortOrder.Direction.DESC,
+                        1, false, ctx);
+                if (!prevTsKvEntries.isEmpty()) {
+                    TsKvEntry prev = prevTsKvEntries.get(0);
+                    if (tsKvEntries.isEmpty() || tsKvEntries.get(0).getTs() > timeRange.startTs) {
+                        TsKvEntry startEntry = new BasicTsKvEntry(timeRange.startTs, prev);
+                        tsKvEntries.add(0, startEntry);
+                    }
+                }
+                if (!tsKvEntries.isEmpty() && tsKvEntries.get(tsKvEntries.size() - 1).getTs() < timeRange.endTs) {
+                    TsKvEntry last = tsKvEntries.get(tsKvEntries.size() - 1);
+                    TsKvEntry endEntry = new BasicTsKvEntry(timeRange.endTs, last);
+                    tsKvEntries.add(endEntry);
+                }
+            }
+            TsChartDataSource chartDataSource = new TsChartDataSource(ds, entity, tsKvEntries, timeRange,
+                    historyConf.getInterval(), aggregation, zoneId, false, null, dataPostProcessFunction, dataIndex, startDataIndex);
+            chartData.add(chartDataSource);
+            dataIndex++;
+            startDataIndex += chartDataSource.getDataKeys().size();
+        }
+
+        int keyIndex = 0;
+
+        for (TsChartDataSource chartDataSource : chartData) {
+            for (DataKey dataKey : chartDataSource.getDataKeys()) {
+                if (chartDataSource.isGenerated()) {
+                    dataKey.setColor(ColorUtils.getMaterialColor(keyIndex));
+                }
+                keyIndex++;
+            }
+        }
+        TimeIntervalCalculator.TimeRange comparisonTimeRange = null;
+        if (comparisonEnabled) {
+            ComparisonDuration timeForComparison = ComparisonDuration.previousInterval;
+            Long comparisonCustomIntervalValue = 7200000L;
+            if (component.getTimeSeriesChartSettings() != null) {
+                if (component.getTimeSeriesChartSettings().getTimeForComparison() != null) {
+                    timeForComparison = component.getTimeSeriesChartSettings().getTimeForComparison();
+                }
+                if (component.getTimeSeriesChartSettings().getComparisonCustomIntervalValue() != null) {
+                    comparisonCustomIntervalValue = component.getTimeSeriesChartSettings().getComparisonCustomIntervalValue();
+                }
+            }
+            comparisonTimeRange = getComparisonTimeRange(timeRange, timeWindowConf,
+                    targetTimezone, timeForComparison, comparisonCustomIntervalValue);
+
+            List<DataKey> comparisionDataKeys = dataKeys.stream().filter(DataKey::isComparisonKey).toList();
+            if (!comparisionDataKeys.isEmpty()) {
+                List<String> comparisonKeys = comparisionDataKeys.stream().map(DataKey::getName).distinct().toList();
+                List<TsChartDataSource> comparisonChartData = new ArrayList<>();
+                for (EntityData entity : entityDatas) {
+                    List<TsKvEntry> tsKvEntries = dataService.getTimeseries(entity.getEntityId(), comparisonKeys, comparisonTimeRange.startTs, comparisonTimeRange.endTs,
+                            historyConf.getInterval(), targetTimezone, timeWindowConf.getAggregation().getType(), SortOrder.Direction.ASC,
+                            timeWindowConf.getAggregation().getLimit(), false, ctx);
+
+                    TsChartDataSource chartDataSource = new TsChartDataSource(ds, entity, tsKvEntries, comparisonTimeRange,
+                            historyConf.getInterval(), timeWindowConf.getAggregation().getType(), zoneId, true, timeForComparison, dataPostProcessFunction, dataIndex, startDataIndex);
+                    comparisonChartData.add(chartDataSource);
+                    dataIndex++;
+                    startDataIndex += chartDataSource.getDataKeys().size();
+                }
+
+                for (TsChartDataSource chartDataSource : comparisonChartData) {
+                    for (DataKey dataKey : chartDataSource.getDataKeys()) {
+                        String color = ColorUtils.getMaterialColor(keyIndex);
+                        TimeSeriesChartKeySettings timeSeriesChartKeySettings = (TimeSeriesChartKeySettings)dataKey.getSettings();
+                        DataKeyComparisonSettings comparisonSettings = timeSeriesChartKeySettings.getComparisonSettings();
+                        if (StringUtils.isNotBlank(comparisonSettings.getColor())) {
+                            color = comparisonSettings.getColor();
+                        }
+                        dataKey.setColor(color);
+                        keyIndex++;
+                    }
+                }
+                chartData.addAll(comparisonChartData);
+            }
+        }
+        TimeZone timeZone = TimeZone.getTimeZone(zoneId.getId());
+        TsChartData tsChartData = new TsChartData(timeZone, timeRange, Aggregation.NONE.equals(timeWindowConf.getAggregation().getType()),
+                chartData, thresholdItems, rangeItems, comparisonEnabled, comparisonTimeRange);
+        Map<String, String> variables = new HashMap<>();
+        if (stateEntity != null) {
+            putEntityInfoData(stateEntity, variables);
+        } else if (!entityDatas.isEmpty()) {
+            putEntityInfoData(entityDatas.get(0), variables);
+        }
+        return new ComponentData(usablePageWidthPx, tsChartData, new HashMap<>(variables));
+    }
+
     private ComponentData buildImageComponentData(int usablePageWidthPx, TbReportCtx ctx, ImageComponent component) {
         if (ImageSourceType.ENTITY_KEY == component.getSourceType()) {
             Optional<DataSource> dataSource = getSingleDataSource(component);
@@ -320,11 +605,20 @@ public class PdfReportService extends AbstractReportService {
 
     private ComponentData buildSingleComponentData(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
         return switch (dataSource.getType()) {
-            case DEVICE, ENTITY -> new ComponentData(usablePageWidthPx, dataSource, collectEntityDatas(ctx, dataSource, stateEntityId));
+            case DEVICE, ENTITY -> buildEntityDataSource(usablePageWidthPx, ctx, dataSource, stateEntityId);
             case ENTITY_COUNT -> buildEntityCountDataSource(usablePageWidthPx, ctx, dataSource);
             case ALARM_COUNT -> buildAlarmCountDataSource(usablePageWidthPx, ctx, dataSource);
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
+    }
+
+    private ComponentData buildEntityDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
+        List<Map<String, String>> entityDatas = collectEntityDatas(ctx, dataSource, stateEntityId);
+        Map<String, Object> variables = new HashMap<>();
+        if (stateEntityId == null && !entityDatas.isEmpty()) {
+            variables.putAll(entityDatas.get(0));
+        }
+        return new ComponentData(usablePageWidthPx, dataSource, entityDatas, variables);
     }
 
     private ComponentData buildEntityCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource) {
@@ -383,20 +677,46 @@ public class PdfReportService extends AbstractReportService {
         }
     }
 
+    private ComponentData buildSplitViewComponentData(int usablePageWidthPx, TbReportCtx ctx, SplitViewComponent component, EntityData stateEntity) {
+        float splitPosition = component.getSplitPosition();
+        float splitGap = component.getSplitGap() * 4f / 3f;
+        int leftWidth = (int)(usablePageWidthPx * splitPosition / 100 - splitGap / 2f);
+        int rightWidth = (int)(usablePageWidthPx * (100 - splitPosition) / 100 - splitGap / 2f);
+        int centerWidth = (int)splitGap;
+        String leftContent = "";
+        if (component.getLeftView() != null) {
+            leftContent = this.renderContent(leftWidth, ctx, Collections.singletonList(component.getLeftView()), stateEntity);
+        }
+        String rightContent = "";
+        if (component.getRightView() != null) {
+            rightContent = this.renderContent(rightWidth, ctx, Collections.singletonList(component.getRightView()), stateEntity);
+        }
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("leftWidth", leftWidth);
+        variables.put("rightWidth", rightWidth);
+        variables.put("centerWidth", centerWidth);
+        variables.put("leftContent", leftContent);
+        variables.put("rightContent", rightContent);
+        return new ComponentData(usablePageWidthPx, variables);
+    }
+
     private ComponentData buildMultipleDataSourceData(int usablePageWidthPx, TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
         List<DataSource> dataSources = null;
         if (component instanceof DataReportComponent) {
-            dataSources = ((DataReportComponent) component).getDataSources();
+            dataSources = getMultipleDataSources((DataReportComponent) component);
         }
         if (dataSources == null || dataSources.isEmpty()) {
             return new ComponentData(usablePageWidthPx);
         }
-        ComponentData mainDataSource = new ComponentData(usablePageWidthPx);
+        Map<String, String> variables = new HashMap<>();
+        if (stateEntity != null) {
+            putEntityInfoData(stateEntity, variables);
+        }
+        ComponentData mainDataSource = new ComponentData(usablePageWidthPx,null, new ArrayList<>(), new HashMap<>(variables));
         for (DataSource dataSource : dataSources) {
             ComponentData singleDataSource = buildSingleComponentData(usablePageWidthPx, ctx, dataSource, stateEntity != null ? stateEntity.getEntityId() : null);
             mainDataSource.merge(singleDataSource);
         }
-        mainDataSource.getVariables().putAll(toStringMap(stateEntity, Collections.emptyList(), ctx));
         return mainDataSource;
     }
 

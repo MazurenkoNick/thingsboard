@@ -855,6 +855,7 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         reportTemplate.setCustomerId(customerId);
         reportTemplate.setFormat(TbReportFormat.CSV);
         CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
+        configuration.setComponents(Collections.emptyList());
         SingleEntityFilter filter = new SingleEntityFilter();
         filter.setSingleEntity(AliasEntityId.fromEntityId(entityId));
         configuration.setEntityAliases(List.of(new EntityAlias(UUID.randomUUID().toString(), "by device id", filter)));

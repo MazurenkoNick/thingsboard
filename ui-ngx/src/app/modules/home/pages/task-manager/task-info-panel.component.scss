@@ -86,6 +86,19 @@
       .failed {
         color: #D12730
       }
+
+      &.info {
+        font-weight: 400;
+        color: rgba(0, 0, 0, 0.54);
+        word-break: break-word;
+      }
+    }
+
+    .task-result-bg {
+      background: rgba(0, 0, 0, 0.04);
+      .warn {
+        color: #FAA405;
+      }
     }
 
     .table-error {

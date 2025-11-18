@@ -138,7 +138,7 @@ public enum Resource {
         operationsByResource.put(Resource.ASSET_PROFILE, Operation.defaultCFEntityOperations);
         operationsByResource.put(Resource.OTA_PACKAGE, Operation.defaultEntityOperations);
         operationsByResource.put(Resource.ASSET, Operation.defaultCFEntityOperations);
-        operationsByResource.put(Resource.CUSTOMER, Operation.defaultEntityOperations);
+        operationsByResource.put(Resource.CUSTOMER, Operation.defaultCFEntityOperations);
         operationsByResource.put(Resource.DASHBOARD, Operation.defaultEntityOperations);
         operationsByResource.put(Resource.ENTITY_VIEW, Operation.defaultEntityOperations);
         operationsByResource.put(Resource.EDGE, Operation.defaultEntityOperations);
@@ -271,8 +271,6 @@ public enum Resource {
                 Resource.ROLE,
                 Resource.SCHEDULER_EVENT,
                 Resource.BLOB_ENTITY,
-                Resource.REPORT_TEMPLATE,
-                Resource.REPORT,
                 Resource.CUSTOMER_GROUP,
                 Resource.USER_GROUP,
                 Resource.DEVICE_GROUP,
@@ -287,7 +285,9 @@ public enum Resource {
                 Resource.AUDIT_LOG,
                 Resource.DEVICE_PROFILE,
                 Resource.ASSET_PROFILE,
-                Resource.MOBILE_APP_SETTINGS
+                Resource.MOBILE_APP_SETTINGS,
+                Resource.REPORT_TEMPLATE,
+                Resource.REPORT
         ));
 
     }

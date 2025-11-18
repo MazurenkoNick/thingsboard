@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
@@ -61,7 +62,12 @@ public class SchedulerEventImportService extends BaseEntityImportService<Schedul
 
     @Override
     protected SchedulerEvent prepare(EntitiesImportCtx ctx, SchedulerEvent schedulerEvent, SchedulerEvent oldSchedulerEvent, SchedulerEventExportData exportData, IdProvider idProvider) {
-        schedulerEvent.setOriginatorId(idProvider.getInternalId(schedulerEvent.getOriginatorId()));
+        // Groups are imported after entities, so a group-originator lookup may return null. Validation forbids a null originator,
+        // so we assign a temporary originator id and rely on reimport to correct it later
+        EntityId originatorId = schedulerEvent.getOriginatorId();
+        boolean isEntityGroup = originatorId != null && originatorId.getEntityType() == EntityType.ENTITY_GROUP;
+        EntityId internalId = idProvider.getInternalId(originatorId, !isEntityGroup || ctx.isFinalImportAttempt());
+        schedulerEvent.setOriginatorId(internalId != null ? internalId : originatorId);
         JsonNode configuration = exportData.prepareConfiguration(schedulerEvent.getConfiguration(), schedulerEvent.getType(),
                 idProvider::getInternalId, ctx.getUser().getId());
         schedulerEvent.setConfiguration(configuration);

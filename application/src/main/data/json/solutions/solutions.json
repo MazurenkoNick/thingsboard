@@ -36,12 +36,12 @@
     "id": "fuel_level_monitoring",
     "title": "Fuel level monitoring",
     "level": "MAKER",
-    "installTimeoutMs": 5000,
-    "previewImageUrl": "https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-1-v2.png",
+    "installTimeoutMs": 15000,
+    "previewImageUrl": "https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-1.png",
     "videoPreviewImageUrl": "https://img.thingsboard.io/usecases/fuel-level-monitoring/video/fuel-monitoring.png",
     "previewMp4Url": "https://video.thingsboard.io/usecases/fuel-level-monitoring.mp4",
     "previewWebmUrl": "https://video.thingsboard.io/usecases/fuel-level-monitoring.webm",
-      "imageUrls": ["https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-1-v2.png", "https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-2-v2.png", "https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-3-v2.png", "https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-4-v2.png", "https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-5-v2.png"]
+    "imageUrls": ["https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-1.png", "https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-2.png", "https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-3.png", "https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-4.png"]
   },
   {
     "id": "swimming_pool_scada_system",

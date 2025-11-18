@@ -31,13 +31,13 @@
 
 import { Component, ViewEncapsulation } from '@angular/core';
 import { FormGroup } from '@angular/forms';
+import { EntityType } from '@shared/models/entity-type.models';
+import { ReportTemplateType } from '@shared/models/report.models';
 import {
-  EntityType,
-  ReportTemplateType,
-  SubReportReportComponentConfig,
-  WidgetConfigMode
-} from '@app/shared/public-api';
-import { AbstractReportComponentConfig } from '@home/pages/reporting/template/components/report-component-config.component';
+  AbstractReportComponentConfig
+} from '@home/pages/reporting/template/components/report-component-config.component';
+import { SubReportReportComponentConfig } from '@shared/models/report-component.models';
+import { WidgetConfigMode } from '@shared/models/widget.models';
 
 @Component({
   selector: 'tb-sub-report-config',

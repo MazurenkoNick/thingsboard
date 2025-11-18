@@ -33,6 +33,7 @@ package org.thingsboard.server.dao.asset;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.EntitySubtype;
+import org.thingsboard.server.common.data.NameConflictStrategy;
 import org.thingsboard.server.common.data.ProfileEntityIdInfo;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetInfo;
@@ -65,6 +66,8 @@ public interface AssetService extends EntityDaoService {
     Asset saveAsset(Asset asset, boolean doValidate);
 
     Asset saveAsset(Asset asset);
+
+    Asset saveAsset(Asset asset, NameConflictStrategy nameConflictStrategy);
 
     void deleteAsset(TenantId tenantId, AssetId assetId);
 

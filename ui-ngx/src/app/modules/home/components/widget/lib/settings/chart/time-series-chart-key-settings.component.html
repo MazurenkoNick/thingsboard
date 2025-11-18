@@ -38,7 +38,7 @@
         {{ 'widgets.time-series-chart.series.show-in-legend' | translate }}
       </div>
     </mat-slide-toggle>
-    <mat-slide-toggle class="mat-slide" formControlName="dataHiddenByDefault">
+    <mat-slide-toggle *ngIf="!reportMode" class="mat-slide" formControlName="dataHiddenByDefault">
       <div tb-hint-tooltip-icon="{{'widgets.time-series-chart.series.hidden-by-default-hint' | translate}}">
         {{ 'widgets.time-series-chart.series.hidden-by-default' | translate }}
       </div>
@@ -65,13 +65,15 @@
     </div>
     <tb-time-series-chart-line-settings [class.!hidden]="timeSeriesChartKeySettingsForm.get('type').value !== TimeSeriesChartSeriesType.line"
                                         [chartType]="chartType"
+                                        [reportMode]="reportMode"
                                         formControlName="lineSettings">
     </tb-time-series-chart-line-settings>
     <tb-chart-bar-settings [class.!hidden]="timeSeriesChartKeySettingsForm.get('type').value !== TimeSeriesChartSeriesType.bar"
+                                     [reportMode]="reportMode"
                                      formControlName="barSettings">
     </tb-chart-bar-settings>
   </div>
-  <div class="tb-form-panel">
+  <div *ngIf="!reportMode" class="tb-form-panel">
     <div class="tb-form-panel-title" translate>widgets.chart.tooltip-settings</div>
     <tb-js-func
         formControlName="tooltipValueFormatter"
@@ -102,7 +104,7 @@
         <div class="tb-form-row space-between">
           <div>{{ 'widgets.time-series-chart.comparison.comparison-data-color' | translate }}</div>
           <tb-color-input asBoxInput
-                          useThemePalette
+                          [useThemePalette]="!reportMode"
                           colorClearButton
                           formControlName="color">
           </tb-color-input>

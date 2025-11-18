@@ -59,7 +59,7 @@ public enum Table {
     )),
     GROUP_PERMISSION("group_permission", tenantId -> {
         return "SELECT group_permission.*, role.name as role_name FROM group_permission INNER JOIN role " +
-                "ON role_id = role.id WHERE ";
+               "ON role_id = role.id WHERE ";
     }),
     BLOB_ENTITY("blob_entity", true, "created_time", "blob_entity"),
     SCHEDULER_EVENT("scheduler_event"),
@@ -72,6 +72,7 @@ public enum Table {
     CONVERTER_DEBUG_EVENT("converter_debug_event", true, "ts", "debug_event"),
     INTEGRATION("integration"),
     INTEGRATION_DEBUG_EVENT("integration_debug_event", true, "ts", "debug_event"),
+    CF_DEBUG_EVENT("cf_debug_event", true, "ts", "debug_event"),
     USER("tb_user"),
     USER_CREDENTIALS("user_credentials", Pair.of(
             "user_id", of(USER)
@@ -94,6 +95,8 @@ public enum Table {
     )),
     ASSET_PROFILE("asset_profile"),
     ASSET("asset"),
+    CALCULATED_FIELD("calculated_field"),
+    CALCULATED_FIELD_LINK("calculated_field_link"),
     ENTITY_VIEW("entity_view"),
     ALARM("alarm"),
     ENTITY_ALARM("entity_alarm", List.of("created_time", "entity_id")),
@@ -125,6 +128,10 @@ public enum Table {
     ALARM_TYPES("alarm_types", null, of("type")),
     CUSTOM_TRANSLATION("custom_translation", List.of("tenant_id", "customer_id", "locale_code")),
     QR_CODE_SETTINGS("qr_code_settings"),
+    JOB("job"),
+    REPORT_TEMPLATE("report_template"),
+    REPORT("report", true, "created_time", "report"),
+    AI_MODEL("ai_model"),
 
     /*
      * data from tables below is exported for each entity separately
@@ -138,14 +145,14 @@ public enum Table {
                     INTEGRATION, USER, EDGE, DASHBOARD, DEVICE, ASSET_PROFILE, ASSET, ENTITY_VIEW, ALARM, SCHEDULER_EVENT, GROUP_PERMISSION)
     ), List.of("last_update_ts", "attribute_key"), tenantId -> {
         return "SELECT attribute_kv.*, dict.key as key_name FROM attribute_kv " +
-                "INNER JOIN key_dictionary dict ON attribute_kv.attribute_key = dict.key_id WHERE ";
+               "INNER JOIN key_dictionary dict ON attribute_kv.attribute_key = dict.key_id WHERE ";
     }),
     LATEST_KV("ts_kv_latest", Pair.of(
             "entity_id", of(TENANT, CUSTOMER, RULE_CHAIN, DEVICE_PROFILE, ROLE, ENTITY_GROUP, RULE_NODE, CONVERTER, OTA_PACKAGE,
                     INTEGRATION, USER, EDGE, DASHBOARD, DEVICE, ASSET_PROFILE, ASSET, ENTITY_VIEW, ALARM, SCHEDULER_EVENT, GROUP_PERMISSION)
     ), List.of("key", "ts"), tenantId -> {
         return "SELECT ts_kv_latest.*, dict.key as key_name FROM ts_kv_latest " +
-                "INNER JOIN key_dictionary dict ON ts_kv_latest.key = dict.key_id WHERE ";
+               "INNER JOIN key_dictionary dict ON ts_kv_latest.key = dict.key_id WHERE ";
     });
 
     private final String name;

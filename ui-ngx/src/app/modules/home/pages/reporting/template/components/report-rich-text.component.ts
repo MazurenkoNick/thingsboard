@@ -35,7 +35,9 @@ import {
   forwardRef,
   Input,
   OnChanges,
-  OnInit, SimpleChanges,
+  OnDestroy,
+  OnInit,
+  SimpleChanges,
   viewChild,
   ViewEncapsulation
 } from '@angular/core';
@@ -50,8 +52,10 @@ import {
 } from '@home/pages/reporting/template/components/report-image-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import {
-  extractKeyFromVariable, imagePlaceholder,
-  isKeyVariable, keyImage,
+  extractKeyFromVariable,
+  imagePlaceholder,
+  isKeyVariable,
+  keyImage,
   ReportVariable
 } from '@home/pages/reporting/template/components/report-component.models';
 import { CustomImageUrlCallback } from '@shared/pipe/image.pipe';
@@ -62,6 +66,12 @@ import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 
 const TB_SRC_ATTRIBUTE = 'data-tb-src';
 const MCE_SRC_ATTRIBUTE = 'data-mce-src';
+
+const findReportComponentCssLink = (): string => {
+  const stylesLink = Array.from(document.getElementsByTagName('link'))
+  .find((link: HTMLLinkElement) => link.rel === 'stylesheet' && link.getAttribute('href').startsWith('report-component'));
+  return stylesLink ? '/' + stylesLink.getAttribute('href') : '';
+}
 
 @Component({
   selector: 'tb-report-rich-text',
@@ -76,7 +86,7 @@ const MCE_SRC_ATTRIBUTE = 'data-mce-src';
   ],
   encapsulation: ViewEncapsulation.None
 })
-export class ReportRichTextComponent implements OnInit, ControlValueAccessor, OnChanges {
+export class ReportRichTextComponent implements OnInit, ControlValueAccessor, OnChanges, OnDestroy {
 
   editorComponent = viewChild('editor', {
     read: EditorComponent,
@@ -94,7 +104,7 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor, On
   tinyMceOptions: Partial<EditorOptions> = {
     base_url: '/assets/tinymce',
     body_class: 'tb-report-component',
-    content_css: ['/report-component.css'],
+    content_css: [findReportComponentCssLink()],
     suffix: '.min',
     formats: {
       'tb-medium': {
@@ -166,6 +176,10 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor, On
         }
       }
     }
+  }
+
+  ngOnDestroy() {
+    this.editorComponent().editor.destroy();
   }
 
   registerOnChange(fn: any): void {

@@ -70,7 +70,7 @@
               </mat-option>
             </mat-select>
           </mat-form-field>
-          <div formGroupName="providerConfig" class="tb-form-panel no-border no-padding">
+          <div formGroupName="providerConfig" class="tb-form-panel no-border no-padding no-gap">
             @if (providerFieldsList.includes('personalAccessToken')) {
               <tb-secret-key-input formControlName="personalAccessToken" class="mat-block flex-1"
                                    appearance="outline"
@@ -80,19 +80,21 @@
               </tb-secret-key-input>
             }
             @if (providerFieldsList.includes('projectId')) {
-              <mat-form-field class="mat-block flex-1" appearance="outline" subscriptSizing="dynamic">
+              <mat-form-field class="mat-block flex-1" appearance="outline">
                 <mat-label translate>ai-models.project-id</mat-label>
                 <input matInput required formControlName="projectId">
-                <mat-error *ngIf="aiModelForms.get('configuration').get('providerConfig').get('projectId').hasError('required')">
+                <mat-error *ngIf="aiModelForms.get('configuration.providerConfig.projectId').hasError('required') ||
+                  aiModelForms.get('configuration.providerConfig.projectId').hasError('pattern')">
                   {{ 'ai-models.project-id-required' | translate }}
                 </mat-error>
               </mat-form-field>
             }
             @if (providerFieldsList.includes('location')) {
-              <mat-form-field class="mat-block flex-1" appearance="outline" subscriptSizing="dynamic">
+              <mat-form-field class="mat-block flex-1" appearance="outline">
                 <mat-label translate>ai-models.location</mat-label>
                 <input matInput required formControlName="location">
-                <mat-error *ngIf="aiModelForms.get('configuration').get('providerConfig').get('location').hasError('required')">
+                <mat-error *ngIf="aiModelForms.get('configuration.providerConfig.location').hasError('required') ||
+                  aiModelForms.get('configuration.providerConfig.location').hasError('pattern')">
                   {{ 'ai-models.location-required' | translate }}
                 </mat-error>
               </mat-form-field>
@@ -108,42 +110,55 @@
               </tb-secret-file-input>
             }
             @if (providerFieldsList.includes('endpoint')) {
-              <mat-form-field class="mat-block flex-1" appearance="outline" subscriptSizing="dynamic">
+              <mat-form-field class="mat-block flex-1" appearance="outline">
                 <mat-label translate>ai-models.endpoint</mat-label>
                 <input required matInput formControlName="endpoint">
-                <mat-error *ngIf="aiModelForms.get('configuration').get('providerConfig').get('endpoint').hasError('required')">
+                <mat-error *ngIf="aiModelForms.get('configuration.providerConfig.endpoint').hasError('required') ||
+                  aiModelForms.get('configuration.providerConfig.endpoint').hasError('pattern')">
                   {{ 'ai-models.endpoint-required' | translate }}
                 </mat-error>
               </mat-form-field>
             }
             @if (providerFieldsList.includes('serviceVersion')) {
-              <mat-form-field class="mat-block flex-1" appearance="outline" subscriptSizing="dynamic">
+              <mat-form-field class="mat-block flex-1" appearance="outline">
                 <mat-label translate>ai-models.service-version</mat-label>
                 <input matInput formControlName="serviceVersion">
+              </mat-form-field>
+            }
+            @if (providerFieldsList.includes('baseUrl')) {
+              <mat-form-field class="mat-block flex-1" appearance="outline">
+                <mat-label translate>ai-models.baseurl</mat-label>
+                <input required matInput formControlName="baseUrl">
+                <mat-error *ngIf="aiModelForms.get('configuration.providerConfig.baseUrl').hasError('required') ||
+                  aiModelForms.get('configuration.providerConfig.baseUrl').hasError('pattern')">
+                  {{ 'ai-models.baseurl-required' | translate }}
+                </mat-error>
               </mat-form-field>
             }
             @if (providerFieldsList.includes('apiKey')) {
               <tb-secret-key-input formControlName="apiKey" class="mat-block flex-1"
                                    appearance="outline"
-                                   required
+                                   [required]="apiKeyRequired"
                                    label="{{ 'ai-models.api-key' | translate }}"
                                    requiredText="{{ 'ai-models.api-key-required' | translate }}">
               </tb-secret-key-input>
             }
             @if (providerFieldsList.includes('region')) {
-              <mat-form-field class="mat-block flex-1" appearance="outline" subscriptSizing="dynamic">
+              <mat-form-field class="mat-block flex-1" appearance="outline">
                 <mat-label translate>ai-models.region</mat-label>
                 <input required matInput formControlName="region">
-                <mat-error *ngIf="aiModelForms.get('configuration').get('providerConfig').get('region').hasError('required')">
+                <mat-error *ngIf="aiModelForms.get('configuration.providerConfig.region').hasError('required') ||
+                  aiModelForms.get('configuration.providerConfig.region').hasError('pattern')">
                   {{ 'ai-models.region-required' | translate }}
                 </mat-error>
               </mat-form-field>
             }
             @if (providerFieldsList.includes('accessKeyId')) {
-              <mat-form-field class="mat-block flex-1" appearance="outline" subscriptSizing="dynamic">
+              <mat-form-field class="mat-block flex-1" appearance="outline">
                 <mat-label translate>ai-models.access-key-id</mat-label>
                 <input required matInput formControlName="accessKeyId">
-                <mat-error *ngIf="aiModelForms.get('configuration').get('providerConfig').get('accessKeyId').hasError('required')">
+                <mat-error *ngIf="aiModelForms.get('configuration.providerConfig.accessKeyId').hasError('required') ||
+                  aiModelForms.get('configuration.providerConfig.accessKeyId').hasError('pattern')">
                   {{ 'ai-models.access-key-id-required' | translate }}
                 </mat-error>
               </mat-form-field>
@@ -156,6 +171,46 @@
                                    requiredText="{{ 'ai-models.secret-access-key-required' | translate }}">
               </tb-secret-key-input>
             }
+            @if (provider === aiProvider.OLLAMA) {
+              <div class="tb-form-panel stroked no-gap no-padding-bottom mb-4" formGroupName="auth">
+                <div class="flex flex-row items-center justify-between xs:flex-col xs:items-start xs:gap-3">
+                  <div class="tb-form-panel-title" tb-hint-tooltip-icon="{{ authenticationHint }}">
+                    {{ 'ai-models.authentication' | translate }}
+                  </div>
+                  <tb-toggle-select formControlName="type">
+                    <tb-toggle-option [value]="AuthenticationType.NONE">{{ 'ai-models.authentication-type.none' | translate }}</tb-toggle-option>
+                    <tb-toggle-option [value]="AuthenticationType.BASIC">{{ 'ai-models.authentication-type.basic' | translate }}</tb-toggle-option>
+                    <tb-toggle-option [value]="AuthenticationType.TOKEN">{{ 'ai-models.authentication-type.token' | translate }}</tb-toggle-option>
+                  </tb-toggle-select>
+                </div>
+                <div class="tb-form-panel no-padding no-border no-gap padding-top">
+                  @if (aiModelForms.get('configuration.providerConfig.auth.type').value === AuthenticationType.BASIC) {
+                    <mat-form-field class="mat-block flex-1" appearance="outline">
+                      <mat-label translate>ai-models.username</mat-label>
+                      <input required matInput formControlName="username">
+                      <mat-error *ngIf="aiModelForms.get('configuration.providerConfig.auth.username').hasError('required') ||
+                        aiModelForms.get('configuration.providerConfig.auth.username').hasError('pattern')">
+                        {{ 'ai-models.username-required' | translate }}
+                      </mat-error>
+                    </mat-form-field>
+                    <tb-secret-key-input formControlName="password" class="mat-block flex-1"
+                                         appearance="outline"
+                                         required
+                                         label="{{ 'ai-models.password' | translate }}"
+                                         requiredText="{{ 'ai-models.password-required' | translate }}">
+                    </tb-secret-key-input>
+                  }
+                  @if (aiModelForms.get('configuration.providerConfig.auth.type').value === AuthenticationType.TOKEN) {
+                    <tb-secret-key-input formControlName="token" class="mat-block flex-1"
+                                         appearance="outline"
+                                         required
+                                         label="{{ 'ai-models.token' | translate }}"
+                                         requiredText="{{ 'ai-models.token-required' | translate }}">
+                    </tb-secret-key-input>
+                  }
+                </div>
+              </div>
+            }
           </div>
         </section>
       </section>
@@ -167,6 +222,7 @@
                                     additionalClass="tb-suffix-show-on-hover"
                                     appearance="outline"
                                     panelWidth=""
+                                    showInlineError
                                     required
                                     [label]="(provider === aiProvider.AZURE_OPENAI ? 'ai-models.deployment-name': 'ai-models.model-id') | translate"
                                     [errorText]="(provider === aiProvider.AZURE_OPENAI ? 'ai-models.deployment-name-required': 'ai-models.model-id-required') | translate"
@@ -261,15 +317,18 @@
               </div>
               <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
                 <input matInput formControlName="maxOutputTokens"
-                       type="number" min="1" step="1" placeholder="{{ 'ai-models.set' | translate }}">
-                <mat-icon matSuffix
-                          matTooltipPosition="above"
-                          matTooltipClass="tb-error-tooltip"
-                          [matTooltip]="'ai-models.max-output-tokens-min' | translate"
-                          *ngIf="aiModelForms.get('configuration').get('maxOutputTokens').hasError('min')"
-                          class="tb-error">
-                  warning
-                </mat-icon>
+                       type="number" step="1" placeholder="{{ 'ai-models.set' | translate }}">
+              </mat-form-field>
+            </div>
+          }
+          @if (modelFieldsList.includes('contextLength')) {
+            <div class="tb-form-row space-between">
+              <div tb-hint-tooltip-icon="{{ 'ai-models.context-length-hint' | translate }}">
+                {{ 'ai-models.context-length' | translate }}
+              </div>
+              <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+                <input matInput formControlName="contextLength"
+                       type="number" step="1" placeholder="{{ 'ai-models.set' | translate }}">
               </mat-form-field>
             </div>
           }

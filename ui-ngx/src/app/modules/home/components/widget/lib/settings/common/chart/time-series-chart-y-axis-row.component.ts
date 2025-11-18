@@ -88,6 +88,10 @@ export class TimeSeriesChartYAxisRowComponent implements ControlValueAccessor, O
   @coerceBoolean()
   supportsUnitConversion = false;
 
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
+
   @Output()
   axisRemoved = new EventEmitter();
 
@@ -180,7 +184,8 @@ export class TimeSeriesChartYAxisRowComponent implements ControlValueAccessor, O
           axisType: 'yAxis',
           panelTitle: this.translate.instant('widgets.time-series-chart.axis.y-axis-settings'),
           axisSettings: deepClone(this.modelValue),
-          advanced: this.advanced
+          advanced: this.advanced,
+          reportMode: this.reportMode
         },
         isModal: true
       });

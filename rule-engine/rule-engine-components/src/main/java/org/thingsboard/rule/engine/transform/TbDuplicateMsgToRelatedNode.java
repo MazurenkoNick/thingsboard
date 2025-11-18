@@ -33,7 +33,6 @@ package org.thingsboard.rule.engine.transform;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
-import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.rule.engine.api.RuleNode;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbNodeConfiguration;
@@ -46,7 +45,6 @@ import org.thingsboard.server.common.msg.TbMsg;
 
 import java.util.List;
 
-@Slf4j
 @RuleNode(
         type = ComponentType.TRANSFORMATION,
         name = "duplicate to related",
@@ -57,7 +55,8 @@ import java.util.List;
                 " and message parameters copied from original message.<br><br>" +
                 "Output connections: <code>Success</code>, <code>Failure</code>.",
         configDirective = "tbTransformationNodeDuplicateToRelatedConfig",
-        icon = "call_split"
+        icon = "call_split",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/transformation/duplicate-to-related/"
 )
 public class TbDuplicateMsgToRelatedNode extends TbAbstractDuplicateMsgNode<TbDuplicateMsgToRelatedNodeConfiguration> {
 

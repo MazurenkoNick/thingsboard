@@ -87,6 +87,7 @@ export const polarAreaChartWidgetBarsChartSettings = (settings: PolarAreaChartWi
   showTotal: false,
   animation: settings.animation,
   showLegend: settings.showLegend,
+  legendShowTotal: settings.legendShowTotal,
   showTooltip: settings.showTooltip,
   tooltipValueType: settings.tooltipValueType,
   tooltipValueDecimals: settings.tooltipValueDecimals,

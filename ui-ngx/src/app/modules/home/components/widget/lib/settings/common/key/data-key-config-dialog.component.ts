@@ -52,11 +52,16 @@ import { ToggleHeaderOption } from '@shared/components/toggle-header.component';
 import { TranslateService } from '@ngx-translate/core';
 import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
 import { FormProperty } from '@shared/models/dynamic-form.models';
+import {
+  DataKeySettingsFormFunction
+} from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
 
 export interface DataKeyConfigDialogData {
   dataKey: DataKey;
   dataKeyConfigMode?: DataKeyConfigMode;
   dataKeySettingsForm: FormProperty[];
+  dataKeySettingsFormFunction?: DataKeySettingsFormFunction;
+  dataKeySettingsFormTrimDefaults?: boolean;
   dataKeySettingsDirective: string;
   dashboard: Dashboard;
   aliasController: IAliasController;
@@ -111,7 +116,7 @@ export class DataKeyConfigDialogComponent extends DialogComponent<DataKeyConfigD
     this.dataKeyFormGroup = this.fb.group({
       dataKey: [this.data.dataKey, [Validators.required]]
     });
-    if (this.data.dataKeySettingsForm?.length ||
+    if (this.data.dataKeySettingsFormFunction || this.data.dataKeySettingsForm?.length ||
       this.data.dataKeySettingsDirective?.length) {
       this.hasAdvanced = true;
       this.dataKeyConfigHeaderOptions = [

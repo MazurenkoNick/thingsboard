@@ -129,7 +129,7 @@ export class TaskManagerTableConfigResolver {
     this.config.handleRowClick = ($event, job) => {
       const path: HTMLElement[] = ($event as any).path || ($event.composedPath && $event.composedPath());
       const progressBarCell = path?.find(el => el.classList.contains('mat-column-progress'));
-      if (progressBarCell) {
+      if (progressBarCell && job.status !== JobStatus.QUEUED && job.status !== JobStatus.PENDING) {
         this.openTaskInfo(progressBarCell, job);
         return true;
       }

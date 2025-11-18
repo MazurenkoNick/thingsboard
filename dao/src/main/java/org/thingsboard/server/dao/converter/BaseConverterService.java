@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.converter;
 
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
@@ -59,14 +60,15 @@ import org.thingsboard.server.exception.DataValidationException;
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validateIds;
 import static org.thingsboard.server.dao.service.Validator.validatePageLink;
 import static org.thingsboard.server.dao.service.Validator.validateString;
 
-@Service("ConverterDaoService")
 @Slf4j
+@Service("ConverterDaoService")
 public class BaseConverterService extends AbstractEntityService implements ConverterService {
 
     public static final String INCORRECT_TENANT_ID = "Incorrect tenantId ";
@@ -87,6 +89,10 @@ public class BaseConverterService extends AbstractEntityService implements Conve
 
     @Override
     public Converter saveConverter(Converter converter) {
+        return saveEntity(converter, () -> doSaveConverter(converter));
+    }
+
+    private Converter doSaveConverter(Converter converter) {
         log.trace("Executing saveConverter [{}]", converter);
         if (converter.getConverterVersion() == null) {
             converter.setConverterVersion(1);
@@ -213,23 +219,29 @@ public class BaseConverterService extends AbstractEntityService implements Conve
         deleteConvertersByTenantId(tenantId);
     }
 
-    private PaginatedRemover<TenantId, Converter> tenantConvertersRemover =
-            new PaginatedRemover<TenantId, Converter>() {
+    private final PaginatedRemover<TenantId, Converter> tenantConvertersRemover = new PaginatedRemover<>() {
 
-                @Override
-                protected PageData<Converter> findEntities(TenantId tenantId, TenantId id, PageLink pageLink) {
-                    return converterDao.findByTenantId(id.getId(), pageLink);
-                }
+        @Override
+        protected PageData<Converter> findEntities(TenantId tenantId, TenantId id, PageLink pageLink) {
+            return converterDao.findByTenantId(id.getId(), pageLink);
+        }
 
-                @Override
-                protected void removeEntity(TenantId tenantId, Converter entity) {
-                    deleteConverter(tenantId, new ConverterId(entity.getId().getId()));
-                }
-            };
+        @Override
+        protected void removeEntity(TenantId tenantId, Converter entity) {
+            deleteConverter(tenantId, new ConverterId(entity.getId().getId()));
+        }
+
+    };
 
     @Override
     public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {
         return Optional.ofNullable(findConverterById(tenantId, new ConverterId(entityId.getId())));
+    }
+
+    @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(converterDao.findByIdAsync(tenantId, entityId.getId()))
+                .transform(Optional::ofNullable, directExecutor());
     }
 
     @Override

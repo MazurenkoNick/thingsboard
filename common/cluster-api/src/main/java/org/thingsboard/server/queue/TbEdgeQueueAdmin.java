@@ -31,7 +31,7 @@
 package org.thingsboard.server.queue;
 
 public interface TbEdgeQueueAdmin extends TbQueueAdmin {
+
     void syncEdgeNotificationsOffsets(String fatGroupId, String newGroupId);
 
-    void deleteConsumerGroup(String consumerGroupId);
 }

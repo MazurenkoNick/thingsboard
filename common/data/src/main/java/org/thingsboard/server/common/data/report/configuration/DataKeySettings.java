@@ -33,6 +33,7 @@ package org.thingsboard.server.common.data.report.configuration;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartKeySettings;
 import org.thingsboard.server.common.data.report.configuration.style.DataKeySettingsType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -43,6 +44,7 @@ import org.thingsboard.server.common.data.report.configuration.style.DataKeySett
         defaultImpl = DefaultDataKeySettings.class)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = ColumnSettings.class, name = "COLUMN"),
+        @JsonSubTypes.Type(value = TimeSeriesChartKeySettings.class, name = "TIME_SERIES_CHART"),
         @JsonSubTypes.Type(value = DefaultDataKeySettings.class, name = "DEFAULT")
 })
 public interface DataKeySettings {

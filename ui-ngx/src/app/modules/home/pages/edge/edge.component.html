@@ -189,7 +189,7 @@
         <div class="tb-hint" [innerHTML]="'edge.edge-license-key-hint' | translate"></div>
         <mat-form-field class="mat-block">
           <mat-label translate>edge.edge-license-key</mat-label>
-          <input matInput type="password" formControlName="edgeLicenseKey" required>
+          <input matInput type="password" formControlName="edgeLicenseKey" required autocomplete="new-password">
           <tb-toggle-password matSuffix [class.!hidden]="entityForm.get('edgeLicenseKey').disabled"></tb-toggle-password>
           <mat-error *ngIf="entityForm.get('edgeLicenseKey').hasError('required')">
             {{ 'edge.edge-license-key-required' | translate }}

@@ -160,6 +160,9 @@ export class IntegrationCredentialsComponent implements ControlValueAccessor, Va
     } else {
       this.integrationCredentialForm.enable({emitEvent: false});
       this.integrationCredentialForm.get('type').updateValueAndValidity({onlySelf: true});
+      if (!this.integrationCredentialForm.valid) {
+        this.integrationCredentialForm.updateValueAndValidity();
+      }
     }
   }
 
@@ -205,8 +208,11 @@ export class IntegrationCredentialsComponent implements ControlValueAccessor, Va
   }
 
   validate(): ValidationErrors | null {
-    return this.integrationCredentialForm.valid ? null : {
-      integrationCredential: {valid: false}
-    };
+    if (this.integrationCredentialForm.status !== 'DISABLED' && !this.integrationCredentialForm.valid) {
+      return {
+        integrationCredential: {valid: false}
+      }
+    }
+    return null;
   }
 }

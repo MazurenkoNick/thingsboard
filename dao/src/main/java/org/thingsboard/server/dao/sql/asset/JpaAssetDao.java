@@ -254,6 +254,12 @@ public class JpaAssetDao extends JpaAbstractDao<AssetEntity, Asset> implements A
     }
 
     @Override
+    public List<EntityInfo> findEntityInfosByNamePrefix(TenantId tenantId, String name) {
+        log.debug("Find asset entity infos by name [{}]", name);
+        return assetRepository.findEntityInfosByNamePrefix(tenantId.getId(), name);
+    }
+
+    @Override
     public Long countByTenantId(TenantId tenantId) {
         return assetRepository.countByTenantId(tenantId.getId());
     }

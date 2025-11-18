@@ -114,10 +114,23 @@
           }
         </mat-form-field>
       </mat-toolbar>
-      <tb-report-component-library [subReport]="subReport"
-                                   [format]="format" class="min-h-0 flex-1"
-                                   [filter]="reportComponentsFilter">
-      </tb-report-component-library>
+      @if (format === TbReportFormat.PDF) {
+        <tb-report-component-library-groups
+          class="min-h-0 flex-1"
+          [context]="reportComponentContext"
+          [subReport]="subReport"
+          [format]="format"
+          [filter]="reportComponentsFilter">
+        </tb-report-component-library-groups>
+      } @else {
+        <tb-report-component-library
+          class="min-h-0 flex-1"
+          [context]="reportComponentContext"
+          [subReport]="subReport"
+          [format]="format"
+          [filter]="reportComponentsFilter">
+        </tb-report-component-library>
+      }
     </div>
     <div #reportTemplateContent class="tb-report-template-content" cdkScrollable>
       <div class="tb-report-content-scroll-wrapper">
@@ -132,6 +145,7 @@
           @if (showHeaderFooter) {
             <tb-report-template-header-footer
               header
+              [context]="reportComponentContext"
               [headerToggleValue]="headerToggleValue"
               [headerFooter]="pdfConfiguration.header"
               [format]="format"
@@ -153,6 +167,7 @@
           <div class="tb-report-components-container">
             <div class="tb-report-components-container-title" translate>report-template.content</div>
             <tb-report-components
+              [context]="reportComponentContext"
               [format]="format"
               [background]="background"
               [width]="pageWidth"
@@ -170,6 +185,7 @@
           @if (showHeaderFooter) {
             <tb-report-template-header-footer
               header="false"
+              [context]="reportComponentContext"
               [headerToggleValue]="footerToggleValue"
               [headerFooter]="pdfConfiguration.footer"
               [format]="format"
@@ -192,25 +208,27 @@
       </div>
     </div>
     <div class="tb-report-settings tb-dynamic-panel"
-                [class.tb-report-component-settings]="!!editingReportComponent">
+                [class.tb-report-component-settings]="!!editingReportComponent"
+                [style.width.px]="editingReportComponent ?
+                            reportComponentTypesData.getReportComponentTypeData(editingReportComponent.type, editingReportComponent.subType).preferredSettingsWidthPx : null">
       @if (editingReportComponent) {
         <tb-details-panel class="flex-1"
                           [color]="null"
                           showCloseDetails="false"
                           headerTitle="{{ 'report-template.editor' | translate }}"
-                          headerSubtitle="{{ reportComponentTypeMap.get(editingReportComponent.type).title | translate }}"
+                          headerSubtitle="{{ reportComponentTypesData.getReportComponentTypeData(editingReportComponent.type, editingReportComponent.subType).title | translate }}"
                           isReadOnly="true">
           <div class="details-buttons flex flex-row items-center justify-end gap-3">
-            @if(reportComponentTypeMap.get(editingReportComponent.type).editable) {
+            @if(reportComponentTypesData.getReportComponentTypeData(editingReportComponent.type, editingReportComponent.subType).editable) {
               <button mat-stroked-button color="primary"
                       (click)="cancelReportComponentEdit()">
                 <mat-icon>close</mat-icon>
-                {{ 'action.cancel' | translate }}
+                {{ 'action.decline' | translate }}
               </button>
               <button mat-flat-button color="primary"
                       (click)="saveReportComponent()">
                 <mat-icon>done</mat-icon>
-                {{ 'action.save' | translate }}
+                {{ 'action.apply' | translate }}
               </button>
             } @else {
               <button mat-stroked-button color="primary"
@@ -234,7 +252,7 @@
                           isReadOnly="true"
                           headerTitle="{{reportTemplate.name}}"
                           headerSubtitle="{{ (subReport ? 'report-template.sub-report-settings' : 'report-template.report-template-settings') | translate }}">
-          <div class="mat-padding">
+          <div class="mat-padding w-full">
             <tb-report-template-settings
               [formControl]="reportTemplateSettingsFormControl"
               [subReport]="subReport"

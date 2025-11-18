@@ -78,6 +78,7 @@ public class NotificationRule extends BaseData<NotificationRuleId> implements Ha
     @Valid
     private NotificationRuleRecipientsConfig recipientsConfig;
 
+    @Valid
     private NotificationRuleConfig additionalConfig;
 
     private NotificationRuleId externalId;

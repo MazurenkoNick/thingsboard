@@ -174,7 +174,7 @@ import { GroupConfigTableConfigService } from '@home/components/group/group-conf
 import { EntityGroupsTableConfigResolver } from '@home/components/group/entity-groups-table-config.resolver';
 import { EntityGroupConfigResolver } from '@home/components/group/entity-group-config.resolver';
 import { ConverterAutocompleteComponent } from '@home/components/converter/converter-autocomplete.component';
-import { AddConverterDialogComponent } from '@home/components/converter/add-converter-dialog.component';
+import { ConverterDialogComponent } from '@home/components/converter/converter-dialog.component';
 import { OperationTypeListComponent } from '@home/components/role/operation-type-list.component';
 import { ResourceTypeAutocompleteComponent } from '@home/components/role/resource-type-autocomplete.component';
 import { PermissionListComponent } from '@home/components/role/permission-list.component';
@@ -272,34 +272,21 @@ import {
 import { EntityChipsComponent } from '@home/components/entity/entity-chips.component';
 import { DashboardViewComponent } from '@home/components/dashboard-view/dashboard-view.component';
 import { ConverterLibraryComponent } from '@home/components/converter/converter-library.component';
-import { CalculatedFieldsTableComponent } from '@home/components/calculated-fields/calculated-fields-table.component';
-import {
-  CalculatedFieldDialogComponent
-} from '@home/components/calculated-fields/components/dialog/calculated-field-dialog.component';
 import {
   EntityDebugSettingsButtonComponent
 } from '@home/components/entity/debug/entity-debug-settings-button.component';
-import {
-  CalculatedFieldArgumentsTableComponent
-} from '@home/components/calculated-fields/components/arguments-table/calculated-field-arguments-table.component';
-import {
-  CalculatedFieldArgumentPanelComponent
-} from '@home/components/calculated-fields/components/panel/calculated-field-argument-panel.component';
-import {
-  CalculatedFieldDebugDialogComponent
-} from '@home/components/calculated-fields/components/debug-dialog/calculated-field-debug-dialog.component';
-import {
-  CalculatedFieldScriptTestDialogComponent
-} from '@home/components/calculated-fields/components/test-dialog/calculated-field-script-test-dialog.component';
-import {
-  CalculatedFieldTestArgumentsComponent
-} from '@home/components/calculated-fields/components/test-arguments/calculated-field-test-arguments.component';
-import {
-  CalculatedFieldReprocessingPanelComponent
-} from '@home/components/calculated-fields/components/reprocessing/calculated-field-reprocessing-panel.component';
 import { CancelTaskDialogComponent } from '@home/components/task/cancel-task-dialog.component';
 import { CheckConnectivityDialogComponent } from '@home/components/ai-model/check-connectivity-dialog.component';
 import { AIModelDialogComponent } from '@home/components/ai-model/ai-model-dialog.component';
+import { ResourcesDialogComponent } from "@home/components/resources/resources-dialog.component";
+import { ResourcesLibraryComponent } from "@home/components/resources/resources-library.component";
+import { CalculatedFieldsTableComponent } from '@home/components/calculated-fields/calculated-fields-table.component';
+import {
+  CalculatedFieldDebugDialogComponent
+} from '@home/components/calculated-fields/components/debug-dialog/calculated-field-debug-dialog.component';
+import { CalculatedFieldsModule } from '@home/components/calculated-fields/calculated-field.module';
+import { AlarmRuleModule } from "@home/components/alarm-rules/alarm-rule.module";
+import { AlarmRulesTableComponent } from "@home/components/alarm-rules/alarm-rules-table.component";
 
 @NgModule({
   declarations:
@@ -312,6 +299,9 @@ import { AIModelDialogComponent } from '@home/components/ai-model/ai-model-dialo
       EntityDetailsPageComponent,
       AuditLogTableComponent,
       AuditLogDetailsDialogComponent,
+      CalculatedFieldsTableComponent,
+      CalculatedFieldDebugDialogComponent,
+      AlarmRulesTableComponent,
       EventContentDialogComponent,
       EventTableHeaderComponent,
       EventTableComponent,
@@ -350,7 +340,7 @@ import { AIModelDialogComponent } from '@home/components/ai-model/ai-model-dialo
       SelectTargetStateDialogComponent,
       AddWidgetToDashboardDialogComponent,
       ConverterAutocompleteComponent,
-      AddConverterDialogComponent,
+      ConverterDialogComponent,
       OperationTypeListComponent,
       ResourceTypeAutocompleteComponent,
       PermissionListComponent,
@@ -476,23 +466,19 @@ import { AIModelDialogComponent } from '@home/components/ai-model/ai-model-dialo
       EntityChipsComponent,
       DashboardViewComponent,
       ConverterLibraryComponent,
-      CalculatedFieldsTableComponent,
-      CalculatedFieldDialogComponent,
-      CalculatedFieldArgumentsTableComponent,
-      CalculatedFieldArgumentPanelComponent,
-      CalculatedFieldDebugDialogComponent,
-      CalculatedFieldScriptTestDialogComponent,
-      CalculatedFieldTestArgumentsComponent,
-      CalculatedFieldReprocessingPanelComponent,
       CancelTaskDialogComponent,
       CheckConnectivityDialogComponent,
       AIModelDialogComponent,
+      ResourcesDialogComponent,
+      ResourcesLibraryComponent,
     ],
   imports: [
     CommonModule,
     SharedModule,
     SharedHomeComponentsModule,
     HomeDialogsModule,
+    CalculatedFieldsModule,
+    AlarmRuleModule,
     WidgetConfigComponentsModule,
     BasicWidgetConfigModule,
     Lwm2mProfileComponentsModule,
@@ -501,7 +487,7 @@ import { AIModelDialogComponent } from '@home/components/ai-model/ai-model-dialo
     DeviceCredentialsModule,
     DeviceProfileCommonModule,
     IntegrationComponentModule,
-    EntityDebugSettingsButtonComponent
+    EntityDebugSettingsButtonComponent,
   ],
   exports: [
     SharedHomeComponentsModule,
@@ -512,6 +498,8 @@ import { AIModelDialogComponent } from '@home/components/ai-model/ai-model-dialo
     EntityDetailsPanelComponent,
     EntityDetailsPageComponent,
     AuditLogTableComponent,
+    CalculatedFieldsTableComponent,
+    AlarmRulesTableComponent,
     EventTableComponent,
     EdgeDownlinkTableHeaderComponent,
     EdgeDownlinkTableComponent,
@@ -654,16 +642,11 @@ import { AIModelDialogComponent } from '@home/components/ai-model/ai-model-dialo
     SendNotificationButtonComponent,
     EntityChipsComponent,
     DashboardViewComponent,
-    CalculatedFieldsTableComponent,
-    CalculatedFieldDialogComponent,
-    CalculatedFieldArgumentsTableComponent,
-    CalculatedFieldArgumentPanelComponent,
-    CalculatedFieldDebugDialogComponent,
-    CalculatedFieldScriptTestDialogComponent,
-    CalculatedFieldTestArgumentsComponent,
     CancelTaskDialogComponent,
     CheckConnectivityDialogComponent,
     AIModelDialogComponent,
+    ResourcesDialogComponent,
+    ResourcesLibraryComponent,
   ],
   providers: [
     WidgetComponentService,

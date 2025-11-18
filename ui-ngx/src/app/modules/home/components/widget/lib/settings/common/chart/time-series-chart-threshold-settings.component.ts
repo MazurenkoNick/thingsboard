@@ -76,6 +76,14 @@ export class TimeSeriesChartThresholdSettingsComponent implements OnInit, Contro
   boxButton = false;
 
   @Input()
+  @coerceBoolean()
+  supportsUnitConversion = false;
+
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
+
+  @Input()
   icon = 'settings';
 
   @Input()
@@ -133,7 +141,9 @@ export class TimeSeriesChartThresholdSettingsComponent implements OnInit, Contro
           panelTitle: this.title,
           widgetConfig: this.widgetConfig,
           hideYAxis: this.hideYAxis,
-          yAxisIds: this.yAxisIds
+          yAxisIds: this.yAxisIds,
+          supportsUnitConversion: this.supportsUnitConversion,
+          reportMode: this.reportMode
         },
         isModal: true
       });

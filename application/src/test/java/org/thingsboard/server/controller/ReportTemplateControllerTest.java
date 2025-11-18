@@ -53,6 +53,8 @@ import org.thingsboard.server.dao.service.DaoSqlTest;
 import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -102,7 +104,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
         reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setDescription("My report");
-        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+        reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
 
         Mockito.reset(tbClusterService, auditLogService);
 
@@ -169,7 +171,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
         reportTemplate.setName("My report");
         reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
-        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+        reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
         ReportTemplate savedReportTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
 
         loginDifferentTenant();
@@ -198,7 +200,8 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
         reportTemplate.setName("My report");
         reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
-        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+        PdfReportTemplateConfig pdfReportTemplateConfig = PdfReportTemplateConfig.builder().components(Collections.emptyList()).build();
+        reportTemplate.setConfiguration(pdfReportTemplateConfig);
         ReportTemplate savedReportTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
         ReportTemplate foundReportTemplate = doGet("/api/reportTemplate/" + savedReportTemplate.getId().getId().toString(), ReportTemplate.class);
         Assert.assertNotNull(foundReportTemplate);
@@ -211,7 +214,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
         reportTemplate.setName("My report");
         reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
-        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+        reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
         ReportTemplate savedReportTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
 
         Mockito.reset(tbClusterService, auditLogService);
@@ -234,7 +237,8 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
-        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+        PdfReportTemplateConfig pdfReportTemplateConfig = PdfReportTemplateConfig.builder().components(Collections.emptyList()).build();
+        reportTemplate.setConfiguration(pdfReportTemplateConfig);
 
         Mockito.reset(tbClusterService, auditLogService);
 
@@ -252,7 +256,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setName("My report");
         reportTemplate.setType(ReportTemplateType.REPORT);
-        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+        reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
 
         Mockito.reset(tbClusterService, auditLogService);
 
@@ -270,7 +274,8 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setName("My report");
         reportTemplate.setFormat(TbReportFormat.PDF);
-        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+        PdfReportTemplateConfig pdfReportTemplateConfig = PdfReportTemplateConfig.builder().components(Collections.emptyList()).build();
+        reportTemplate.setConfiguration(pdfReportTemplateConfig);
 
         Mockito.reset(tbClusterService, auditLogService);
 
@@ -295,7 +300,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
             reportTemplate.setName("ReportTemplate" + i);
             reportTemplate.setFormat(TbReportFormat.PDF);
             reportTemplate.setType(ReportTemplateType.REPORT);
-            reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+            reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
             reportTemplates.add(new ReportTemplateInfo(doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class)));
         }
         List<ReportTemplateInfo> loadedReportTemplates = new ArrayList<>();
@@ -333,7 +338,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
             reportTemplate.setName(name);
             reportTemplate.setFormat(TbReportFormat.PDF);
             reportTemplate.setType(ReportTemplateType.REPORT);
-            reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+            reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
             reportTemplatesTitle1.add(new ReportTemplateInfo(doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class)));
         }
         String title2 = "Report template title 2";
@@ -346,7 +351,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
             reportTemplate.setName(name);
             reportTemplate.setFormat(TbReportFormat.PDF);
             reportTemplate.setType(ReportTemplateType.REPORT);
-            reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+            reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
             reportTemplatesTitle2.add(new ReportTemplateInfo(doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class)));
         }
 
@@ -421,7 +426,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
             reportTemplate.setName(name);
             reportTemplate.setFormat(TbReportFormat.PDF);
             reportTemplate.setType(ReportTemplateType.REPORT);
-            reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+            reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
             pdfReportTemplates.add(new ReportTemplateInfo(doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class)));
         }
         pdfReportTemplates.sort(idComparator);
@@ -435,7 +440,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
             reportTemplate.setName(name);
             reportTemplate.setFormat(TbReportFormat.CSV);
             reportTemplate.setType(ReportTemplateType.REPORT);
-            reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+            reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
             csvReportTemplates.add(new ReportTemplateInfo(doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class)));
         }
         csvReportTemplates.sort(idComparator);
@@ -449,7 +454,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
             reportTemplate.setName(name);
             reportTemplate.setFormat(TbReportFormat.PDF);
             reportTemplate.setType(ReportTemplateType.SUB_REPORT);
-            reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+            reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
             pdfSubReports.add(new ReportTemplateInfo(doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class)));
         }
         pdfSubReports.sort(idComparator);
@@ -463,7 +468,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
             reportTemplate.setName(name);
             reportTemplate.setFormat(TbReportFormat.CSV);
             reportTemplate.setType(ReportTemplateType.SUB_REPORT);
-            reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+            reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
             csvSubReports.add(new ReportTemplateInfo(doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class)));
         }
         csvSubReports.sort(idComparator);

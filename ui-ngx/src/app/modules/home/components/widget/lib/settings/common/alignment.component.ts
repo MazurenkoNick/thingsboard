@@ -65,6 +65,9 @@ export class AlignmentComponent implements ControlValueAccessor {
   @coerceBoolean()
   horizontal = true;
 
+  @Input()
+  allowedAlignments: alignment[];
+
   modelValue: alignment;
 
   private propagateChange = null;
@@ -101,7 +104,8 @@ export class AlignmentComponent implements ControlValueAccessor {
     } else {
       const ctx: any = {
         alignment: this.modelValue,
-        horizontal: this.horizontal
+        horizontal: this.horizontal,
+        allowedAlignments: this.allowedAlignments
       };
       const alignmentPanelPopover = this.popoverService.displayPopover({
         trigger,

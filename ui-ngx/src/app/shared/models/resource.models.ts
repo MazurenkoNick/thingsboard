@@ -39,7 +39,8 @@ export enum ResourceType {
   LWM2M_MODEL = 'LWM2M_MODEL',
   PKCS_12 = 'PKCS_12',
   JKS = 'JKS',
-  JS_MODULE = 'JS_MODULE'
+  JS_MODULE = 'JS_MODULE',
+  GENERAL = 'GENERAL',
 }
 
 export enum ResourceSubType {
@@ -72,7 +73,8 @@ export const ResourceTypeTranslationMap = new Map<ResourceType, string>(
     [ResourceType.LWM2M_MODEL, 'resource.type.lwm2m-model'],
     [ResourceType.PKCS_12, 'resource.type.pkcs-12'],
     [ResourceType.JKS, 'resource.type.jks'],
-    [ResourceType.JS_MODULE, 'resource.type.js-module']
+    [ResourceType.JS_MODULE, 'resource.type.js-module'],
+    [ResourceType.GENERAL, 'resource.type.general'],
   ]
 );
 
@@ -91,8 +93,8 @@ export interface TbResourceInfo<D> extends Omit<BaseData<TbResourceId>, 'name' |
   title?: string;
   resourceType: ResourceType;
   resourceSubType?: ResourceSubType;
-  fileName: string;
-  public: boolean;
+  fileName?: string;
+  public?: boolean;
   publicResourceKey?: string;
   readonly link?: string;
   readonly publicLink?: string;
@@ -102,7 +104,7 @@ export interface TbResourceInfo<D> extends Omit<BaseData<TbResourceId>, 'name' |
 export type ResourceInfo = TbResourceInfo<any>;
 
 export interface Resource extends ResourceInfo {
-  data: string;
+  data?: string;
   name?: string;
 }
 
@@ -214,6 +216,7 @@ export const isImageResourceUrl = (url: string): boolean => url && IMAGES_URL_RE
 
 export const isJSResourceUrl = (url: string): boolean => url && RESOURCES_URL_REGEXP.test(url);
 export const isJSResource = (url: string): boolean => url?.startsWith(TB_RESOURCE_PREFIX);
+export const isTbImage = (url: string): boolean => url?.startsWith(TB_IMAGE_PREFIX);
 
 export const extractParamsFromImageResourceUrl = (url: string): {type: ImageResourceType; key: string} => {
   const res = url.match(IMAGES_URL_REGEXP);

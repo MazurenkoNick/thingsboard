@@ -36,6 +36,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DeviceId;
+import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.EntityDataPageLink;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.query.EntityDataSortOrder;
@@ -77,7 +78,7 @@ public class StateEntityOwnerFilterTest extends AbstractEDQTest {
 
     private static EntityDataQuery getEntityDataQuery(DeviceId deviceId) {
         StateEntityOwnerFilter filter = new StateEntityOwnerFilter();
-        filter.setSingleEntity(deviceId);
+        filter.setSingleEntity(AliasEntityId.fromEntityId(deviceId));
         var pageLink = new EntityDataPageLink(20, 0, null, new EntityDataSortOrder(new EntityKey(EntityKeyType.TIME_SERIES, "name"), EntityDataSortOrder.Direction.DESC), false);
 
         var entityFields = Arrays.asList(new EntityKey(EntityKeyType.ENTITY_FIELD, "name"), new EntityKey(EntityKeyType.ENTITY_FIELD, "createdTime"));

@@ -35,7 +35,7 @@ import {
   calculateThresholdsOffset,
   createTimeSeriesVisualMapOption,
   createTimeSeriesXAxis,
-  createTimeSeriesYAxis,
+  createTimeSeriesYAxis, dataKeySeriesType,
   defaultTimeSeriesChartYAxisSettings,
   generateChartData,
   LineSeriesStepType,
@@ -227,7 +227,8 @@ export class TbTimeSeriesChart {
       this.ctx.sanitizer,
       this.settings,
       this.tooltipDateFormat,
-      tooltipValueFormatFunction
+      tooltipValueFormatFunction,
+      this.ctx.translate
     );
     this.onResize();
     if (this.autoResize) {
@@ -380,7 +381,9 @@ export class TbTimeSeriesChart {
     this.yMinSubject.complete();
     this.yMaxSubject.complete();
     this.darkModeObserver?.disconnect();
-    this.ctx.dashboard.gridster.el.removeEventListener('scroll', this.onParentScroll);
+    if (this.ctx.dashboard?.gridster) {
+      this.ctx.dashboard.gridster.el.removeEventListener('scroll', this.onParentScroll);
+    }
   }
 
   public resize(): void {
@@ -420,15 +423,15 @@ export class TbTimeSeriesChart {
         for (const dataKey of dataKeys) {
           const keySettings = mergeDeep<TimeSeriesChartKeySettings>({} as TimeSeriesChartKeySettings,
             timeSeriesChartKeyDefaultSettings, dataKey.settings);
-          if ((keySettings.type === TimeSeriesChartSeriesType.line && keySettings.lineSettings.showPointLabel &&
+          if ((dataKeySeriesType(keySettings) === TimeSeriesChartSeriesType.line && keySettings.lineSettings.showPointLabel &&
               keySettings.lineSettings.pointLabelPosition === ChartLabelPosition.top) ||
-            (keySettings.type === TimeSeriesChartSeriesType.bar &&
+            (dataKeySeriesType(keySettings) === TimeSeriesChartSeriesType.bar &&
               keySettings.barSettings.showLabel &&
               [ChartLabelPosition.top, ChartLabelPosition.bottom]
               .includes(keySettings.barSettings.labelPosition as ChartLabelPosition))) {
             this.topPointLabels = true;
           }
-          if (this.stateValueConverter && keySettings.type === TimeSeriesChartSeriesType.line) {
+          if (this.stateValueConverter && dataKeySeriesType(keySettings) === TimeSeriesChartSeriesType.line) {
             keySettings.lineSettings.pointLabelFormatter = this.stateValueConverter.labelFormatter;
           }
           dataKey.settings = keySettings;
@@ -642,7 +645,9 @@ export class TbTimeSeriesChart {
     this.timeSeriesChart = echarts.init(this.chartElement,  null, {
       renderer: 'svg'
     });
-    this.ctx.dashboard.gridster.el.addEventListener('scroll', this.onParentScroll);
+    if (this.ctx.dashboard?.gridster) {
+      this.ctx.dashboard.gridster.el.addEventListener('scroll', this.onParentScroll);
+    }
     this.timeSeriesChartOptions = {
       darkMode: this.darkMode,
       backgroundColor: 'transparent',
@@ -853,7 +858,7 @@ export class TbTimeSeriesChart {
   private scaleYAxis(yAxis: TimeSeriesChartYAxis): boolean {
     if (!this.stateData) {
       const axisBarDataItems = this.dataItems.filter(d => d.yAxisId === yAxis.id && d.enabled &&
-        d.data.length && d.dataKey.settings.type === TimeSeriesChartSeriesType.bar);
+        d.data.length && dataKeySeriesType(d.dataKey.settings) === TimeSeriesChartSeriesType.bar);
       return !axisBarDataItems.length;
     } else {
       return false;
@@ -893,7 +898,7 @@ export class TbTimeSeriesChart {
           if (this.animationEnabled()) {
             barItems =
               this.dataItems.filter(d => d.enabled && d.data.length &&
-                d.dataKey.settings.type === TimeSeriesChartSeriesType.bar);
+                dataKeySeriesType(d.dataKey.settings) === TimeSeriesChartSeriesType.bar);
             this.updateBarsAnimation(barItems, false);
           }
           this.timeSeriesChart.resize();

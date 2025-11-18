@@ -50,7 +50,6 @@ import org.thingsboard.server.queue.provider.TbQueueProducerProvider;
 import org.thingsboard.server.service.solutions.data.definition.EmulatorDefinition;
 import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -105,28 +104,27 @@ public abstract class AbstractEmulatorLauncher<T extends GroupEntity<?>> {
         emulator.init(emulatorDefinition);
     }
 
-    public CompletableFuture<?> launch() {
+    public void launch() {
         final long latestTs = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(emulatorDefinition.getPublishPeriodInDays()) - publishFrequency;
-        return CompletableFuture
-                .runAsync(() -> {
-                    try {
-                        if (emulator instanceof SimpleEmulator) {
-                            if (latestTs < (System.currentTimeMillis() - publishFrequency)) {
-                                pushOldTelemetry(latestTs);
-                            }
-                        } else if (emulator instanceof CustomEmulator) {
-                            Pair<Long, ObjectNode> telemetry = ((CustomEmulator) emulator).getNextValue();
-                            while (telemetry != null) {
-                                publishTelemetry(telemetry.getFirst(), telemetry.getSecond());
-                                telemetry = ((CustomEmulator) emulator).getNextValue();
-                            }
-                        }
-
-                        postProcessEntity(entity);
-                    } catch (Exception e) {
-                        log.warn("[{}] Failed to upload telemetry for device: ", entity.getName(), e);
+        oldTelemetryExecutor.submit(() -> {
+            try {
+                if (emulator instanceof SimpleEmulator) {
+                    if (latestTs < (System.currentTimeMillis() - publishFrequency)) {
+                        pushOldTelemetry(latestTs);
                     }
-                }, oldTelemetryExecutor);
+                } else if (emulator instanceof CustomEmulator) {
+                    Pair<Long, ObjectNode> telemetry = ((CustomEmulator) emulator).getNextValue();
+                    while (telemetry != null) {
+                        publishTelemetry(telemetry.getFirst(), telemetry.getSecond());
+                        telemetry = ((CustomEmulator) emulator).getNextValue();
+                    }
+                }
+
+                postProcessEntity(entity);
+            } catch (Exception e) {
+                log.warn("[{}] Failed to upload telemetry for device: ", entity.getName(), e);
+            }
+        });
     }
 
     protected void postProcessEntity(T entity) {
@@ -160,7 +158,6 @@ public abstract class AbstractEmulatorLauncher<T extends GroupEntity<?>> {
                 .dataType(TbMsgDataType.JSON)
                 .data(msgData)
                 .build();
-
         tbClusterService.pushMsgToRuleEngine(entity.getTenantId(), entity.getId(), tbMsg, null);
     }
 }

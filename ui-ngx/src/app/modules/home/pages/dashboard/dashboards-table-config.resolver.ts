@@ -75,9 +75,13 @@ import {
   EntityAliasesDialogData
 } from '@home/components/alias/entity-aliases-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
+import {
+  DashboardInfoDialogData,
+  ImportDashboardFileDialogComponent
+} from "@home/pages/dashboard/import-dashboard-file-dialog.component";
 
 @Injectable()
-export class DashboardsTableConfigResolver  {
+export class DashboardsTableConfigResolver {
 
   constructor(private allEntitiesTableConfigService: AllEntitiesTableConfigService<DashboardInfo>,
               private store: Store<AppState>,
@@ -177,7 +181,7 @@ export class DashboardsTableConfigResolver  {
       columns.push(new EntityTableColumn<DashboardInfo>('ownerName', title, '30%'));
     }
     columns.push(
-      new EntityChipsEntityTableColumn<DashboardInfo>( 'groups', 'entity.groups', '40%')
+      new EntityChipsEntityTableColumn<DashboardInfo>('groups', 'entity.groups', '40%')
     );
     return columns;
   }
@@ -289,6 +293,20 @@ export class DashboardsTableConfigResolver  {
     this.importExport.exportDashboard(dashboard.id.id);
   }
 
+  importDashboardFile($event: Event, dashboard: DashboardInfo) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    return this.dialog.open<ImportDashboardFileDialogComponent, DashboardInfoDialogData,
+      boolean>(ImportDashboardFileDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        dashboard
+      }
+    }).afterClosed();
+  }
+
   manageOwnerAndGroups($event: Event, dashboard: DashboardInfo, config: EntityTableConfig<DashboardInfo>) {
     this.homeDialogs.manageOwnerAndGroups($event, dashboard).subscribe(
       (res) => {
@@ -306,6 +324,9 @@ export class DashboardsTableConfigResolver  {
         return true;
       case 'export':
         this.exportDashboard(action.event, action.entity);
+        return true;
+      case 'import':
+        this.importDashboardFile(action.event, action.entity);
         return true;
       case 'manageOwnerAndGroups':
         this.manageOwnerAndGroups(action.event, action.entity, config);

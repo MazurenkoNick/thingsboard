@@ -35,7 +35,6 @@
     required
     appearance="outline"
     [type]="ReportTemplateType.REPORT"
-    includeCustomers
     formControlName="reportTemplateId">
   </tb-report-template-autocomplete>
   <tb-entity-autocomplete
@@ -62,6 +61,7 @@
       [entityType]="entityType.NOTIFICATION_TARGET"
       [entitySubType]="NotificationType.GENERAL">
       <button #createTargetButton
+              type="button"
               mat-button color="primary" matSuffix
               (click)="createTarget($event, createTargetButton)">
         <span style="white-space: nowrap">{{ 'notification.create-new' | translate }}</span>

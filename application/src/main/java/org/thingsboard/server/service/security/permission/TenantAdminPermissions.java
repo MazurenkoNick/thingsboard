@@ -50,7 +50,7 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 import java.util.List;
 
 @Slf4j
-@Component(value = "tenantAdminPermissions")
+@Component
 public class TenantAdminPermissions extends AbstractPermissions {
 
     @Autowired
@@ -278,15 +278,6 @@ public class TenantAdminPermissions extends AbstractPermissions {
             } else {
                 return user.getUserPermissions().hasGenericPermission(Resource.WHITE_LABELING, operation);
             }
-        }
-
-    };
-
-    public static final PermissionChecker genericPermissionChecker = new PermissionChecker() {
-
-        @Override
-        public boolean hasPermission(SecurityUser user, Resource resource, Operation operation) {
-            return user.getUserPermissions().hasGenericPermission(resource, operation);
         }
 
     };

@@ -51,11 +51,13 @@ public class ReportTask extends Task<ReportTaskResult> {
 
     private CustomerId customerId;
     private ReportTemplateId reportTemplateId;
+    @ToString.Exclude
     private ReportTemplateConfig reportTemplateConfig;
 
     private String timezone;
     private UserId userId;
     private EntityId userOwnerId;
+    @ToString.Exclude
     private String accessToken;
     private long accessTokenExpirationTs;
 

@@ -86,8 +86,10 @@
       [dataKeysPanelOptions]="{
         widgetType: widgetType.timeseries,
         callbacks: callbacks,
-        settingsForm: !isPlainFormat ? TableReportColumnSettingsForm : null,
-        latestSettingsForm: !isPlainFormat ? TableReportColumnSettingsForm : null,
+        settingsFormFunction: !isPlainFormat ? dataKeySettingsFormFunction : null,
+        settingsFormTrimDefaults: true,
+        latestSettingsFormFunction: !isPlainFormat ? dataKeySettingsFormFunction : null,
+        latestSettingsFormTrimDefaults: true,
         hasAdditionalLatestDataKeys: true
       }"
       reportMode

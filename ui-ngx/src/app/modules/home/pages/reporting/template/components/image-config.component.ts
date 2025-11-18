@@ -32,22 +32,21 @@
 import { Component, ViewEncapsulation } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import {
-  DataKeyType,
-  getDataKey,
+  AbstractReportComponentConfig
+} from '@home/pages/reporting/template/components/report-component-config.component';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { merge } from 'rxjs';
+import {
   imageAlignments,
   imageAlignmentTranslations,
   ImageReportComponentConfig,
   imageSourceType,
   imageWidthTypes,
-  imageWidthTypeTranslations,
-  updateDataKeys,
-  WidgetConfigMode
-} from '@app/shared/public-api';
-import {
-  AbstractReportComponentConfig
-} from '@home/pages/reporting/template/components/report-component-config.component';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { merge } from 'rxjs';
+  imageWidthTypeTranslations
+} from '@shared/models/report-component.models';
+import { WidgetConfigMode } from '@shared/models/widget.models';
+import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
+import { getDataKey, updateDataKeys } from '@shared/models/widget-settings.models';
 
 @Component({
   selector: 'tb-image-config',

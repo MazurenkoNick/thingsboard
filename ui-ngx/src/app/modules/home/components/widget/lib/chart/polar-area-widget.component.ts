@@ -43,6 +43,8 @@ import {
   polarAreaChartWidgetDefaultSettings,
   PolarAreaChartWidgetSettings
 } from '@home/components/widget/lib/chart/polar-area-widget.models';
+import { coerceBoolean } from '@shared/decorators/coercion';
+import { ChartWidgetComponent } from '@home/components/widget/lib/chart/chart.models';
 
 @Component({
   selector: 'tb-polar-area-chart-widget',
@@ -50,13 +52,17 @@ import {
   styleUrls: [],
   encapsulation: ViewEncapsulation.None
 })
-export class PolarAreaWidgetComponent implements OnInit {
+export class PolarAreaWidgetComponent implements OnInit, ChartWidgetComponent {
 
   @ViewChild('latestChart')
   latestChart: LatestChartComponent;
 
   @Input()
   ctx: WidgetContext;
+
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
 
   @Input()
   widgetTitlePanel: TemplateRef<any>;

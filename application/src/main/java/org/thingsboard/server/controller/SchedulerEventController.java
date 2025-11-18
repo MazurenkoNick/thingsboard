@@ -92,6 +92,7 @@ import static org.thingsboard.server.controller.ControllerConstants.REPORT_USER_
 import static org.thingsboard.server.controller.ControllerConstants.SCHEDULER_EVENT_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.TENANT_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.UUID_WIKI_LINK;
 import static org.thingsboard.server.controller.EdgeController.EDGE_ID;
@@ -283,8 +284,8 @@ public class SchedulerEventController extends BaseController {
     }
 
     @ApiOperation(value = "Get Scheduled Report Events (getScheduledReportEvents)",
-            notes = TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+            notes = TENANT_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/scheduledReports")
     public PageData<ScheduledReportInfo> getScheduledReportEvents(
             @Parameter(description = REPORT_TEMPLATE_ID_DESCRIPTION)

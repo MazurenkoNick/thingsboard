@@ -39,31 +39,46 @@ import org.testng.annotations.Test;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.JobId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
 import org.thingsboard.server.common.data.job.ReportJobResult;
+import org.thingsboard.server.common.data.kv.Aggregation;
+import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
+import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.DataSourceType;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
+import org.thingsboard.server.common.data.report.configuration.TableSortOrder;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.common.data.report.configuration.timewindow.AggregationConfiguration;
+import org.thingsboard.server.common.data.report.configuration.timewindow.History;
+import org.thingsboard.server.common.data.report.configuration.timewindow.Interval;
+import org.thingsboard.server.common.data.report.configuration.timewindow.QuickTimeInterval;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 import org.thingsboard.server.msa.AbstractContainerTest;
 import org.thingsboard.server.msa.ui.utils.EntityPrototypes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.thingsboard.server.msa.prototypes.DevicePrototypes.defaultDevicePrototype;
 import static org.thingsboard.server.msa.ui.utils.EntityPrototypes.defaultTenantAdmin;
 
 public class ReportServiceTest extends AbstractContainerTest {
@@ -122,6 +137,106 @@ public class ReportServiceTest extends AbstractContainerTest {
         checkCsvReport(csvReport);
     }
 
+    @Test
+    public void testEntityTableReportComponentWithTsAggregation() {
+        Device device = testRestClient.postDevice("", defaultDevicePrototype("report"));
+        for (int i = 0; i < 3; i++) {
+            testRestClient.postTelemetry(device.getId(), JacksonUtil.toJsonNode("{\"temperature\":" + (i + 25) +"}"));
+        }
+
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        EntityAlias entityAlias = buildSingleDeviceAlias(devicesAliasId, device.getId());
+
+        EntityTableComponent tableComponent = new EntityTableComponent();
+        DataKey tempField = new DataKey("temperature", "timeseries", "TEMPERATURE");
+        tempField.setAggregationType(Aggregation.AVG);
+        tempField.setTimewindow(buildCurrentDateTimeWindow());
+        tempField.setDecimals(0);
+        tableComponent.setDataSources(List.of(DataSource.builder()
+                .type(DataSourceType.ENTITY)
+                .entityAliasId(devicesAliasId)
+                .dataKeys(List.of(
+                        new DataKey("createdTime", "entityField", "CREATED TIME"),
+                        new DataKey("name", "entityField", "NAME"),
+                        tempField
+                ))
+                .build()));
+
+        ReportTemplate csvReportTemplate = createReportTemplate(entityAlias, tableComponent);
+
+        ReportRequest reportRequest = new ReportRequest();
+        reportRequest.setReportTemplateId(csvReportTemplate.getId());
+        String csvReport = new String(testRestClient.requestTestReport(reportRequest));
+
+        String[] lines = csvReport.split("\r?\n");
+        assertThat(lines[1]).isEqualTo(String.join(",", String.valueOf(device.getCreatedTime()),
+                device.getName(), String.valueOf(26)));
+    }
+
+    @Test
+    public void testTimeseriesReportComponent() {
+        Device device = testRestClient.postDevice("", defaultDevicePrototype("report"));
+        long ts = System.currentTimeMillis();
+        for (int i = 0; i < 3; i++) {
+            testRestClient.postTelemetry(device.getId(), JacksonUtil.toJsonNode("{\"ts\": " + (ts - i) + ", \"values\":{\"temperature\":" + (i + 25) +"}}"));
+        }
+
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        EntityAlias entityAlias = buildSingleDeviceAlias(devicesAliasId, device.getId());
+
+        TimeseriesTableComponent tableComponent = new TimeseriesTableComponent();
+        tableComponent.setDataSources(List.of(DataSource.builder()
+                .type(DataSourceType.ENTITY)
+                .entityAliasId(devicesAliasId)
+                .dataKeys(List.of(new DataKey("temperature", "timeseries", "TEMPERATURE")))
+                .build()));
+        tableComponent.setTimewindow(buildCurrentDateTimeWindow());
+        tableComponent.setShowTimestamp(true);
+        tableComponent.setTimestampLabel("Timestamp");
+        tableComponent.setTimestampPattern("milliseconds");
+
+        ReportTemplate csvReportTemplate = createReportTemplate(entityAlias, tableComponent);
+
+        ReportRequest reportRequest = new ReportRequest();
+        reportRequest.setReportTemplateId(csvReportTemplate.getId());
+        String csvReport = new String(testRestClient.requestTestReport(reportRequest));
+
+        String[] lines = csvReport.split("\r?\n");
+        assertThat(lines[0]).isEqualTo(String.join(",", "Timestamp", "TEMPERATURE"));
+        for (int i = 1; i <= 3; i++) {
+            assertThat(lines[i]).isEqualTo(String.join(",",  String.valueOf(ts - i + 1), String.valueOf( 25 + i - 1)));
+        }
+    }
+
+    private ReportTemplate createReportTemplate(EntityAlias entityAlias, ReportComponent tableComponent) {
+        CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
+        configuration.setEntityAliases(List.of(entityAlias));
+        configuration.setComponents(List.of(tableComponent));
+
+        ReportTemplate csvReportTemplate = new ReportTemplate();
+        csvReportTemplate.setConfiguration(configuration);
+        csvReportTemplate.setName("Device inventory report");
+        csvReportTemplate.setType(ReportTemplateType.REPORT);
+        csvReportTemplate.setFormat(TbReportFormat.CSV);
+        csvReportTemplate = testRestClient.postReportTemplate(csvReportTemplate);
+        return csvReportTemplate;
+    }
+
+    private TimeWindowConfiguration buildCurrentDateTimeWindow() {
+        TimeWindowConfiguration timewindow = new TimeWindowConfiguration();
+        History history = new History();
+        history.setHistoryType(2);
+        history.setQuickInterval(QuickTimeInterval.CURRENT_DAY);
+        history.setInterval(Interval.of(1000));
+        timewindow.setHistory(history);
+        timewindow.setTimezone(TimeZone.getDefault().getID());
+        AggregationConfiguration aggregation = new AggregationConfiguration();
+        aggregation.setType(Aggregation.NONE);
+        aggregation.setLimit(25000);
+        timewindow.setAggregation(aggregation);
+        return timewindow;
+    }
+
     private List<Device> createDevices(int count) {
         List<Device> devices = new ArrayList<>();
         for (int i = 1; i <= count; i++) {
@@ -176,16 +291,9 @@ public class ReportServiceTest extends AbstractContainerTest {
                         new DataKey("threshold", "attribute", "THRESHOLD")
                 ))
                 .build()));
+        tableComponent.setTableSortOrder(new TableSortOrder("CREATED TIME", TableSortOrder.Direction.ASC));
 
-        CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
-        configuration.setEntityAliases(List.of(entityAlias));
-        configuration.setComponents(List.of(tableComponent));
-
-        ReportTemplate csvReportTemplate = new ReportTemplate();
-        csvReportTemplate.setConfiguration(configuration);
-        csvReportTemplate.setName("Device inventory report");
-        csvReportTemplate.setType(ReportTemplateType.REPORT);
-        return testRestClient.postReportTemplate(csvReportTemplate);
+        return createReportTemplate(entityAlias, tableComponent);
     }
 
     private static EntityAlias buildDevicesEntityAlias(String aliasId) {
@@ -193,6 +301,12 @@ public class ReportServiceTest extends AbstractContainerTest {
         filter.setDeviceTypes(List.of("default"));
         filter.setDeviceNameFilter("");
         return new EntityAlias(aliasId, "devices", filter);
+    }
+
+    private static EntityAlias buildSingleDeviceAlias(String aliasId, DeviceId deviceId) {
+        SingleEntityFilter filter = new SingleEntityFilter();
+        filter.setSingleEntity(AliasEntityId.fromEntityId(deviceId));
+        return new EntityAlias(aliasId, "device", filter);
     }
 
 }
