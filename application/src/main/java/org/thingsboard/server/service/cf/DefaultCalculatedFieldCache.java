@@ -39,6 +39,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.thingsboard.server.actors.ActorSystemContext;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.cf.CalculatedFieldLink;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
@@ -48,8 +49,10 @@ import org.thingsboard.server.common.data.id.CalculatedFieldId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.TenantProfileId;
 import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.dao.cf.CalculatedFieldService;
+import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
 import org.thingsboard.server.queue.util.AfterStartUp;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
 import org.thingsboard.server.service.profile.TbAssetProfileCache;
@@ -77,6 +80,7 @@ public class DefaultCalculatedFieldCache implements CalculatedFieldCache {
     private final CalculatedFieldService calculatedFieldService;
     private final TbAssetProfileCache assetProfileCache;
     private final TbDeviceProfileCache deviceProfileCache;
+    private final TbTenantProfileCache tenantProfileCache;
     private final OwnersCacheService ownersCacheService;
     @Lazy
     private final ActorSystemContext systemContext;
@@ -244,8 +248,13 @@ public class DefaultCalculatedFieldCache implements CalculatedFieldCache {
     }
 
     @Override
-    public void handleTenantProfileUpdate() {
-        calculatedFieldsCtx.values().forEach(CalculatedFieldCtx::updateTenantProfileProperties);
+    public void handleTenantProfileUpdate(TenantProfileId tenantProfileId) {
+        calculatedFieldsCtx.values().stream()
+                .filter(ctx -> {
+                    TenantProfile tenantProfile = tenantProfileCache.get(ctx.getTenantId());
+                    return tenantProfile != null && tenantProfileId.equals(tenantProfile.getId());
+                })
+                .forEach(CalculatedFieldCtx::updateTenantProfileProperties);
     }
 
     @Override

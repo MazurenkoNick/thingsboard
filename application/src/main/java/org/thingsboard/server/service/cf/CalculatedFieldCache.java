@@ -36,6 +36,7 @@ import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.TenantProfileId;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
 
 import java.util.List;
@@ -65,7 +66,7 @@ public interface CalculatedFieldCache {
 
     void evict(CalculatedFieldId calculatedFieldId);
 
-    void handleTenantProfileUpdate();
+    void handleTenantProfileUpdate(TenantProfileId tenantProfileId);
 
     EntityId getProfileId(TenantId tenantId, EntityId entityId);
 
