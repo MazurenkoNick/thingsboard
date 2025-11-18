@@ -56,6 +56,7 @@ import {
   ArgumentEntityType,
   CalculatedField,
   CalculatedFieldAlarmRule,
+  CalculatedFieldsQuery,
   CalculatedFieldType,
 } from '@shared/models/calculated-field.models';
 import { ImportExportService } from '@shared/import-export/import-export.service';
@@ -82,7 +83,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
     action: (calculatedField: CalculatedField) => this.openDebugEventsDialog.call(this, calculatedField),
   };
 
-  alarmRuleFilterConfig: any;
+  alarmRuleFilterConfig: CalculatedFieldsQuery;
 
   constructor(private calculatedFieldsService: CalculatedFieldsService,
               private translate: TranslateService,
