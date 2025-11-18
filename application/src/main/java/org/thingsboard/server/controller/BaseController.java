@@ -649,8 +649,8 @@ public abstract class BaseController {
         }
     }
 
-    void checkParameter(String name, String param) throws ThingsboardException {
-        if (StringUtils.isEmpty(param.trim())) {
+    static void checkParameter(String name, String param) throws ThingsboardException {
+        if (StringUtils.isBlank(param)) {
             throw new ThingsboardException("Parameter '" + name + "' can't be empty!", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
     }
