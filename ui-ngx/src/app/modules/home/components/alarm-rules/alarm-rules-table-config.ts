@@ -264,7 +264,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
         entityId: this.entityId,
         tenantId: this.tenantId,
         entityName: this.entityName,
-        ownerId: this.ownerId ?? {entityType: EntityType.TENANT, id: this.tenantId},
+        ownerId: this.ownerId,
         additionalDebugActionConfig: this.additionalDebugActionConfig,
         isDirty,
         readonly: this.readonly,

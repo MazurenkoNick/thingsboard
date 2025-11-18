@@ -90,7 +90,7 @@ export class AlarmRulesTableComponent {
   ) {
     this.pageMode = !!this.route.snapshot.data.isPage;
     effect(() => {
-      if (this.active()) {
+      if (this.active() || this.pageMode) {
         this.alarmRulesTableConfig = new AlarmRulesTableConfig(
           this.calculatedFieldsService,
           this.translate,
