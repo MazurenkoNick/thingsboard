@@ -68,12 +68,11 @@ public class CustomInterval extends BaseAggInterval {
     }
 
     @Override
-    protected ZonedDateTime getAlignedBoundary(ZonedDateTime reference, boolean next) {
+    protected ZonedDateTime alignToIntervalStart(ZonedDateTime reference) {
         ZonedDateTime localMidnight = reference.toLocalDate().atStartOfDay(reference.getZone());
         long secondsFromMidnight = Duration.between(localMidnight, reference).getSeconds();
         long alignedSecondsFromMidnight = (secondsFromMidnight / durationSec) * durationSec;
-        ZonedDateTime aligned = localMidnight.plusSeconds(alignedSecondsFromMidnight);
-        return next ? aligned.plusSeconds(durationSec) : aligned;
+        return localMidnight.plusSeconds(alignedSecondsFromMidnight);
     }
 
     @Override

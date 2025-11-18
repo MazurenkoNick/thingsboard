@@ -165,10 +165,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
 
         try (ctx) {
             ctx.checkStateSize();
-            if (!(ctx instanceof EntityAggCfReprocessingCtx)) {
-                processStateIfReady(ctx, startTs).get();
-            }
-
+            ctx.processInitialState(startTs);
             ctx.prepareCtx(startTs, endTs);
             ctx.processData(startTs, endTs);
             ctx.awaitResults();
@@ -325,6 +322,8 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
 
         void checkStateSize();
 
+        void processInitialState(long startTs) throws Exception;
+
         void awaitResults() throws InterruptedException;
 
         void prepareCtx(long startTs, long endTs) throws Exception;
@@ -338,7 +337,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
     }
 
     @Getter
-    public abstract static class AbstractCfReprocessingCtx implements CFReprocessingCtx, AutoCloseable {
+    public abstract class AbstractCfReprocessingCtx implements CFReprocessingCtx, AutoCloseable {
 
         protected final TenantId tenantId;
         protected final EntityId entityId;
@@ -358,6 +357,10 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             this.state = state;
             this.cfId = cfCtx.getCfId();
             this.ctxId = new CalculatedFieldEntityCtxId(tenantId, cfId, entityId);
+        }
+
+        public void processInitialState(long startTs) throws Exception {
+            processStateIfReady(this, startTs).get();
         }
 
         public void checkStateSize() {
@@ -407,6 +410,8 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         public EntityAggCfReprocessingCtx(TenantId tenantId, EntityId entityId, CalculatedFieldCtx cfCtx, CalculatedFieldState state) {
             super(tenantId, entityId, cfCtx, state);
         }
+
+        public void processInitialState(long startTs) {}
 
         @Override
         public void prepareCtx(long startTs, long endTs) {

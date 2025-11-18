@@ -52,14 +52,24 @@ import org.thingsboard.server.common.data.cf.configuration.aggregation.AggMetric
 import org.thingsboard.server.common.data.cf.configuration.aggregation.single.EntityAggregationCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.aggregation.single.interval.AggInterval;
 import org.thingsboard.server.common.data.cf.configuration.aggregation.single.interval.CustomInterval;
+import org.thingsboard.server.common.data.cf.configuration.aggregation.single.interval.HourInterval;
 import org.thingsboard.server.common.data.cf.configuration.aggregation.single.interval.Watermark;
 import org.thingsboard.server.common.data.debug.DebugSettings;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.job.Job;
+import org.thingsboard.server.common.data.job.JobStatus;
+import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.controller.AbstractControllerTest;
+import org.thingsboard.server.controller.AbstractWebTest;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -73,6 +83,8 @@ import static org.thingsboard.server.cf.CalculatedFieldIntegrationTest.POLL_INTE
         "actors.calculated_fields.check_interval=1"
 })
 public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest {
+
+    private final String TZ = "Europe/Kyiv";
 
     private Tenant savedTenant;
 
@@ -111,7 +123,7 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
     public void testCreateCfAndNoTelemetryDuringInterval_checkAggregation() throws Exception {
         Device device = createDevice("Device", "1234567890111");
 
-        CustomInterval customInterval = new CustomInterval("Europe/Kyiv", 0L, 5L);
+        CustomInterval customInterval = new CustomInterval(TZ, 0L, 5L);
         long intervalEndTs = customInterval.getCurrentIntervalEndTs();
 
         CalculatedField totalConsumptionCF = createTotalConsumptionCF(device.getId(), customInterval, null);
@@ -131,7 +143,7 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
     public void testCreateCfWithoutWatermark_checkAggregation() throws Exception {
         Device device = createDevice("Device", "1234567890111");
 
-        CustomInterval customInterval = new CustomInterval("Europe/Kyiv", 0L, 5L);
+        CustomInterval customInterval = new CustomInterval(TZ, 0L, 5L);
         long currentIntervalStartTs = customInterval.getCurrentIntervalStartTs();
         long currentIntervalEndTs = customInterval.getCurrentIntervalEndTs();
 
@@ -172,7 +184,7 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
     public void testCreateCfWithWatermark_checkAggregationDuringWatermark() throws Exception {
         Device device = createDevice("Device", "1234567890111");
 
-        CustomInterval customInterval = new CustomInterval("Europe/Kyiv", 0L, 5L);
+        CustomInterval customInterval = new CustomInterval(TZ, 0L, 5L);
         long currentIntervalStartTs = customInterval.getCurrentIntervalStartTs();
         long currentIntervalEndTs = customInterval.getCurrentIntervalEndTs();
 
@@ -208,6 +220,114 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
                     assertThat(result).isNotNull();
                     assertThat(result.get("consumption").get(0).get("value").asText()).isEqualTo("600");
                 });
+    }
+
+    @Test
+    public void testReprocessCalculatedField() throws Exception {
+        Device device = createDevice("Device", "1234567890111");
+
+        LocalDate testDate = LocalDate.of(2025, 11, 11);
+        ZonedDateTime dateTime = ZonedDateTime.of(testDate, LocalTime.of(13, 24), ZoneId.of(TZ));
+        // reprocessing time window(TW)
+        long startTs = dateTime.minusHours(5).toInstant().toEpochMilli(); // 2025-11-11 8:24
+        long endTs = dateTime.toInstant().toEpochMilli(); // 2025-11-11 13:24
+
+        // outside the TW
+        long interval_1_1 = ts(testDate, 8, 11, 23);
+        long interval_1_2 = ts(testDate, 8, 33, 56);
+        long interval_1_3 = ts(testDate, 8, 47, 12);
+
+        postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":11}}", interval_1_1));
+        postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":12}}", interval_1_2));
+        postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":8}}", interval_1_3));
+
+        // outside the TW (but telemetry will be used for initial processing)
+        long interval_2_nextStartTs = ts(testDate, 10, 0, 0);
+        long interval_2_1 = ts(testDate, 9, 0, 0);
+        long interval_2_2 = ts(testDate, 9, 15, 11);
+
+        postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":13}}", interval_2_1));
+        postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":35}}", interval_2_2));
+
+        // inside the TW
+        long interval_3_nextStartTs = ts(testDate, 11, 0, 0);
+        long interval_3_1 = ts(testDate, 10, 20, 44);
+        long interval_3_2 = ts(testDate, 10, 40, 33);
+        long interval_3_3 = ts(testDate, 10, 55, 22);
+
+        postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":3}}", interval_3_1));
+        postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":22}}", interval_3_2));
+        postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":22}}", interval_3_3));
+
+        // inside the TW
+        long interval_5_nextStartTs = ts(testDate, 13, 0, 0);
+        long interval_5_1 = ts(testDate, 12, 11, 46);
+        long interval_5_2 = ts(testDate, 12, 26, 11);
+        long interval_5_3 = ts(testDate, 12, 59, 31);
+
+        postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":5}}", interval_5_1));
+        postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":51}}", interval_5_2));
+        postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":12}}", interval_5_3));
+
+        // inside the TW
+        long interval_4_nextStartTs = ts(testDate, 12, 0, 0);
+
+        // outside the TW
+        long interval_6_1 = ts(testDate, 13, 17, 32);
+        long interval_6_2 = ts(testDate, 13, 38, 31);
+
+        postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":22}}", interval_6_1));
+        postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":11}}", interval_6_2));
+
+        /*
+                                              startTs                        endTs
+                                                 |-----------------------------|
+                             |         |         |         |         |         |         |
+               |  intervals  |   8-9   |  9-10   |  10-11  |  11-12  |  12-13  |  13-14  |
+               |  telemetry  | 11 12 8 |  13 35  | 3 22 22 |         | 5 51 12 |  22 11  |
+                             |         |         |         |         |         |         |
+                                                 |-----------------------------|
+                                                                |--- reprocessing time window
+               consumption should be: 48 -> 47 -> 9999(default value) -> 68
+        */
+
+        CalculatedField savedCalculatedField = createTotalConsumptionCF(device.getId(), new HourInterval(TZ, 0L), null);
+
+        reprocessCalculatedField(savedCalculatedField, startTs, endTs);
+
+        await().alias("reprocess -> perform calculation for time window").atMost(TIMEOUT, TimeUnit.SECONDS)
+                .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    ObjectNode consumption = getTimeSeries(device.getId(), startTs, endTs, "consumption");
+                    assertThat(consumption).isNotNull();
+
+                    assertThat(consumption.get("consumption").get(0).get("ts").asText()).isEqualTo(Long.toString(interval_5_nextStartTs - 1));
+                    assertThat(consumption.get("consumption").get(0).get("value").asText()).isEqualTo("68");
+
+                    assertThat(consumption.get("consumption").get(1).get("ts").asText()).isEqualTo(Long.toString(interval_4_nextStartTs - 1));
+                    assertThat(consumption.get("consumption").get(1).get("value").asText()).isEqualTo("9999");
+
+                    assertThat(consumption.get("consumption").get(2).get("ts").asText()).isEqualTo(Long.toString(interval_3_nextStartTs - 1));
+                    assertThat(consumption.get("consumption").get(2).get("value").asText()).isEqualTo("47");
+
+                    assertThat(consumption.get("consumption").get(3).get("ts").asText()).isEqualTo(Long.toString(interval_2_nextStartTs - 1));
+                    assertThat(consumption.get("consumption").get(3).get("value").asText()).isEqualTo("48");
+                });
+
+        await().atMost(AbstractWebTest.TIMEOUT, TimeUnit.SECONDS).untilAsserted(() -> {
+            Job cfReprocessingJob = findJobs(List.of(JobType.CF_REPROCESSING), List.of(device.getUuidId())).stream().findFirst().orElseThrow();
+            assertThat(cfReprocessingJob.getStatus()).isEqualTo(JobStatus.COMPLETED);
+            assertThat(cfReprocessingJob.getResult().getSuccessfulCount()).isEqualTo(1);
+            assertThat(cfReprocessingJob.getResult().getTotalCount()).isEqualTo(1);
+            assertThat(cfReprocessingJob.getEntityId()).isEqualTo(device.getId());
+            assertThat(cfReprocessingJob.getEntityName()).isEqualTo(device.getName());
+        });
+    }
+
+    private long ts(LocalDate date, int hour, int minute, int second) {
+        return ZonedDateTime.of(date, LocalTime.of(hour, minute, second), ZoneId.of(TZ))
+                .toInstant()
+                .toEpochMilli();
     }
 
     private CalculatedField createTotalConsumptionCF(EntityId entityId, AggInterval aggInterval, Watermark watermark) {
@@ -265,6 +385,14 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
 
     private ObjectNode getLatestTelemetry(EntityId entityId, String... keys) throws Exception {
         return doGetAsync("/api/plugins/telemetry/" + entityId.getEntityType() + "/" + entityId.getId() + "/values/timeseries?keys=" + String.join(",", keys), ObjectNode.class);
+    }
+
+    private ObjectNode getTimeSeries(EntityId entityId, long startTs, long endTs, String... keys) throws Exception {
+        return doGetAsync("/api/plugins/telemetry/" + entityId.getEntityType() + "/" + entityId.getId() + "/values/timeseries?keys={keys}&startTs={startTs}&endTs={endTs}", ObjectNode.class, String.join(",", keys), startTs, endTs);
+    }
+
+    private Job reprocessCalculatedField(CalculatedField savedCalculatedField, long startTs, long endTs) throws Exception {
+        return doGet("/api/calculatedField/" + savedCalculatedField.getUuidId() + "/reprocess?startTs={startTs}&endTs={endTs}", Job.class, startTs, endTs);
     }
 
 }
