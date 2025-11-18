@@ -894,7 +894,6 @@ public class BaseRuleChainService extends AbstractEntityService implements RuleC
         }
     }
 
-
     @Override
     public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {
         HasId<?> hasId = EntityType.RULE_NODE.equals(entityId.getEntityType()) ?
