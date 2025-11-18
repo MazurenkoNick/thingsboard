@@ -28,36 +28,28 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.transport.lwm2m.security.cid.serverDtlsCidLength_3;
+package org.thingsboard.server.transport.lwm2m.security.cid;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.thingsboard.server.transport.lwm2m.security.cid.AbstractSecurityLwM2MIntegrationDtlsCidLength3Test;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.test.context.TestPropertySource;
+import org.thingsboard.server.dao.service.DaoSqlTest;
 
-import static org.thingsboard.server.common.data.device.credentials.lwm2m.LwM2MSecurityMode.PSK;
-import static org.thingsboard.server.transport.lwm2m.Lwm2mTestHelper.LwM2MProfileBootstrapConfigType.NONE;
 
-public class PskLwm2mIntegrationDtlsCidLengthTest extends AbstractSecurityLwM2MIntegrationDtlsCidLength3Test {
+@TestPropertySource(properties = {
+        "transport.lwm2m.dtls.connection_id_length=16"
+})
 
-    @Before
-    public void createProfileRpc() {
-        transportConfiguration = getTransportConfiguration(OBSERVE_ATTRIBUTES_WITHOUT_PARAMS, getBootstrapServerCredentialsSecure(PSK, NONE));
-        awaitAlias = "await on client state (Psk_Lwm2m) DtlsCidLength = 3";
+@DaoSqlTest
+@Slf4j
+public abstract class AbstractSecurityLwM2MIntegrationDtlsCidLength16Test extends AbstractSecurityLwM2MIntegrationDtlsCidLengthTest {
+
+    private static final Integer  serverDtlsCidLength = 16;
+
+    protected void  testNoSecDtlsCidLength(Integer clientDtlsCidLength) throws Exception {
+        testNoSecDtlsCidLength(clientDtlsCidLength, serverDtlsCidLength);
     }
 
-    @Test
-    public void testWithPskConnectLwm2mSuccessClientDtlsCidLength_Null() throws Exception {
-        testPskDtlsCidLength(null);
-    }
-
-    @Test
-    public void testWithPskConnectLwm2mSuccessClientDtlsCidLength_0() throws Exception {
-        testPskDtlsCidLength(0);
-    }
-
-    @Test
-    public void testWithPskConnectLwm2mSuccessClientDtlsCidLength_2() throws Exception {
-        testPskDtlsCidLength(2);
+    protected void  testPskDtlsCidLength(Integer clientDtlsCidLength) throws Exception {
+        testPskDtlsCidLength(clientDtlsCidLength, serverDtlsCidLength);
     }
 }
-

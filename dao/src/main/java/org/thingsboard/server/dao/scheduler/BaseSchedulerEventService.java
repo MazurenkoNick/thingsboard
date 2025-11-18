@@ -161,6 +161,10 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
 
     @Override
     public SchedulerEvent saveSchedulerEvent(SchedulerEvent schedulerEvent) {
+        return saveEntity(schedulerEvent, () -> doSaveSchedulerEvent(schedulerEvent));
+    }
+
+    private SchedulerEvent doSaveSchedulerEvent(SchedulerEvent schedulerEvent) {
         log.trace("Executing saveSchedulerEvent [{}]", schedulerEvent);
         schedulerEventValidator.validate(schedulerEvent, SchedulerEventInfo::getTenantId);
         try {

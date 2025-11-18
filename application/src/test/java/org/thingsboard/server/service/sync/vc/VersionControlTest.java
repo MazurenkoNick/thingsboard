@@ -778,7 +778,7 @@ public class VersionControlTest extends AbstractControllerTest {
     @Test
     public void testDeviceGroupVcWithoutEntities_betweenTenants() throws Exception {
         EntityGroup deviceGroup = createEntityGroup(tenantId1, EntityType.DEVICE, "Device group");
-        Device device = createDevice(null, null, "Test device", "test1");
+        Device device = createDevice("Test device", "test1");
         assignEntityToGroup(deviceGroup.getId(), device.getId());
 
         SingleEntityVersionCreateRequest request = new SingleEntityVersionCreateRequest();

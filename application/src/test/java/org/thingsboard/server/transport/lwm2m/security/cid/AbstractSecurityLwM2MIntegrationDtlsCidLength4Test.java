@@ -28,22 +28,27 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.rule.engine.analytics.latest.telemetry;
+package org.thingsboard.server.transport.lwm2m.security.cid;
 
-public class TbMinAggFunction extends TbBaseAggFunction {
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.test.context.TestPropertySource;
+import org.thingsboard.server.dao.service.DaoSqlTest;
 
-    private double min = Double.MAX_VALUE;
 
-    @Override
-    protected void doUpdate(double value) {
-        if (value < min) {
-            min = value;
-        }
+@TestPropertySource(properties = {
+        "transport.lwm2m.dtls.connection_id_length=4"
+})
+
+@DaoSqlTest
+@Slf4j
+public abstract class AbstractSecurityLwM2MIntegrationDtlsCidLength4Test extends AbstractSecurityLwM2MIntegrationDtlsCidLengthTest {
+
+    private static final Integer  serverDtlsCidLength = 4;
+
+    protected void  testNoSecDtlsCidLength(Integer dtlsCidLength) throws Exception {
+        testNoSecDtlsCidLength(dtlsCidLength, serverDtlsCidLength);
     }
-
-    @Override
-    protected double prepareResult() {
-        return min;
+    protected void  testPskDtlsCidLength(Integer dtlsCidLength) throws Exception {
+        testPskDtlsCidLength(dtlsCidLength, serverDtlsCidLength);
     }
-
 }
