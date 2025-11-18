@@ -69,7 +69,7 @@ public class SysAdminPermissions extends AbstractPermissions {
         put(Resource.MOBILE_APP_SETTINGS, PermissionChecker.allowAllPermissionChecker);
         put(Resource.CUSTOM_MENU, customMenuPermissionChecker);
         put(Resource.SECRET, systemEntityPermissionChecker);
-        put(Resource.API_KEY, systemEntityPermissionChecker);
+        put(Resource.API_KEY, PermissionChecker.allowAllPermissionChecker);
     }
 
     private static final PermissionChecker systemEntityPermissionChecker = new PermissionChecker() {
