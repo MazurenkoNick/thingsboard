@@ -30,19 +30,15 @@
  */
 package org.thingsboard.server.common.data.cf.configuration;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
-        property = "type"
-)
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = AttributeImmediateOutputStrategy.class, name = "IMMEDIATE"),
-        @JsonSubTypes.Type(value = AttributeRuleChainOutputStrategy.class, name = "RULE_CHAIN"),
-})
-public interface AttributeOutputStrategy extends OutputStrategy {
+@Data
+@NoArgsConstructor
+public class AttributesRuleChainOutputStrategy implements AttributesOutputStrategy {
+
+    @Override
+    public OutputStrategyType getType() {
+        return OutputStrategyType.RULE_CHAIN;
+    }
 }

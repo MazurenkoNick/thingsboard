@@ -30,15 +30,23 @@
  */
 package org.thingsboard.server.common.data.cf.configuration;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
 @NoArgsConstructor
-public class AttributeRuleChainOutputStrategy implements AttributeOutputStrategy {
+public class AttributesImmediateOutputStrategy implements AttributesOutputStrategy {
+
+    private boolean updateAttributesOnlyOnValueChange;
+
+    private boolean saveAttribute;
+    private boolean sendWsUpdate;
+    private boolean processCfs;
 
     @Override
     public OutputStrategyType getType() {
-        return OutputStrategyType.RULE_CHAIN;
+        return OutputStrategyType.IMMEDIATE;
     }
 }
