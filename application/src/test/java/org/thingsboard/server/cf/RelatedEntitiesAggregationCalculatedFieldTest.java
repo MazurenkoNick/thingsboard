@@ -47,9 +47,10 @@ import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
 import org.thingsboard.server.common.data.cf.configuration.ArgumentType;
+import org.thingsboard.server.common.data.cf.configuration.AttributesOutput;
 import org.thingsboard.server.common.data.cf.configuration.Output;
-import org.thingsboard.server.common.data.cf.configuration.OutputType;
 import org.thingsboard.server.common.data.cf.configuration.ReferencedEntityKey;
+import org.thingsboard.server.common.data.cf.configuration.TimeSeriesOutput;
 import org.thingsboard.server.common.data.cf.configuration.aggregation.AggFunction;
 import org.thingsboard.server.common.data.cf.configuration.aggregation.AggFunctionInput;
 import org.thingsboard.server.common.data.cf.configuration.aggregation.AggKeyInput;
@@ -642,8 +643,7 @@ public class RelatedEntitiesAggregationCalculatedFieldTest extends AbstractContr
                 });
 
         var configuration = (RelatedEntitiesAggregationCalculatedFieldConfiguration) cf.getConfiguration();
-        Output output = new Output();
-        output.setType(OutputType.ATTRIBUTES);
+        AttributesOutput output = new AttributesOutput();
         output.setScope(AttributeScope.SERVER_SCOPE);
         configuration.setOutput(output);
         saveCalculatedField(cf);
@@ -774,8 +774,7 @@ public class RelatedEntitiesAggregationCalculatedFieldTest extends AbstractContr
         avgMetric.setInput(new AggKeyInput("temp"));
         aggMetrics.put("avgTemperature", avgMetric);
 
-        Output output = new Output();
-        output.setType(OutputType.TIME_SERIES);
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setDecimalsByDefault(0);
 
         return createAggCf("Average temperature", entityId,
@@ -811,8 +810,7 @@ public class RelatedEntitiesAggregationCalculatedFieldTest extends AbstractContr
         totalSpaces.setInput(new AggFunctionInput("return 1;"));
         aggMetrics.put("totalSpaces", totalSpaces);
 
-        Output output = new Output();
-        output.setType(OutputType.TIME_SERIES);
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setDecimalsByDefault(0);
 
         return createAggCf("Occupied spaces", entityId,
@@ -848,8 +846,7 @@ public class RelatedEntitiesAggregationCalculatedFieldTest extends AbstractContr
         totalSpaces.setInput(new AggFunctionInput("return 1;"));
         aggMetrics.put("totalSpaces", totalSpaces);
 
-        Output output = new Output();
-        output.setType(OutputType.TIME_SERIES);
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setDecimalsByDefault(0);
 
         return createAggCf("Occupied spaces", entityId,

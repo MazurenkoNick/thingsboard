@@ -45,6 +45,7 @@ import {
   CalculatedFieldOutput,
   CalculatedFieldRelatedAggregationConfiguration,
   CalculatedFieldType,
+  defaultCalculatedFieldOutput,
   getCalculatedFieldArgumentsEditorCompleter,
   getCalculatedFieldArgumentsHighlights,
   notEmptyObjectValidator,
@@ -105,9 +106,7 @@ export class RelatedEntitiesAggregationComponentComponent implements ControlValu
     arguments: this.fb.control({}, notEmptyObjectValidator()),
     metrics: this.fb.control({}, notEmptyObjectValidator()),
     deduplicationIntervalInSec: [this.minAllowedDeduplicationIntervalInSecForCF],
-    output: this.fb.control<CalculatedFieldOutput>({
-      type: OutputType.Timeseries,
-    }),
+    output: this.fb.control<CalculatedFieldOutput>(defaultCalculatedFieldOutput),
     useLatestTs: [false]
   });
 
