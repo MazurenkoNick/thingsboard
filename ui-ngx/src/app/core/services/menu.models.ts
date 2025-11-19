@@ -1292,6 +1292,10 @@ const menuFilters = new Map<MenuId, MenuFilter>([
           userPermissionsService.hasReadGenericPermission(Resource.ALARM)
   ],
   [
+    MenuId.alarm_rules, (_authState, userPermissionsService) =>
+    userPermissionsService.hasResourcesGenericPermission([Resource.DEVICE, Resource.ASSET, Resource.CUSTOMER, Resource.DEVICE_PROFILE, Resource.ASSET_PROFILE],Operation.READ_CALCULATED_FIELD)
+  ],
+  [
     MenuId.dashboard_all, (_authState, userPermissionsService) =>
           userPermissionsService.hasReadGenericPermission(Resource.DASHBOARD)
   ],
