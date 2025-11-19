@@ -55,6 +55,9 @@ import { POSITION_MAP } from '@shared/models/overlay.models';
 import { UtilsService } from '@core/services/utils.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AlarmRuleFilterConfig } from "@shared/models/alarm-rule.models";
+import { Operation, Resource } from "@shared/models/security.models";
+import { EntityService } from "@core/http/entity.service";
+import { UserPermissionsService } from "@core/http/user-permissions.service";
 
 export const ALARM_FILTER_CONFIG_DATA = new InjectionToken<any>('AlarmRuleFilterConfigData');
 
@@ -133,7 +136,9 @@ export class AlarmRuleFilterConfigComponent implements OnInit, ControlValueAcces
               private nativeElement: ElementRef,
               private viewContainerRef: ViewContainerRef,
               private utils: UtilsService,
-              private destroyRef: DestroyRef) {
+              private destroyRef: DestroyRef,
+              private entityService: EntityService,
+              private userPermissionsService: UserPermissionsService) {
   }
 
   ngOnInit(): void {
@@ -145,6 +150,13 @@ export class AlarmRuleFilterConfigComponent implements OnInit, ControlValueAcces
       if (this.panelMode && !this.initialAlarmRuleFilterConfig) {
         this.initialAlarmRuleFilterConfig = deepClone(this.alarmRuleFilterConfig);
       }
+    }
+    this.listEntityTypes = this.entityService.prepareAllowedEntityTypesList(this.listEntityTypes, false, Operation.WRITE) as EntityType[];
+    if (this.userPermissionsService.hasGenericPermission(Resource.DEVICE_PROFILE, Operation.WRITE)) {
+      this.listEntityTypes.push(EntityType.DEVICE_PROFILE);
+    }
+    if (this.userPermissionsService.hasGenericPermission(Resource.ASSET_PROFILE, Operation.WRITE)) {
+      this.listEntityTypes.push(EntityType.ASSET_PROFILE);
     }
     this.alarmRuleFilterConfigForm = this.fb.group({
       name: [null, []],
