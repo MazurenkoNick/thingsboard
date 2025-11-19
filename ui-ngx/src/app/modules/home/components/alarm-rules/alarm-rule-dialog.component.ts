@@ -38,7 +38,7 @@ import { Router } from '@angular/router';
 import { DialogComponent } from '@shared/components/dialog.component';
 import { CalculatedField, CalculatedFieldArgument, CalculatedFieldType } from '@shared/models/calculated-field.models';
 import { oneSpaceInsideRegex } from '@shared/models/regex.constants';
-import { EntityType } from '@shared/models/entity-type.models';
+import { AliasEntityType, EntityType, entityTypeTranslations } from '@shared/models/entity-type.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ScriptLanguage } from '@shared/models/rule-node.models';
 import { CalculatedFieldsService } from '@core/http/calculated-fields.service';
@@ -48,6 +48,9 @@ import { COMMA, ENTER, SEMICOLON } from "@angular/cdk/keycodes";
 import { MatChipInputEvent } from "@angular/material/chips";
 import { AlarmRule, AlarmRuleConditionType, AlarmRuleExpressionType } from "@shared/models/alarm-rule.models";
 import { deepTrim } from "@core/utils";
+import { EntityService } from "@core/http/entity.service";
+import { Operation, Resource } from "@shared/models/security.models";
+import { UserPermissionsService } from "@core/http/user-permissions.service";
 
 export interface AlarmRuleDialogData {
   value?: CalculatedField;
@@ -73,6 +76,10 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
     name: ['', [Validators.required, Validators.pattern(oneSpaceInsideRegex), Validators.maxLength(255)]],
     type: [CalculatedFieldType.ALARM],
     debugSettings: [],
+    entityId: this.fb.group({
+      entityType: this.fb.control<EntityType | AliasEntityType | null>(null, Validators.required),
+      id: ['', Validators.required],
+    }),
     configuration: this.fb.group({
       arguments: this.fb.control({}),
       propagate: [false],
@@ -80,7 +87,7 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
       propagateToOwnerHierarchy: [false],
       propagateToTenant: [false],
       propagateRelationTypes: [null],
-      createRules: [null],
+      createRules: [null, Validators.required],
       clearRule: [null],
     }),
   });
@@ -90,7 +97,12 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
     action: () => this.data.additionalDebugActionConfig.action({ id: this.data.value.id, ...this.fromGroupValue }),
   } : null;
 
+  ownerId = this.data.ownerId ?? null;
+
+  alarmRuleEntityTypeList = [EntityType.DEVICE, EntityType.ASSET, EntityType.CUSTOMER, EntityType.DEVICE_PROFILE, EntityType.ASSET_PROFILE];
+
   readonly EntityType = EntityType;
+  readonly entityTypeTranslations = entityTypeTranslations;
   readonly CalculatedFieldType = CalculatedFieldType;
   readonly ScriptLanguage = ScriptLanguage;
 
@@ -102,13 +114,37 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
               protected dialogRef: MatDialogRef<AlarmRuleDialogComponent, CalculatedField>,
               private calculatedFieldsService: CalculatedFieldsService,
               private destroyRef: DestroyRef,
-              private fb: FormBuilder) {
+              private fb: FormBuilder,
+              private entityService: EntityService,
+              private userPermissionsService: UserPermissionsService) {
     super(store, router, dialogRef);
+    this.alarmRuleEntityTypeList = this.entityService.prepareAllowedEntityTypesList(this.alarmRuleEntityTypeList, false, Operation.WRITE) as EntityType[];
+    if (this.userPermissionsService.hasGenericPermission(Resource.DEVICE_PROFILE, Operation.WRITE)) {
+      this.alarmRuleEntityTypeList.push(EntityType.DEVICE_PROFILE);
+    }
+    if (this.userPermissionsService.hasGenericPermission(Resource.ASSET_PROFILE, Operation.WRITE)) {
+      this.alarmRuleEntityTypeList.push(EntityType.ASSET_PROFILE);
+    }
     this.observeIsLoading();
     this.applyDialogData();
 
     if (this.data.readonly) {
       this.fieldFormGroup.disable();
+    }
+    this.fieldFormGroup.get('entityId.id').valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((value) => {
+      if (value) {
+        this.getOwnerByEntityTypeAndId(this.fieldFormGroup.get('entityId.entityType').value as EntityType, value);
+      }
+    });
+  }
+
+  private getOwnerByEntityTypeAndId(entityType: EntityType, id: string): void {
+    if (entityType === EntityType.DEVICE_PROFILE || entityType === EntityType.ASSET_PROFILE) {
+      this.ownerId = {entityType: EntityType.TENANT, id: this.data.tenantId};
+    } else {
+      this.entityService.getEntity(entityType, id).subscribe(entity => this.ownerId = entity.ownerId);
     }
   }
 
@@ -181,8 +217,11 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
   }
 
   private applyDialogData(): void {
-    const { configuration = {}, type = CalculatedFieldType.ALARM, debugSettings = { failuresEnabled: true, allEnabled: true }, ...value } = this.data.value ?? {};
-    this.fieldFormGroup.patchValue({ configuration, type, debugSettings, ...value }, {emitEvent: false});
+    const { configuration = {}, type = CalculatedFieldType.ALARM, debugSettings = { failuresEnabled: true, allEnabled: true }, entityId = this.data.entityId, ...value } = this.data.value ?? {};
+    this.fieldFormGroup.patchValue({ configuration, type, debugSettings, entityId, ...value }, {emitEvent: false});
+    if (!this.ownerId && entityId) {
+      this.getOwnerByEntityTypeAndId(entityId.entityType as EntityType, entityId.id);
+    }
   }
 
   private observeIsLoading(): void {

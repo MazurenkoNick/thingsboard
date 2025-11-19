@@ -30,6 +30,6 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-@if (alarmRulesTableConfig) {
-  <tb-entities-table [class.white-background]="!pageMode" [entitiesTableConfig]="alarmRulesTableConfig"></tb-entities-table>
-}
+<tb-alarm-rule-filter-config [ngModel]="alarmRuleTableConfig.alarmRuleFilterConfig"
+                             (ngModelChange)="alarmRuleFilterChanged($event)">
+</tb-alarm-rule-filter-config>

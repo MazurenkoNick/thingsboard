@@ -28,8 +28,29 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-:host ::ng-deep {
-  .white-background {
-    --mat-sidenav-content-background-color: white;
-  }
+package org.thingsboard.server.common.data.cf;
+
+import lombok.Builder;
+import lombok.Data;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.thingsboard.server.common.data.EntityType;
+
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+@Data
+@Builder
+public class CalculatedFieldFilter {
+
+    @NonNull
+    private final CalculatedFieldType type;
+    @NonNull
+    private final Set<EntityType> entityTypes;
+    @Nullable
+    private final List<UUID> entityIds;
+    @Nullable
+    private final List<String> names;
+
 }
