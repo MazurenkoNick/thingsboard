@@ -67,7 +67,7 @@ public class ApiKeyInfo extends BaseData<ApiKeyId> implements TenantEntity {
     @NoXss
     @NotBlank
     @Length(fieldName = "description")
-    @Schema(description = "API Key description.", example = "API key description")
+    @Schema(description = "API Key description.", example = "API Key description")
     private String description;
 
     @Schema(description = "Enabled/disabled API key.", example = "true")
@@ -88,7 +88,7 @@ public class ApiKeyInfo extends BaseData<ApiKeyId> implements TenantEntity {
     private AuthorityPermissionsInfo permissions;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    @Schema(description = "Indicates if the api key is expired based on current time. Returns false if expirationTime is 0 (no expiry).",
+    @Schema(description = "Indicates if the API key is expired based on current time. Returns false if expirationTime is 0 (no expiry).",
             example = "false",
             accessMode = Schema.AccessMode.READ_ONLY)
     public boolean isExpired() {

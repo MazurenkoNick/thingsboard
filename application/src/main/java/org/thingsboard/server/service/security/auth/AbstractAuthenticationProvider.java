@@ -62,13 +62,13 @@ public abstract class AbstractAuthenticationProvider implements AuthenticationPr
     private final UserAuthDetailsCache userAuthDetailsCache;
     private final UserPermissionsService userPermissionsService;
 
-    protected SecurityUser authenticateByPublicId(String publicId, String errorContext, UserPrincipal userPrincipal) {
+    protected SecurityUser authenticateByPublicId(String publicId, String authContextName, UserPrincipal userPrincipal) {
         TenantId systemId = TenantId.SYS_TENANT_ID;
         CustomerId customerId;
         try {
             customerId = new CustomerId(UUID.fromString(publicId));
         } catch (Exception e) {
-            throw new BadCredentialsException(errorContext + " is not valid");
+            throw new BadCredentialsException(authContextName + " is not valid");
         }
         Customer publicCustomer = customerService.findCustomerById(systemId, customerId);
         if (publicCustomer == null) {
@@ -76,7 +76,7 @@ public abstract class AbstractAuthenticationProvider implements AuthenticationPr
         }
 
         if (!publicCustomer.isPublic()) {
-            throw new BadCredentialsException(errorContext + " is not valid");
+            throw new BadCredentialsException(authContextName + " is not valid");
         }
 
         User user = new User(new UserId(EntityId.NULL_UUID));

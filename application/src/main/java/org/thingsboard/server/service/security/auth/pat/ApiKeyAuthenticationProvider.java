@@ -73,11 +73,6 @@ public class ApiKeyAuthenticationProvider extends AbstractAuthenticationProvider
         return new ApiKeyAuthenticationToken(securityUser);
     }
 
-    @Override
-    public boolean supports(Class<?> authentication) {
-        return ApiKeyAuthenticationToken.class.isAssignableFrom(authentication);
-    }
-
     private SecurityUser authenticate(String key, UserId userIdInternal, CustomerId customerIdInternal) {
         if (StringUtils.isEmpty(key)) {
             throw new BadCredentialsException("Empty API key");
@@ -127,5 +122,10 @@ public class ApiKeyAuthenticationProvider extends AbstractAuthenticationProvider
     }
 
     private record ResolvedUser(TenantId tenantId, UserId userId, CustomerId customerId, boolean isPublicCustomer) {}
+
+    @Override
+    public boolean supports(Class<?> authentication) {
+        return ApiKeyAuthenticationToken.class.isAssignableFrom(authentication);
+    }
 
 }

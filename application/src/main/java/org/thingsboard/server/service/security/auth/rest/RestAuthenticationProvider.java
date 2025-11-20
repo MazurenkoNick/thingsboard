@@ -63,7 +63,6 @@ import org.thingsboard.server.service.security.model.UserPrincipal;
 import org.thingsboard.server.service.security.permission.UserPermissionsService;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
 
-
 @Component
 @Slf4j
 @TbCoreComponent
