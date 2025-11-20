@@ -359,6 +359,34 @@ public class ReportControllerTest extends AbstractControllerTest {
     }
 
     @Test
+    public void testReportCsvWithTimeSeriesTableWithAggr() throws Exception {
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        EntityAlias entityAlias = buildDeviceTypeEntityAlias(devicesAliasId);
+
+        TimeWindowConfiguration timeWindowConf = buildCurrentDateTimeWindow(Aggregation.SUM, Interval.of(86400000));
+        TimeseriesTableComponent tsComponent = new TimeseriesTableComponent();
+        tsComponent.setDataSources(List.of(DataSource.builder()
+                .type(DataSourceType.ENTITY)
+                .entityAliasId(devicesAliasId)
+                .dataKeys(List.of(
+                        new DataKey("energy", "timeseries", "ENERGY")
+                ))
+                .latestDataKeys(List.of(
+                        new DataKey("name", "entityField", "NAME")
+                ))
+                .build()));
+        tsComponent.setTimewindow(timeWindowConf);
+
+        ReportTemplateConfig configuration = createReportConfigTemplate(List.of(tsComponent), entityAlias, TbReportFormat.CSV);
+
+        List<String> columnHeaders = List.of("ENERGY", "NAME");
+        List<List<String>> generatedValues = generateTsDataForSumAggr(columnHeaders);
+        List<String> expectedRows = generatedValues.stream().map(row -> String.join(",", row)).toList();
+
+        generateAndCheckCSVReport(configuration, expectedRows);
+    }
+
+    @Test
     public void testReportPdfWithTimeSeriesTable() throws Exception {
         String devicesAliasId = StringUtils.randomAlphabetic(10);
         EntityAlias entityAlias = buildDeviceTypeEntityAlias(devicesAliasId);
@@ -551,6 +579,10 @@ public class ReportControllerTest extends AbstractControllerTest {
     }
 
     private TimeseriesTableComponent buildTimeseriesTableComponent(String devicesAliasId) {
+        return buildTimeseriesTableComponent(devicesAliasId, buildCurrentDateTimeWindow());
+    }
+
+    private TimeseriesTableComponent buildTimeseriesTableComponent(String devicesAliasId, TimeWindowConfiguration timewindow) {
         TimeseriesTableComponent tsComponent = new TimeseriesTableComponent();
         tsComponent.setShowTimestamp(true);
         tsComponent.setTimestampLabel("Timestamp");
@@ -570,7 +602,6 @@ public class ReportControllerTest extends AbstractControllerTest {
                         new DataKey("active", "attribute", "ACTIVE")
                 ))
                 .build()));
-        TimeWindowConfiguration timewindow = buildCurrentDateTimeWindow();
         tsComponent.setTimewindow(timewindow);
         return tsComponent;
     }
@@ -580,15 +611,15 @@ public class ReportControllerTest extends AbstractControllerTest {
     }
 
     private static TimeWindowConfiguration buildCurrentDateTimeWindow() {
-        return buildCurrentDateTimeWindow(Aggregation.NONE);
+        return buildCurrentDateTimeWindow(Aggregation.NONE, null);
     }
 
-    private static TimeWindowConfiguration buildCurrentDateTimeWindow(Aggregation aggregationType) {
+    private static TimeWindowConfiguration buildCurrentDateTimeWindow(Aggregation aggregationType, Interval interval) {
         TimeWindowConfiguration timewindow = new TimeWindowConfiguration();
         History history = new History();
         history.setHistoryType(2);
         history.setQuickInterval(QuickTimeInterval.CURRENT_DAY);
-        history.setInterval(Interval.of(86400000));
+        history.setInterval(interval);
         timewindow.setHistory(history);
         timewindow.setTimezone(TimeZone.getDefault().getID());
         AggregationConfiguration aggregation = new AggregationConfiguration();
@@ -818,6 +849,30 @@ public class ReportControllerTest extends AbstractControllerTest {
                         "false"));
             }
         }
+        return expectedLines;
+    }
+
+    private List<List<String>> generateTsDataForSumAggr(List<String> columnHeaders) throws Exception {
+        Device device = new Device();
+        device.setName("To test aggr device");
+        device.setType("default");
+        device.setLabel("testLabel" + (int) (Math.random() * 1000));
+        device = doPost("/api/device", device, Device.class);
+
+        List<List<String>> expectedLines = new ArrayList<>();
+
+        expectedLines.add(columnHeaders);
+
+        long energySum = 0;
+        for (int i = 0; i < 18; i++) {
+            long energyConsumption = (long) (Math.random() * 100);
+            long ts = System.currentTimeMillis() - 300L * i;
+            doPost("/api/plugins/telemetry/DEVICE/" + device.getId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(String.format("{\"ts\": %s, \"values\": {\"energy\":%s}}", ts, energyConsumption)));
+            energySum += energyConsumption;
+        }
+        expectedLines.add(List.of(
+                String.valueOf(energySum),
+                device.getName()));
         return expectedLines;
     }
 
