@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.model;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Id;
@@ -51,9 +52,6 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/**
- * Created by ashvayka on 13.07.17.
- */
 @Data
 @MappedSuperclass
 public abstract class BaseSqlEntity<D> implements BaseEntity<D> {
@@ -138,6 +136,10 @@ public abstract class BaseSqlEntity<D> implements BaseEntity<D> {
 
     protected <T> T fromJson(JsonNode json, Class<T> type) {
         return JacksonUtil.convertValue(json, type);
+    }
+
+    protected <T> T fromJson(JsonNode json, TypeReference<T> toValueTypeRef) {
+        return JacksonUtil.convertValue(json, toValueTypeRef);
     }
 
     protected String listToString(List<?> list) {

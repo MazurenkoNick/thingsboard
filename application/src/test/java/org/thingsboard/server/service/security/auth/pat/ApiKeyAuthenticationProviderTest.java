@@ -36,11 +36,20 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.thingsboard.server.common.data.audit.ActionType;
+import org.thingsboard.server.common.data.domain.Domain;
 import org.thingsboard.server.common.data.edge.Edge;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.pat.ApiKey;
 import org.thingsboard.server.common.data.pat.ApiKeyInfo;
+import org.thingsboard.server.common.data.permission.Operation;
+import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.controller.AbstractControllerTest;
 import org.thingsboard.server.dao.service.DaoSqlTest;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.thingsboard.server.dao.model.ModelConstants.NULL_UUID;
@@ -99,6 +108,52 @@ public class ApiKeyAuthenticationProviderTest extends AbstractControllerTest {
                 .andExpect(status().isOk());
     }
 
+//    @Test
+//    public void testSaveDomainWithApiKey_whenSysAdminWithoutDomainWritePermission_thenForbidden() throws Exception {
+//        loginSysAdmin();
+//
+//        // Create API Key with only READ permission for SECRET
+//        Map<Resource, Set<Operation>> permissions = new HashMap<>();
+//        permissions.put(Resource.DOMAIN, Set.of(Operation.READ));
+//
+//        ApiKeyInfo apiKeyInfo = constructSystemApiKeyInfoWithPermissions(currentUserId, permissions);
+//        String token = doPost("/api/apiKey", apiKeyInfo, ApiKey.class).getValue();
+//        setApiKey(token);
+//
+//        Domain domain = constructDomain(TenantId.SYS_TENANT_ID, "localhost", true, true);
+//
+//        doPostWithApiKey("/api/domain", domain)
+//                .andExpect(status().isForbidden());
+//
+//        doDelete("/api/apiKey/" + apiKeyInfo.getId().getId().toString(), token).andExpect(status().isOk());
+//
+//        loginTenantAdmin();
+//    }
+//
+//    @Test
+//    public void testSaveDomainWithApiKey_whenSysAdminWithDomainWritePermission_thenOk() throws Exception {
+//        loginSysAdmin();
+//
+//        // Create API Key with ALL permission for SECRET
+//        Map<Resource, Set<Operation>> permissions = new HashMap<>();
+//        permissions.put(Resource.DOMAIN, Set.of(Operation.ALL));
+//
+//        ApiKeyInfo apiKeyInfo = constructSystemApiKeyInfoWithPermissions(currentUserId, permissions);
+//        String token = doPost("/api/apiKey", apiKeyInfo, ApiKey.class).getValue();
+//        setApiKey(token);
+//
+//        Domain domain = constructDomain(TenantId.SYS_TENANT_ID, "localhost", true, true);
+//
+//        doPostWithApiKey("/api/domain", domain)
+//                .andExpect(status().isOk());
+//        doDeleteWithApiKey("/api/domain/" + domain.getId().getId().toString(), token)
+//                .andExpect(status().isOk());
+//        doDelete("/api/apiKey/" + apiKeyInfo.getId().getId().toString(), token)
+//                .andExpect(status().isOk());
+//
+//        loginTenantAdmin();
+//    }
+
     @Test
     public void testUnauthorizedWhenKeyDisabled() throws Exception {
         ApiKeyInfo disabledApiKeyInfo = doPut("/api/apiKey/" + savedApiKey.getId().getId() + "/enabled/false", Boolean.FALSE, ApiKeyInfo.class);
@@ -123,5 +178,24 @@ public class ApiKeyAuthenticationProviderTest extends AbstractControllerTest {
         apiKeyInfo.setUserId(tenantAdminUserId);
         return apiKeyInfo;
     }
+
+//    private ApiKeyInfo constructSystemApiKeyInfoWithPermissions(UserId userId, Map<Resource, Set<Operation>> permissions) {
+//        ApiKeyInfo apiKeyInfo = new ApiKeyInfo();
+//        apiKeyInfo.setTenantId(TenantId.SYS_TENANT_ID);
+//        apiKeyInfo.setUserId(userId);
+//        apiKeyInfo.setDescription("Test API Key");
+//        apiKeyInfo.setEnabled(true);
+//        apiKeyInfo.setPermissions(permissions);
+//        return apiKeyInfo;
+//    }
+//
+//    private Domain constructDomain(TenantId tenantId, String domainName, boolean oauth2Enabled, boolean edgeEnabled) {
+//        Domain domain = new Domain();
+//        domain.setTenantId(tenantId);
+//        domain.setName(domainName);
+//        domain.setOauth2Enabled(oauth2Enabled);
+//        domain.setPropagateToEdge(edgeEnabled);
+//        return domain;
+//    }
 
 }

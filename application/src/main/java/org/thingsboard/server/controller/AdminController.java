@@ -426,7 +426,8 @@ public class AdminController extends BaseController {
                     + SYSTEM_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('SYS_ADMIN')")
     @GetMapping(value = "/updates")
-    public UpdateMessage checkUpdates() {
+    public UpdateMessage checkUpdates() throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.READ);
         return updateService.checkUpdates();
     }
 
@@ -435,6 +436,7 @@ public class AdminController extends BaseController {
     @PreAuthorize("hasAuthority('SYS_ADMIN')")
     @GetMapping(value = "/licenseUsageInfo")
     public LicenseUsageInfo getLicenseUsageInfo() throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.READ);
         // LicenseInfo licenseInfo = subscriptionService.getLicenseInfo();
 
         LicenseInfo licenseInfo = new LicenseInfo();
@@ -457,7 +459,8 @@ public class AdminController extends BaseController {
                     + SYSTEM_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('SYS_ADMIN')")
     @GetMapping(value = "/systemInfo")
-    public SystemInfo getSystemInfo() {
+    public SystemInfo getSystemInfo() throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.READ);
         return systemInfoService.getSystemInfo();
     }
 
@@ -466,7 +469,8 @@ public class AdminController extends BaseController {
                     + SYSTEM_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('SYS_ADMIN')")
     @GetMapping(value = "/featuresInfo")
-    public FeaturesInfo getFeaturesInfo() {
+    public FeaturesInfo getFeaturesInfo() throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.READ);
         return systemInfoService.getFeaturesInfo();
     }
 

@@ -28,42 +28,33 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.security.permission;
+package org.thingsboard.server.common.data.permission;
 
-import org.thingsboard.server.common.data.TenantEntity;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.permission.Operation;
-import org.thingsboard.server.common.data.permission.Resource;
-import org.thingsboard.server.service.security.model.SecurityUser;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import org.thingsboard.server.common.data.security.Authority;
 
-import java.util.HashMap;
-import java.util.Optional;
+import java.util.Map;
+import java.util.Set;
 
-public abstract class AbstractPermissions extends HashMap<Resource, PermissionChecker> implements Permissions {
+@Data
+@Schema
+public class AuthorityPermissionsInfo {
 
-    public AbstractPermissions() {
-        super();
-    }
+    @Schema(description = "Map of permissions per authority level. Each authority (SYS_ADMIN, TENANT_ADMIN, CUSTOMER_USER) " +
+            "can have different sets of resource permissions. " +
+            "Format: {\"AUTHORITY\": {\"RESOURCE\": [\"OPERATION1\", \"OPERATION2\"]}}. " +
+            "Example: {\"TENANT_ADMIN\": {\"DEVICE\": [\"READ\", \"WRITE\"], \"DASHBOARD\": [\"READ\"]}, " +
+            "\"CUSTOMER_USER\": {\"DEVICE\": [\"READ\"]}}",
+            example = "{\"TENANT_ADMIN\": {\"DEVICE\": [\"READ\", \"WRITE\"], \"ALARM\": [\"READ\", \"CREATE\"]}, " +
+                    "\"CUSTOMER_USER\": {\"DEVICE\": [\"READ\"], \"ALARM\": [\"READ\"]}}")
+    private Map<Authority, Map<Resource, Set<Operation>>> operationsByResource;
 
-    @Override
-    public Optional<PermissionChecker> getPermissionChecker(Resource resource) {
-        PermissionChecker permissionChecker = this.get(resource);
-        return Optional.ofNullable(permissionChecker);
-    }
-
-    public static final PermissionChecker genericPermissionChecker = new PermissionChecker() {
-
-        @Override
-        public boolean hasPermission(SecurityUser user, Resource resource, Operation operation) {
-            return user.getUserPermissions().hasGenericPermission(resource, operation);
+    public Map<Resource, Set<Operation>> getPermissionsForAuthority(Authority authority) {
+        if (operationsByResource == null || authority == null) {
+            return null;
         }
-
-        @Override
-        public boolean hasPermission(SecurityUser user, Operation operation, EntityId entityId, TenantEntity entity) {
-            Resource resource = Resource.resourceFromEntityType(entity.getEntityType());
-            return user.getUserPermissions().hasGenericPermission(resource, operation);
-        }
-
-    };
+        return operationsByResource.get(authority);
+    }
 
 }

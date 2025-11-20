@@ -267,6 +267,7 @@ public class DashboardController extends BaseController {
         TenantId tenantId = TenantId.fromUUID(toUUID(strTenantId));
         checkTenantId(tenantId, Operation.READ);
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
+        accessControlService.checkPermission(getCurrentUser(), Resource.DASHBOARD, Operation.READ);
         return checkNotNull(dashboardService.findDashboardsByTenantId(tenantId, pageLink));
     }
 

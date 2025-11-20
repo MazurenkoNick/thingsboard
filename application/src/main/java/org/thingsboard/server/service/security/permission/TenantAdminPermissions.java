@@ -65,7 +65,7 @@ public class TenantAdminPermissions extends AbstractPermissions {
     public TenantAdminPermissions() {
         super();
         //TODO: entities-version-merge
-        put(Resource.ADMIN_SETTINGS, PermissionChecker.allowAllPermissionChecker);
+        put(Resource.ADMIN_SETTINGS, genericPermissionChecker);
         put(Resource.PROFILE, genericPermissionChecker);
         put(Resource.ALARM, tenantStandaloneEntityPermissionChecker);
         put(Resource.ASSET, tenantGroupEntityPermissionChecker);
@@ -102,10 +102,10 @@ public class TenantAdminPermissions extends AbstractPermissions {
         put(Resource.QUEUE, queuePermissionChecker);
         put(Resource.VERSION_CONTROL, genericPermissionChecker);
         put(Resource.NOTIFICATION, tenantStandaloneEntityPermissionChecker);
-        put(Resource.MOBILE_APP_SETTINGS, PermissionChecker.allowAllPermissionChecker);
+        put(Resource.MOBILE_APP_SETTINGS, genericPermissionChecker);
         put(Resource.CUSTOM_MENU, customMenuPermissionChecker);
         put(Resource.OAUTH2_CLIENT, tenantStandaloneEntityPermissionChecker);
-        put(Resource.OAUTH2_CONFIGURATION_TEMPLATE, new PermissionChecker.GenericPermissionChecker(Operation.READ));
+        put(Resource.OAUTH2_CONFIGURATION_TEMPLATE, oauthConfigurationTemplatePermissionChecker);
         put(Resource.MOBILE_APP, tenantStandaloneEntityPermissionChecker);
         put(Resource.MOBILE_APP_BUNDLE, tenantStandaloneEntityPermissionChecker);
         put(Resource.JOB, tenantStandaloneEntityPermissionChecker);
@@ -340,6 +340,17 @@ public class TenantAdminPermissions extends AbstractPermissions {
             } else {
                 return user.getTenantId().equals(customMenu.getTenantId()) && user.getCustomerId().equals(customMenu.getCustomerId());
             }
+        }
+    };
+
+    private final PermissionChecker oauthConfigurationTemplatePermissionChecker = new PermissionChecker.GenericPermissionChecker(Operation.READ) {
+
+        @Override
+        public boolean hasPermission(SecurityUser user, Resource resource, Operation operation) {
+            if (!super.hasPermission(user, resource, operation)) {
+                return false;
+            }
+            return user.getUserPermissions().hasGenericPermission(resource, operation);
         }
     };
 

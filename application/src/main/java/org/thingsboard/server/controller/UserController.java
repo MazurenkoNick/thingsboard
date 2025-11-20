@@ -117,8 +117,6 @@ import static org.thingsboard.server.controller.ControllerConstants.CUSTOMER_ID_
 import static org.thingsboard.server.controller.ControllerConstants.DASHBOARD_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID;
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID_PARAM_DESCRIPTION;
-import static org.thingsboard.server.controller.ControllerConstants.HOME_DASHBOARD_HIDE_TOOLBAR;
-import static org.thingsboard.server.controller.ControllerConstants.HOME_DASHBOARD_ID;
 import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_DATA_PARAMETERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
@@ -404,8 +402,9 @@ public class UserController extends BaseController {
             @Parameter(description = SORT_ORDER_DESCRIPTION, schema = @Schema(allowableValues = {"ASC", "DESC"}))
             @RequestParam(required = false) String sortOrder) throws ThingsboardException {
         checkParameter("tenantId", strTenantId);
-        TenantId tenantId = new TenantId(toUUID(strTenantId));
+        TenantId tenantId = TenantId.fromUUID(toUUID(strTenantId));
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
+        accessControlService.checkPermission(getCurrentUser(), Resource.USER, Operation.READ);
         return checkNotNull(userService.findTenantAdmins(tenantId, pageLink));
     }
 
@@ -598,8 +597,7 @@ public class UserController extends BaseController {
             notes = "Requested users must be owned by tenant or assigned to customer which user is performing the request. "
                     + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/users", params = {"userIds"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/users", params = {"userIds"})
     public List<User> getUsersByIds(
             @Parameter(description = "A list of user ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
             @RequestParam("userIds") String[] strUserIds) throws ThingsboardException, ExecutionException, InterruptedException {

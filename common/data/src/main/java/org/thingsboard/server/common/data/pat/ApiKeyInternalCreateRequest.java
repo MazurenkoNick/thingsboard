@@ -28,42 +28,36 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.security.permission;
+package org.thingsboard.server.common.data.pat;
 
-import org.thingsboard.server.common.data.TenantEntity;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.permission.Operation;
-import org.thingsboard.server.common.data.permission.Resource;
-import org.thingsboard.server.service.security.model.SecurityUser;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+import org.thingsboard.server.common.data.id.ApiKeyId;
+import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.permission.AuthorityPermissionsInfo;
+import org.thingsboard.server.common.data.validation.Length;
+import org.thingsboard.server.common.data.validation.NoXss;
 
-import java.util.HashMap;
-import java.util.Optional;
+@Data
+@Schema
+public class ApiKeyInternalCreateRequest {
 
-public abstract class AbstractPermissions extends HashMap<Resource, PermissionChecker> implements Permissions {
+    @Schema(description = "JSON object with API key Id. API key Id of the API key cannot be changed.")
+    private ApiKeyId apiKeyId;
 
-    public AbstractPermissions() {
-        super();
-    }
+    @Schema(description = "JSON object with User Id. UserId of the API key cannot be changed.")
+    private UserId userId;
 
-    @Override
-    public Optional<PermissionChecker> getPermissionChecker(Resource resource) {
-        PermissionChecker permissionChecker = this.get(resource);
-        return Optional.ofNullable(permissionChecker);
-    }
+    @NoXss
+    @NotBlank
+    @Length(fieldName = "description")
+    @Schema(description = "Api Key description.", example = "API Key description")
+    private String description;
 
-    public static final PermissionChecker genericPermissionChecker = new PermissionChecker() {
-
-        @Override
-        public boolean hasPermission(SecurityUser user, Resource resource, Operation operation) {
-            return user.getUserPermissions().hasGenericPermission(resource, operation);
-        }
-
-        @Override
-        public boolean hasPermission(SecurityUser user, Operation operation, EntityId entityId, TenantEntity entity) {
-            Resource resource = Resource.resourceFromEntityType(entity.getEntityType());
-            return user.getUserPermissions().hasGenericPermission(resource, operation);
-        }
-
-    };
+    @Schema(description = "Authority-specific permissions for this API key. " +
+            "For internal API keys: specify permissions for all authorities (SYS_ADMIN, TENANT_ADMIN, CUSTOMER_USER). " +
+            "For regular API keys: this field will always be null.")
+    private AuthorityPermissionsInfo permissions;
 
 }

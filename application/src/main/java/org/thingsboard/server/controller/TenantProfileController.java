@@ -108,6 +108,7 @@ public class TenantProfileController extends BaseController {
             @Parameter(description = TENANT_PROFILE_ID_PARAM_DESCRIPTION)
             @PathVariable("tenantProfileId") String strTenantProfileId) throws ThingsboardException {
         checkParameter("tenantProfileId", strTenantProfileId);
+        accessControlService.checkPermission(getCurrentUser(), Resource.TENANT_PROFILE, Operation.READ);
         TenantProfileId tenantProfileId = new TenantProfileId(toUUID(strTenantProfileId));
         return checkNotNull(tenantProfileService.findTenantProfileInfoById(getTenantId(), tenantProfileId));
     }
@@ -118,6 +119,7 @@ public class TenantProfileController extends BaseController {
     @RequestMapping(value = "/tenantProfileInfo/default", method = RequestMethod.GET)
     @ResponseBody
     public EntityInfo getDefaultTenantProfileInfo() throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.TENANT_PROFILE, Operation.READ);
         return checkNotNull(tenantProfileService.findDefaultTenantProfileInfo(getTenantId()));
     }
 
@@ -257,6 +259,7 @@ public class TenantProfileController extends BaseController {
             @RequestParam(required = false) String sortProperty,
             @Parameter(description = SORT_ORDER_DESCRIPTION, schema = @Schema(allowableValues = {"ASC", "DESC"}))
             @RequestParam(required = false) String sortOrder) throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.TENANT_PROFILE, Operation.READ);
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         return checkNotNull(tenantProfileService.findTenantProfiles(getTenantId(), pageLink));
     }
@@ -277,6 +280,7 @@ public class TenantProfileController extends BaseController {
             @RequestParam(required = false) String sortProperty,
             @Parameter(description = SORT_ORDER_DESCRIPTION, schema = @Schema(allowableValues = {"ASC", "DESC"}))
             @RequestParam(required = false) String sortOrder) throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.TENANT_PROFILE, Operation.READ);
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         return checkNotNull(tenantProfileService.findTenantProfileInfos(getTenantId(), pageLink));
     }
@@ -284,7 +288,8 @@ public class TenantProfileController extends BaseController {
     @GetMapping(value = "/tenantProfiles", params = {"ids"})
     @PreAuthorize("hasAuthority('SYS_ADMIN')")
     public List<TenantProfile> getTenantProfilesByIds(@Parameter(description = "Comma-separated list of tenant profile ids", array = @ArraySchema(schema = @Schema(type = "string")))
-                                                      @RequestParam("ids") UUID[] ids) {
+                                                      @RequestParam("ids") UUID[] ids) throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.TENANT_PROFILE, Operation.READ);
         return tenantProfileService.findTenantProfilesByIds(TenantId.SYS_TENANT_ID, ids);
     }
 

@@ -34,12 +34,21 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.pat.ApiKey;
 import org.thingsboard.server.common.data.pat.ApiKeyInfo;
+import org.thingsboard.server.common.data.pat.ApiKeyInternalCreateRequest;
+import org.thingsboard.server.common.data.permission.AuthorityPermissionsInfo;
+import org.thingsboard.server.common.data.permission.Operation;
+import org.thingsboard.server.common.data.permission.Resource;
+import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -69,6 +78,133 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
         Assert.assertEquals(tenantAdminUser.getId(), savedApiKey.getUserId());
 
         doDelete("/api/apiKey/" + savedApiKey.getId()).andExpect(status().isOk());
+    }
+
+    @Test
+    public void testSaveInternalApiKey() throws Exception {
+        loginSysAdmin();
+
+        Map<Resource, Set<Operation>> permissions = new HashMap<>();
+        permissions.put(Resource.DEVICE, Set.of(Operation.READ, Operation.WRITE));
+        permissions.put(Resource.DASHBOARD, Set.of(Operation.READ));
+        Map<Authority, Map<Resource, Set<Operation>>> operationsByResource = new HashMap<>();
+        operationsByResource.put(Authority.SYS_ADMIN, permissions);
+        AuthorityPermissionsInfo authorityPermissionsInfo = new AuthorityPermissionsInfo();
+        authorityPermissionsInfo.setOperationsByResource(operationsByResource);
+
+        ApiKeyInternalCreateRequest createRequest = constructApiKeyInternalCreateRequest(authorityPermissionsInfo);
+        doPost("/api/apiKey/internal", createRequest, ApiKey.class);
+
+        PageData<ApiKeyInfo> pageData = doGetTypedWithPageLink("/api/apiKeys/" + currentUserId + "?", new TypeReference<>() {}, new PageLink(10, 0));
+        Assert.assertEquals(1, pageData.getData().size());
+
+        ApiKeyInfo savedApiKey = pageData.getData().get(0);
+        Assert.assertNotNull(savedApiKey);
+        Assert.assertEquals(createRequest.getDescription(), savedApiKey.getDescription());
+        Assert.assertEquals(TenantId.SYS_TENANT_ID, savedApiKey.getTenantId());
+        Assert.assertEquals(currentUserId, savedApiKey.getUserId());
+        Assert.assertNotNull(savedApiKey.getPermissions());
+        Assert.assertNotNull(savedApiKey.getPermissions().getOperationsByResource());
+        var sysAdminPermissions = savedApiKey.getPermissions().getOperationsByResource().get(Authority.SYS_ADMIN);
+        Assert.assertNotNull(sysAdminPermissions);
+        Assert.assertEquals(2, sysAdminPermissions.size());
+
+        Assert.assertTrue(sysAdminPermissions.containsKey(Resource.DEVICE));
+        Assert.assertTrue(sysAdminPermissions.containsKey(Resource.DASHBOARD));
+        Assert.assertEquals(2, sysAdminPermissions.get(Resource.DEVICE).size());
+        Assert.assertTrue(sysAdminPermissions.get(Resource.DEVICE).contains(Operation.READ));
+        Assert.assertTrue(sysAdminPermissions.get(Resource.DEVICE).contains(Operation.WRITE));
+        Assert.assertEquals(1, sysAdminPermissions.get(Resource.DASHBOARD).size());
+        Assert.assertTrue(sysAdminPermissions.get(Resource.DASHBOARD).contains(Operation.READ));
+
+        loginTenantAdmin();
+    }
+
+    @Test
+    public void testRotateInternalApiKey() throws Exception {
+        loginSysAdmin();
+
+        Map<Resource, Set<Operation>> permissions = new HashMap<>();
+        permissions.put(Resource.DEVICE, Set.of(Operation.READ));
+        Map<Authority, Map<Resource, Set<Operation>>> operationsByResource = new HashMap<>();
+        operationsByResource.put(Authority.SYS_ADMIN, permissions);
+        AuthorityPermissionsInfo authorityPermissionsInfo = new AuthorityPermissionsInfo();
+        authorityPermissionsInfo.setOperationsByResource(operationsByResource);
+
+        ApiKeyInternalCreateRequest createRequest = constructApiKeyInternalCreateRequest(authorityPermissionsInfo);
+        ApiKey savedApiKey = doPost("/api/apiKey/internal", createRequest, ApiKey.class);
+        Assert.assertNotNull(savedApiKey);
+        Assert.assertNotNull(savedApiKey.getValue());
+        String originalValue = savedApiKey.getValue();
+
+        ApiKey rotatedApiKey = doPost("/api/apiKey/" + savedApiKey.getId().getId() + "/rotate", ApiKey.class);
+        Assert.assertNotNull(rotatedApiKey);
+        Assert.assertNotNull(rotatedApiKey.getValue());
+        Assert.assertNotEquals(originalValue, rotatedApiKey.getValue());
+        Assert.assertEquals(savedApiKey.getId(), rotatedApiKey.getId());
+        Assert.assertEquals(savedApiKey.getDescription(), rotatedApiKey.getDescription());
+        Assert.assertTrue(rotatedApiKey.isInternal());
+
+        Assert.assertNotNull(rotatedApiKey.getPermissions());
+        var sysAdminPermissions = rotatedApiKey.getPermissions().getOperationsByResource().get(Authority.SYS_ADMIN);
+        Assert.assertNotNull(sysAdminPermissions);
+        Assert.assertTrue(sysAdminPermissions.containsKey(Resource.DEVICE));
+
+        loginTenantAdmin();
+    }
+
+    @Test
+    public void testRotateRegularApiKey_shouldFail() throws Exception {
+        loginSysAdmin();
+
+        ApiKeyInfo apiKeyInfo = constructSysAdminApiKeyInfo();
+        ApiKey savedApiKey = doPost("/api/apiKey", apiKeyInfo, ApiKey.class);
+        Assert.assertNotNull(savedApiKey);
+        Assert.assertFalse(savedApiKey.isInternal());
+
+        doPost("/api/apiKey/" + savedApiKey.getId().getId() + "/rotate")
+                .andExpect(status().isBadRequest());
+
+        doDelete("/api/apiKey/" + savedApiKey.getId()).andExpect(status().isOk());
+
+        loginTenantAdmin();
+    }
+
+    @Test
+    public void testSaveInternalApiKeyAsTenantAdmin_shouldFail() throws Exception {
+        Map<Resource, Set<Operation>> permissions = new HashMap<>();
+        permissions.put(Resource.DEVICE, Set.of(Operation.READ));
+        Map<Authority, Map<Resource, Set<Operation>>> operationsByResource = new HashMap<>();
+        operationsByResource.put(Authority.TENANT_ADMIN, permissions);
+        AuthorityPermissionsInfo authorityPermissionsInfo = new AuthorityPermissionsInfo();
+        authorityPermissionsInfo.setOperationsByResource(operationsByResource);
+
+        ApiKeyInternalCreateRequest createRequest = constructApiKeyInternalCreateRequest(authorityPermissionsInfo);
+        doPost("/api/apiKey/internal", createRequest)
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void testUpdateInternalApiKeyDescription() throws Exception {
+        loginSysAdmin();
+
+        Map<Resource, Set<Operation>> permissions = new HashMap<>();
+        permissions.put(Resource.DEVICE, Set.of(Operation.READ));
+        Map<Authority, Map<Resource, Set<Operation>>> operationsByResource = new HashMap<>();
+        operationsByResource.put(Authority.SYS_ADMIN, permissions);
+        AuthorityPermissionsInfo authorityPermissionsInfo = new AuthorityPermissionsInfo();
+        authorityPermissionsInfo.setOperationsByResource(operationsByResource);
+
+        ApiKeyInternalCreateRequest createRequest = constructApiKeyInternalCreateRequest(authorityPermissionsInfo);
+        ApiKey savedApiKey = doPost("/api/apiKey/internal", createRequest, ApiKey.class);
+        Assert.assertNotNull(savedApiKey);
+        Assert.assertTrue(savedApiKey.isInternal());
+
+        String newDescription = "New description";
+        doPut("/api/apiKey/" + savedApiKey.getId().getId() + "/description", newDescription)
+                .andExpect(status().isOk());
+
+        loginTenantAdmin();
     }
 
     @Test
@@ -154,6 +290,23 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
         apiKeyInfo.setEnabled(enabled);
         apiKeyInfo.setUserId(tenantAdminUserId);
         return apiKeyInfo;
+    }
+
+    private ApiKeyInfo constructSysAdminApiKeyInfo() {
+        ApiKeyInfo apiKeyInfo = new ApiKeyInfo();
+        apiKeyInfo.setDescription("API key description for sysadmin");
+        apiKeyInfo.setEnabled(true);
+        apiKeyInfo.setUserId(currentUserId);
+        apiKeyInfo.setTenantId(TenantId.SYS_TENANT_ID);
+        return apiKeyInfo;
+    }
+
+    private ApiKeyInternalCreateRequest constructApiKeyInternalCreateRequest(AuthorityPermissionsInfo info) {
+        ApiKeyInternalCreateRequest request = new ApiKeyInternalCreateRequest();
+        request.setDescription("API key description for internal API key");
+        request.setUserId(currentUserId);
+        request.setPermissions(info);
+        return request;
     }
 
 }

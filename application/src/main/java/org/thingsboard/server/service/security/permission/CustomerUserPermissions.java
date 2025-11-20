@@ -112,7 +112,7 @@ public class CustomerUserPermissions extends AbstractPermissions {
         put(Resource.MOBILE_APP_SETTINGS, qrCodeSettingsPermissionChecker);
         put(Resource.CUSTOM_MENU, customMenuPermissionChecker);
         put(Resource.OAUTH2_CLIENT, customerStandaloneEntityPermissionChecker);
-        put(Resource.OAUTH2_CONFIGURATION_TEMPLATE, new PermissionChecker.GenericPermissionChecker(Operation.READ));
+        put(Resource.OAUTH2_CONFIGURATION_TEMPLATE, oauthConfigurationTemplatePermissionChecker);
         put(Resource.DOMAIN, customerStandaloneEntityPermissionChecker);
         put(Resource.REPORT_TEMPLATE, reportTemplatePermissionChecker);
         put(Resource.REPORT, customerStandaloneEntityPermissionChecker);
@@ -316,29 +316,27 @@ public class CustomerUserPermissions extends AbstractPermissions {
         }
     };
 
-    private static final PermissionChecker customerResourcePermissionChecker =
-            new PermissionChecker<TbResourceId, TbResourceInfo>() {
+    private static final PermissionChecker customerResourcePermissionChecker = new PermissionChecker<TbResourceId, TbResourceInfo>() {
 
-                @Override
-                public boolean hasPermission(SecurityUser user, Operation operation, TbResourceId resourceId, TbResourceInfo resource) {
-                    if (resource.getResourceType() == null || !resource.getResourceType().isCustomerAccess()) {
-                        return false;
-                    }
-                    if (operation == Operation.READ) {
-                        if (resource.getTenantId() == null || resource.getTenantId().isNullUid()) {
-                            return true;
-                        }
-                        return user.getTenantId().equals(resource.getTenantId());
-                    } else {
-                        if (resource.getResourceType() == ResourceType.IMAGE) {
-                            return user.getCustomerId().equals(resource.getCustomerId());
-                        } else {
-                            return false;
-                        }
-                    }
+        @Override
+        public boolean hasPermission(SecurityUser user, Operation operation, TbResourceId resourceId, TbResourceInfo resource) {
+            if (resource.getResourceType() == null || !resource.getResourceType().isCustomerAccess()) {
+                return false;
+            }
+            boolean checkGenericPermissions;
+            if (operation == Operation.READ) {
+                if (resource.getTenantId() == null || resource.getTenantId().isNullUid()) {
+                    checkGenericPermissions = true;
+                } else {
+                    checkGenericPermissions = user.getTenantId().equals(resource.getTenantId());
                 }
+            } else {
+                checkGenericPermissions = resource.getResourceType() == ResourceType.IMAGE && user.getCustomerId().equals(resource.getCustomerId());
+            }
+            return checkGenericPermissions && user.getUserPermissions().hasGenericPermission(Resource.TB_RESOURCE, operation);
+        }
 
-            };
+    };
 
     private final PermissionChecker customerEntityGroupPermissionChecker = new PermissionChecker() {
 
@@ -524,6 +522,17 @@ public class CustomerUserPermissions extends AbstractPermissions {
             }
             // This entity does not have groups, so we are checking only generic level permissions
             return user.getUserPermissions().hasGenericPermission(Resource.API_KEY, operation);
+        }
+    };
+
+    private final PermissionChecker oauthConfigurationTemplatePermissionChecker = new PermissionChecker.GenericPermissionChecker(Operation.READ) {
+
+        @Override
+        public boolean hasPermission(SecurityUser user, Resource resource, Operation operation) {
+            if (!super.hasPermission(user, resource, operation)) {
+                return false;
+            }
+            return user.getUserPermissions().hasGenericPermission(resource, operation);
         }
     };
 
