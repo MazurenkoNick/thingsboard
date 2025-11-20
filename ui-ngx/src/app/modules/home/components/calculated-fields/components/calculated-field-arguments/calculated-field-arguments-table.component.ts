@@ -103,7 +103,7 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
   @Input() entityName: string;
   @Input() ownerId: EntityId;
   @Input() isScript: boolean;
-  @Input({ transform: booleanAttribute }) readonly: boolean;
+  @Input({transform: booleanAttribute}) readonly: boolean;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
@@ -288,7 +288,7 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
       return acc;
     }, {} as Record<EntityType, string[]>);
     const tasks = Object.entries(entitiesByType).map(([entityType, ids]) =>
-      this.entityService.getEntities(entityType as EntityType, ids)
+      this.entityService.getEntities(entityType as EntityType, ids, {ignoreLoading: true})
     );
     if (!tasks.length) {
       return;

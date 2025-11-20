@@ -32,7 +32,6 @@ package org.thingsboard.server.msa;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonArray;
@@ -48,7 +47,9 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.DeviceProfile;
 import org.thingsboard.server.common.data.DeviceProfileProvisionType;
+import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.device.profile.AllowCreateNewDevicesDeviceProfileProvisionConfiguration;
 import org.thingsboard.server.common.data.device.profile.CheckPreProvisionedDevicesDeviceProfileProvisionConfiguration;
 import org.thingsboard.server.common.data.device.profile.DeviceProfileData;
@@ -61,6 +62,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.function.Consumer;
 
 
 @Slf4j
@@ -241,6 +243,14 @@ public abstract class AbstractContainerTest {
         deviceProfile.setProfileData(deviceProfileData);
         deviceProfile.setProvisionDeviceKey(testProvisionDeviceKey);
         return testRestClient.postDeviceProfile(deviceProfile);
+    }
+
+    protected void updateDefaultTenantProfile(Consumer<TenantProfile> updater) {
+        EntityInfo defaultTenantProfileInfo = testRestClient.getDefaultTenantProfileInfo();
+        TenantProfile oldTenantProfile = testRestClient.getTenantProfileById(defaultTenantProfileInfo.getId().getId().toString());
+        TenantProfile tenantProfile = JacksonUtil.clone(oldTenantProfile);
+        updater.accept(tenantProfile);
+        testRestClient.postTenantProfile(tenantProfile);
     }
 
 }

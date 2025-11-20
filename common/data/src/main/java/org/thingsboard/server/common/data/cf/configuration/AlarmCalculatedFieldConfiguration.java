@@ -62,6 +62,7 @@ public class AlarmCalculatedFieldConfiguration implements ArgumentsBasedCalculat
 
     private boolean propagate;
     private boolean propagateToOwner;
+    private boolean propagateToOwnerHierarchy;
     private boolean propagateToTenant;
     private List<String> propagateRelationTypes;
 

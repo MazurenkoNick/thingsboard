@@ -50,6 +50,8 @@ import { ImportExportService } from '@shared/import-export/import-export.service
 import { EntityDebugSettingsService } from '@home/components/entity/debug/entity-debug-settings.service';
 import { DatePipe } from '@angular/common';
 import { AlarmRulesTableConfig } from "@home/components/alarm-rules/alarm-rules-table-config";
+import { UtilsService } from "@core/services/utils.service";
+import { ActivatedRoute } from "@angular/router";
 
 @Component({
   selector: 'tb-alarm-rules-table',
@@ -71,6 +73,8 @@ export class AlarmRulesTableComponent {
 
   alarmRulesTableConfig: AlarmRulesTableConfig;
 
+  pageMode: boolean = false;
+
   constructor(private calculatedFieldsService: CalculatedFieldsService,
               private translate: TranslateService,
               private dialog: MatDialog,
@@ -80,10 +84,13 @@ export class AlarmRulesTableComponent {
               private renderer: Renderer2,
               private importExportService: ImportExportService,
               private entityDebugSettingsService: EntityDebugSettingsService,
-              private destroyRef: DestroyRef) {
-
+              private utilsService: UtilsService,
+              private destroyRef: DestroyRef,
+              private route: ActivatedRoute,
+  ) {
+    this.pageMode = !!this.route.snapshot.data.isPage;
     effect(() => {
-      if (this.active()) {
+      if (this.active() || this.pageMode) {
         this.alarmRulesTableConfig = new AlarmRulesTableConfig(
           this.calculatedFieldsService,
           this.translate,
@@ -97,8 +104,10 @@ export class AlarmRulesTableComponent {
           this.ownerId(),
           this.importExportService,
           this.entityDebugSettingsService,
+          this.utilsService,
           this.readonly(),
           this.hideClearEventAction(),
+          this.pageMode
         );
         this.cd.markForCheck();
       }

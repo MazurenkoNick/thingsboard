@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.util.ConcurrentReferenceHashMap;
 import org.thingsboard.common.util.DebugModeUtil;
 import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.EntityType;
@@ -59,17 +60,22 @@ import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
 import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.List;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.UniquifyStrategy.RANDOM;
 
 @Slf4j
 public abstract class AbstractEntityService {
+
+    private final ConcurrentMap<TenantId, ReentrantLock> entityCreationLocks = new ConcurrentReferenceHashMap<>(16);
 
     @Autowired
     protected ApplicationEventPublisher eventPublisher;
@@ -107,6 +113,20 @@ public abstract class AbstractEntityService {
 
     @Value("${debug.settings.default_duration:15}")
     private int defaultDebugDurationMinutes;
+
+    protected <E extends HasId & HasTenantId> E saveEntity(E entity, Supplier<E> saveFunction) {
+        if (entity.getId() == null) {
+            ReentrantLock lock = entityCreationLocks.computeIfAbsent(entity.getTenantId(), id -> new ReentrantLock());
+            lock.lock();
+            try {
+                return saveFunction.get();
+            } finally {
+                lock.unlock();
+            }
+        } else {
+            return saveFunction.get();
+        }
+    }
 
     protected void createRelation(TenantId tenantId, EntityRelation relation) {
         log.debug("Creating relation: {}", relation);

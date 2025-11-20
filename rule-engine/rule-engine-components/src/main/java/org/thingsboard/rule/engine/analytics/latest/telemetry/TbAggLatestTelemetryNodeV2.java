@@ -35,7 +35,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import lombok.SneakyThrows;
@@ -69,10 +68,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.common.data.DataConstants.QUEUE_NAME;
 
 @Slf4j
@@ -95,7 +95,7 @@ public class TbAggLatestTelemetryNodeV2 implements TbNode {
     private final Gson gson = new Gson();
     private static final int CACHE_TTL_MULTIPLIER = 3;
     private TbAggLatestTelemetryNodeV2Configuration config;
-    private final Map<EntityId, AggDeduplicationData> lastMsgMap = new HashMap<>();
+    private final ConcurrentMap<EntityId, AggDeduplicationData> lastMsgMap = new ConcurrentHashMap<>();
     private final Set<String> clientAttributeNames = new HashSet<>();
     private final Set<String> sharedAttributeNames = new HashSet<>();
     private final Set<String> serverAttributeNames = new HashSet<>();
@@ -142,7 +142,7 @@ public class TbAggLatestTelemetryNodeV2 implements TbNode {
     }
 
     @Override
-    public void onMsg(TbContext ctx, TbMsg msg) throws ExecutionException, InterruptedException, TbNodeException {
+    public void onMsg(TbContext ctx, TbMsg msg) {
         switch (msg.getInternalType()) {
             case TB_AGG_LATEST_SELF_MSG:
                 processDelayedMsg(ctx, msg.getOriginator());
@@ -207,10 +207,10 @@ public class TbAggLatestTelemetryNodeV2 implements TbNode {
         ListenableFuture<List<EntityId>> entityIds;
         if (EntitySearchDirection.TO.equals(config.getDirection())) {
             var relations = ctx.getRelationService().findByToAndTypeAsync(ctx.getTenantId(), msg.getOriginator(), config.getRelationType(), RelationTypeGroup.COMMON);
-            entityIds = Futures.transform(relations, r -> r.stream().map(EntityRelation::getFrom).collect(Collectors.toList()), MoreExecutors.directExecutor());
+            entityIds = Futures.transform(relations, r -> r.stream().map(EntityRelation::getFrom).toList(), directExecutor());
         } else {
             var relations = ctx.getRelationService().findByFromAndTypeAsync(ctx.getTenantId(), msg.getOriginator(), config.getRelationType(), RelationTypeGroup.COMMON);
-            entityIds = Futures.transform(relations, r -> r.stream().map(EntityRelation::getTo).collect(Collectors.toList()), MoreExecutors.directExecutor());
+            entityIds = Futures.transform(relations, r -> r.stream().map(EntityRelation::getTo).toList(), directExecutor());
         }
 
         ListenableFuture<List<TbAggEntityData>> entityDataList = Futures.transform(entityIds, eIds -> eIds.stream().map(entityId -> {
@@ -228,7 +228,7 @@ public class TbAggLatestTelemetryNodeV2 implements TbNode {
                 data.setServerAttributesFuture(ctx.getAttributesService().find(ctx.getTenantId(), entityId, AttributeScope.SERVER_SCOPE, serverAttributeNames));
             }
             return data;
-        }).collect(Collectors.toList()), ctx.getDbCallbackExecutor());
+        }).toList(), ctx.getDbCallbackExecutor());
 
         ListenableFuture<?> allDataFuture = Futures.transformAsync(entityDataList, tmp -> {
             List<ListenableFuture<?>> futures = new ArrayList<>();
@@ -275,10 +275,7 @@ public class TbAggLatestTelemetryNodeV2 implements TbNode {
         childDataList.forEach(TbAggEntityData::prepare);
         JsonObject result = new JsonObject();
         for (var aggMapping : config.getAggMappings()) {
-            var filteredDataList = childDataList.stream().filter(ed -> aggMapping.getFilter() == null || filter(aggMapping.getFilter().getTbelFilterFunction(), ed)).collect(Collectors.toList());
-            if (filteredDataList.isEmpty()) {
-                continue;
-            }
+            var filteredDataList = childDataList.stream().filter(ed -> aggMapping.getFilter() == null || filter(aggMapping.getFilter().getTbelFilterFunction(), ed)).toList();
             TbAggFunction aggregation = TbAggFunctionFactory.createAggFunction(aggMapping.getAggFunction());
             filteredDataList.forEach(childData -> {
                 aggregation.update(childData.getValue(aggMapping.getSourceScope(), aggMapping.getSource()), aggMapping.getDefaultValue());
@@ -299,7 +296,7 @@ public class TbAggLatestTelemetryNodeV2 implements TbNode {
 
     @SneakyThrows
     private boolean filter(String script, TbAggEntityData ed) {
-        //We use TBEL scripts only, so it is ok to do a blocking call.
+        // We use TBEL scripts only, so it is ok to do a blocking call.
         return attributesScriptEngineMap.get(script).executeAttributesFilterAsync(ed.getFilterMap()).get();
     }
 
@@ -314,6 +311,15 @@ public class TbAggLatestTelemetryNodeV2 implements TbNode {
         sharedAttributeNames.clear();
         serverAttributeNames.clear();
         latestTsKeyNames.clear();
+
+        attributesScriptEngineMap.values().forEach(scriptEngine -> {
+            try {
+                scriptEngine.destroy();
+            } catch (Exception e) {
+                log.warn("Failed to destroy script engine", e);
+            }
+        });
+        attributesScriptEngineMap.clear();
     }
 
     @Override

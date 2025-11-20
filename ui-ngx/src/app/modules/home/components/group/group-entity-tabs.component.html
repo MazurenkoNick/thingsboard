@@ -120,3 +120,7 @@
                       (versionRestored)="entitiesTableConfig.updateData()"
                       [active]="versionControlTab.isActive" [entityId]="entity.id" [entityName]="entity.name" [externalEntityId]="entity.externalId || entity.id"></tb-version-control>
 </mat-tab>
+<mat-tab *ngIf="entity && entityType === entityTypes.USER && (resource.API_KEY | hasGenericPermission: operation.READ)"
+         label="{{ 'api-key.api-keys' | translate }}" #apiKeysTab="matTab">
+  <tb-api-keys-table [active]="apiKeysTab.isActive" [userId]="entity.id"></tb-api-keys-table>
+</mat-tab>

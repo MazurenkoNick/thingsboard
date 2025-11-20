@@ -1316,7 +1316,7 @@ export class WidgetSubscription implements IWidgetSubscription {
             const value = row[1];
             let tsRow = tsRows[tsKey];
             if (!tsRow) {
-              tsRow = this.latestData.length ? deepClone(latest[datasourceData.datasource.name]) : {};
+              tsRow = (this.latestData.length && latest[datasourceData.datasource.name]) ? deepClone(latest[datasourceData.datasource.name]) : {};
               tsRow[timestampColumnTitle] = toUtcDate(ts);
               tsRow['Entity Name'] = datasourceData.datasource.entityName;
               tsRows[tsKey] = tsRow;

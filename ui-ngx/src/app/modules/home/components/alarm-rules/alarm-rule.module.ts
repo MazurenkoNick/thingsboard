@@ -63,6 +63,8 @@ import {
 import { AlarmRuleFilterListComponent } from "@home/components/alarm-rules/filter/alarm-rule-filter-list.component";
 import { AlarmRuleFilterDialogComponent } from "@home/components/alarm-rules/filter/alarm-rule-filter-dialog.component";
 import { AlarmRuleDetailsDialogComponent } from "@home/components/alarm-rules/alarm-rule-details-dialog.component";
+import { AlarmRuleFilterConfigComponent } from "@home/components/alarm-rules/alarm-rule-filter-config.component";
+import { AlarmRuleTableHeaderComponent } from "@home/components/alarm-rules/alarm-rule-table-header.component";
 
 @NgModule({
   declarations: [
@@ -81,6 +83,8 @@ import { AlarmRuleDetailsDialogComponent } from "@home/components/alarm-rules/al
     AlarmRuleFilterPredicateValueComponent,
     AlarmRuleComplexFilterPredicateDialogComponent,
     AlarmRuleDetailsDialogComponent,
+    AlarmRuleFilterConfigComponent,
+    AlarmRuleTableHeaderComponent
   ],
   imports: [
     CommonModule,

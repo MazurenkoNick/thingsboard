@@ -116,6 +116,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static org.thingsboard.server.common.data.report.configuration.chart.ReportComponentSubType.RANGE_CHART;
+import static org.thingsboard.server.common.data.report.configuration.chart.ReportComponentSubType.STATE_CHART;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.DASHBOARD;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.ERROR;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.SUB_REPORT;
@@ -243,7 +245,9 @@ public class PdfReportService extends AbstractReportService {
             return componentsRenderers.get(component.getType()).render(component, componentData);
         } catch (Exception e) {
             log.error("Failed to render component of type [{}]", component.getType(), e);
-            return renderError(usablePageWidthPx, "Failed to render component of type: " + component.getType(), e);
+            String componentSubType = component.getSubType() != null ? " [" + component.getSubType() + "]" : "";
+            return renderError(usablePageWidthPx, "Failed to render component of type: "
+                    + component.getType() + componentSubType, e);
         }
     }
 
@@ -353,11 +357,11 @@ public class PdfReportService extends AbstractReportService {
     private ComponentData buildLatestChartComponentData(int usablePageWidthPx, TbReportCtx ctx, LatestChartComponent component, EntityData stateEntity) {
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
-            return new ComponentData(usablePageWidthPx, "Data source is not configured for the chart");
+            return new ComponentData(usablePageWidthPx, "Data source is not configured for the chart [" + component.getSubType() + "]");
         }
         DataSource ds = dataSource.get();
         if (ds.getDataKeys().isEmpty()) {
-            return new ComponentData(usablePageWidthPx, "At least one series should be specified for the chart");
+            return new ComponentData(usablePageWidthPx, "At least one series should be specified for the chart [" + component.getSubType() + "]");
         }
         List<EntityData> entityDatas = fetchEntities(ctx, ds, stateEntity != null ? stateEntity.getEntityId() : null, DEFAULT_TS_CHART_SORT_ORDER);
         List<LatestChartDataSource> chartData = new ArrayList<>();
@@ -391,11 +395,11 @@ public class PdfReportService extends AbstractReportService {
     private ComponentData buildTsChartComponentData(int usablePageWidthPx, TbReportCtx ctx, TimeseriesChartComponent component, EntityData stateEntity) {
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
-            return new ComponentData(usablePageWidthPx, "Data source is not configured for time series chart");
+            return new ComponentData(usablePageWidthPx, "Data source is not configured for time series chart [" + component.getSubType() + "]");
         }
         DataSource ds = dataSource.get();
         if (ds.getDataKeys().isEmpty()) {
-            return new ComponentData(usablePageWidthPx, "At least one series should be specified for time series chart");
+            return new ComponentData(usablePageWidthPx, "At least one series should be specified for time series chart [" + component.getSubType() + "]");
         }
 
         List<TimeSeriesChartThreshold> thresholds = null;
@@ -420,7 +424,7 @@ public class PdfReportService extends AbstractReportService {
                 .filterId(ds.getFilterId())
                 .dataKeys(ds.getLatestDataKeys()).build();
 
-        boolean singleEntity = "rangeChart".equals(component.getSubType());
+        boolean singleEntity = RANGE_CHART == component.getSubType();
 
         List<EntityData> entityDatas = fetchEntities(ctx, latestDataSource, stateEntity != null ? stateEntity.getEntityId() : null, DEFAULT_TS_CHART_SORT_ORDER, singleEntity);
 
@@ -448,7 +452,7 @@ public class PdfReportService extends AbstractReportService {
         });
 
         List<TsChartRangeItem> rangeItems = new ArrayList<>();
-        if ("rangeChart".equals(component.getSubType())) {
+        if (RANGE_CHART == component.getSubType()) {
             if (component.getTimeSeriesChartSettings() != null) {
                 ReportRangeChartSettings rangeChartSettings = (ReportRangeChartSettings) component.getTimeSeriesChartSettings();
                 List<ColorRange> colorRanges = rangeChartSettings.getRangeColors();
@@ -484,7 +488,7 @@ public class PdfReportService extends AbstractReportService {
 
         int dataIndex = 0;
         int startDataIndex = 0;
-        boolean stateData = "stateChart".equals(component.getSubType());
+        boolean stateData = STATE_CHART == component.getSubType();
         DataPostProcessFunction dataPostProcessFunction = (dataKey, timestamp, value) -> this.postProcess(ctx, dataKey, timestamp, value, true);
 
         for (EntityData entity : entityDatas) {

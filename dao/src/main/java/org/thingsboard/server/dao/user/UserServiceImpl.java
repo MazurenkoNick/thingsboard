@@ -50,6 +50,7 @@ import org.thingsboard.server.cache.user.UserCacheKey;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.UserAuthDetails;
 import org.thingsboard.server.common.data.UserInfo;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.id.CustomMenuId;
@@ -87,6 +88,7 @@ import org.thingsboard.server.dao.eventsourcing.ActionEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
+import org.thingsboard.server.dao.pat.ApiKeyService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.service.PaginatedRemover;
@@ -135,6 +137,7 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
     private final UserAuthSettingsDao userAuthSettingsDao;
     private final UserSettingsService userSettingsService;
     private final UserSettingsDao userSettingsDao;
+    private final ApiKeyService apiKeyService;
     private final SecuritySettingsService securitySettingsService;
     private final RoleService roleService;
     private final DataValidator<User> userValidator;
@@ -226,7 +229,7 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
     @Override
     @Transactional
     public User saveUser(TenantId tenantId, User user) {
-        return saveUser(tenantId, user, true);
+        return saveEntity(user, () -> saveUser(tenantId, user, true));
     }
 
     private User saveUser(TenantId tenantId, User user, boolean validate) {
@@ -373,7 +376,7 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
 
     @Override
     public UserCredentials checkUserActivationToken(TenantId tenantId, UserCredentials userCredentials) {
-        if (userCredentials.getActivationTokenTtl() < TimeUnit.MINUTES.toMillis(15)) { // renew link if less than 15 minutes before expiration
+        if (userCredentials.getActivationTokenTtl() < TimeUnit.MINUTES.toMillis(15)) { // renew a link if less than 15 minutes before expiration
             userCredentials = generateUserActivationToken(userCredentials);
             userCredentials = saveUserCredentials(tenantId, userCredentials);
             log.debug("[{}][{}] Regenerated expired user activation token", tenantId, userCredentials.getUserId());
@@ -418,6 +421,7 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
         validateId(userId, id -> INCORRECT_USER_ID + id);
         userCredentialsDao.removeByUserId(tenantId, userId);
         userAuthSettingsDao.removeByUserId(userId);
+        apiKeyService.deleteByUserId(tenantId, userId);
         publishEvictEvent(new UserCacheEvictEvent(user.getTenantId(), user.getEmail(), null));
         userSettingsDao.removeByUserId(tenantId, userId);
         userDao.removeById(tenantId, userId.getId());
@@ -663,6 +667,18 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
     public void updateUsersCustomMenuId(List<UserId> userIds, CustomMenuId customMenuId) {
         log.trace("Executing updateUsersCustomMenuId, customMenuId [{}]", customMenuId);
         userDao.updateUsersCustomMenuId(userIds, customMenuId);
+    }
+
+    @Override
+    public boolean existsInEntityGroup(UserId id, EntityGroupId entityGroupId) {
+        return userDao.existsInEntityGroup(id, entityGroupId);
+    }
+
+    @Override
+    public UserAuthDetails findUserAuthDetailsByUserId(TenantId tenantId, UserId userId) {
+        log.trace("Executing findUserAuthDetailsByUserId [{}]", userId);
+        validateId(userId, id -> INCORRECT_USER_ID + id);
+        return userDao.findUserAuthDetailsByUserId(tenantId.getId(), userId.getId());
     }
 
     private Optional<UserMobileSessionInfo> findMobileSessionInfo(TenantId tenantId, UserId userId) {

@@ -31,18 +31,13 @@
 package org.thingsboard.server.service.security.auth.mfa.config;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.AdminSettings;
-import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UserId;
-import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
-import org.thingsboard.server.common.data.kv.JsonDataEntry;
 import org.thingsboard.server.common.data.security.UserAuthSettings;
 import org.thingsboard.server.common.data.security.model.mfa.PlatformTwoFaSettings;
 import org.thingsboard.server.common.data.security.model.mfa.account.AccountTwoFaSettings;
@@ -68,8 +63,8 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
     private final UserAuthSettingsDao userAuthSettingsDao;
     private final AdminSettingsService adminSettingsService;
     private final AdminSettingsDao adminSettingsDao;
-    @Autowired @Lazy
-    private TwoFactorAuthService twoFactorAuthService;
+    @Lazy
+    private final TwoFactorAuthService twoFactorAuthService;
 
     protected static final String TWO_FACTOR_AUTH_SETTINGS_KEY = "twoFaSettings";
 
@@ -105,11 +100,6 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
     }
 
     protected AccountTwoFaSettings saveAccountTwoFaSettings(TenantId tenantId, User user, AccountTwoFaSettings settings) {
-        if (settings.getConfigs().isEmpty()) {
-            if (twoFactorAuthService.isEnforceTwoFaEnabled(tenantId, user)) {
-                throw new DataValidationException("At least one 2FA provider is required");
-            }
-        }
         UserAuthSettings userAuthSettings = Optional.ofNullable(userAuthSettingsDao.findByUserId(user.getId()))
                 .orElseGet(() -> {
                     UserAuthSettings newUserAuthSettings = new UserAuthSettings();
@@ -122,7 +112,6 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
         settings.getConfigs().values().forEach(accountConfig -> accountConfig.setSerializeHiddenFields(false));
         return settings;
     }
-
 
     @Override
     public Optional<TwoFaAccountConfig> getTwoFaAccountConfig(TenantId tenantId, User user, TwoFaProviderType providerType) {
@@ -152,6 +141,7 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
         if (configs.values().stream().noneMatch(TwoFaAccountConfig::isUseByDefault)) {
             configs.values().stream().findFirst().ifPresent(config -> config.setUseByDefault(true));
         }
+        checkAccountTwoFaSettings(tenantId, user, settings);
         return saveAccountTwoFaSettings(tenantId, user, settings);
     }
 
@@ -169,6 +159,7 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
                     .min(Comparator.comparing(TwoFaAccountConfig::getProviderType))
                     .ifPresent(config -> config.setUseByDefault(true));
         }
+        checkAccountTwoFaSettings(tenantId, user, settings);
         return saveAccountTwoFaSettings(tenantId, user, settings);
     }
 
@@ -182,7 +173,13 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
     public Optional<PlatformTwoFaSettings> getPlatformTwoFaSettings(TenantId tenantId, boolean sysadminSettingsAsDefault) {
         Optional<PlatformTwoFaSettings> twoFaSettings = Optional.ofNullable(adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, TWO_FACTOR_AUTH_SETTINGS_KEY))
                 .map(adminSettings -> JacksonUtil.treeToValue(adminSettings.getJsonValue(), PlatformTwoFaSettings.class));
-        if (!TenantId.SYS_TENANT_ID.equals(tenantId)) {
+        if (!tenantId.isSysTenantId()) {
+            if (twoFaSettings.isPresent() && !twoFaSettings.get().isUseSystemTwoFactorAuthSettings()) {
+                if (twoFaSettings.get().getProviders().isEmpty()) {
+                    twoFaSettings.get().setUseSystemTwoFactorAuthSettings(true);
+                }
+            }
+
             if (sysadminSettingsAsDefault) {
                 if (twoFaSettings.isEmpty() || twoFaSettings.get().isUseSystemTwoFactorAuthSettings()) {
                     return getPlatformTwoFaSettings(TenantId.SYS_TENANT_ID, false);
@@ -210,6 +207,11 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
                 }
             }
         } else {
+            if (!twoFactorAuthSettings.isUseSystemTwoFactorAuthSettings()) {
+                if (twoFactorAuthSettings.getProviders().isEmpty()) {
+                    throw new DataValidationException("At least one 2FA provider is required");
+                }
+            }
             twoFactorAuthSettings.setEnforceTwoFa(false);
             twoFactorAuthSettings.setEnforcedUsersFilter(null);
         }
@@ -230,6 +232,14 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
     public void deletePlatformTwoFaSettings(TenantId tenantId) {
         Optional.ofNullable(adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, TWO_FACTOR_AUTH_SETTINGS_KEY))
                 .ifPresent(adminSettings -> adminSettingsDao.removeById(tenantId, adminSettings.getId().getId()));
+    }
+
+    private void checkAccountTwoFaSettings(TenantId tenantId, User user, AccountTwoFaSettings settings) {
+        if (settings.getConfigs().isEmpty()) {
+            if (twoFactorAuthService.isEnforceTwoFaEnabled(tenantId, user)) {
+                throw new DataValidationException("At least one 2FA provider is required");
+            }
+        }
     }
 
 }

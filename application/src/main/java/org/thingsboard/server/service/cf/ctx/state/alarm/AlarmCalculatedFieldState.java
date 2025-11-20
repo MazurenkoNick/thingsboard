@@ -137,8 +137,8 @@ public class AlarmCalculatedFieldState extends BaseCalculatedFieldState {
     }
 
     @Override
-    public void init() {
-        super.init();
+    public void init(boolean restored) {
+        super.init(restored);
         AtomicBoolean reevalNeeded = new AtomicBoolean(false);
         Map<AlarmSeverity, AlarmRule> createRules = configuration.getCreateRules();
         for (AlarmSeverity severity : AlarmSeverity.values()) {
@@ -363,6 +363,7 @@ public class AlarmCalculatedFieldState extends BaseCalculatedFieldState {
             newAlarm.setTenantId(ctx.getTenantId());
             newAlarm.setPropagate(configuration.isPropagate());
             newAlarm.setPropagateToOwner(configuration.isPropagateToOwner());
+            newAlarm.setPropagateToOwnerHierarchy(configuration.isPropagateToOwnerHierarchy());
             newAlarm.setPropagateToTenant(configuration.isPropagateToTenant());
             if (configuration.getPropagateRelationTypes() != null) {
                 newAlarm.setPropagateRelationTypes(configuration.getPropagateRelationTypes());

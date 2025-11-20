@@ -41,8 +41,7 @@ import java.util.UUID;
 
 public class ModelConstants {
 
-    private ModelConstants() {
-    }
+    private ModelConstants() {}
 
     public static final UUID NULL_UUID = Uuids.startOf(0);
     public static final TenantId SYSTEM_TENANT = TenantId.fromUUID(ModelConstants.NULL_UUID);
@@ -957,15 +956,6 @@ public class ModelConstants {
     public static final String CALCULATED_FIELD_VERSION = "version";
 
     /**
-     * Calculated field links constants.
-     */
-    public static final String CALCULATED_FIELD_LINK_TABLE_NAME = "calculated_field_link";
-    public static final String CALCULATED_FIELD_LINK_TENANT_ID_COLUMN = TENANT_ID_COLUMN;
-    public static final String CALCULATED_FIELD_LINK_ENTITY_TYPE = ENTITY_TYPE_COLUMN;
-    public static final String CALCULATED_FIELD_LINK_ENTITY_ID = ENTITY_ID_COLUMN;
-    public static final String CALCULATED_FIELD_LINK_CALCULATED_FIELD_ID = "calculated_field_id";
-
-    /**
      * Secret constants.
      */
     public static final String SECRET_TABLE_NAME = "secret";
@@ -1000,6 +990,17 @@ public class ModelConstants {
     public static final String AI_MODEL_TENANT_ID_COLUMN_NAME = TENANT_ID_COLUMN;
     public static final String AI_MODEL_NAME_COLUMN_NAME = NAME_PROPERTY;
     public static final String AI_MODEL_CONFIGURATION_COLUMN_NAME = "configuration";
+
+    /**
+     * Api Key constants.
+     */
+    public static final String API_KEY_TABLE_NAME = "api_key";
+    public static final String API_KEY_TENANT_ID_COLUMN_NAME = TENANT_ID_COLUMN;
+    public static final String API_KEY_USER_ID_COLUMN_NAME = USER_ID_PROPERTY;
+    public static final String API_KEY_VALUE_COLUMN_NAME = "value";
+    public static final String API_KEY_EXPIRATION_TIME_COLUMN_NAME = "expiration_time";
+    public static final String API_KEY_ENABLED_COLUMN_NAME = "enabled";
+    public static final String API_KEY_DESCRIPTION_COLUMN_NAME = "description";
 
     protected static final String[] NONE_AGGREGATION_COLUMNS = new String[]{LONG_VALUE_COLUMN, DOUBLE_VALUE_COLUMN, BOOLEAN_VALUE_COLUMN, STRING_VALUE_COLUMN, JSON_VALUE_COLUMN, KEY_COLUMN, TS_COLUMN};
 
@@ -1049,13 +1050,13 @@ public class ModelConstants {
     }
 
     public static final String SUB_CUSTOMERS_QUERY = " e.tenant_id = :tenantId AND e.customer_id IN (WITH RECURSIVE customers_ids(id) AS " +
-                                                     "(SELECT id id FROM customer ce WHERE ce.tenant_id = :tenantId and id = :customerId " +
-                                                     "UNION SELECT ce1.id id FROM customer ce1, customers_ids parent WHERE ce1.tenant_id = :tenantId " +
-                                                     "and ce1.parent_customer_id = parent.id) SELECT id FROM customers_ids) ";
+            "(SELECT id id FROM customer ce WHERE ce.tenant_id = :tenantId and id = :customerId " +
+            "UNION SELECT ce1.id id FROM customer ce1, customers_ids parent WHERE ce1.tenant_id = :tenantId " +
+            "and ce1.parent_customer_id = parent.id) SELECT id FROM customers_ids) ";
 
     public static final String CUSTOMERS_SUB_CUSTOMERS_QUERY = " e.tenant_id = :tenantId AND e.parent_customer_id IN (WITH RECURSIVE customers_ids(id) AS " +
-                                                               "(SELECT id id FROM customer ce WHERE ce.tenant_id = :tenantId and id = :customerId " +
-                                                               "UNION SELECT ce1.id id FROM customer ce1, customers_ids parent WHERE ce1.tenant_id = :tenantId " +
-                                                               "and ce1.parent_customer_id = parent.id) SELECT id FROM customers_ids) ";
+            "(SELECT id id FROM customer ce WHERE ce.tenant_id = :tenantId and id = :customerId " +
+            "UNION SELECT ce1.id id FROM customer ce1, customers_ids parent WHERE ce1.tenant_id = :tenantId " +
+            "and ce1.parent_customer_id = parent.id) SELECT id FROM customers_ids) ";
 
 }

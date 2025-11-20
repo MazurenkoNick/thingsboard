@@ -191,9 +191,7 @@
           </ng-container>
           <ng-container matColumnDef="schedule">
             <mat-header-cell *matHeaderCellDef style="width: 20%">{{ 'scheduler.schedule' | translate }}</mat-header-cell>
-            <mat-cell *matCellDef="let schedulerEvent">
-              {{ eventInfo(schedulerEvent) }}
-            </mat-cell>
+            <mat-cell *matCellDef="let schedulerEvent" [innerHTML]="eventInfo(schedulerEvent) | safe:'html'"></mat-cell>
           </ng-container>
           <ng-container matColumnDef="actions" stickyEnd>
             <mat-header-cell *matHeaderCellDef style="min-width: 100px; max-width: 100px; width: 100px">

@@ -32,10 +32,11 @@
 import {
   checkBoxCell,
   DateEntityTableColumn,
+  EntityLinkTableColumn,
   EntityTableColumn,
   EntityTableConfig
 } from '@home/models/entity/entities-table-config.models';
-import { EntityType } from '@shared/models/entity-type.models';
+import { EntityType, entityTypeTranslations } from '@shared/models/entity-type.models';
 import { TranslateService } from '@ngx-translate/core';
 import { Direction } from '@shared/models/page/sort-order';
 import { MatDialog } from '@angular/material/dialog';
@@ -55,6 +56,7 @@ import {
   ArgumentEntityType,
   CalculatedField,
   CalculatedFieldAlarmRule,
+  CalculatedFieldsQuery,
   CalculatedFieldType,
 } from '@shared/models/calculated-field.models';
 import { ImportExportService } from '@shared/import-export/import-export.service';
@@ -69,6 +71,9 @@ import {
   CalculatedFieldDebugDialogData
 } from "@home/components/calculated-fields/components/debug-dialog/calculated-field-debug-dialog.component";
 import { AlarmSeverity, alarmSeverityTranslations } from "@shared/models/alarm.models";
+import { UtilsService } from "@core/services/utils.service";
+import { deepClone, getEntityDetailsPageURL } from "@core/utils";
+import { AlarmRuleTableHeaderComponent } from "@home/components/alarm-rules/alarm-rule-table-header.component";
 
 export class AlarmRulesTableConfig extends EntityTableConfig<any> {
 
@@ -77,6 +82,8 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
     title: this.translate.instant('calculated-fields.see-debug-events'),
     action: (calculatedField: CalculatedField) => this.openDebugEventsDialog.call(this, calculatedField),
   };
+
+  alarmRuleFilterConfig: CalculatedFieldsQuery;
 
   constructor(private calculatedFieldsService: CalculatedFieldsService,
               private translate: TranslateService,
@@ -90,13 +97,17 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
               private ownerId: EntityId = null,
               private importExportService: ImportExportService,
               private entityDebugSettingsService: EntityDebugSettingsService,
+              private utilsService: UtilsService,
               private readonly: boolean = false,
               private hideClearEventAction: boolean = false,
+              public pageMode: boolean = false,
   ) {
     super();
-    this.tableTitle = this.translate.instant('alarm-rule.alarm-rules');
+    if (this.pageMode) {
+      this.headerComponent = AlarmRuleTableHeaderComponent;
+    }
+    this.tableTitle = this.pageMode ? '' : this.translate.instant('alarm-rule.alarm-rules');
     this.detailsPanelEnabled = false;
-    this.pageMode = false;
     this.entityType = EntityType.CALCULATED_FIELD;
     this.entityTranslations = {
       type: 'alarm-rule.alarm-rule',
@@ -134,13 +145,29 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
 
     this.defaultSortOrder = {property: 'createdTime', direction: Direction.DESC};
     this.columns.push(new DateEntityTableColumn<CalculatedFieldAlarmRule>('createdTime', 'common.created-time', this.datePipe, '150px'));
-    this.columns.push(new EntityTableColumn<CalculatedFieldAlarmRule>('name', 'alarm-rule.alarm-type', '33%'));
-    this.columns.push(new EntityTableColumn<CalculatedFieldAlarmRule>('createRule', 'alarm-rule.severities', '67%',
+    this.columns.push(new EntityTableColumn<CalculatedFieldAlarmRule>('name', 'alarm-rule.alarm-type', this.pageMode ? '30%' :'33%',
+      entity => this.utilsService.customTranslation(entity.name, entity.name)));
+    if (this.pageMode) {
+      this.columns.push(new EntityTableColumn<CalculatedFieldAlarmRule>('entityType', 'alarm-rule.entity-type', '15%',
+        entity => this.translate.instant(entityTypeTranslations.get(entity.entityId.entityType).type)));
+      this.columns.push(new EntityLinkTableColumn<CalculatedFieldAlarmRule>('entityName', 'alarm-rule.entity-name', '30%',
+        entity => this.utilsService.customTranslation(entity['entityName'], entity['entityName']),
+        entity => getEntityDetailsPageURL(entity.entityId?.id, entity.entityId?.entityType as EntityType), false));
+    }
+    this.columns.push(new EntityTableColumn<CalculatedFieldAlarmRule>('createRule', 'alarm-rule.severities', this.pageMode ? '15%' :'67%',
       entity => Object.keys(entity.configuration.createRules).map((severity) => this.translate.instant(alarmSeverityTranslations.get(severity as AlarmSeverity))).join(', '),
       () => ({}), false));
     this.columns.push(new EntityTableColumn<CalculatedFieldAlarmRule>('clearRule', 'alarm-rule.cleared', '70px',
       entity => checkBoxCell(!!entity.configuration.clearRule), ()=> { return {padding: 0, textAlign: 'center'}}, false));
 
+    this.cellActionDescriptors.push(
+      {
+        name: this.translate.instant('notification.copy-template'),
+        icon: 'content_copy',
+        isEnabled: () => true,
+        onAction: ($event, entity) => this.copyCalculatedField(entity)
+      }
+    );
     this.cellActionDescriptors.push(
       {
         name: this.translate.instant('action.export'),
@@ -176,7 +203,9 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
   }
 
   fetchCalculatedFields(pageLink: PageLink): Observable<PageData<CalculatedField>> {
-    return this.calculatedFieldsService.getCalculatedFields(this.entityId, pageLink, CalculatedFieldType.ALARM);
+    return this.pageMode ?
+      this.calculatedFieldsService.getCalculatedFieldsFilter(pageLink, {type: CalculatedFieldType.ALARM, ...this.alarmRuleFilterConfig}) :
+      this.calculatedFieldsService.getCalculatedFields(this.entityId, pageLink, CalculatedFieldType.ALARM);
   }
 
   onOpenDebugConfig($event: Event, calculatedField: CalculatedField): void {
@@ -208,6 +237,17 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
 
   private editCalculatedField(calculatedField: CalculatedField, isDirty = false): void {
     this.getCalculatedAlarmDialog(calculatedField, 'action.apply', isDirty)
+      .subscribe((res) => {
+        if (res) {
+          this.updateData();
+        }
+      });
+  }
+
+  private copyCalculatedField(calculatedField: CalculatedField, isDirty = false): void {
+    const copyCalculatedAlarmRule = deepClone(calculatedField);
+    copyCalculatedAlarmRule.entityId = null;
+    this.getCalculatedAlarmDialog(copyCalculatedAlarmRule, 'action.apply', isDirty)
       .subscribe((res) => {
         if (res) {
           this.updateData();

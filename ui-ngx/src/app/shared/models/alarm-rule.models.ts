@@ -41,6 +41,7 @@ import {
   NumericOperation,
   StringOperation
 } from "@shared/models/query/query.models";
+import { EntityType } from "@shared/models/entity-type.models";
 
 export enum AlarmRuleScheduleType {
   ANY_TIME = 'ANY_TIME',
@@ -165,3 +166,9 @@ export interface BaseComplexFilterPredicate<T extends AlarmRuleFilterPredicate> 
 }
 
 export type ComplexAlarmRuleFilterPredicate = BaseComplexFilterPredicate<AlarmRuleFilterPredicate>;
+
+export interface AlarmRuleFilterConfig {
+  name?: Array<string>;
+  entityType?: EntityType;
+  entities?: Array<string>;
+}
