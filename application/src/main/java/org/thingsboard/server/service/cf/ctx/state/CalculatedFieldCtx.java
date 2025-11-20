@@ -73,6 +73,7 @@ import org.thingsboard.server.common.data.tenant.profile.DefaultTenantProfileCon
 import org.thingsboard.server.common.data.util.CollectionsUtil;
 import org.thingsboard.server.common.util.ProtoUtils;
 import org.thingsboard.server.dao.relation.RelationService;
+import org.thingsboard.server.dao.util.TimeUtils;
 import org.thingsboard.server.gen.transport.TransportProtos.CalculatedFieldTelemetryMsgProto;
 import org.thingsboard.server.service.cf.CalculatedFieldProcessingService;
 import org.thingsboard.server.service.cf.ctx.CalculatedFieldEntityCtxId;
@@ -81,6 +82,7 @@ import org.thingsboard.server.service.cf.ctx.state.geofencing.GeofencingCalculat
 import org.thingsboard.server.service.telemetry.AlarmSubscriptionService;
 
 import java.io.Closeable;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -225,14 +227,19 @@ public class CalculatedFieldCtx implements Closeable {
 
     public boolean isRequiresScheduledReevaluation() {
         long now = System.currentTimeMillis();
-        long cfCheckIntervalMillis = TimeUnit.SECONDS.toMillis(systemContext.getCfCheckInterval());
         if (calculatedField.getConfiguration() instanceof EntityAggregationCalculatedFieldConfiguration entityAggregationConfig) {
             Watermark watermark = entityAggregationConfig.getWatermark();
             if (watermark != null && watermark.getDuration() > 0) {
                 return true;
             }
-            long intervalEndTs = entityAggregationConfig.getInterval().getCurrentIntervalEndTs();
-            if (now + cfCheckIntervalMillis >= intervalEndTs) {
+            if (lastReevaluationTs == 0) {
+                lastReevaluationTs = now;
+                return true;
+            }
+            ZonedDateTime lastReevaluationTime = TimeUtils.toZonedDateTime(lastReevaluationTs, entityAggregationConfig.getInterval().getZoneId());
+            long previousIntervalEndTs = entityAggregationConfig.getInterval().getDateTimeIntervalEndTs(lastReevaluationTime);
+            if (now >= previousIntervalEndTs) {
+                lastReevaluationTs = now;
                 return true;
             }
         }
@@ -240,7 +247,7 @@ public class CalculatedFieldCtx implements Closeable {
         if (calculatedField.getConfiguration() instanceof AlarmCalculatedFieldConfiguration) {
             long reevaluationIntervalMillis = TimeUnit.SECONDS.toMillis(systemContext.getAlarmRulesReevaluationInterval());
             if (requiresScheduledReevaluation) {
-                if (now + cfCheckIntervalMillis >= lastReevaluationTs + reevaluationIntervalMillis) {
+                if (now - lastReevaluationTs >= reevaluationIntervalMillis) {
                     lastReevaluationTs = now;
                     return true;
                 }
@@ -633,8 +640,8 @@ public class CalculatedFieldCtx implements Closeable {
             return true;
         }
         if (calculatedField.getConfiguration() instanceof SimpleCalculatedFieldConfiguration thisConfig
-                && other.calculatedField.getConfiguration() instanceof SimpleCalculatedFieldConfiguration otherConfig
-                && thisConfig.isUseLatestTs() != otherConfig.isUseLatestTs()) {
+            && other.calculatedField.getConfiguration() instanceof SimpleCalculatedFieldConfiguration otherConfig
+            && thisConfig.isUseLatestTs() != otherConfig.isUseLatestTs()) {
             return true;
         }
         if (cfType == CalculatedFieldType.ALARM) {
@@ -653,12 +660,12 @@ public class CalculatedFieldCtx implements Closeable {
             return true;
         }
         if (calculatedField.getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration thisConfig
-                && other.getCalculatedField().getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration otherConfig
-                && (thisConfig.getDeduplicationIntervalInSec() != otherConfig.getDeduplicationIntervalInSec() || !thisConfig.getMetrics().equals(otherConfig.getMetrics()))) {
+            && other.getCalculatedField().getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration otherConfig
+            && (thisConfig.getDeduplicationIntervalInSec() != otherConfig.getDeduplicationIntervalInSec() || !thisConfig.getMetrics().equals(otherConfig.getMetrics()))) {
             return true;
         }
         if (calculatedField.getConfiguration() instanceof EntityAggregationCalculatedFieldConfiguration thisConfig
-                && other.getCalculatedField().getConfiguration() instanceof EntityAggregationCalculatedFieldConfiguration otherConfig) {
+            && other.getCalculatedField().getConfiguration() instanceof EntityAggregationCalculatedFieldConfiguration otherConfig) {
             boolean metricsChanged = thisConfig.getMetrics().equals(otherConfig.getMetrics());
             boolean watermarkChanged = thisConfig.getWatermark().equals(otherConfig.getWatermark());
             return metricsChanged || watermarkChanged;
@@ -694,7 +701,7 @@ public class CalculatedFieldCtx implements Closeable {
 
     private boolean hasGeofencingZoneGroupConfigurationChanges(CalculatedFieldCtx other) {
         if (calculatedField.getConfiguration() instanceof GeofencingCalculatedFieldConfiguration thisConfig
-                && other.calculatedField.getConfiguration() instanceof GeofencingCalculatedFieldConfiguration otherConfig) {
+            && other.calculatedField.getConfiguration() instanceof GeofencingCalculatedFieldConfiguration otherConfig) {
             return !thisConfig.getZoneGroups().equals(otherConfig.getZoneGroups());
         }
         return false;
@@ -702,7 +709,7 @@ public class CalculatedFieldCtx implements Closeable {
 
     private boolean hasRelatedEntitiesAggregationConfigurationChanges(CalculatedFieldCtx other) {
         if (calculatedField.getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration thisConfig
-                && other.calculatedField.getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration otherConfig) {
+            && other.calculatedField.getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration otherConfig) {
             return !thisConfig.getRelation().equals(otherConfig.getRelation());
         }
         return false;
@@ -710,7 +717,7 @@ public class CalculatedFieldCtx implements Closeable {
 
     private boolean hasEntityAggregationConfigurationChanges(CalculatedFieldCtx other) {
         if (calculatedField.getConfiguration() instanceof EntityAggregationCalculatedFieldConfiguration thisConfig
-                && other.calculatedField.getConfiguration() instanceof EntityAggregationCalculatedFieldConfiguration otherConfig) {
+            && other.calculatedField.getConfiguration() instanceof EntityAggregationCalculatedFieldConfiguration otherConfig) {
             return !thisConfig.getInterval().equals(otherConfig.getInterval());
         }
         return false;
@@ -735,7 +742,7 @@ public class CalculatedFieldCtx implements Closeable {
                     yield true;
                 }
                 yield geofencingState.getLastDynamicArgumentsRefreshTs() <
-                        System.currentTimeMillis() - scheduledUpdateIntervalMillis;
+                      System.currentTimeMillis() - scheduledUpdateIntervalMillis;
             }
             default -> false;
         };
@@ -779,10 +786,10 @@ public class CalculatedFieldCtx implements Closeable {
     @Override
     public String toString() {
         return "CalculatedFieldCtx{" +
-                "cfId=" + cfId +
-                ", cfType=" + cfType +
-                ", entityId=" + entityId +
-                '}';
+               "cfId=" + cfId +
+               ", cfType=" + cfType +
+               ", entityId=" + entityId +
+               '}';
     }
 
 }
