@@ -989,7 +989,6 @@ export class ImportExportService {
           columnsTable.push({
             header: title,
             key: title,
-            width: (title === timestampColumnTitle ? dateFormat.length : title.length) * 1.2,
             style: {
               numFmt: title === timestampColumnTitle ? dateFormat : null
             }
@@ -1010,6 +1009,17 @@ export class ImportExportService {
           });
         });
       }
+
+      sheet.columns.forEach((column, i) => {
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, (cell) => {
+          const cellValueLength = isDate(cell.value) ? dateFormat.length : (String(cell.value)).length;
+          if (cellValueLength > maxLength) {
+            maxLength = cellValueLength;
+          }
+        });
+        column.width = Math.ceil(maxLength * 1.3);
+      });
 
       workbook.xlsx.writeBuffer().then((xlsxData: any) => {
         this.downloadFile(xlsxData, filename, XLSX_TYPE, normalizeFileName);
