@@ -220,16 +220,6 @@ public class TwoFactorAuthConfigTest extends AbstractControllerTest {
         doPost("/api/2fa/account/config/generate?providerType=TOTP")
                 .andExpect(status().isOk());
 
-        tenantTwoFaSettings.setUseSystemTwoFactorAuthSettings(false);
-        tenantTwoFaSettings.setProviders(Collections.emptyList());
-        tenantTwoFaSettings.setMaxVerificationFailuresBeforeUserLockout(10);
-        doPost("/api/2fa/settings", tenantTwoFaSettings).andExpect(status().isOk());
-        twoFaSettings = readResponse(doGet("/api/2fa/settings").andExpect(status().isOk()), PlatformTwoFaSettings.class);
-        assertThat(twoFaSettings).isEqualTo(tenantTwoFaSettings);
-
-        assertThat(getErrorMessage(doPost("/api/2fa/account/config/generate?providerType=TOTP")
-                .andExpect(status().isBadRequest()))).containsIgnoringCase("provider is not configured");
-
         loginSysAdmin();
         sysadminTwoFaSettings.setProviders(Collections.emptyList());
         doPost("/api/2fa/settings", sysadminTwoFaSettings).andExpect(status().isOk());
@@ -663,7 +653,9 @@ public class TwoFactorAuthConfigTest extends AbstractControllerTest {
                 Resource.WHITE_LABELING, Set.of(Operation.READ, Operation.WRITE)
         ));
         PlatformTwoFaSettings twoFaSettings = new PlatformTwoFaSettings();
-        twoFaSettings.setProviders(Collections.emptyList());
+        TotpTwoFaProviderConfig providerConfig = new TotpTwoFaProviderConfig();
+        providerConfig.setIssuerName("tb");
+        twoFaSettings.setProviders(List.of(providerConfig));
         twoFaSettings.setMinVerificationCodeSendPeriod(5);
         twoFaSettings.setTotalAllowedTimeForVerification(100);
         doPost("/api/2fa/settings", twoFaSettings)

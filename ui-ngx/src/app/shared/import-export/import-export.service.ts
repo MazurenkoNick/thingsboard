@@ -39,15 +39,15 @@ import { BreakpointId, Dashboard, DashboardLayoutId } from '@shared/models/dashb
 import {
   deepClone,
   guid,
+  isDate,
   isDefined,
   isNotEmptyStr,
-  isNumber,
   isObject,
   isString,
   isUndefined,
   unwrapModule
 } from '@core/utils';
-import { DOCUMENT } from '@angular/common';
+import { DatePipe, DOCUMENT } from '@angular/common';
 import {
   AliasesInfo,
   AliasFilterType,
@@ -112,7 +112,6 @@ import { ActionPreferencesPutUserSettings } from '@core/auth/auth.actions';
 import { ExportableEntity } from '@shared/models/base-data';
 import { EntityId } from '@shared/models/id/entity-id';
 import { Borders, Column, Workbook } from 'exceljs';
-import moment_ from 'moment';
 import { Customer } from '@shared/models/customer.model';
 import {
   ExportResourceDialogComponent,
@@ -124,13 +123,13 @@ import { CalculatedFieldsService } from '@core/http/calculated-fields.service';
 import { CalculatedField } from '@shared/models/calculated-field.models';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { ReportTemplate, ReportTemplateType, TbReportFormat } from '@shared/models/report.models';
+import { toUtcDate } from '@shared/models/time/time.models';
 
 export type editMissingAliasesFunction = (widgets: Array<Widget>, isSingleWidget: boolean,
                                           customTitle: string, missingEntityAliases: EntityAliases) => Observable<EntityAliases>;
 
 type SupportEntityResources = 'includeResourcesInExportWidgetTypes' | 'includeResourcesInExportDashboard' | 'includeBundleWidgetsInExport';
 
-const moment = moment_;
 
 // @dynamic
 @Injectable()
@@ -156,6 +155,7 @@ export class ImportExportService {
               private itembuffer: ItemBufferService,
               private calculatedFieldsService: CalculatedFieldsService,
               private reportTemplateService: ReportTemplateService,
+              private datePipe: DatePipe,
               private dialog: MatDialog) {
 
   }
@@ -921,27 +921,22 @@ export class ImportExportService {
     return cellData;
   }
 
-  public exportCsv(data: ExportRow[], filename: string, normalizeFileName = false) {
+  public exportCsv(data: ExportRow[], filename: string, normalizeFileName = false, dateFormat: string = 'yyyy-MM-dd HH:mm:ss') {
     let colsHead: string;
     let colsData: string;
     if (data && data.length) {
-      this.formatDataAccordingToLocale(data);
-
+      this.formatTimestampColumn(data, dateFormat);
       const isMap = data[0] instanceof Map;
-
       const headers: string[] = isMap ? Array.from(data[0].keys()) : Object.keys(data[0]);
       colsHead = headers.map(key => [this.processCSVCell(key)]).join(';');
-      colsData = data.map(row => {
-        if (isMap) {
-          return Array.from(row.values()).map(val => [
-            this.processCSVCell(val)
-          ]).join(';');
-        } else {
-          return headers.map(col => [
-            this.processCSVCell(row[col])
-          ]).join(';');
-        }
-      }).join('\n');
+      colsData = data.map(obj => [ // obj === row
+        headers.map(col => {
+          const value = isMap
+            ? (obj.has(col) ? obj.get(col) : '')
+            : obj[col]
+          return this.processCSVCell(value);
+        }).join(';')
+      ]).join('\n');
     } else {
       colsHead = '';
       colsData = '';
@@ -950,30 +945,27 @@ export class ImportExportService {
     this.downloadFile(csvData, filename, CSV_TYPE, normalizeFileName);
   }
 
-  public exportXls(data: ExportRow[], filename: string, normalizeFileName = false) {
+  public exportXls(data: ExportRow[], filename: string, normalizeFileName = false, dateFormat: string = 'yyyy-MM-dd HH:mm:ss') {
     let colsHead: string;
     let colsData: string;
     if (data && data.length) {
-      this.formatDataAccordingToLocale(data);
-
+      this.formatTimestampColumn(data, dateFormat);
       const isMap = data[0] instanceof Map;
       const headers: string[] = isMap ? Array.from(data[0].keys()) : Object.keys(data[0]);
       colsHead = `<tr>${headers.map(key => `<td><b>${key}</b></td>`).join('')}</tr>`;
       colsData = data.map(row => {
-        let rowHtml: string;
-
-        if (isMap) {
-          rowHtml = Array.from((row as Map<string, any>).values()).map(value => {
-            return `<td>${value ?? ''}</td>`;
-          }).join('');
-        } else {
-          rowHtml = headers.map(header => {
-            const value = (row as {[key: string]: any})[header];
-            return `<td>${value ?? ''}</td>`;
-          }).join('');
-        }
+        const rowHtml = headers.map(header => {
+          const value = isMap
+            ? (row.has(header) ? row.get(header) : '')
+            : row[header];
+          return `<td>${value ?? ''}</td>`;
+        }).join('');
         return `<tr>${rowHtml}</tr>`;
       }).join('');
+      colsData = data.map(obj => [`<tr>
+                ${Object.keys(obj).map(col => `<td>${obj[col] ? obj[col] : ''}</td>`).join('')}
+            </tr>`])
+        .join('');
     } else {
       colsHead = '';
       colsData = '';
@@ -1001,6 +993,9 @@ export class ImportExportService {
         right: {style: 'thin'}
       };
 
+      const timestampColumnTitle = this.translate.instant('widgets.table.timestamp-column-name');
+      dateFormat = dateFormat.replace(/S/g, '0'); // .000 - milliseconds format in Excel
+
       if (data && data.length) {
         const isMap = data[0] instanceof Map;
         const titles: string[] = isMap ? Array.from(data[0].keys()) : Object.keys(data[0]);
@@ -1009,9 +1004,8 @@ export class ImportExportService {
           columnsTable.push({
             header: title,
             key: title,
-            width: (title === 'Timestamp' ? dateFormat.length : title.length) * 1.2,
             style: {
-              numFmt: title === 'Timestamp' ? dateFormat : null
+              numFmt: title === timestampColumnTitle ? dateFormat : null
             }
           });
         });
@@ -1025,9 +1019,11 @@ export class ImportExportService {
           const isItemMap = item instanceof Map;
 
           const rowToAdd = isItemMap ? Object.fromEntries(item) : item;
-          const timestamp = isItemMap ? item.get('Timestamp') : item.Timestamp;
-          if (timestamp) {
-            rowToAdd.Timestamp = moment(new Date(Date.parse(timestamp))).utcOffset(0, true).toDate();
+          const timestamp = isItemMap
+            ? (item.has(timestampColumnTitle) ? item.get(timestampColumnTitle) : '')
+            : item[timestampColumnTitle];
+          if (timestamp && !isDate(timestamp)) {
+            rowToAdd[timestampColumnTitle] = toUtcDate(timestamp);
           }
           sheet.addRow(rowToAdd).eachCell({ includeEmpty: true }, cell => {
             cell.border = cellBorderStyle;
@@ -1035,30 +1031,37 @@ export class ImportExportService {
         });
       }
 
+      sheet.columns.forEach((column, _i) => {
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, (cell) => {
+          const cellValueLength = isDate(cell.value) ? dateFormat.length : (String(cell.value)).length;
+          if (cellValueLength > maxLength) {
+            maxLength = cellValueLength;
+          }
+        });
+        column.width = Math.ceil(maxLength * 1.3);
+      });
+
       workbook.xlsx.writeBuffer().then((xlsxData: any) => {
         this.downloadFile(xlsxData, filename, XLSX_TYPE, normalizeFileName);
       });
     });
   }
 
-  private formatDataAccordingToLocale(data: ExportRow[]) {
-
+  private formatTimestampColumn(data: ExportRow[], dateFormat: string = 'yyyy-MM-dd HH:mm:ss') {
+    const timestampColumnTitle = this.translate.instant('widgets.table.timestamp-column-name');
     const isMap = data[0] instanceof Map;
 
     if (isMap) {
       for (const row of data as Map<string, any>[]) {
-        for (const [key, value] of row.entries()) {
-          if (isNumber(value)) {
-            row.set(key, (value as number).toLocaleString(undefined, {maximumFractionDigits: 14}));
-          }
+        if (row.has(timestampColumnTitle) && isDate(row.get(timestampColumnTitle))) {
+          row.set(timestampColumnTitle, this.datePipe.transform(row.get(timestampColumnTitle), dateFormat, 'UTC'));
         }
       }
     } else {
       for (const row of data) {
-        for (const key in Object.keys(row)) {
-          if (isNumber(row[key])) {
-            row[key] = (row[key] as number).toLocaleString(undefined, {maximumFractionDigits: 14});
-          }
+        if (row[timestampColumnTitle] && isDate(row[timestampColumnTitle])) {
+          row[timestampColumnTitle] = this.datePipe.transform((row[timestampColumnTitle] as Date), dateFormat, 'UTC');
         }
       }
     }

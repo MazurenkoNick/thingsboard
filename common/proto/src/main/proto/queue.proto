@@ -88,6 +88,7 @@ enum EntityTypeProto {
   SECRET                = 107;
   ADMIN_SETTINGS        = 42;
   AI_MODEL              = 43;
+  API_KEY               = 44;
 }
 
 enum ApiUsageRecordKeyProto {
@@ -961,6 +962,14 @@ message GeofencingArgumentProto {
   repeated GeofencingZoneProto zones = 2;
 }
 
+message ArgumentIntervalProto {
+  string argName = 1;
+  int64 startTs = 2;
+  int64 endTs = 3;
+  int64 lastArgsRefreshTs = 4;
+  int64 lastMetricsEvalTs = 5;
+}
+
 message CalculatedFieldStateProto {
   CalculatedFieldEntityCtxIdProto id = 1;
   string type = 2;
@@ -970,6 +979,7 @@ message CalculatedFieldStateProto {
   AlarmStateProto alarmState = 6;
   int64 lastArgsUpdateTs = 7;
   int64 lastMetricsEvalTs = 8;
+  repeated ArgumentIntervalProto aggregationArguments = 9;
 }
 
 //Used to report session state to tb-Service and persist this state in the cache on the tb-Service level.
@@ -2046,5 +2056,5 @@ message AlarmRuleStateProto {
   string severity = 1;
   int64 eventCount = 2;
   int64 firstEventTs = 3;
-  int64 lastEventTs = 4;
+  int64 lastCheckTs = 4;
 }

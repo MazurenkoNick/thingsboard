@@ -54,14 +54,15 @@ import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
 import org.thingsboard.server.common.data.cf.configuration.ArgumentType;
+import org.thingsboard.server.common.data.cf.configuration.AttributesOutput;
 import org.thingsboard.server.common.data.cf.configuration.CalculatedFieldConfiguration;
-import org.thingsboard.server.common.data.cf.configuration.Output;
-import org.thingsboard.server.common.data.cf.configuration.OutputType;
 import org.thingsboard.server.common.data.cf.configuration.PropagationCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.ReferencedEntityKey;
 import org.thingsboard.server.common.data.cf.configuration.RelationPathQueryDynamicSourceConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.ScriptCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.SimpleCalculatedFieldConfiguration;
+import org.thingsboard.server.common.data.cf.configuration.TimeSeriesImmediateOutputStrategy;
+import org.thingsboard.server.common.data.cf.configuration.TimeSeriesOutput;
 import org.thingsboard.server.common.data.cf.configuration.geofencing.EntityCoordinates;
 import org.thingsboard.server.common.data.cf.configuration.geofencing.GeofencingCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.geofencing.ZoneGroupConfiguration;
@@ -157,13 +158,11 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         config.setArguments(Map.of("T", argument));
         config.setExpression("(T * 9/5) + 32");
 
-        Output output = new Output();
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setName("fahrenheitTemp");
-        output.setType(OutputType.TIME_SERIES);
         config.setOutput(output);
 
         calculatedField.setConfiguration(config);
-        calculatedField.setVersion(1L);
 
         CalculatedField savedCalculatedField = doPost("/api/calculatedField", calculatedField, CalculatedField.class);
 
@@ -185,10 +184,12 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
                     assertThat(fahrenheitTemp.get("fahrenheitTemp").get(0).get("value").asText()).isEqualTo("86.0");
                 });
 
-        Output savedOutput = savedCalculatedField.getConfiguration().getOutput();
-        savedOutput.setType(OutputType.ATTRIBUTES);
-        savedOutput.setScope(AttributeScope.SERVER_SCOPE);
-        savedOutput.setName("temperatureF");
+        AttributesOutput newOutput = new AttributesOutput();
+        newOutput.setScope(AttributeScope.SERVER_SCOPE);
+        newOutput.setName("temperatureF");
+        config.setOutput(newOutput);
+        savedCalculatedField.setConfiguration(config);
+
         savedCalculatedField = doPost("/api/calculatedField", savedCalculatedField, CalculatedField.class);
 
         await().alias("update CF output -> perform calculation with updated output").atMost(TIMEOUT, TimeUnit.SECONDS)
@@ -243,9 +244,8 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         config.setArguments(Map.of("T", argument));
         config.setExpression("(T * 9/5) + 32");
 
-        Output output = new Output();
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setName("fahrenheitTemp");
-        output.setType(OutputType.TIME_SERIES);
         config.setOutput(output);
 
         calculatedField.setConfiguration(config);
@@ -292,9 +292,8 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         config.setArguments(Map.of("T", argument));
         config.setExpression("(T * 9/5) + 32");
 
-        Output output = new Output();
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setName("fahrenheitTemp");
-        output.setType(OutputType.TIME_SERIES);
         config.setOutput(output);
 
         calculatedField.setConfiguration(config);
@@ -356,9 +355,8 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
 
         config.setExpression("x + y");
 
-        Output output = new Output();
+        AttributesOutput output = new AttributesOutput();
         output.setName("z");
-        output.setType(OutputType.ATTRIBUTES);
         output.setScope(AttributeScope.SERVER_SCOPE);
 
         config.setOutput(output);
@@ -513,9 +511,8 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         config.setArguments(Map.of("T", argument));
         config.setExpression("(T * 9/0) + 32");
 
-        Output output = new Output();
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setName("fahrenheitTemp");
-        output.setType(OutputType.TIME_SERIES);
         config.setOutput(output);
 
         calculatedField.setConfiguration(config);
@@ -563,9 +560,8 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         config.setArguments(Map.of("T", argument));
         config.setExpression("(T * 9/5) + 32");
 
-        Output output = new Output();
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setName("fahrenheitTemp");
-        output.setType(OutputType.TIME_SERIES);
         config.setOutput(output);
 
         config.setUseLatestTs(true);
@@ -613,9 +609,8 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         config.setArguments(Map.of("a", argument1, "b", argument2));
         config.setExpression("a + b");
 
-        Output output = new Output();
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setName("c");
-        output.setType(OutputType.TIME_SERIES);
         config.setOutput(output);
 
         config.setUseLatestTs(true);
@@ -667,9 +662,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         config.setArguments(Map.of("T", argument));
         config.setExpression("return {\"ts\": ctx.latestTs, \"values\": {\"fahrenheitTemp\": (T * 1.8) + 32}};");
 
-        Output output = new Output();
-        output.setType(OutputType.TIME_SERIES);
-        config.setOutput(output);
+        config.setOutput(new TimeSeriesOutput());
 
         calculatedField.setConfiguration(config);
 
@@ -1164,9 +1157,8 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         config.setArguments(Map.of("a", a));
         config.setExpression("a + 10");
 
-        Output output = new Output();
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setName("result");
-        output.setType(OutputType.TIME_SERIES);
         config.setOutput(output);
 
         calculatedField.setConfiguration(config);
@@ -1222,9 +1214,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
 
         config.setExpression(exampleScript);
 
-        Output output = new Output();
-        output.setType(OutputType.TIME_SERIES);
-        config.setOutput(output);
+        config.setOutput(new TimeSeriesOutput());
 
         calculatedField.setConfiguration(config);
 
@@ -1251,9 +1241,8 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         config.setArguments(Map.of("a", a, "b", b));
         config.setExpression("a + b");
 
-        Output output = new Output();
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setName("result");
-        output.setType(OutputType.TIME_SERIES);
         config.setOutput(output);
 
         calculatedField.setConfiguration(config);
@@ -1278,9 +1267,8 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         config.setArguments(Map.of("m", argument));
         config.setExpression("m + 1");
 
-        Output output = new Output();
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setName("m1");
-        output.setType(OutputType.TIME_SERIES);
         output.setDecimalsByDefault(0);
         config.setOutput(output);
         calculatedField.setConfiguration(config);
@@ -1331,9 +1319,8 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         config.setArguments(Map.of("x", x, "y", y));
         config.setExpression("x + y");
 
-        Output output = new Output();
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setName("z");
-        output.setType(OutputType.TIME_SERIES);
         output.setDecimalsByDefault(0);
         config.setOutput(output);
 
@@ -1428,9 +1415,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
 
         cfg.setZoneGroups(Map.of("allowedZones", allowedGroup, "restrictedZones", restrictedGroup));
 
-        Output out = new Output();
-        out.setType(OutputType.TIME_SERIES);
-        cfg.setOutput(out);
+        cfg.setOutput(new TimeSeriesOutput());
 
         cf.setConfiguration(cfg);
 
@@ -1512,8 +1497,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         cfg.setZoneGroups(Map.of("allowedZones", allowedZonesGroup, "restrictedZones", restrictedZonesGroup));
 
         // Output to server attributes
-        Output out = new Output();
-        out.setType(OutputType.ATTRIBUTES);
+        AttributesOutput out = new AttributesOutput();
         out.setScope(AttributeScope.SERVER_SCOPE);
         cfg.setOutput(out);
 
@@ -1623,8 +1607,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         cfg.setZoneGroups(Map.of("allowedZones", allowedZonesGroup, "restrictedZones", restrictedZonesGroup));
 
         // Output to server attributes
-        Output out = new Output();
-        out.setType(OutputType.ATTRIBUTES);
+        AttributesOutput out = new AttributesOutput();
         out.setScope(AttributeScope.SERVER_SCOPE);
         cfg.setOutput(out);
 
@@ -1721,8 +1704,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         cfg.setZoneGroups(Map.of("allowedZones", allowedZonesGroup));
 
         // Server attributes output
-        Output out = new Output();
-        out.setType(OutputType.ATTRIBUTES);
+        AttributesOutput out = new AttributesOutput();
         out.setScope(AttributeScope.SERVER_SCOPE);
         cfg.setOutput(out);
 
@@ -1832,8 +1814,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
 
         cfg.setExpression("{\"testResult\": t * 2}");
 
-        Output output = new Output();
-        output.setType(OutputType.ATTRIBUTES);
+        AttributesOutput output = new AttributesOutput();
         output.setScope(AttributeScope.SERVER_SCOPE);
         cfg.setOutput(output);
 
@@ -1909,8 +1890,8 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         arg.setRefEntityKey(new ReferencedEntityKey("temperature", ArgumentType.TS_LATEST, null));
         cfg.setArguments(Map.of("temperatureComputed", arg));
 
-        Output output = new Output();
-        output.setType(OutputType.TIME_SERIES);
+        TimeSeriesOutput output = new TimeSeriesOutput();
+        output.setStrategy(new TimeSeriesImmediateOutputStrategy(0, true, true, true, true));
         cfg.setOutput(output);
 
         cf.setConfiguration(cfg);
@@ -1979,9 +1960,8 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         config.setArguments(Map.of("a", argumentA, "b", argumentB));
         config.setExpression("a + b");
 
-        Output output = new Output();
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setName("c");
-        output.setType(OutputType.TIME_SERIES);
         output.setDecimalsByDefault(0);
         config.setOutput(output);
 
@@ -2005,6 +1985,48 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
                     ObjectNode c = getLatestTelemetry(testDevice.getId(), "c");
                     assertThat(c).isNotNull();
                     assertThat(c.get("c").get(0).get("value").asText()).isEqualTo("20");
+                });
+    }
+
+    @Test
+    public void testSimpleCalculatedFieldWhenSkipRuleEngineOutputProcessing() throws Exception {
+        Device testDevice = createDevice("Test device", "1234567890");
+
+        postTelemetry(testDevice.getId(), "{\"temperature\":24.5}");
+
+        CalculatedField calculatedField = new CalculatedField();
+        calculatedField.setEntityId(testDevice.getId());
+        calculatedField.setType(CalculatedFieldType.SIMPLE);
+        calculatedField.setName("C to F");
+        calculatedField.setDebugSettings(DebugSettings.all());
+
+        SimpleCalculatedFieldConfiguration config = new SimpleCalculatedFieldConfiguration();
+
+        Argument argument = new Argument();
+        ReferencedEntityKey refEntityKey = new ReferencedEntityKey("temperature", ArgumentType.TS_LATEST, null);
+        argument.setRefEntityKey(refEntityKey);
+        config.setArguments(Map.of("T", argument));
+        config.setExpression("(T * 9/5) + 32");
+
+        TimeSeriesOutput output = new TimeSeriesOutput();
+        output.setName("fahrenheitTemp");
+        output.setDecimalsByDefault(1);
+        output.setStrategy(new TimeSeriesImmediateOutputStrategy(1000L, true, true, true, true));
+
+        config.setOutput(output);
+
+        config.setUseLatestTs(true);
+
+        calculatedField.setConfiguration(config);
+
+        CalculatedField savedCalculatedField = doPost("/api/calculatedField", calculatedField, CalculatedField.class);
+
+        await().alias("create CF -> perform initial calculation").atMost(TIMEOUT, TimeUnit.SECONDS)
+                .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    ObjectNode fahrenheitTemp = getLatestTelemetry(testDevice.getId(), "fahrenheitTemp");
+                    assertThat(fahrenheitTemp).isNotNull();
+                    assertThat(fahrenheitTemp.get("fahrenheitTemp").get(0).get("value").asText()).isEqualTo("76.1");
                 });
     }
 

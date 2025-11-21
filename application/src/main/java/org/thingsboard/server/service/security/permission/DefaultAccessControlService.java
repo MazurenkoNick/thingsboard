@@ -167,7 +167,7 @@ public class DefaultAccessControlService implements AccessControlService {
             }
         }
         Optional<PermissionChecker> permissionChecker = permissions.getPermissionChecker(resource);
-        if (!permissionChecker.isPresent()) {
+        if (permissionChecker.isEmpty()) {
             if (throwException) {
                 permissionDenied();
             } else {
@@ -187,8 +187,7 @@ public class DefaultAccessControlService implements AccessControlService {
                 ThingsboardErrorCode.PERMISSION_DENIED);
     }
 
-    private <I extends EntityId, T extends TenantEntity>
-    void entityOperationPermissionDenied(Resource resource, Operation operation, I entityId, T entity) throws ThingsboardException {
+    private <I extends EntityId, T extends TenantEntity> void entityOperationPermissionDenied(Resource resource, Operation operation, I entityId, T entity) throws ThingsboardException {
         EntityType entityType = entity != null ? entity.getEntityType() : entityId.getEntityType();
         String message = "You don't have permission to perform '" + operation + "' operation with " + entityType;
         if (entity instanceof HasName) {

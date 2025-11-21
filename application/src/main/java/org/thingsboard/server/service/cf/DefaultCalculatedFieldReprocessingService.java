@@ -42,10 +42,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.thingsboard.rule.engine.api.TimeseriesSaveRequest;
 import org.thingsboard.rule.engine.api.TimeseriesSaveRequest.Strategy;
 import org.thingsboard.server.actors.ActorSystemContext;
-import org.thingsboard.server.common.adaptor.JsonConverter;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
@@ -53,6 +51,8 @@ import org.thingsboard.server.common.data.cf.configuration.Argument;
 import org.thingsboard.server.common.data.cf.configuration.ArgumentType;
 import org.thingsboard.server.common.data.cf.configuration.OutputType;
 import org.thingsboard.server.common.data.cf.configuration.aggregation.RelatedEntitiesAggregationCalculatedFieldConfiguration;
+import org.thingsboard.server.common.data.cf.configuration.aggregation.single.EntityAggregationCalculatedFieldConfiguration;
+import org.thingsboard.server.common.data.cf.configuration.aggregation.single.interval.AggInterval;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -60,7 +60,6 @@ import org.thingsboard.server.common.data.job.task.CfReprocessingTask;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.BasicTsKvEntry;
-import org.thingsboard.server.common.data.kv.KvEntry;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.util.TbPair;
@@ -74,6 +73,8 @@ import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldState;
 import org.thingsboard.server.service.cf.ctx.state.SingleValueArgumentEntry;
+import org.thingsboard.server.service.cf.ctx.state.aggregation.single.AggIntervalEntry;
+import org.thingsboard.server.service.cf.ctx.state.aggregation.single.EntityAggregationCalculatedFieldState;
 import org.thingsboard.server.service.security.permission.OwnersCacheService;
 import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
 
@@ -115,18 +116,16 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
     private int telemetryFetchPackSize;
 
     private final ActorSystemContext systemContext;
-    private final TelemetrySubscriptionService telemetrySubscriptionService;
 
     public DefaultCalculatedFieldReprocessingService(AttributesService attributesService,
                                                      TimeseriesService timeseriesService,
                                                      ApiLimitService apiLimitService,
                                                      RelationService relationService,
-                                                     OwnersCacheService ownersCacheService,
+                                                     OwnersCacheService ownersService,
                                                      ActorSystemContext systemContext,
-                                                     TelemetrySubscriptionService telemetrySubscriptionService) {
-        super(attributesService, timeseriesService, apiLimitService, relationService, ownersCacheService);
+                                                     TelemetrySubscriptionService tsSubService) {
+        super(attributesService, timeseriesService, tsSubService, apiLimitService, relationService, ownersService);
         this.systemContext = systemContext;
-        this.telemetrySubscriptionService = telemetrySubscriptionService;
     }
 
     @Override
@@ -161,30 +160,9 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
 
         try (ctx) {
             ctx.checkStateSize();
-            processStateIfReady(ctx, startTs).get();
-
-            ctx.initializeBatches(startTs, endTs);
-
-            while (true) {
-                if (Thread.interrupted()) {
-                    throw new InterruptedException();
-                }
-
-                OptionalLong minTs = ctx.findNextTimestamp();
-
-                if (minTs.isEmpty()) {
-                    var latestResult = ctx.getLatestResult();
-                    if (latestResult != null) {
-                        Future<Void> result = saveResult(ctx, latestResult.getSecond(), latestResult.getFirst(), Strategy.LATEST_AND_WS);
-                        ctx.addResult(result, telemetryFetchPackSize);
-                    }
-                    break;
-                }
-
-                Map<String, ArgumentEntry> updatedArgs = ctx.getUpdatedArgs(minTs.getAsLong(), startTs, endTs);
-                Future<Void> result = processArgumentValuesUpdate(ctx, updatedArgs, minTs.getAsLong());
-                ctx.addResult(result, telemetryFetchPackSize);
-            }
+            ctx.processInitialState(startTs);
+            ctx.prepareCtx(startTs, endTs);
+            ctx.processData(startTs, endTs);
             ctx.awaitResults();
         }
     }
@@ -194,7 +172,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         boolean initialized = ctx.getCfCtx().isInitialized();
         if (initialized && state.isReady()) {
             log.trace("[{}][{}] Performing calculation for CF {}", ctx.getTenantId(), ctx.getEntityId(), ctx.getCfId());
-            CalculatedFieldResult calculationResult = state.performCalculation(Collections.emptyMap(), ctx.getCfCtx()).get(cfCalculationResultTimeout, TimeUnit.SECONDS);
+            CalculatedFieldResult calculationResult = ctx.performCalculation(state).get(cfCalculationResultTimeout, TimeUnit.SECONDS);
             ctx.checkStateSize();
             if (!calculationResult.isEmpty()) {
                 ctx.setLatestResult(new TbPair<>(ts, calculationResult));
@@ -228,7 +206,10 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
     private CalculatedFieldState initState(TenantId tenantId, EntityId entityId, CalculatedFieldCtx ctx, long startTs) throws InterruptedException {
         CalculatedFieldState state = createStateByType(ctx, entityId);
         state.setCtx(ctx, null);
-        state.init();
+        state.init(false);
+        if (CalculatedFieldType.ENTITY_AGGREGATION.equals(ctx.getCfType())) {
+            return state;
+        }
 
         Map<String, ArgumentEntry> arguments;
         try {
@@ -278,21 +259,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         JsonElement result = JsonParser.parseString(Objects.requireNonNull(calculatedFieldResult.stringValue()));
         log.trace("[{}][{}] Saving CF result: {}", ctx.getTenantId(), ctx.getEntityId(), result);
         SettableFuture<Void> future = SettableFuture.create();
-        Map<Long, List<KvEntry>> tsKvMap = JsonConverter.convertToTelemetry(result, ts);
-        List<TsKvEntry> tsKvEntryList = new ArrayList<>();
-        for (Entry<Long, List<KvEntry>> tsKvEntry : tsKvMap.entrySet()) {
-            for (KvEntry kvEntry : tsKvEntry.getValue()) {
-                tsKvEntryList.add(new BasicTsKvEntry(tsKvEntry.getKey(), kvEntry));
-            }
-        }
-        telemetrySubscriptionService.saveTimeseriesInternal(TimeseriesSaveRequest.builder()
-                .tenantId(ctx.getTenantId())
-                .entityId(ctx.getEntityId())
-                .entries(tsKvEntryList)
-                .strategy(strategy)
-                .future(future)
-                .build()
-        );
+        saveTimeSeries(ctx.getTenantId(), ctx.getEntityId(), result, ts, strategy, future);
         if (log.isTraceEnabled()) {
             Futures.addCallback(future, new FutureCallback<>() {
                 @Override
@@ -314,6 +281,9 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         if (CalculatedFieldType.RELATED_ENTITIES_AGGREGATION.equals(cfCtx.getCfType())) {
             return new RelatedEntitiesCfReprocessingCtx(tenantId, entityId, cfCtx, state);
         }
+        if (CalculatedFieldType.ENTITY_AGGREGATION.equals(cfCtx.getCfType())) {
+            return new EntityAggCfReprocessingCtx(tenantId, entityId, cfCtx, state);
+        }
         return new SimpleCfReprocessingCtx(tenantId, entityId, cfCtx, state);
     }
 
@@ -331,19 +301,17 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
 
         void setLatestResult(TbPair<Long, CalculatedFieldResult> latestResult);
 
-        TbPair<Long, CalculatedFieldResult> getLatestResult();
-
         void checkStateSize();
 
-        void addResult(Future<Void> resultFuture, int awaitPeriod) throws InterruptedException;
+        void processInitialState(long startTs) throws Exception;
 
         void awaitResults() throws InterruptedException;
 
-        void initializeBatches(long startTs, long endTs) throws ExecutionException, InterruptedException;
+        void prepareCtx(long startTs, long endTs) throws Exception;
 
-        OptionalLong findNextTimestamp();
+        void processData(long startTs, long endTs) throws Exception;
 
-        Map<String, ArgumentEntry> getUpdatedArgs(long minTs, long startTs, long endTs) throws InterruptedException;
+        Future<CalculatedFieldResult> performCalculation(CalculatedFieldState state) throws Exception;
 
         void close();
 
@@ -372,52 +340,9 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             this.ctxId = new CalculatedFieldEntityCtxId(tenantId, cfId, entityId);
         }
 
-        @Override
-        public Map<String, ArgumentEntry> getUpdatedArgs(long minTs, long startTs, long endTs) throws InterruptedException {
-            Map<String, ArgumentEntry> updatedArgs = new HashMap<>();
-
-            for (String argName : getArgNames()) {
-                ArgumentEntry argumentEntry = processArgBuffer(argName, minTs, startTs, endTs);
-                if (argumentEntry != null) {
-                    updatedArgs.put(argName, argumentEntry);
-                }
-            }
-
-            return updatedArgs;
+        public void processInitialState(long startTs) throws Exception {
+            processStateIfReady(this, startTs).get();
         }
-
-        protected abstract Set<String> getArgNames();
-
-        protected abstract ArgumentEntry processArgBuffer(String argName, long minTs, long startTs, long endTs) throws InterruptedException;
-
-        protected ArgumentEntry processArgEntityBuffer(String argName, EntityId sourceId, LinkedList<TsKvEntry> buffer, long minTs, long startTs, long endTs) throws InterruptedException {
-            if (buffer != null && !buffer.isEmpty() && buffer.getFirst().getTs() == minTs) {
-                TsKvEntry kvEntry = buffer.removeFirst();
-                ArgumentEntry argumentEntry = ArgumentEntry.createSingleValueArgument(sourceId, new SingleValueArgumentEntry(kvEntry));
-
-                if (buffer.isEmpty()) {
-                    refillArgEntityBuffer(argName, sourceId, startTs, endTs);
-                }
-
-                return argumentEntry;
-            }
-            return null;
-        }
-
-        protected void refillArgEntityBuffer(String argName, EntityId sourceId, long startTs, long endTs) throws InterruptedException {
-            Argument arg = cfCtx.getArguments().get(argName);
-            long cursorTs = Optional.ofNullable(getArgCursor(argName, sourceId)).orElse(startTs);
-            LinkedList<TsKvEntry> nextBatch = fetchTelemetryBatch(tenantId, entityId, arg, cursorTs, endTs, telemetryFetchPackSize).stream()
-                    .filter(tsKv -> tsKv.getTs() > cursorTs)
-                    .collect(Collectors.toCollection(LinkedList::new));
-            if (!nextBatch.isEmpty()) {
-                putNewBatch(argName, sourceId, nextBatch);
-            }
-        }
-
-        protected abstract Long getArgCursor(String argName, EntityId sourceId);
-
-        protected abstract void putNewBatch(String argName, EntityId sourceId, LinkedList<TsKvEntry> nextBatch);
 
         public void checkStateSize() {
             state.checkStateSize(ctxId, cfCtx.getMaxStateSize());
@@ -458,7 +383,155 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
     }
 
     @Getter
-    public class RelatedEntitiesCfReprocessingCtx extends AbstractCfReprocessingCtx {
+    public class EntityAggCfReprocessingCtx extends AbstractCfReprocessingCtx {
+
+        private final LinkedList<AggIntervalEntry> intervals = new LinkedList<>();
+        private AggIntervalEntry intervalCursor;
+
+        public EntityAggCfReprocessingCtx(TenantId tenantId, EntityId entityId, CalculatedFieldCtx cfCtx, CalculatedFieldState state) {
+            super(tenantId, entityId, cfCtx, state);
+        }
+
+        public void processInitialState(long startTs) {}
+
+        @Override
+        public void prepareCtx(long startTs, long endTs) {
+            if (!(cfCtx.getCalculatedField().getConfiguration() instanceof EntityAggregationCalculatedFieldConfiguration config)) {
+                return;
+            }
+            AggInterval interval = config.getInterval();
+            interval.getIntervalsBetween(startTs, endTs).forEach(intervalEntry -> {
+                intervals.addLast(new AggIntervalEntry(intervalEntry.getFirst(), intervalEntry.getSecond()));
+            });
+            intervalCursor = intervals.peekFirst();
+        }
+
+        @Override
+        public void processData(long startTs, long endTs) throws Exception {
+            while (true) {
+                if (Thread.interrupted()) {
+                    throw new InterruptedException();
+                }
+
+                AggIntervalEntry interval = intervals.pollFirst();
+                intervalCursor = interval;
+
+                if (intervalCursor == null) {
+                    var latestResult = getLatestResult();
+                    if (latestResult != null) {
+                        Future<Void> result = saveResult(this, latestResult.getSecond(), latestResult.getFirst(), Strategy.LATEST_AND_WS);
+                        addResult(result, telemetryFetchPackSize);
+                    }
+                    break;
+                }
+
+                Future<Void> result = processStateIfReady(this, interval.getEndTs());
+                addResult(result, telemetryFetchPackSize);
+            }
+        }
+
+        @Override
+        public Future<CalculatedFieldResult> performCalculation(CalculatedFieldState state) throws Exception {
+            var aggState = (EntityAggregationCalculatedFieldState) state;
+            return aggState.performAggregationDuringInterval(this);
+        }
+
+        @Override
+        public void close() {
+            super.close();
+            intervals.clear();
+        }
+
+    }
+
+    @Getter
+    public abstract class ArgBufferCfReprocessingCtx extends AbstractCfReprocessingCtx {
+
+        public ArgBufferCfReprocessingCtx(TenantId tenantId, EntityId entityId, CalculatedFieldCtx cfCtx, CalculatedFieldState state) {
+            super(tenantId, entityId, cfCtx, state);
+        }
+
+        @Override
+        public void processData(long startTs, long endTs) throws Exception {
+            while (true) {
+                if (Thread.interrupted()) {
+                    throw new InterruptedException();
+                }
+
+                OptionalLong minTs = findNextTimestamp();
+
+                if (minTs.isEmpty()) {
+                    var latestResult = getLatestResult();
+                    if (latestResult != null) {
+                        Future<Void> result = saveResult(this, latestResult.getSecond(), latestResult.getFirst(), Strategy.LATEST_AND_WS);
+                        addResult(result, telemetryFetchPackSize);
+                    }
+                    return;
+                }
+
+                Map<String, ArgumentEntry> updatedArgs = getUpdatedArgs(minTs.getAsLong(), startTs, endTs);
+                Future<Void> result = processArgumentValuesUpdate(this, updatedArgs, minTs.getAsLong());
+                addResult(result, telemetryFetchPackSize);
+            }
+        }
+
+        public Map<String, ArgumentEntry> getUpdatedArgs(long minTs, long startTs, long endTs) throws InterruptedException {
+            Map<String, ArgumentEntry> updatedArgs = new HashMap<>();
+
+            for (String argName : getArgNames()) {
+                ArgumentEntry argumentEntry = processArgBuffer(argName, minTs, startTs, endTs);
+                if (argumentEntry != null) {
+                    updatedArgs.put(argName, argumentEntry);
+                }
+            }
+
+            return updatedArgs;
+        }
+
+        @Override
+        public Future<CalculatedFieldResult> performCalculation(CalculatedFieldState state) throws Exception {
+            return state.performCalculation(Collections.emptyMap(), cfCtx);
+        }
+
+        protected abstract Set<String> getArgNames();
+
+        protected abstract ArgumentEntry processArgBuffer(String argName, long minTs, long startTs, long endTs) throws InterruptedException;
+
+        protected ArgumentEntry processArgEntityBuffer(String argName, EntityId sourceId, LinkedList<TsKvEntry> buffer, long minTs, long startTs, long endTs) throws InterruptedException {
+            if (buffer != null && !buffer.isEmpty() && buffer.getFirst().getTs() == minTs) {
+                TsKvEntry kvEntry = buffer.removeFirst();
+                ArgumentEntry argumentEntry = ArgumentEntry.createSingleValueArgument(sourceId, new SingleValueArgumentEntry(kvEntry));
+
+                if (buffer.isEmpty()) {
+                    refillArgEntityBuffer(argName, sourceId, startTs, endTs);
+                }
+
+                return argumentEntry;
+            }
+            return null;
+        }
+
+        protected void refillArgEntityBuffer(String argName, EntityId sourceId, long startTs, long endTs) throws InterruptedException {
+            Argument arg = cfCtx.getArguments().get(argName);
+            long cursorTs = Optional.ofNullable(getArgCursor(argName, sourceId)).orElse(startTs);
+            LinkedList<TsKvEntry> nextBatch = fetchTelemetryBatch(tenantId, entityId, arg, cursorTs, endTs, telemetryFetchPackSize).stream()
+                    .filter(tsKv -> tsKv.getTs() > cursorTs)
+                    .collect(Collectors.toCollection(LinkedList::new));
+            if (!nextBatch.isEmpty()) {
+                putNewBatch(argName, sourceId, nextBatch);
+            }
+        }
+
+        protected abstract Long getArgCursor(String argName, EntityId sourceId);
+
+        protected abstract void putNewBatch(String argName, EntityId sourceId, LinkedList<TsKvEntry> nextBatch);
+
+        protected abstract OptionalLong findNextTimestamp();
+
+    }
+
+    @Getter
+    public class RelatedEntitiesCfReprocessingCtx extends ArgBufferCfReprocessingCtx {
 
         private final Map<String, Map<EntityId, LinkedList<TsKvEntry>>> entityTelemetryBuffers = new HashMap<>();
         private final Map<String, Map<EntityId, Long>> entityCursors = new HashMap<>();
@@ -468,7 +541,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         }
 
         @Override
-        public void initializeBatches(long startTs, long endTs) throws ExecutionException, InterruptedException {
+        public void prepareCtx(long startTs, long endTs) throws Exception {
             Map<String, Argument> arguments = cfCtx.getArguments();
             for (Entry<String, Argument> e : arguments.entrySet()) {
                 String argName = e.getKey();
@@ -476,22 +549,22 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
                 if (!ArgumentType.TS_LATEST.equals(arg.getRefEntityKey().getType())) {
                     continue;
                 }
-                var configuration = (RelatedEntitiesAggregationCalculatedFieldConfiguration) cfCtx.getCalculatedField().getConfiguration();
-                List<EntityId> relatedEntities = resolveRelatedEntities(tenantId, entityId, configuration.getRelation()).get();
-                if (relatedEntities == null) {
-                    continue;
-                }
-                for (EntityId relatedEntity : relatedEntities) {
-                    LinkedList<TsKvEntry> batch = new LinkedList<>(fetchTelemetryBatch(tenantId, relatedEntity, arg, startTs, endTs, telemetryFetchPackSize));
-                    if (!batch.isEmpty()) {
-                        entityTelemetryBuffers.computeIfAbsent(argName, name -> new HashMap<>()).put(relatedEntity, batch);
-                        entityCursors.computeIfAbsent(argName, name -> new HashMap<>()).put(relatedEntity, batch.getLast().getTs());
+                if (cfCtx.getCalculatedField().getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration configuration) {
+                    List<EntityId> relatedEntities = resolveRelatedEntities(tenantId, entityId, configuration.getRelation()).get();
+                    if (relatedEntities == null) {
+                        continue;
+                    }
+                    for (EntityId relatedEntity : relatedEntities) {
+                        LinkedList<TsKvEntry> batch = new LinkedList<>(fetchTelemetryBatch(tenantId, relatedEntity, arg, startTs, endTs, telemetryFetchPackSize));
+                        if (!batch.isEmpty()) {
+                            entityTelemetryBuffers.computeIfAbsent(argName, name -> new HashMap<>()).put(relatedEntity, batch);
+                            entityCursors.computeIfAbsent(argName, name -> new HashMap<>()).put(relatedEntity, batch.getLast().getTs());
+                        }
                     }
                 }
             }
         }
 
-        @Override
         public OptionalLong findNextTimestamp() {
             return entityTelemetryBuffers.values().stream()
                     .map(Map::values)
@@ -550,7 +623,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
     }
 
     @Getter
-    public class SimpleCfReprocessingCtx extends AbstractCfReprocessingCtx {
+    public class SimpleCfReprocessingCtx extends ArgBufferCfReprocessingCtx {
 
         private final Map<String, LinkedList<TsKvEntry>> telemetryBuffers = new HashMap<>();
         private final Map<String, Long> cursors = new HashMap<>();
@@ -560,7 +633,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         }
 
         @Override
-        public void initializeBatches(long startTs, long endTs) throws InterruptedException {
+        public void prepareCtx(long startTs, long endTs) throws Exception {
             Map<String, Argument> arguments = cfCtx.getArguments();
             for (Entry<String, Argument> e : arguments.entrySet()) {
                 String argName = e.getKey();
@@ -576,7 +649,6 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             }
         }
 
-        @Override
         public OptionalLong findNextTimestamp() {
             return telemetryBuffers.values().stream()
                     .filter(buffer -> !buffer.isEmpty())

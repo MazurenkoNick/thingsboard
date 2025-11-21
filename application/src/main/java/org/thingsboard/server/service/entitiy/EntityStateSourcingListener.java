@@ -194,6 +194,7 @@ public class EntityStateSourcingListener {
                 if (!isCreated) {
                     tbClusterService.onUserUpdated((User) event.getEntity(), (User) event.getOldEntity());
                 }
+                tbClusterService.broadcastEntityStateChangeEvent(event.getTenantId(), event.getEntityId(), lifecycleEvent);
             }
             case CALCULATED_FIELD -> {
                 onCalculatedFieldUpdate(event.getEntity(), event.getOldEntity());
@@ -251,7 +252,7 @@ public class EntityStateSourcingListener {
                 Asset asset = (Asset) event.getEntity();
                 tbClusterService.onAssetDeleted(tenantId, asset, null);
             }
-            case ASSET_PROFILE, ENTITY_VIEW, CUSTOMER, EDGE, NOTIFICATION_RULE -> {
+            case ASSET_PROFILE, ENTITY_VIEW, CUSTOMER, EDGE, NOTIFICATION_RULE, USER -> {
                 tbClusterService.broadcastEntityStateChangeEvent(tenantId, entityId, ComponentLifecycleEvent.DELETED);
             }
             case NOTIFICATION_REQUEST -> {
@@ -321,10 +322,12 @@ public class EntityStateSourcingListener {
         log.trace("[{}] ActionEntityEvent called: {}", tenantId, event);
         switch (event.getActionType()) {
             case CREDENTIALS_UPDATED -> {
-                if (EntityType.DEVICE.equals(event.getEntityId().getEntityType()) &&
-                    event.getEntity() instanceof DeviceCredentials deviceCredentials) {
+                if (event.getEntityId().getEntityType() == EntityType.DEVICE && event.getEntity() instanceof DeviceCredentials deviceCredentials) {
                     tbClusterService.pushMsgToCore(new DeviceCredentialsUpdateNotificationMsg(tenantId,
                             (DeviceId) event.getEntityId(), deviceCredentials), null);
+                } else if (event.getEntityId().getEntityType() == EntityType.USER) {
+                    tbClusterService.broadcastEntityStateChangeEvent(event.getTenantId(), event.getEntityId(), ComponentLifecycleEvent.UPDATED);
+
                 }
             }
             case ASSIGNED_TO_TENANT -> {

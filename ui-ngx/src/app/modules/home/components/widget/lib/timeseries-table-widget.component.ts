@@ -125,6 +125,7 @@ import { ComponentPortal } from '@angular/cdk/portal';
 import { FormBuilder } from '@angular/forms';
 import { DEFAULT_OVERLAY_POSITIONS } from '@shared/models/overlay.models';
 import { DateFormatSettings, ValueFormatProcessor } from '@shared/models/widget-settings.models';
+import { toUtcDate } from '@shared/models/time/time.models';
 
 export enum TabSortKey {
   NAME_ASC = 'NAME_ASC',
@@ -1012,7 +1013,7 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
               tsRow = isDefined(sourcesLatest[datasourceData.datasource.name])
                 ? deepClone(sourcesLatest[datasourceData.datasource.name]) : {};
               if (columnsToExport.includes(timestampFieldName)) {
-                tsRow[timestampFieldName] = this.datePipe.transform(ts, this.dateFormatFilter);
+                tsRow[timestampFieldName] = toUtcDate(ts);
               }
               tsRow['Entity Name'] = this.useEntityLabel ? datasourceData.datasource.entityLabel : datasourceData.datasource.entityName;
               sourcesTsRows[tsKey] = tsRow;

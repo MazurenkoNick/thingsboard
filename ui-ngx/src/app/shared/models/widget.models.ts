@@ -87,6 +87,8 @@ export interface WidgetTypeData {
   template: WidgetTypeTemplate;
 }
 
+export const widgetTitleAutocompleteValues = ['entityName', 'entityLabel'];
+
 export const widgetTypesData = new Map<widgetType, WidgetTypeData>(
   [
     [

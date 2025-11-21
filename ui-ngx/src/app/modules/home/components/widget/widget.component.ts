@@ -1784,9 +1784,9 @@ export class WidgetComponent extends PageComponent implements OnInit, OnChanges,
   private doExportWidgetData(filename: string, data: ExportRow[],
                              widgetExportType: WidgetExportType, dateFormat: string) {
     if (widgetExportType === WidgetExportType.csv) {
-      this.importExport.exportCsv(data, filename, true);
+      this.importExport.exportCsv(data, filename, true, dateFormat);
     } else if (widgetExportType === WidgetExportType.xls) {
-      this.importExport.exportXls(data, filename, true);
+      this.importExport.exportXls(data, filename, true, dateFormat);
     } else if (widgetExportType === WidgetExportType.xlsx) {
       this.importExport.exportXlsx(data, filename, dateFormat, true);
     }
