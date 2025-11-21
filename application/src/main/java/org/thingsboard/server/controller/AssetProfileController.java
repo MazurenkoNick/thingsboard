@@ -125,11 +125,7 @@ public class AssetProfileController extends BaseController {
         checkParameter(ASSET_PROFILE_ID, strAssetProfileId);
         AssetProfileId assetProfileId = new AssetProfileId(toUUID(strAssetProfileId));
         checkEntityId(assetProfileId, Operation.READ);
-        AssetProfileInfo assetProfileInfo = checkNotNull(assetProfileService.findAssetProfileInfoById(getTenantId(), assetProfileId));
-        if (!getTenantId().equals(assetProfileInfo.getTenantId())) {
-            throw permissionDenied();
-        }
-        return assetProfileInfo;
+        return checkNotNull(assetProfileService.findAssetProfileInfoById(getTenantId(), assetProfileId));
     }
 
     @ApiOperation(value = "Get Default Asset Profile (getDefaultAssetProfileInfo)",

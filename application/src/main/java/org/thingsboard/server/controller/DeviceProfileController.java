@@ -133,11 +133,7 @@ public class DeviceProfileController extends BaseController {
         checkParameter(DEVICE_PROFILE_ID, strDeviceProfileId);
         DeviceProfileId deviceProfileId = new DeviceProfileId(toUUID(strDeviceProfileId));
         checkEntityId(deviceProfileId, Operation.READ);
-        DeviceProfileInfo deviceProfileInfo = checkNotNull(deviceProfileService.findDeviceProfileInfoById(getTenantId(), deviceProfileId));
-        if (!getTenantId().equals(deviceProfileInfo.getTenantId())) {
-            throw permissionDenied();
-        }
-        return deviceProfileInfo;
+        return checkNotNull(deviceProfileService.findDeviceProfileInfoById(getTenantId(), deviceProfileId));
     }
 
     @ApiOperation(value = "Get Default Device Profile (getDefaultDeviceProfileInfo)",
