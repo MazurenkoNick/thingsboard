@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
@@ -102,10 +103,10 @@ public class ApiKeyController extends BaseController {
     }
 
     @ApiOperation(value = "Rotate internal API key (rotateInternalApiKey)",
-            notes = "Regenerates the value of an internal API key." + SYSTEM_AUTHORITY_PARAGRAPH,
-            hidden = true)
+            notes = "Regenerates the value of an internal API key." + SYSTEM_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('SYS_ADMIN')")
     @PostMapping(value = "/apiKey/{id}/rotate")
+    @Hidden
     public ApiKey rotateInternalApiKey(
             @Parameter(description = API_KEY_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable UUID id) throws ThingsboardException {
