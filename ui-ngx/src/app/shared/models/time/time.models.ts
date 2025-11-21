@@ -703,6 +703,8 @@ export const calculateTsOffset = (timezone?: string): number => {
   }
 };
 
+export const toUtcDate = (ts: number | string): Date => moment(ts).utcOffset(0, true).toDate();
+
 export const isHistoryTypeTimewindow = (timewindow: Timewindow): boolean => getTimewindowType(timewindow) === TimewindowType.HISTORY;
 
 export const getCurrentTime = (tz?: string): moment_.Moment => {

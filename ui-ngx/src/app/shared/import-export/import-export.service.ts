@@ -39,15 +39,15 @@ import { BreakpointId, Dashboard, DashboardLayoutId } from '@shared/models/dashb
 import {
   deepClone,
   guid,
+  isDate,
   isDefined,
   isNotEmptyStr,
-  isNumber,
   isObject,
   isString,
   isUndefined,
   unwrapModule
 } from '@core/utils';
-import { DOCUMENT } from '@angular/common';
+import { DatePipe, DOCUMENT } from '@angular/common';
 import {
   AliasesInfo,
   AliasFilterType,
@@ -124,6 +124,7 @@ import { CalculatedFieldsService } from '@core/http/calculated-fields.service';
 import { CalculatedField } from '@shared/models/calculated-field.models';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { ReportTemplate, ReportTemplateType, TbReportFormat } from '@shared/models/report.models';
+import { toUtcDate } from '@shared/models/time/time.models';
 
 export type editMissingAliasesFunction = (widgets: Array<Widget>, isSingleWidget: boolean,
                                           customTitle: string, missingEntityAliases: EntityAliases) => Observable<EntityAliases>;
@@ -156,6 +157,7 @@ export class ImportExportService {
               private itembuffer: ItemBufferService,
               private calculatedFieldsService: CalculatedFieldsService,
               private reportTemplateService: ReportTemplateService,
+              private datePipe: DatePipe,
               private dialog: MatDialog) {
 
   }
@@ -921,11 +923,11 @@ export class ImportExportService {
     return cellData;
   }
 
-  public exportCsv(data: {[key: string]: any}[], filename: string, normalizeFileName = false) {
+  public exportCsv(data: {[key: string]: any}[], filename: string, normalizeFileName = false, dateFormat: string = 'yyyy-MM-dd HH:mm:ss') {
     let colsHead: string;
     let colsData: string;
     if (data && data.length) {
-      this.formatDataAccordingToLocale(data);
+      this.formatTimestampColumn(data, dateFormat);
       colsHead = Object.keys(data[0]).map(key => [this.processCSVCell(key)]).join(';');
       colsData = data.map(obj => [ // obj === row
         Object.keys(obj).map(col => [
@@ -940,11 +942,11 @@ export class ImportExportService {
     this.downloadFile(csvData, filename, CSV_TYPE, normalizeFileName);
   }
 
-  public exportXls(data: {[key: string]: any}[], filename: string, normalizeFileName = false) {
+  public exportXls(data: {[key: string]: any}[], filename: string, normalizeFileName = false, dateFormat: string = 'yyyy-MM-dd HH:mm:ss') {
     let colsHead: string;
     let colsData: string;
     if (data && data.length) {
-      this.formatDataAccordingToLocale(data);
+      this.formatTimestampColumn(data, dateFormat);
       colsHead = `<tr>${Object.keys(data[0]).map(key => `<td><b>${key}</b></td>`).join('')}</tr>`;
       colsData = data.map(obj => [`<tr>
                 ${Object.keys(obj).map(col => `<td>${obj[col] ? obj[col] : ''}</td>`).join('')}
@@ -977,6 +979,9 @@ export class ImportExportService {
         right: {style: 'thin'}
       };
 
+      const timestampColumnTitle = this.translate.instant('widgets.table.timestamp-column-name');
+      dateFormat = dateFormat.replace(/S/g, '0'); // .000 - milliseconds format in Excel
+
       if (data && data.length) {
         const titles = Object.keys(data[0]);
         const columnsTable: Array<Partial<Column>> = [];
@@ -984,9 +989,8 @@ export class ImportExportService {
           columnsTable.push({
             header: title,
             key: title,
-            width: (title === 'Timestamp' ? dateFormat.length : title.length) * 1.2,
             style: {
-              numFmt: title === 'Timestamp' ? dateFormat : null
+              numFmt: title === timestampColumnTitle ? dateFormat : null
             }
           });
         });
@@ -997,8 +1001,8 @@ export class ImportExportService {
         sheet.getRow(1).eachCell(cell => cell.border = cellBorderStyle);
 
         data.forEach((item) => {
-          if (item.Timestamp) {
-            item.Timestamp = moment(new Date(Date.parse(item.Timestamp))).utcOffset(0, true).toDate();
+          if (item[timestampColumnTitle] && !isDate(item[timestampColumnTitle])) {
+            item[timestampColumnTitle] = toUtcDate(item[timestampColumnTitle]);
           }
           sheet.addRow(item).eachCell({ includeEmpty: true }, cell => {
             cell.border = cellBorderStyle;
@@ -1006,18 +1010,28 @@ export class ImportExportService {
         });
       }
 
+      sheet.columns.forEach((column, i) => {
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, (cell) => {
+          const cellValueLength = isDate(cell.value) ? dateFormat.length : (String(cell.value)).length;
+          if (cellValueLength > maxLength) {
+            maxLength = cellValueLength;
+          }
+        });
+        column.width = Math.ceil(maxLength * 1.3);
+      });
+
       workbook.xlsx.writeBuffer().then((xlsxData: any) => {
         this.downloadFile(xlsxData, filename, XLSX_TYPE, normalizeFileName);
       });
     });
   }
 
-  private formatDataAccordingToLocale(data: {[key: string]: any}[]) {
+  private formatTimestampColumn(data: {[key: string]: any}[], dateFormat: string = 'yyyy-MM-dd HH:mm:ss') {
+    const timestampColumnTitle = this.translate.instant('widgets.table.timestamp-column-name');
     for (const row of data) {
-      for (const key in Object.keys(row)) {
-        if (isNumber(row[key])) {
-          row[key] = (row[key] as number).toLocaleString(undefined, {maximumFractionDigits: 14});
-        }
+      if (row[timestampColumnTitle] && isDate(row[timestampColumnTitle])) {
+        row[timestampColumnTitle] = this.datePipe.transform((row[timestampColumnTitle] as Date), dateFormat, 'UTC');
       }
     }
   }
