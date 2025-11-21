@@ -29,17 +29,25 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SharedModule } from '@shared/shared.module';
-import { AuditLogRoutingModule } from '@modules/home/pages/audit-log/audit-log-routing.module';
+import { Component } from '@angular/core';
+import { AppState } from '@app/core/public-api';
+import { AuditLog, AuditLogFilter, TimePageLink } from '@app/shared/public-api';
+import { EntityTableHeaderComponent } from '@home/components/entity/entity-table-header.component';
+import { Store } from '@ngrx/store';
 
-@NgModule({
-  declarations: [],
-  imports: [
-    CommonModule,
-    SharedModule,
-    AuditLogRoutingModule
-  ]
+@Component({
+  selector: 'tb-audit-log-header',
+  templateUrl: './audit-log-header.component.html',
+  styles: ``
 })
-export class AuditLogModule { }
+export class AuditLogHeaderComponent extends EntityTableHeaderComponent<AuditLog, TimePageLink> {
+
+  constructor(protected store: Store<AppState>) {
+    super(store)
+  }
+
+  auditLogFiltersChanged(auditLogFilter: AuditLogFilter) {
+    this.entitiesTableConfig.componentsData.auditLogFilter = auditLogFilter;
+    this.entitiesTableConfig.getTable().resetSortAndFilter(true, true);
+  }
+}

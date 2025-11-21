@@ -1177,7 +1177,13 @@
         "type-timeseries-updated": "Telemetry updated",
         "type-timeseries-deleted": "Telemetry deleted",
         "type-owner-changed": "Owner changed",
-        "type-sms-sent": "SMS sent"
+        "type-sms-sent": "SMS sent",
+        "any":"Any",
+        "filter":"Audit Log Filters",
+        "audit-log-filter-title": "Audit Log Filter",
+        "filter-title": "Filter",
+        "filter-type-add": "+ Add type",
+        "filter-types": "Audit Log Types"
     },
     "debug-settings": {
         "label": "Debug Configuration",
@@ -5424,8 +5430,8 @@
         "username": "Username (email)",
         "remember-me": "Remember me",
         "forgot-password": "Forgot Password?",
-        "password-reset": "Password reset",
-        "expired-password-reset-message": "Your credentials has been expired! Please create new password.",
+        "password-reset": "Password Reset",
+        "expired-password-reset-message": "Your password has expired! \nPlease enter a new password.",
         "new-password": "New password",
         "new-password-again": "Confirm new password",
         "password-link-sent-message": "Reset link has been sent",
