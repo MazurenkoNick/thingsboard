@@ -158,7 +158,7 @@ public class AssetProfileController extends BaseController {
             @Parameter(description = "A JSON value representing the asset profile.")
             @RequestBody AssetProfile assetProfile) throws Exception {
         assetProfile.setTenantId(getTenantId());
-        checkEntity(assetProfile.getId(), assetProfile, Resource.ASSET_PROFILE, null);
+        checkEntity(assetProfile.getId(), assetProfile, Resource.ASSET_PROFILE);
         return tbAssetProfileService.save(assetProfile, getCurrentUser());
     }
 

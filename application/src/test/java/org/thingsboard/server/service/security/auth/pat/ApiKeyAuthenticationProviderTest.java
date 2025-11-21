@@ -36,21 +36,23 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.domain.DomainInfo;
 import org.thingsboard.server.common.data.edge.Edge;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.pat.ApiKey;
 import org.thingsboard.server.common.data.pat.ApiKeyInfo;
-import org.thingsboard.server.common.data.pat.ApiKeyInternalCreateRequest;
 import org.thingsboard.server.common.data.permission.AuthorityPermissionsInfo;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.controller.AbstractControllerTest;
+import org.thingsboard.server.dao.pat.ApiKeyService;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 
 import java.util.HashMap;
@@ -68,11 +70,14 @@ public class ApiKeyAuthenticationProviderTest extends AbstractControllerTest {
 
     ApiKey savedApiKey;
 
+    @Autowired
+    private ApiKeyService apiKeyService;
+
     @Before
     public void setUp() throws Exception {
         loginTenantAdmin();
 
-        ApiKeyInfo apiKeyInfo = constructApiKeyInfo();
+        ApiKeyInfo apiKeyInfo = constructApiKeyInfo(tenantId, tenantAdminUserId, false, null);
         savedApiKey = doPost("/api/apiKey", apiKeyInfo, ApiKey.class);
         setApiKey(savedApiKey.getValue());
     }
@@ -126,7 +131,7 @@ public class ApiKeyAuthenticationProviderTest extends AbstractControllerTest {
 
     @Test
     public void testUnauthorizedWhenKeyExpired() throws Exception {
-        ApiKeyInfo apiKeyInfo = constructApiKeyInfo();
+        ApiKeyInfo apiKeyInfo = constructApiKeyInfo(tenantId, tenantAdminUserId, false, null);
         apiKeyInfo.setExpirationTime(System.currentTimeMillis() - 1000);
         ApiKey savedApiKeyWithBad = doPost("/api/apiKey", apiKeyInfo, ApiKey.class);
         setApiKey(savedApiKeyWithBad.getValue());
@@ -147,8 +152,8 @@ public class ApiKeyAuthenticationProviderTest extends AbstractControllerTest {
         AuthorityPermissionsInfo authorityPermissionsInfo = new AuthorityPermissionsInfo();
         authorityPermissionsInfo.setOperationsByResource(operationsByResource);
 
-        var request = constructSystemApiKeyInfoWithPermissions(currentUserId, authorityPermissionsInfo);
-        ApiKey internalApiKey = doPost("/api/apiKey/internal", request, ApiKey.class);
+        var apiKeyInfo = constructApiKeyInfo(TenantId.SYS_TENANT_ID, currentUserId, true, authorityPermissionsInfo);
+        ApiKey internalApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
         Assert.assertNotNull(internalApiKey);
         Assert.assertTrue(internalApiKey.isInternal());
 
@@ -176,8 +181,8 @@ public class ApiKeyAuthenticationProviderTest extends AbstractControllerTest {
         AuthorityPermissionsInfo authorityPermissionsInfo = new AuthorityPermissionsInfo();
         authorityPermissionsInfo.setOperationsByResource(operationsByResource);
 
-        var request = constructSystemApiKeyInfoWithPermissions(currentUserId, authorityPermissionsInfo);
-        ApiKey internalApiKey = doPost("/api/apiKey/internal", request, ApiKey.class);
+        var apiKeyInfo = constructApiKeyInfo(TenantId.SYS_TENANT_ID, currentUserId, true, authorityPermissionsInfo);
+        ApiKey internalApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
         Assert.assertNotNull(internalApiKey);
         Assert.assertTrue(internalApiKey.isInternal());
 
@@ -206,8 +211,8 @@ public class ApiKeyAuthenticationProviderTest extends AbstractControllerTest {
         AuthorityPermissionsInfo authorityPermissionsInfo = new AuthorityPermissionsInfo();
         authorityPermissionsInfo.setOperationsByResource(operationsByResource);
 
-        var request = constructSystemApiKeyInfoWithPermissions(currentUserId, authorityPermissionsInfo);
-        ApiKey internalApiKey = doPost("/api/apiKey/internal", request, ApiKey.class);
+        var apiKeyInfo = constructApiKeyInfo(TenantId.SYS_TENANT_ID, currentUserId, true, authorityPermissionsInfo);
+        ApiKey internalApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
         Assert.assertNotNull(internalApiKey);
         Assert.assertTrue(internalApiKey.isInternal());
 
@@ -225,8 +230,8 @@ public class ApiKeyAuthenticationProviderTest extends AbstractControllerTest {
     public void testInternalApiKeyWithNoPermission_useApiKeyUserPermissionsAsDefault() throws Exception {
         loginSysAdmin();
 
-        var request = constructSystemApiKeyInfoWithPermissions(currentUserId, null);
-        ApiKey internalApiKey = doPost("/api/apiKey/internal", request, ApiKey.class);
+        var apiKeyInfo = constructApiKeyInfo(TenantId.SYS_TENANT_ID, currentUserId, true, null);
+        ApiKey internalApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
         Assert.assertNotNull(internalApiKey);
         Assert.assertTrue(internalApiKey.isInternal());
 
@@ -235,20 +240,15 @@ public class ApiKeyAuthenticationProviderTest extends AbstractControllerTest {
         doGetTypedWithPageLinkAndInternalApiKey("/api/domain/infos?", PAGE_DATA_DOMAIN_TYPE_REF, new PageLink(10, 0), null);
     }
 
-    private ApiKeyInfo constructApiKeyInfo() {
+    private ApiKeyInfo constructApiKeyInfo(TenantId tenantId, UserId userId, boolean internal, AuthorityPermissionsInfo permissions) {
         ApiKeyInfo apiKeyInfo = new ApiKeyInfo();
-        apiKeyInfo.setDescription("New API key description");
+        apiKeyInfo.setUserId(userId);
+        apiKeyInfo.setPermissions(permissions);
+        apiKeyInfo.setDescription("API key");
+        apiKeyInfo.setTenantId(tenantId);
+        apiKeyInfo.setInternal(internal);
         apiKeyInfo.setEnabled(true);
-        apiKeyInfo.setUserId(tenantAdminUserId);
         return apiKeyInfo;
-    }
-
-    private ApiKeyInternalCreateRequest constructSystemApiKeyInfoWithPermissions(UserId userId, AuthorityPermissionsInfo permissions) {
-        ApiKeyInternalCreateRequest request = new ApiKeyInternalCreateRequest();
-        request.setUserId(userId);
-        request.setPermissions(permissions);
-        request.setDescription("Internal API key with permissions");
-        return request;
     }
 
     private Device constructDevice(String name) {

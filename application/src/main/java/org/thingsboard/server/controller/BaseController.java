@@ -90,7 +90,6 @@ import org.thingsboard.server.common.data.alarm.AlarmInfo;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetInfo;
 import org.thingsboard.server.common.data.asset.AssetProfile;
-import org.thingsboard.server.common.data.asset.AssetProfileInfo;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.blob.BlobEntityWithCustomerInfo;
@@ -918,7 +917,7 @@ public abstract class BaseController {
                 checkEntity(entityId, entity, resource, entityGroupId);
             }
         } else {
-            checkEntity(entityId, entity, resource, null);
+            checkEntity(entityId, entity, resource);
         }
     }
 

@@ -161,7 +161,7 @@ public class WidgetTypeController extends AutoCommitController {
             widgetTypeDetails.setTenantId(currentUser.getTenantId());
         }
 
-        checkEntity(widgetTypeDetails.getId(), widgetTypeDetails, Resource.WIDGET_TYPE, null);
+        checkEntity(widgetTypeDetails.getId(), widgetTypeDetails, Resource.WIDGET_TYPE);
         return tbWidgetTypeService.save(widgetTypeDetails, updateExistingByFqn != null && updateExistingByFqn, currentUser);
     }
 

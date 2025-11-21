@@ -117,7 +117,7 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
         apiKeyInfo.setPermissions(authorityPermissionsInfo);
         apiKeyInfo.setExpirationTime(0);
 
-        ApiKey savedApiKey = apiKeyService.saveInternalApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
+        ApiKey savedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
 
         Assert.assertNotNull(savedApiKey);
         Assert.assertNotNull(savedApiKey.getId());
@@ -140,7 +140,7 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
     }
 
     @Test
-    public void testSaveInternalApiKeyWithMultipleAuthorities() {
+    public void testsaveApiKeyWithMultipleAuthorities() {
         Map<Authority, Map<Resource, Set<Operation>>> operationsByResource = new HashMap<>();
 
         // SYS_ADMIN permissions
@@ -167,7 +167,7 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
         apiKeyInfo.setInternal(true);
         apiKeyInfo.setPermissions(authorityPermissionsInfo);
 
-        ApiKey savedApiKey = apiKeyService.saveInternalApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
+        ApiKey savedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
 
         Assert.assertNotNull(savedApiKey);
         Assert.assertTrue(savedApiKey.isInternal());
@@ -207,9 +207,10 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
 
         savedApiKey.setInternal(true);
 
-        assertThatThrownBy(() -> apiKeyService.saveApiKey(tenantId, savedApiKey))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Can't update internal API Key inside this method!");
+        savedApiKey = apiKeyService.saveApiKey(tenantId, apiKeyInfo);
+
+        Assert.assertNotNull(savedApiKey);
+        Assert.assertFalse(savedApiKey.isInternal());
     }
 
     @Test
@@ -242,12 +243,12 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
         apiKeyInfo.setInternal(true);
         apiKeyInfo.setPermissions(authorityPermissionsInfo);
 
-        ApiKey savedApiKey = apiKeyService.saveInternalApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
+        ApiKey savedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
         Assert.assertTrue(savedApiKey.isInternal());
 
         String description = "Updated internal key description";
         savedApiKey.setDescription(description);
-        ApiKey updatedApiKey = apiKeyService.saveInternalApiKey(TenantId.SYS_TENANT_ID, savedApiKey);
+        ApiKey updatedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, savedApiKey);
 
         Assert.assertNotNull(updatedApiKey);
         Assert.assertEquals(savedApiKey.getId(), updatedApiKey.getId());
@@ -320,7 +321,7 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
         apiKeyInfo.setInternal(true);
         apiKeyInfo.setPermissions(null);
 
-        ApiKey savedApiKey = apiKeyService.saveInternalApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
+        ApiKey savedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
         String originalValue = savedApiKey.getValue();
         Assert.assertNotNull(originalValue);
 
@@ -399,7 +400,7 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
         apiKeyInfo.setTenantId(TenantId.SYS_TENANT_ID);
         apiKeyInfo.setInternal(true);
 
-        ApiKey savedApiKey = apiKeyService.saveInternalApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
+        ApiKey savedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
 
         assertThatThrownBy(() -> apiKeyService.deleteApiKey(TenantId.SYS_TENANT_ID, savedApiKey, false))
                 .isInstanceOf(DataValidationException.class)

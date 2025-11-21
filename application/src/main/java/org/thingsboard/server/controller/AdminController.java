@@ -436,7 +436,6 @@ public class AdminController extends BaseController {
     @PreAuthorize("hasAuthority('SYS_ADMIN')")
     @GetMapping(value = "/licenseUsageInfo")
     public LicenseUsageInfo getLicenseUsageInfo() throws ThingsboardException {
-        accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.READ);
         // LicenseInfo licenseInfo = subscriptionService.getLicenseInfo();
 
         LicenseInfo licenseInfo = new LicenseInfo();
@@ -480,7 +479,12 @@ public class AdminController extends BaseController {
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @GetMapping(value = "/mail/oauth2/loginProcessingUrl")
     public String getMailProcessingUrl() throws ThingsboardException {
-        accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.READ);
+        SecurityUser user = getCurrentUser();
+        if (user.isSystemAdmin()) {
+            accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.READ);
+        } else {
+            accessControlService.checkPermission(user, Resource.WHITE_LABELING, Operation.READ);
+        }
         return "\"/api/admin/mail/oauth2/code\"";
     }
 

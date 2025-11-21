@@ -216,7 +216,7 @@ public class DeviceProfileController extends BaseController {
             @Parameter(description = "A JSON value representing the device profile.")
             @RequestBody DeviceProfile deviceProfile) throws Exception {
         deviceProfile.setTenantId(getTenantId());
-        checkEntity(deviceProfile.getId(), deviceProfile, Resource.DEVICE_PROFILE, null);
+        checkEntity(deviceProfile.getId(), deviceProfile, Resource.DEVICE_PROFILE);
         return tbDeviceProfileService.save(deviceProfile, getCurrentUser());
     }
 

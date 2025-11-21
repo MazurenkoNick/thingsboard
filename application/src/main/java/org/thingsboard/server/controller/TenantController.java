@@ -128,7 +128,7 @@ public class TenantController extends BaseController {
     @PostMapping(value = "/tenant")
     public Tenant saveTenant(@Parameter(description = "A JSON value representing the tenant.")
                              @RequestBody Tenant tenant) throws Exception {
-        checkEntity(tenant.getId(), tenant, Resource.TENANT, null);
+        checkEntity(tenant.getId(), tenant, Resource.TENANT);
         return tbTenantService.save(tenant);
     }
 

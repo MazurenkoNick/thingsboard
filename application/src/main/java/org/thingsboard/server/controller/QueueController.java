@@ -127,7 +127,8 @@ public class QueueController extends BaseController {
     public Queue getQueueByName(@Parameter(description = QUEUE_NAME_PARAM_DESCRIPTION)
                                 @PathVariable("queueName") String queueName) throws ThingsboardException {
         checkParameter("queueName", queueName);
-        return checkNotNull(checkQueueId(queueService.findQueueByTenantIdAndName(getTenantId(), queueName).getId(), Operation.READ));
+        accessControlService.checkPermission(getCurrentUser(), Resource.QUEUE, Operation.READ);
+        return checkNotNull(queueService.findQueueByTenantIdAndName(getTenantId(), queueName));
     }
 
     @ApiOperation(value = "Create Or Update Queue (saveQueue)",

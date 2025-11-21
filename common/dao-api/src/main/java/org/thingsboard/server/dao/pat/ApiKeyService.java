@@ -37,14 +37,11 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.pat.ApiKey;
 import org.thingsboard.server.common.data.pat.ApiKeyInfo;
-import org.thingsboard.server.common.data.permission.AuthorityPermissionsInfo;
 import org.thingsboard.server.dao.entity.EntityDaoService;
 
 public interface ApiKeyService extends EntityDaoService {
 
     ApiKey saveApiKey(TenantId tenantId, ApiKeyInfo apiKey);
-
-    ApiKey saveInternalApiKey(TenantId tenantId, ApiKeyInfo apiKey);
 
     ApiKey rotateInternalApiKey(TenantId tenantId, ApiKeyInfo apiKeyInfo);
 

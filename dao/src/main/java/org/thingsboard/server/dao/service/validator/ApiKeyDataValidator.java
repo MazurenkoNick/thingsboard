@@ -72,6 +72,10 @@ public class ApiKeyDataValidator extends DataValidator<ApiKey> {
         if (userService.findUserById(apiKey.getTenantId(), apiKey.getUserId()) == null) {
             throw new DataValidationException("API key reference a non-existent user!");
         }
+
+        if (apiKey.isInternal() && !apiKey.isEnabled()) {
+            throw new DataValidationException("Internal API key cannot be disabled!");
+        }
     }
 
     @Override
@@ -85,6 +89,9 @@ public class ApiKeyDataValidator extends DataValidator<ApiKey> {
         }
         if (old.getExpirationTime() != apiKey.getExpirationTime()) {
             throw new DataValidationException("Cannot update API key expiration time!");
+        }
+        if (old.isInternal() != apiKey.isInternal()) {
+            throw new DataValidationException("Cannot change internal flag of existing API Key!");
         }
         return old;
     }

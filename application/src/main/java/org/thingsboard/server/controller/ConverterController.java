@@ -197,7 +197,7 @@ public class ConverterController extends AutoCommitController {
     @PostMapping(value = "/converter")
     public Converter saveConverter(@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "A JSON value representing the converter.") @RequestBody Converter converter) throws Exception {
         converter.setTenantId(getCurrentUser().getTenantId());
-        checkEntity(converter.getId(), converter, Resource.CONVERTER, null);
+        checkEntity(converter.getId(), converter, Resource.CONVERTER);
         return tbConverterService.save(converter, getCurrentUser());
     }
 

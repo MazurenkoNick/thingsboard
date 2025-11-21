@@ -100,44 +100,12 @@ public class ApiKeyServiceImpl extends AbstractCachedEntityService<ApiKeyCacheKe
                 apiKey.setValue(old.getValue());
             }
 
-            if (old != null && apiKeyInfo.isInternal()) {
-                throw new IllegalArgumentException("Can't update internal API Key inside this method!");
+            if (!TenantId.SYS_TENANT_ID.equals(apiKey.getTenantId()) || !apiKey.isInternal()) {
+                apiKey.setInternal(false);
+                apiKey.setPermissions(null);
             }
-
-            // Ensure an internal API key with permissions cannot be set via regular save
-            apiKey.setInternal(false);
-            apiKey.setPermissions(null);
 
             var savedApiKey = apiKeyDao.save(tenantId, apiKey);
-            eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(tenantId).entityId(savedApiKey.getId()).entity(savedApiKey).created(apiKey.getId() == null).build());
-            if (old != null && old.isEnabled() != apiKey.isEnabled()) {
-                publishEvictEvent(new ApiKeyEvictEvent(apiKey.getValue()));
-            }
-            return savedApiKey;
-        } catch (Exception e) {
-            checkConstraintViolation(e, "api_key_value_unq_key", "API Key with such value already exists!");
-            throw e;
-        }
-    }
-
-    @Override
-    public ApiKey saveInternalApiKey(TenantId tenantId, ApiKeyInfo apiKeyInfo) {
-        log.trace("Executing saveInternalApiKey [{}]", apiKeyInfo);
-        var apiKey = new ApiKey(apiKeyInfo);
-        var old = apiKeyValidator.validate(apiKey, ApiKeyInfo::getTenantId);
-        if (old == null) {
-            String value = generateApiKeySecret();
-            apiKey.setValue(value);
-        } else {
-            apiKey.setValue(old.getValue());
-        }
-
-        apiKey.setEnabled(true);
-        apiKey.setInternal(true);
-        apiKey.setExpirationTime(0);
-
-        try {
-            ApiKey savedApiKey = apiKeyDao.save(tenantId, apiKey);
             eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(tenantId).entityId(savedApiKey.getId()).entity(savedApiKey).created(apiKey.getId() == null).build());
             if (old != null && old.isEnabled() != apiKey.isEnabled()) {
                 publishEvictEvent(new ApiKeyEvictEvent(apiKey.getValue()));

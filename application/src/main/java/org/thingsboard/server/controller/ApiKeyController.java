@@ -46,6 +46,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.ApiKeyId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -54,7 +55,6 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.pat.ApiKey;
 import org.thingsboard.server.common.data.pat.ApiKeyInfo;
-import org.thingsboard.server.common.data.pat.ApiKeyInternalCreateRequest;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.config.annotations.ApiOperation;
@@ -95,21 +95,10 @@ public class ApiKeyController extends BaseController {
         User user = checkUserId(apiKeyInfo.getUserId(), Operation.WRITE);
         apiKeyInfo.setTenantId(user.getTenantId());
         checkEntity(apiKeyInfo.getId(), apiKeyInfo, Resource.API_KEY);
+        if (apiKeyInfo.getId() == null && apiKeyInfo.isInternal()) {
+            throw new ThingsboardException("Internal API key cannot be created!", ThingsboardErrorCode.PERMISSION_DENIED);
+        }
         return checkNotNull(apiKeyService.saveApiKey(apiKeyInfo.getTenantId(), apiKeyInfo));
-    }
-
-    @ApiOperation(value = "Save internal API key (saveInternalApiKey)",
-            notes = "Creates an internal API key with authority-specific permissions and returns the token ONCE as 'ApiKey <value>'" + SYSTEM_AUTHORITY_PARAGRAPH,
-            hidden = true)
-    @PreAuthorize("hasAuthority('SYS_ADMIN')")
-    @PostMapping(value = "/apiKey/internal")
-    public ApiKey saveInternalApiKey(
-            @Parameter(description = "A JSON value representing the internal API key with authorityPermissions.")
-            @RequestBody @Valid ApiKeyInternalCreateRequest apiKeyInternalCreateRequest) throws ThingsboardException {
-        ApiKeyInfo apiKeyInfo = new ApiKeyInfo(TenantId.SYS_TENANT_ID, apiKeyInternalCreateRequest);
-        checkUserId(apiKeyInternalCreateRequest.getUserId(), Operation.WRITE);
-        checkEntity(apiKeyInfo.getId(), apiKeyInfo, Resource.API_KEY);
-        return checkNotNull(apiKeyService.saveInternalApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo));
     }
 
     @ApiOperation(value = "Rotate internal API key (rotateInternalApiKey)",
@@ -167,9 +156,6 @@ public class ApiKeyController extends BaseController {
         ApiKey apiKey = checkApiKeyId(apiKeyId, Operation.WRITE);
         checkUserId(apiKey.getUserId(), Operation.WRITE);
         apiKey.setDescription(description.orElse(null));
-        if (apiKey.isInternal()) {
-            return apiKeyService.saveInternalApiKey(apiKey.getTenantId(), apiKey);
-        }
         return apiKeyService.saveApiKey(apiKey.getTenantId(), apiKey);
     }
 
@@ -186,9 +172,6 @@ public class ApiKeyController extends BaseController {
         ApiKey apiKey = checkApiKeyId(apiKeyId, Operation.WRITE);
         checkUserId(apiKey.getUserId(), Operation.WRITE);
         apiKey.setEnabled(enabledValue);
-        if (apiKey.isInternal()) {
-            return apiKeyService.saveInternalApiKey(apiKey.getTenantId(), apiKey);
-        }
         return apiKeyService.saveApiKey(apiKey.getTenantId(), apiKey);
     }
 

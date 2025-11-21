@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.common.data.pat;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -73,18 +74,20 @@ public class ApiKeyInfo extends BaseData<ApiKeyId> implements TenantEntity {
     @Schema(description = "Enabled/disabled API key.", example = "true")
     private boolean enabled;
 
-    @JsonProperty
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     @Schema(description = "Internal API key flag. Internal keys allow user impersonation via headers and cannot be updated/deleted, only rotated. " +
             "This field is read-only and can only be set when creating internal API keys via special service method.",
             example = "false",
-            accessMode = Schema.AccessMode.READ_ONLY)
+            accessMode = Schema.AccessMode.READ_ONLY,
+            hidden = true)
     private boolean internal;
 
-    @JsonProperty
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Schema(description = "Authority-specific permissions for this API key. " +
             "For internal API keys: specify permissions for all authorities (SYS_ADMIN, TENANT_ADMIN, CUSTOMER_USER). " +
             "This field is read-only and can only be set when creating internal API keys via special service method.",
-            accessMode = Schema.AccessMode.READ_ONLY)
+            accessMode = Schema.AccessMode.READ_ONLY,
+            hidden = true)
     private AuthorityPermissionsInfo permissions;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
@@ -124,17 +127,6 @@ public class ApiKeyInfo extends BaseData<ApiKeyId> implements TenantEntity {
         this.description = apiKeyInfo.getDescription();
         this.internal = apiKeyInfo.isInternal();
         this.permissions = apiKeyInfo.getPermissions();
-    }
-
-    public ApiKeyInfo(TenantId tenantId, ApiKeyInternalCreateRequest apiKeyRequest) {
-        super();
-        this.tenantId = tenantId;
-        this.userId = apiKeyRequest.getUserId();
-        this.expirationTime = 0;
-        this.description = apiKeyRequest.getDescription();
-        this.enabled = true;
-        this.internal = true;
-        this.permissions = apiKeyRequest.getPermissions();
     }
 
     @Override

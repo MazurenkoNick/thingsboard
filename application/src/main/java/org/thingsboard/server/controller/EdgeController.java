@@ -76,7 +76,6 @@ import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.sync.ie.importing.csv.BulkImportRequest;
 import org.thingsboard.server.common.data.sync.ie.importing.csv.BulkImportResult;
 import org.thingsboard.server.common.msg.edge.FromEdgeSyncResponse;
-import org.thingsboard.server.common.msg.edge.ToEdgeSyncRequest;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -90,7 +89,6 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -300,8 +298,9 @@ public class EdgeController extends BaseController {
     @GetMapping(value = "/tenant/edges", params = {"edgeName"})
     public Edge getTenantEdge(@Parameter(description = "Unique name of the edge", required = true)
                               @RequestParam String edgeName) throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.EDGE, Operation.READ);
         TenantId tenantId = getCurrentUser().getTenantId();
-        return checkEntity(getCurrentUser(), checkNotNull(edgeService.findEdgeByTenantIdAndName(tenantId, edgeName)), Operation.READ);
+        return checkNotNull(edgeService.findEdgeByTenantIdAndName(tenantId, edgeName));
     }
 
     @ApiOperation(value = "Set root rule chain for provided edge (setEdgeRootRuleChain)",

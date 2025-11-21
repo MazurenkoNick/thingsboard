@@ -148,7 +148,7 @@ public class ReportTemplateController extends BaseController {
         if (Authority.CUSTOMER_USER.equals(currentUser.getAuthority())) {
             reportTemplate.setCustomerId(currentUser.getCustomerId());
         }
-        checkEntity(reportTemplate.getId(), reportTemplate, Resource.REPORT_TEMPLATE, null);
+        checkEntity(reportTemplate.getId(), reportTemplate, Resource.REPORT_TEMPLATE);
         return tbReportTemplateService.save(reportTemplate, currentUser);
     }
 
