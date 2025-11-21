@@ -17,7 +17,11 @@ You may always customize the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Te
 
 We have already created two sensors and loaded some demo data for them. See device info and credentials below:
 
+<div class="table-wrapper">
+
 ${device_list_and_credentials}
+
+</div>
 
 Solution expects that the sensor device will upload "temperature" and "humidity" values. 
 The most simple example of the expected payload is in JSON format:
@@ -47,13 +51,21 @@ User may turn alarms on and off as well as configure the alarm thresholds via th
 You may notice that "Customer D" has two users, and the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Temperature & Humidity"</a> dashboard is accessible for those users.
 You may create more Customers and more Users via administration UI.
 
+<div class="table-wrapper">
+
 ${user_list}
+
+</div>
 
 ### Solution entities
 
 As part of this solution, the following entities were created:
 
+<div class="table-wrapper">
+
 ${all_entities}
+
+</div>
 
 ### Edge computing
 

@@ -125,7 +125,11 @@ You may create more Customers and more Users via <a href="${Smart Supermarket Ad
 
 **User list**
 
+<div class="table-wrapper">
+
 ${user_list}
+
+</div>
 
 ### Device Profiles
 
@@ -245,7 +249,11 @@ If your sensor is not battery powered, you may simply ignore the alarm rule.
 
 We have already created 20+ devices and loaded some demo data for them. See device info and credentials below:
 
+<div class="table-wrapper">
+
 ${device_list_and_credentials}
+
+</div>
 
 Solution expects that the device telemetry will correspond to the samples provided in device profile section of the instruction.
 The most simple example of the freezer payload is in JSON format:
@@ -292,7 +300,11 @@ This attributes are referenced in the alarm rules for corresponding device profi
 
 As part of this solution, the following entities were created:
 
+<div class="table-wrapper">
+
 ${all_entities}
+
+</div>
 
 ### Edge computing
 

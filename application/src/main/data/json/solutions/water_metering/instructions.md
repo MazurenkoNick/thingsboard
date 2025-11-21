@@ -37,9 +37,11 @@ We have also created the "Water Metering User Dashboard" for the end users. This
 ### Devices
 
 We have already created three water metering devices and loaded some demo data for them. See device info and credentials below:
+<div class="table-wrapper">
 
 ${device_list_and_credentials}
 
+</div>
 Solution expects that the water meter device will report "pulseCounter", "temperature", "battery" and "leakage" values.
 The most simple example of the expected payload is in JSON format:
 
@@ -82,14 +84,21 @@ You may create more Customers and more Users via <a href="${MAIN_DASHBOARD_URL}"
 
 **User list**
 
+<div class="table-wrapper">
+
 ${user_list}
 
+</div>
 
 ### Solution entities
 
 As part of this solution, the following entities were created:
 
+<div class="table-wrapper">
+
 ${all_entities}
+
+</div>
 
 ### Edge computing
 

@@ -39,22 +39,3 @@
     }
   }
 }
-
-:host ::ng-deep {
-  .mat-mdc-dialog-content {
-    tb-markdown {
-      .tb-markdown-view { 
-        table {
-          @media #{$mat-lt-md} {
-            overflow-x: auto;
-            white-space: nowrap;
-            display: block;
-            tbody, thead {
-              width: 100%;
-            }
-          }      
-        }
-      }
-    }
-  }
-}
