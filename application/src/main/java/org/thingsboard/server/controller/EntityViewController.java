@@ -54,7 +54,6 @@ import org.thingsboard.server.common.data.EntityViewInfo;
 import org.thingsboard.server.common.data.NameConflictPolicy;
 import org.thingsboard.server.common.data.NameConflictStrategy;
 import org.thingsboard.server.common.data.UniquifyStrategy;
-import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.entityview.EntityViewSearchQuery;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroup;
@@ -77,7 +76,6 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import static org.thingsboard.server.controller.ControllerConstants.CUSTOMER_ID;
 import static org.thingsboard.server.controller.ControllerConstants.CUSTOMER_ID_PARAM_DESCRIPTION;
@@ -91,7 +89,6 @@ import static org.thingsboard.server.controller.ControllerConstants.ENTITY_VIEW_
 import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
 import static org.thingsboard.server.controller.ControllerConstants.MODEL_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.NAME_CONFLICT_POLICY_DESC;
-import static org.thingsboard.server.controller.ControllerConstants.UNIQUIFY_SEPARATOR_DESC;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_DATA_PARAMETERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DESCRIPTION;
@@ -101,11 +98,9 @@ import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_D
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
+import static org.thingsboard.server.controller.ControllerConstants.UNIQUIFY_SEPARATOR_DESC;
 import static org.thingsboard.server.controller.ControllerConstants.UNIQUIFY_STRATEGY_DESC;
 
-/**
- * Created by Victor Basanets on 8/28/2017.
- */
 @RestController
 @TbCoreComponent
 @RequiredArgsConstructor
@@ -465,7 +460,7 @@ public class EntityViewController extends BaseController {
             } catch (ThingsboardException e) {
                 return false;
             }
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
     @ApiOperation(value = "Get Entity View Types (getEntityViewTypes)",
@@ -476,8 +471,10 @@ public class EntityViewController extends BaseController {
     @ResponseBody
     public List<EntitySubtype> getEntityViewTypes() throws ThingsboardException, ExecutionException, InterruptedException {
         SecurityUser user = getCurrentUser();
+        accessControlService.checkPermission(user, Resource.ENTITY_VIEW, Operation.READ);
         TenantId tenantId = user.getTenantId();
         ListenableFuture<List<EntitySubtype>> entityViewTypes = entityViewService.findEntityViewTypesByTenantId(tenantId);
         return checkNotNull(entityViewTypes.get());
     }
+
 }

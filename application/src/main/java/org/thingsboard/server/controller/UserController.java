@@ -700,7 +700,7 @@ public class UserController extends BaseController {
             } catch (ThingsboardException e) {
                 return false;
             }
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
     @ApiOperation(value = "Save user settings (saveUserSettings)",

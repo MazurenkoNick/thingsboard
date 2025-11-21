@@ -281,7 +281,7 @@ public class RoleController extends AutoCommitController {
             } catch (ThingsboardException e) {
                 return false;
             }
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
 }

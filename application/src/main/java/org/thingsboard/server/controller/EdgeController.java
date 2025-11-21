@@ -260,6 +260,7 @@ public class EdgeController extends BaseController {
                                    @RequestParam(required = false) String sortOrder) throws ThingsboardException {
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         TenantId tenantId = getCurrentUser().getTenantId();
+        accessControlService.checkPermission(getCurrentUser(), Resource.EDGE, Operation.READ);
         return checkNotNull(edgeService.findEdgesByTenantId(tenantId, pageLink));
     }
 
@@ -283,6 +284,7 @@ public class EdgeController extends BaseController {
             @RequestParam(required = false) String sortOrder) throws ThingsboardException {
         TenantId tenantId = getCurrentUser().getTenantId();
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
+        accessControlService.checkPermission(getCurrentUser(), Resource.EDGE, Operation.READ);
         if (type != null && type.trim().length() > 0) {
             return checkNotNull(edgeService.findEdgesByTenantIdAndType(tenantId, type, pageLink));
         } else {
@@ -299,7 +301,7 @@ public class EdgeController extends BaseController {
     public Edge getTenantEdge(@Parameter(description = "Unique name of the edge", required = true)
                               @RequestParam String edgeName) throws ThingsboardException {
         TenantId tenantId = getCurrentUser().getTenantId();
-        return checkNotNull(edgeService.findEdgeByTenantIdAndName(tenantId, edgeName));
+        return checkEntity(getCurrentUser(), checkNotNull(edgeService.findEdgeByTenantIdAndName(tenantId, edgeName)), Operation.READ);
     }
 
     @ApiOperation(value = "Set root rule chain for provided edge (setEdgeRootRuleChain)",
@@ -581,6 +583,7 @@ public class EdgeController extends BaseController {
     public List<EntitySubtype> getEdgeTypes() throws ThingsboardException, ExecutionException, InterruptedException {
         SecurityUser user = getCurrentUser();
         TenantId tenantId = user.getTenantId();
+        accessControlService.checkPermission(user, Resource.EDGE, Operation.READ);
         ListenableFuture<List<EntitySubtype>> edgeTypes = edgeService.findEdgeTypesByTenantId(tenantId);
         return checkNotNull(edgeTypes.get());
     }

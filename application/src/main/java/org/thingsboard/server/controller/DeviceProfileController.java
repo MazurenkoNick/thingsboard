@@ -132,6 +132,7 @@ public class DeviceProfileController extends BaseController {
             @PathVariable(DEVICE_PROFILE_ID) String strDeviceProfileId) throws ThingsboardException {
         checkParameter(DEVICE_PROFILE_ID, strDeviceProfileId);
         DeviceProfileId deviceProfileId = new DeviceProfileId(toUUID(strDeviceProfileId));
+        checkEntityId(deviceProfileId, Operation.READ);
         DeviceProfileInfo deviceProfileInfo = checkNotNull(deviceProfileService.findDeviceProfileInfoById(getTenantId(), deviceProfileId));
         if (!getTenantId().equals(deviceProfileInfo.getTenantId())) {
             throw permissionDenied();
@@ -146,6 +147,7 @@ public class DeviceProfileController extends BaseController {
     @RequestMapping(value = "/deviceProfileInfo/default", method = RequestMethod.GET)
     @ResponseBody
     public DeviceProfileInfo getDefaultDeviceProfileInfo() throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.DEVICE_PROFILE, Operation.READ);
         return checkNotNull(deviceProfileService.findDefaultDeviceProfileInfo(getTenantId()));
     }
 
@@ -301,7 +303,7 @@ public class DeviceProfileController extends BaseController {
     @RequestMapping(value = "/deviceProfileInfos", params = {"deviceProfileIds"}, method = RequestMethod.GET)
     @ResponseBody
     public List<DeviceProfileInfo> getDeviceProfilesByIds(
-            @Parameter(description = "A list of device profile ids, separated by comma ','",  array = @ArraySchema(schema = @Schema(type = "string")), required = true)
+            @Parameter(description = "A list of device profile ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
             @RequestParam("deviceProfileIds") String[] strDeviceProfileIds) throws ThingsboardException, ExecutionException, InterruptedException {
         checkArrayParameter("deviceProfileIds", strDeviceProfileIds);
         if (!accessControlService.hasPermission(getCurrentUser(), Resource.DEVICE_PROFILE, Operation.READ)) {
@@ -326,6 +328,7 @@ public class DeviceProfileController extends BaseController {
             @Parameter(description = "Flag indicating whether to retrieve exclusively the names of device profiles that are referenced by tenant's devices.")
             @RequestParam(value = "activeOnly", required = false, defaultValue = "false") boolean activeOnly) throws ThingsboardException {
         SecurityUser user = getCurrentUser();
+        accessControlService.checkPermission(user, Resource.DEVICE_PROFILE, Operation.READ);
         TenantId tenantId = user.getTenantId();
         return checkNotNull(deviceProfileService.findDeviceProfileNamesByTenantId(tenantId, activeOnly));
     }

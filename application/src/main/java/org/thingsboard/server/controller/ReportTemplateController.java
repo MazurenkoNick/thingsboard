@@ -246,6 +246,6 @@ public class ReportTemplateController extends BaseController {
             } catch (ThingsboardException e) {
                 return false;
             }
-        }).collect(Collectors.toList());
+        }).toList();
     }
 }

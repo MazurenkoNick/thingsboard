@@ -117,7 +117,7 @@ public class ApiKeyAuthenticationProvider extends AbstractAuthenticationProvider
             }
         }
 
-        // Use API key's user (for regular keys or internal without headers)
+        // Use API key's user (for regular keys or internal without additional headers)
         return new ResolvedUser(apiKey.getTenantId(), apiKey.getUserId(), null, false);
     }
 

@@ -37,7 +37,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.Type;
 import org.thingsboard.server.common.data.id.ApiKeyId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -56,7 +55,6 @@ import static org.thingsboard.server.dao.model.ModelConstants.API_KEY_PERMISSION
 import static org.thingsboard.server.dao.model.ModelConstants.API_KEY_TENANT_ID_COLUMN_NAME;
 import static org.thingsboard.server.dao.model.ModelConstants.API_KEY_USER_ID_COLUMN_NAME;
 
-@Slf4j
 @Data
 @EqualsAndHashCode(callSuper = true)
 @MappedSuperclass

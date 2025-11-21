@@ -149,10 +149,6 @@ import static org.thingsboard.server.controller.ControllerConstants.TELEMETRY_SC
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.TS_STRICT_DATA_EXAMPLE;
 
-
-/**
- * Created by ashvayka on 22.03.18.
- */
 @RestController
 @TbCoreComponent
 @RequestMapping(TbUrlConstants.TELEMETRY_URL_PREFIX)

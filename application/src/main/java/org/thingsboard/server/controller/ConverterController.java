@@ -219,7 +219,7 @@ public class ConverterController extends AutoCommitController {
             @RequestParam(required = false) String sortProperty,
             @Parameter(description = SORT_ORDER_DESCRIPTION, schema = @Schema(allowableValues = {"ASC", "DESC"}))
             @RequestParam(required = false) String sortOrder,
-            @Parameter(required = false, description = INTEGRATION_TYPE_DESCRIPTION)
+            @Parameter(description = INTEGRATION_TYPE_DESCRIPTION)
             @RequestParam(required = false) IntegrationType integrationType) throws ThingsboardException {
         accessControlService.checkPermission(getCurrentUser(), Resource.CONVERTER, Operation.READ);
         TenantId tenantId = getCurrentUser().getTenantId();
@@ -417,7 +417,7 @@ public class ConverterController extends AutoCommitController {
             @Parameter(description = "Script language: JS or TBEL")
             @RequestParam(required = false) ScriptLanguage scriptLang,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "A JSON value representing the input to the converter function.")
-            @RequestBody JsonNode inputParams) throws ThingsboardException {
+            @RequestBody JsonNode inputParams) {
         String payloadBase64 = inputParams.get("payload").asText();
         byte[] payload = Base64.getDecoder().decode(payloadBase64);
         JsonNode metadata = inputParams.get("metadata");

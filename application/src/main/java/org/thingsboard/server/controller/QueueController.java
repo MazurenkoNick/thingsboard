@@ -95,6 +95,7 @@ public class QueueController extends BaseController {
                                                         @Parameter(description = SORT_ORDER_DESCRIPTION, schema = @Schema(allowableValues = {"ASC", "DESC"}))
                                                         @RequestParam(required = false) String sortOrder) throws ThingsboardException {
         checkParameter("serviceType", serviceType);
+        accessControlService.checkPermission(getCurrentUser(), Resource.QUEUE, Operation.READ);
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         ServiceType type = ServiceType.of(serviceType);
         switch (type) {
@@ -126,7 +127,7 @@ public class QueueController extends BaseController {
     public Queue getQueueByName(@Parameter(description = QUEUE_NAME_PARAM_DESCRIPTION)
                                 @PathVariable("queueName") String queueName) throws ThingsboardException {
         checkParameter("queueName", queueName);
-        return checkNotNull(queueService.findQueueByTenantIdAndName(getTenantId(), queueName));
+        return checkNotNull(checkQueueId(queueService.findQueueByTenantIdAndName(getTenantId(), queueName).getId(), Operation.READ));
     }
 
     @ApiOperation(value = "Create Or Update Queue (saveQueue)",
@@ -146,7 +147,7 @@ public class QueueController extends BaseController {
         checkParameter("serviceType", serviceType);
         queue.setTenantId(getCurrentUser().getTenantId());
 
-        checkEntity(queue.getId(), queue, Resource.QUEUE, null);
+        checkEntity(queue.getId(), queue, Resource.QUEUE);
 
         ServiceType type = ServiceType.of(serviceType);
         switch (type) {
@@ -171,4 +172,5 @@ public class QueueController extends BaseController {
         checkQueueId(queueId, Operation.DELETE);
         tbQueueService.deleteQueue(getTenantId(), queueId);
     }
+
 }

@@ -124,6 +124,7 @@ public class AssetProfileController extends BaseController {
             @PathVariable(ASSET_PROFILE_ID) String strAssetProfileId) throws ThingsboardException {
         checkParameter(ASSET_PROFILE_ID, strAssetProfileId);
         AssetProfileId assetProfileId = new AssetProfileId(toUUID(strAssetProfileId));
+        checkEntityId(assetProfileId, Operation.READ);
         AssetProfileInfo assetProfileInfo = checkNotNull(assetProfileService.findAssetProfileInfoById(getTenantId(), assetProfileId));
         if (!getTenantId().equals(assetProfileInfo.getTenantId())) {
             throw permissionDenied();
@@ -138,6 +139,7 @@ public class AssetProfileController extends BaseController {
     @RequestMapping(value = "/assetProfileInfo/default", method = RequestMethod.GET)
     @ResponseBody
     public AssetProfileInfo getDefaultAssetProfileInfo() throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.ASSET_PROFILE, Operation.READ);
         return checkNotNull(assetProfileService.findDefaultAssetProfileInfo(getTenantId()));
     }
 
@@ -267,6 +269,7 @@ public class AssetProfileController extends BaseController {
             @RequestParam(value = "activeOnly", required = false, defaultValue = "false") boolean activeOnly) throws ThingsboardException {
         SecurityUser user = getCurrentUser();
         TenantId tenantId = user.getTenantId();
+        accessControlService.checkPermission(user, Resource.ASSET_PROFILE, Operation.READ);
         return checkNotNull(assetProfileService.findAssetProfileNamesByTenantId(tenantId, activeOnly));
     }
 

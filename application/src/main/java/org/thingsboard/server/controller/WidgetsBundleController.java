@@ -138,7 +138,7 @@ public class WidgetsBundleController extends BaseController {
             widgetsBundle.setTenantId(currentUser.getTenantId());
         }
 
-        checkEntity(widgetsBundle.getId(), widgetsBundle, Resource.WIDGETS_BUNDLE, null);
+        checkEntity(widgetsBundle.getId(), widgetsBundle, Resource.WIDGETS_BUNDLE);
         return tbWidgetsBundleService.save(widgetsBundle, currentUser);
     }
 
@@ -154,6 +154,7 @@ public class WidgetsBundleController extends BaseController {
             @RequestBody List<String> strWidgetTypeIds) throws Exception {
         checkParameter("widgetsBundleId", strWidgetsBundleId);
         WidgetsBundleId widgetsBundleId = new WidgetsBundleId(toUUID(strWidgetsBundleId));
+        checkWidgetsBundleId(widgetsBundleId, Operation.WRITE);
         checkNotNull(strWidgetTypeIds);
         Set<WidgetTypeId> widgetTypeIds = new LinkedHashSet<>();
         var currentUser = getCurrentUser();
@@ -180,6 +181,7 @@ public class WidgetsBundleController extends BaseController {
             @RequestBody List<String> widgetTypeFqns) throws Exception {
         checkParameter("widgetsBundleId", strWidgetsBundleId);
         WidgetsBundleId widgetsBundleId = new WidgetsBundleId(toUUID(strWidgetsBundleId));
+        checkWidgetsBundleId(widgetsBundleId, Operation.WRITE);
         checkNotNull(widgetTypeFqns);
         var currentUser = getCurrentUser();
         tbWidgetsBundleService.updateWidgetsBundleWidgetFqns(widgetsBundleId, widgetTypeFqns, currentUser);

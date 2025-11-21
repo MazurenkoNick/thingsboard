@@ -475,6 +475,7 @@ public class IntegrationController extends AutoCommitController {
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/integrations/converters/info")
     public Map<IntegrationType, IntegrationConvertersInfo> getIntegrationsConvertersInfo() throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.INTEGRATION, Operation.READ);
         return tbIntegrationService.getIntegrationsConvertersInfo(getTenantId());
     }
 

@@ -106,8 +106,8 @@ public class TenantProfileController extends BaseController {
             @Parameter(description = TENANT_PROFILE_ID_PARAM_DESCRIPTION)
             @PathVariable("tenantProfileId") String strTenantProfileId) throws ThingsboardException {
         checkParameter("tenantProfileId", strTenantProfileId);
-        accessControlService.checkPermission(getCurrentUser(), Resource.TENANT_PROFILE, Operation.READ);
         TenantProfileId tenantProfileId = new TenantProfileId(toUUID(strTenantProfileId));
+        checkEntityId(tenantProfileId, Operation.READ);
         return checkNotNull(tenantProfileService.findTenantProfileInfoById(getTenantId(), tenantProfileId));
     }
 
@@ -285,6 +285,5 @@ public class TenantProfileController extends BaseController {
         accessControlService.checkPermission(getCurrentUser(), Resource.TENANT_PROFILE, Operation.READ);
         return tenantProfileService.findTenantProfilesByIds(TenantId.SYS_TENANT_ID, ids);
     }
-
 
 }

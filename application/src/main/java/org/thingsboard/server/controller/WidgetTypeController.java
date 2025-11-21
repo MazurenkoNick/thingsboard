@@ -208,6 +208,7 @@ public class WidgetTypeController extends AutoCommitController {
             @RequestParam(required = false) String[] widgetTypeList,
             @Parameter(description = SCADA_FIRST_PARAM_DESCRIPTION)
             @RequestParam(required = false) Boolean scadaFirst) throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.WIDGET_TYPE, Operation.READ);
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         List<String> widgetTypes = widgetTypeList != null ? Arrays.asList(widgetTypeList) : Collections.emptyList();
         DeprecatedFilter widgetTypeDeprecatedFilter = StringUtils.isNotEmpty(deprecatedFilter) ? DeprecatedFilter.valueOf(deprecatedFilter) : DeprecatedFilter.ALL;
@@ -258,6 +259,7 @@ public class WidgetTypeController extends AutoCommitController {
     public List<WidgetType> getBundleWidgetTypes(
             @Parameter(description = "Widget Bundle Id", required = true)
             @RequestParam("widgetsBundleId") String strWidgetsBundleId) throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.WIDGET_TYPE, Operation.READ);
         WidgetsBundleId widgetsBundleId = new WidgetsBundleId(toUUID(strWidgetsBundleId));
         return checkNotNull(widgetTypeService.findWidgetTypesByWidgetsBundleId(getTenantId(), widgetsBundleId));
     }
@@ -296,6 +298,7 @@ public class WidgetTypeController extends AutoCommitController {
             @RequestParam(value = INCLUDE_RESOURCES, required = false) boolean includeResources
     ) throws ThingsboardException {
         SecurityUser user = getCurrentUser();
+        accessControlService.checkPermission(user, Resource.WIDGET_TYPE, Operation.READ);
         WidgetsBundleId widgetsBundleId = new WidgetsBundleId(toUUID(strWidgetsBundleId));
         List<WidgetTypeDetails> result = checkNotNull(widgetTypeService.findWidgetTypesDetailsByWidgetsBundleId(getTenantId(), widgetsBundleId));
         if (includeResources) {
@@ -314,6 +317,7 @@ public class WidgetTypeController extends AutoCommitController {
     public List<String> getBundleWidgetTypeFqns(
             @Parameter(description = "Widget Bundle Id", required = true)
             @RequestParam("widgetsBundleId") String strWidgetsBundleId) throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.WIDGET_TYPE, Operation.READ);
         WidgetsBundleId widgetsBundleId = new WidgetsBundleId(toUUID(strWidgetsBundleId));
         return checkNotNull(widgetTypeService.findWidgetFqnsByWidgetsBundleId(getTenantId(), widgetsBundleId));
     }
@@ -364,6 +368,7 @@ public class WidgetTypeController extends AutoCommitController {
             @RequestParam(required = false) String deprecatedFilter,
             @Parameter(description = WIDGET_TYPE_ARRAY_DESCRIPTION, array = @ArraySchema(schema = @Schema(allowableValues = {"timeseries", "latest", "control", "alarm", "static"})))
             @RequestParam(required = false) String[] widgetTypeList) throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.WIDGET_TYPE, Operation.READ);
         WidgetsBundleId widgetsBundleId = new WidgetsBundleId(toUUID(strWidgetsBundleId));
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         List<String> widgetTypes = widgetTypeList != null ? Arrays.asList(widgetTypeList) : Collections.emptyList();

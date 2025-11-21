@@ -95,7 +95,6 @@ import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
 import static org.thingsboard.server.controller.ControllerConstants.NAME_CONFLICT_POLICY_DESC;
-import static org.thingsboard.server.controller.ControllerConstants.UNIQUIFY_SEPARATOR_DESC;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_DATA_PARAMETERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DESCRIPTION;
@@ -106,6 +105,7 @@ import static org.thingsboard.server.controller.ControllerConstants.RBAC_WRITE_C
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
+import static org.thingsboard.server.controller.ControllerConstants.UNIQUIFY_SEPARATOR_DESC;
 import static org.thingsboard.server.controller.ControllerConstants.UNIQUIFY_STRATEGY_DESC;
 import static org.thingsboard.server.controller.ControllerConstants.UUID_WIKI_LINK;
 
@@ -125,7 +125,7 @@ public class AssetController extends BaseController {
                     "If the user has the authority of 'Tenant Administrator', the server checks that the asset is owned by the same tenant. " +
                     "If the user has the authority of 'Customer User', the server checks that the asset is assigned to the same customer."
                     + "\n\n" + RBAC_READ_CHECK
-            )
+    )
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/asset/{assetId}", method = RequestMethod.GET)
     @ResponseBody
@@ -478,7 +478,7 @@ public class AssetController extends BaseController {
             } catch (ThingsboardException e) {
                 return false;
             }
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
     @ApiOperation(value = "Get Asset Types (getAssetTypes)",
