@@ -48,7 +48,7 @@ import { PageComponent } from '@shared/components/page.component';
 import { AfterViewInit, DestroyRef, Directive, EventEmitter, inject, Inject, OnInit, Type } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
-import { AbstractControl, UntypedFormGroup, ValidatorFn } from '@angular/forms';
+import { AbstractControl, UntypedFormGroup } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { Dashboard } from '@shared/models/dashboard.models';
 import { IAliasController } from '@core/api/widget-api.models';
@@ -62,7 +62,7 @@ import {
   DataKeySettingsFunction
 } from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
 import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
-import { CompiledTbFunction, TbFunction } from '@shared/models/js-function.models';
+import { TbFunction } from '@shared/models/js-function.models';
 import { FormProperty, jsonFormSchemaToFormProperties } from '@shared/models/dynamic-form.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TbUnit } from '@shared/models/unit.models';
@@ -723,6 +723,8 @@ export const mapItemTypeTranslationMap = new Map<MapItemType, string>(
     [ MapItemType.polyline, 'widget-action.map-item.polyline' ]
   ]
 )
+
+export type ExportRow = {[key: string]: any} | Map<string, any>;
 
 export enum WidgetExportType {
   csv = 'csv',

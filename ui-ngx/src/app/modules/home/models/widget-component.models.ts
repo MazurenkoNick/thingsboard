@@ -34,6 +34,7 @@ import {
   DataSet,
   Datasource,
   DatasourceData,
+  ExportRow,
   FormattedData,
   fullWidgetTypeFqn,
   Widget,
@@ -334,7 +335,7 @@ export class WidgetContext {
   activeEntityInfo?: SubscriptionEntityInfo;
 
   exportWidgetData: (widgetExportType: WidgetExportType) => void;
-  customDataExport?: () => {[key: string]: any}[] | RxJS.Observable<{[key: string]: any}[]>;
+  customDataExport?: () => ExportRow[] | RxJS.Observable<ExportRow[]>;
   exportDateFormat?: string;
 
   datasources?: Array<Datasource>;

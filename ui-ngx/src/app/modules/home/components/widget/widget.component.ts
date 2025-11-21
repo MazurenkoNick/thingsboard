@@ -53,6 +53,7 @@ import {
 } from '@angular/core';
 import { DashboardWidget } from '@home/models/dashboard-component.models';
 import {
+  ExportRow,
   Widget,
   WidgetAction,
   WidgetActionDescriptor,
@@ -1780,7 +1781,7 @@ export class WidgetComponent extends PageComponent implements OnInit, OnChanges,
     });
   }
 
-  private doExportWidgetData(filename: string, data: {[key: string]: any}[],
+  private doExportWidgetData(filename: string, data: ExportRow[],
                              widgetExportType: WidgetExportType, dateFormat: string) {
     if (widgetExportType === WidgetExportType.csv) {
       this.importExport.exportCsv(data, filename, true, dateFormat);
@@ -1791,7 +1792,7 @@ export class WidgetComponent extends PageComponent implements OnInit, OnChanges,
     }
   }
 
-  private prepareWidgetExportData(): {[key: string]: any}[] | Observable<{[key: string]: any}[]> {
+  private prepareWidgetExportData(): ExportRow[] | Observable<ExportRow[]> {
     if (isFunction(this.widgetContext.customDataExport)) {
       return this.widgetContext.customDataExport();
     } else if (this.widgetContext.defaultSubscription){
