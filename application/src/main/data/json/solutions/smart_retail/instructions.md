@@ -125,7 +125,7 @@ You may create more Customers and more Users via <a href="${Smart Supermarket Ad
 
 **User list**
 
-<div class="table-wrapper">
+<div class="tb-markdown-view table-wrapper">
 
 ${user_list}
 
@@ -249,7 +249,7 @@ If your sensor is not battery powered, you may simply ignore the alarm rule.
 
 We have already created 20+ devices and loaded some demo data for them. See device info and credentials below:
 
-<div class="table-wrapper">
+<div class="tb-markdown-view table-wrapper">
 
 ${device_list_and_credentials}
 
@@ -300,7 +300,7 @@ This attributes are referenced in the alarm rules for corresponding device profi
 
 As part of this solution, the following entities were created:
 
-<div class="table-wrapper">
+<div class="tb-markdown-view table-wrapper">
 
 ${all_entities}
 

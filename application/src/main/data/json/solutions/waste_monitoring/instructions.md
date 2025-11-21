@@ -86,7 +86,7 @@ See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_bla
 
 As part of this solution, the following entities were created:
 
-<div class="table-wrapper">
+<div class="tb-markdown-view table-wrapper">
 
 ${all_entities}
 

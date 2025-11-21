@@ -78,7 +78,7 @@ The device also accepts the RPC command to enable or disable the water flow. Sam
 
 We have already created 12+ devices and loaded some demo data for them. See device info and credentials below:
 
-<div class="table-wrapper">
+<div class="tb-markdown-view table-wrapper">
 
 ${device_list_and_credentials}
 
@@ -104,7 +104,7 @@ See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_bla
 
 As part of this solution, the following entities were created:
 
-<div class="table-wrapper">
+<div class="tb-markdown-view table-wrapper">
 
 ${all_entities}
 

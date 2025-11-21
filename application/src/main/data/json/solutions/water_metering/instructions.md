@@ -37,7 +37,7 @@ We have also created the "Water Metering User Dashboard" for the end users. This
 ### Devices
 
 We have already created three water metering devices and loaded some demo data for them. See device info and credentials below:
-<div class="table-wrapper">
+<div class="tb-markdown-view table-wrapper">
 
 ${device_list_and_credentials}
 
@@ -84,7 +84,7 @@ You may create more Customers and more Users via <a href="${MAIN_DASHBOARD_URL}"
 
 **User list**
 
-<div class="table-wrapper">
+<div class="tb-markdown-view table-wrapper">
 
 ${user_list}
 
@@ -94,7 +94,7 @@ ${user_list}
 
 As part of this solution, the following entities were created:
 
-<div class="table-wrapper">
+<div class="tb-markdown-view table-wrapper">
 
 ${all_entities}
 

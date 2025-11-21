@@ -17,7 +17,7 @@ You may always customize the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Fl
 
 We have already created four bus tracking devices and loaded some demo data for them. See device info and credentials below:
 
-<div class="table-wrapper">
+<div class="tb-markdown-view table-wrapper">
 
 ${device_list_and_credentials}
 
@@ -48,7 +48,7 @@ Alarms are generated using three <a href="${DOCS_BASE_URL}/user-guide/device-pro
 
 As part of this solution, the following entities were created:
 
-<div class="table-wrapper">
+<div class="tb-markdown-view table-wrapper">
 
 ${all_entities}
 
