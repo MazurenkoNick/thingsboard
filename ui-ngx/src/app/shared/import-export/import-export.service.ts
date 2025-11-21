@@ -962,10 +962,6 @@ export class ImportExportService {
         }).join('');
         return `<tr>${rowHtml}</tr>`;
       }).join('');
-      colsData = data.map(obj => [`<tr>
-                ${Object.keys(obj).map(col => `<td>${obj[col] ? obj[col] : ''}</td>`).join('')}
-            </tr>`])
-        .join('');
     } else {
       colsHead = '';
       colsData = '';
