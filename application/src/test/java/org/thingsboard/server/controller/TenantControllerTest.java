@@ -282,12 +282,11 @@ public class TenantControllerTest extends AbstractControllerTest {
     @Test
     public void testFindTenants() throws Exception {
         loginSysAdmin();
-        List<Tenant> tenants = new ArrayList<>();
         PageLink pageLink = new PageLink(17);
         PageData<Tenant> pageData = doGetTypedWithPageLink("/api/tenants?", PAGE_DATA_TENANT_TYPE_REF, pageLink);
         Assert.assertFalse(pageData.hasNext());
         Assert.assertEquals(1, pageData.getData().size());
-        tenants.addAll(pageData.getData());
+        List<Tenant> tenants = new ArrayList<>(pageData.getData());
 
         Mockito.reset(tbClusterService);
 
@@ -398,12 +397,11 @@ public class TenantControllerTest extends AbstractControllerTest {
     @Test
     public void testFindTenantInfos() throws Exception {
         loginSysAdmin();
-        List<TenantInfo> tenants = new ArrayList<>();
         PageLink pageLink = new PageLink(17);
         PageData<TenantInfo> pageData = doGetTypedWithPageLink("/api/tenantInfos?", PAGE_DATA_TENANT_INFO_TYPE_REF, pageLink);
         Assert.assertFalse(pageData.hasNext());
         Assert.assertEquals(1, pageData.getData().size());
-        tenants.addAll(pageData.getData());
+        List<TenantInfo> tenants = new ArrayList<>(pageData.getData());
 
         List<ListenableFuture<TenantInfo>> createFutures = new ArrayList<>(56);
         for (int i = 0; i < 56; i++) {
