@@ -84,6 +84,13 @@ export class SelfRegistrationComponent extends PageComponent implements OnInit, 
     autofocus: false,
     branding: false,
     resize: true,
+    setup: (editor) => {
+      editor.on('PostRender', function() {
+        const container = editor.getContainer().closest('.mat-drawer-container.mat-sidenav-container');
+        const uiContainer = document.querySelector('.tox.tox-tinymce-aux');
+        container.parentNode.appendChild(uiContainer);
+      });
+    },
     promotion: false,
     relative_urls: false,
     urlconverter_callback: (url) => url
