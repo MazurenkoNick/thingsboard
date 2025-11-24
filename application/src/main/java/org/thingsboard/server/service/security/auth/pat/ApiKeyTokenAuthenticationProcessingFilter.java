@@ -76,10 +76,8 @@ public class ApiKeyTokenAuthenticationProcessingFilter extends AbstractAuthentic
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         String apiKeyValue = tokenExtractor.extract(request);
-        UUID userIdUUID = extractUuidFromHeader(request, USER_ID_HEADER);
-        UserId userId = userIdUUID != null ? new UserId(userIdUUID) : null;
-        UUID customerUUID = extractUuidFromHeader(request, CUSTOMER_ID_HEADER);
-        CustomerId customerId = customerUUID != null ? new CustomerId(customerUUID) : null;
+        UserId userId = getUserId(request);
+        CustomerId customerId = getCustomerId(request);
         ApiKeyAuthRequest apiKeyAuthRequest = new ApiKeyAuthRequest(apiKeyValue, userId, customerId);
         return getAuthenticationManager().authenticate(new ApiKeyAuthenticationToken(apiKeyAuthRequest));
     }
@@ -110,6 +108,16 @@ public class ApiKeyTokenAuthenticationProcessingFilter extends AbstractAuthentic
                                               AuthenticationException failed) throws IOException, ServletException {
         SecurityContextHolder.clearContext();
         failureHandler.onAuthenticationFailure(request, response, failed);
+    }
+
+    private UserId getUserId(HttpServletRequest request) {
+        UUID uuid = extractUuidFromHeader(request, USER_ID_HEADER);
+        return uuid != null ? new UserId(uuid) : null;
+    }
+
+    private CustomerId getCustomerId(HttpServletRequest request) {
+        UUID uuid = extractUuidFromHeader(request, CUSTOMER_ID_HEADER);
+        return uuid != null ? new CustomerId(uuid) : null;
     }
 
     private UUID extractUuidFromHeader(HttpServletRequest request, String headerName) {

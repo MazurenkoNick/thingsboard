@@ -394,9 +394,9 @@ public class UserController extends BaseController {
             @Parameter(description = SORT_ORDER_DESCRIPTION, schema = @Schema(allowableValues = {"ASC", "DESC"}))
             @RequestParam(required = false) String sortOrder) throws ThingsboardException {
         checkParameter("tenantId", strTenantId);
+        accessControlService.checkPermission(getCurrentUser(), Resource.USER, Operation.READ);
         TenantId tenantId = TenantId.fromUUID(toUUID(strTenantId));
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
-        accessControlService.checkPermission(getCurrentUser(), Resource.USER, Operation.READ);
         return checkNotNull(userService.findTenantAdmins(tenantId, pageLink));
     }
 
