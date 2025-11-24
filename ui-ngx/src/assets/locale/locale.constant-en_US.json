@@ -5532,7 +5532,11 @@
         "accept-privacy-policy-message": "You must accept our Privacy Policy",
         "recaptcha-title": "reCAPTCHA",
         "terms-of-use": "Terms of Use",
-        "accept-terms-of-use-message": "You must accept our Terms Of Use"
+        "accept-terms-of-use-message": "You must accept our Terms Of Use",
+        "firstname-max-length": "First name should be less than 256",
+        "lastname-max-length": "Last name should be less than 256",
+        "firstname-required": "First name is required",
+        "lastname-required": "Last name is required"
     },
     "mobile": {
         "add-application": "Add application",
