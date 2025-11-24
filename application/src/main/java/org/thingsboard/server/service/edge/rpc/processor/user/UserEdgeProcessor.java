@@ -80,6 +80,10 @@ public class UserEdgeProcessor extends BaseUserProcessor implements UserProcesso
                     saveOrUpdateUser(tenantId, userId, userUpdateMsg, edge);
                     yield Futures.immediateFuture(null);
                 }
+                case ENTITY_DELETED_RPC_MESSAGE -> {
+                    deleteUserAndPushEntityDeletedEventToRuleEngine(tenantId, userId, edge);
+                    yield Futures.immediateFuture(null);
+                }
                 default -> handleUnsupportedMsgType(userUpdateMsg.getMsgType());
             };
         } catch (DataValidationException | ThingsboardException e) {
@@ -145,6 +149,17 @@ public class UserEdgeProcessor extends BaseUserProcessor implements UserProcesso
         } catch (Exception e) {
             log.warn("[{}][{}] Failed to push user action to rule engine: {}", tenantId, userId, TbMsgType.ENTITY_CREATED.name(), e);
         }
+    }
+
+    private void deleteUserAndPushEntityDeletedEventToRuleEngine(TenantId tenantId, UserId userId, Edge edge) throws ThingsboardException {
+        User removedUser = deleteUser(tenantId, userId);
+        if (removedUser == null) {
+            return;
+        }
+        CustomerId userCustomerId = removedUser.getCustomerId();
+        String userAsString = JacksonUtil.toString(removedUser);
+        TbMsgMetaData msgMetaData = getEdgeActionTbMsgMetaData(edge, userCustomerId);
+        pushEntityEventToRuleEngine(tenantId, userId, userCustomerId, TbMsgType.ENTITY_DELETED, userAsString, msgMetaData);
     }
 
     @Override

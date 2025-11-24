@@ -126,6 +126,17 @@ public abstract class BaseUserProcessor extends BaseEdgeProcessor {
         }
     }
 
+    protected User deleteUser(TenantId tenantId, UserId userId) throws ThingsboardException {
+        User userById = edgeCtx.getUserService().findUserById(tenantId, userId);
+        if (userById == null) {
+            log.trace("[{}] User with id {} does not exist", tenantId, userId);
+            return null;
+        }
+        edgeCtx.getUserService().deleteUser(tenantId, userById);
+        userPermissionsService.onUserUpdatedOrRemoved(userById);
+        return userById;
+    }
+
     protected void updateUserCredentials(TenantId tenantId, UserCredentialsUpdateMsg updateMsg) {
         UserCredentials userCredentialsFromUpdateMsg = JacksonUtil.fromString(updateMsg.getEntity(), UserCredentials.class, true);
         if (userCredentialsFromUpdateMsg == null) {
