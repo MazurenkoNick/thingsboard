@@ -55,9 +55,6 @@ import java.util.UUID;
 public abstract class BaseUserProcessor extends BaseEdgeProcessor {
 
     @Autowired
-    private TbClusterService tbClusterService;
-
-    @Autowired
     private UserPermissionsService userPermissionsService;
 
     @Autowired
