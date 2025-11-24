@@ -510,32 +510,15 @@ public class DefaultTbClusterService implements TbClusterService {
 
     @Override
     public void onUserUpdated(User user, User oldUser) {
-        boolean created = oldUser == null;
-
-        var msg = ComponentLifecycleMsg.builder()
-                .tenantId(user.getTenantId())
-                .entityId(user.getId())
-                .name(user.getName());
-
-        if (created) {
-            msg.event(ComponentLifecycleEvent.CREATED);
-        } else {
-            msg.event(ComponentLifecycleEvent.UPDATED)
-                    .oldName(oldUser.getName());
-
-            if (!Objects.equals(user.getCustomMenuId(), oldUser.getCustomMenuId())) {
-                UserId userId = user.getId();
-                broadcastToCore(TransportProtos.ToCoreNotificationMsg.newBuilder()
-                        .setCustomMenuCacheInvalidateMsg(
-                                TransportProtos.CustomMenuCacheInvalidateMsg.newBuilder()
-                                        .setUserIdMSB(userId.getId().getMostSignificantBits())
-                                        .setUserIdLSB(userId.getId().getLeastSignificantBits())
-                                        .build()
-                        ).build());
-            }
+        if (!Objects.equals(user.getCustomMenuId(), oldUser.getCustomMenuId())) {
+            UserId userId = user.getId();
+            broadcastToCore(TransportProtos.ToCoreNotificationMsg.newBuilder()
+                    .setCustomMenuCacheInvalidateMsg(TransportProtos.CustomMenuCacheInvalidateMsg.newBuilder()
+                            .setUserIdMSB(userId.getId().getMostSignificantBits())
+                            .setUserIdLSB(userId.getId().getLeastSignificantBits())
+                            .build())
+                    .build());
         }
-
-        broadcast(msg.build());
     }
 
     @Override

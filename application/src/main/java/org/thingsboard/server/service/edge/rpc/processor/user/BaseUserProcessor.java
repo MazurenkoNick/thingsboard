@@ -108,7 +108,6 @@ public abstract class BaseUserProcessor extends BaseEdgeProcessor {
             }
 
             safeAddToEntityGroup(tenantId, userUpdateMsg, userId);
-            tbClusterService.onUserUpdated(savedUser, isCreated ? null : user);
             userPermissionsService.onUserUpdatedOrRemoved(savedUser);
         } catch (Exception e) {
             log.error("[{}] Failed to process user update msg [{}]", tenantId, userUpdateMsg, e);
