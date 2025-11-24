@@ -18,7 +18,11 @@ You may always customize the  <a href="${MAIN_DASHBOARD_URL}" target="_blank">"S
 
 We have already created "Office" asset and 4 devices related to it. We have also loaded demo data for those devices. See device info and credentials below:
 
+<div class="tb-markdown-view table-wrapper">
+
 ${device_list_and_credentials}
+
+</div>
 
 Solution expects specific telemetry from each device based on its type. 
 You may find payload examples and commands to send the data on behalf of the devices below.
@@ -98,7 +102,11 @@ Alarms are generated using <a href="${DOCS_BASE_URL}/user-guide/device-profiles/
 
 As part of this solution, the following entities were created:
 
+<div class="tb-markdown-view table-wrapper">
+
 ${all_entities}
+
+</div>
 
 ### Edge computing
 

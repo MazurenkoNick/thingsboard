@@ -50,10 +50,22 @@
                   <mat-form-field class="mat-block tb-appearance-transparent flex-1">
                     <mat-label translate>signup.firstname</mat-label>
                     <input matInput autofocus formControlName="FIRST_NAME" required/>
+                    <mat-error *ngIf="signup.get('fields.FIRST_NAME').hasError('maxlength')">
+                      {{ 'signup.firstname-max-length' | translate }}
+                    </mat-error>
+                    <mat-error *ngIf="signup.get('fields.FIRST_NAME').hasError('required')">
+                      {{ 'signup.firstname-required' | translate }}
+                    </mat-error>
                   </mat-form-field>
                   <mat-form-field class="mat-block tb-appearance-transparent flex-1">
                     <mat-label translate>signup.lastname</mat-label>
                     <input matInput formControlName="LAST_NAME" required/>
+                    <mat-error *ngIf="signup.get('fields.LAST_NAME').hasError('maxlength')">
+                      {{ 'signup.lastname-max-length' | translate }}
+                    </mat-error>
+                    <mat-error *ngIf="signup.get('fields.LAST_NAME').hasError('required')">
+                      {{ 'signup.lastname-required' | translate }}
+                    </mat-error>
                   </mat-form-field>
                 </div>
                 <mat-form-field class="mat-block tb-appearance-transparent">
