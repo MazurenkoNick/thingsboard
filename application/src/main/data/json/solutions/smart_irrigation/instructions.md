@@ -78,7 +78,11 @@ The device also accepts the RPC command to enable or disable the water flow. Sam
 
 We have already created 12+ devices and loaded some demo data for them. See device info and credentials below:
 
+<div class="tb-markdown-view table-wrapper">
+
 ${device_list_and_credentials}
+
+</div>
 
 Solution expects that the device telemetry will correspond to the samples provided in device profile section of the instruction.
 The most simple example of the moisture sensor payload is in JSON format:
@@ -100,7 +104,11 @@ See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_bla
 
 As part of this solution, the following entities were created:
 
+<div class="tb-markdown-view table-wrapper">
+
 ${all_entities}
+
+</div>
 
 ### Edge computing
 
