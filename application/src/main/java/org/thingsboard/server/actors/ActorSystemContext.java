@@ -126,6 +126,8 @@ import org.thingsboard.server.dao.notification.NotificationTargetService;
 import org.thingsboard.server.dao.notification.NotificationTemplateService;
 import org.thingsboard.server.dao.oauth2.OAuth2ClientService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
+import org.thingsboard.server.dao.owner.OwnerService;
+import org.thingsboard.server.dao.pat.ApiKeyService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.queue.QueueStatsService;
 import org.thingsboard.server.dao.relation.RelationService;
@@ -690,6 +692,14 @@ public class ActorSystemContext {
     @Getter
     private SecretService secretService;
 
+    @Autowired
+    @Getter
+    private OwnerService ownerService;
+
+    @Autowired
+    @Getter
+    private ApiKeyService apiKeyService;
+
     @Value("${actors.session.max_concurrent_sessions_per_device:1}")
     @Getter
     private int maxConcurrentSessionsPerDevice;
@@ -1015,7 +1025,7 @@ public class ActorSystemContext {
 
     private boolean checkLimits(TenantId tenantId) {
         if (debugModeRateLimitsConfig.isCalculatedFieldDebugPerTenantLimitsEnabled() &&
-            !rateLimitService.checkRateLimit(LimitedApi.CALCULATED_FIELD_DEBUG_EVENTS, (Object) tenantId, debugModeRateLimitsConfig.getCalculatedFieldDebugPerTenantLimitsConfiguration())) {
+                !rateLimitService.checkRateLimit(LimitedApi.CALCULATED_FIELD_DEBUG_EVENTS, (Object) tenantId, debugModeRateLimitsConfig.getCalculatedFieldDebugPerTenantLimitsConfiguration())) {
             log.trace("[{}] Calculated field debug event limits exceeded!", tenantId);
             return false;
         }

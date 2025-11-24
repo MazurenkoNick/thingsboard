@@ -704,11 +704,12 @@ public class DefaultTbClusterService implements TbClusterService {
                 EntityType.JOB,
                 EntityType.CALCULATED_FIELD,
                 EntityType.TB_RESOURCE,
-                EntityType.CUSTOMER)
-                         || (entityType == EntityType.ASSET && msg.getEvent() == ComponentLifecycleEvent.UPDATED)
-                         || (entityType == EntityType.DEVICE && msg.getEvent() == ComponentLifecycleEvent.UPDATED);
+                EntityType.CUSTOMER,
+                EntityType.USER)
+                || (entityType == EntityType.ASSET && msg.getEvent() == ComponentLifecycleEvent.UPDATED)
+                || (entityType == EntityType.DEVICE && msg.getEvent() == ComponentLifecycleEvent.UPDATED);
 
-        boolean toRuleEngine = !toIntegrationExecutor;
+        boolean toRuleEngine = !toIntegrationExecutor && entityType != EntityType.USER;
 
         boolean toTbReport = entityType.isOneOf(EntityType.JOB, EntityType.TENANT);
         Set<String> tbReportServices = partitionService.getAllServiceIds(ServiceType.TB_REPORT);
@@ -759,7 +760,7 @@ public class DefaultTbClusterService implements TbClusterService {
             int toEdgeNfsCnt = toEdgeNfs.getAndSet(0);
             if (toCoreMsgCnt > 0 || toCoreNfsCnt > 0 || toIeNfsCnt > 0 || toRuleEngineMsgsCnt > 0 || toRuleEngineNfsCnt > 0 || toTransportNfsCnt > 0 || toEdgeMsgCnt > 0 || toEdgeNfsCnt > 0) {
                 log.info("To TbCore: [{}] messages [{}] notifications; To TbRuleEngine: [{}] messages [{}] notifications; To Transport: [{}] notifications; " +
-                         "To Integration Executor: [{}] notifications; To Edge: [{}] messages [{}] notifications",
+                                "To Integration Executor: [{}] notifications; To Edge: [{}] messages [{}] notifications",
                         toCoreMsgCnt, toCoreNfsCnt, toRuleEngineMsgsCnt, toRuleEngineNfsCnt, toTransportNfsCnt, toIeNfsCnt, toEdgeMsgCnt, toEdgeNfsCnt);
             }
         }
@@ -938,7 +939,7 @@ public class DefaultTbClusterService implements TbClusterService {
                         EdgeId relatedEdgeId = findRelatedEdgeIdIfAny(tenantId, entityId);
                         log.trace("{} Going to send edge update notification for device actor, device id {}, edge id {}", tenantId, entityId, relatedEdgeId);
 
-                    pushMsgToCore(new DeviceEdgeUpdateMsg(tenantId, new DeviceId(entityId.getId()), relatedEdgeId), null);
+                        pushMsgToCore(new DeviceEdgeUpdateMsg(tenantId, new DeviceId(entityId.getId()), relatedEdgeId), null);
                     }
                 }
         }

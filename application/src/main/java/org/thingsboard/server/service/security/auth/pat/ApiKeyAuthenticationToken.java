@@ -28,32 +28,49 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.security.auth.jwt.extractor;
+package org.thingsboard.server.service.security.auth.pat;
 
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.authentication.AuthenticationServiceException;
-import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.config.ThingsboardSecurityConfiguration;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.thingsboard.server.service.security.model.SecurityUser;
+import org.thingsboard.server.service.security.model.token.RawApiKey;
 
-@Component(value="jwtHeaderTokenExtractor")
-public class JwtHeaderTokenExtractor implements TokenExtractor {
-    public static final String HEADER_PREFIX = "Bearer ";
+import java.io.Serial;
+
+public class ApiKeyAuthenticationToken extends AbstractAuthenticationToken {
+
+    @Serial
+    private static final long serialVersionUID = 2978710889397403536L;
+
+    private RawApiKey rawApiKey;
+    private SecurityUser securityUser;
+
+    public ApiKeyAuthenticationToken(RawApiKey rawApiKey) {
+        super(null);
+        this.rawApiKey = rawApiKey;
+        setAuthenticated(false);
+    }
+
+    public ApiKeyAuthenticationToken(SecurityUser securityUser) {
+        super(securityUser.getAuthorities());
+        this.eraseCredentials();
+        this.securityUser = securityUser;
+        super.setAuthenticated(true);
+    }
 
     @Override
-    public String extract(HttpServletRequest request) {
-        String header = request.getHeader(ThingsboardSecurityConfiguration.JWT_TOKEN_HEADER_PARAM);
-        if (StringUtils.isBlank(header)) {
-            header = request.getHeader(ThingsboardSecurityConfiguration.JWT_TOKEN_HEADER_PARAM_V2);
-            if (StringUtils.isBlank(header)) {
-                throw new AuthenticationServiceException("Authorization header cannot be blank!");
-            }
-        }
-
-        if (header.length() < HEADER_PREFIX.length()) {
-            throw new AuthenticationServiceException("Invalid authorization header size.");
-        }
-
-        return header.substring(HEADER_PREFIX.length(), header.length());
+    public Object getCredentials() {
+        return rawApiKey;
     }
+
+    @Override
+    public Object getPrincipal() {
+        return this.securityUser;
+    }
+
+    @Override
+    public void eraseCredentials() {
+        super.eraseCredentials();
+        this.rawApiKey = null;
+    }
+
 }

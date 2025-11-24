@@ -33,6 +33,10 @@ package org.thingsboard.integration.opcua;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
 import org.eclipse.milo.opcua.sdk.client.api.config.OpcUaClientConfig;
@@ -44,12 +48,14 @@ import org.eclipse.milo.opcua.sdk.core.nodes.VariableNode;
 import org.eclipse.milo.opcua.stack.client.DiscoveryClient;
 import org.eclipse.milo.opcua.stack.core.AttributeId;
 import org.eclipse.milo.opcua.stack.core.Identifiers;
+import org.eclipse.milo.opcua.stack.core.StatusCodes;
 import org.eclipse.milo.opcua.stack.core.UaException;
 import org.eclipse.milo.opcua.stack.core.security.SecurityPolicy;
 import org.eclipse.milo.opcua.stack.core.types.builtin.DataValue;
 import org.eclipse.milo.opcua.stack.core.types.builtin.LocalizedText;
 import org.eclipse.milo.opcua.stack.core.types.builtin.NodeId;
 import org.eclipse.milo.opcua.stack.core.types.builtin.QualifiedName;
+import org.eclipse.milo.opcua.stack.core.types.builtin.StatusCode;
 import org.eclipse.milo.opcua.stack.core.types.builtin.Variant;
 import org.eclipse.milo.opcua.stack.core.types.builtin.unsigned.UInteger;
 import org.eclipse.milo.opcua.stack.core.types.builtin.unsigned.Unsigned;
@@ -61,13 +67,17 @@ import org.eclipse.milo.opcua.stack.core.types.enumerated.TimestampsToReturn;
 import org.eclipse.milo.opcua.stack.core.types.structured.BrowseDescription;
 import org.eclipse.milo.opcua.stack.core.types.structured.BrowseResult;
 import org.eclipse.milo.opcua.stack.core.types.structured.CallMethodRequest;
+import org.eclipse.milo.opcua.stack.core.types.structured.CallMethodResult;
+import org.eclipse.milo.opcua.stack.core.types.structured.CallResponse;
 import org.eclipse.milo.opcua.stack.core.types.structured.EndpointDescription;
 import org.eclipse.milo.opcua.stack.core.types.structured.MonitoredItemCreateRequest;
 import org.eclipse.milo.opcua.stack.core.types.structured.MonitoringParameters;
 import org.eclipse.milo.opcua.stack.core.types.structured.ReadValueId;
 import org.eclipse.milo.opcua.stack.core.types.structured.ReferenceDescription;
+import org.eclipse.milo.opcua.stack.core.types.structured.WriteResponse;
 import org.eclipse.milo.opcua.stack.core.types.structured.WriteValue;
 import org.eclipse.milo.opcua.stack.core.util.ConversionUtil;
+import org.thingsboard.common.util.DonAsynchron;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.integration.api.AbstractIntegration;
 import org.thingsboard.integration.api.IntegrationContext;
@@ -197,47 +207,82 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
     @Override
     public void onDownlinkMsg(IntegrationDownlinkMsg downlink) {
         TbMsg msg = downlink.getTbMsg();
-        logDownlink(context, "Downlink: " + msg.getType(), msg);
-        if (downlinkConverter != null) {
-            processDownLinkMsg(context, msg);
-        }
-    }
-
-    protected void processDownLinkMsg(IntegrationContext context, TbMsg msg) {
-        String status = "OK";
-        Exception exception = null;
         try {
-            if (doProcessDownLinkMsg(context, msg)) {
-                integrationStatistics.incMessagesProcessed();
+            if (!connected) {
+                persistDebug(context, "Downlink", "ERROR", null,
+                        null, "FAILURE",
+                        new OpcUaIntegrationException("Cannot process downlink message because of connection was lost.", new RuntimeException()));
+                return;
             }
-        } catch (Exception e) {
-            log.warn("[{}] Failed to process downLink message", getConfigurationId(), e);
-            exception = e;
-            status = "ERROR";
+
+            logDownlink(context, "Downlink: " + msg.getType(), msg);
+            if (downlinkConverter != null) {
+                processDownLinkMsg(context, msg);
+            }
+        } catch (Exception ex) {
+            reportDownlinkError(context, msg, "ERROR", ex);
         }
-        reportDownlinkError(context, msg, status, exception);
     }
 
-    private boolean doProcessDownLinkMsg(IntegrationContext context, TbMsg msg) throws Exception {
+    private void processDownLinkMsg(IntegrationContext context, TbMsg msg) throws Exception {
         Map<String, String> mdMap = new HashMap<>(metadataTemplate.getKvMap());
         List<DownlinkData> result = downlinkConverter.convertDownLink(context.getDownlinkConverterContext(), Collections.singletonList(msg), new IntegrationMetaData(mdMap));
-        if (!connected) {
-            persistDebug(context, "Downlink", "ERROR", null, "Cannot process downlink message because of connection was lost.", "FAILURE", new OpcUaIntegrationException("Not connected", new RuntimeException()));
-            return false;
-        }
         List<WriteValue> writeValues = prepareWriteValues(result);
-        List<CallMethodRequest> callMethods = prepareCallMethods(result);
+        List<CallMethodRequest> callMethods =  prepareCallMethods(result);
 
-        logOpcUaDownlink(context, writeValues, callMethods);
-
-        if (!writeValues.isEmpty()) {
-            client.write(writeValues);
-        }
-        if (!callMethods.isEmpty()) {
-            client.call(callMethods);
+        if (writeValues.isEmpty() && callMethods.isEmpty()) {
+            return;
         }
 
-        return !writeValues.isEmpty() || !callMethods.isEmpty();
+        DonAsynchron.withCallback(doProcessDownLinkMsg(writeValues, callMethods), processResult -> {
+                integrationStatistics.incMessagesProcessed();
+                logOpcUaDownlink(context, writeValues, callMethods);
+        }, ex -> reportDownlinkError(context, msg, "ERROR", ex), MoreExecutors.directExecutor());
+    }
+
+    private ListenableFuture<Void> doProcessDownLinkMsg(List<WriteValue> writeValues, List<CallMethodRequest> callMethods) {
+        FluentFuture<WriteResponse> writeFuture = DonAsynchron.toFluentFuture(client.write(writeValues));
+        FluentFuture<CallResponse> callFuture = DonAsynchron.toFluentFuture(client.call(callMethods));
+        return Futures.whenAllComplete(writeFuture, callFuture).call(() -> {
+            List<String> errs = new ArrayList<>();
+            WriteResponse writeResponse = writeFuture.get();
+            CallResponse callResponse = callFuture.get();
+
+            StatusCode[] codes = writeResponse.getResults();
+            for (int i = 0; i < codes.length; i++) {
+                StatusCode sc = codes[i];
+                if (!sc.isGood()) {
+                    long code = sc.getValue();
+                    String statusName = StatusCodes.lookup(code)
+                            .map(arr -> arr.length > 0 ? arr[0] : null)
+                            .orElse(String.format("0x%08X", code));
+                    errs.add("Write " + writeValues.get(i).getNodeId() + ", status = " + statusName);
+                }
+            }
+
+            CallMethodResult[] res = callResponse.getResults();
+            for (int i = 0; i < res.length; i++) {
+                CallMethodRequest req = callMethods.get(i);
+                CallMethodResult r = res[i];
+                if (!r.getStatusCode().isGood()) {
+                    errs.add("Call" + req.getObjectId() + "#" + req.getMethodId() + ", " + r.getStatusCode());
+                }
+                StatusCode[] argCodes = r.getInputArgumentResults();
+                if (argCodes != null) {
+                    for (int a = 0; a < argCodes.length; a++) {
+                        if (!argCodes[a].isGood()) {
+                            errs.add("Call arg[" + a + "] -> " + argCodes[a]);
+                        }
+                    }
+                }
+            }
+
+            if (!errs.isEmpty()) {
+                throw new OpcUaIntegrationException(String.join("\n", errs));
+            }
+
+            return null;
+        }, MoreExecutors.directExecutor());
     }
 
     private void submit(OpcUaIntegrationTask task) {
@@ -756,100 +801,118 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
         );
     }
 
-    private List<WriteValue> prepareWriteValues(List<DownlinkData> dataList) {
+    private List<WriteValue> prepareWriteValues(List<DownlinkData> dataList) throws OpcUaIntegrationException {
         List<WriteValue> writeValuesList = new ArrayList<>();
         for (DownlinkData data : dataList) {
             if (!data.isEmpty() && data.getContentType().equals("JSON")) {
-                try {
-                    JsonNode payload = JacksonUtil.fromBytes(data.getData());
-                    if (payload.has("writeValues")) {
-                        JsonNode writeValues = payload.get("writeValues");
-                        if (writeValues.isArray()) {
-                            for (JsonNode writeValueJson : writeValues) {
-                                Optional<NodeId> nodeId = Optional.empty();
-                                Optional<Variant> value = Optional.empty();
-                                if (writeValueJson.has("nodeId")) {
-                                    try {
-                                        nodeId = NodeId.parseSafe(writeValueJson.get("nodeId").asText());
-                                    } catch (Exception e) {
-                                        log.error(String.format("[%s] Browsing nodeId=%s failed: %s", getConfigurationId(), nodeId, e.getMessage()), e);
-                                    }
+                JsonNode payload = JacksonUtil.fromBytes(data.getData());
+                if (payload.has("writeValues")) {
+                    JsonNode writeValues = payload.get("writeValues");
+                    if (writeValues.isArray()) {
+                        for (JsonNode writeValueJson : writeValues) {
+                            Optional<NodeId> nodeId = Optional.empty();
+                            Optional<Variant> variantValue = Optional.empty();
+                            if (writeValueJson.has("nodeId")) {
+                                String nodeIdStr = writeValueJson.get("nodeId").asText();
+                                try {
+                                    nodeId = NodeId.parseSafe(nodeIdStr);
+                                } catch (Exception e) {
+                                    throw new OpcUaIntegrationException("Invalid OPC UA writeValues payload: failed to parse nodeId from value " + nodeIdStr + " Node: " + writeValueJson, e);
                                 }
-                                if (writeValueJson.has("value")) {
-                                    JsonNode valueJson = writeValueJson.get("value");
-                                    value = extractValue(valueJson);
-                                }
-                                if (nodeId.isPresent() && value.isPresent()) {
-                                    WriteValue writeValue = new WriteValue(
-                                            nodeId.get(), AttributeId.Value.uid(), null, DataValue.valueOnly(value.get()));
-                                    writeValuesList.add(writeValue);
-                                }
+                            }
+                            variantValue = toVariant(writeValueJson);
+                            if (nodeId.isPresent() && variantValue.isPresent()) {
+                                WriteValue writeValue = new WriteValue(
+                                        nodeId.get(), AttributeId.Value.uid(), null, DataValue.valueOnly(variantValue.get()));
+                                writeValuesList.add(writeValue);
                             }
                         }
                     }
-                } catch (Exception e) {
-                    log.error("[{}] Preparing write values failed: {}", getConfigurationId(), e.getMessage(), e);
                 }
             }
         }
         return writeValuesList;
     }
 
-    private List<CallMethodRequest> prepareCallMethods(List<DownlinkData> dataList) {
+    private List<CallMethodRequest> prepareCallMethods(List<DownlinkData> dataList) throws OpcUaIntegrationException {
         List<CallMethodRequest> callMethodRequests = new ArrayList<>();
         for (DownlinkData data : dataList) {
             if (!data.isEmpty() && data.getContentType().equals("JSON")) {
-                try {
-                    JsonNode payload = JacksonUtil.fromBytes(data.getData());
-                    if (payload.has("callMethods")) {
-                        JsonNode callMethods = payload.get("callMethods");
-                        if (callMethods.isArray()) {
-                            for (JsonNode callMethodJson : callMethods) {
-                                Optional<NodeId> objectId = Optional.empty();
-                                Optional<NodeId> methodId = Optional.empty();
-                                Optional<Variant[]> arguments = Optional.empty();
-                                if (callMethodJson.has("objectId")) {
-                                    try {
-                                        objectId = NodeId.parseSafe(callMethodJson.get("objectId").asText());
-                                    } catch (Exception e) {
-                                        log.error("[{}] Parsing safe {}", getConfigurationId(), e.getMessage(), e);
-                                    }
+                JsonNode payload = JacksonUtil.fromBytes(data.getData());
+                if (payload.has("callMethods")) {
+                    JsonNode callMethods = payload.get("callMethods");
+                    if (callMethods.isArray()) {
+                        for (JsonNode callMethodJson : callMethods) {
+                            Optional<NodeId> objectId = Optional.empty();
+                            Optional<NodeId> methodId = Optional.empty();
+                            Optional<Variant[]> arguments = Optional.empty();
+                            if (callMethodJson.has("objectId")) {
+                                String objectIdStr = callMethodJson.get("objectId").asText();
+                                try {
+                                    objectId = NodeId.parseSafe(objectIdStr);
+                                } catch (Exception e) {
+                                    throw new OpcUaIntegrationException("Invalid OPC UA callMethods payload: failed to parse objectId NodeId from value " + objectIdStr + " Node: " + callMethodJson, e);
                                 }
-                                if (callMethodJson.has("methodId")) {
-                                    try {
-                                        methodId = NodeId.parseSafe(callMethodJson.get("methodId").asText());
-                                    } catch (Exception e) {
-                                        log.error("[{}] Parsing safe {}", getConfigurationId(), e.getMessage(), e);
-                                    }
+                            }
+                            if (callMethodJson.has("methodId")) {
+                                String methodIdStr = callMethodJson.get("methodId").asText();
+                                try {
+                                    methodId = NodeId.parseSafe(methodIdStr);
+                                } catch (Exception e) {
+                                    throw new OpcUaIntegrationException("Invalid OPC UA callMethods payload: failed to parse methodId NodeId from value '" + methodIdStr + " Node: " + callMethodJson, e);
                                 }
-                                if (callMethodJson.has("args")) {
-                                    JsonNode argsJson = callMethodJson.get("args");
-                                    if (argsJson.isArray()) {
-                                        List<Variant> argsList = new ArrayList<>();
-                                        for (JsonNode argJson : argsJson) {
-                                            Optional<Variant> value = extractValue(argJson);
-                                            value.ifPresent(argsList::add);
+                            }
+                            if (callMethodJson.has("args")) {
+                                JsonNode argsJson = callMethodJson.get("args");
+                                if (argsJson.isArray()) {
+                                    List<Variant> argsList = new ArrayList<>();
+                                    for (JsonNode argJson : argsJson) {
+                                        if (argJson.isObject()) {
+                                            Optional<Variant> argument = toVariant(argJson);
+                                            argument.ifPresent(argsList::add);
+                                        } else {
+                                            Variant value = new Variant(extractValue(argJson));
+                                            argsList.add(value);
                                         }
-                                        arguments = Optional.of(argsList.toArray(new Variant[]{}));
                                     }
+                                    arguments = Optional.of(argsList.toArray(new Variant[]{}));
                                 }
-                                if (objectId.isPresent() && methodId.isPresent()) {
-                                    Variant[] args = arguments.isPresent() ? arguments.get() : new Variant[]{};
-                                    CallMethodRequest callMethodRequest = new CallMethodRequest(objectId.get(), methodId.get(), args);
-                                    callMethodRequests.add(callMethodRequest);
-                                }
+                            }
+                            if (objectId.isPresent() && methodId.isPresent()) {
+                                Variant[] args = arguments.orElseGet(() -> new Variant[]{});
+                                CallMethodRequest callMethodRequest = new CallMethodRequest(objectId.get(), methodId.get(), args);
+                                callMethodRequests.add(callMethodRequest);
                             }
                         }
                     }
-                } catch (Exception e) {
-                    log.error("[{}] PrepareCallMethods {}", getConfigurationId(), e.getMessage(), e);
                 }
             }
         }
         return callMethodRequests;
     }
 
-    private Optional<Variant> extractValue(JsonNode valueJson) {
+    private Optional<Variant> toVariant(JsonNode wrapper) throws OpcUaIntegrationException {
+        if (!wrapper.has("value")) {
+            return Optional.empty();
+        }
+
+        JsonNode valueJson = wrapper.get("value");
+        Object value = extractValue(valueJson);
+        if (wrapper.hasNonNull("dataType")) {
+            String typeName = wrapper.get("dataType").asText();
+            try {
+                OpcUaType opcUaType = OpcUaType.fromOpcUaType(typeName);
+                Object opcVal = opcUaType.convertValue(value);
+                return Optional.of(new Variant(opcVal));
+            } catch (Exception e) {
+                throw new OpcUaIntegrationException("Invalid OPC UA payload: failed to convert value to OPC UA type " + typeName + " Node: " + wrapper, e);
+            }
+        } else {
+            return Optional.of(new Variant(value));
+        }
+    }
+
+    private Object extractValue(JsonNode valueJson) {
         Object val = null;
         if (valueJson.isValueNode()) {
             if (valueJson.isTextual()) {
@@ -864,10 +927,7 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
                 val = valueJson.asBoolean();
             }
         }
-        if (val != null) {
-            return Optional.of(new Variant(val));
-        }
-        return Optional.empty();
+        return val;
     }
 
     private void logOpcUaDownlink(IntegrationContext context, List<WriteValue> writeValues, List<CallMethodRequest> callMethods) {

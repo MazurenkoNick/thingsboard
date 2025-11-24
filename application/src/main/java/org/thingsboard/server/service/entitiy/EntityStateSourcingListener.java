@@ -191,7 +191,10 @@ public class EntityStateSourcingListener {
                 tbClusterService.onCustomerUpdated((Customer) event.getEntity(), (Customer) event.getOldEntity());
             }
             case USER -> {
-                tbClusterService.onUserUpdated((User) event.getEntity(), (User) event.getOldEntity());
+                if (!isCreated) {
+                    tbClusterService.onUserUpdated((User) event.getEntity(), (User) event.getOldEntity());
+                }
+                tbClusterService.broadcastEntityStateChangeEvent(event.getTenantId(), event.getEntityId(), lifecycleEvent);
             }
             case CALCULATED_FIELD -> {
                 onCalculatedFieldUpdate(event.getEntity(), event.getOldEntity());

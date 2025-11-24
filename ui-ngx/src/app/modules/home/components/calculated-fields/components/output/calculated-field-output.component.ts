@@ -43,6 +43,8 @@ import { AttributeScope } from '@shared/models/telemetry/telemetry.models';
 import {
   CalculatedFieldOutput,
   CalculatedFieldSimpleOutput,
+  OutputStrategyType,
+  OutputStrategyTypeTranslations,
   OutputType,
   OutputTypeTranslations
 } from '@shared/models/calculated-field.models';
@@ -67,6 +69,7 @@ import { coerceBoolean } from '@shared/decorators/coercion';
       multi: true
     }
   ],
+  styleUrls: ['./calculated-field-output.component.scss'],
 })
 export class CalculatedFieldOutputComponent implements ControlValueAccessor, Validator, OnInit, OnChanges {
 
@@ -94,6 +97,10 @@ export class CalculatedFieldOutputComponent implements ControlValueAccessor, Val
   readonly OutputTypeTranslations = OutputTypeTranslations;
   readonly EntityType = EntityType;
 
+  readonly OutputStrategyType  = OutputStrategyType;
+  readonly OutputStrategyTypes  = Object.values(OutputStrategyType) as OutputStrategyType[];
+  readonly OutputStrategyTypeTranslations  = OutputStrategyTypeTranslations;
+
   private fb = inject(FormBuilder);
   private destroyRef = inject(DestroyRef);
 
@@ -102,6 +109,16 @@ export class CalculatedFieldOutputComponent implements ControlValueAccessor, Val
     scope: [{value: AttributeScope.SERVER_SCOPE, disabled: true}],
     type: [OutputType.Timeseries],
     decimalsByDefault: [null as number, [Validators.min(0), Validators.max(15), Validators.pattern(digitsRegex)]],
+    strategy: this.fb.group({
+      type: [OutputStrategyType.IMMEDIATE],
+      saveTimeSeries: [true],
+      saveLatest: [true],
+      saveAttribute: [true],
+      sendWsUpdate: [true],
+      processCfs: [true],
+      updateAttributesOnlyOnValueChange: [true],
+      ttl: [0]
+    })
   });
 
   private propagateChange: (config: CalculatedFieldOutput | CalculatedFieldSimpleOutput) => void = () => { };
@@ -109,14 +126,23 @@ export class CalculatedFieldOutputComponent implements ControlValueAccessor, Val
   ngOnInit() {
     this.outputForm.get('type').valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(type => this.toggleScopeByOutputType(type));
+      .subscribe(type => {
+        this.toggleScopeByOutputType(type);
+        this.updatedStrategy();
+      });
+
+    this.outputForm.get('strategy.type').valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.updatedStrategy();
+      });
 
     this.updatedFormWithMode();
 
     this.outputForm.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe((value: CalculatedFieldOutput | CalculatedFieldSimpleOutput) => {
-      this.updatedModel(value)
+      this.updatedModel(value);
     })
   }
 
@@ -156,6 +182,14 @@ export class CalculatedFieldOutputComponent implements ControlValueAccessor, Val
       this.outputForm.enable({emitEvent: false});
       this.updatedFormWithMode();
       this.toggleScopeByOutputType(this.outputForm.get('type').value);
+      this.updatedStrategy();
+    }
+  }
+
+  toggleChip(controlName: string) {
+    const control = this.outputForm.get('strategy').get(controlName);
+    if (control && control.enabled) {
+      control.setValue(!control.value);
     }
   }
 
@@ -190,6 +224,26 @@ export class CalculatedFieldOutputComponent implements ControlValueAccessor, Val
     }
     if (this.disableType) {
       this.outputForm.get('type').disable({emitEvent: false});
+    }
+  }
+
+  private updatedStrategy(): void {
+    const strategyType = this.outputForm.get('strategy.type').value;
+    this.outputForm.get('strategy').disable({emitEvent: false});
+    this.outputForm.get('strategy.type').enable({emitEvent: false});
+
+    if (strategyType === OutputStrategyType.IMMEDIATE) {
+      const outputType = this.outputForm.get('type').value;
+      this.outputForm.get('strategy.sendWsUpdate').enable({emitEvent: false});
+      this.outputForm.get('strategy.processCfs').enable({emitEvent: false});
+      if (outputType === OutputType.Attribute) {
+        this.outputForm.get('strategy.saveAttribute').enable({emitEvent: false});
+        this.outputForm.get('strategy.updateAttributesOnlyOnValueChange').enable({emitEvent: false});
+      } else {
+        this.outputForm.get('strategy.saveTimeSeries').enable({emitEvent: false});
+        this.outputForm.get('strategy.saveLatest').enable({emitEvent: false});
+        this.outputForm.get('strategy.ttl').enable({emitEvent: false});
+      }
     }
   }
 }
