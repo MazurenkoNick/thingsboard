@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { FormControl, FormGroup } from "@angular/forms";
+import { FormControl, FormGroup, Validators } from "@angular/forms";
 import { validateEmail } from "@app/core/utils";
 
 export interface SignupRequestValues {
@@ -50,8 +50,8 @@ export class SignupRequest {
 
   constructor(firstName: string, lastName: string, email: string, password: string, recaptchaResponse: string) {
     this.fields = new FormGroup({
-      FIRST_NAME: new FormControl(firstName),
-      LAST_NAME: new FormControl(lastName),
+      FIRST_NAME: new FormControl(firstName, [Validators.required, Validators.maxLength(256)]),
+      LAST_NAME: new FormControl(lastName, [Validators.required, Validators.maxLength(256)]),
       EMAIL: new FormControl(email, [validateEmail]),
       PASSWORD: new FormControl(password)
     });

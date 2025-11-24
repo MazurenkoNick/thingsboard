@@ -249,13 +249,21 @@ We can see that the IAQ has changed by 160, so its level exceeds the indicators 
 
 We have already created devices and loaded some demo data for them. See device info and credentials below:
 
+<div class="tb-markdown-view table-wrapper">
+
 ${device_list_and_credentials}
+
+</div>
 
 ### Solution entities
 
 As part of this solution, the following entities were created:
 
+<div class="tb-markdown-view table-wrapper">
+
 ${all_entities}
+
+</div>
 
 ### Edge computing
 
