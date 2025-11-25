@@ -151,7 +151,7 @@ public class OtaPackageController extends BaseController {
     public OtaPackageInfo saveOtaPackageInfo(@Parameter(description = "A JSON value representing the OTA Package.")
                                              @RequestBody SaveOtaPackageInfoRequest otaPackageInfo) throws Exception {
         otaPackageInfo.setTenantId(getTenantId());
-        checkEntity(otaPackageInfo.getId(), otaPackageInfo, Resource.OTA_PACKAGE, null);
+        checkEntity(otaPackageInfo.getId(), otaPackageInfo, Resource.OTA_PACKAGE);
 
         return tbOtaPackageService.save(otaPackageInfo, getCurrentUser());
     }
@@ -267,4 +267,3 @@ public class OtaPackageController extends BaseController {
     }
 
 }
-

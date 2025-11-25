@@ -212,7 +212,33 @@ public class WidgetTypeControllerTest extends AbstractControllerTest {
 
         Assert.assertEquals(widgetTypes, loadedWidgetTypes);
 
-        loginCustomerUser();
+        // Create customer with widget type permissions
+        Customer customer = new Customer();
+        customer.setTitle("Test Customer");
+        customer.setTenantId(savedTenant.getId());
+        Customer savedCustomer = doPost("/api/customer", customer, Customer.class);
+
+        EntityGroup userGroup = new EntityGroup();
+        userGroup.setType(EntityType.USER);
+        userGroup.setName("UserGroup" + RandomStringUtils.randomAlphabetic(5));
+        userGroup = doPost("/api/entityGroup", userGroup, EntityGroup.class);
+
+        Role role = createWidgetTypeGenericReadRole(RandomStringUtils.randomAlphabetic(10));
+        role = doPost("/api/role", role, Role.class);
+
+        GroupPermission groupPermission = new GroupPermission();
+        groupPermission.setRoleId(role.getId());
+        groupPermission.setUserGroupId(userGroup.getId());
+        doPost("/api/groupPermission", groupPermission, GroupPermission.class);
+
+        User customerUser = new User();
+        customerUser.setAuthority(Authority.CUSTOMER_USER);
+        customerUser.setTenantId(savedTenant.getId());
+        customerUser.setCustomerId(savedCustomer.getId());
+        customerUser.setEmail("testCustomer" + RandomStringUtils.randomAlphabetic(5) + "@thingsboard.io");
+        customerUser = createUser(customerUser, "password", userGroup.getId());
+
+        login(customerUser.getEmail(), "password");
 
         List<WidgetType> loadedWidgetTypesCustomer = doGetTyped("/api/widgetTypes?widgetsBundleId={widgetsBundleId}",
                 new TypeReference<>() {}, widgetsBundle.getId().getId().toString());
@@ -389,6 +415,15 @@ public class WidgetTypeControllerTest extends AbstractControllerTest {
         role.setName(roleName);
         role.setType(RoleType.GENERIC);
         role.setPermissions(JacksonUtil.toJsonNode("{\"ALL\":[\"READ\"]}"));
+        return role;
+    }
+
+    private Role createWidgetTypeGenericReadRole(String roleName) {
+        Role role = new Role();
+        role.setTenantId(savedTenant.getId());
+        role.setName(roleName);
+        role.setType(RoleType.GENERIC);
+        role.setPermissions(JacksonUtil.toJsonNode("{\"WIDGET_TYPE\":[\"READ\"]}"));
         return role;
     }
 

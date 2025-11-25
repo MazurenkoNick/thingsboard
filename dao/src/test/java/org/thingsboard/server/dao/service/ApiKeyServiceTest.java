@@ -43,10 +43,17 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.pat.ApiKey;
 import org.thingsboard.server.common.data.pat.ApiKeyInfo;
+import org.thingsboard.server.common.data.permission.AuthorityPermissionsInfo;
+import org.thingsboard.server.common.data.permission.Operation;
+import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.pat.ApiKeyService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.exception.DataValidationException;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -57,6 +64,7 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
 
     @Autowired
     ApiKeyService apiKeyService;
+
     @Autowired
     UserService userService;
 
@@ -93,12 +101,116 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
     }
 
     @Test
+    public void testSaveInternalApiKey() {
+        Map<Resource, Set<Operation>> permissions = new HashMap<>();
+        permissions.put(Resource.DEVICE, Set.of(Operation.READ, Operation.WRITE));
+        permissions.put(Resource.DASHBOARD, Set.of(Operation.READ));
+        Map<Authority, Map<Resource, Set<Operation>>> operationsByResource = new HashMap<>();
+        operationsByResource.put(Authority.SYS_ADMIN, permissions);
+
+        AuthorityPermissionsInfo authorityPermissionsInfo = new AuthorityPermissionsInfo();
+        authorityPermissionsInfo.setOperationsByResource(operationsByResource);
+
+        ApiKeyInfo apiKeyInfo = createApiKeyInfo(TEST_API_KEY_DESCRIPTION);
+        apiKeyInfo.setTenantId(TenantId.SYS_TENANT_ID);
+        apiKeyInfo.setInternal(true);
+        apiKeyInfo.setPermissions(authorityPermissionsInfo);
+        apiKeyInfo.setExpirationTime(0);
+
+        ApiKey savedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
+
+        Assert.assertNotNull(savedApiKey);
+        Assert.assertNotNull(savedApiKey.getId());
+        Assert.assertEquals(TenantId.SYS_TENANT_ID, savedApiKey.getTenantId());
+        Assert.assertEquals(TEST_API_KEY_DESCRIPTION, savedApiKey.getDescription());
+        Assert.assertTrue(savedApiKey.isEnabled());
+        Assert.assertTrue(savedApiKey.isInternal());
+        Assert.assertEquals(0, savedApiKey.getExpirationTime());
+        Assert.assertNotNull(savedApiKey.getValue());
+        Assert.assertNotNull(savedApiKey.getPermissions());
+
+        var sysAdminPermissions = savedApiKey.getPermissions().getPermissionsForAuthority(Authority.SYS_ADMIN);
+        Assert.assertNotNull(sysAdminPermissions);
+        Assert.assertEquals(2, sysAdminPermissions.size());
+        Assert.assertTrue(sysAdminPermissions.containsKey(Resource.DEVICE));
+        Assert.assertTrue(sysAdminPermissions.containsKey(Resource.DASHBOARD));
+        Assert.assertEquals(2, sysAdminPermissions.get(Resource.DEVICE).size());
+        Assert.assertTrue(sysAdminPermissions.get(Resource.DEVICE).contains(Operation.READ));
+        Assert.assertTrue(sysAdminPermissions.get(Resource.DEVICE).contains(Operation.WRITE));
+    }
+
+    @Test
+    public void testsaveApiKeyWithMultipleAuthorities() {
+        Map<Authority, Map<Resource, Set<Operation>>> operationsByResource = new HashMap<>();
+
+        // SYS_ADMIN permissions
+        Map<Resource, Set<Operation>> sysAdminPerms = new HashMap<>();
+        sysAdminPerms.put(Resource.TENANT, Set.of(Operation.READ, Operation.WRITE));
+        operationsByResource.put(Authority.SYS_ADMIN, sysAdminPerms);
+
+        // TENANT_ADMIN permissions
+        Map<Resource, Set<Operation>> tenantAdminPerms = new HashMap<>();
+        tenantAdminPerms.put(Resource.DEVICE, Set.of(Operation.READ));
+        tenantAdminPerms.put(Resource.ASSET, Set.of(Operation.READ, Operation.WRITE));
+        operationsByResource.put(Authority.TENANT_ADMIN, tenantAdminPerms);
+
+        // CUSTOMER_USER permissions
+        Map<Resource, Set<Operation>> customerUserPerms = new HashMap<>();
+        customerUserPerms.put(Resource.DASHBOARD, Set.of(Operation.READ));
+        operationsByResource.put(Authority.CUSTOMER_USER, customerUserPerms);
+
+        AuthorityPermissionsInfo authorityPermissionsInfo = new AuthorityPermissionsInfo();
+        authorityPermissionsInfo.setOperationsByResource(operationsByResource);
+
+        ApiKeyInfo apiKeyInfo = createApiKeyInfo("Multi-authority internal key");
+        apiKeyInfo.setTenantId(TenantId.SYS_TENANT_ID);
+        apiKeyInfo.setInternal(true);
+        apiKeyInfo.setPermissions(authorityPermissionsInfo);
+
+        ApiKey savedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
+
+        Assert.assertNotNull(savedApiKey);
+        Assert.assertTrue(savedApiKey.isInternal());
+        Assert.assertNotNull(savedApiKey.getPermissions());
+
+        Assert.assertNotNull(savedApiKey.getPermissions().getPermissionsForAuthority(Authority.SYS_ADMIN));
+        Assert.assertNotNull(savedApiKey.getPermissions().getPermissionsForAuthority(Authority.TENANT_ADMIN));
+        Assert.assertNotNull(savedApiKey.getPermissions().getPermissionsForAuthority(Authority.CUSTOMER_USER));
+    }
+
+    @Test
     public void testSaveApiKeyWithTooLongDescription() {
         ApiKeyInfo apiKeyInfo = createApiKeyInfo(StringUtils.randomAlphabetic(300));
 
         assertThatThrownBy(() -> apiKeyService.saveApiKey(tenantId, apiKeyInfo))
                 .isInstanceOf(DataValidationException.class)
                 .hasMessageContaining("description length must be equal or less than 255");
+    }
+
+    @Test
+    public void testSaveRegularApiKeyCantSetInternal() {
+        ApiKeyInfo apiKeyInfo = createApiKeyInfo(TEST_API_KEY_DESCRIPTION);
+        apiKeyInfo.setInternal(true);
+
+        ApiKey savedApiKey = apiKeyService.saveApiKey(tenantId, apiKeyInfo);
+
+        Assert.assertNotNull(savedApiKey);
+        Assert.assertFalse(savedApiKey.isInternal());
+        Assert.assertNull(savedApiKey.getPermissions());
+    }
+
+    @Test
+    public void testUpdateRegularApiKeyCantBecomeInternal() {
+        ApiKeyInfo apiKeyInfo = createApiKeyInfo("Regular key");
+        ApiKey savedApiKey = apiKeyService.saveApiKey(tenantId, apiKeyInfo);
+        Assert.assertFalse(savedApiKey.isInternal());
+
+        savedApiKey.setInternal(true);
+
+        savedApiKey = apiKeyService.saveApiKey(tenantId, apiKeyInfo);
+
+        Assert.assertNotNull(savedApiKey);
+        Assert.assertFalse(savedApiKey.isInternal());
     }
 
     @Test
@@ -113,6 +225,35 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
         Assert.assertNotNull(updatedApiKey);
         Assert.assertEquals(savedApiKey.getId(), updatedApiKey.getId());
         Assert.assertEquals(newDescription, updatedApiKey.getDescription());
+        Assert.assertEquals(savedApiKey.getValue(), updatedApiKey.getValue());
+    }
+
+    @Test
+    public void testUpdateDescriptionInternalApiKey() {
+        Map<Resource, Set<Operation>> permissions = new HashMap<>();
+        permissions.put(Resource.DEVICE, Set.of(Operation.READ));
+        Map<Authority, Map<Resource, Set<Operation>>> operationsByResource = new HashMap<>();
+        operationsByResource.put(Authority.SYS_ADMIN, permissions);
+
+        AuthorityPermissionsInfo authorityPermissionsInfo = new AuthorityPermissionsInfo();
+        authorityPermissionsInfo.setOperationsByResource(operationsByResource);
+
+        ApiKeyInfo apiKeyInfo = createApiKeyInfo(TEST_API_KEY_DESCRIPTION);
+        apiKeyInfo.setTenantId(TenantId.SYS_TENANT_ID);
+        apiKeyInfo.setInternal(true);
+        apiKeyInfo.setPermissions(authorityPermissionsInfo);
+
+        ApiKey savedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
+        Assert.assertTrue(savedApiKey.isInternal());
+
+        String description = "Updated internal key description";
+        savedApiKey.setDescription(description);
+        ApiKey updatedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, savedApiKey);
+
+        Assert.assertNotNull(updatedApiKey);
+        Assert.assertEquals(savedApiKey.getId(), updatedApiKey.getId());
+        Assert.assertEquals(description, updatedApiKey.getDescription());
+        Assert.assertTrue(updatedApiKey.isInternal());
         Assert.assertEquals(savedApiKey.getValue(), updatedApiKey.getValue());
     }
 
@@ -174,6 +315,37 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
     }
 
     @Test
+    public void testRotateInternalApiKey() {
+        ApiKeyInfo apiKeyInfo = createApiKeyInfo("Internal key for rotation");
+        apiKeyInfo.setTenantId(TenantId.SYS_TENANT_ID);
+        apiKeyInfo.setInternal(true);
+        apiKeyInfo.setPermissions(null);
+
+        ApiKey savedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
+        String originalValue = savedApiKey.getValue();
+        Assert.assertNotNull(originalValue);
+
+        ApiKey rotatedApiKey = apiKeyService.rotateInternalApiKey(TenantId.SYS_TENANT_ID, savedApiKey);
+
+        Assert.assertNotNull(rotatedApiKey);
+        Assert.assertEquals(savedApiKey.getId(), rotatedApiKey.getId());
+        Assert.assertNotEquals(originalValue, rotatedApiKey.getValue());
+        Assert.assertTrue(rotatedApiKey.isInternal());
+        Assert.assertEquals(savedApiKey.getDescription(), rotatedApiKey.getDescription());
+    }
+
+    @Test
+    public void testRotateRegularApiKey_shouldFail() {
+        ApiKeyInfo apiKeyInfo = createApiKeyInfo("Regular API key");
+        ApiKey savedApiKey = apiKeyService.saveApiKey(tenantId, apiKeyInfo);
+        Assert.assertFalse(savedApiKey.isInternal());
+
+        assertThatThrownBy(() -> apiKeyService.rotateInternalApiKey(tenantId, savedApiKey))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Can't rotate non-internal API Key!");
+    }
+
+    @Test
     public void testDeleteApiKey() {
         ApiKeyInfo apiKeyInfo = createApiKeyInfo(TEST_API_KEY_DESCRIPTION);
         ApiKey savedApiKey = apiKeyService.saveApiKey(tenantId, apiKeyInfo);
@@ -220,6 +392,26 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
         Assert.assertNotNull(pageData);
         Assert.assertEquals(0, pageData.getData().size());
         Assert.assertEquals(0, pageData.getTotalElements());
+    }
+
+    @Test
+    public void testDeleteInternalApiKey_shouldFailWithoutForce() {
+        ApiKeyInfo apiKeyInfo = createApiKeyInfo("Internal key for deletion test");
+        apiKeyInfo.setTenantId(TenantId.SYS_TENANT_ID);
+        apiKeyInfo.setInternal(true);
+
+        ApiKey savedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
+
+        assertThatThrownBy(() -> apiKeyService.deleteApiKey(TenantId.SYS_TENANT_ID, savedApiKey, false))
+                .isInstanceOf(DataValidationException.class)
+                .hasMessageContaining("Cannot delete internal API Key!");
+
+        ApiKey foundKey = apiKeyService.findApiKeyById(TenantId.SYS_TENANT_ID, savedApiKey.getId());
+        Assert.assertNotNull(foundKey);
+
+        apiKeyService.deleteApiKey(TenantId.SYS_TENANT_ID, savedApiKey, true);
+        foundKey = apiKeyService.findApiKeyById(TenantId.SYS_TENANT_ID, savedApiKey.getId());
+        Assert.assertNull(foundKey);
     }
 
     private ApiKeyInfo createApiKeyInfo(String description) {

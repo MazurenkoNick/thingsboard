@@ -333,4 +333,5 @@ public class CustomMenuController extends BaseController {
     private void checkWhiteLabelingPermissions(Operation operation) throws ThingsboardException {
         accessControlService.checkPermission(getCurrentUser(), Resource.WHITE_LABELING, operation);
     }
+
 }

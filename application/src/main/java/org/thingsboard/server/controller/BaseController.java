@@ -917,7 +917,7 @@ public abstract class BaseController {
                 checkEntity(entityId, entity, resource, entityGroupId);
             }
         } else {
-            checkEntity(entityId, entity, resource, null);
+            checkEntity(entityId, entity, resource);
         }
     }
 

@@ -30,6 +30,8 @@
  */
 package org.thingsboard.server.service.security.permission;
 
+import org.thingsboard.server.common.data.TenantEntity;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.service.security.model.SecurityUser;
@@ -53,6 +55,12 @@ public abstract class AbstractPermissions extends HashMap<Resource, PermissionCh
 
         @Override
         public boolean hasPermission(SecurityUser user, Resource resource, Operation operation) {
+            return user.getUserPermissions().hasGenericPermission(resource, operation);
+        }
+
+        @Override
+        public boolean hasPermission(SecurityUser user, Operation operation, EntityId entityId, TenantEntity entity) {
+            Resource resource = Resource.resourceFromEntityType(entity.getEntityType());
             return user.getUserPermissions().hasGenericPermission(resource, operation);
         }
 

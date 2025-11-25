@@ -581,7 +581,7 @@ public class DeviceController extends BaseController {
             } catch (ThingsboardException e) {
                 return false;
             }
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
     @ApiOperation(value = "Get Device Types (getDeviceTypes)",
