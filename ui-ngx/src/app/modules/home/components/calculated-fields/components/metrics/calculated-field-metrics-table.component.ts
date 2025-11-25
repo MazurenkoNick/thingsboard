@@ -55,6 +55,7 @@ import {
   AggInputTypeTranslations,
   CalculatedFieldAggMetric,
   CalculatedFieldAggMetricValue,
+  CalculatedFieldArgument,
 } from '@shared/models/calculated-field.models';
 import { MatButton } from '@angular/material/button';
 import { TbPopoverService } from '@shared/components/popover.service';
@@ -91,10 +92,11 @@ import { AceHighlightRules } from '@shared/models/ace/ace.models';
 })
 export class CalculatedFieldMetricsTableComponent implements OnInit, ControlValueAccessor, Validator, AfterViewInit {
 
-  @Input() arguments: Array<string>;
+  @Input() arguments: Record<string, CalculatedFieldArgument>;
   @Input() editorCompleter: TbEditorCompleter;
   @Input() highlightRules: AceHighlightRules;
   @Input({transform: booleanAttribute}) simpleMode: boolean = false;
+  @Input() calculatedFieldId: string;
   @Input({transform: booleanAttribute}) readonly: boolean;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
@@ -182,6 +184,7 @@ export class CalculatedFieldMetricsTableComponent implements OnInit, ControlValu
         editorCompleter: this.editorCompleter,
         highlightRules: this.highlightRules,
         simpleMode: this.simpleMode,
+        calculatedFieldId: this.calculatedFieldId
       };
       this.popoverComponent = this.popoverService.displayPopover({
         trigger,

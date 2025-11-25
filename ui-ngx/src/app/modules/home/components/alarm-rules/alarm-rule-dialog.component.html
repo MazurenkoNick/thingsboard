@@ -73,6 +73,7 @@
             <tb-entity-type-select appearance="outline"
                                    subscriptSizing="dynamic"
                                    showLabel
+                                   required
                                    label="{{ 'alarm-rule.target-entity-type' | translate }}"
                                    [filterAllowedEntityTypes]="false"
                                    [allowedEntityTypes]="alarmRuleEntityTypeList"
@@ -99,12 +100,14 @@
                                                [tenantId]="data.tenantId"
                                                [ownerId]="ownerId"
                                                [readonly]="data.readonly"
+                                               [watchKeyChange]="true"
+                                               [disabledAddButton]="!fieldFormGroup.get('entityId.id').value"
                                                [entityName]="data.entityName"/>
         </div>
         <div class="tb-form-panel">
           <div class="tb-form-panel-title">{{ 'alarm-rule.create-conditions' | translate }}</div>
           <div class="flex flex-1 flex-col">
-            <tb-create-cf-alarm-rules formControlName="createRules" [arguments]="arguments">
+            <tb-create-cf-alarm-rules formControlName="createRules" [arguments]="arguments" [value]="data.value">
             </tb-create-cf-alarm-rules>
           </div>
         </div>
@@ -113,7 +116,7 @@
           <div class="flex flex-row items-center justify-start gap-2 pb-2"
                [class.!hidden]="!configFormGroup.get('clearRule').value">
             <div class="clear-alarm-rule flex flex-1 flex-row">
-              <tb-cf-alarm-rule formControlName="clearRule" class="flex-1" [arguments]="arguments">
+              <tb-cf-alarm-rule formControlName="clearRule" class="flex-1" [arguments]="arguments" [value]="data.value" isClearCondition>
               </tb-cf-alarm-rule>
             </div>
             @if (!data.readonly) {
@@ -136,9 +139,7 @@
               <button mat-stroked-button color="primary"
                       type="button"
                       (click)="addClearAlarmRule()"
-                      matTooltip="{{ 'alarm-rule.add-clear-alarm-rule' | translate }}"
                       matTooltipPosition="above">
-                <mat-icon class="button-icon">add_circle_outline</mat-icon>
                 {{ 'alarm-rule.add-clear-alarm-rule' | translate }}
               </button>
             </div>

@@ -91,6 +91,8 @@ export class RelatedEntitiesAggregationComponentComponent implements ControlValu
   @Input({ transform: booleanAttribute })
   readonly: boolean;
 
+  @Input() calculatedFieldId: string;
+
   readonly ScriptLanguage = ScriptLanguage;
   readonly CalculatedFieldType = CalculatedFieldType;
   readonly OutputType = OutputType;
@@ -111,7 +113,7 @@ export class RelatedEntitiesAggregationComponentComponent implements ControlValu
   });
 
   arguments$ = this.relatedAggregationConfiguration.get('arguments').valueChanges.pipe(
-    map(argumentsObj => Object.keys(argumentsObj))
+    map(argumentsObj => argumentsObj)
   );
 
   argumentsEditorCompleter$ = this.relatedAggregationConfiguration.get('arguments').valueChanges.pipe(

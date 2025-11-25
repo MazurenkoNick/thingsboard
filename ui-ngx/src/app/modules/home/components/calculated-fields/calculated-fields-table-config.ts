@@ -39,7 +39,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { Direction } from '@shared/models/page/sort-order';
 import { MatDialog } from '@angular/material/dialog';
 import { PageLink } from '@shared/models/page/page-link';
-import { Observable, of } from 'rxjs';
+import { EMPTY, Observable, of } from 'rxjs';
 import { PageData } from '@shared/models/page/page-data';
 import { EntityId } from '@shared/models/id/entity-id';
 import { Store } from '@ngrx/store';
@@ -79,6 +79,7 @@ import { TbPopoverService } from '@shared/components/popover.service';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { Resource } from '@shared/models/security.models';
 import { UtilsService } from "@core/services/utils.service";
+import { ActionNotificationShow } from "@core/notification/notification.actions";
 
 export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedField> {
 
@@ -298,6 +299,19 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
     this.importExportService.openCalculatedFieldImportDialog()
       .pipe(
         filter(Boolean),
+        switchMap(calculatedField => {
+          if (calculatedField.type === CalculatedFieldType.ALARM) {
+            this.store.dispatch(new ActionNotificationShow({
+              message: this.translate.instant('calculated-fields.hint.import-invalid-calculated-field-type'),
+              type: 'error',
+              verticalPosition: 'top',
+              horizontalPosition: 'left',
+              duration: 5000
+            }));
+            return EMPTY;
+          }
+          return of(calculatedField);
+        }),
         switchMap(calculatedField => this.getCalculatedFieldDialog(this.updateImportedCalculatedField(calculatedField), 'action.add', true)),
         filter(Boolean),
         switchMap(calculatedField => this.calculatedFieldsService.saveCalculatedField(calculatedField)),

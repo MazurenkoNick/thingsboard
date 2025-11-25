@@ -43,7 +43,7 @@ import { isDefinedAndNotNull } from '@core/utils';
 import { DashboardId } from '@shared/models/id/dashboard-id';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AlarmRule, AlarmRuleCondition } from "@shared/models/alarm-rule.models";
-import { CalculatedFieldArgument } from "@shared/models/calculated-field.models";
+import { CalculatedField, CalculatedFieldArgument } from "@shared/models/calculated-field.models";
 import {
   AlarmRuleDetailsDialogComponent,
   AlarmRuleDetailsDialogData
@@ -79,6 +79,13 @@ export class CfAlarmRuleComponent implements ControlValueAccessor, OnInit, Valid
 
   @Input()
   arguments: Record<string, CalculatedFieldArgument>;
+
+  @Input()
+  @coerceBoolean()
+  isClearCondition = false;
+
+  @Input()
+  value: CalculatedField;
 
   private modelValue: AlarmRule;
 
