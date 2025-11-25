@@ -33,17 +33,14 @@ package org.thingsboard.server.service.edge.rpc.processor.scheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.common.util.JacksonUtil;
-import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.dao.service.DataValidator;
-import org.thingsboard.server.gen.edge.v1.DeviceUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.SchedulerEventUpdateMsg;
 import org.thingsboard.server.service.edge.rpc.processor.BaseEdgeProcessor;
-import org.thingsboard.server.service.scheduler.SchedulerService;
 
 @Slf4j
 public abstract class BaseSchedulerEventProcessor extends BaseEdgeProcessor {
@@ -51,38 +48,37 @@ public abstract class BaseSchedulerEventProcessor extends BaseEdgeProcessor {
     @Autowired
     private DataValidator<SchedulerEvent> schedulerEventValidator;
 
-    @Autowired
-    protected SchedulerService schedulerService;
-
-    protected Boolean saveOrUpdateSchedulerEvent(TenantId tenantId, SchedulerEventId schedulerEventId, SchedulerEventUpdateMsg schedulerEventUpdateMsg) {
+    protected Boolean saveOrUpdateSchedulerEvent(TenantId tenantId, SchedulerEventId schedulerEventId, SchedulerEventUpdateMsg schedulerEventUpdateMsg, boolean isEnabledDuringCreation) {
         boolean created = false;
         try {
             SchedulerEvent schedulerEvent = JacksonUtil.fromString(schedulerEventUpdateMsg.getEntity(), SchedulerEvent.class, true);
             if (schedulerEvent == null) {
                 throw new RuntimeException("[{" + tenantId + "}] schedulerEventUpdateMsg {" + schedulerEventUpdateMsg + "} cannot be converted to scheduler event");
             }
-            SchedulerEvent schedulerEventById = edgeCtx.getSchedulerEventService().findSchedulerEventById(tenantId, schedulerEventId);
-            if (schedulerEventById == null) {
+            SchedulerEvent existingSchedulerEvent = edgeCtx.getSchedulerEventService().findSchedulerEventById(tenantId, schedulerEventId);
+            if (existingSchedulerEvent == null) {
                 created = true;
                 schedulerEvent.setId(null);
             }
             schedulerEventValidator.validate(schedulerEvent, SchedulerEventInfo::getTenantId);
             if (created) {
+                updateEnabledBasedOnCreationRules(isEnabledDuringCreation, schedulerEvent);
                 schedulerEvent.setId(schedulerEventId);
+            } else {
+                schedulerEvent.setEnabled(existingSchedulerEvent.isEnabled());
             }
             edgeCtx.getSchedulerEventService().saveSchedulerEvent(schedulerEvent, false);
-
-            if (created) {
-                schedulerService.onSchedulerEventAdded(schedulerEvent);
-            } else {
-                schedulerService.onSchedulerEventUpdated(schedulerEvent);
-            }
 
         } catch (Exception e) {
             log.error("[{}] Failed to process scheduler event update msg [{}]", tenantId, schedulerEventUpdateMsg, e);
             throw e;
         }
         return created;
+    }
+
+    private void updateEnabledBasedOnCreationRules(boolean isEnabledByDefault, SchedulerEvent newSchedulerEvent) {
+        boolean isEnabled = newSchedulerEvent.isEnabled() && isEnabledByDefault;
+        newSchedulerEvent.setEnabled(isEnabled);
     }
 
     protected abstract void setCustomerId(TenantId tenantId, CustomerId customerId, SchedulerEvent schedulerEvent);

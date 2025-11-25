@@ -145,6 +145,7 @@ public class SchedulerEventEdgeTest extends AbstractEdgeTest {
 
         SchedulerEvent foundSchedulerEvent = doGet("/api/schedulerEvent/" + schedulerEvent.getId().getId(), SchedulerEvent.class);
         compareExpectedAndActual(schedulerEvent, foundSchedulerEvent);
+        Assert.assertFalse(foundSchedulerEvent.isEnabled());
 
         Assert.assertEquals(1, getEdgeSchedulerEvents().getData().size());
 
@@ -158,6 +159,7 @@ public class SchedulerEventEdgeTest extends AbstractEdgeTest {
 
         foundSchedulerEvent = doGet("/api/schedulerEvent/" + schedulerEvent.getId().getId(), SchedulerEvent.class);
         compareExpectedAndActual(schedulerEvent, foundSchedulerEvent);
+        Assert.assertFalse(foundSchedulerEvent.isEnabled());
 
         // delete from edge
         edgeImitator.expectResponsesAmount(1);
@@ -189,6 +191,7 @@ public class SchedulerEventEdgeTest extends AbstractEdgeTest {
 
         SchedulerEvent foundSchedulerEvent = doGet("/api/schedulerEvent/" + schedulerEvent.getId().getId(), SchedulerEvent.class);
         compareExpectedAndActual(schedulerEvent, foundSchedulerEvent);
+        Assert.assertFalse(foundSchedulerEvent.isEnabled());
 
         Assert.assertEquals(1, getEdgeSchedulerEvents().getData().size());
 
@@ -202,6 +205,7 @@ public class SchedulerEventEdgeTest extends AbstractEdgeTest {
 
         foundSchedulerEvent = doGet("/api/schedulerEvent/" + schedulerEvent.getId().getId(), SchedulerEvent.class);
         compareExpectedAndActual(schedulerEvent, foundSchedulerEvent);
+        Assert.assertFalse(foundSchedulerEvent.isEnabled());
 
         // delete from edge
         edgeImitator.expectResponsesAmount(1);
@@ -291,6 +295,7 @@ public class SchedulerEventEdgeTest extends AbstractEdgeTest {
         schedulerEvent.setName(name);
         schedulerEvent.setType("irrigation");
         schedulerEvent.setTenantId(tenantId);
+        schedulerEvent.setEnabled(true);
 
         ObjectNode schedule = JacksonUtil.newObjectNode();
         schedule.put("startTime", System.currentTimeMillis());

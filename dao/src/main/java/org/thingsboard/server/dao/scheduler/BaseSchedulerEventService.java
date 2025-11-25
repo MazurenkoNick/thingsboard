@@ -49,12 +49,12 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.report.ScheduledReportQuery;
+import org.thingsboard.server.common.data.scheduler.ScheduledReportInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventTimeFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
-import org.thingsboard.server.common.data.scheduler.ScheduledReportInfo;
 import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.entity.AbstractEntityService;
 import org.thingsboard.server.dao.entity.EntityCountService;
@@ -165,8 +165,11 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
     @Override
     public SchedulerEvent saveSchedulerEvent(SchedulerEvent schedulerEvent, boolean doValidate) {
         log.trace("Executing saveSchedulerEvent [{}]", schedulerEvent);
+        SchedulerEvent oldSchedulerEvent = null;
         if (doValidate) {
-            schedulerEventValidator.validate(schedulerEvent, SchedulerEventInfo::getTenantId);
+            oldSchedulerEvent = schedulerEventValidator.validate(schedulerEvent, SchedulerEventInfo::getTenantId);
+        } else if (schedulerEvent.getId() != null) {
+            oldSchedulerEvent = findSchedulerEventById(schedulerEvent.getTenantId(), schedulerEvent.getId());
         }
         try {
             SchedulerEvent savedSchedulerEvent = schedulerEventDao.save(schedulerEvent.getTenantId(), schedulerEvent);
@@ -174,7 +177,7 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
                 entityCountService.publishCountEntityEvictEvent(schedulerEvent.getTenantId(), EntityType.SCHEDULER_EVENT);
             }
             eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(schedulerEvent.getTenantId())
-                    .entityId(savedSchedulerEvent.getId()).entity(savedSchedulerEvent).created(schedulerEvent.getId() == null).build());
+                    .entityId(savedSchedulerEvent.getId()).entity(savedSchedulerEvent).created(oldSchedulerEvent == null).build());
             return savedSchedulerEvent;
         } catch (Exception e) {
             checkConstraintViolation(e,
