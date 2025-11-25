@@ -92,17 +92,16 @@ public class ApiKeyServiceImpl extends AbstractCachedEntityService<ApiKeyCacheKe
         log.trace("Executing saveApiKey [{}]", apiKeyInfo);
         try {
             var apiKey = new ApiKey(apiKeyInfo);
+            if (!TenantId.SYS_TENANT_ID.equals(apiKey.getTenantId()) || !apiKey.isInternal()) {
+                apiKey.setInternal(false);
+                apiKey.setPermissions(null);
+            }
             var old = apiKeyValidator.validate(apiKey, ApiKeyInfo::getTenantId);
             if (old == null) {
                 String value = generateApiKeySecret();
                 apiKey.setValue(value);
             } else {
                 apiKey.setValue(old.getValue());
-            }
-
-            if (!TenantId.SYS_TENANT_ID.equals(apiKey.getTenantId()) || !apiKey.isInternal()) {
-                apiKey.setInternal(false);
-                apiKey.setPermissions(null);
             }
 
             var savedApiKey = apiKeyDao.save(tenantId, apiKey);

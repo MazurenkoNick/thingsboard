@@ -124,8 +124,11 @@ public class AssetProfileController extends BaseController {
             @PathVariable(ASSET_PROFILE_ID) String strAssetProfileId) throws ThingsboardException {
         checkParameter(ASSET_PROFILE_ID, strAssetProfileId);
         AssetProfileId assetProfileId = new AssetProfileId(toUUID(strAssetProfileId));
-        checkEntityId(assetProfileId, Operation.READ);
-        return checkNotNull(assetProfileService.findAssetProfileInfoById(getTenantId(), assetProfileId));
+        AssetProfileInfo assetProfileInfo = checkNotNull(assetProfileService.findAssetProfileInfoById(getTenantId(), assetProfileId));
+        if (!getTenantId().equals(assetProfileInfo.getTenantId())) {
+            throw permissionDenied();
+        }
+        return assetProfileInfo;
     }
 
     @ApiOperation(value = "Get Default Asset Profile (getDefaultAssetProfileInfo)",

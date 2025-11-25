@@ -41,9 +41,6 @@ import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.pat.ApiKey;
-import org.thingsboard.server.common.data.permission.MergedUserPermissions;
-import org.thingsboard.server.common.data.permission.Operation;
-import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.pat.ApiKeyService;
 import org.thingsboard.server.service.security.auth.AbstractAuthenticationProvider;
@@ -51,9 +48,6 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.model.token.ApiKeyAuthRequest;
 import org.thingsboard.server.service.security.permission.UserPermissionsService;
 import org.thingsboard.server.service.user.cache.UserAuthDetailsCache;
-
-import java.util.Map;
-import java.util.Set;
 
 @Component
 public class ApiKeyAuthenticationProvider extends AbstractAuthenticationProvider {
@@ -95,14 +89,7 @@ public class ApiKeyAuthenticationProvider extends AbstractAuthenticationProvider
         if (resolvedUser.isPublicCustomer()) {
             securityUser = super.authenticateByPublicId(resolvedUser.customerId().toString(), "Internal API key", null);
         } else {
-            securityUser = authenticateByUserId(resolvedUser.tenantId(), resolvedUser.userId());
-        }
-
-        if (apiKey.isInternal() && apiKey.getPermissions() != null) {
-            Map<Resource, Set<Operation>> permissions = apiKey.getPermissions().getPermissionsForAuthority(securityUser.getAuthority());
-            if (permissions != null) {
-                securityUser.setUserPermissions(new MergedUserPermissions(permissions, securityUser.getUserPermissions().getGroupPermissions()));
-            }
+            securityUser = authenticateByUserId(resolvedUser.tenantId(), resolvedUser.userId(), apiKey.isInternal() ? apiKey.getPermissions() : null);
         }
 
         return securityUser;

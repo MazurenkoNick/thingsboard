@@ -478,13 +478,7 @@ public class AdminController extends BaseController {
             "further log in processing and generating access tokens. " + SYSTEM_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @GetMapping(value = "/mail/oauth2/loginProcessingUrl")
-    public String getMailProcessingUrl() throws ThingsboardException {
-        SecurityUser user = getCurrentUser();
-        if (user.isSystemAdmin()) {
-            accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.READ);
-        } else {
-            accessControlService.checkPermission(user, Resource.WHITE_LABELING, Operation.READ);
-        }
+    public String getMailProcessingUrl() {
         return "\"/api/admin/mail/oauth2/code\"";
     }
 

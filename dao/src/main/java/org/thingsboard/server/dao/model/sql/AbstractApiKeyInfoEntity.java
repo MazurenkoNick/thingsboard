@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.dao.model.sql;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.Column;
@@ -42,6 +41,7 @@ import org.thingsboard.server.common.data.id.ApiKeyId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.pat.ApiKeyInfo;
+import org.thingsboard.server.common.data.permission.AuthorityPermissionsInfo;
 import org.thingsboard.server.dao.model.BaseEntity;
 import org.thingsboard.server.dao.model.BaseSqlEntity;
 
@@ -106,7 +106,7 @@ public abstract class AbstractApiKeyInfoEntity<T extends ApiKeyInfo> extends Bas
         apiKeyInfo.setExpirationTime(expirationTime);
         apiKeyInfo.setDescription(description);
         apiKeyInfo.setInternal(internal);
-        apiKeyInfo.setPermissions(fromJson(permissions, new TypeReference<>() {}));
+        apiKeyInfo.setPermissions(fromJson(permissions, AuthorityPermissionsInfo.class));
         return apiKeyInfo;
     }
 

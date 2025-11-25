@@ -95,7 +95,6 @@ public class QueueController extends BaseController {
                                                         @Parameter(description = SORT_ORDER_DESCRIPTION, schema = @Schema(allowableValues = {"ASC", "DESC"}))
                                                         @RequestParam(required = false) String sortOrder) throws ThingsboardException {
         checkParameter("serviceType", serviceType);
-        accessControlService.checkPermission(getCurrentUser(), Resource.QUEUE, Operation.READ);
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         ServiceType type = ServiceType.of(serviceType);
         switch (type) {
@@ -127,7 +126,6 @@ public class QueueController extends BaseController {
     public Queue getQueueByName(@Parameter(description = QUEUE_NAME_PARAM_DESCRIPTION)
                                 @PathVariable("queueName") String queueName) throws ThingsboardException {
         checkParameter("queueName", queueName);
-        accessControlService.checkPermission(getCurrentUser(), Resource.QUEUE, Operation.READ);
         return checkNotNull(queueService.findQueueByTenantIdAndName(getTenantId(), queueName));
     }
 

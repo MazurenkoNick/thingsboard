@@ -44,7 +44,10 @@ import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.permission.AuthorityPermissionsInfo;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
+import org.thingsboard.server.common.data.permission.Operation;
+import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.service.security.model.SecurityUser;
@@ -52,6 +55,9 @@ import org.thingsboard.server.service.security.model.UserPrincipal;
 import org.thingsboard.server.service.security.permission.UserPermissionsService;
 import org.thingsboard.server.service.user.cache.UserAuthDetailsCache;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -99,7 +105,7 @@ public abstract class AbstractAuthenticationProvider implements AuthenticationPr
         return new SecurityUser(user, true, principal, userPermissions);
     }
 
-    protected SecurityUser authenticateByUserId(TenantId tenantId, UserId userId) {
+    protected SecurityUser authenticateByUserId(TenantId tenantId, UserId userId, AuthorityPermissionsInfo permissionsInfo) {
         UserAuthDetails userAuthDetails = userAuthDetailsCache.getUserAuthDetails(tenantId, userId);
         if (userAuthDetails == null) {
             throw new UsernameNotFoundException("User with credentials not found");
@@ -116,6 +122,14 @@ public abstract class AbstractAuthenticationProvider implements AuthenticationPr
         UserPrincipal userPrincipal = new UserPrincipal(UserPrincipal.Type.USER_NAME, user.getEmail());
 
         MergedUserPermissions userPermissions;
+        if (permissionsInfo != null) {
+            Map<Resource, Set<Operation>> permissions = permissionsInfo.getPermissionsForAuthority(user.getAuthority());
+            if (permissions != null && !permissions.isEmpty()) {
+                userPermissions = new MergedUserPermissions(permissions, new HashMap<>());
+                return new SecurityUser(user, true, userPrincipal, userPermissions);
+            }
+        }
+
         try {
             userPermissions = userPermissionsService.getMergedPermissions(user, false);
         } catch (Exception e) {

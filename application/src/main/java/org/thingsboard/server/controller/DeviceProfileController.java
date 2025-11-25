@@ -132,8 +132,11 @@ public class DeviceProfileController extends BaseController {
             @PathVariable(DEVICE_PROFILE_ID) String strDeviceProfileId) throws ThingsboardException {
         checkParameter(DEVICE_PROFILE_ID, strDeviceProfileId);
         DeviceProfileId deviceProfileId = new DeviceProfileId(toUUID(strDeviceProfileId));
-        checkEntityId(deviceProfileId, Operation.READ);
-        return checkNotNull(deviceProfileService.findDeviceProfileInfoById(getTenantId(), deviceProfileId));
+        DeviceProfileInfo deviceProfileInfo = checkNotNull(deviceProfileService.findDeviceProfileInfoById(getTenantId(), deviceProfileId));
+        if (!getTenantId().equals(deviceProfileInfo.getTenantId())) {
+            throw permissionDenied();
+        }
+        return deviceProfileInfo;
     }
 
     @ApiOperation(value = "Get Default Device Profile (getDefaultDeviceProfileInfo)",
