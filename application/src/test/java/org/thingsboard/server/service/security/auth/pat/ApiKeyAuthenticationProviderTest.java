@@ -30,17 +30,34 @@
  */
 package org.thingsboard.server.service.security.auth.pat;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.audit.ActionType;
+import org.thingsboard.server.common.data.domain.DomainInfo;
 import org.thingsboard.server.common.data.edge.Edge;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.pat.ApiKey;
 import org.thingsboard.server.common.data.pat.ApiKeyInfo;
+import org.thingsboard.server.common.data.permission.AuthorityPermissionsInfo;
+import org.thingsboard.server.common.data.permission.Operation;
+import org.thingsboard.server.common.data.permission.Resource;
+import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.controller.AbstractControllerTest;
+import org.thingsboard.server.dao.pat.ApiKeyService;
 import org.thingsboard.server.dao.service.DaoSqlTest;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.thingsboard.server.dao.model.ModelConstants.NULL_UUID;
@@ -48,13 +65,19 @@ import static org.thingsboard.server.dao.model.ModelConstants.NULL_UUID;
 @DaoSqlTest
 public class ApiKeyAuthenticationProviderTest extends AbstractControllerTest {
 
+    private final TypeReference<PageData<Device>> PAGE_DATA_DEVICE_TYPE_REF = new TypeReference<>() {};
+    private final TypeReference<PageData<DomainInfo>> PAGE_DATA_DOMAIN_TYPE_REF = new TypeReference<>() {};
+
     ApiKey savedApiKey;
+
+    @Autowired
+    private ApiKeyService apiKeyService;
 
     @Before
     public void setUp() throws Exception {
         loginTenantAdmin();
 
-        ApiKeyInfo apiKeyInfo = constructApiKeyInfo();
+        ApiKeyInfo apiKeyInfo = constructApiKeyInfo(tenantId, tenantAdminUserId, false, null);
         savedApiKey = doPost("/api/apiKey", apiKeyInfo, ApiKey.class);
         setApiKey(savedApiKey.getValue());
     }
@@ -71,7 +94,7 @@ public class ApiKeyAuthenticationProviderTest extends AbstractControllerTest {
 
         Mockito.reset(tbClusterService, auditLogService);
 
-        Edge savedEdge = doPostWithApiKey("/api/edge", edge, Edge.class);
+        Edge savedEdge = doPostWithApiKey("/api/edge", edge, Edge.class, null);
 
         Assert.assertNotNull(savedEdge);
         Assert.assertNotNull(savedEdge.getId());
@@ -86,7 +109,7 @@ public class ApiKeyAuthenticationProviderTest extends AbstractControllerTest {
                 ActionType.ADDED, 2);
 
         savedEdge.setName("My new edge");
-        doPostWithApiKey("/api/edge", savedEdge, Edge.class);
+        doPostWithApiKey("/api/edge", savedEdge, Edge.class, null);
 
         Edge foundEdge = doGetWithApiKey("/api/edge/" + savedEdge.getId().getId().toString(), Edge.class);
         Assert.assertEquals(foundEdge.getName(), savedEdge.getName());
@@ -108,7 +131,7 @@ public class ApiKeyAuthenticationProviderTest extends AbstractControllerTest {
 
     @Test
     public void testUnauthorizedWhenKeyExpired() throws Exception {
-        ApiKeyInfo apiKeyInfo = constructApiKeyInfo();
+        ApiKeyInfo apiKeyInfo = constructApiKeyInfo(tenantId, tenantAdminUserId, false, null);
         apiKeyInfo.setExpirationTime(System.currentTimeMillis() - 1000);
         ApiKey savedApiKeyWithBad = doPost("/api/apiKey", apiKeyInfo, ApiKey.class);
         setApiKey(savedApiKeyWithBad.getValue());
@@ -116,12 +139,124 @@ public class ApiKeyAuthenticationProviderTest extends AbstractControllerTest {
         doGetWithApiKey("/api/admin/featuresInfo").andExpect(status().isUnauthorized());
     }
 
-    private ApiKeyInfo constructApiKeyInfo() {
+    @Test
+    public void testInternalApiKeyWithTenantAdminPermissions_canOnlyRead() throws Exception {
+        loginSysAdmin();
+
+        Map<Resource, Set<Operation>> tenantAdminPermissions = new HashMap<>();
+        tenantAdminPermissions.put(Resource.DEVICE, Set.of(Operation.READ));
+
+        Map<Authority, Map<Resource, Set<Operation>>> operationsByResource = new HashMap<>();
+        operationsByResource.put(Authority.TENANT_ADMIN, tenantAdminPermissions);
+
+        AuthorityPermissionsInfo authorityPermissionsInfo = new AuthorityPermissionsInfo();
+        authorityPermissionsInfo.setOperationsByResource(operationsByResource);
+
+        var apiKeyInfo = constructApiKeyInfo(TenantId.SYS_TENANT_ID, currentUserId, true, authorityPermissionsInfo);
+        ApiKey internalApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
+        Assert.assertNotNull(internalApiKey);
+        Assert.assertTrue(internalApiKey.isInternal());
+
+        setApiKey(internalApiKey.getValue());
+
+        PageLink pageLink = new PageLink(15, 0);
+        doGetTypedWithPageLinkAndInternalApiKey("/api/tenant/devices?", PAGE_DATA_DEVICE_TYPE_REF, pageLink, tenantAdminUserId);
+
+        Device device = constructDevice("Read permissions for device");
+
+        doPostWithApiKey("/api/device", device, tenantAdminUserId)
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void testInternalApiKeyWithTenantAdminPermissions_allPermissionsForDevice() throws Exception {
+        loginSysAdmin();
+
+        Map<Resource, Set<Operation>> tenantAdminPermissions = new HashMap<>();
+        tenantAdminPermissions.put(Resource.DEVICE, Set.of(Operation.ALL));
+
+        Map<Authority, Map<Resource, Set<Operation>>> operationsByResource = new HashMap<>();
+        operationsByResource.put(Authority.TENANT_ADMIN, tenantAdminPermissions);
+
+        AuthorityPermissionsInfo authorityPermissionsInfo = new AuthorityPermissionsInfo();
+        authorityPermissionsInfo.setOperationsByResource(operationsByResource);
+
+        var apiKeyInfo = constructApiKeyInfo(TenantId.SYS_TENANT_ID, currentUserId, true, authorityPermissionsInfo);
+        ApiKey internalApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
+        Assert.assertNotNull(internalApiKey);
+        Assert.assertTrue(internalApiKey.isInternal());
+
+        setApiKey(internalApiKey.getValue());
+
+        PageLink pageLink = new PageLink(15, 0);
+        doGetTypedWithPageLinkAndInternalApiKey("/api/tenant/devices?", PAGE_DATA_DEVICE_TYPE_REF, pageLink, tenantAdminUserId);
+
+        Device device = constructDevice("All permissions for device");
+        Device savedDevice = doPostWithApiKey("/api/device", device, Device.class, tenantAdminUserId);
+
+        doDeleteWithInternalApiKey("/api/device/" + savedDevice.getId().getId().toString(), tenantAdminUserId)
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testInternalApiKeyWithTenantAdminPermissions_noPermissionsForDevice() throws Exception {
+        loginSysAdmin();
+
+        Map<Resource, Set<Operation>> tenantAdminPermissions = new HashMap<>();
+        tenantAdminPermissions.put(Resource.ASSET, Set.of(Operation.ALL));
+
+        Map<Authority, Map<Resource, Set<Operation>>> operationsByResource = new HashMap<>();
+        operationsByResource.put(Authority.TENANT_ADMIN, tenantAdminPermissions);
+
+        AuthorityPermissionsInfo authorityPermissionsInfo = new AuthorityPermissionsInfo();
+        authorityPermissionsInfo.setOperationsByResource(operationsByResource);
+
+        var apiKeyInfo = constructApiKeyInfo(TenantId.SYS_TENANT_ID, currentUserId, true, authorityPermissionsInfo);
+        ApiKey internalApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
+        Assert.assertNotNull(internalApiKey);
+        Assert.assertTrue(internalApiKey.isInternal());
+
+        setApiKey(internalApiKey.getValue());
+
+        doGetWithInternalApiKey("/api/tenant/devices?deviceName=" + "Test", tenantAdminUserId)
+                .andExpect(status().isForbidden());
+
+        Device device = constructDevice("No permissions for device");
+        doPostWithApiKey("/api/device", device, tenantAdminUserId)
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void testInternalApiKeyWithNoPermission_useApiKeyUserPermissionsAsDefault() throws Exception {
+        loginSysAdmin();
+
+        var apiKeyInfo = constructApiKeyInfo(TenantId.SYS_TENANT_ID, currentUserId, true, null);
+        ApiKey internalApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
+        Assert.assertNotNull(internalApiKey);
+        Assert.assertTrue(internalApiKey.isInternal());
+
+        setApiKey(internalApiKey.getValue());
+
+        doGetTypedWithPageLinkAndInternalApiKey("/api/domain/infos?", PAGE_DATA_DOMAIN_TYPE_REF, new PageLink(10, 0), null);
+    }
+
+    private ApiKeyInfo constructApiKeyInfo(TenantId tenantId, UserId userId, boolean internal, AuthorityPermissionsInfo permissions) {
         ApiKeyInfo apiKeyInfo = new ApiKeyInfo();
-        apiKeyInfo.setDescription("New API key description");
+        apiKeyInfo.setUserId(userId);
+        apiKeyInfo.setPermissions(permissions);
+        apiKeyInfo.setDescription("API key");
+        apiKeyInfo.setTenantId(tenantId);
+        apiKeyInfo.setInternal(internal);
         apiKeyInfo.setEnabled(true);
-        apiKeyInfo.setUserId(tenantAdminUserId);
         return apiKeyInfo;
+    }
+
+    private Device constructDevice(String name) {
+        Device device = new Device();
+        device.setName(name);
+        device.setType("default");
+        device.setTenantId(tenantId);
+        return device;
     }
 
 }

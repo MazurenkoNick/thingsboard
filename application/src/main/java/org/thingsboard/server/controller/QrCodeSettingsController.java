@@ -173,7 +173,7 @@ public class QrCodeSettingsController extends BaseController {
     @GetMapping(value = "/api/mobile/qr/merged")
     public QrCodeSettings getMergedMobileAppSettings() throws ThingsboardException {
         SecurityUser currentUser = getCurrentUser();
-        accessControlService.checkPermission(getCurrentUser(), Resource.MOBILE_APP_SETTINGS, Operation.READ);
+        accessControlService.checkPermission(currentUser, Resource.MOBILE_APP_SETTINGS, Operation.READ);
         return qrCodeSettingService.getMergedQrCodeSettings(currentUser.getTenantId());
     }
 

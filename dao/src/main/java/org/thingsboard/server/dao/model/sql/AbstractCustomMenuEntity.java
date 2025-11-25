@@ -41,7 +41,6 @@ import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.menu.CMAssigneeType;
 import org.thingsboard.server.common.data.menu.CMScope;
-import org.thingsboard.server.common.data.menu.CustomMenu;
 import org.thingsboard.server.common.data.menu.CustomMenuInfo;
 import org.thingsboard.server.dao.model.BaseSqlEntity;
 
@@ -52,7 +51,6 @@ import static org.thingsboard.server.dao.model.ModelConstants.CUSTOM_MENU_ASSIGN
 import static org.thingsboard.server.dao.model.ModelConstants.CUSTOM_MENU_NAME;
 import static org.thingsboard.server.dao.model.ModelConstants.CUSTOM_MENU_SCOPE;
 import static org.thingsboard.server.dao.model.ModelConstants.TENANT_ID_COLUMN;
-
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -116,4 +114,5 @@ public abstract class AbstractCustomMenuEntity<T extends CustomMenuInfo> extends
         customMenuInfo.setAssigneeType(assigneeType);
         return customMenuInfo;
     }
+
 }

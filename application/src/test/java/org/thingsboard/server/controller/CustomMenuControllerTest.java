@@ -208,7 +208,7 @@ public class CustomMenuControllerTest extends AbstractControllerTest {
         doDelete("/api/customMenu/" + subCustomerMenu.getId());
         JsonNode currentSubCustomerMenu2 = doGet("/api/customMenu", JsonNode.class);
         assertCustomMenuConfig(currentSubCustomerMenu2, customerDefaultConfig);
-        
+
         loginCustomerAdminUser();
         // delete customer default menu
         doDelete("/api/customMenu/" + customerDefaultMenu.getId());

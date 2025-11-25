@@ -917,6 +917,8 @@ CREATE TABLE IF NOT EXISTS api_key (
     enabled boolean NOT NULL DEFAULT TRUE,
     expiration_time bigint DEFAULT 0,
     description varchar(255),
+    internal boolean NOT NULL DEFAULT FALSE,
+    permissions json,
     CONSTRAINT api_key_value_unq_key UNIQUE (value)
 );
 

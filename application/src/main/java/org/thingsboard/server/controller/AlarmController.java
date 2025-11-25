@@ -157,7 +157,7 @@ public class AlarmController extends BaseController {
     public Alarm saveAlarm(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "A JSON value representing the alarm.") @RequestBody Alarm alarm) throws ThingsboardException {
         alarm.setTenantId(getTenantId());
         checkNotNull(alarm.getOriginator());
-        checkEntity(alarm.getId(), alarm, Resource.ALARM, null);
+        checkEntity(alarm.getId(), alarm, Resource.ALARM);
         checkEntityId(alarm.getOriginator(), Operation.READ);
         if (alarm.getAssigneeId() != null) {
             checkUserId(alarm.getAssigneeId(), Operation.READ);
