@@ -90,7 +90,8 @@ public class SchedulerEventEdgeProcessor extends BaseSchedulerEventProcessor imp
     }
 
     private void saveOrUpdateSchedulerEvent(TenantId tenantId, SchedulerEventId schedulerEventId, SchedulerEventUpdateMsg schedulerEventUpdateMsg, Edge edge) {
-        Boolean created = super.saveOrUpdateSchedulerEvent(tenantId, schedulerEventId, schedulerEventUpdateMsg);
+        boolean enableDuringCreation = false;
+        Boolean created = super.saveOrUpdateSchedulerEvent(tenantId, schedulerEventId, schedulerEventUpdateMsg, enableDuringCreation);
         if (created) {
             createRelationFromEdge(tenantId, edge.getId(), schedulerEventId);
             pushSchedulerEventCreatedEventToRuleEngine(tenantId, edge, schedulerEventId);
@@ -113,7 +114,7 @@ public class SchedulerEventEdgeProcessor extends BaseSchedulerEventProcessor imp
     public DownlinkMsg convertEdgeEventToDownlink(EdgeEvent edgeEvent, EdgeVersion edgeVersion) {
         SchedulerEventId schedulerEventId = new SchedulerEventId(edgeEvent.getEntityId());
         switch (edgeEvent.getAction()) {
-            case ADDED, UPDATED, ASSIGNED_TO_EDGE -> {
+            case UPDATED, ASSIGNED_TO_EDGE -> {
                 SchedulerEvent schedulerEvent = edgeCtx.getSchedulerEventService().findSchedulerEventById(edgeEvent.getTenantId(), schedulerEventId);
                 if (schedulerEvent != null) {
                     UpdateMsgType msgType = getUpdateMsgType(edgeEvent.getAction());
