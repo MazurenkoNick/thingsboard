@@ -41,6 +41,7 @@ import org.thingsboard.server.common.data.edge.EdgeEvent;
 import org.thingsboard.server.common.data.edge.EdgeEventActionType;
 import org.thingsboard.server.common.data.edge.EdgeEventType;
 import org.thingsboard.server.common.data.id.EdgeId;
+import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityIdFactory;
 import org.thingsboard.server.common.data.id.GroupPermissionId;
@@ -109,8 +110,11 @@ public class GroupPermissionsEdgeProcessor extends BaseEdgeProcessor {
                     PageDataIterable<EdgeId> edgeIds = new PageDataIterable<>(
                             link -> edgeCtx.getEdgeService().findRelatedEdgeIdsByEntityId(tenantId, groupPermission.getUserGroupId(), EntityType.USER, link), 1024);
                     for (EdgeId edgeId : edgeIds) {
+                        EntityType entityGroupType = groupPermission.getEntityGroupType();
+                        EntityGroupId targetGroupId = entityGroupType == null ? groupPermission.getUserGroupId() : groupPermission.getEntityGroupId();
+                        EntityType targetGroupType = entityGroupType == null ? EntityType.USER : entityGroupType;
                         ListenableFuture<Boolean> checkFuture =
-                                edgeCtx.getEntityGroupService().checkEntityGroupAssignedToEdgeAsync(tenantId, edgeId, groupPermission.getEntityGroupId(), groupPermission.getEntityGroupType());
+                                edgeCtx.getEntityGroupService().checkEntityGroupAssignedToEdgeAsync(tenantId, edgeId, targetGroupId, targetGroupType);
                         futures.add(Futures.transformAsync(checkFuture, exists -> {
                             if (Boolean.TRUE.equals(exists)) {
                                 return saveEdgeEvent(tenantId, edgeId, type, actionType, entityId, null);
