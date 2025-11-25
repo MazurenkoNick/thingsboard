@@ -90,8 +90,7 @@ public class SchedulerEventEdgeProcessor extends BaseSchedulerEventProcessor imp
     }
 
     private void saveOrUpdateSchedulerEvent(TenantId tenantId, SchedulerEventId schedulerEventId, SchedulerEventUpdateMsg schedulerEventUpdateMsg, Edge edge) {
-        boolean enableDuringCreation = false;
-        Boolean created = super.saveOrUpdateSchedulerEvent(tenantId, schedulerEventId, schedulerEventUpdateMsg, enableDuringCreation);
+        Boolean created = super.saveOrUpdateSchedulerEvent(tenantId, schedulerEventId, schedulerEventUpdateMsg);
         if (created) {
             createRelationFromEdge(tenantId, edge.getId(), schedulerEventId);
             pushSchedulerEventCreatedEventToRuleEngine(tenantId, edge, schedulerEventId);
@@ -139,6 +138,11 @@ public class SchedulerEventEdgeProcessor extends BaseSchedulerEventProcessor imp
     @Override
     public EdgeEventType getEdgeEventType() {
         return EdgeEventType.SCHEDULER_EVENT;
+    }
+
+    @Override
+    protected boolean isEnabledDuringCreation() {
+        return false;
     }
 
     @Override

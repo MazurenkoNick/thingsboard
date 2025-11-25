@@ -48,7 +48,7 @@ public abstract class BaseSchedulerEventProcessor extends BaseEdgeProcessor {
     @Autowired
     private DataValidator<SchedulerEvent> schedulerEventValidator;
 
-    protected Boolean saveOrUpdateSchedulerEvent(TenantId tenantId, SchedulerEventId schedulerEventId, SchedulerEventUpdateMsg schedulerEventUpdateMsg, boolean isEnabledDuringCreation) {
+    protected Boolean saveOrUpdateSchedulerEvent(TenantId tenantId, SchedulerEventId schedulerEventId, SchedulerEventUpdateMsg schedulerEventUpdateMsg) {
         boolean created = false;
         try {
             SchedulerEvent schedulerEvent = JacksonUtil.fromString(schedulerEventUpdateMsg.getEntity(), SchedulerEvent.class, true);
@@ -62,7 +62,7 @@ public abstract class BaseSchedulerEventProcessor extends BaseEdgeProcessor {
             }
             schedulerEventValidator.validate(schedulerEvent, SchedulerEventInfo::getTenantId);
             if (created) {
-                updateEnabledBasedOnCreationRules(isEnabledDuringCreation, schedulerEvent);
+                updateEnabledBasedOnCreationRules(schedulerEvent);
                 schedulerEvent.setId(schedulerEventId);
             } else {
                 schedulerEvent.setEnabled(existingSchedulerEvent.isEnabled());
@@ -76,10 +76,12 @@ public abstract class BaseSchedulerEventProcessor extends BaseEdgeProcessor {
         return created;
     }
 
-    private void updateEnabledBasedOnCreationRules(boolean isEnabledByDefault, SchedulerEvent newSchedulerEvent) {
-        boolean isEnabled = newSchedulerEvent.isEnabled() && isEnabledByDefault;
+    private void updateEnabledBasedOnCreationRules(SchedulerEvent newSchedulerEvent) {
+        boolean isEnabled = newSchedulerEvent.isEnabled() && isEnabledDuringCreation();
         newSchedulerEvent.setEnabled(isEnabled);
     }
+
+    protected abstract boolean isEnabledDuringCreation();
 
     protected abstract void setCustomerId(TenantId tenantId, CustomerId customerId, SchedulerEvent schedulerEvent);
 }
