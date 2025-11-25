@@ -74,7 +74,6 @@ public abstract class BaseUserProcessor extends BaseEdgeProcessor {
                 isCreated = true;
                 user.setId(null);
             } else {
-                changeOwnerIfRequired(tenantId, user.getCustomerId(), userById.getId());
                 user.setId(userId);
             }
 
