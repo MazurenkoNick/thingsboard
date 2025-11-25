@@ -49,8 +49,7 @@ import { SignupDialogComponent, SignupDialogData } from '@modules/signup/pages/s
 import { from } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UserPasswordPolicy } from '@shared/models/settings.models';
-import { passwordErrorRules, passwordStrengthValidator } from '@shared/models/password.models';
-import { ConnectionPositionPair } from '@angular/cdk/overlay';
+import { passwordStrengthValidator } from '@shared/models/password.models';
 
 @Component({
   selector: 'tb-signup',
@@ -60,8 +59,6 @@ import { ConnectionPositionPair } from '@angular/cdk/overlay';
 export class SignupComponent extends PageComponent {
 
   @ViewChild('recaptcha') recaptchaComponent: ReCaptcha2Component;
-
-  passwordErrorRules = passwordErrorRules;
 
   private signupRequest = SignupRequest.create();
 
@@ -73,16 +70,6 @@ export class SignupComponent extends PageComponent {
   acceptTermsOfUse: boolean;
   signupParams = this.selfRegistrationService.signUpParams;
   passwordPolicy: UserPasswordPolicy;
-
-  isTooltipOpen= false;
-
-  overlayPositions: ConnectionPositionPair[] = [
-    {
-      originX: 'center', originY: 'top',
-      overlayX: 'center', overlayY: 'bottom',
-      offsetY: -20
-    }
-  ]
 
   @HostBinding('class') class = 'tb-custom-css';
 
@@ -135,10 +122,6 @@ export class SignupComponent extends PageComponent {
     } else {
       this.signup.markAllAsTouched();
     }
-  }
-
-  checkForError(errorName: string): boolean {
-    return this.signup.get('fields.PASSWORD').hasError(errorName);
   }
 
   get passwordErrorsLength(): number {
