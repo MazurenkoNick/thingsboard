@@ -41,6 +41,7 @@ import { CreatePasswordComponent } from '@modules/login/pages/login/create-passw
 import { TwoFactorAuthLoginComponent } from '@modules/login/pages/login/two-factor-auth-login.component';
 import { LinkExpiredComponent } from '@modules/login/pages/login/link-expired.component';
 import { ForceTwoFactorAuthLoginComponent } from '@modules/login/pages/login/force-two-factor-auth-login.component';
+import { PasswordRequirementsTooltipComponent } from '@modules/login/pages/login/password-requirements-tooltip.component';
 
 @NgModule({
   declarations: [
@@ -51,6 +52,7 @@ import { ForceTwoFactorAuthLoginComponent } from '@modules/login/pages/login/for
     TwoFactorAuthLoginComponent,
     LinkExpiredComponent,
     ForceTwoFactorAuthLoginComponent,
+    PasswordRequirementsTooltipComponent
   ],
   imports: [
     CommonModule,

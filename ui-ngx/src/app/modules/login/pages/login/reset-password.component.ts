@@ -96,16 +96,8 @@ export class ResetPasswordComponent extends PageComponent {
     });
   }
 
-  getPasswordErrors(): string[] {
-    const control = this.resetPassword.get('newPassword');
-    if (!control || !control.errors) {
-      return [];
-    }
-    return Object.keys(control.errors).map((errorKey) => {
-      const key = PasswordErrorMessageKey[errorKey as keyof typeof PasswordErrorMessageKey]
-        ?? PasswordErrorMessageKey.default;
-      return this.translate.instant(key, this.passwordPolicy);
-    });
+  get passwordErrorsLength(): number {
+    return Object.keys(this.resetPassword.get('newPassword')?.errors ?? {}).length;
   }
 
   onResetPassword() {

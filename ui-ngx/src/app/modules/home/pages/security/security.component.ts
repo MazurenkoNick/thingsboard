@@ -214,13 +214,16 @@ export class SecurityComponent extends PageComponent implements OnInit, OnDestro
       const newPass = newPassControl?.value ?? '';
 
       if (current && newPass && current === newPass) {
-        newPassControl?.setErrors({ passwordSameAsOld: true });
+        newPassControl?.setErrors({
+          ...newPassControl.errors,
+          passwordSameAsOld: true
+        });
         return { passwordSameAsOld: true };
       } else {
         const currentErrors = newPassControl?.errors;
-        if (currentErrors?.['passwordSameAsOld']) {
+        if (currentErrors?.passwordSameAsOld) {
           const { passwordSameAsOld, ...rest } = currentErrors;
-          newPassControl?.setErrors(Object.keys(rest).length ? rest : null);
+          newPassControl.setErrors(Object.keys(rest).length ? rest : null);
         }
         return null;
       }
