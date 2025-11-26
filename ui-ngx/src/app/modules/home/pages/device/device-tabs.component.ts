@@ -32,7 +32,7 @@
 import { Component } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
-import { Device } from '@shared/models/device.models';
+import { Device, DeviceInfo } from '@shared/models/device.models';
 import { EntityTabsComponent } from '../../components/entity/entity-tabs.component';
 import { EntityId } from "@shared/models/id/entity-id";
 

@@ -236,7 +236,8 @@ export class CalculatedFieldMetricsPanelComponent implements OnInit {
           arguments: resultArguments,
           expression: expression,
           argumentsEditorCompleter: getCalculatedFieldArgumentsEditorCompleter(argumentsList),
-          argumentsHighlightRules: getCalculatedFieldArgumentsHighlights(argumentsList)
+          argumentsHighlightRules: getCalculatedFieldArgumentsHighlights(argumentsList),
+          readonly: false
         }
       }).afterClosed()
       .pipe(

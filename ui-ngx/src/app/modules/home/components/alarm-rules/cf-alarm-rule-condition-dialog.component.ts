@@ -167,12 +167,6 @@ export class CfAlarmRuleConditionDialogComponent extends DialogComponent<CfAlarm
     this.durationDynamicModeControl.patchValue(!!this.condition?.value?.dynamicValueArgument, {emitEvent: false});
     this.repeatingDynamicModeControl.patchValue(!!this.condition?.count?.dynamicValueArgument, {emitEvent: false});
 
-    if (this.readonly) {
-      this.conditionFormGroup.disable({emitEvent: false});
-      this.durationDynamicModeControl.disable({emitEvent: false});
-      this.repeatingDynamicModeControl.disable({emitEvent: false});
-    }
-
     this.conditionFormGroup.get('type').valueChanges.pipe(
       takeUntilDestroyed()
     ).subscribe((type) => {
@@ -199,6 +193,11 @@ export class CfAlarmRuleConditionDialogComponent extends DialogComponent<CfAlarm
 
     this.updateValidators(this.conditionFormGroup.get('type').value ?? AlarmRuleConditionType.SIMPLE);
     this.updateExpressionTypeValidator(this.condition?.expression?.type ?? 'SIMPLE');
+    if (this.readonly) {
+      this.conditionFormGroup.disable({emitEvent: false});
+      this.durationDynamicModeControl.disable({emitEvent: false});
+      this.repeatingDynamicModeControl.disable({emitEvent: false});
+    }
   }
 
   updateStaticValueValidator(type: AlarmRuleConditionType, dynamicValue: boolean) {
@@ -298,7 +297,8 @@ export class CfAlarmRuleConditionDialogComponent extends DialogComponent<CfAlarm
           arguments: resultArguments,
           expression: expression,
           argumentsEditorCompleter: getCalculatedFieldArgumentsEditorCompleter(argumentsList),
-          argumentsHighlightRules: getCalculatedFieldArgumentsHighlights(argumentsList)
+          argumentsHighlightRules: getCalculatedFieldArgumentsHighlights(argumentsList),
+          readonly: this.readonly,
         }
       }).afterClosed()
       .pipe(

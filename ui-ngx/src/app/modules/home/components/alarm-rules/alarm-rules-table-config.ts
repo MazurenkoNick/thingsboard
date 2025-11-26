@@ -161,14 +161,16 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
     this.columns.push(new EntityTableColumn<CalculatedFieldAlarmRule>('clearRule', 'alarm-rule.cleared', '70px',
       entity => checkBoxCell(!!entity.configuration.clearRule), ()=> { return {padding: 0, textAlign: 'center'}}, false));
 
-    this.cellActionDescriptors.push(
-      {
-        name: this.translate.instant('notification.copy-template'),
-        icon: 'content_copy',
-        isEnabled: () => true,
-        onAction: ($event, entity) => this.copyCalculatedField(entity)
-      }
-    );
+    if (!this.readonly) {
+      this.cellActionDescriptors.push(
+        {
+          name: this.translate.instant('notification.copy-template'),
+          icon: 'content_copy',
+          isEnabled: () => true,
+          onAction: ($event, entity) => this.copyCalculatedField(entity)
+        }
+      );
+    }
     this.cellActionDescriptors.push(
       {
         name: this.translate.instant('action.export'),
