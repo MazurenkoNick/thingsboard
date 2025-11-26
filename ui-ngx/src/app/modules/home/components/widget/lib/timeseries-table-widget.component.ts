@@ -126,12 +126,14 @@ import { FormBuilder } from '@angular/forms';
 import { DEFAULT_OVERLAY_POSITIONS } from '@shared/models/overlay.models';
 import { DateFormatSettings, ValueFormatProcessor } from '@shared/models/widget-settings.models';
 import { entityFields } from '@shared/models/entity.models';
+import { toUtcDate } from '@shared/models/time/time.models';
 
 export interface TimeseriesTableWidgetSettings extends TableWidgetSettings {
   showTimestamp: boolean;
   showMilliseconds: boolean;
   hideEmptyLines: boolean;
   dateFormat: DateFormatSettings;
+  timestampExportOption: columnExportOptions;
   sortOrder: SortOrder;
 }
 
