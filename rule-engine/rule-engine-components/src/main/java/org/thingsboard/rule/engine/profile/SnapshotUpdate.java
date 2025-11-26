@@ -36,6 +36,7 @@ import org.thingsboard.server.common.data.device.profile.AlarmConditionKeyType;
 
 import java.util.Set;
 
+@Deprecated
 class SnapshotUpdate {
 
     @Getter

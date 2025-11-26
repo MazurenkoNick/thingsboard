@@ -50,7 +50,7 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 import java.util.List;
 
 @Slf4j
-@Component(value = "tenantAdminPermissions")
+@Component
 public class TenantAdminPermissions extends AbstractPermissions {
 
     @Autowired
@@ -65,7 +65,6 @@ public class TenantAdminPermissions extends AbstractPermissions {
     public TenantAdminPermissions() {
         super();
         //TODO: entities-version-merge
-        put(Resource.ADMIN_SETTINGS, PermissionChecker.allowAllPermissionChecker);
         put(Resource.PROFILE, genericPermissionChecker);
         put(Resource.ALARM, tenantStandaloneEntityPermissionChecker);
         put(Resource.ASSET, tenantGroupEntityPermissionChecker);
@@ -114,6 +113,7 @@ public class TenantAdminPermissions extends AbstractPermissions {
         put(Resource.REPORT_TEMPLATE, tenantStandaloneEntityPermissionChecker);
         put(Resource.REPORT, tenantStandaloneEntityPermissionChecker);
         put(Resource.AI_MODEL, tenantStandaloneEntityPermissionChecker);
+        put(Resource.API_KEY, tenantStandaloneEntityPermissionChecker);
     }
 
     public static final PermissionChecker tenantStandaloneEntityPermissionChecker = new PermissionChecker() {
@@ -278,15 +278,6 @@ public class TenantAdminPermissions extends AbstractPermissions {
             } else {
                 return user.getUserPermissions().hasGenericPermission(Resource.WHITE_LABELING, operation);
             }
-        }
-
-    };
-
-    public static final PermissionChecker genericPermissionChecker = new PermissionChecker() {
-
-        @Override
-        public boolean hasPermission(SecurityUser user, Resource resource, Operation operation) {
-            return user.getUserPermissions().hasGenericPermission(resource, operation);
         }
 
     };

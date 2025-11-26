@@ -193,7 +193,7 @@ export class ImageReferencesComponent implements OnInit {
             break;
           case EntityType.AI_MODEL:
             detailsUrl = '/settings/ai-models';
-            queryParams = {textSearch: entity.name}
+            queryParams = {textSearch: encodeURI(entity.name)}
             break;
           default:
             detailsUrl = getEntityDetailsPageURL(entity.id.id, entityType);

@@ -32,6 +32,8 @@ package org.thingsboard.server.common.data.cf.configuration.geofencing;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.springframework.lang.Nullable;
 import org.thingsboard.server.common.data.AttributeScope;
@@ -51,8 +53,10 @@ public class ZoneGroupConfiguration {
     private EntityId refEntityId;
     private CfArgumentDynamicSourceConfiguration refDynamicSourceConfiguration;
 
+    @NotBlank
     private final String perimeterKeyName;
 
+    @NotNull
     private final GeofencingReportStrategy reportStrategy;
     private final boolean createRelationsWithMatchedZones;
 
@@ -62,12 +66,6 @@ public class ZoneGroupConfiguration {
     public void validate(String name) {
         if (EntityCoordinates.ENTITY_ID_LATITUDE_ARGUMENT_KEY.equals(name) || EntityCoordinates.ENTITY_ID_LONGITUDE_ARGUMENT_KEY.equals(name)) {
             throw new IllegalArgumentException("Name '" + name + "' is reserved and cannot be used for zone group!");
-        }
-        if (StringUtils.isBlank(perimeterKeyName)) {
-            throw new IllegalArgumentException("Perimeter key name must be specified for '" + name + "' zone group!");
-        }
-        if (reportStrategy == null) {
-            throw new IllegalArgumentException("Report strategy must be specified for '" + name + "' zone group!");
         }
         if (refDynamicSourceConfiguration != null) {
             refDynamicSourceConfiguration.validate();
@@ -88,7 +86,7 @@ public class ZoneGroupConfiguration {
     }
 
     public boolean hasCurrentOwnerSource() {
-        return toArgument().hasCurrentOwnerSource();
+        return toArgument().hasOwnerSource();
     }
 
     @JsonIgnore
@@ -111,4 +109,5 @@ public class ZoneGroupConfiguration {
         argument.setRefEntityKey(new ReferencedEntityKey(perimeterKeyName, ArgumentType.ATTRIBUTE, AttributeScope.SERVER_SCOPE));
         return argument;
     }
+
 }

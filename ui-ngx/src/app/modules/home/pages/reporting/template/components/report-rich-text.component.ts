@@ -67,6 +67,12 @@ import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 const TB_SRC_ATTRIBUTE = 'data-tb-src';
 const MCE_SRC_ATTRIBUTE = 'data-mce-src';
 
+const findReportComponentCssLink = (): string => {
+  const stylesLink = Array.from(document.getElementsByTagName('link'))
+  .find((link: HTMLLinkElement) => link.rel === 'stylesheet' && link.getAttribute('href').startsWith('report-component'));
+  return stylesLink ? '/' + stylesLink.getAttribute('href') : '';
+}
+
 @Component({
   selector: 'tb-report-rich-text',
   templateUrl: './report-rich-text.component.html',
@@ -98,7 +104,7 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor, On
   tinyMceOptions: Partial<EditorOptions> = {
     base_url: '/assets/tinymce',
     body_class: 'tb-report-component',
-    content_css: ['/report-component.css'],
+    content_css: [findReportComponentCssLink()],
     suffix: '.min',
     formats: {
       'tb-medium': {

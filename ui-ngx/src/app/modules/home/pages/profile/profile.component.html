@@ -52,7 +52,7 @@
         <fieldset [disabled]="(isLoading$ | async) || readonly">
           <mat-form-field class="mat-block">
             <mat-label translate>user.email</mat-label>
-            <input matInput type="email" formControlName="email" required/>
+            <input matInput type="email" formControlName="email"/>
             <mat-error *ngIf="profile.get('email').hasError('required')">
               {{ 'user.email-required' | translate }}
             </mat-error>
@@ -73,9 +73,11 @@
                           [enableFlagsSelect]="true"
                           formControlName="phone">
           </tb-phone-input>
-          <mat-form-field class="mat-block">
+          <mat-form-field class="mat-block" floatLabel="always">
             <mat-label translate>language.language</mat-label>
-            <mat-select formControlName="language">
+            <mat-select formControlName="language"
+                        [placeholder]="'language.auto' | translate">
+              <mat-option [value]="null">{{ 'language.auto' | translate }}</mat-option>
               <mat-option *ngFor="let lang of languageList" [value]="lang[0]">
                 {{ lang[1] }}
               </mat-option>

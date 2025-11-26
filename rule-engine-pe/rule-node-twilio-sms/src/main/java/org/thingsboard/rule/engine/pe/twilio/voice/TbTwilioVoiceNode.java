@@ -38,7 +38,6 @@ import com.twilio.twiml.voice.Say;
 import com.twilio.twiml.voice.SsmlProsody;
 import com.twilio.type.PhoneNumber;
 import com.twilio.type.Twiml;
-import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.rule.engine.api.RuleNode;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbNode;
@@ -52,7 +51,6 @@ import org.thingsboard.server.common.msg.TbMsg;
 
 import static org.thingsboard.common.util.DonAsynchron.withCallback;
 
-@Slf4j
 @RuleNode(
         type = ComponentType.EXTERNAL,
         name = "twilio voice",
@@ -62,7 +60,7 @@ import static org.thingsboard.common.util.DonAsynchron.withCallback;
         uiResources = {"static/rulenode/twilio-config.js"},
         configDirective = "tbActionNodeTwilioVoiceConfig",
         icon = "phone_in_talk",
-        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/external-nodes/#twilio-voice-node",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/external/twilio-voice/",
         hasSecrets = true
 )
 public class TbTwilioVoiceNode implements TbNode {

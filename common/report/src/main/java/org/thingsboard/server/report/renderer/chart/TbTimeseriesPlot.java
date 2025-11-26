@@ -253,6 +253,9 @@ public class TbTimeseriesPlot extends XYPlot implements TbLegendItemSource {
 
     private boolean hasTopLabels() {
         for (XYDataset dataset : this.getDatasets().values()) {
+            if (dataset == null) {
+                continue;
+            }
             int datasetIndex = indexOf(dataset);
             XYItemRenderer renderer = this.getRenderer(datasetIndex);
             for (int series = 0; series < dataset.getSeriesCount(); series++) {

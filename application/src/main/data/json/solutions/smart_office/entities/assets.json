@@ -8,7 +8,6 @@
     "attributes": {
       "address": "246 Bowery New York NY 10012 United States",
       "email": "support@office-center.com",
-      "floorPlan": "https://img.thingsboard.io/dashboards/smart-building/office-floor-plan.jpg",
       "phone": "+1112223334"
     },
     "relations": []

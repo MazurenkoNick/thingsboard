@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.scheduler;
 
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,12 +69,13 @@ import org.thingsboard.server.exception.DataValidationException;
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validateIds;
 
-@Service("SchedulerEventDaoService")
 @Slf4j
+@Service("SchedulerEventDaoService")
 public class BaseSchedulerEventService extends AbstractEntityService implements SchedulerEventService {
 
     public static final String INCORRECT_TENANT_ID = "Incorrect tenantId ";
@@ -164,6 +166,10 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
 
     @Override
     public SchedulerEvent saveSchedulerEvent(SchedulerEvent schedulerEvent, boolean doValidate) {
+        return saveEntity(schedulerEvent, () -> doSaveSchedulerEvent(schedulerEvent, doValidate));
+    }
+
+    private SchedulerEvent doSaveSchedulerEvent(SchedulerEvent schedulerEvent, boolean doValidate) {
         log.trace("Executing saveSchedulerEvent [{}]", schedulerEvent);
         SchedulerEvent oldSchedulerEvent = null;
         if (doValidate) {
@@ -317,6 +323,12 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
     @Override
     public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {
         return Optional.ofNullable(findSchedulerEventById(tenantId, new SchedulerEventId(entityId.getId())));
+    }
+
+    @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(schedulerEventDao.findByIdAsync(tenantId, entityId.getId()))
+                .transform(Optional::ofNullable, directExecutor());
     }
 
     @Override

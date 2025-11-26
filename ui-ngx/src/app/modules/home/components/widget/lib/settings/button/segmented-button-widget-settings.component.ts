@@ -30,7 +30,13 @@
 ///
 
 import { Component } from '@angular/core';
-import { TargetDevice, WidgetSettings, WidgetSettingsComponent, widgetType } from '@shared/models/widget.models';
+import {
+  TargetDevice,
+  WidgetSettings,
+  WidgetSettingsComponent,
+  widgetTitleAutocompleteValues,
+  widgetType
+} from '@shared/models/widget.models';
 import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
@@ -81,6 +87,8 @@ export class SegmentedButtonWidgetSettingsComponent extends WidgetSettingsCompon
   valueType = ValueType;
 
   segmentedButtonWidgetSettingsForm: UntypedFormGroup;
+
+  predefinedValues = widgetTitleAutocompleteValues;
 
   constructor(protected store: Store<AppState>,
               private fb: UntypedFormBuilder) {

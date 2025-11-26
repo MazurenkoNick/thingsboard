@@ -30,24 +30,45 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<mat-tab *ngIf="entity && !isEdit && authUser.authority === authorities.TENANT_ADMIN && (resource.ASSET_PROFILE | hasGenericPermission: operation.READ_CALCULATED_FIELD)"
-         label="{{ 'entity.type-calculated-fields' | translate }}" #calculatedFieldsTab="matTab">
-  <tb-calculated-fields-table
-    [active]="calculatedFieldsTab.isActive"
-    [entityId]="entity.id"
-    [entityName]="entity.name"
-    [ownerId]="entity.tenantId"
-    [readonly]="!(resource.ASSET_PROFILE | hasGenericPermission: operation.WRITE_CALCULATED_FIELD)"
-    [hideClearEventAction]="!(resource.ASSET_PROFILE | hasGenericPermission: operation.WRITE)"
-  />
-</mat-tab>
-<mat-tab *ngIf="entity && !isEdit && (resource.AUDIT_LOG | hasGenericPermission: operation.READ)" #auditLogsTab="matTab"
-         label="{{ 'audit-log.audit-logs' | translate }}">
-  <tb-audit-log-table detailsMode="true" [active]="auditLogsTab.isActive" [auditLogMode]="auditLogModes.ENTITY" [entityId]="entity.id"></tb-audit-log-table>
-</mat-tab>
-<mat-tab *ngIf="entity && !isEdit && ([resource.VERSION_CONTROL, resource.ASSET_PROFILE] | hasGenericPermission: operation.READ)"
-         label="{{ 'version-control.version-control' | translate }}" #versionControlTab="matTab">
-  <tb-version-control detailsMode="true" singleEntityMode="true"
-                      (versionRestored)="entitiesTableConfig.updateData()"
-                      [active]="versionControlTab.isActive" [entityId]="entity.id" [entityName]="entity.name" [externalEntityId]="entity.externalId || entity.id"></tb-version-control>
-</mat-tab>
+@if (entity && !isEdit) {
+  @if (authUser.authority === authorities.TENANT_ADMIN  && (resource.ASSET_PROFILE | hasGenericPermission: operation.READ_CALCULATED_FIELD)) {
+    <mat-tab label="{{ 'entity.type-calculated-fields' | translate }}" #calculatedFieldsTab="matTab">
+      <tb-calculated-fields-table
+        [active]="calculatedFieldsTab.isActive"
+        [entityId]="entity.id"
+        [entityName]="entity.name"
+        [ownerId]="entity.tenantId"
+        [readonly]="!(resource.ASSET_PROFILE | hasGenericPermission: operation.WRITE_CALCULATED_FIELD)"
+        [hideClearEventAction]="!(resource.ASSET_PROFILE | hasGenericPermission: operation.WRITE)"
+      />
+    </mat-tab>
+    <mat-tab #alarmRules="matTab" label="{{'alarm-rule.alarm-rules' | translate }}">
+      <tb-alarm-rules-table
+        [active]="alarmRules.isActive"
+        [entityId]="entity.id"
+        [entityName]="entity.name"
+        [ownerId]="entity.tenantId"
+        [readonly]="!(resource.ASSET_PROFILE | hasGenericPermission: operation.WRITE_CALCULATED_FIELD)"
+        [hideClearEventAction]="!(resource.ASSET_PROFILE | hasGenericPermission: operation.WRITE)">
+      </tb-alarm-rules-table>
+    </mat-tab>
+  }
+  @if ((resource.AUDIT_LOG | hasGenericPermission: operation.READ)) {
+    <mat-tab #auditLogsTab="matTab"
+             label="{{ 'audit-log.audit-logs' | translate }}">
+      <tb-audit-log-table detailsMode="true" [active]="auditLogsTab.isActive" [auditLogMode]="auditLogModes.ENTITY" [entityId]="entity.id"></tb-audit-log-table>
+    </mat-tab>
+  }
+  @if (([resource.VERSION_CONTROL, resource.ASSET_PROFILE] | hasGenericPermission: operation.READ)) {
+    <mat-tab label="{{ 'version-control.version-control' | translate }}" #versionControlTab="matTab">
+      <tb-version-control detailsMode="true"
+                          singleEntityMode="true"
+                          (versionRestored)="entitiesTableConfig.updateData()"
+                          [active]="versionControlTab.isActive"
+                          [entityId]="entity.id"
+                          [entityName]="entity.name"
+                          [externalEntityId]="entity.externalId || entity.id">
+      </tb-version-control>
+    </mat-tab>
+  }
+}

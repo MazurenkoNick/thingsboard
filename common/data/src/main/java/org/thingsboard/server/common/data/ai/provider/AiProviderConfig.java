@@ -34,4 +34,4 @@ public sealed interface AiProviderConfig
         permits
         OpenAiProviderConfig, AzureOpenAiProviderConfig, GoogleAiGeminiProviderConfig,
         GoogleVertexAiGeminiProviderConfig, MistralAiProviderConfig, AnthropicProviderConfig,
-        AmazonBedrockProviderConfig, GitHubModelsProviderConfig {}
+        AmazonBedrockProviderConfig, GitHubModelsProviderConfig, OllamaProviderConfig {}

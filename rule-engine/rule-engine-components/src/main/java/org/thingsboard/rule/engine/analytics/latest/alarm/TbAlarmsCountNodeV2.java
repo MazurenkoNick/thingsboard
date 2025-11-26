@@ -77,7 +77,8 @@ import static org.thingsboard.server.common.data.DataConstants.QUEUE_NAME;
                 "Generates outgoing messages with alarm count values for each found entity. By default, an outgoing message generates with 'POST_TELEMETRY_REQUEST' type. " +
                 "The type of the outgoing messages controls under \"<b>Output message type</b>\" configuration parameter.",
         configDirective = "tbAnalyticsNodeAlarmsCountV2Config",
-        icon = "functions"
+        icon = "functions",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/analytics/alarms-count/"
 )
 public class TbAlarmsCountNodeV2 implements TbNode {
 
@@ -111,7 +112,8 @@ public class TbAlarmsCountNodeV2 implements TbNode {
                     processAlarmsCount = true;
                 }
             }
-        } else if (msg.isTypeOneOf(TbMsgType.ALARM, TbMsgType.ALARM_ACK, TbMsgType.ALARM_CLEAR)) {
+        } else if (msg.isTypeOneOf(TbMsgType.ALARM, TbMsgType.ALARM_CREATED, TbMsgType.ALARM_UPDATED,
+                TbMsgType.ALARM_SEVERITY_UPDATED, TbMsgType.ALARM_ACK, TbMsgType.ALARM_CLEAR)) {
             alarm = convertMsgDataToAlarm(msg);
             processAlarmsCount = true;
         }
@@ -184,7 +186,7 @@ public class TbAlarmsCountNodeV2 implements TbNode {
         } else {
             pageLink = new TimePageLink(alarmSearchPageLink, null, null);
         }
-        AlarmQuery alarmQuery = new AlarmQuery(entityId, pageLink, null, null, null,false);
+        AlarmQuery alarmQuery = new AlarmQuery(entityId, pageLink, null, null, null, false);
         List<Long> alarmCounts = ctx.getAlarmService().findAlarmCounts(ctx.getTenantId(), alarmQuery, filters);
         ObjectNode obj = JacksonUtil.newObjectNode();
         for (int i = 0; i < mappings.size(); i++) {

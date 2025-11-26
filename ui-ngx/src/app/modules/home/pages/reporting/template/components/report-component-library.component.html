@@ -32,6 +32,7 @@
 -->
 <div class="tb-report-component-library" #libraryDragOriginList cdkDropList
      [class.no-padding]="nestedLibrary"
+     [cdkDropListConnectedTo]="context.dragDropCtx.dropLists"
      [cdkDropListEnterPredicate]="dropListEnterPredicate"
      [cdkDropListSortingDisabled]="true">
   @for (id of reportComponentIds; track id) {
@@ -42,7 +43,8 @@
            (cdkDragStarted)="dragStarted($event)"
            (cdkDragEnded)="dragEnded()"
            (cdkDragEntered)="dragEntered()"
-           (cdkDragReleased)="dragReleased()"
+           (cdkDragMoved)="dragMoved($event)"
+           (cdkDragReleased)="dragReleased($event)"
            class="tb-report-component-library-drag-item tb-draggable"
            [class.nested-library]="nestedLibrary">
         <div *cdkDragPlaceholder>

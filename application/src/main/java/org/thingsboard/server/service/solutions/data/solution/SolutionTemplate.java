@@ -41,7 +41,7 @@ import java.util.List;
 @NoArgsConstructor
 public class SolutionTemplate {
 
-    @Schema(description = "ID of the solution template", example = "784f394c-42b6-435a-983c-b7beff2784f9")
+    @Schema(description = "ID of the solution template", example = "smart_office")
     private String id;
     @Schema(description = "Template Title", example = "Smart office")
     private String title;

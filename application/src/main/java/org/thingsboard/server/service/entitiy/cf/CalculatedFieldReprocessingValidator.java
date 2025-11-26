@@ -32,7 +32,7 @@ package org.thingsboard.server.service.entitiy.cf;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.thingsboard.script.api.tbel.TbelInvokeService;
+import org.thingsboard.server.actors.ActorSystemContext;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
 import org.thingsboard.server.common.data.cf.configuration.ArgumentType;
@@ -44,8 +44,6 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
 import org.thingsboard.server.dao.job.JobService;
-import org.thingsboard.server.dao.relation.RelationService;
-import org.thingsboard.server.dao.usagerecord.ApiLimitService;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
 
 import java.util.Map;
@@ -65,9 +63,7 @@ public class CalculatedFieldReprocessingValidator {
     public static final String INVALID_OUTPUT_TYPE = "output type 'Attribute' is not supported.";
 
     private final JobService jobService;
-    private final TbelInvokeService tbelInvokeService;
-    private final ApiLimitService apiLimitService;
-    private final RelationService relationService;
+    private final ActorSystemContext systemContext;
 
     public CfReprocessingValidationResult validate(CalculatedField calculatedField) {
         return checkJobStatus(calculatedField.getTenantId(), calculatedField.getId())
@@ -101,13 +97,13 @@ public class CalculatedFieldReprocessingValidator {
     }
 
     private Optional<CfReprocessingValidationResult> checkExpression(CalculatedField calculatedField) {
-        CalculatedFieldCtx ctx = new CalculatedFieldCtx(calculatedField, tbelInvokeService, apiLimitService, relationService);
+        CalculatedFieldCtx ctx = new CalculatedFieldCtx(calculatedField, systemContext);
         try {
             ctx.init();
         } catch (Exception e) {
             return Optional.of(CfReprocessingValidationResult.invalid(e.getMessage()));
         } finally {
-            ctx.stop();
+            ctx.close();
         }
         return Optional.empty();
     }

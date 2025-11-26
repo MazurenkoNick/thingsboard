@@ -72,6 +72,7 @@ import org.thingsboard.server.common.data.id.EdgeId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.RuleChainId;
+import org.thingsboard.server.common.data.id.TbResourceId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.msg.TbMsgType;
@@ -79,6 +80,7 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.plugin.ComponentLifecycleEvent;
 import org.thingsboard.server.common.data.queue.Queue;
+import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.ToDeviceActorNotificationMsg;
 import org.thingsboard.server.common.msg.edge.EdgeEventUpdateMsg;
@@ -474,8 +476,9 @@ public class DefaultTbClusterService implements TbClusterService {
 
     @Override
     public void onResourceChange(TbResourceInfo resource, TbQueueCallback callback) {
+        TenantId tenantId = resource.getTenantId();
+        TbResourceId resourceId = resource.getId();
         if (resource.getResourceType() == ResourceType.LWM2M_MODEL) {
-            TenantId tenantId = resource.getTenantId();
             log.trace("[{}][{}][{}] Processing change resource", tenantId, resource.getResourceType(), resource.getResourceKey());
             ResourceUpdateMsg resourceUpdateMsg = ResourceUpdateMsg.newBuilder()
                     .setTenantIdMSB(tenantId.getId().getMostSignificantBits())
@@ -486,6 +489,7 @@ public class DefaultTbClusterService implements TbClusterService {
             ToTransportMsg transportMsg = ToTransportMsg.newBuilder().setResourceUpdateMsg(resourceUpdateMsg).build();
             broadcast(transportMsg, DataConstants.LWM2M_TRANSPORT_NAME, callback);
         }
+        broadcastEntityStateChangeEvent(tenantId, resourceId, ComponentLifecycleEvent.UPDATED);
     }
 
     @Override
@@ -501,6 +505,7 @@ public class DefaultTbClusterService implements TbClusterService {
             ToTransportMsg transportMsg = ToTransportMsg.newBuilder().setResourceDeleteMsg(resourceDeleteMsg).build();
             broadcast(transportMsg, DataConstants.LWM2M_TRANSPORT_NAME, callback);
         }
+        broadcastEntityStateChangeEvent(resource.getTenantId(), resource.getId(), ComponentLifecycleEvent.DELETED);
     }
 
     @Override
@@ -527,6 +532,13 @@ public class DefaultTbClusterService implements TbClusterService {
                             .build())
                     .build());
         }
+        ComponentLifecycleMsg msg = ComponentLifecycleMsg.builder()
+                .tenantId(customer.getTenantId())
+                .entityId(customer.getId())
+                .event(oldCustomer == null ? ComponentLifecycleEvent.CREATED : ComponentLifecycleEvent.UPDATED)
+                .ownerChanged(oldCustomer != null && !customer.getOwnerId().equals(oldCustomer.getOwnerId()))
+                .build();
+        broadcast(msg);
     }
 
     private <T> void broadcastEntityChangeToTransport(TenantId tenantId, EntityId entityid, T entity, TbQueueCallback callback) {
@@ -673,11 +685,14 @@ public class DefaultTbClusterService implements TbClusterService {
                 EntityType.DEVICE_PROFILE,
                 EntityType.ASSET_PROFILE,
                 EntityType.JOB,
-                EntityType.CALCULATED_FIELD)
+                EntityType.CALCULATED_FIELD,
+                EntityType.TB_RESOURCE,
+                EntityType.CUSTOMER,
+                EntityType.USER)
                 || (entityType == EntityType.ASSET && msg.getEvent() == ComponentLifecycleEvent.UPDATED)
                 || (entityType == EntityType.DEVICE && msg.getEvent() == ComponentLifecycleEvent.UPDATED);
 
-        boolean toRuleEngine = !toIntegrationExecutor;
+        boolean toRuleEngine = !toIntegrationExecutor && entityType != EntityType.USER;
 
         boolean toTbReport = entityType.isOneOf(EntityType.JOB, EntityType.TENANT);
         Set<String> tbReportServices = partitionService.getAllServiceIds(ServiceType.TB_REPORT);
@@ -728,7 +743,7 @@ public class DefaultTbClusterService implements TbClusterService {
             int toEdgeNfsCnt = toEdgeNfs.getAndSet(0);
             if (toCoreMsgCnt > 0 || toCoreNfsCnt > 0 || toIeNfsCnt > 0 || toRuleEngineMsgsCnt > 0 || toRuleEngineNfsCnt > 0 || toTransportNfsCnt > 0 || toEdgeMsgCnt > 0 || toEdgeNfsCnt > 0) {
                 log.info("To TbCore: [{}] messages [{}] notifications; To TbRuleEngine: [{}] messages [{}] notifications; To Transport: [{}] notifications; " +
-                         "To Integration Executor: [{}] notifications; To Edge: [{}] messages [{}] notifications",
+                                "To Integration Executor: [{}] notifications; To Edge: [{}] messages [{}] notifications",
                         toCoreMsgCnt, toCoreNfsCnt, toRuleEngineMsgsCnt, toRuleEngineNfsCnt, toTransportNfsCnt, toIeNfsCnt, toEdgeMsgCnt, toEdgeNfsCnt);
             }
         }
@@ -808,6 +823,28 @@ public class DefaultTbClusterService implements TbClusterService {
     }
 
     @Override
+    public void onRelationUpdated(TenantId tenantId, EntityRelation entityRelation, TbQueueCallback callback) {
+        ComponentLifecycleMsg msg = ComponentLifecycleMsg.builder()
+                .tenantId(tenantId)
+                .entityId(entityRelation.getFrom())
+                .event(ComponentLifecycleEvent.RELATION_UPDATED)
+                .info(JacksonUtil.valueToTree(entityRelation))
+                .build();
+        broadcast(msg);
+    }
+
+    @Override
+    public void onRelationDeleted(TenantId tenantId, EntityRelation entityRelation, TbQueueCallback callback) {
+        ComponentLifecycleMsg msg = ComponentLifecycleMsg.builder()
+                .tenantId(tenantId)
+                .entityId(entityRelation.getFrom())
+                .event(ComponentLifecycleEvent.RELATION_DELETED)
+                .info(JacksonUtil.valueToTree(entityRelation))
+                .build();
+        broadcast(msg);
+    }
+
+    @Override
     public void sendNotificationMsgToEdge(TenantId tenantId, EdgeId edgeId, EntityId entityId, String body,
                                           EdgeEventType type, EdgeEventActionType action, EdgeId originatorEdgeId) {
         sendNotificationMsgToEdge(tenantId, edgeId, entityId, body, type, action, null, null, originatorEdgeId);
@@ -884,6 +921,7 @@ public class DefaultTbClusterService implements TbClusterService {
                     case ADDED_TO_ENTITY_GROUP, REMOVED_FROM_ENTITY_GROUP -> {
                         EdgeId relatedEdgeId = findRelatedEdgeIdIfAny(tenantId, entityId);
                         log.trace("{} Going to send edge update notification for device actor, device id {}, edge id {}", tenantId, entityId, relatedEdgeId);
+
                         pushMsgToCore(new DeviceEdgeUpdateMsg(tenantId, new DeviceId(entityId.getId()), relatedEdgeId), null);
                     }
                 }

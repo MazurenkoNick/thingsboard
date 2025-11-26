@@ -110,6 +110,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static org.thingsboard.server.service.sync.vc.DefaultGitRepositoryService.GROUP_ENTITY_IDS_FILE_SUFFIX;
+
 @TbCoreComponent
 @Service
 @Slf4j
@@ -343,7 +345,7 @@ public class DefaultGitVersionControlQueueService implements GitVersionControlQu
 
     @Override
     public ListenableFuture<List<EntityId>> getGroupEntityIds(TenantId tenantId, String versionId, List<CustomerId> ownerIds, EntityType type, EntityId externalId) {
-        String path = getHierarchyPath(ownerIds) + "groups/" + type.name().toLowerCase() + "/" + externalId.getId() + "_entities.json";
+        String path = getHierarchyPath(ownerIds) + "groups/" + type.name().toLowerCase() + "/" + externalId.getId() + GROUP_ENTITY_IDS_FILE_SUFFIX;
         FileContentGitRequest request = new FileContentGitRequest(tenantId, versionId, path);
         ListenableFuture<String> future = sendRequest(request, builder -> builder.setEntityContentRequest(EntityContentRequestMsg.newBuilder()
                 .setVersionId(versionId)
@@ -635,7 +637,7 @@ public class DefaultGitVersionControlQueueService implements GitVersionControlQu
     }
 
     private static String getGroupEntitiesListPath(EntityType groupType, EntityId groupExternalId) {
-        return "groups/" + groupType.name().toLowerCase() + "/" + groupExternalId + "_entities.json";
+        return "groups/" + groupType.name().toLowerCase() + "/" + groupExternalId + GROUP_ENTITY_IDS_FILE_SUFFIX;
     }
 
     private static String getGroupPath(EntityGroup group) {

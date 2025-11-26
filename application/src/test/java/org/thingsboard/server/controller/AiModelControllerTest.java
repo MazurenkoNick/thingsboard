@@ -38,9 +38,11 @@ import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.ai.AiModel;
 import org.thingsboard.server.common.data.ai.model.chat.AnthropicChatModelConfig;
 import org.thingsboard.server.common.data.ai.model.chat.GoogleAiGeminiChatModelConfig;
+import org.thingsboard.server.common.data.ai.model.chat.GoogleVertexAiGeminiChatModelConfig;
 import org.thingsboard.server.common.data.ai.model.chat.OpenAiChatModelConfig;
 import org.thingsboard.server.common.data.ai.provider.AnthropicProviderConfig;
 import org.thingsboard.server.common.data.ai.provider.GoogleAiGeminiProviderConfig;
+import org.thingsboard.server.common.data.ai.provider.GoogleVertexAiGeminiProviderConfig;
 import org.thingsboard.server.common.data.ai.provider.OpenAiProviderConfig;
 import org.thingsboard.server.common.data.id.AiModelId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -119,7 +121,10 @@ public class AiModelControllerTest extends AbstractControllerTest {
         var model = doPost("/api/ai/model", constructValidOpenAiModel("Test model"), AiModel.class);
 
         var newModelConfig = OpenAiChatModelConfig.builder()
-                .providerConfig(new OpenAiProviderConfig("test-api-key-updated"))
+                .providerConfig(OpenAiProviderConfig.builder()
+                        .baseUrl(OpenAiProviderConfig.OPENAI_OFFICIAL_BASE_URL)
+                        .apiKey("test-api-key-updated")
+                        .build())
                 .modelId("o4-mini")
                 .temperature(0.2)
                 .topP(0.4)
@@ -146,6 +151,55 @@ public class AiModelControllerTest extends AbstractControllerTest {
         assertThat(updatedModel.getName()).isEqualTo("Test model updated");
         assertThat(updatedModel.getConfiguration()).isEqualTo(newModelConfig);
         assertThat(updatedModel.getExternalId()).isNull();
+    }
+
+    // checks that fileName is nullable in PE since it can be null if secrets are used
+    @Test
+    public void saveAiModel_whenCreatingValidVertexModelWithSecretsUsedForKeyAsTenantAdmin_shouldSucceed() throws Exception {
+        // GIVEN
+        loginTenantAdmin();
+
+        // if secrets are used, fileName is null and serviceAccountKey contains a reference to a secret instead of actual contents of key file
+        var providerConfig = GoogleVertexAiGeminiProviderConfig.builder()
+                .fileName(null)
+                .projectId("test-project-123")
+                .location("us-south1")
+                .serviceAccountKey("${secret:test-key;type:TEXT_FILE}")
+                .build();
+
+        var modelConfig = GoogleVertexAiGeminiChatModelConfig.builder()
+                .providerConfig(providerConfig)
+                .modelId("gemini-2.5-pro")
+                .temperature(0.5)
+                .topP(0.3)
+                .frequencyPenalty(0.1)
+                .presencePenalty(0.2)
+                .maxOutputTokens(1000)
+                .timeoutSeconds(60)
+                .maxRetries(2)
+                .build();
+
+        var model = AiModel.builder()
+                .tenantId(tenantId)
+                .name("test-vertex-ai")
+                .configuration(modelConfig)
+                .build();
+
+        // WHEN
+        var savedModel = doPost("/api/ai/model", model, AiModel.class);
+
+        // THEN
+
+        // verify returned object
+        assertThat(savedModel.getId()).isNotNull();
+        assertThat(savedModel.getUuidId()).isNotNull().isNotEqualTo(EntityId.NULL_UUID);
+        assertThat(savedModel.getId().getEntityType()).isEqualTo(EntityType.AI_MODEL);
+        assertThat(savedModel.getCreatedTime()).isPositive();
+        assertThat(savedModel.getVersion()).isEqualTo(1);
+        assertThat(savedModel.getTenantId()).isEqualTo(tenantId);
+        assertThat(savedModel.getName()).isEqualTo("test-vertex-ai");
+        assertThat(savedModel.getConfiguration()).isEqualTo(model.getConfiguration());
+        assertThat(savedModel.getExternalId()).isNull();
     }
 
     /* --- Get by ID API tests --- */
@@ -285,7 +339,7 @@ public class AiModelControllerTest extends AbstractControllerTest {
                 .tenantId(tenantId)
                 .name("Test model 1")
                 .configuration(OpenAiChatModelConfig.builder()
-                        .providerConfig(new OpenAiProviderConfig("test-api-key"))
+                        .providerConfig(OpenAiProviderConfig.builder().apiKey("test-api-key").build())
                         .modelId("o3-pro")
                         .build())
                 .build(), AiModel.class);
@@ -609,7 +663,10 @@ public class AiModelControllerTest extends AbstractControllerTest {
 
     private AiModel constructValidOpenAiModel(String name) {
         var modelConfig = OpenAiChatModelConfig.builder()
-                .providerConfig(new OpenAiProviderConfig("test-api-key"))
+                .providerConfig(OpenAiProviderConfig.builder()
+                        .baseUrl(OpenAiProviderConfig.OPENAI_OFFICIAL_BASE_URL)
+                        .apiKey("test-api-key")
+                        .build())
                 .modelId("gpt-4o")
                 .temperature(0.5)
                 .topP(0.3)

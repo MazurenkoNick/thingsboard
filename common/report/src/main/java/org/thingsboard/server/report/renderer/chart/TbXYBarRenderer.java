@@ -75,6 +75,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.thingsboard.server.report.util.AwtFontUtils.newFont;
 import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
 
 public class TbXYBarRenderer extends XYBarRenderer implements TbItemRenderer {
@@ -117,7 +118,7 @@ public class TbXYBarRenderer extends XYBarRenderer implements TbItemRenderer {
         this.defaultSeriesLabelsVisible = false;
 
         this.seriesLabelFontMap = new HashMap<>();
-        this.defaultSeriesLabelFont = new Font("SansSerif", Font.PLAIN, 10);
+        this.defaultSeriesLabelFont = newFont("sans-serif", Font.PLAIN, 10);
 
         this.seriesLabelPaintList = new PaintList();
         this.defaultSeriesLabelPaint = Color.BLACK;

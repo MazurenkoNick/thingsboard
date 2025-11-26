@@ -117,6 +117,7 @@
       @if (format === TbReportFormat.PDF) {
         <tb-report-component-library-groups
           class="min-h-0 flex-1"
+          [context]="reportComponentContext"
           [subReport]="subReport"
           [format]="format"
           [filter]="reportComponentsFilter">
@@ -124,6 +125,7 @@
       } @else {
         <tb-report-component-library
           class="min-h-0 flex-1"
+          [context]="reportComponentContext"
           [subReport]="subReport"
           [format]="format"
           [filter]="reportComponentsFilter">
@@ -143,6 +145,7 @@
           @if (showHeaderFooter) {
             <tb-report-template-header-footer
               header
+              [context]="reportComponentContext"
               [headerToggleValue]="headerToggleValue"
               [headerFooter]="pdfConfiguration.header"
               [format]="format"
@@ -164,6 +167,7 @@
           <div class="tb-report-components-container">
             <div class="tb-report-components-container-title" translate>report-template.content</div>
             <tb-report-components
+              [context]="reportComponentContext"
               [format]="format"
               [background]="background"
               [width]="pageWidth"
@@ -181,6 +185,7 @@
           @if (showHeaderFooter) {
             <tb-report-template-header-footer
               header="false"
+              [context]="reportComponentContext"
               [headerToggleValue]="footerToggleValue"
               [headerFooter]="pdfConfiguration.footer"
               [format]="format"
@@ -247,7 +252,7 @@
                           isReadOnly="true"
                           headerTitle="{{reportTemplate.name}}"
                           headerSubtitle="{{ (subReport ? 'report-template.sub-report-settings' : 'report-template.report-template-settings') | translate }}">
-          <div class="mat-padding">
+          <div class="mat-padding w-full">
             <tb-report-template-settings
               [formControl]="reportTemplateSettingsFormControl"
               [subReport]="subReport"

@@ -131,6 +131,8 @@ public class TbTimeSeriesChart implements XYSeriesLabelGenerator, TbSeriesLegend
 
     private final ReportTimeSeriesChartSettings chartSettings;
     private final TsChartData chartData;
+    private final Map<String, Object> variables;
+
     private final TbStateValueConverter stateValueConverter;
     private final boolean stackMode;
 
@@ -152,9 +154,12 @@ public class TbTimeSeriesChart implements XYSeriesLabelGenerator, TbSeriesLegend
     private List<TbDatasetKey> datasetKeys;
 
 
-    public TbTimeSeriesChart(ReportTimeSeriesChartSettings chartSettings, TsChartData chartData, TbVisualMap visualMap, String units, Integer decimals) {
+    public TbTimeSeriesChart(ReportTimeSeriesChartSettings chartSettings, TsChartData chartData,
+                             Map<String, Object> variables, TbVisualMap visualMap, String units, Integer decimals) {
         this.chartSettings = chartSettings;
         this.chartData = chartData;
+        this.variables = variables;
+
         this.visualMap = visualMap;
 
         if (!this.chartSettings.getStates().isEmpty()) {
@@ -188,7 +193,8 @@ public class TbTimeSeriesChart implements XYSeriesLabelGenerator, TbSeriesLegend
 
         if (chartSettings.getShowTitle()) {
             Font titleFont = toAwtFont(chartSettings.getTitleFont());
-            TextTitle title = new TextTitle(chartSettings.getTitle(), titleFont);
+            String titleText = ThymeleafUtil.renderFromTextString(chartSettings.getTitle(), this.variables);
+            TextTitle title = new TextTitle(titleText, titleFont);
             title.setPaint(safeParseCssColor(chartSettings.getTitleColor()));
             HorizontalAlignment alignment = HorizontalAlignment.CENTER;
             switch (chartSettings.getTitleAlignment()) {
@@ -265,8 +271,11 @@ public class TbTimeSeriesChart implements XYSeriesLabelGenerator, TbSeriesLegend
         Map<TbDatasetKey, List<TsChartSeriesData>> groupedSeries = datasetGroupsFromSeries(this.seriesList);
 
         this.datasetKeys = new ArrayList<>(groupedSeries.keySet());
-
-        groupedSeries.forEach(this::setupDataset);
+        if (groupedSeries.isEmpty()) {
+            this.plot.setRenderer(0, new TbXYLineAndShapeRenderer());
+        } else {
+            groupedSeries.forEach(this::setupDataset);
+        }
     }
 
     private void setupThresholds() {

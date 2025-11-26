@@ -41,7 +41,6 @@ import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
-import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
@@ -70,9 +69,11 @@ import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -162,15 +163,17 @@ public abstract class AbstractReportService implements ReportService {
         return Collections.emptyList();
     }
 
-    private void updateWithAggregatedData(TbReportCtx ctx, List<DataKey> dataKeysWithAggregation, EntityData entityData) {
-        if (!dataKeysWithAggregation.isEmpty()) {
-            List<BaseReadTsKvQuery> queries = buildReadTsKvQueries(ctx, dataKeysWithAggregation);
+    private void updateWithAggregatedData(TbReportCtx ctx, List<DataKey> dataKeys, EntityData entityData) {
+        if (!dataKeys.isEmpty()) {
+            List<BaseReadTsKvQuery> queries = buildReadTsKvQueries(ctx, dataKeys);
             List<ReadTsKvQueryResult> result = dataService.findTimeseriesByQueries(entityData.getEntityId(), queries, ctx);
+            int i = 0;
             for (ReadTsKvQueryResult queryResult : result) {
                 List<TsKvEntry> queryResultData = queryResult.getData();
                 if (CollectionUtils.isNotEmpty(queryResultData)) {
-                    entityData.getTimeseries().put(queryResultData.get(0).getKey(), queryResult.toTsValues());
+                    entityData.getTimeseries().put(dataKeys.get(i).getLabel(), queryResult.toTsValues());
                 }
+                i++;
             }
         }
     }
@@ -276,7 +279,7 @@ public abstract class AbstractReportService implements ReportService {
         HashMap<String, String> data = new HashMap<>();
         if (entityData != null) {
             putLatestValues(dataKeys, data, entityData.getLatest(), ctx, timezone);
-            putTimeseriesValues(dataKeys, data, entityData.getTimeseries(), ctx, timezone);
+            putAggregatedTsValues(dataKeys, data, entityData.getTimeseries(), ctx, timezone);
             putEntityInfoData(entityData, data);
         }
         return data;
@@ -355,20 +358,24 @@ public abstract class AbstractReportService implements ReportService {
         }
     }
 
-    private void putTimeseriesValues(List<DataKey> dataKeys, HashMap<String, String> data, Map<String, TsValue[]> timeseries, TbReportCtx ctx, String timezone) {
-        if (dataKeys == null) {
+    private void putAggregatedTsValues(List<DataKey> dataKeys, HashMap<String, String> data, Map<String, TsValue[]> timeseries, TbReportCtx ctx, String timezone) {
+        if (dataKeys == null || timeseries == null) {
             return;
         }
-        List<DataKey> dataKeysWithAggregation = dataKeys.stream()
-                .filter(dataKey -> dataKey.getAggregationType() != null && dataKey.getAggregationType() != Aggregation.NONE)
-                .toList();
-        for (DataKey dataKey : dataKeysWithAggregation) {
-            timeseries.computeIfPresent(dataKey.getName(), (s, tsValues) -> {
-                for (TsValue tsValue : tsValues) {
-                    data.put(dataKey.getLabel(), formatValue(ctx, dataKey, tsValue.getTs(), tsValue.getValue(), timezone));
-                }
-                return tsValues;
-            });
+        for (DataKey dk : dataKeys) {
+            var agg = dk.getAggregationType();
+            if (agg == null || agg == Aggregation.NONE) {
+                continue;
+            }
+
+            TsValue[] series = timeseries.get(dk.getLabel());
+            if (series == null || series.length == 0) {
+                continue;
+            }
+            TsValue latest = Arrays.stream(series)
+                    .max(Comparator.comparingLong(TsValue::getTs))
+                    .get();
+            data.put(dk.getLabel(), formatValue(ctx, dk, latest.getTs(), latest.getValue(), timezone));
         }
     }
 
@@ -401,7 +408,7 @@ public abstract class AbstractReportService implements ReportService {
                 ));
 
         groupedByTs.forEach((ts, entries) -> {
-            Map<String, String> tsValues = new HashMap<>();
+            Map<String, String> tsValues = new LinkedHashMap<>();
             tsValues.put("rawTs", ts.toString());
             if (component.isShowTimestamp()) {
                 tsValues.put(component.getTimestampLabel(), formatTimestamp(ts, component.getTimestampPattern(), ctx, timezone));
@@ -409,13 +416,8 @@ public abstract class AbstractReportService implements ReportService {
             for (DataKey dataKey : dataKeys) {
                 entries.stream().filter(tsKvEntry -> tsKvEntry.getKey().equals(dataKey.getName()))
                         .findFirst()
-                        .ifPresentOrElse(tsKvEntry -> {
-                                    String value = tsKvEntry.getValueAsString();
-                                    if (value != null) {
-                                        tsValues.put(dataKey.getLabel(), formatValue(ctx, dataKey, tsKvEntry.getTs(), tsKvEntry.getValue(), false, timezone));
-                                    }
-                                },
-                                () -> tsValues.putIfAbsent(dataKey.getLabel(), null));
+                        .ifPresentOrElse(tsKvEntry -> tsValues.put(dataKey.getLabel(), formatValue(ctx, dataKey, tsKvEntry.getTs(), tsKvEntry.getValue(), false, timezone)),
+                                () -> tsValues.put(dataKey.getLabel(), formatValue(ctx, dataKey, 0, null, false, timezone)));
             }
             putLatestValues(latestDataKeys, tsValues, entity.getLatest(), ctx, timezone);
             tsValues.put("entityName", entityName.orElse(""));

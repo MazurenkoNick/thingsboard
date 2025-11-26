@@ -36,7 +36,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import jakarta.annotation.Nullable;
-import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.thingsboard.common.util.DonAsynchron;
 import org.thingsboard.rule.engine.api.AttributesDeleteRequest;
 import org.thingsboard.rule.engine.api.AttributesSaveRequest;
@@ -45,8 +45,6 @@ import org.thingsboard.rule.engine.api.RuleNode;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbNode;
 import org.thingsboard.rule.engine.api.TbNodeConfiguration;
-import org.thingsboard.rule.engine.api.TbNodeException;
-import org.thingsboard.rule.engine.api.util.TbNodeUtils;
 import org.thingsboard.server.common.adaptor.JsonConverter;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.DataConstants;
@@ -68,7 +66,6 @@ import static org.thingsboard.server.common.data.msg.TbMsgType.INACTIVITY_EVENT;
 import static org.thingsboard.server.common.data.msg.TbMsgType.POST_ATTRIBUTES_REQUEST;
 import static org.thingsboard.server.common.data.msg.TbNodeConnectionType.SUCCESS;
 
-@Slf4j
 @RuleNode(
         type = ComponentType.ACTION,
         name = "copy to view",
@@ -78,16 +75,13 @@ import static org.thingsboard.server.common.data.msg.TbNodeConnectionType.SUCCES
                 "Copy will be done only for attributes that are between start and end dates and according to attribute keys configuration. \n" +
                 "Changes message originator to related entity view and produces new messages according to count of updated entity views",
         configDirective = "tbNodeEmptyConfig",
-        icon = "content_copy"
+        icon = "content_copy",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/action/copy-to-view/"
 )
 public class TbCopyAttributesToEntityViewNode implements TbNode {
 
-    EmptyNodeConfiguration config;
-
     @Override
-    public void init(TbContext ctx, TbNodeConfiguration configuration) throws TbNodeException {
-        this.config = TbNodeUtils.convert(configuration, EmptyNodeConfiguration.class);
-    }
+    public void init(TbContext ctx, TbNodeConfiguration configuration) {}
 
     @Override
     public void onMsg(TbContext ctx, TbMsg msg) {
@@ -153,14 +147,14 @@ public class TbCopyAttributesToEntityViewNode implements TbNode {
     }
 
     private FutureCallback<Void> getFutureCallback(TbContext ctx, TbMsg msg, EntityView entityView) {
-        return new FutureCallback<Void>() {
+        return new FutureCallback<>() {
             @Override
             public void onSuccess(@Nullable Void result) {
                 transformAndTellNext(ctx, msg, entityView);
             }
 
             @Override
-            public void onFailure(Throwable t) {
+            public void onFailure(@NonNull Throwable t) {
                 ctx.tellFailure(msg, t);
             }
         };
@@ -172,18 +166,11 @@ public class TbCopyAttributesToEntityViewNode implements TbNode {
 
     private boolean attributeContainsInEntityView(AttributeScope scope, String attrKey, EntityView entityView) {
         AttributesEntityView attributesEntityView = entityView.getKeys().getAttributes();
-        List<String> keys = null;
-        switch (scope) {
-            case CLIENT_SCOPE:
-                keys = attributesEntityView.getCs();
-                break;
-            case SERVER_SCOPE:
-                keys = attributesEntityView.getSs();
-                break;
-            case SHARED_SCOPE:
-                keys = attributesEntityView.getSh();
-                break;
-        }
+        List<String> keys = switch (scope) {
+            case CLIENT_SCOPE -> attributesEntityView.getCs();
+            case SERVER_SCOPE -> attributesEntityView.getSs();
+            case SHARED_SCOPE -> attributesEntityView.getSh();
+        };
         return CollectionsUtil.contains(keys, attrKey);
     }
 

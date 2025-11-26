@@ -30,7 +30,6 @@
  */
 package org.thingsboard.rule.engine.filter;
 
-import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.rule.engine.api.EmptyNodeConfiguration;
 import org.thingsboard.rule.engine.api.RuleNode;
 import org.thingsboard.rule.engine.api.TbContext;
@@ -41,7 +40,6 @@ import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.plugin.ComponentType;
 
-@Slf4j
 @RuleNode(
         type = ComponentType.FILTER,
         name = "device profile switch",
@@ -51,7 +49,9 @@ import org.thingsboard.server.common.data.plugin.ComponentType;
         nodeDescription = "Route incoming messages based on the name of the device profile",
         nodeDetails = "Route incoming messages based on the name of the device profile. The device profile name is case-sensitive<br><br>" +
                 "Output connections: <i>Device profile name</i> or <code>Failure</code>",
-        configDirective = "tbNodeEmptyConfig")
+        configDirective = "tbNodeEmptyConfig",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/filter/device-profile-switch/"
+)
 public class TbDeviceTypeSwitchNode extends TbAbstractTypeSwitchNode {
 
     @Override

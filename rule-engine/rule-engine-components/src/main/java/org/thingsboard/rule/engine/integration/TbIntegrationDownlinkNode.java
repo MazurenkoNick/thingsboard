@@ -32,7 +32,6 @@ package org.thingsboard.rule.engine.integration;
 
 import com.google.common.util.concurrent.FutureCallback;
 import jakarta.annotation.Nullable;
-import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.rule.engine.api.RuleNode;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbNode;
@@ -45,7 +44,6 @@ import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
 import org.thingsboard.server.common.data.plugin.ComponentType;
 import org.thingsboard.server.common.msg.TbMsg;
 
-@Slf4j
 @RuleNode(
         type = ComponentType.ACTION,
         name = "integration downlink",
@@ -53,20 +51,20 @@ import org.thingsboard.server.common.msg.TbMsg;
         nodeDescription = "Pushes downlink message to selected integration",
         nodeDetails = "Will push downlink message to the selected integration queue.",
         configDirective = "tbActionNodeIntegrationDownlinkConfig",
-        icon = "input"
+        icon = "input",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/action/integration-downlink/"
 )
 public class TbIntegrationDownlinkNode implements TbNode {
 
-    private TbIntegrationDownlinkConfiguration config;
     private IntegrationId integrationId;
 
     @Override
     public void init(TbContext ctx, TbNodeConfiguration configuration) throws TbNodeException {
-        this.config = TbNodeUtils.convert(configuration, TbIntegrationDownlinkConfiguration.class);
+        var config = TbNodeUtils.convert(configuration, TbIntegrationDownlinkConfiguration.class);
         if (config.getIntegrationId() == null) {
             throw new TbNodeException("Integration id is not set in the rule node configuration!");
         }
-        this.integrationId = new IntegrationId(config.getIntegrationId());
+        integrationId = new IntegrationId(config.getIntegrationId());
         Integration integration = ctx.getPeContext().getIntegrationService().findIntegrationById(ctx.getTenantId(), integrationId);
         if (integration == null) {
             throw new TbNodeException("Integration with ID [" + integrationId + "] not found!");
@@ -78,7 +76,7 @@ public class TbIntegrationDownlinkNode implements TbNode {
     @Override
     public void onMsg(TbContext ctx, TbMsg msg) {
         if (integrationId != null) {
-            ctx.getPeContext().pushToIntegration(integrationId, msg, new FutureCallback<Void>() {
+            ctx.getPeContext().pushToIntegration(integrationId, msg, new FutureCallback<>() {
                 @Override
                 public void onSuccess(@Nullable Void tmp) {
                     ctx.tellNext(msg, TbNodeConnectionType.SUCCESS);
@@ -98,4 +96,5 @@ public class TbIntegrationDownlinkNode implements TbNode {
     public void destroy() {
         integrationId = null;
     }
+
 }

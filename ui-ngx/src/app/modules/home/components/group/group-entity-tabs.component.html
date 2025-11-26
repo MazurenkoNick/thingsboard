@@ -62,6 +62,21 @@
     [entityId]="entity.id"
   />
 </mat-tab>
+@if (entity && authUser.authority === authorities.TENANT_ADMIN &&
+  (entityType === entityTypes.DEVICE || entityType === entityTypes.ASSET || entityType === entityTypes.CUSTOMER) &&
+  (resource[entityType] | hasGenericPermission: operation.READ_CALCULATED_FIELD)) {
+  <mat-tab #alarmRules="matTab" label="{{'alarm-rule.alarm-rules' | translate }}">
+    <tb-alarm-rules-table
+      [active]="alarmRules.isActive"
+      [entityId]="entity.id"
+      [entityName]="entity.name"
+      [ownerId]="entity.ownerId"
+      [readonly]="!(resource[entityType] | hasGenericPermission: operation.WRITE_CALCULATED_FIELD)"
+      [hideClearEventAction]="!(entityGroup | hasGroupEntityOrGenericPermission: entityResource: operation.WRITE)">
+    </tb-alarm-rules-table>
+  </mat-tab>
+}
+
 <mat-tab *ngIf="entity && (resource.ALARM | hasGenericPermission: operation.READ)"
          label="{{ 'alarm.alarms' | translate }}" #alarmsTab="matTab">
   <tb-alarm-table [active]="alarmsTab.isActive"
@@ -104,4 +119,8 @@
   <tb-version-control detailsMode="true" singleEntityMode="true"
                       (versionRestored)="entitiesTableConfig.updateData()"
                       [active]="versionControlTab.isActive" [entityId]="entity.id" [entityName]="entity.name" [externalEntityId]="entity.externalId || entity.id"></tb-version-control>
+</mat-tab>
+<mat-tab *ngIf="entity && entityType === entityTypes.USER && (resource.API_KEY | hasGenericPermission: operation.READ)"
+         label="{{ 'api-key.api-keys' | translate }}" #apiKeysTab="matTab">
+  <tb-api-keys-table [active]="apiKeysTab.isActive" [userId]="entity.id"></tb-api-keys-table>
 </mat-tab>

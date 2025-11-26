@@ -61,6 +61,8 @@ import { BarChartWidgetComponent } from '@home/components/widget/lib/chart/bar-c
 import { PieChartWidgetComponent } from '@home/components/widget/lib/chart/pie-chart-widget.component';
 import { DoughnutWidgetSettings } from '@home/components/widget/lib/chart/doughnut-widget.models';
 import { DoughnutWidgetComponent } from '@home/components/widget/lib/chart/doughnut-widget.component';
+import { reportComponentTypesData } from '@home/pages/reporting/template/components/report-component.models';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'tb-latest-chart-preview',
@@ -75,6 +77,7 @@ export class LatestChartPreviewComponent extends AbstractReportComponentPreview<
   @ViewChild('widgetContent', {read: ViewContainerRef, static: false}) widgetContainer: ViewContainerRef;
 
   private reportWidgetContextService = inject(ReportWidgetContextService);
+  private translate = inject(TranslateService);
 
   imageWidth: string = '100%';
   imageHeightPx: number = 400;
@@ -87,6 +90,8 @@ export class LatestChartPreviewComponent extends AbstractReportComponentPreview<
 
   hasData = false;
   noDataMessage: string;
+
+  chartTypeTitle: string;
 
   private viewInited = false;
 
@@ -114,6 +119,7 @@ export class LatestChartPreviewComponent extends AbstractReportComponentPreview<
     this.titleStyle = textStyle(this.reportComponent.latestChartSettings.titleFont);
     this.titleStyle.color = this.reportComponent.latestChartSettings.titleColor;
     this.titleStyle.textAlign = this.reportComponent.latestChartSettings.titleAlignment;
+    this.chartTypeTitle = this.translate.instant(reportComponentTypesData.getReportComponentTypeData(this.reportComponent.type, this.reportComponent.subType).title);
 
     const datasources = this.reportComponent.dataSources;
     if (datasources?.length) {

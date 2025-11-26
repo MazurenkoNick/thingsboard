@@ -61,6 +61,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.thingsboard.server.report.util.AwtFontUtils.newFont;
 import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
 
 public class TbTableLegendTitle extends Title {
@@ -103,10 +104,10 @@ public class TbTableLegendTitle extends Title {
         this.itemPaint = LegendTitle.DEFAULT_ITEM_PAINT;
         this.itemLabelPadding = new RectangleInsets(2.0, 2.0, 2.0, 2.0);
 
-        this.legendColumnTitleFont = new Font("Roboto", Font.PLAIN, 12);
+        this.legendColumnTitleFont = newFont("Roboto", Font.PLAIN, 12);
         this.legendColumnTitlePaint = safeParseCssColor("rgba(0, 0, 0, 0.38)");
 
-        this.legendValueFont = new Font("RobotoMedium", Font.PLAIN, 12);
+        this.legendValueFont = newFont("RobotoMedium", Font.PLAIN, 12);
         this.legendValuePaint = safeParseCssColor("rgba(0, 0, 0, 0.87)");
     }
 
@@ -207,7 +208,7 @@ public class TbTableLegendTitle extends Title {
         this.legendTable.clear();
         TbLegendValuesRequest request = this.buildLegendValuesRequest();
         List<TbLegendItem> legendItems = this.source.getTbLegendItems(request);
-        if (legendItems != null) {
+        if (legendItems != null && !legendItems.isEmpty()) {
             if (this.legendItemComparator != null) {
                 legendItems.sort(this.legendItemComparator);
             }

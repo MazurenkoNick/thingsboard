@@ -78,14 +78,16 @@ public class ComponentData {
         this.image = image;
     }
 
-    public ComponentData(int usablePageWidthPx, LatestChartData latestChartData) {
+    public ComponentData(int usablePageWidthPx, LatestChartData latestChartData, Map<String, Object> variables) {
         this(usablePageWidthPx);
         this.latestChartData = latestChartData;
+        this.variables = variables;
     }
 
-    public ComponentData(int usablePageWidthPx, TsChartData tsChartData) {
+    public ComponentData(int usablePageWidthPx, TsChartData tsChartData, Map<String, Object> variables) {
         this(usablePageWidthPx);
         this.tsChartData = tsChartData;
+        this.variables = variables;
     }
 
     public ComponentData(int usablePageWidthPx, List<Map<String, String>> entityDatas) {

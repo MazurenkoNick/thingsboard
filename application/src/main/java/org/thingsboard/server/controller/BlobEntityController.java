@@ -35,6 +35,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -63,6 +64,7 @@ import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.blob.TbBlobService;
 import org.thingsboard.server.service.security.model.SecurityUser;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -128,8 +130,11 @@ public class BlobEntityController extends BaseController {
         BlobEntityId blobEntityId = new BlobEntityId(toUUID(strBlobEntityId));
         BlobEntity blobEntity = checkBlobEntityId(blobEntityId, Operation.READ);
         ByteArrayResource resource = new ByteArrayResource(blobEntity.getData().array());
+        ContentDisposition cd = ContentDisposition.attachment()
+                .filename(blobEntity.getName(), StandardCharsets.UTF_8)
+                .build();
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + blobEntity.getName())
+                .header(HttpHeaders.CONTENT_DISPOSITION, cd.toString())
                 .header("x-filename", blobEntity.getName())
                 .contentLength(resource.contentLength())
                 .contentType(parseMediaType(blobEntity.getContentType()))

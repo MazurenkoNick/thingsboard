@@ -523,7 +523,13 @@ const ruleNodeClazzHelpLinkMap = {
   'org.thingsboard.rule.engine.metadata.TbGetTenantDetailsNode': 'ruleNodeTenantDetails',
   'org.thingsboard.rule.engine.metadata.CalculateDeltaNode': 'ruleNodeCalculateDelta',
   'org.thingsboard.rule.engine.transform.TbChangeOriginatorNode': 'ruleNodeChangeOriginator',
+  'org.thingsboard.rule.engine.transform.TbCopyKeysNode': 'ruleNodeCopyKeyValuePairs',
+  'org.thingsboard.rule.engine.deduplication.TbMsgDeduplicationNode': 'ruleNodeDeduplication',
+  'org.thingsboard.rule.engine.transform.TbDeleteKeysNode': 'ruleNodeDeleteKeyValuePairs',
+  'org.thingsboard.rule.engine.transform.TbJsonPathNode': 'ruleNodeJsonPath',
+  'org.thingsboard.rule.engine.transform.TbRenameKeysNode': 'ruleNodeRenameKeys',
   'org.thingsboard.rule.engine.transform.TbTransformMsgNode': 'ruleNodeTransformMsg',
+  'org.thingsboard.rule.engine.transform.TbSplitArrayMsgNode': 'ruleNodeSplitArrayMsg',
   'org.thingsboard.rule.engine.mail.TbMsgToEmailNode': 'ruleNodeMsgToEmail',
   'org.thingsboard.rule.engine.action.TbAssignToCustomerNode': 'ruleNodeAssignToCustomer',
   'org.thingsboard.rule.engine.action.TbUnassignFromCustomerNode': 'ruleNodeUnassignFromCustomer',
@@ -552,6 +558,7 @@ const ruleNodeClazzHelpLinkMap = {
   'org.thingsboard.rule.engine.kafka.TbKafkaNode': 'ruleNodeKafka',
   'org.thingsboard.rule.engine.mqtt.TbMqttNode': 'ruleNodeMqtt',
   'org.thingsboard.rule.engine.mqtt.azure.TbAzureIotHubNode': 'ruleNodeAzureIotHub',
+  'org.thingsboard.rule.engine.gcp.pubsub.TbPubSubNode': 'ruleNodeGcpPubSub',
   'org.thingsboard.rule.engine.rabbitmq.TbRabbitMqNode': 'ruleNodeRabbitMq',
   'org.thingsboard.rule.engine.rest.TbRestApiCallNode': 'ruleNodeRestApiCall',
   'org.thingsboard.rule.engine.mail.TbSendEmailNode': 'ruleNodeSendEmail',
@@ -566,8 +573,10 @@ const ruleNodeClazzHelpLinkMap = {
   'org.thingsboard.rule.engine.transform.TbDuplicateMsgToGroupByNameNode': 'ruleNodeDuplicateToGroupByName',
   'org.thingsboard.rule.engine.transform.TbDuplicateMsgToRelatedNode': 'ruleNodeDuplicateToRelated',
   'org.thingsboard.rule.engine.action.TbChangeOwnerNode': 'ruleNodeChangeOwner',
-  'org.thingsboard.rule.engine.report.TbGenerateReportNode': 'ruleNodeGenerateReport',
-  'org.thingsboard.rule.engine.analytics.latest.telemetry.TbAggLatestTelemetryNode': 'ruleNodeAggregateLatest',
+  'org.thingsboard.rule.engine.report.TbGenerateReportNode': 'ruleNodeGenerateDashboardReport',
+  'org.thingsboard.rule.engine.report.TbGenerateReportV2Node': 'ruleNodeGenerateReport',
+  'org.thingsboard.rule.engine.analytics.latest.telemetry.TbAggLatestTelemetryNodeV2': 'ruleNodeAggregateLatest',
+  'org.thingsboard.rule.engine.analytics.latest.telemetry.TbAggLatestTelemetryNode': 'ruleNodeAggregateLatestDeprecated',
   'org.thingsboard.rule.engine.analytics.incoming.TbSimpleAggMsgNode': 'ruleNodeAggregateStream',
   'org.thingsboard.rule.engine.analytics.latest.alarm.TbAlarmsCountNodeV2': 'ruleNodeAlarmsCount',
   'org.thingsboard.rule.engine.analytics.latest.alarm.TbAlarmsCountNode': 'ruleNodeAlarmsCountDeprecated',
@@ -579,6 +588,8 @@ const ruleNodeClazzHelpLinkMap = {
   'org.thingsboard.rule.engine.rest.TbSendRestApiCallReplyNode': 'ruleNodeRestCallReply',
   'org.thingsboard.rule.engine.notification.TbNotificationNode': 'ruleNodeSendNotification',
   'org.thingsboard.rule.engine.notification.TbSlackNode': 'ruleNodeSendSlack',
+  'org.thingsboard.rule.engine.pe.twilio.TbTwilioSmsNode': 'ruleNodeTwilioSms',
+  'org.thingsboard.rule.engine.pe.twilio.voice.TbTwilioVoiceNode': 'ruleNodeTwilioVoice'
 };
 
 export function getRuleNodeHelpLink(component: RuleNodeComponentDescriptor): string {

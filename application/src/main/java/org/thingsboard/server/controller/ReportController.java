@@ -36,6 +36,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -82,6 +83,7 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.model.token.AccessJwtToken;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -137,8 +139,11 @@ public class ReportController extends BaseController {
         Report report = checkReportId(reportId, Operation.READ);
         byte[] data = reportService.getReportData(getTenantId(), reportId);
         ByteArrayResource resource = new ByteArrayResource(data);
+        ContentDisposition cd = ContentDisposition.attachment()
+                .filename(report.getName(), StandardCharsets.UTF_8)
+                .build();
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=\"" + report.getName() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, cd.toString())
                 .header("x-filename", report.getName())
                 .contentLength(resource.contentLength())
                 .header("Content-Type", report.getFormat().getContentType())
@@ -315,7 +320,7 @@ public class ReportController extends BaseController {
             } catch (ThingsboardException e) {
                 return false;
             }
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
 }

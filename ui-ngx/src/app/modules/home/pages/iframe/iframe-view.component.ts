@@ -31,10 +31,9 @@
 
 import { Component, HostBinding, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { AuthService } from '@core/auth/auth.service';
 import { of, Subscription } from 'rxjs';
-import { Dashboard, HomeDashboard } from '@shared/models/dashboard.models';
+import { HomeDashboard } from '@shared/models/dashboard.models';
 import { Observable } from 'rxjs/internal/Observable';
 import { isDefinedAndNotNull } from '@core/utils';
 import { map } from 'rxjs/operators';
@@ -49,20 +48,19 @@ export class IFrameViewComponent implements OnInit, OnDestroy {
   @HostBinding('style.width') public width = '100%';
   @HostBinding('style.height') public height = '100%';
 
-  safeIframeUrl: SafeResourceUrl;
+  iframeUrl: string;
   dashboard: HomeDashboard;
   loading = true;
 
   private sub: Subscription;
 
-  constructor(private sanitizer: DomSanitizer,
-              private route: ActivatedRoute,
+  constructor(private route: ActivatedRoute,
               private dashboardService: DashboardService) {
   }
 
   ngOnInit(): void {
     this.sub = this.route.queryParams.subscribe((queryParams) => {
-      this.safeIframeUrl = null;
+      this.iframeUrl = null;
       if (this.isDashboard(queryParams)) {
         this.loading = true;
         this.dashboard = null;
@@ -92,7 +90,7 @@ export class IFrameViewComponent implements OnInit, OnDestroy {
           }
           iframeUrl += `accessToken=${accessToken}`;
         }
-        this.safeIframeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(iframeUrl);
+        this.iframeUrl = iframeUrl;
         this.loading = false;
       }
     });

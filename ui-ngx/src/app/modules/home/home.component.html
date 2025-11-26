@@ -39,9 +39,9 @@
     <header class="tb-nav-header">
       <mat-toolbar color="primary" class="tb-nav-header-toolbar">
         <div class="flex flex-auto flex-row">
-          <img [src]="wl.logoImageUrl$() | async | image | async"
-               [style.height.px]="wl.logoImageHeight$() | async"
-               aria-label="logo" class="tb-logo-title"/>
+          <tb-logo [src]="wl.logoImageUrl$() | async | image | async"
+                   [style.height.px]="wl.logoImageHeight$() | async" class="tb-logo-title">
+          </tb-logo>
         </div>
       </mat-toolbar>
     </header>
@@ -84,6 +84,7 @@
                    placeholder="{{ 'common.enter-search' | translate }}"/>
           </mat-form-field>
         </div>
+<!--        <tb-github-badge class="lt-md:!hidden"></tb-github-badge>-->
         <button [class.!hidden]="!searchEnabled"
                 mat-icon-button (click)="openSearch()">
           <mat-icon class="material-icons">search</mat-icon>

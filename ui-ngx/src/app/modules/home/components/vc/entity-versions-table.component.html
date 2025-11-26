@@ -30,7 +30,7 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="mat-padding tb-entity-table tb-absolute-fill" [class.tb-popover-mode]="popoverComponent">
+<div class="mat-padding tb-entity-table tb-absolute-fill xs:!w-screen sm:!w-fit" [class.tb-popover-mode]="popoverComponent">
   <div class="tb-entity-table-content flex flex-1 flex-col" [class.tb-outlined-border]="!popoverComponent">
     <mat-toolbar class="mat-mdc-table-toolbar" [class.!hidden]="textSearchMode">
       <div class="mat-toolbar-tools">
@@ -129,7 +129,9 @@
         <ng-container matColumnDef="name">
           <mat-header-cell *matHeaderCellDef style="width: 50%"> {{ 'version-control.version-name' | translate }} </mat-header-cell>
           <mat-cell *matCellDef="let entityVersion">
-            {{ entityVersion.name }}
+            <div [matTooltip]="entityVersion.name" matTooltipPosition="above" [matTooltipDisabled]="entityVersion.name?.length < 256">
+              {{ entityVersion.name?.length > 256 ? entityVersion.name.substring(0, 256) + '…' : entityVersion.name }}
+            </div>
           </mat-cell>
         </ng-container>
         <ng-container matColumnDef="author">

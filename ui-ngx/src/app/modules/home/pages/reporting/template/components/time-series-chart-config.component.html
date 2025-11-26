@@ -54,9 +54,12 @@
         {{ 'widget-config.title' | translate }}
       </mat-slide-toggle>
       <div class="flex flex-1 flex-row items-center justify-start gap-2">
-        <mat-form-field class="flex" appearance="outline" subscriptSizing="dynamic">
-          <input matInput formControlName="title" placeholder="{{ 'widget-config.set' | translate }}">
-        </mat-form-field>
+        <tb-string-pattern-autocomplete formControlName="title"
+                                        class="flex-1"
+                                        appearance="outline" subscriptSizing="dynamic"
+                                        brackets="curly"
+                                        predefinedValuesButton
+                                        [predefinedValues]="['entityName', 'entityLabel']"></tb-string-pattern-autocomplete>
         <tb-font-settings formControlName="titleFont"
                           [allowedFontWeights]="['normal', 'bold', '500']"
                           [allowedFontStyles]="['normal', 'italic']"
@@ -87,6 +90,7 @@
       [dataSourcesOptions]="{
                   widgetType: widgetType.timeseries,
                   maxDatasources: 1,
+                  maxDataKeys: rangeChart ? 1 : undefined,
                   datasourcesOptional: false,
                   allowFunctions: false
       }"

@@ -33,11 +33,9 @@ package org.thingsboard.server.common.data.report.configuration.components;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.thingsboard.server.common.data.report.configuration.DataSource;
-import org.thingsboard.server.common.data.report.configuration.style.Insets;
+import org.thingsboard.server.common.data.report.configuration.chart.ReportComponentSubType;
 
 import java.io.Serializable;
-import java.util.List;
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -58,12 +56,13 @@ import java.util.List;
         @JsonSubTypes.Type(value = ImageComponent.class, name = "IMAGE"),
         @JsonSubTypes.Type(value = SubReportComponent.class, name = "SUB_REPORT"),
         @JsonSubTypes.Type(value = ErrorComponent.class, name = "ERROR"),
-        @JsonSubTypes.Type(value = DividerComponent.class, name = "DIVIDER")
+        @JsonSubTypes.Type(value = DividerComponent.class, name = "DIVIDER"),
+        @JsonSubTypes.Type(value = SplitViewComponent.class, name = "SPLIT_VIEW")
 })
 public interface ReportComponent extends Serializable {
 
     ReportComponentType getType();
 
-    String getSubType();
+    ReportComponentSubType getSubType();
 
 }

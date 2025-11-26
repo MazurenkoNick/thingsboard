@@ -73,6 +73,8 @@ import {
 } from '@home/components/widget/lib/chart/bar-chart-with-labels-widget.component';
 import { ChartWidgetComponent } from '@home/components/widget/lib/chart/chart.models';
 import { RangeChartWidgetComponent } from '@home/components/widget/lib/chart/range-chart-widget.component';
+import { reportComponentTypesData } from '@home/pages/reporting/template/components/report-component.models';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'tb-time-series-chart-preview',
@@ -98,6 +100,7 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
   chartType: TimeSeriesChartType = TimeSeriesChartType.default;
 
   private reportWidgetContextService = inject(ReportWidgetContextService);
+  private translate = inject(TranslateService);
 
   imageWidth: string = '100%';
   imageHeightPx: number = 400;
@@ -110,6 +113,8 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
 
   hasData = false;
   noDataMessage: string;
+
+  chartTypeTitle: string;
 
   private viewInited = false;
 
@@ -137,6 +142,7 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
     this.titleStyle = textStyle(this.reportComponent.timeSeriesChartSettings.titleFont);
     this.titleStyle.color = this.reportComponent.timeSeriesChartSettings.titleColor;
     this.titleStyle.textAlign = this.reportComponent.timeSeriesChartSettings.titleAlignment;
+    this.chartTypeTitle = this.translate.instant(reportComponentTypesData.getReportComponentTypeData(this.reportComponent.type, this.reportComponent.subType).title);
 
     const datasources = this.reportComponent.dataSources;
     if (datasources?.length) {

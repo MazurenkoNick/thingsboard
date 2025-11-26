@@ -32,6 +32,7 @@ package org.thingsboard.server.dao.grouppermission;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -68,11 +69,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validatePageLink;
 
-@Service("GroupPermissionDaoService")
 @Slf4j
+@Service("GroupPermissionDaoService")
 public class GroupPermissionServiceImpl extends AbstractEntityService implements GroupPermissionService {
 
     public static final String INCORRECT_TENANT_ID = "Incorrect tenantId ";
@@ -80,7 +82,6 @@ public class GroupPermissionServiceImpl extends AbstractEntityService implements
     public static final String INCORRECT_ENTITY_GROUP_ID = "Incorrect entityGroupId ";
     public static final String INCORRECT_ROLE_ID = "Incorrect roleId ";
     public static final String INCORRECT_GROUP_PERMISSION_ID = "Incorrect groupPermissionId ";
-    public static final String INCORRECT_PAGE_LINK = "Incorrect page link ";
 
     @Autowired
     private GroupPermissionDao groupPermissionDao;
@@ -154,7 +155,7 @@ public class GroupPermissionServiceImpl extends AbstractEntityService implements
                                                                                                           EntityGroupId userGroupId,
                                                                                                           RoleId roleId, PageLink pageLink) {
         log.trace("Executing findGroupPermissionByTenantIdAndEntityGroupIdAndUserGroupIdAndRoleId, tenantId [{}], entityGroupId [{}], " +
-                "userGroupId [{}], roleId [{}], pageLink [{}]", tenantId, userGroupId, roleId, pageLink);
+                "userGroupId [{}], roleId [{}], pageLink [{}]", tenantId, entityGroupId, userGroupId, roleId, pageLink);
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validateId(entityGroupId, id -> INCORRECT_ENTITY_GROUP_ID + id);
         validateId(userGroupId, id -> INCORRECT_USER_GROUP_ID + id);
@@ -366,7 +367,7 @@ public class GroupPermissionServiceImpl extends AbstractEntityService implements
         }, MoreExecutors.directExecutor());
     }
 
-    private PaginatedRemover<TenantId, GroupPermission> tenantGroupPermissionRemover = new PaginatedRemover<TenantId, GroupPermission>() {
+    private final PaginatedRemover<TenantId, GroupPermission> tenantGroupPermissionRemover = new PaginatedRemover<>() {
 
         @Override
         protected PageData<GroupPermission> findEntities(TenantId tenantId, TenantId id, PageLink pageLink) {
@@ -377,9 +378,11 @@ public class GroupPermissionServiceImpl extends AbstractEntityService implements
         protected void removeEntity(TenantId tenantId, GroupPermission entity) {
             deleteGroupPermission(tenantId, entity.getId());
         }
+
     };
 
-    private PaginatedRemover<EntityGroupId, GroupPermission> userGroupPermissionRemover = new PaginatedRemover<EntityGroupId, GroupPermission>() {
+    private final PaginatedRemover<EntityGroupId, GroupPermission> userGroupPermissionRemover = new PaginatedRemover<>() {
+
         @Override
         protected PageData<GroupPermission> findEntities(TenantId tenantId, EntityGroupId userGroupId, PageLink pageLink) {
             return groupPermissionDao.findGroupPermissionsByTenantIdAndUserGroupId(tenantId.getId(), userGroupId.getId(), pageLink);
@@ -389,9 +392,11 @@ public class GroupPermissionServiceImpl extends AbstractEntityService implements
         protected void removeEntity(TenantId tenantId, GroupPermission entity) {
             deleteGroupPermission(tenantId, entity.getId());
         }
+
     };
 
-    private PaginatedRemover<EntityGroupId, GroupPermission> entityGroupPermissionRemover = new PaginatedRemover<EntityGroupId, GroupPermission>() {
+    private final PaginatedRemover<EntityGroupId, GroupPermission> entityGroupPermissionRemover = new PaginatedRemover<>() {
+
         @Override
         protected PageData<GroupPermission> findEntities(TenantId tenantId, EntityGroupId entityGroupId, PageLink pageLink) {
             return groupPermissionDao.findGroupPermissionsByTenantIdAndEntityGroupId(tenantId.getId(), entityGroupId.getId(), pageLink);
@@ -401,9 +406,11 @@ public class GroupPermissionServiceImpl extends AbstractEntityService implements
         protected void removeEntity(TenantId tenantId, GroupPermission entity) {
             deleteGroupPermission(tenantId, entity.getId());
         }
+
     };
 
-    private PaginatedRemover<RoleId, GroupPermission> rolePermissionRemover = new PaginatedRemover<RoleId, GroupPermission>() {
+    private final PaginatedRemover<RoleId, GroupPermission> rolePermissionRemover = new PaginatedRemover<>() {
+
         @Override
         protected PageData<GroupPermission> findEntities(TenantId tenantId, RoleId roleId, PageLink pageLink) {
             return groupPermissionDao.findGroupPermissionsByTenantIdAndRoleId(tenantId.getId(), roleId.getId(), pageLink);
@@ -413,12 +420,19 @@ public class GroupPermissionServiceImpl extends AbstractEntityService implements
         protected void removeEntity(TenantId tenantId, GroupPermission entity) {
             deleteGroupPermission(tenantId, entity.getId());
         }
+
     };
 
 
     @Override
     public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {
         return Optional.ofNullable(findGroupPermissionById(tenantId, new GroupPermissionId(entityId.getId())));
+    }
+
+    @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(groupPermissionDao.findByIdAsync(tenantId, entityId.getId()))
+                .transform(Optional::ofNullable, directExecutor());
     }
 
     @Override

@@ -40,6 +40,7 @@ import { PageLink } from '@shared/models/page/page-link';
 import { defaultHttpOptionsFromConfig, RequestConfig } from '@core/http/http-utils';
 import { PageData } from '@shared/models/page/page-data';
 import { sortEntitiesByIds } from '@shared/models/base-data';
+import { getFilenameFromHttpHeader } from '@core/utils';
 
 @Injectable({
   providedIn: 'root'
@@ -105,18 +106,12 @@ export class ReportService {
         const blob = new Blob([response.body], { type: contentType });
         const href = URL.createObjectURL(blob);
         if (downloadElseOpen) {
-          const filename = headers.get('x-filename');
+          const filename = getFilenameFromHttpHeader(headers);
           const linkElement = this.document.createElement('a');
           linkElement.setAttribute('href', href);
           linkElement.setAttribute('download', filename);
-          const clickEvent = new MouseEvent('click',
-            {
-              view: this.window,
-              bubbles: true,
-              cancelable: false
-            }
-          );
-          linkElement.dispatchEvent(clickEvent);
+          linkElement.click();
+          setTimeout(() => URL.revokeObjectURL(href), 0);
         } else {
           this.window.open(href, '_blank');
         }

@@ -164,8 +164,8 @@ export class LatestChartConfigComponent extends AbstractReportComponentConfig<La
       legendLabelFont: [latestChartSettings.legendLabelFont, []],
       legendLabelColor: [latestChartSettings.legendLabelColor, []],
       legendValueFont: [latestChartSettings.legendValueFont, []],
-      legendValueColor: [latestChartSettings.legendValueColor, []]
-
+      legendValueColor: [latestChartSettings.legendValueColor, []],
+      legendShowTotal: [latestChartSettings.legendShowTotal, []],
     });
 
     if ('latestBarChart' === this.subType) {
@@ -272,6 +272,8 @@ export class LatestChartConfigComponent extends AbstractReportComponentConfig<La
     delete config.legendValueFont;
     latestChartSettings.legendValueColor = config.legendValueColor;
     delete config.legendValueColor;
+    latestChartSettings.legendShowTotal = config.legendShowTotal;
+    delete config.legendShowTotal;
 
     if ('latestBarChart' === this.subType) {
       const barChartSettings = latestChartSettings as ReportBarChartSettings;
@@ -366,12 +368,14 @@ export class LatestChartConfigComponent extends AbstractReportComponentConfig<La
       form.get('legendLabelColor').enable({emitEvent: false});
       form.get('legendValueFont').enable({emitEvent: false});
       form.get('legendValueColor').enable({emitEvent: false});
+      form.get('legendShowTotal').enable({emitEvent: false});
     } else {
       form.get('legendPosition').disable({emitEvent: false});
       form.get('legendLabelFont').disable({emitEvent: false});
       form.get('legendLabelColor').disable({emitEvent: false});
       form.get('legendValueFont').disable({emitEvent: false});
       form.get('legendValueColor').disable({emitEvent: false});
+      form.get('legendShowTotal').disable({emitEvent: false});
     }
     if (this.subType === 'pieChart') {
       const showLabel: boolean = form.get('showLabel').value;
@@ -391,9 +395,11 @@ export class LatestChartConfigComponent extends AbstractReportComponentConfig<La
       if (totalEnabled) {
         form.get('totalValueFont').enable({emitEvent: false});
         form.get('totalValueColor').enable({emitEvent: false});
+        form.get('legendShowTotal').disable({emitEvent: false});
       } else {
         form.get('totalValueFont').disable({emitEvent: false});
         form.get('totalValueColor').disable({emitEvent: false});
+        form.get('legendShowTotal').enable({emitEvent: false});
       }
     }
   }

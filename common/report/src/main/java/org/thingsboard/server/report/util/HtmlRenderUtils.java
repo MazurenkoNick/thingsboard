@@ -39,7 +39,6 @@ import org.thingsboard.server.report.util.itext.PdfReportUserAgent;
 import org.w3c.tidy.Tidy;
 import org.xhtmlrenderer.extend.ReplacedElementFactory;
 import org.xhtmlrenderer.extend.TextRenderer;
-import org.xhtmlrenderer.pdf.ITextFontResolver;
 import org.xhtmlrenderer.pdf.ITextOutputDevice;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 import org.xhtmlrenderer.pdf.ITextUserAgent;
@@ -59,8 +58,8 @@ import static org.xhtmlrenderer.pdf.ITextRenderer.DEFAULT_DOTS_PER_POINT;
 
 public class HtmlRenderUtils {
 
-    private static final ITextFontResolver fontResolver = new PdfReportFontResolver();
-    private static final TextRenderer textRenderer = new PdfReportTextRenderer();
+    private static final PdfReportFontResolver fontResolver = new PdfReportFontResolver();
+    private static final TextRenderer textRenderer = new PdfReportTextRenderer(fontResolver.getFallBackFonts());
 
     public static ITextRenderer createRenderer(ReportDataService dataService, TbReportCtx ctx, int usablePageWidthPx) {
         ITextOutputDevice outputDevice = new ITextOutputDevice(DEFAULT_DOTS_PER_POINT);
@@ -72,12 +71,6 @@ public class HtmlRenderUtils {
                 fontResolver,
                 replacedElementFactory,
                 textRenderer);
-    }
-
-    public static String convertToXhtml(String html) throws UnsupportedEncodingException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        parseDom(html, outputStream);
-        return outputStream.toString(UTF_8);
     }
 
     public static org.w3c.dom.Document parseDom(String html) throws UnsupportedEncodingException {

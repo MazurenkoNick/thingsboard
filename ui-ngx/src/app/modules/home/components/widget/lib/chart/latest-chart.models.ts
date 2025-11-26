@@ -102,6 +102,7 @@ export interface LatestChartSettings extends LatestChartTooltipSettings {
   sortSeries: boolean;
   showTotal?: boolean;
   showLegend: boolean;
+  legendShowTotal: boolean;
   animation: ChartAnimationSettings;
 }
 
@@ -111,6 +112,7 @@ export const latestChartDefaultSettings: LatestChartSettings = {
   sortSeries: false,
   showTotal: false,
   showLegend: true,
+  legendShowTotal: true,
   animation: mergeDeep({} as ChartAnimationSettings, chartAnimationDefaultSettings)
 };
 
@@ -126,7 +128,6 @@ export interface LatestChartWidgetSettings extends LatestChartSettings {
 
 export const latestChartWidgetDefaultSettings: LatestChartWidgetSettings = {
   ...latestChartDefaultSettings,
-  showLegend: true,
   legendPosition: LegendPosition.bottom,
   legendLabelFont: {
     family: 'Roboto',

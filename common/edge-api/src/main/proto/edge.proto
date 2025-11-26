@@ -59,6 +59,7 @@ enum EdgeVersion {
   V_4_0_0 = 10;
   V_4_1_0 = 11;
   V_4_2_0 = 12;
+  V_4_3_0 = 13;
 
   V_LATEST = 999;
 }
@@ -150,6 +151,12 @@ message CalculatedFieldUpdateMsg{
   string entity = 4;
 }
 
+message AiModelUpdateMsg{
+  UpdateMsgType msgType = 1;
+  int64 idMSB = 2;
+  int64 idLSB = 3;
+  string entity = 4;
+}
 
 message EntityDataProto {
   int64 entityIdMSB = 1;
@@ -570,8 +577,9 @@ message UplinkMsg {
   repeated RuleChainMetadataUpdateMsg ruleChainMetadataUpdateMsg = 26;
   repeated CalculatedFieldUpdateMsg calculatedFieldUpdateMsg = 27;
   repeated CalculatedFieldRequestMsg calculatedFieldRequestMsg = 28;
-  repeated ReportTemplateUpdateMsg reportTemplateUpdateMsg = 29;
-  repeated SchedulerEventUpdateMsg schedulerEventUpdateMsg = 30;
+  repeated AiModelUpdateMsg aiModelUpdateMsg = 29;
+  repeated ReportTemplateUpdateMsg reportTemplateUpdateMsg = 30;
+  repeated SchedulerEventUpdateMsg schedulerEventUpdateMsg = 31;
 }
 
 message UplinkResponseMsg {
@@ -634,5 +642,9 @@ message DownlinkMsg {
   repeated CalculatedFieldUpdateMsg calculatedFieldUpdateMsg = 53;
   repeated EncryptionKeyUpdateMsg encryptionKeyUpdateMsg = 54;
   repeated SecretUpdateMsg secretUpdateMsg = 55;
+<<<<<<< HEAD
   repeated ReportTemplateUpdateMsg reportTemplateUpdateMsg = 56;
+=======
+  repeated AiModelUpdateMsg aiModelUpdateMsg = 56;
+>>>>>>> upstream/master
 }

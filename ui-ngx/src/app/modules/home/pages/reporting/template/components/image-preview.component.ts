@@ -61,13 +61,13 @@ export class ImagePreviewComponent extends AbstractReportComponentPreview<ImageR
       if (key) {
         this.imageUrl = keyImage(key.name);
       } else {
-        this.imageUrl = '/assets/report/components/image.svg';
+        this.imageUrl = '/assets/report/components/image-placeholder.svg';
       }
     } else {
       if (this.reportComponent.imageUrl && this.reportComponent.imageUrl.trim().length) {
         this.imageUrl = this.reportComponent.imageUrl;
       } else {
-        this.imageUrl = '/assets/report/components/image.svg';
+        this.imageUrl = '/assets/report/components/image-placeholder.svg';
       }
     }
     this.imageWidth = '100%';

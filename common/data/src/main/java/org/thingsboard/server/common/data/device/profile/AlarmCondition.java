@@ -41,6 +41,7 @@ import java.util.List;
 @Schema
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Deprecated
 public class AlarmCondition implements Serializable {
 
     @Valid

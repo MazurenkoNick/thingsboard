@@ -151,6 +151,7 @@ import org.thingsboard.server.service.solutions.data.definition.CustomerEntityDe
 import org.thingsboard.server.service.solutions.data.definition.DashboardDefinition;
 import org.thingsboard.server.service.solutions.data.definition.DashboardUserDetailsDefinition;
 import org.thingsboard.server.service.solutions.data.definition.DeviceDefinition;
+import org.thingsboard.server.service.solutions.data.definition.DeviceProfileDefinition;
 import org.thingsboard.server.service.solutions.data.definition.EdgeDefinition;
 import org.thingsboard.server.service.solutions.data.definition.EdgeEntityGroupDefinition;
 import org.thingsboard.server.service.solutions.data.definition.EmulatorDefinition;
@@ -439,9 +440,9 @@ public class DefaultSolutionService implements SolutionService {
             }
         }
 
-        List<DeviceProfile> deviceProfiles = loadListOfEntitiesIfFileExists(solutionId, "device_profiles.json", new TypeReference<>() {
+        List<DeviceProfileDefinition> deviceProfiles = loadListOfEntitiesIfFileExists(solutionId, "device_profiles.json", new TypeReference<>() {
         });
-        deviceProfiles.addAll(loadListOfEntitiesFromDirectory(solutionId, "device_profiles", DeviceProfile.class));
+        deviceProfiles.addAll(loadListOfEntitiesFromDirectory(solutionId, "device_profiles", DeviceProfileDefinition.class));
         // Validate that entities with such name does not exist entities
         if (!deviceProfiles.isEmpty()) {
             for (DeviceProfile deviceProfile : deviceProfiles) {
@@ -778,9 +779,8 @@ public class DefaultSolutionService implements SolutionService {
     }
 
     private void provisionDeviceProfiles(SolutionInstallContext ctx) {
-        List<DeviceProfile> deviceProfiles = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "device_profiles.json", new TypeReference<>() {
-        });
-        deviceProfiles.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "device_profiles", DeviceProfile.class));
+        List<DeviceProfileDefinition> deviceProfiles = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "device_profiles.json", new TypeReference<>() {});
+        deviceProfiles.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "device_profiles", DeviceProfileDefinition.class));
         deviceProfiles.forEach(deviceProfile -> {
             deviceProfile.setId(null);
             deviceProfile.setCreatedTime(0L);
@@ -805,8 +805,11 @@ public class DefaultSolutionService implements SolutionService {
             }
         });
 
-        deviceProfiles = deviceProfiles.stream().map(deviceProfileService::saveDeviceProfile).collect(Collectors.toList());
-        deviceProfiles.forEach(ctx::register);
+        deviceProfiles.forEach(deviceProfileDefinition -> {
+            DeviceProfile deviceProfile = new DeviceProfile(deviceProfileDefinition);
+            deviceProfile = deviceProfileService.saveDeviceProfile(deviceProfile);
+            ctx.register(deviceProfileDefinition, deviceProfile);
+        });
     }
 
     private void provisionAssetProfiles(SolutionInstallContext ctx) {
@@ -1426,12 +1429,16 @@ public class DefaultSolutionService implements SolutionService {
                 argBasedCfg.getArguments().forEach((key, argument) -> {
                     EntityId refEntityId = argument.getRefEntityId();
                     if (refEntityId != null) {
-                        String newId = realIds.get(refEntityId.getId().toString());
-                        if (newId != null) {
-                            argument.setRefEntityId(EntityIdFactory.getByTypeAndUuid(refEntityId.getEntityType(), newId));
+                        if (refEntityId.getEntityType() == EntityType.TENANT) {
+                            argument.setRefEntityId(ctx.getTenantId());
                         } else {
-                            log.error("[{}][{}] Calculated field: {} references non existing entity.", ctx.getTenantId(), ctx.getSolutionId(), cf.getName());
-                            throw new ThingsboardRuntimeException();
+                            String newId = realIds.get(refEntityId.getId().toString());
+                            if (newId != null) {
+                                argument.setRefEntityId(EntityIdFactory.getByTypeAndUuid(refEntityId.getEntityType(), newId));
+                            } else {
+                                log.error("[{}][{}] Calculated field: {} references non existing entity.", ctx.getTenantId(), ctx.getSolutionId(), cf.getName());
+                                throw new ThingsboardRuntimeException();
+                            }
                         }
                     }
                 });

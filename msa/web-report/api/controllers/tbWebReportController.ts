@@ -65,7 +65,11 @@ export function genDashboardReport(req: Request, res: Response, queue: TbWebRepo
     queue.generateDashboardReport(requestState, request).then(
         (reportBuffer) => {
             clearTimeout(timeoutTimer);
-            res.attachment(request.name + request.reportContentType.ext);
+
+            const originalFilename = request.name + request.reportContentType.ext;
+            const encodedFilename = encodeURIComponent(originalFilename);
+            res.set('Content-Disposition', `attachment; filename="${originalFilename.replace(/[^a-zA-Z0-9.-]/g, '_')}";  filename*=UTF-8''${encodedFilename}`);
+
             res.contentType(request.reportContentType.contentType);
             res.send(reportBuffer);
             activeRequestsCount--;

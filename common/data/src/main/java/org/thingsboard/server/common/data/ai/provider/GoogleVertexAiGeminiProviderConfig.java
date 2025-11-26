@@ -30,11 +30,12 @@
  */
 package org.thingsboard.server.common.data.ai.provider;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 
+@Builder
 public record GoogleVertexAiGeminiProviderConfig(
-        @NotBlank String fileName, // not used on BE, but needed for UI
+        String fileName, // not used on BE, but needed for UI; has to be nullable in PE since can be null if secrets are used
         @NotNull String projectId,
         @NotNull String location,
         @NotNull String serviceAccountKey

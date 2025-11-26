@@ -73,6 +73,7 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 import org.thingsboard.server.common.data.report.configuration.components.SubReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesChartComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.SplitViewComponent;
 import org.thingsboard.server.common.data.report.configuration.image.ImageSourceType;
 import org.thingsboard.server.common.data.report.configuration.style.Insets;
 import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
@@ -95,6 +96,7 @@ import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.HtmlRenderUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 import org.thingsboard.server.report.util.WebReportClient;
+import org.w3c.dom.Document;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.awt.Dimension;
@@ -102,6 +104,7 @@ import java.io.ByteArrayOutputStream;
 import java.text.NumberFormat;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -113,6 +116,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static org.thingsboard.server.common.data.report.configuration.chart.ReportComponentSubType.RANGE_CHART;
+import static org.thingsboard.server.common.data.report.configuration.chart.ReportComponentSubType.STATE_CHART;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.DASHBOARD;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.ERROR;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.SUB_REPORT;
@@ -127,6 +132,7 @@ import static org.thingsboard.server.report.util.ReportQueryUtils.resolveAliasId
 import static org.thingsboard.server.report.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toEntityCountQuery;
 import static org.thingsboard.server.report.util.ReportUtils.collectThresholdItems;
+import static org.thingsboard.server.report.util.ReportUtils.getMultipleDataSources;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportComponent;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
@@ -172,9 +178,9 @@ public class PdfReportService extends AbstractReportService {
         reportVariables.put("pageContent", renderContent(usablePageWidthPx, ctx, configuration.getComponents(), stateEntity));
 
         String renderedHtmlContent = ThymeleafUtil.renderFromHtmlTemplate("html/report-template", reportVariables);
-        String xHtml = HtmlRenderUtils.convertToXhtml(renderedHtmlContent);
 
-        renderer.setDocumentFromString(xHtml);
+        Document doc = HtmlRenderUtils.parseDom(renderedHtmlContent);
+        renderer.setDocument(doc);
         renderer.layout();
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -239,7 +245,9 @@ public class PdfReportService extends AbstractReportService {
             return componentsRenderers.get(component.getType()).render(component, componentData);
         } catch (Exception e) {
             log.error("Failed to render component of type [{}]", component.getType(), e);
-            return renderError(usablePageWidthPx, "Failed to render component of type: " + component.getType(), e);
+            String componentSubType = component.getSubType() != null ? " [" + component.getSubType() + "]" : "";
+            return renderError(usablePageWidthPx, "Failed to render component of type: "
+                    + component.getType() + componentSubType, e);
         }
     }
 
@@ -255,6 +263,7 @@ public class PdfReportService extends AbstractReportService {
                     buildAlarmComponentData(usablePageWidthPx, ctx, (AlarmTableComponent) component, stateEntity);
             case DASHBOARD ->
                     buildDashboardComponentData(usablePageWidthPx, ctx, ((DashboardComponent) component), stateEntity);
+            case SPLIT_VIEW -> buildSplitViewComponentData(usablePageWidthPx, ctx, (SplitViewComponent) component, stateEntity);
             case IMAGE -> buildImageComponentData(usablePageWidthPx, ctx, ((ImageComponent) component));
             default -> buildMultipleDataSourceData(usablePageWidthPx, ctx, component, stateEntity);
         };
@@ -348,11 +357,11 @@ public class PdfReportService extends AbstractReportService {
     private ComponentData buildLatestChartComponentData(int usablePageWidthPx, TbReportCtx ctx, LatestChartComponent component, EntityData stateEntity) {
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
-            return new ComponentData(usablePageWidthPx, "Data source is not configured for the chart");
+            return new ComponentData(usablePageWidthPx, "Data source is not configured for the chart [" + component.getSubType() + "]");
         }
         DataSource ds = dataSource.get();
         if (ds.getDataKeys().isEmpty()) {
-            return new ComponentData(usablePageWidthPx, "At least one series should be specified for the chart");
+            return new ComponentData(usablePageWidthPx, "At least one series should be specified for the chart [" + component.getSubType() + "]");
         }
         List<EntityData> entityDatas = fetchEntities(ctx, ds, stateEntity != null ? stateEntity.getEntityId() : null, DEFAULT_TS_CHART_SORT_ORDER);
         List<LatestChartDataSource> chartData = new ArrayList<>();
@@ -374,17 +383,23 @@ public class PdfReportService extends AbstractReportService {
             }
         }
         LatestChartData latestChartData = new LatestChartData(chartData);
-        return new ComponentData(usablePageWidthPx, latestChartData);
+        Map<String, String> variables = new HashMap<>();
+        if (stateEntity != null) {
+            putEntityInfoData(stateEntity, variables);
+        } else if (!entityDatas.isEmpty()) {
+            putEntityInfoData(entityDatas.get(0), variables);
+        }
+        return new ComponentData(usablePageWidthPx, latestChartData, new HashMap<>(variables));
     }
 
     private ComponentData buildTsChartComponentData(int usablePageWidthPx, TbReportCtx ctx, TimeseriesChartComponent component, EntityData stateEntity) {
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
-            return new ComponentData(usablePageWidthPx, "Data source is not configured for time series chart");
+            return new ComponentData(usablePageWidthPx, "Data source is not configured for time series chart [" + component.getSubType() + "]");
         }
         DataSource ds = dataSource.get();
         if (ds.getDataKeys().isEmpty()) {
-            return new ComponentData(usablePageWidthPx, "At least one series should be specified for time series chart");
+            return new ComponentData(usablePageWidthPx, "At least one series should be specified for time series chart [" + component.getSubType() + "]");
         }
 
         List<TimeSeriesChartThreshold> thresholds = null;
@@ -409,7 +424,7 @@ public class PdfReportService extends AbstractReportService {
                 .filterId(ds.getFilterId())
                 .dataKeys(ds.getLatestDataKeys()).build();
 
-        boolean singleEntity = "rangeChart".equals(component.getSubType());
+        boolean singleEntity = RANGE_CHART == component.getSubType();
 
         List<EntityData> entityDatas = fetchEntities(ctx, latestDataSource, stateEntity != null ? stateEntity.getEntityId() : null, DEFAULT_TS_CHART_SORT_ORDER, singleEntity);
 
@@ -437,7 +452,7 @@ public class PdfReportService extends AbstractReportService {
         });
 
         List<TsChartRangeItem> rangeItems = new ArrayList<>();
-        if ("rangeChart".equals(component.getSubType())) {
+        if (RANGE_CHART == component.getSubType()) {
             if (component.getTimeSeriesChartSettings() != null) {
                 ReportRangeChartSettings rangeChartSettings = (ReportRangeChartSettings) component.getTimeSeriesChartSettings();
                 List<ColorRange> colorRanges = rangeChartSettings.getRangeColors();
@@ -472,7 +487,8 @@ public class PdfReportService extends AbstractReportService {
         ZoneId zoneId = targetTimezone != null ? ZoneId.of(targetTimezone) : ZoneId.systemDefault();
 
         int dataIndex = 0;
-        boolean stateData = "stateChart".equals(component.getSubType());
+        int startDataIndex = 0;
+        boolean stateData = STATE_CHART == component.getSubType();
         DataPostProcessFunction dataPostProcessFunction = (dataKey, timestamp, value) -> this.postProcess(ctx, dataKey, timestamp, value, true);
 
         for (EntityData entity : entityDatas) {
@@ -501,9 +517,10 @@ public class PdfReportService extends AbstractReportService {
                 }
             }
             TsChartDataSource chartDataSource = new TsChartDataSource(ds, entity, tsKvEntries, timeRange,
-                    historyConf.getInterval(), aggregation, zoneId, false, null, dataPostProcessFunction, dataIndex);
+                    historyConf.getInterval(), aggregation, zoneId, false, null, dataPostProcessFunction, dataIndex, startDataIndex);
             chartData.add(chartDataSource);
             dataIndex++;
+            startDataIndex += chartDataSource.getDataKeys().size();
         }
 
         int keyIndex = 0;
@@ -518,22 +535,22 @@ public class PdfReportService extends AbstractReportService {
         }
         TimeIntervalCalculator.TimeRange comparisonTimeRange = null;
         if (comparisonEnabled) {
+            ComparisonDuration timeForComparison = ComparisonDuration.previousInterval;
+            Long comparisonCustomIntervalValue = 7200000L;
+            if (component.getTimeSeriesChartSettings() != null) {
+                if (component.getTimeSeriesChartSettings().getTimeForComparison() != null) {
+                    timeForComparison = component.getTimeSeriesChartSettings().getTimeForComparison();
+                }
+                if (component.getTimeSeriesChartSettings().getComparisonCustomIntervalValue() != null) {
+                    comparisonCustomIntervalValue = component.getTimeSeriesChartSettings().getComparisonCustomIntervalValue();
+                }
+            }
+            comparisonTimeRange = getComparisonTimeRange(timeRange, timeWindowConf,
+                    targetTimezone, timeForComparison, comparisonCustomIntervalValue);
+
             List<DataKey> comparisionDataKeys = dataKeys.stream().filter(DataKey::isComparisonKey).toList();
             if (!comparisionDataKeys.isEmpty()) {
                 List<String> comparisonKeys = comparisionDataKeys.stream().map(DataKey::getName).distinct().toList();
-                ComparisonDuration timeForComparison = ComparisonDuration.previousInterval;
-                Long comparisonCustomIntervalValue = 7200000L;
-                if (component.getTimeSeriesChartSettings() != null) {
-                    if (component.getTimeSeriesChartSettings().getTimeForComparison() != null) {
-                        timeForComparison = component.getTimeSeriesChartSettings().getTimeForComparison();
-                    }
-                    if (component.getTimeSeriesChartSettings().getComparisonCustomIntervalValue() != null) {
-                        comparisonCustomIntervalValue = component.getTimeSeriesChartSettings().getComparisonCustomIntervalValue();
-                    }
-                }
-                comparisonTimeRange = getComparisonTimeRange(timeRange, timeWindowConf,
-                        targetTimezone, timeForComparison, comparisonCustomIntervalValue);
-
                 List<TsChartDataSource> comparisonChartData = new ArrayList<>();
                 for (EntityData entity : entityDatas) {
                     List<TsKvEntry> tsKvEntries = dataService.getTimeseries(entity.getEntityId(), comparisonKeys, comparisonTimeRange.startTs, comparisonTimeRange.endTs,
@@ -541,9 +558,10 @@ public class PdfReportService extends AbstractReportService {
                             timeWindowConf.getAggregation().getLimit(), false, ctx);
 
                     TsChartDataSource chartDataSource = new TsChartDataSource(ds, entity, tsKvEntries, comparisonTimeRange,
-                            historyConf.getInterval(), timeWindowConf.getAggregation().getType(), zoneId, true, timeForComparison, dataPostProcessFunction, dataIndex);
+                            historyConf.getInterval(), timeWindowConf.getAggregation().getType(), zoneId, true, timeForComparison, dataPostProcessFunction, dataIndex, startDataIndex);
                     comparisonChartData.add(chartDataSource);
                     dataIndex++;
+                    startDataIndex += chartDataSource.getDataKeys().size();
                 }
 
                 for (TsChartDataSource chartDataSource : comparisonChartData) {
@@ -564,7 +582,13 @@ public class PdfReportService extends AbstractReportService {
         TimeZone timeZone = TimeZone.getTimeZone(zoneId.getId());
         TsChartData tsChartData = new TsChartData(timeZone, timeRange, Aggregation.NONE.equals(timeWindowConf.getAggregation().getType()),
                 chartData, thresholdItems, rangeItems, comparisonEnabled, comparisonTimeRange);
-        return new ComponentData(usablePageWidthPx, tsChartData);
+        Map<String, String> variables = new HashMap<>();
+        if (stateEntity != null) {
+            putEntityInfoData(stateEntity, variables);
+        } else if (!entityDatas.isEmpty()) {
+            putEntityInfoData(entityDatas.get(0), variables);
+        }
+        return new ComponentData(usablePageWidthPx, tsChartData, new HashMap<>(variables));
     }
 
     private ComponentData buildImageComponentData(int usablePageWidthPx, TbReportCtx ctx, ImageComponent component) {
@@ -653,10 +677,33 @@ public class PdfReportService extends AbstractReportService {
         }
     }
 
+    private ComponentData buildSplitViewComponentData(int usablePageWidthPx, TbReportCtx ctx, SplitViewComponent component, EntityData stateEntity) {
+        float splitPosition = component.getSplitPosition();
+        float splitGap = component.getSplitGap() * 4f / 3f;
+        int leftWidth = (int)(usablePageWidthPx * splitPosition / 100 - splitGap / 2f);
+        int rightWidth = (int)(usablePageWidthPx * (100 - splitPosition) / 100 - splitGap / 2f);
+        int centerWidth = (int)splitGap;
+        String leftContent = "";
+        if (component.getLeftView() != null) {
+            leftContent = this.renderContent(leftWidth, ctx, Collections.singletonList(component.getLeftView()), stateEntity);
+        }
+        String rightContent = "";
+        if (component.getRightView() != null) {
+            rightContent = this.renderContent(rightWidth, ctx, Collections.singletonList(component.getRightView()), stateEntity);
+        }
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("leftWidth", leftWidth);
+        variables.put("rightWidth", rightWidth);
+        variables.put("centerWidth", centerWidth);
+        variables.put("leftContent", leftContent);
+        variables.put("rightContent", rightContent);
+        return new ComponentData(usablePageWidthPx, variables);
+    }
+
     private ComponentData buildMultipleDataSourceData(int usablePageWidthPx, TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
         List<DataSource> dataSources = null;
         if (component instanceof DataReportComponent) {
-            dataSources = ((DataReportComponent) component).getDataSources();
+            dataSources = getMultipleDataSources((DataReportComponent) component);
         }
         if (dataSources == null || dataSources.isEmpty()) {
             return new ComponentData(usablePageWidthPx);

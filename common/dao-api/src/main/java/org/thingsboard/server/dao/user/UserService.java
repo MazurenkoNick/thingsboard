@@ -31,8 +31,8 @@
 package org.thingsboard.server.dao.user;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.UserAuthDetails;
 import org.thingsboard.server.common.data.UserInfo;
 import org.thingsboard.server.common.data.id.CustomMenuId;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -44,6 +44,8 @@ import org.thingsboard.server.common.data.id.TenantProfileId;
 import org.thingsboard.server.common.data.id.UserCredentialsId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.mobile.MobileSessionInfo;
+import org.thingsboard.server.common.data.notification.targets.platform.SystemLevelUsersFilter;
+import org.thingsboard.server.common.data.notification.targets.platform.UsersFilter;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.security.UserCredentials;
@@ -51,7 +53,6 @@ import org.thingsboard.server.dao.entity.EntityDaoService;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public interface UserService extends EntityDaoService {
 
@@ -166,5 +167,13 @@ public interface UserService extends EntityDaoService {
     List<User> findUsersByCustomMenuId(CustomMenuId customMenuId);
 
     void updateUsersCustomMenuId(List<UserId> ids, CustomMenuId customMenuId);
+
+    boolean existsInEntityGroup(UserId id, EntityGroupId entityGroupId);
+
+    PageData<User> findUsersByFilter(TenantId tenantId, UsersFilter filter, PageLink pageLink);
+
+    boolean matchesFilter(TenantId tenantId, SystemLevelUsersFilter filter, User user);
+
+    UserAuthDetails findUserAuthDetailsByUserId(TenantId tenantId, UserId userId);
 
 }

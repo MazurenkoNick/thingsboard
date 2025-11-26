@@ -31,6 +31,7 @@
 package org.thingsboard.server.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -64,7 +65,9 @@ import org.thingsboard.server.common.data.notification.targets.platform.Affected
 import org.thingsboard.server.common.data.notification.template.NotificationTemplate;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
+import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.report.ReportInfo;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
@@ -84,15 +87,18 @@ import org.thingsboard.server.common.data.report.configuration.components.DataRe
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ImageComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.RichTextComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.common.data.report.configuration.style.Heading;
 import org.thingsboard.server.common.data.report.configuration.timewindow.AggregationConfiguration;
 import org.thingsboard.server.common.data.report.configuration.timewindow.History;
 import org.thingsboard.server.common.data.report.configuration.timewindow.Interval;
 import org.thingsboard.server.common.data.report.configuration.timewindow.QuickTimeInterval;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 import org.thingsboard.server.dao.notification.DefaultNotifications;
 import org.thingsboard.server.dao.service.DaoSqlTest;
+import org.thingsboard.server.dao.timeseries.TimeseriesService;
 import org.thingsboard.server.report.service.TbReportService;
 
 import java.math.BigDecimal;
@@ -125,6 +131,8 @@ public class ReportControllerTest extends AbstractControllerTest {
     private DefaultNotifications defaultNotifications;
     @MockitoSpyBean
     private TbReportService tbReportService;
+    @Autowired
+    private TimeseriesService timeseriesService;
 
     @Before
     public void beforeTest() throws Exception {
@@ -148,6 +156,120 @@ public class ReportControllerTest extends AbstractControllerTest {
         List<String> expectedRows = generatedValues.stream().map(row -> String.join(",", row)).toList();
 
         generateAndCheckCSVReport(configuration, expectedRows);
+    }
+
+    @Test
+    public void testCSVReportWithOriginatorAndAggrFields() throws Exception {
+        Device testDevice = new Device();
+        testDevice.setName("Originator device");
+        testDevice.setType("default");
+        testDevice.setLabel("testLabel" + (int) (Math.random() * 1000));
+        testDevice = doPost("/api/device", testDevice, Device.class);
+
+        for (int i = 10; i < 25; i++) {
+            String telemetryPayload = "{\"temperature\":" + i + "}";
+            doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getId() + "/timeseries/" + DataConstants.SHARED_SCOPE, telemetryPayload, String.class, status().isOk());
+            Thread.sleep(100);
+        }
+
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        SingleEntityFilter filter = new SingleEntityFilter();
+        filter.setSingleEntity(AliasEntityId.fromEntityId(testDevice.getId()));
+        EntityAlias entityAlias = new EntityAlias(devicesAliasId, "device", filter);
+
+        EntityTableComponent tableComponent = new EntityTableComponent();
+        DataKey tempField = new DataKey("temperature", "timeseries", "TEMPERATURE");
+        tempField.setAggregationType(Aggregation.AVG);
+        tempField.setTimewindow(buildCurrentDateTimeWindow());
+        tempField.setDecimals(0);
+        tableComponent.setDataSources(List.of(DataSource.builder()
+                .type(DataSourceType.ENTITY)
+                .entityAliasId(devicesAliasId)
+                .dataKeys(List.of(
+                        new DataKey("createdTime", "entityField", "CREATED TIME"),
+                        new DataKey("name", "entityField", "NAME"),
+                        tempField
+                ))
+                .build()));
+
+        ReportTemplateConfig configuration = createReportConfigTemplate(List.of(tableComponent), entityAlias, TbReportFormat.CSV);
+
+        ReportRequest request = new ReportRequest();
+        request.setReportTemplateConfig(configuration);
+        request.setOriginator(testDevice.getId());
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(configuration.getTimeDataPattern()).withZone(ZoneId.systemDefault());
+
+        TimeIntervalCalculator.TimeRange timeRange = TimeIntervalCalculator.getTimeRange(tempField.getTimewindow(), tempField.getTimewindow().getTimezone());
+        Device finalDevice = testDevice;
+
+        await().atMost(60, TimeUnit.SECONDS).until(() -> {
+            String csvReport = doPost("/api/v2/report/test", request, String.class);
+            List<String> actualReportRows = Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim).toList();
+            log.warn("Report rows: {}", actualReportRows);
+            ObjectNode timeseries = doGetAsync("/api/plugins/telemetry/DEVICE/" + finalDevice.getId() + "/values/timeseries?keys=temperature&startTs={startTs}&endTs={endTs}", ObjectNode.class, timeRange.startTs, timeRange.endTs);
+            log.warn("Telemetry: {}", timeseries);
+            return actualReportRows
+                    .containsAll(List.of("CREATED TIME,NAME,TEMPERATURE", formatter.format(Instant.ofEpochMilli(finalDevice.getCreatedTime())) + "," + finalDevice.getName() + ",17"));
+        });
+    }
+
+    @Test
+    public void testCSVReportWithMultipleAggrFields() throws Exception {
+        Device testDevice = new Device();
+        testDevice.setName("Originator device");
+        testDevice.setType("default");
+        testDevice.setLabel("testLabel" + (int) (Math.random() * 1000));
+        testDevice = doPost("/api/device", testDevice, Device.class);
+
+        for (int i = 0; i < 10; i++) {
+            String telemetryPayload = "{\"temperature\":" + i + "}";
+            doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getId() + "/timeseries/" + DataConstants.SHARED_SCOPE, telemetryPayload, String.class, status().isOk());
+            Thread.sleep(100);
+        }
+
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        SingleEntityFilter filter = new SingleEntityFilter();
+        filter.setSingleEntity(AliasEntityId.fromEntityId(testDevice.getId()));
+        EntityAlias entityAlias = new EntityAlias(devicesAliasId, "device", filter);
+
+        EntityTableComponent tableComponent = new EntityTableComponent();
+        DataKey avgTemp = new DataKey("temperature", "timeseries", "AVG TEMPERATURE");
+        avgTemp.setAggregationType(Aggregation.AVG);
+        avgTemp.setTimewindow(buildCurrentDateTimeWindow());
+        avgTemp.setDecimals(1);
+
+        DataKey minTemp = new DataKey("temperature", "timeseries", "MIN TEMPERATURE");
+        minTemp.setAggregationType(Aggregation.MIN);
+        minTemp.setTimewindow(buildCurrentDateTimeWindow());
+        minTemp.setDecimals(1);
+
+        tableComponent.setDataSources(List.of(DataSource.builder()
+                .type(DataSourceType.ENTITY)
+                .entityAliasId(devicesAliasId)
+                .dataKeys(List.of(
+                        new DataKey("createdTime", "entityField", "CREATED TIME"),
+                        new DataKey("name", "entityField", "NAME"),
+                        avgTemp,
+                        minTemp
+                ))
+                .build()));
+
+        ReportTemplateConfig configuration = createReportConfigTemplate(List.of(tableComponent), entityAlias, TbReportFormat.CSV);
+
+        ReportRequest request = new ReportRequest();
+        request.setReportTemplateConfig(configuration);
+
+        Device finalTestDevice = testDevice;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(configuration.getTimeDataPattern()).withZone(ZoneId.systemDefault());
+
+        await().atMost(60, TimeUnit.SECONDS).until(() -> {
+            String csvReport = doPost("/api/v2/report/test", request, String.class);
+            List<String> actualReportRows = Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim).toList();
+            log.warn("Report rows: {}", actualReportRows);
+            return actualReportRows
+                    .containsAll(List.of("CREATED TIME,NAME,AVG TEMPERATURE,MIN TEMPERATURE", formatter.format(Instant.ofEpochMilli(finalTestDevice.getCreatedTime())) + "," + finalTestDevice.getName() + ",4.5,0.0"));
+        });
     }
 
     @Test
@@ -229,7 +351,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         TimeseriesTableComponent tsComponent = buildTimeseriesTableComponent(devicesAliasId);
         ReportTemplateConfig configuration = createReportConfigTemplate(List.of(tsComponent), entityAlias, TbReportFormat.CSV);
 
-        List<String> columnHeaders = List.of("Timestamp", "TEMPERATURE", "NAME", "ACTIVE");
+        List<String> columnHeaders = List.of("Timestamp", "TEMPERATURE", "Non existing", "NAME", "ACTIVE");
         List<List<String>> generatedValues = generateTsData(columnHeaders);
         List<String> expectedRows = generatedValues.stream().map(row -> String.join(",", row)).toList();
 
@@ -244,7 +366,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         TimeseriesTableComponent tsComponent = buildTimeseriesTableComponent(devicesAliasId);
         ReportTemplateConfig configuration = createReportConfigTemplate(List.of(tsComponent), entityAlias, TbReportFormat.PDF);
 
-        List<String> columnHeaders = List.of("Timestamp", "TEMPERATURE", "NAME", "ACTIVE");
+        List<String> columnHeaders = List.of("Timestamp", "TEMPERATURE", "Non existing", "NAME", "ACTIVE");
         List<List<String>> expectedLines = generateTsData(columnHeaders);
         List<String> expectedRows = expectedLines.stream().map(row -> String.join(" ", row)).toList();
 
@@ -415,16 +537,33 @@ public class ReportControllerTest extends AbstractControllerTest {
         assertThat(errorMessage).isEqualTo("Timeout for test report generation. Generation took more than 2000 milliseconds!");
     }
 
+    @Test
+    public void testPDFReportWithChineseAndJapaneseWords() throws Exception {
+        String chineseText = "你好 (Nǐ hǎo): Hello";
+        String japaneseText = "こんにちは (Konnichiwa): Hello in Japanese";
+
+        ReportTemplateConfig configuration = PdfReportTemplateConfig.builder()
+                .components(List.of(buildRichTextComponent(chineseText), buildRichTextComponent(japaneseText)))
+                .build();
+        List<String> expectedRows = List.of(chineseText, japaneseText);
+
+        generateAndCheckPDFReportText(configuration, expectedRows);
+    }
+
     private TimeseriesTableComponent buildTimeseriesTableComponent(String devicesAliasId) {
         TimeseriesTableComponent tsComponent = new TimeseriesTableComponent();
         tsComponent.setShowTimestamp(true);
         tsComponent.setTimestampLabel("Timestamp");
         tsComponent.setTimestampPattern("milliseconds");
+        DataKey nonExistingDataKey = new DataKey("nonExisting", "timeseries", "Non existing");
+        nonExistingDataKey.setUsePostProcessing(true);
+        nonExistingDataKey.setPostFuncBody("return value == null ? \"N/A\" : value;");
         tsComponent.setDataSources(List.of(DataSource.builder()
                 .type(DataSourceType.ENTITY)
                 .entityAliasId(devicesAliasId)
                 .dataKeys(List.of(
-                        new DataKey("temperature", "timeseries", "TEMPERATURE")
+                        new DataKey("temperature", "timeseries", "TEMPERATURE"),
+                        nonExistingDataKey
                 ))
                 .latestDataKeys(List.of(
                         new DataKey("name", "entityField", "NAME"),
@@ -441,21 +580,25 @@ public class ReportControllerTest extends AbstractControllerTest {
     }
 
     private static TimeWindowConfiguration buildCurrentDateTimeWindow() {
+        return buildCurrentDateTimeWindow(Aggregation.NONE);
+    }
+
+    private static TimeWindowConfiguration buildCurrentDateTimeWindow(Aggregation aggregationType) {
         TimeWindowConfiguration timewindow = new TimeWindowConfiguration();
         History history = new History();
         history.setHistoryType(2);
         history.setQuickInterval(QuickTimeInterval.CURRENT_DAY);
-        history.setInterval(Interval.of(1000));
+        history.setInterval(Interval.of(86400000));
         timewindow.setHistory(history);
         timewindow.setTimezone(TimeZone.getDefault().getID());
         AggregationConfiguration aggregation = new AggregationConfiguration();
-        aggregation.setType(Aggregation.NONE);
+        aggregation.setType(aggregationType);
         aggregation.setLimit(25000);
         timewindow.setAggregation(aggregation);
         return timewindow;
     }
 
-    private void generateAndCheckCSVReport(ReportTemplateConfig config, List<String> expectedRows) throws Exception {
+    private void generateAndCheckCSVReport(ReportTemplateConfig config, List<String> expectedRows) {
         ReportRequest request = new ReportRequest();
         request.setReportTemplateConfig(config);
 
@@ -466,7 +609,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         });
     }
 
-    private void generateAndCheckPDFReportText(ReportTemplateConfig config, List<String> expectedRows) throws Exception {
+    private void generateAndCheckPDFReportText(ReportTemplateConfig config, List<String> expectedRows) {
         await().atMost(60, TimeUnit.SECONDS).until(() -> {
             String pdfReport = generatePDFReportText(config);
             return Arrays.stream(pdfReport.split("\\r?\\n")).map(String::trim).toList().containsAll(expectedRows);
@@ -520,6 +663,12 @@ public class ReportControllerTest extends AbstractControllerTest {
         tableComponent.setTableHeading(tableHeading);
         tableComponent.setTableSortOrder(new TableSortOrder("NAME", TableSortOrder.Direction.ASC));
         return tableComponent;
+    }
+
+    private RichTextComponent buildRichTextComponent(String richText) {
+        RichTextComponent richTextComponent = new RichTextComponent();
+        richTextComponent.setValue(richText);
+        return richTextComponent;
     }
 
     private List<List<String>> generateLatestTestData(List<String> columnHeaders, String tableHeading, String timeDataPattern) throws Exception {
@@ -664,6 +813,7 @@ public class ReportControllerTest extends AbstractControllerTest {
                 expectedLines.add(List.of(
                         String.valueOf(ts),
                         String.valueOf(temperature),
+                        "N/A",
                         device.getName(),
                         "false"));
             }

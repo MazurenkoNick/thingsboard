@@ -40,15 +40,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.common.data.edqs.fields.UserFields;
 import org.thingsboard.server.common.data.security.Authority;
+import org.thingsboard.server.common.data.util.TbPair;
 import org.thingsboard.server.dao.model.sql.UserEntity;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * @author Valerii Sosliuk
- */
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
     UserEntity findByEmail(String email);
@@ -138,14 +136,30 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
                                                @Param("roleId") UUID roleId,
                                                Pageable pageable);
 
+    @Query("SELECT count(u) > 0 FROM UserEntity u WHERE u.id = :id AND u.tenantId IN :tenantsIds AND u.id IN " +
+            "(SELECT r.toId FROM RelationEntity r WHERE r.fromType = 'ENTITY_GROUP' AND r.toType = 'USER' AND r.fromId IN " +
+            "(SELECT p.userGroupId FROM GroupPermissionEntity p WHERE p.tenantId IN :tenantsIds AND p.roleId = :roleId))")
+    boolean existsByIdAndTenantsIdsAndRoleId(UUID id,
+                                             List<UUID> tenantsIds,
+                                             UUID roleId);
+
     @Query("SELECT u FROM UserEntity u INNER JOIN TenantEntity t ON u.tenantId = t.id " +
             "WHERE t.tenantProfileId IN :tenantProfilesIds AND u.id IN " +
             "(SELECT r.toId FROM RelationEntity r WHERE r.fromType = 'ENTITY_GROUP' AND r.toType = 'USER' AND r.fromId IN " +
             "(SELECT p.userGroupId FROM GroupPermissionEntity p INNER JOIN TenantEntity te ON p.tenantId = te.id " +
-            "  WHERE te.tenantProfileId IN :tenantProfilesIds AND p.roleId = :roleId))")
+            "WHERE te.tenantProfileId IN :tenantProfilesIds AND p.roleId = :roleId))")
     Page<UserEntity> findByTenantProfilesIdsAndRoleId(@Param("tenantProfilesIds") List<UUID> tenantProfilesIds,
                                                       @Param("roleId") UUID roleId,
                                                       Pageable pageable);
+
+    @Query("SELECT count(u) > 0 FROM UserEntity u INNER JOIN TenantEntity t ON u.tenantId = t.id " +
+            "WHERE u.id = :id AND t.tenantProfileId IN :tenantProfilesIds AND u.id IN " +
+            "(SELECT r.toId FROM RelationEntity r WHERE r.fromType = 'ENTITY_GROUP' AND r.toType = 'USER' AND r.fromId IN " +
+            "(SELECT p.userGroupId FROM GroupPermissionEntity p INNER JOIN TenantEntity te ON p.tenantId = te.id " +
+            "WHERE te.tenantProfileId IN :tenantProfilesIds AND p.roleId = :roleId))")
+    boolean existsByIdAndTenantProfilesIdsAndRoleId(UUID id,
+                                                    List<UUID> tenantProfilesIds,
+                                                    UUID roleId);
 
     @Query("SELECT u FROM UserEntity u WHERE u.id IN " +
             "(SELECT r.toId FROM RelationEntity r WHERE r.fromType = 'ENTITY_GROUP' AND r.toType = 'USER' AND r.fromId IN " +
@@ -153,12 +167,18 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     Page<UserEntity> findByRoleId(@Param("roleId") UUID roleId,
                                   Pageable pageable);
 
+    @Query("SELECT count(u) > 0 FROM UserEntity u WHERE u.id = :id AND u.id IN " +
+            "(SELECT r.toId FROM RelationEntity r WHERE r.fromType = 'ENTITY_GROUP' AND r.toType = 'USER' AND r.fromId IN " +
+            "(SELECT p.userGroupId FROM GroupPermissionEntity p WHERE p.roleId = :roleId))")
+    boolean existsByIdAndRoleId(UUID id,
+                                UUID roleId);
+
     @Query(value = "SELECT count(u.id) FROM tb_user u WHERE u.id IN " +
             "(SELECT r.to_id FROM relation r WHERE r.from_type = 'ENTITY_GROUP' AND r.to_type = 'USER' AND r.from_id IN " +
             "(SELECT p.user_group_id FROM group_permission p WHERE p.tenant_id = :tenantId AND p.role_id = :roleId)) AND u.id NOT IN :userIds", nativeQuery = true)
     int countUsersByTenantIdAndRoleIdAndIdNotIn(@Param("tenantId") UUID tenantId,
-                                                             @Param("roleId") UUID roleId,
-                                                             @Param("userIds") List<UUID> userIds);
+                                                @Param("roleId") UUID roleId,
+                                                @Param("userIds") List<UUID> userIds);
 
     @Query("SELECT u FROM UserEntity u WHERE u.customMenuId = :customMenuId")
     List<UserEntity> findByCustomMenuId(@Param("customMenuId") UUID customMenuId);
@@ -177,4 +197,22 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
             "u.customerId, u.version, u.firstName, u.lastName, u.email, u.phone, u.additionalInfo) " +
             "FROM UserEntity u WHERE u.id > :id ORDER BY u.id")
     List<UserFields> findNextBatch(@Param("id") UUID id, Limit limit);
+
+    @Query(value = "SELECT EXISTS ("
+            + "  SELECT 1 "
+            + "  FROM tb_user u "
+            + "  INNER JOIN relation re ON u.id = re.to_id "
+            + "  WHERE u.id = :userId "
+            + "    AND re.to_type = 'USER' "
+            + "    AND re.relation_type_group = 'FROM_ENTITY_GROUP' "
+            + "    AND re.relation_type = 'Contains' "
+            + "    AND re.from_id = :groupId "
+            + "    AND re.from_type = 'ENTITY_GROUP' "
+            + ")", nativeQuery = true)
+    boolean existsInEntityGroup(@Param("userId") UUID userId, @Param("groupId") UUID groupId);
+
+    @Query("SELECT new org.thingsboard.server.common.data.util.TbPair(u, uc.enabled) " +
+            "FROM UserEntity u JOIN UserCredentialsEntity uc ON u.id = uc.userId WHERE u.id = :userId ")
+    TbPair<UserEntity, Boolean> findUserAuthDetailsByUserId(@Param("userId") UUID userId);
+
 }

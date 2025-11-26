@@ -57,7 +57,7 @@
 <div class="mat-padding flex flex-col">
   <form [formGroup]="entityForm">
     <fieldset [disabled]="(isLoading$ | async) || !isEdit">
-      <mat-form-field class="mat-block">
+      <mat-form-field class="mat-block" appearance="outline">
         <mat-label translate>role.name</mat-label>
         <input matInput formControlName="name" required>
         <mat-error *ngIf="entityForm.get('name').hasError('required')">
@@ -67,7 +67,7 @@
           {{ 'role.name-max-length' | translate }}
         </mat-error>
       </mat-form-field>
-      <mat-form-field class="mat-block">
+      <mat-form-field class="mat-block" appearance="outline">
         <mat-label translate>role.role-type</mat-label>
         <mat-select formControlName="type" required>
           <mat-option *ngFor="let type of roleTypes" [value]="type">
@@ -76,7 +76,7 @@
         </mat-select>
       </mat-form-field>
       <div formGroupName="additionalInfo" class="flex flex-col">
-        <mat-form-field class="mat-block">
+        <mat-form-field class="mat-block" appearance="outline">
           <mat-label translate>role.description</mat-label>
           <textarea matInput formControlName="description" rows="2"></textarea>
         </mat-form-field>

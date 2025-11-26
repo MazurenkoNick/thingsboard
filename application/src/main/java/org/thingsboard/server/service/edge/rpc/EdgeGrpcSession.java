@@ -63,6 +63,7 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.TimePageLink;
 import org.thingsboard.server.common.msg.edge.EdgeEventUpdateMsg;
 import org.thingsboard.server.dao.edge.stats.EdgeStatsKey;
+import org.thingsboard.server.gen.edge.v1.AiModelUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.AlarmCommentUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.AlarmUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.AssetProfileUpdateMsg;
@@ -1009,6 +1010,11 @@ public abstract class EdgeGrpcSession implements Closeable {
             if (uplinkMsg.getSchedulerEventUpdateMsgCount() > 0) {
                 for (SchedulerEventUpdateMsg schedulerEventUpdateMsg : uplinkMsg.getSchedulerEventUpdateMsgList()) {
                     result.add(ctx.getSchedulerEventProcessor().processSchedulerEventMsgFromEdge(edge.getTenantId(), edge, schedulerEventUpdateMsg));
+                }
+            }
+            if (uplinkMsg.getAiModelUpdateMsgCount() > 0) {
+                for (AiModelUpdateMsg aiModelUpdateMsg : uplinkMsg.getAiModelUpdateMsgList()) {
+                    result.add(ctx.getAiModelProcessor().processAiModelMsgFromEdge(edge.getTenantId(), edge, aiModelUpdateMsg));
                 }
             }
         } catch (Exception e) {

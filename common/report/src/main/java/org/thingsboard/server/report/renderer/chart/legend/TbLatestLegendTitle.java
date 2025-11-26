@@ -54,6 +54,7 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.util.List;
 
+import static org.thingsboard.server.report.util.AwtFontUtils.newFont;
 import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
 
 public class TbLatestLegendTitle extends Title {
@@ -77,10 +78,10 @@ public class TbLatestLegendTitle extends Title {
     public TbLatestLegendTitle(List<TbLatestChartLegendItem> legendItems) {
         this.legendItems = legendItems;
 
-        this.legendLabelFont = new Font("Roboto", Font.PLAIN, 12);
+        this.legendLabelFont = newFont("Roboto", Font.PLAIN, 12);
         this.legendLabelPaint = safeParseCssColor("rgba(0, 0, 0, 0.38)");
 
-        this.legendValueFont = new Font("Roboto", Font.BOLD, 14);
+        this.legendValueFont = newFont("Roboto", Font.BOLD, 14);
         this.legendValuePaint = safeParseCssColor("rgba(0, 0, 0, 0.87)");
     }
 

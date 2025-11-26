@@ -166,6 +166,12 @@ security:
     tokenSigningKey: "${JWT_TOKEN_SIGNING_KEY:thingsboardDefaultSigningKey}" # Base64 encoded
   # Enable/disable access to Tenant Administrators JWT token by System Administrator or Customer Users JWT token by Tenant Administrator
   user_token_access_enabled: "${SECURITY_USER_TOKEN_ACCESS_ENABLED:true}"
+  # API key parameters
+  api_key:
+    # Prefix for the auto-generated API key. For example, tb_Ood4dQMxWvMH-76z3E_Cv0mZaBWT0Clk3hRSO0P_jNQ
+    value_prefix: "${SECURITY_API_KEY_VALUE_PREFIX:tb_}"
+    # Length of the auto-generated API key. Max is 255
+    value_bytes_size: "${SECURITY_API_KEY_VALUE_PREFIX:64}"
   # Enable/disable case-sensitive username login
   user_login_case_sensitive: "${SECURITY_USER_LOGIN_CASE_SENSITIVE:true}"
   claim:
@@ -325,8 +331,11 @@ cassandra:
     default_fetch_size: "${CASSANDRA_DEFAULT_FETCH_SIZE:2000}"
     # Specify partitioning size for timestamp key-value storage. Example: MINUTES, HOURS, DAYS, MONTHS, INDEFINITE
     ts_key_value_partitioning: "${TS_KV_PARTITIONING:MONTHS}"
-    # Enable/Disable timestamp key-value partioning on read queries
+    # Enable/Disable timestamp key-value partitioning on read queries
     use_ts_key_value_partitioning_on_read: "${USE_TS_KV_PARTITIONING_ON_READ:true}"
+    # Safety trigger to fall back to use_ts_key_value_partitioning_on_read as true if estimated partitions count is greater than safety trigger value.
+    # It helps to prevent building huge partition list (OOM) for corner cases (like from 0 to infinity) and prefer fewer reads strategy from NoSQL database
+    use_ts_key_value_partitioning_on_read_max_estimated_partition_count: "${USE_TS_KV_PARTITIONING_ON_READ_MAX_ESTIMATED_PARTITION_COUNT:40}"
     # The number of partitions that are cached in memory of each service. It is useful to decrease the load of re-inserting the same partitions again
     ts_key_value_partitions_max_cache_size: "${TS_KV_PARTITIONS_MAX_CACHE_SIZE:100000}"
     # Timeseries Time To Live (in seconds) for Cassandra Record. 0 - record has never expired
@@ -458,6 +467,9 @@ sql:
       enabled: "${SQL_TTL_NOTIFICATIONS_ENABLED:true}" # Enable/disable TTL (Time To Live) for notification center records
       ttl: "${SQL_TTL_NOTIFICATIONS_SECS:2592000}" # Default value - 30 days
       checking_interval_ms: "${SQL_TTL_NOTIFICATIONS_CHECKING_INTERVAL_MS:86400000}" # Default value - 1 day
+    api_keys:
+      enabled: "${SQL_TTL_API_KEYS_ENABLED:true}" # Enable/disable TTL (Time To Live) for expired api keys records
+      checking_interval_ms: "${SQL_TTL_API_KEYS_CHECKING_INTERVAL_MS:86400000}" # Default value - 1 day
   relations:
     max_level: "${SQL_RELATIONS_MAX_LEVEL:50}" # This value has to be reasonably small to prevent infinite recursion as early as possible
     pool_size: "${SQL_RELATIONS_POOL_SIZE:4}" # This value has to be reasonably small to prevent the relation query from blocking all other DB calls
@@ -558,6 +570,11 @@ actors:
       configuration: "${ACTORS_CALCULATED_FIELD_DEBUG_MODE_RATE_LIMITS_PER_TENANT_CONFIGURATION:50000:3600}"
     # Time in seconds to receive calculation result.
     calculation_timeout: "${ACTORS_CALCULATION_TIMEOUT_SEC:5}"
+    # Interval in seconds to check calculated fields for re-evaluation interval. 1 minute by default.
+    check_interval: "${ACTORS_CALCULATED_FIELDS_CHECK_INTERVAL_SEC:60}"
+  alarms:
+    # Interval in seconds to re-evaluate Alarm rules that have a time schedule. 2 minutes by default.
+    reevaluation_interval: "${ACTORS_ALARMS_REEVALUATION_INTERVAL_SEC:120}"
 
 debug:
   settings:
@@ -775,6 +792,9 @@ cache:
     mailOauth2State:
       timeToLiveInMinutes: "${CACHE_SPECS_MAIL_OAUTH2_STATE_TTL:2}" # mail oauth2 state parameter TTL
       maxSize: "${CACHE_SPECS_MAIL_OAUTH2_STATE_SIZE:10000}" # 0 means the cache is disabled
+    apiKeys:
+      timeToLiveInMinutes: "${CACHE_SPECS_API_KEYS_TTL:1440}" # API keys cache TTL
+      maxSize: "${CACHE_SPECS_API_KEYS_MAX_SIZE:10000}" # 0 means the cache is disabled
 
     # PE cache specs
     downlink:
@@ -835,6 +855,12 @@ cache:
     etag:
       timeToLiveInMinutes: "${CACHE_SPECS_CUSTOM_MENU_ETAGS_TTL:44640}" # Custom Menu ETags cache TTL in minutes (one month by default)
       maxSize: "${CACHE_SPECS_CUSTOM_MENU_ETAGS_MAX_SIZE:1000000}" # 0 means the cache is disabled
+  tbResourceData:
+    timeToLiveInMinutes: "${CACHE_SPECS_RESOURCE_DATA_TTL:10080}" # TB resource data cache TTL
+    maxSize: "${CACHE_SPECS_RESOURCE_DATA_MAX_SIZE:100000}" # 0 means the cache is disabled
+  userAuthDetails:
+    timeToLiveInMinutes: "${CACHE_SPECS_USER_AUTH_DETAILS_TTL:120}" # User auth details cache TTL
+    maxSize: "${CACHE_SPECS_USER_AUTH_DETAILS_MAX_SIZE:200000}" # 0 means the cache is disabled
 
 # Spring data parameters
 spring.data.redis.repositories.enabled: false # Disable this because it is not required.
@@ -1311,7 +1337,7 @@ transport:
       # - A value of 0 means we accept using CID but will not generate one for foreign peer (enables support but not for incoming traffic).
       # - A value between 0 and <= 4: SingleNodeConnectionIdGenerator is used
       # - A value that are > 4: MultiNodeConnectionIdGenerator is used
-      connection_id_length: "${LWM2M_DTLS_CONNECTION_ID_LENGTH:}"
+      connection_id_length: "${LWM2M_DTLS_CONNECTION_ID_LENGTH:8}"
     server:
       # LwM2M Server ID
       id: "${LWM2M_SERVER_ID:123}"
@@ -1356,7 +1382,7 @@ transport:
       # Enable/disable Bootstrap Server
       enabled: "${LWM2M_ENABLED_BS:true}"
       # Default value in LwM2M client after start in mode Bootstrap for the object : name "LWM2M Security" field: "Short Server ID" (deviceProfile: Bootstrap.BOOTSTRAP SERVER.Short ID)
-      id: "${LWM2M_SERVER_ID_BS:111}"
+      id: "${LWM2M_SERVER_ID_BS:0}"
       # LwM2M bootstrap server bind address. Bind to all interfaces by default
       bind_address: "${LWM2M_BS_BIND_ADDRESS:0.0.0.0}"
       # LwM2M bootstrap server bind port
@@ -1455,6 +1481,8 @@ transport:
       ignore_type_cast_errors: "${SNMP_RESPONSE_IGNORE_TYPE_CAST_ERRORS:false}"
     # Thread pool size for scheduler that executes device querying tasks
     scheduler_thread_pool_size: "${SNMP_SCHEDULER_THREAD_POOL_SIZE:4}"
+    # Maximum number of retry attempts for a single SNMP devices batch during bootstrap.
+    batch_retries: "${SNMP_BOOTSTRAP_RETRIES:8}"
   stats:
     # Enable/Disable the collection of transport statistics
     enabled: "${TB_TRANSPORT_STATS_ENABLED:true}"
@@ -1499,7 +1527,7 @@ coap:
     # - A value of 0 means we accept using CID but will not generate one for foreign peer (enables support but not for incoming traffic).
     # - A value between 0 and <= 4: SingleNodeConnectionIdGenerator is used
     # - A value that are > 4: MultiNodeConnectionIdGenerator is used
-    connection_id_length: "${COAP_DTLS_CONNECTION_ID_LENGTH:}"
+    connection_id_length: "${COAP_DTLS_CONNECTION_ID_LENGTH:8}"
     # Specify the MTU (Maximum Transmission Unit).
     # Should be used if LAN MTU is not used, e.g. if IP tunnels are used or if the client uses a smaller value than the LAN MTU.
     # Default = 1024

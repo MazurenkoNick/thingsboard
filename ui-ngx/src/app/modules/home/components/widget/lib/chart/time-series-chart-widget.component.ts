@@ -175,11 +175,17 @@ export class TimeSeriesChartWidgetComponent implements ChartWidgetComponent, OnI
     if (this.timeSeriesChart) {
       this.timeSeriesChart.update();
     }
+    if (this.reportMode) {
+      this.cd.detectChanges();
+    }
   }
 
   public onLatestDataUpdated() {
     if (this.timeSeriesChart) {
       this.timeSeriesChart.latestUpdated();
+    }
+    if (this.reportMode) {
+      this.cd.detectChanges();
     }
   }
 

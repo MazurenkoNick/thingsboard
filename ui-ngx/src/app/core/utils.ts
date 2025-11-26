@@ -37,7 +37,7 @@ import { DataKey, Datasource, DatasourceData, FormattedData, ReplaceInfo } from 
 import { EntityId } from '@shared/models/id/entity-id';
 import { NULL_UUID } from '@shared/models/id/has-uuid';
 import { baseDetailsPageByEntityType, EntityType } from '@shared/models/entity-type.models';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { TranslateService } from '@ngx-translate/core';
 import { serverErrorCodesTranslations } from '@shared/models/constants';
 import { SubscriptionEntityInfo } from '@core/api/widget-api.models';
@@ -50,8 +50,10 @@ import {
 } from '@shared/models/js-function.models';
 import { DomSanitizer } from '@angular/platform-browser';
 import { SecurityContext } from '@angular/core';
+import { AbstractControl, ValidationErrors, Validators } from '@angular/forms';
 
 const varsRegex = /\${([^}]*)}/g;
+const emailRegex = /^[A-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 
 export function onParentScrollOrWindowResize(el: Node): Observable<Event> {
   const scrollSubject = new Subject<Event>();
@@ -1126,6 +1128,24 @@ export const trimDefaultValues = (input: Record<string, any>, defaults: Record<s
   return result;
 }
 
+export const getFilenameFromHttpHeader = (headers: HttpHeaders): string  => {
+  if (!headers) {
+    return '';
+  }
+  const header = headers.get('content-disposition');
+  if (header) {
+    const filenameStarMatch = /filename\*=UTF-8''([^;]+)/i.exec(header);
+    if (filenameStarMatch && filenameStarMatch[1]) {
+      return decodeURIComponent(filenameStarMatch[1]);
+    }
+    const filenameMatch = /filename="([^"]+)"/i.exec(header);
+    if (filenameMatch && filenameMatch[1]) {
+      return filenameMatch[1];
+    }
+  }
+  return headers.get('x-filename') ?? '';
+}
+
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
@@ -1144,3 +1164,11 @@ export function debounce<T extends (...args: any[]) => any>(
     timeout = setTimeout(later, wait);
   };
 }
+
+export const validateEmail = (control: AbstractControl): ValidationErrors | null => {
+  if (isUndefinedOrNull(control.value) || (typeof control.value === 'string' && control.value.length === 0)) {
+    return null;
+  }
+  return emailRegex.test(control.value) ? null : {email: true};
+};
+

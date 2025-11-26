@@ -39,16 +39,15 @@ import { BreakpointId, Dashboard, DashboardLayoutId } from '@shared/models/dashb
 import {
   deepClone,
   guid,
+  isDate,
   isDefined,
   isNotEmptyStr,
-  isNumber,
   isObject,
   isString,
   isUndefined,
   unwrapModule
 } from '@core/utils';
-import { WINDOW } from '@core/services/window.service';
-import { DOCUMENT } from '@angular/common';
+import { DatePipe, DOCUMENT } from '@angular/common';
 import {
   AliasesInfo,
   AliasFilterType,
@@ -63,7 +62,7 @@ import { forkJoin, Observable, of, Subject } from 'rxjs';
 import { catchError, map, mergeMap, switchMap, take, tap } from 'rxjs/operators';
 import { DashboardUtilsService } from '@core/services/dashboard-utils.service';
 import { EntityService } from '@core/http/entity.service';
-import { Widget, WidgetSize, WidgetTypeDetails } from '@shared/models/widget.models';
+import { ExportRow, Widget, WidgetSize, WidgetTypeDetails } from '@shared/models/widget.models';
 import { ItemBufferService, WidgetItem } from '@core/services/item-buffer.service';
 import {
   BulkImportRequest,
@@ -113,7 +112,6 @@ import { ActionPreferencesPutUserSettings } from '@core/auth/auth.actions';
 import { ExportableEntity } from '@shared/models/base-data';
 import { EntityId } from '@shared/models/id/entity-id';
 import { Borders, Column, Workbook } from 'exceljs';
-import moment_ from 'moment';
 import { Customer } from '@shared/models/customer.model';
 import {
   ExportResourceDialogComponent,
@@ -125,20 +123,19 @@ import { CalculatedFieldsService } from '@core/http/calculated-fields.service';
 import { CalculatedField } from '@shared/models/calculated-field.models';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { ReportTemplate, ReportTemplateType, TbReportFormat } from '@shared/models/report.models';
+import { toUtcDate } from '@shared/models/time/time.models';
 
 export type editMissingAliasesFunction = (widgets: Array<Widget>, isSingleWidget: boolean,
                                           customTitle: string, missingEntityAliases: EntityAliases) => Observable<EntityAliases>;
 
 type SupportEntityResources = 'includeResourcesInExportWidgetTypes' | 'includeResourcesInExportDashboard' | 'includeBundleWidgetsInExport';
 
-const moment = moment_;
 
 // @dynamic
 @Injectable()
 export class ImportExportService {
 
-  constructor(@Inject(WINDOW) private window: Window,
-              @Inject(DOCUMENT) private document: Document,
+  constructor(@Inject(DOCUMENT) private document: Document,
               private store: Store<AppState>,
               private translate: TranslateService,
               private dashboardService: DashboardService,
@@ -158,6 +155,7 @@ export class ImportExportService {
               private itembuffer: ItemBufferService,
               private calculatedFieldsService: CalculatedFieldsService,
               private reportTemplateService: ReportTemplateService,
+              private datePipe: DatePipe,
               private dialog: MatDialog) {
 
   }
@@ -216,9 +214,7 @@ export class ImportExportService {
   public exportReportTemplate(reportTemplateId: string): void {
     this.reportTemplateService.getReportTemplate(reportTemplateId).subscribe({
       next: (reportTemplate) => {
-        let name = reportTemplate.name;
-        name = name.toLowerCase().replace(/\W/g, '_');
-        this.exportToPc(this.prepareReportTemplateExport(reportTemplate), name);
+        this.exportToPc(this.prepareReportTemplateExport(reportTemplate), reportTemplate.name, true);
       },
       error: (e) => {
         this.handleExportError(e, 'report-template.export-failed-error');
@@ -245,9 +241,7 @@ export class ImportExportService {
   public exportCalculatedField(calculatedFieldId: string): void {
     this.calculatedFieldsService.getCalculatedFieldById(calculatedFieldId).subscribe({
       next: (calculatedField) => {
-        let name = calculatedField.name;
-        name = name.toLowerCase().replace(/\W/g, '_');
-        this.exportToPc(this.prepareCalculatedFieldExport(calculatedField), name);
+        this.exportToPc(this.prepareCalculatedFieldExport(calculatedField), calculatedField.name, true);
       },
       error: (e) => {
         this.handleExportError(e, 'calculated-fields.export-failed-error');
@@ -268,9 +262,7 @@ export class ImportExportService {
           this.updateUserSettingsIncludeResourcesIfNeeded(includeResources, result.include, 'includeResourcesInExportDashboard');
           this.dashboardService.exportDashboard(dashboardId, result.include).subscribe({
             next: (dashboard) => {
-              let name = dashboard.title;
-              name = name.toLowerCase().replace(/\W/g, '_');
-              this.exportToPc(this.prepareDashboardExport(dashboard), name);
+              this.exportToPc(this.prepareDashboardExport(dashboard), dashboard.title, true);
             },
             error: (e) => {
               this.handleExportError(e, 'dashboard.export-failed-error');
@@ -331,9 +323,8 @@ export class ImportExportService {
                       widgetTitle: string, breakpoint: BreakpointId) {
     const widgetItem = this.itembuffer.prepareWidgetItem(dashboard, sourceState, sourceLayout, widget, breakpoint);
     const widgetDefaultName = this.widgetService.getWidgetInfoFromCache(widget.typeFullFqn).widgetName;
-    let fileName = widgetDefaultName + (isNotEmptyStr(widgetTitle) ? `_${widgetTitle}` : '');
-    fileName = fileName.toLowerCase().replace(/\W/g, '_');
-    this.exportToPc(this.prepareExport(widgetItem), fileName);
+    const fileName = widgetDefaultName + (isNotEmptyStr(widgetTitle) ? `_${widgetTitle}` : '');
+    this.exportToPc(this.prepareExport(widgetItem), fileName, true);
   }
 
   public importWidget(dashboard: Dashboard, targetState: string,
@@ -430,9 +421,7 @@ export class ImportExportService {
           this.updateUserSettingsIncludeResourcesIfNeeded(includeResources, result.include, 'includeResourcesInExportWidgetTypes');
           this.widgetService.exportWidgetType(widgetTypeId, result.include).subscribe({
             next: (widgetTypeDetails) => {
-              let name = widgetTypeDetails.name;
-              name = name.toLowerCase().replace(/\W/g, '_');
-              this.exportToPc(this.prepareExport(widgetTypeDetails), name);
+              this.exportToPc(this.prepareExport(widgetTypeDetails), widgetTypeDetails.name, true);
             },
             error: (e) => {
               this.handleExportError(e, 'widget-type.export-failed-error');
@@ -510,7 +499,7 @@ export class ImportExportService {
   public exportEntity(entityData: VersionedEntity): void {
     const id = (entityData as EntityInfoData).id ?? (entityData as RuleChainMetaData).ruleChainId;
     let fileName = (entityData as EntityInfoData).name;
-    let preparedData;
+    let preparedData: any;
     switch (id.entityType) {
       case EntityType.DEVICE_PROFILE:
       case EntityType.ASSET_PROFILE:
@@ -581,9 +570,7 @@ export class ImportExportService {
         for (const widgetTypeDetails of widgetTypesDetails) {
           widgetsBundleItem.widgetTypes.push(this.prepareExport(widgetTypeDetails));
         }
-        let name = widgetsBundle.title;
-        name = name.toLowerCase().replace(/\W/g, '_');
-        this.exportToPc(widgetsBundleItem, name);
+        this.exportToPc(widgetsBundleItem, widgetsBundle.title, true);
       },
       error: (e) => {
         this.handleExportError(e, 'widgets-bundle.export-failed-error');
@@ -598,9 +585,7 @@ export class ImportExportService {
           widgetsBundle: this.prepareExport(widgetsBundle),
           widgetTypeFqns
         };
-        let name = widgetsBundle.title;
-        name = name.toLowerCase().replace(/\W/g, '_');
-        this.exportToPc(widgetsBundleItem, name);
+        this.exportToPc(widgetsBundleItem, widgetsBundle.title, true);
       },
       error: (e) => {
         this.handleExportError(e, 'widgets-bundle.export-failed-error');
@@ -734,11 +719,9 @@ export class ImportExportService {
   private onRuleChainExported() {
     return {
       next: (ruleChainExport: RuleChainImport) => {
-        let name = ruleChainExport.ruleChain.name;
-        name = name.toLowerCase().replace(/\W/g, '_');
-        this.exportToPc(ruleChainExport, name);
+        this.exportToPc(ruleChainExport, ruleChainExport.ruleChain.name, true);
       },
-      error: (e) => {
+      error: (e: any) => {
         this.handleExportError(e, 'rulechain.export-failed-error');
       }
     };
@@ -822,9 +805,7 @@ export class ImportExportService {
         if (!converter.configuration) {
           converter.configuration = {} as ConverterConfig;
         }
-        let name = converter.name;
-        name = name.toLowerCase().replace(/\W/g, '_');
-        this.exportToPc(this.prepareExport(converter), name);
+        this.exportToPc(this.prepareExport(converter), converter.name, true);
       },
       error: (error) => {
         this.handleExportError(error, 'converter.export-failed-error');
@@ -851,9 +832,7 @@ export class ImportExportService {
   public exportTenantProfile(tenantProfileId: string) {
     this.tenantProfileService.getTenantProfile(tenantProfileId).subscribe({
       next: (tenantProfile) => {
-        let name = tenantProfile.name;
-        name = name.toLowerCase().replace(/\W/g, '_');
-        this.exportToPc(this.prepareProfileExport(tenantProfile), name);
+        this.exportToPc(this.prepareProfileExport(tenantProfile), tenantProfile.name, true);
       },
       error: (e) => {
         this.handleExportError(e, 'tenant-profile.export-failed-error');
@@ -880,9 +859,7 @@ export class ImportExportService {
   public exportDeviceProfile(deviceProfileId: string) {
     this.deviceProfileService.exportDeviceProfile(deviceProfileId).subscribe({
       next: (deviceProfile) => {
-        let name = deviceProfile.name;
-        name = name.toLowerCase().replace(/\W/g, '_');
-        this.exportToPc(this.prepareProfileExport(deviceProfile), name);
+        this.exportToPc(this.prepareProfileExport(deviceProfile), deviceProfile.name, true);
       },
       error: (e) => {
         this.handleExportError(e, 'device-profile.export-failed-error');
@@ -909,9 +886,7 @@ export class ImportExportService {
   public exportAssetProfile(assetProfileId: string) {
     this.assetProfileService.exportAssetProfile(assetProfileId).subscribe({
       next: (assetProfile) => {
-        let name = assetProfile.name;
-        name = name.toLowerCase().replace(/\W/g, '_');
-        this.exportToPc(this.prepareProfileExport(assetProfile), name);
+        this.exportToPc(this.prepareProfileExport(assetProfile), assetProfile.name, true);
       },
       error: (e) => {
         this.handleExportError(e, 'asset-profile.export-failed-error');
@@ -946,46 +921,58 @@ export class ImportExportService {
     return cellData;
   }
 
-  public exportCsv(data: {[key: string]: any}[], filename: string) {
+  public exportCsv(data: ExportRow[], filename: string, normalizeFileName = false, dateFormat: string = 'yyyy-MM-dd HH:mm:ss') {
     let colsHead: string;
     let colsData: string;
     if (data && data.length) {
-      this.formatDataAccordingToLocale(data);
-      colsHead = Object.keys(data[0]).map(key => [this.processCSVCell(key)]).join(';');
+      this.formatTimestampColumn(data, dateFormat);
+      const isMap = data[0] instanceof Map;
+      const headers: string[] = isMap ? Array.from(data[0].keys()) : Object.keys(data[0]);
+      colsHead = headers.map(key => [this.processCSVCell(key)]).join(';');
       colsData = data.map(obj => [ // obj === row
-        Object.keys(obj).map(col => [
-          this.processCSVCell(obj[col])
-        ]).join(';')
+        headers.map(col => {
+          const value = isMap
+            ? (obj.has(col) ? obj.get(col) : '')
+            : obj[col]
+          return this.processCSVCell(value);
+        }).join(';')
       ]).join('\n');
     } else {
       colsHead = '';
       colsData = '';
     }
     const csvData = `${colsHead}\n${colsData}`;
-    this.downloadFile(csvData, filename, CSV_TYPE);
+    this.downloadFile(csvData, filename, CSV_TYPE, normalizeFileName);
   }
 
-  public exportXls(data: {[key: string]: any}[], filename: string) {
+  public exportXls(data: ExportRow[], filename: string, normalizeFileName = false, dateFormat: string = 'yyyy-MM-dd HH:mm:ss') {
     let colsHead: string;
     let colsData: string;
     if (data && data.length) {
-      this.formatDataAccordingToLocale(data);
-      colsHead = `<tr>${Object.keys(data[0]).map(key => `<td><b>${key}</b></td>`).join('')}</tr>`;
-      colsData = data.map(obj => [`<tr>
-                ${Object.keys(obj).map(col => `<td>${obj[col] ? obj[col] : ''}</td>`).join('')}
-            </tr>`])
-        .join('');
+      this.formatTimestampColumn(data, dateFormat);
+      const isMap = data[0] instanceof Map;
+      const headers: string[] = isMap ? Array.from(data[0].keys()) : Object.keys(data[0]);
+      colsHead = `<tr>${headers.map(key => `<td><b>${key}</b></td>`).join('')}</tr>`;
+      colsData = data.map(row => {
+        const rowHtml = headers.map(header => {
+          const value = isMap
+            ? (row.has(header) ? row.get(header) : '')
+            : row[header];
+          return `<td>${value ?? ''}</td>`;
+        }).join('');
+        return `<tr>${rowHtml}</tr>`;
+      }).join('');
     } else {
       colsHead = '';
       colsData = '';
     }
     const tableData = `<table>${colsHead}${colsData}</table>`.trim();
     const parameters = { title: filename, table: tableData };
-    const xlsData = TEMPLATE_XLS.replace(/{(\w+)}/g, (x, y) => parameters[y]);
-    this.downloadFile(xlsData, filename, XLS_TYPE);
+    const xlsData = TEMPLATE_XLS.replace(/{(\w+)}/g, (_x, y) => parameters[y]);
+    this.downloadFile(xlsData, filename, XLS_TYPE, normalizeFileName);
   }
 
-  public exportXlsx(data: { [key: string]: any }[], filename: string, dateFormat: string = 'yyyy-MM-dd HH:mm:ss') {
+  public exportXlsx(data: ExportRow[], filename: string, dateFormat: string = 'yyyy-MM-dd HH:mm:ss', normalizeFileName = false) {
     import('exceljs').then((exceljs) => {
       const Excel = unwrapModule(exceljs);
       const workbook: Workbook = new Excel.Workbook();
@@ -1002,16 +989,19 @@ export class ImportExportService {
         right: {style: 'thin'}
       };
 
+      const timestampColumnTitle = this.translate.instant('widgets.table.timestamp-column-name');
+      dateFormat = dateFormat.replace(/S/g, '0'); // .000 - milliseconds format in Excel
+
       if (data && data.length) {
-        const titles = Object.keys(data[0]);
+        const isMap = data[0] instanceof Map;
+        const titles: string[] = isMap ? Array.from(data[0].keys()) : Object.keys(data[0]);
         const columnsTable: Array<Partial<Column>> = [];
         titles.forEach((title) => {
           columnsTable.push({
             header: title,
             key: title,
-            width: (title === 'Timestamp' ? dateFormat.length : title.length) * 1.2,
             style: {
-              numFmt: title === 'Timestamp' ? dateFormat : null
+              numFmt: title === timestampColumnTitle ? dateFormat : null
             }
           });
         });
@@ -1022,26 +1012,52 @@ export class ImportExportService {
         sheet.getRow(1).eachCell(cell => cell.border = cellBorderStyle);
 
         data.forEach((item) => {
-          if (item.Timestamp) {
-            item.Timestamp = moment(new Date(Date.parse(item.Timestamp))).utcOffset(0, true).toDate();
+          const isItemMap = item instanceof Map;
+
+          const rowToAdd = isItemMap ? Object.fromEntries(item) : item;
+          const timestamp = isItemMap
+            ? (item.has(timestampColumnTitle) ? item.get(timestampColumnTitle) : '')
+            : item[timestampColumnTitle];
+          if (timestamp && !isDate(timestamp)) {
+            rowToAdd[timestampColumnTitle] = toUtcDate(timestamp);
           }
-          sheet.addRow(item).eachCell({ includeEmpty: true }, cell => {
+          sheet.addRow(rowToAdd).eachCell({ includeEmpty: true }, cell => {
             cell.border = cellBorderStyle;
           });
         });
       }
 
-      workbook.xlsx.writeBuffer().then((xlsxData) => {
-        this.downloadFile(xlsxData, filename, XLSX_TYPE);
+      sheet.columns.forEach((column, _i) => {
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, (cell) => {
+          const cellValueLength = isDate(cell.value) ? dateFormat.length : (String(cell.value)).length;
+          if (cellValueLength > maxLength) {
+            maxLength = cellValueLength;
+          }
+        });
+        column.width = Math.ceil(maxLength * 1.3);
+      });
+
+      workbook.xlsx.writeBuffer().then((xlsxData: any) => {
+        this.downloadFile(xlsxData, filename, XLSX_TYPE, normalizeFileName);
       });
     });
   }
 
-  private formatDataAccordingToLocale(data: {[key: string]: any}[]) {
-    for (const row of data) {
-      for (const key in Object.keys(row)) {
-        if (isNumber(row[key])) {
-          row[key] = (row[key] as number).toLocaleString(undefined, {maximumFractionDigits: 14});
+  private formatTimestampColumn(data: ExportRow[], dateFormat: string = 'yyyy-MM-dd HH:mm:ss') {
+    const timestampColumnTitle = this.translate.instant('widgets.table.timestamp-column-name');
+    const isMap = data[0] instanceof Map;
+
+    if (isMap) {
+      for (const row of data as Map<string, any>[]) {
+        if (row.has(timestampColumnTitle) && isDate(row.get(timestampColumnTitle))) {
+          row.set(timestampColumnTitle, this.datePipe.transform(row.get(timestampColumnTitle), dateFormat, 'UTC'));
+        }
+      }
+    } else {
+      for (const row of data) {
+        if (row[timestampColumnTitle] && isDate(row[timestampColumnTitle])) {
+          row[timestampColumnTitle] = this.datePipe.transform((row[timestampColumnTitle] as Date), dateFormat, 'UTC');
         }
       }
     }
@@ -1071,15 +1087,15 @@ export class ImportExportService {
     return true;
   }
 
-  public exportText(data: string | Array<string>, filename: string) {
+  public exportText(data: string | Array<string>, filename: string, normalizeFileName = false) {
     let content = data;
     if (Array.isArray(data)) {
       content = data.join('\n');
     }
-    this.downloadFile(content, filename, TEXT_TYPE);
+    this.downloadFile(content, filename, TEXT_TYPE, normalizeFileName);
   }
 
-  public exportJSZip(data: object, filename: string): Observable<void> {
+  public exportJSZip(data: object, filename: string, normalizeFileName = false): Observable<void> {
     const exportJsSubjectSubject = new Subject<void>();
     import('jszip').then((JSZip) => {
       try {
@@ -1091,9 +1107,9 @@ export class ImportExportService {
           }
         }
         jsZip.generateAsync({type: 'blob'}).then(content => {
-          this.downloadFile(content, filename, ZIP_TYPE);
+          this.downloadFile(content, filename, ZIP_TYPE, normalizeFileName);
           exportJsSubjectSubject.next(null);
-        }).catch(e => {
+        }).catch((e: any) => {
             exportJsSubjectSubject.error(e);
         });
       } catch (e) {
@@ -1452,42 +1468,40 @@ export class ImportExportService {
     ));
   }
 
-  private exportToPc(data: any, filename: string) {
+  private exportToPc(data: any, filename: string, normalizeFileName = false) {
     if (!data) {
       console.error('No data');
       return;
     }
-    this.exportJson(data, filename);
+    this.exportJson(data, filename, normalizeFileName);
   }
 
-  public exportJson(data: any, filename: string) {
+  public exportJson(data: any, filename: string, normalizeFileName = false) {
     if (isObject(data)) {
       data = JSON.stringify(data, null,  2);
     }
-    this.downloadFile(data, filename, JSON_TYPE);
+    this.downloadFile(data, filename, JSON_TYPE, normalizeFileName);
   }
 
-  private downloadFile(data: any, filename: string, fileType: FileType) {
-    if (!filename) {
-      filename = 'download';
+  private prepareFilename(filename: string, extension: string, normalizeFileName = false): string {
+    if (normalizeFileName) {
+      filename = filename.toLowerCase().replace(/\s/g, '_');
     }
-    filename += '.' + fileType.extension;
+    filename = filename.replace(/[\\/<>:"|?*\s]/g, '_');
+    return `${filename}.${extension}`;
+  }
+
+  private downloadFile(data: any, filename = 'download', fileType: FileType, normalizeFileName: boolean) {
+    filename = this.prepareFilename(filename, fileType.extension, normalizeFileName);
     const blob = new Blob([data], {type: fileType.mimeType});
-    // @ts-ignore
-    if (this.window.navigator && this.window.navigator.msSaveOrOpenBlob) {
-      // @ts-ignore
-      this.window.navigator.msSaveOrOpenBlob(blob, filename);
-    } else {
-      const e = this.document.createEvent('MouseEvents');
-      const a = this.document.createElement('a');
-      a.download = filename;
-      a.href = URL.createObjectURL(blob);
-      a.dataset.downloadurl = [fileType.mimeType, a.download, a.href].join(':');
-      // @ts-ignore
-      e.initEvent('click', true, false, this.window,
-        0, 0, 0, 0, 0, false, false, false, false, 0, null);
-      a.dispatchEvent(e);
-    }
+    const url = URL.createObjectURL(blob);
+
+    const a = this.document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.dataset.downloadurl = [fileType.mimeType, a.download, a.href].join(':');
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 
   private prepareProfileExport<T extends DeviceProfile|AssetProfile|TenantProfile>(profile: T): T {

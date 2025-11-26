@@ -42,6 +42,7 @@ import org.thingsboard.server.report.context.chart.LatestChartData;
 import org.thingsboard.server.report.context.chart.LatestChartDataItem;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.thingsboard.server.report.util.AwtFontUtils.toAwtFont;
 import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
@@ -50,8 +51,8 @@ public class TbDoughnutChart extends TbLatestChart<ReportDoughnutChartSettings, 
 
     private DefaultPieDataset<Integer> doughnutDataset;
 
-    public TbDoughnutChart(ReportDoughnutChartSettings settings, LatestChartData latestChartData) {
-        super(settings, latestChartData);
+    public TbDoughnutChart(ReportDoughnutChartSettings settings, LatestChartData latestChartData, Map<String, Object> variables) {
+        super(settings, latestChartData, variables);
     }
 
     @Override

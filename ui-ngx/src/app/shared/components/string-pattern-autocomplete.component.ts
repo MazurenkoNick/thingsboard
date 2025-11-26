@@ -239,7 +239,8 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
       default:
         prepareValue = value;
     }
-    const newText = `${this.modelValue.substring(0, triggerIndex)}${this.patternSymbol}${prepareValue}${this.modelValue.substring(position)}`;
+    const base = this.modelValue ?? '';
+    const newText = `${base.substring(0, triggerIndex)}${this.patternSymbol}${prepareValue}${base.substring(position)}`;
     this.selectionFormControl.patchValue(newText);
     this.searchText = '';
     setTimeout(() => {
@@ -288,6 +289,7 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
     }
     let regex: RegExp;
     let simpleGroup = false;
+    text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     switch (this.brackets) {
       case 'curly':
         regex = new RegExp(`([${this.patternSymbol}](\\{([^}]*)\\}))`, 'g');

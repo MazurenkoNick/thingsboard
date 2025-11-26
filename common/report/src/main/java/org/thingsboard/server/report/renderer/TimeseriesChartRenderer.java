@@ -93,7 +93,8 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
             chartSettings = new ReportTimeSeriesChartSettings(inputSettings);
         }
 
-        TbTimeSeriesChart timeSeriesChart = new TbTimeSeriesChart(chartSettings, reportDataSource.getTsChartData(), visualMap, units, decimals);
+        TbTimeSeriesChart timeSeriesChart = new TbTimeSeriesChart(chartSettings, reportDataSource.getTsChartData(), reportDataSource.getVariables(),
+                                                                  visualMap, units, decimals);
 
         return timeSeriesChart.createChart(g2);
     }

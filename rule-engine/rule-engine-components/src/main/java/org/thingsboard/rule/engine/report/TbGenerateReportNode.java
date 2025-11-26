@@ -31,7 +31,6 @@
 package org.thingsboard.rule.engine.report;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.RuleNode;
 import org.thingsboard.rule.engine.api.TbContext;
@@ -51,7 +50,6 @@ import org.thingsboard.server.common.msg.TbMsgMetaData;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-@Slf4j
 @RuleNode(
         type = ComponentType.ACTION,
         name = "generate dashboard report",
@@ -59,9 +57,11 @@ import java.util.UUID;
         nodeDescription = "Generates dashboard report",
         nodeDetails = "Generates dashboard based reports.",
         configDirective = "tbActionNodeGenerateDashboardReportConfig",
-        icon = "description"
+        icon = "description",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/action/generate-dashboard-report/"
 )
 public class TbGenerateReportNode extends TbAbstractExternalNode {
+
     private static final String ATTACHMENTS = "attachments";
 
     private TbGenerateReportNodeConfiguration config;

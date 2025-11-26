@@ -1,0 +1,109 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<ng-container *ngIf="panelMode; else componentMode">
+  <ng-container *ngTemplateOutlet="alarmRuleFilterPanel"></ng-container>
+</ng-container>
+<ng-template #componentMode>
+  <ng-container *ngIf="buttonMode; else alarmFilter">
+    <button color="primary"
+            matTooltip="{{buttonDisplayValue}}"
+            matTooltipPosition="above"
+            mat-stroked-button
+            (click)="toggleAlarmRuleFilterPanel($event)">
+      <mat-icon>filter_list</mat-icon>{{buttonDisplayValue}}
+    </button>
+  </ng-container>
+</ng-template>
+<ng-template #alarmRuleFilterPanel>
+  <form class="mat-content mat-padding flex flex-col" (ngSubmit)="update()">
+    <ng-container *ngTemplateOutlet="alarmFilter"></ng-container>
+    <div class="tb-panel-actions flex flex-row items-center justify-end">
+      <button type="button"
+              mat-button
+              color="primary"
+              (click)="reset()">
+        {{ 'action.reset' | translate }}
+      </button>
+      <span class="flex-1"></span>
+      <button type="button"
+              mat-button
+              (click)="cancel()">
+        {{ 'action.cancel' | translate }}
+      </button>
+      <button type="submit"
+              mat-raised-button
+              color="primary"
+              [disabled]="alarmRuleFilterConfigForm.invalid || !alarmRuleFilterConfigForm.dirty">
+        {{ 'action.update' | translate }}
+      </button>
+    </div>
+  </form>
+</ng-template>
+<ng-template #alarmFilter>
+  <div class="tb-form-panel tb-alarm-filter-config-component no-padding no-border" [formGroup]="alarmRuleFilterConfigForm">
+    <div class="tb-form-row column-xs">
+      <div class="fixed-title-width" translate>alarm-rule.alarm-rule-type-list</div>
+      <tb-entity-subtype-list subscriptSizing="dynamic"
+                              formControlName="name"
+                              appearance="outline"
+                              [additionalClasses]="['tb-chips', 'flex']"
+                              [entityType]="entityType.CALCULATED_FIELD">
+      </tb-entity-subtype-list>
+    </div>
+    <div class="tb-form-row column-xs">
+      <div class="fixed-title-width" translate>alarm-rule.entity-type</div>
+      <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
+        <mat-select formControlName="entityType" placeholder="{{ 'alarm-rule.any-type' | translate }}">
+          <mat-option>{{ 'alarm-rule.any-type' | translate }}</mat-option>
+          <mat-option *ngFor="let type of listEntityTypes" [value]="type">
+            {{ entityTypeTranslations.get(type)?.type | translate }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    @if (alarmRuleFilterConfigForm.get('entityType').value) {
+      <div class="tb-form-row column-xs">
+        <div class="fixed-title-width" translate>alarm-rule.alarm-rule-entity-list</div>
+        <tb-entity-list appearance="outline"
+                        subscriptSizing="dynamic"
+                        class="flex flex-1"
+                        inlineField
+                        syncIdsWithDB
+                        labelText="{{'entity.entity-list' | translate}}"
+                        [entityType]="alarmRuleFilterConfigForm.get('entityType').value"
+                        formControlName="entities">
+        </tb-entity-list>
+      </div>
+    }
+  </div>
+</ng-template>

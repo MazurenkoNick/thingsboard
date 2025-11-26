@@ -153,3 +153,20 @@ table.tb-report-table th.tb-report-table-heading {
     border-right: 0;
     border-bottom: 0;
 }
+
+table.tb-split-view {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    border-collapse: collapse;
+    border-width: 0;
+    border-style: none;
+    border-spacing: 0;
+}
+
+table.tb-split-view > tr > td {
+    height: 1px;
+    border-style: none;
+    padding: 0;
+    margin: 0;
+}

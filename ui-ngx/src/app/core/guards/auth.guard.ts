@@ -128,6 +128,9 @@ export class AuthGuard  {
             if (path === 'login.mfa') {
               tasks.push(this.authService.getAvailableTwoFaLoginProviders());
             }
+            if (path === 'login.force-mfa') {
+              tasks.push(this.authService.getAvailableTwoFaProviders());
+            }
             return forkJoin(tasks).pipe(
               map(() => {
                 if (path === 'signup' && !this.selfRegistrationService.signUpParams.activate) {
@@ -154,7 +157,7 @@ export class AuthGuard  {
             }
           }
           if (this.mobileService.isMobileApp() && !path.startsWith('dashboard.')) {
-            this.mobileService.handleMobileNavigation(path, params);
+            this.mobileService.handleMobileNavigation(path, params, lastChild.queryParams);
             return of(false);
           }
           if (authState.authUser.authority === Authority.PRE_VERIFICATION_TOKEN) {

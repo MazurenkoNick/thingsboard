@@ -68,6 +68,10 @@ export const IntegrationJSDefaultConvertersUrl = new Map<IntegrationType, string
   [IntegrationType.TPE, '/assets/converters/js-tpe-decoder.raw']
 ]);
 
+export const IntegrationTbelDefaultEncodersUrl = new Map<IntegrationType, string>([
+  [IntegrationType.OPC_UA, '/assets/converters/tbel-opc-ua-encoder.raw']
+])
+
 export const jsDefaultConvertersUrl = new Map<ConverterType, string>([
   [ConverterType.UPLINK, '/assets/converters/js-decoder.raw' ],
   [ConverterType.DOWNLINK, '/assets/converters/js-encoder.raw'],
@@ -291,6 +295,8 @@ export const getTargetTemplateUrl =
       return getJsTemplateUrl(converterType, converterVersion);
     } else if (converterType === ConverterType.UPLINK && IntegrationTbelDefaultConvertersUrl.has(integrationType)) {
       return IntegrationTbelDefaultConvertersUrl.get(integrationType);
+    } else if (converterType === ConverterType.DOWNLINK && IntegrationTbelDefaultEncodersUrl.has(integrationType)) {
+      return IntegrationTbelDefaultEncodersUrl.get(integrationType);
     }
     return getTbelTemplateUrl(converterType, converterVersion);
   }
