@@ -81,11 +81,18 @@ export interface CalculatedFieldAlarmRule extends BaseCalculatedField {
   configuration: CalculatedFieldAlarmRuleConfiguration;
 }
 
+export interface CalculatedFieldRelatedEntityAggregation extends BaseCalculatedField {
+  type: CalculatedFieldType.RELATED_ENTITIES_AGGREGATION;
+  configuration: CalculatedFieldRelatedAggregationConfiguration;
+}
+
+
 export type CalculatedField =
   | CalculatedFieldSimple
   | CalculatedFieldScript
   | CalculatedFieldGeofencing
   | CalculatedFieldPropagation
+  | CalculatedFieldRelatedEntityAggregation
   | CalculatedFieldAlarmRule;
 
 export enum CalculatedFieldType {
@@ -506,7 +513,7 @@ export interface CalculatedFieldArgumentValue extends CalculatedFieldArgument {
   entityName?: string;
 }
 
-export type CalculatedFieldTestScriptFn = (calculatedField: CalculatedField, argumentsObj?: Record<string, unknown>, closeAllOnSave?: boolean) => Observable<string>;
+export type CalculatedFieldTestScriptFn = (calculatedField: CalculatedField, argumentsObj?: Record<string, unknown>, closeAllOnSave?: boolean, expression?: string) => Observable<string>;
 
 export interface CalculatedFieldTestScriptInputParams {
   arguments: CalculatedFieldEventArguments;

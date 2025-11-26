@@ -313,8 +313,10 @@ export class CfAlarmScheduleComponent implements ControlValueAccessor, Validator
   }
 
   changeCustomScheduler($event: MatChipSelectionChange, index: number) {
-    const value = $event.selected;
-    this.disabledSelectedTime(value, index, true);
+    if (!this.disabled) {
+      const value = $event.selected;
+      this.disabledSelectedTime(value, index, true);
+    }
   }
 
   private disabledSelectedTime(enable: boolean, index: number, emitEvent = false) {
