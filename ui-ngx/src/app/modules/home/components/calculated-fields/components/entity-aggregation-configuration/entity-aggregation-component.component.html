@@ -50,6 +50,7 @@
     </div>
     <tb-calculated-field-metrics-table formControlName="metrics"
                                        simpleMode
+                                       [testScript]="testScript"
                                        [arguments]="arguments$ | async"
                                        [readonly]="readonly"
     ></tb-calculated-field-metrics-table>
