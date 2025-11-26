@@ -2996,6 +2996,45 @@ public class RestClient implements Closeable {
         }
     }
 
+    public PageData<SchedulerEvent> getEdgeSchedulerEvents(EdgeId edgeId, PageLink pageLink) {
+        Map<String, String> params = new HashMap<>();
+        params.put("edgeId", edgeId.getId().toString());
+        addPageLinkToParam(params, pageLink);
+        return restTemplate.exchange(
+                baseURL + "/api/edge/{edgeId}/schedulerEvents?" + getUrlParams(pageLink),
+                HttpMethod.GET, HttpEntity.EMPTY,
+                new ParameterizedTypeReference<PageData<SchedulerEvent>>() {
+                }, params).getBody();
+    }
+
+    public Optional<SchedulerEvent> assignSchedulerEventToEdge(EdgeId edgeId, SchedulerEventId schedulerEventId) {
+        try {
+            ResponseEntity<SchedulerEvent> schedulerEvent = restTemplate.postForEntity(baseURL + "/api/edge/{edgeId}/schedulerEvent/{schedulerEventId}",
+                    null, SchedulerEvent.class, edgeId.getId(), schedulerEventId.getId());
+            return Optional.ofNullable(schedulerEvent.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public Optional<SchedulerEvent> unassignSchedulerEventFromEdge(EdgeId edgeId, SchedulerEventId schedulerEventId) {
+        try {
+            ResponseEntity<SchedulerEvent> schedulerEvent = restTemplate.exchange(baseURL + "/api/edge/{edgeId}/schedulerEvent/{schedulerEventId}",
+                    HttpMethod.DELETE, HttpEntity.EMPTY, SchedulerEvent.class, edgeId.getId(), schedulerEventId.getId());
+            return Optional.ofNullable(schedulerEvent.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
     public List<EntityGroupInfo> getAllEdgeEntityGroups(EdgeId edgeId, EntityType groupType) {
         return restTemplate.exchange(
                 baseURL + "/api/allEntityGroups/edge/{edgeId}/{groupType}",
