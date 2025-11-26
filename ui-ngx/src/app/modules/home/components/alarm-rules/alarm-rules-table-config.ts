@@ -379,7 +379,8 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
             expression,
             argumentsEditorCompleter: getCalculatedFieldArgumentsEditorCompleter(calculatedField.configuration.arguments),
             argumentsHighlightRules: getCalculatedFieldArgumentsHighlights(calculatedField.configuration.arguments),
-            openCalculatedFieldEdit
+            openCalculatedFieldEdit,
+            readonly: this.readonly
           }
         }).afterClosed()
         .pipe(
