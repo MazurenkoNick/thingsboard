@@ -642,9 +642,6 @@ message DownlinkMsg {
   repeated CalculatedFieldUpdateMsg calculatedFieldUpdateMsg = 53;
   repeated EncryptionKeyUpdateMsg encryptionKeyUpdateMsg = 54;
   repeated SecretUpdateMsg secretUpdateMsg = 55;
-<<<<<<< HEAD
-  repeated ReportTemplateUpdateMsg reportTemplateUpdateMsg = 56;
-=======
   repeated AiModelUpdateMsg aiModelUpdateMsg = 56;
->>>>>>> upstream/master
+  repeated ReportTemplateUpdateMsg reportTemplateUpdateMsg = 57;
 }
