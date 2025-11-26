@@ -124,10 +124,6 @@ export class SignupComponent extends PageComponent {
     }
   }
 
-  get passwordErrorsLength(): number {
-    return Object.keys(this.signup.get('fields.PASSWORD').errors).length;
-  }
-
   private executeSignup(signupRequest: SignupRequestValues): void {
     this.signupService.signup(signupRequest).subscribe({
       next: (signupResult) => {

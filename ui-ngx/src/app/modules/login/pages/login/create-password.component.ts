@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, HostBinding} from '@angular/core';
+import { Component, HostBinding } from '@angular/core';
 import { AuthService } from '@core/auth/auth.service';
 import { PageComponent } from '@shared/components/page.component';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -74,7 +74,7 @@ export class CreatePasswordComponent extends PageComponent {
   private buildCreatePasswordForm() {
     this.createPassword = this.fb.group({
       newPassword: ['', [Validators.required, passwordStrengthValidator(this.passwordPolicy)]],
-      newPassword2:['']
+      newPassword2: ['']
     }, {
       validators: [
         passwordsMatchValidator('newPassword', 'newPassword2'),
