@@ -50,9 +50,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.common.util.JacksonUtil;
@@ -117,8 +115,6 @@ import static org.thingsboard.server.controller.ControllerConstants.CUSTOMER_ID_
 import static org.thingsboard.server.controller.ControllerConstants.DASHBOARD_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID;
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID_PARAM_DESCRIPTION;
-import static org.thingsboard.server.controller.ControllerConstants.HOME_DASHBOARD_HIDE_TOOLBAR;
-import static org.thingsboard.server.controller.ControllerConstants.HOME_DASHBOARD_ID;
 import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_DATA_PARAMETERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
@@ -167,8 +163,7 @@ public class UserController extends BaseController {
                     "If the user has the authority of 'TENANT_ADMIN', the server checks that the requested user is owned by the same tenant. " +
                     "If the user has the authority of 'CUSTOMER_USER', the server checks that the requested user is owned by the same customer.\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/user/{userId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/user/{userId}")
     public User getUserById(
             @Parameter(description = USER_ID_PARAM_DESCRIPTION)
             @PathVariable(USER_ID) String strUserId) throws ThingsboardException {
@@ -185,8 +180,7 @@ public class UserController extends BaseController {
                     "If the user has the authority of 'TENANT_ADMIN', the server checks that the requested user is owned by the same tenant. " +
                     "If the user has the authority of 'CUSTOMER_USER', the server checks that the requested user is owned by the same customer.\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/user/info/{userId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/user/info/{userId}")
     public UserInfo getUserInfoById(
             @Parameter(description = USER_ID_PARAM_DESCRIPTION)
             @PathVariable(USER_ID) String strUserId) throws ThingsboardException {
@@ -202,8 +196,7 @@ public class UserController extends BaseController {
                     "If the user who performs the request has the authority of 'SYS_ADMIN', it is possible to login as any tenant administrator. " +
                     "If the user who performs the request has the authority of 'TENANT_ADMIN', it is possible to login as any customer user.\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/user/tokenAccessEnabled", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/user/tokenAccessEnabled")
     public boolean isUserTokenAccessEnabled() {
         return userTokenAccessEnabled;
     }
@@ -213,8 +206,7 @@ public class UserController extends BaseController {
                     "If the user who performs the request has the authority of 'SYS_ADMIN', it is possible to get the token of any tenant administrator. " +
                     "If the user who performs the request has the authority of 'TENANT_ADMIN', it is possible to get the token of any customer user that belongs to the same tenant. ")
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/user/{userId}/token", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/user/{userId}/token")
     public JwtPair getUserToken(
             @Parameter(description = USER_ID_PARAM_DESCRIPTION)
             @PathVariable(USER_ID) String strUserId) throws ThingsboardException {
@@ -242,8 +234,7 @@ public class UserController extends BaseController {
                     "Remove 'id', 'tenantId' and optionally 'customerId' from the request body example (below) to create new User entity." +
                     RBAC_WRITE_CHECK)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/user", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/user")
     public User saveUser(
             @Parameter(description = "A JSON value representing the User.", required = true)
             @RequestBody User user,
@@ -318,7 +309,7 @@ public class UserController extends BaseController {
     @ApiOperation(value = "Send or re-send the activation email",
             notes = "Force send the activation email to the user. Useful to resend the email if user has accidentally deleted it.\n\n" + RBAC_DELETE_CHECK)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/user/sendActivationMail", method = RequestMethod.POST)
+    @PostMapping(value = "/user/sendActivationMail")
     @ResponseStatus(value = HttpStatus.OK)
     public void sendActivationEmail(
             @Parameter(description = "Email of the user", required = true)
@@ -366,7 +357,7 @@ public class UserController extends BaseController {
             notes = "Deletes the User, it's credentials and all the relations (from and to the User). " +
                     "Referencing non-existing User Id will cause an error. \n\n" + RBAC_DELETE_CHECK)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/user/{userId}", method = RequestMethod.DELETE)
+    @DeleteMapping(value = "/user/{userId}")
     @ResponseStatus(value = HttpStatus.OK)
     public void deleteUser(
             @Parameter(description = USER_ID_PARAM_DESCRIPTION)
@@ -377,7 +368,9 @@ public class UserController extends BaseController {
         if (user.getAuthority() == Authority.SYS_ADMIN && getCurrentUser().getId().equals(userId)) {
             throw new ThingsboardException("Sysadmin is not allowed to delete himself", ThingsboardErrorCode.PERMISSION_DENIED);
         }
-
+        if (user.getAuthority() == Authority.TENANT_ADMIN && entityGroupService.containsLastTenantAdmin(user.getTenantId(), List.of(user.getId()))) {
+            throw new ThingsboardException("At least one tenant administrator must remain!", ThingsboardErrorCode.INVALID_ARGUMENTS);
+        }
         userPermissionsService.onUserUpdatedOrRemoved(user);
 
         tbUserService.delete(getTenantId(), getCurrentUser().getCustomerId(), user, getCurrentUser());
@@ -386,8 +379,7 @@ public class UserController extends BaseController {
     @ApiOperation(value = "Get Tenant Users (getTenantAdmins)",
             notes = "Returns a page of users owned by tenant. " + PAGE_DATA_PARAMETERS + SYSTEM_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
     @PreAuthorize("hasAuthority('SYS_ADMIN')")
-    @RequestMapping(value = "/tenant/{tenantId}/users", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/tenant/{tenantId}/users", params = {"pageSize", "page"})
     public PageData<User> getTenantAdmins(
             @Parameter(description = TENANT_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(TENANT_ID) String strTenantId,
@@ -402,7 +394,8 @@ public class UserController extends BaseController {
             @Parameter(description = SORT_ORDER_DESCRIPTION, schema = @Schema(allowableValues = {"ASC", "DESC"}))
             @RequestParam(required = false) String sortOrder) throws ThingsboardException {
         checkParameter("tenantId", strTenantId);
-        TenantId tenantId = new TenantId(toUUID(strTenantId));
+        accessControlService.checkPermission(getCurrentUser(), Resource.USER, Operation.READ);
+        TenantId tenantId = TenantId.fromUUID(toUUID(strTenantId));
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         return checkNotNull(userService.findTenantAdmins(tenantId, pageLink));
     }
@@ -411,8 +404,7 @@ public class UserController extends BaseController {
             notes = "Returns a page of users owned by customer. "
                     + PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/customer/{customerId}/users", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/customer/{customerId}/users", params = {"pageSize", "page"})
     public PageData<User> getCustomerUsers(
             @Parameter(description = CUSTOMER_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(CUSTOMER_ID) String strCustomerId,
@@ -439,8 +431,7 @@ public class UserController extends BaseController {
             notes = "Returns page of user data objects. Search is been executed by email, firstName and " +
                     "lastName fields. " + PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/users/info", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/users/info")
     public PageData<UserEmailInfo> findUsersByQuery(
             @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
             @RequestParam int pageSize,
@@ -477,8 +468,7 @@ public class UserController extends BaseController {
             notes = "Returns a page of users for the current tenant with authority 'CUSTOMER_USER'. "
                     + PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/customer/users", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/customer/users", params = {"pageSize", "page"})
     public PageData<User> getAllCustomerUsers(
             @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
             @RequestParam int pageSize,
@@ -500,8 +490,7 @@ public class UserController extends BaseController {
             notes = "Returns a page of user objects available for the current user. " +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/user/users", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/user/users", params = {"pageSize", "page"})
     public PageData<User> getUserUsers(
             @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
             @RequestParam int pageSize,
@@ -524,8 +513,7 @@ public class UserController extends BaseController {
             notes = "Returns a page of user info objects owned by the tenant or the customer of a current user. " +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/userInfos/all", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/userInfos/all", params = {"pageSize", "page"})
     public PageData<UserInfo> getAllUserInfos(
             @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
             @RequestParam int pageSize,
@@ -562,8 +550,7 @@ public class UserController extends BaseController {
             notes = "Returns a page of user info objects owned by the specified customer. " +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/customer/{customerId}/userInfos", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/customer/{customerId}/userInfos", params = {"pageSize", "page"})
     public PageData<UserInfo> getCustomerUserInfos(
             @Parameter(description = CUSTOMER_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(CUSTOMER_ID) String strCustomerId,
@@ -596,8 +583,7 @@ public class UserController extends BaseController {
             notes = "Requested users must be owned by tenant or assigned to customer which user is performing the request. "
                     + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/users", params = {"userIds"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/users", params = {"userIds"})
     public List<User> getUsersByIds(
             @Parameter(description = "A list of user ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
             @RequestParam("userIds") String[] strUserIds) throws ThingsboardException, ExecutionException, InterruptedException {
@@ -616,8 +602,7 @@ public class UserController extends BaseController {
             notes = "Enables or Disables user credentials. Useful when you would like to block user account without deleting it. "
                     + PAGE_DATA_PARAMETERS + SYSTEM_OR_TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_WRITE_CHECK)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/user/{userId}/userCredentialsEnabled", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/user/{userId}/userCredentialsEnabled")
     public void setUserCredentialsEnabled(
             @Parameter(description = USER_ID_PARAM_DESCRIPTION)
             @PathVariable(USER_ID) String strUserId,
@@ -639,8 +624,7 @@ public class UserController extends BaseController {
                     "Search is been executed by email, firstName and lastName fields. " +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/users/assign/{alarmId}", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/users/assign/{alarmId}", params = {"pageSize", "page"})
     public PageData<UserEmailInfo> getUsersForAssign(
             @Parameter(description = ALARM_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable("alarmId") String strAlarmId,
@@ -686,8 +670,7 @@ public class UserController extends BaseController {
             notes = "Returns a page of user objects that belongs to specified Entity Group Id. " +
                     PAGE_DATA_PARAMETERS + "\n\n" + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroup/{entityGroupId}/users", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroup/{entityGroupId}/users", params = {"pageSize", "page"})
     public PageData<User> getUsersByEntityGroupId(
             @Parameter(description = ENTITY_GROUP_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(ENTITY_GROUP_ID) String strEntityGroupId,
@@ -717,7 +700,7 @@ public class UserController extends BaseController {
             } catch (ThingsboardException e) {
                 return false;
             }
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
     @ApiOperation(value = "Save user settings (saveUserSettings)",
@@ -760,7 +743,7 @@ public class UserController extends BaseController {
             notes = "Delete user settings by specifying list of json element xpaths. \n " +
                     "Example: to delete B and C element in { \"A\": {\"B\": 5}, \"C\": 15} send A.B,C in jsonPaths request parameter")
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/user/settings/{paths}", method = RequestMethod.DELETE)
+    @DeleteMapping(value = "/user/settings/{paths}")
     public void deleteUserSettings(@Parameter(description = PATHS)
                                    @PathVariable(PATHS) String paths) throws ThingsboardException {
         checkParameter(USER_ID, paths);
@@ -800,7 +783,7 @@ public class UserController extends BaseController {
             notes = "Delete user settings by specifying list of json element xpaths. \n " +
                     "Example: to delete B and C element in { \"A\": {\"B\": 5}, \"C\": 15} send A.B,C in jsonPaths request parameter")
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/user/settings/{type}/{paths}", method = RequestMethod.DELETE)
+    @DeleteMapping(value = "/user/settings/{type}/{paths}")
     public void deleteUserSettings(@Parameter(description = PATHS)
                                    @PathVariable(PATHS) String paths,
                                    @Parameter(description = "Settings type, case insensitive, one of: \"general\", \"quick_links\", \"doc_links\" or \"dashboards\".")
@@ -824,8 +807,7 @@ public class UserController extends BaseController {
     @ApiOperation(value = "Report action of User over the dashboard (reportUserDashboardAction)",
             notes = "Report action of User over the dashboard. " + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/user/dashboards/{dashboardId}/{action}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/user/dashboards/{dashboardId}/{action}")
     public UserDashboardsInfo reportUserDashboardAction(
             @Parameter(description = DASHBOARD_ID_PARAM_DESCRIPTION)
             @PathVariable(DashboardController.DASHBOARD_ID) String strDashboardId,

@@ -33,6 +33,7 @@ package org.thingsboard.server.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DaoSqlTest
+@Slf4j
 public class TranslationControllerTest extends AbstractControllerTest {
 
     private static final String ES_ES = "es_ES";
@@ -377,24 +379,24 @@ public class TranslationControllerTest extends AbstractControllerTest {
         TranslationInfo arabic = getTranslationInfo(AR_QA);
         assertThat(arabic.getProgress()).isEqualTo(0);
 
-        JsonNode fullCustomerTranslation = doGet("/api/translation/full/" + AR_QA, JsonNode.class);
+        JsonNode fullEngTranslation = doGet("/api/translation/full/" + EN_US, JsonNode.class);
 
         //translate some keys and check progress > 0
-        Iterator<String> fieldNames = fullCustomerTranslation.fieldNames();
+        Iterator<String> fieldNames = fullEngTranslation.fieldNames();
         int count = 20;
         while (fieldNames.hasNext() && count > 0) {
             String fieldName = fieldNames.next();
-            ((ObjectNode) customTranslation).set(fieldName, fullCustomerTranslation.get(fieldName));
+            ((ObjectNode) customTranslation).set(fieldName, fullEngTranslation.get(fieldName));
             count--;
         }
         doPost("/api/translation/custom/" + AR_QA, customTranslation);
 
-        Set<String> fullTranslationKeys = JacksonUtil.extractKeys(fullCustomerTranslation);
+        Set<String> fullTranslationKeys = JacksonUtil.extractKeys(fullEngTranslation);
         Set<String> translated = JacksonUtil.extractKeys(customTranslation);
 
         TranslationInfo updatedSystemArabicInfo = getTranslationInfo(AR_QA);
         assertThat(updatedSystemArabicInfo.getProgress()).isGreaterThan(0)
-                .isEqualTo((translated.size() * 100)/fullTranslationKeys.size());
+                .isEqualTo(((translated.size() - 1)  * 100)/fullTranslationKeys.size()); // we don`t take into account the added key "save"
 
         //login as tenant, translate all keys, check progress is 100
         loginTenantAdmin();
@@ -403,7 +405,7 @@ public class TranslationControllerTest extends AbstractControllerTest {
         TranslationInfo tenantArabicInfo = getTranslationInfo(AR_QA);
         assertThat(tenantArabicInfo.getProgress()).isEqualTo(updatedSystemArabicInfo.getProgress());
 
-        doPost("/api/translation/custom/" + AR_QA, fullCustomerTranslation);
+        doPost("/api/translation/custom/" + AR_QA, fullEngTranslation);
         TranslationInfo updatedTenantArabic = getTranslationInfo(AR_QA);
         assertThat(updatedTenantArabic.getProgress()).isEqualTo(100);
     }

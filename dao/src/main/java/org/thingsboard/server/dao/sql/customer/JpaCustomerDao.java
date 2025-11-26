@@ -183,6 +183,15 @@ public class JpaCustomerDao extends JpaAbstractDao<CustomerEntity, Customer> imp
     }
 
     @Override
+    public PageData<Customer> findByTenantIdAndParentCustomerId(TenantId tenantId, CustomerId parentCustomerId, PageLink pageLink) {
+        if (parentCustomerId != null && !parentCustomerId.isNullUid()) {
+            return DaoUtil.toPageData(customerRepository.findByTenantIdAndParentCustomerId(tenantId.getId(), parentCustomerId.getId(), DaoUtil.toPageable(pageLink)));
+        } else {
+            return DaoUtil.toPageData(customerRepository.findByTenantIdAndNullParentCustomerId(tenantId.getId(), DaoUtil.toPageable(pageLink)));
+        }
+    }
+
+    @Override
     public PageData<Customer> findAllByTenantId(TenantId tenantId, PageLink pageLink) {
         return findByTenantId(tenantId.getId(), pageLink);
     }

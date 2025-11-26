@@ -276,6 +276,7 @@ import { SecretAutocompleteComponent } from '@shared/components/secret-storage/s
 import { ReportTemplateAutocompleteComponent } from '@shared/components/report/report-template-autocomplete.component';
 import { FormRowDirective } from '@shared/directives/form-row.directive';
 import { TimeUnitInputComponent } from '@shared/components/time-unit-input.component';
+import { DateExpirationPipe } from '@shared/pipe/date-expiration.pipe';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -284,6 +285,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
 @NgModule({
   providers: [
     DatePipe,
+    SelectableColumnsPipe,
     MillisecondsToTimeStringPipe,
     EnumToArrayPipe,
     HighlightPipe,
@@ -458,6 +460,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     HasEntityGroupPermissionPipe,
     HasGroupEntityPermissionPipe,
     HasGroupEntityOrGenericPermissionPipe,
+    DateExpirationPipe,
     TbJsonToStringDirective,
     JsonObjectEditDialogComponent,
     HistorySelectorComponent,
@@ -748,6 +751,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     SafePipe,
     ShortNumberPipe,
     SelectableColumnsPipe,
+    DateExpirationPipe,
     RouterModule,
     HasGenericPermissionPipe,
     HasEntityGroupPermissionPipe,

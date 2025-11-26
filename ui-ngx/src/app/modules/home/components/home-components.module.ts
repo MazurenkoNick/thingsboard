@@ -38,6 +38,7 @@ import { DetailsPanelComponent } from '@home/components/details-panel.component'
 import { EntityDetailsPanelComponent } from '@home/components/entity/entity-details-panel.component';
 import { AuditLogDetailsDialogComponent } from '@home/components/audit-log/audit-log-details-dialog.component';
 import { AuditLogTableComponent } from '@home/components/audit-log/audit-log-table.component';
+import { AuditLogHeaderComponent } from '@home/components/audit-log/audit-log-header.component';
 import { EventTableHeaderComponent } from '@home/components/event/event-table-header.component';
 import { EventTableComponent } from '@home/components/event/event-table.component';
 import { EventFilterPanelComponent } from '@home/components/event/event-filter-panel.component';
@@ -174,7 +175,7 @@ import { GroupConfigTableConfigService } from '@home/components/group/group-conf
 import { EntityGroupsTableConfigResolver } from '@home/components/group/entity-groups-table-config.resolver';
 import { EntityGroupConfigResolver } from '@home/components/group/entity-group-config.resolver';
 import { ConverterAutocompleteComponent } from '@home/components/converter/converter-autocomplete.component';
-import { AddConverterDialogComponent } from '@home/components/converter/add-converter-dialog.component';
+import { ConverterDialogComponent } from '@home/components/converter/converter-dialog.component';
 import { OperationTypeListComponent } from '@home/components/role/operation-type-list.component';
 import { ResourceTypeAutocompleteComponent } from '@home/components/role/resource-type-autocomplete.component';
 import { PermissionListComponent } from '@home/components/role/permission-list.component';
@@ -272,42 +273,27 @@ import {
 import { EntityChipsComponent } from '@home/components/entity/entity-chips.component';
 import { DashboardViewComponent } from '@home/components/dashboard-view/dashboard-view.component';
 import { ConverterLibraryComponent } from '@home/components/converter/converter-library.component';
-import { CalculatedFieldsTableComponent } from '@home/components/calculated-fields/calculated-fields-table.component';
-import {
-  CalculatedFieldDialogComponent
-} from '@home/components/calculated-fields/components/dialog/calculated-field-dialog.component';
 import {
   EntityDebugSettingsButtonComponent
 } from '@home/components/entity/debug/entity-debug-settings-button.component';
-import {
-  CalculatedFieldArgumentsTableComponent
-} from '@home/components/calculated-fields/components/arguments-table/calculated-field-arguments-table.component';
-import {
-  CalculatedFieldArgumentPanelComponent
-} from '@home/components/calculated-fields/components/panel/calculated-field-argument-panel.component';
-import {
-  CalculatedFieldDebugDialogComponent
-} from '@home/components/calculated-fields/components/debug-dialog/calculated-field-debug-dialog.component';
-import {
-  CalculatedFieldScriptTestDialogComponent
-} from '@home/components/calculated-fields/components/test-dialog/calculated-field-script-test-dialog.component';
-import {
-  CalculatedFieldTestArgumentsComponent
-} from '@home/components/calculated-fields/components/test-arguments/calculated-field-test-arguments.component';
-import {
-  CalculatedFieldReprocessingPanelComponent
-} from '@home/components/calculated-fields/components/reprocessing/calculated-field-reprocessing-panel.component';
 import { CancelTaskDialogComponent } from '@home/components/task/cancel-task-dialog.component';
 import { CheckConnectivityDialogComponent } from '@home/components/ai-model/check-connectivity-dialog.component';
 import { AIModelDialogComponent } from '@home/components/ai-model/ai-model-dialog.component';
 import { ResourcesDialogComponent } from "@home/components/resources/resources-dialog.component";
 import { ResourcesLibraryComponent } from "@home/components/resources/resources-library.component";
+import { CalculatedFieldsTableComponent } from '@home/components/calculated-fields/calculated-fields-table.component';
 import {
-  CalculatedFieldGeofencingZoneGroupsTableComponent
-} from '@home/components/calculated-fields/components/geofencing-zone-grups-table/calculated-field-geofencing-zone-groups-table.component';
-import {
-  CalculatedFieldGeofencingZoneGroupsPanelComponent
-} from '@home/components/calculated-fields/components/panel/calculated-field-geofencing-zone-groups-panel.component';
+  CalculatedFieldDebugDialogComponent
+} from '@home/components/calculated-fields/components/debug-dialog/calculated-field-debug-dialog.component';
+import { CalculatedFieldsModule } from '@home/components/calculated-fields/calculated-field.module';
+import { AlarmRuleModule } from "@home/components/alarm-rules/alarm-rule.module";
+import { AlarmRulesTableComponent } from "@home/components/alarm-rules/alarm-rules-table.component";
+import { ApiKeysTableComponent } from '@home/components/api-key/api-keys-table.component';
+import { AddApiKeyDialogComponent } from '@home/components/api-key/add-api-key-dialog.component';
+import { EditApiKeyDescriptionPanelComponent } from '@home/components/api-key/edit-api-key-description-panel.component';
+import { ApiKeyGeneratedDialogComponent } from '@home/components/api-key/api-key-generated-dialog.component';
+import { ApiKeysTableDialogComponent } from '@home/components/api-key/api-keys-table-dialog.component';
+import { AuditLogFilterComponent } from "@home/components/audit-log/audit-log-filter.component";
 
 @NgModule({
   declarations:
@@ -320,6 +306,9 @@ import {
       EntityDetailsPageComponent,
       AuditLogTableComponent,
       AuditLogDetailsDialogComponent,
+      CalculatedFieldsTableComponent,
+      CalculatedFieldDebugDialogComponent,
+      AlarmRulesTableComponent,
       EventContentDialogComponent,
       EventTableHeaderComponent,
       EventTableComponent,
@@ -358,7 +347,7 @@ import {
       SelectTargetStateDialogComponent,
       AddWidgetToDashboardDialogComponent,
       ConverterAutocompleteComponent,
-      AddConverterDialogComponent,
+      ConverterDialogComponent,
       OperationTypeListComponent,
       ResourceTypeAutocompleteComponent,
       PermissionListComponent,
@@ -484,27 +473,26 @@ import {
       EntityChipsComponent,
       DashboardViewComponent,
       ConverterLibraryComponent,
-      CalculatedFieldsTableComponent,
-      CalculatedFieldDialogComponent,
-      CalculatedFieldArgumentsTableComponent,
-      CalculatedFieldArgumentPanelComponent,
-      CalculatedFieldDebugDialogComponent,
-      CalculatedFieldScriptTestDialogComponent,
-      CalculatedFieldTestArgumentsComponent,
-      CalculatedFieldReprocessingPanelComponent,
       CancelTaskDialogComponent,
-      CalculatedFieldGeofencingZoneGroupsTableComponent,
-      CalculatedFieldGeofencingZoneGroupsPanelComponent,
       CheckConnectivityDialogComponent,
       AIModelDialogComponent,
       ResourcesDialogComponent,
       ResourcesLibraryComponent,
+      ApiKeysTableComponent,
+      ApiKeysTableDialogComponent,
+      AddApiKeyDialogComponent,
+      EditApiKeyDescriptionPanelComponent,
+      ApiKeyGeneratedDialogComponent,
+      AuditLogHeaderComponent,
+      AuditLogFilterComponent
     ],
   imports: [
     CommonModule,
     SharedModule,
     SharedHomeComponentsModule,
     HomeDialogsModule,
+    CalculatedFieldsModule,
+    AlarmRuleModule,
     WidgetConfigComponentsModule,
     BasicWidgetConfigModule,
     Lwm2mProfileComponentsModule,
@@ -513,7 +501,7 @@ import {
     DeviceCredentialsModule,
     DeviceProfileCommonModule,
     IntegrationComponentModule,
-    EntityDebugSettingsButtonComponent
+    EntityDebugSettingsButtonComponent,
   ],
   exports: [
     SharedHomeComponentsModule,
@@ -524,6 +512,8 @@ import {
     EntityDetailsPanelComponent,
     EntityDetailsPageComponent,
     AuditLogTableComponent,
+    CalculatedFieldsTableComponent,
+    AlarmRulesTableComponent,
     EventTableComponent,
     EdgeDownlinkTableHeaderComponent,
     EdgeDownlinkTableComponent,
@@ -666,20 +656,13 @@ import {
     SendNotificationButtonComponent,
     EntityChipsComponent,
     DashboardViewComponent,
-    CalculatedFieldsTableComponent,
-    CalculatedFieldDialogComponent,
-    CalculatedFieldArgumentsTableComponent,
-    CalculatedFieldArgumentPanelComponent,
-    CalculatedFieldDebugDialogComponent,
-    CalculatedFieldScriptTestDialogComponent,
-    CalculatedFieldTestArgumentsComponent,
     CancelTaskDialogComponent,
-    CalculatedFieldGeofencingZoneGroupsTableComponent,
-    CalculatedFieldGeofencingZoneGroupsPanelComponent,
     CheckConnectivityDialogComponent,
     AIModelDialogComponent,
     ResourcesDialogComponent,
     ResourcesLibraryComponent,
+    ApiKeysTableComponent,
+    ApiKeysTableDialogComponent,
   ],
   providers: [
     WidgetComponentService,

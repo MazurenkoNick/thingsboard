@@ -35,6 +35,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.report.configuration.chart.ReportComponentSubType;
 
 @Schema
 @Data
@@ -43,6 +44,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public abstract class AbstractReportComponent implements ReportComponent {
 
-    private String subType;
+    private ReportComponentSubType subType;
 
 }

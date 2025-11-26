@@ -53,7 +53,7 @@ import {
 } from '@angular/core';
 import { DashboardWidget } from '@home/models/dashboard-component.models';
 import {
-  MobileImageResult,
+  ExportRow,
   Widget,
   WidgetAction,
   WidgetActionDescriptor,
@@ -146,7 +146,6 @@ import { IModulesMap } from '@modules/common/modules-map.models';
 import { DashboardUtilsService } from '@core/services/dashboard-utils.service';
 import { CompiledTbFunction, compileTbFunction, isNotEmptyTbFunction } from '@shared/models/js-function.models';
 import { HttpClient } from '@angular/common/http';
-import { addDiagnosticChain } from '@angular/compiler-cli/src/ngtsc/diagnostics';
 
 @Component({
   selector: 'tb-widget',
@@ -1782,18 +1781,18 @@ export class WidgetComponent extends PageComponent implements OnInit, OnChanges,
     });
   }
 
-  private doExportWidgetData(filename: string, data: {[key: string]: any}[],
+  private doExportWidgetData(filename: string, data: ExportRow[],
                              widgetExportType: WidgetExportType, dateFormat: string) {
     if (widgetExportType === WidgetExportType.csv) {
-      this.importExport.exportCsv(data, filename, true);
+      this.importExport.exportCsv(data, filename, true, dateFormat);
     } else if (widgetExportType === WidgetExportType.xls) {
-      this.importExport.exportXls(data, filename, true);
+      this.importExport.exportXls(data, filename, true, dateFormat);
     } else if (widgetExportType === WidgetExportType.xlsx) {
       this.importExport.exportXlsx(data, filename, dateFormat, true);
     }
   }
 
-  private prepareWidgetExportData(): {[key: string]: any}[] | Observable<{[key: string]: any}[]> {
+  private prepareWidgetExportData(): ExportRow[] | Observable<ExportRow[]> {
     if (isFunction(this.widgetContext.customDataExport)) {
       return this.widgetContext.customDataExport();
     } else if (this.widgetContext.defaultSubscription){

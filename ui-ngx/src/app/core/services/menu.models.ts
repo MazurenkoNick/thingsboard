@@ -133,7 +133,9 @@ export enum MenuId {
   domains = 'domains',
   clients = 'clients',
   audit_log = 'audit_log',
+  alarms_center = 'alarms_center',
   alarms = 'alarms',
+  alarm_rules = 'alarm_rules',
   dashboards = 'dashboards',
   entities = 'entities',
   devices = 'devices',
@@ -586,13 +588,33 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
     }
   ],
   [
+    MenuId.alarms_center,
+    {
+      id: MenuId.alarms_center,
+      name: 'alarm.alarms',
+      type: 'link',
+      path: '/alarms',
+      icon: 'mdi:alert-outline'
+    }
+  ],
+  [
     MenuId.alarms,
     {
       id: MenuId.alarms,
       name: 'alarm.alarms',
       type: 'link',
-      path: '/alarms',
+      path: '/alarms/alarms',
       icon: 'mdi:alert-outline'
+    }
+  ],
+  [
+    MenuId.alarm_rules,
+    {
+      id: MenuId.alarm_rules,
+      name: 'alarm-rule.alarm-rules',
+      type: 'link',
+      path: '/alarms/alarm-rules',
+      icon: 'tune'
     }
   ],
   [
@@ -1270,6 +1292,10 @@ const menuFilters = new Map<MenuId, MenuFilter>([
           userPermissionsService.hasReadGenericPermission(Resource.ALARM)
   ],
   [
+    MenuId.alarm_rules, (_authState, userPermissionsService) =>
+    [Resource.DEVICE, Resource.ASSET, Resource.CUSTOMER, Resource.DEVICE_PROFILE, Resource.ASSET_PROFILE].some(res => userPermissionsService.hasResourcesGenericPermission(res, Operation.READ_CALCULATED_FIELD))
+  ],
+  [
     MenuId.dashboard_all, (_authState, userPermissionsService) =>
           userPermissionsService.hasReadGenericPermission(Resource.DASHBOARD)
   ],
@@ -1667,7 +1693,13 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
     Authority.TENANT_ADMIN,
     [
       {id: MenuId.home},
-      {id: MenuId.alarms},
+      {
+        id: MenuId.alarms_center,
+        pages: [
+          {id: MenuId.alarms},
+          {id: MenuId.alarm_rules}
+        ]
+      },
       {
         id: MenuId.dashboards,
         pages: [

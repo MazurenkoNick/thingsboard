@@ -91,6 +91,8 @@ public interface CustomerService extends EntityDaoService {
 
     PageData<CustomerInfo> findCustomerInfosByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId, PageLink pageLink);
 
+    PageData<Customer> findCustomersByTenantIdAndParentCustomerId(TenantId tenantId, CustomerId parentCustomerId, PageLink pageLink);
+
     PageData<CustomerInfo> findCustomerInfosByTenantIdAndCustomerIdIncludingSubCustomers(TenantId tenantId, CustomerId customerId, PageLink pageLink);
 
     List<Customer> findCustomersByCustomMenuId(CustomMenuId customMenuId);

@@ -60,7 +60,7 @@ public class AggLatestMapping {
     private AggLatestMappingFilter filter;
 
     public ListenableFuture<Optional<JsonObject>> aggregate(TbContext ctx, Map<String, ScriptEngine> attributesScriptEngineMap,
-                                            ListenableFuture<List<EntityId>> entityIds) {
+                                                            ListenableFuture<List<EntityId>> entityIds) {
         ListenableFuture<List<EntityId>> filteredEntityIds =
                 filter != null
                         ? Futures.transformAsync(entityIds, ids -> filter.filterEntityIds(ctx, attributesScriptEngineMap, ids), ctx.getDbCallbackExecutor())

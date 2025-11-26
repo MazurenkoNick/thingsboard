@@ -48,7 +48,7 @@ import { PageComponent } from '@shared/components/page.component';
 import { AfterViewInit, DestroyRef, Directive, EventEmitter, inject, Inject, OnInit, Type } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
-import { AbstractControl, UntypedFormGroup, ValidatorFn } from '@angular/forms';
+import { AbstractControl, UntypedFormGroup } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { Dashboard } from '@shared/models/dashboard.models';
 import { IAliasController } from '@core/api/widget-api.models';
@@ -62,7 +62,7 @@ import {
   DataKeySettingsFunction
 } from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
 import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
-import { CompiledTbFunction, TbFunction } from '@shared/models/js-function.models';
+import { TbFunction } from '@shared/models/js-function.models';
 import { FormProperty, jsonFormSchemaToFormProperties } from '@shared/models/dynamic-form.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TbUnit } from '@shared/models/unit.models';
@@ -86,6 +86,8 @@ export interface WidgetTypeData {
   configHelpLinkId: string;
   template: WidgetTypeTemplate;
 }
+
+export const widgetTitleAutocompleteValues = ['entityName', 'entityLabel'];
 
 export const widgetTypesData = new Map<widgetType, WidgetTypeData>(
   [
@@ -677,7 +679,8 @@ export enum MapItemType {
   marker = 'marker',
   polygon = 'polygon',
   rectangle = 'rectangle',
-  circle = 'circle'
+  circle = 'circle',
+  polyline = 'polyline'
 }
 
 export const widgetActionTypes = Object.keys(WidgetActionType)
@@ -717,8 +720,11 @@ export const mapItemTypeTranslationMap = new Map<MapItemType, string>(
     [ MapItemType.polygon, 'widget-action.map-item.polygon' ],
     [ MapItemType.rectangle, 'widget-action.map-item.rectangle' ],
     [ MapItemType.circle, 'widget-action.map-item.circle' ],
+    [ MapItemType.polyline, 'widget-action.map-item.polyline' ]
   ]
 )
+
+export type ExportRow = {[key: string]: any} | Map<string, any>;
 
 export enum WidgetExportType {
   csv = 'csv',
@@ -858,6 +864,8 @@ export interface MapItemTooltips {
   finishRect?: string;
   startCircle?: string;
   finishCircle?: string;
+  startPolyline?: string;
+  finishPolyline?: string;
 }
 
 export const mapItemTooltipsTranslation: Required<MapItemTooltips> = Object.freeze({
@@ -868,7 +876,9 @@ export const mapItemTooltipsTranslation: Required<MapItemTooltips> = Object.free
   startRect: 'widgets.maps.data-layer.polygon.rectangle-place-first-point-hint',
   finishRect: 'widgets.maps.data-layer.polygon.finish-rectangle-hint',
   startCircle: 'widgets.maps.data-layer.circle.place-circle-center-hint',
-  finishCircle: 'widgets.maps.data-layer.circle.finish-circle-hint'
+  finishCircle: 'widgets.maps.data-layer.circle.finish-circle-hint',
+  startPolyline: 'widgets.maps.data-layer.polyline.polyline-place-first-point-hint',
+  finishPolyline: 'widgets.maps.data-layer.polyline.finish-polyline-hint'
 })
 
 export interface WidgetActionDescriptor extends WidgetAction {
@@ -1182,5 +1192,4 @@ export abstract class WidgetSettingsComponent extends PageComponent implements
 
   protected onWidgetConfigSet(widgetConfig: WidgetConfigComponentData) {
   }
-
 }

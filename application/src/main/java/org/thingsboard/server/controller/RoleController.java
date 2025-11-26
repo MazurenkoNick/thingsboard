@@ -168,7 +168,7 @@ public class RoleController extends AutoCommitController {
             if (Authority.CUSTOMER_USER.equals(currentUser.getAuthority())) {
                 role.setCustomerId(currentUser.getCustomerId());
             }
-            checkEntity(role.getId(), role, Resource.ROLE, null);
+            checkEntity(role.getId(), role, Resource.ROLE);
 
             Role savedRole = checkNotNull(roleService.saveRole(getTenantId(), role));
 
@@ -281,7 +281,7 @@ public class RoleController extends AutoCommitController {
             } catch (ThingsboardException e) {
                 return false;
             }
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
 }

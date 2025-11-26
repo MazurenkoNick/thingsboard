@@ -125,6 +125,8 @@ import { ComponentPortal } from '@angular/cdk/portal';
 import { FormBuilder } from '@angular/forms';
 import { DEFAULT_OVERLAY_POSITIONS } from '@shared/models/overlay.models';
 import { DateFormatSettings, ValueFormatProcessor } from '@shared/models/widget-settings.models';
+import { entityFields } from '@shared/models/entity.models';
+import { toUtcDate } from '@shared/models/time/time.models';
 
 export interface TimeseriesTableWidgetSettings extends TableWidgetSettings {
   showTimestamp: boolean;
@@ -132,6 +134,7 @@ export interface TimeseriesTableWidgetSettings extends TableWidgetSettings {
   hideEmptyLines: boolean;
   dateFormat: DateFormatSettings;
   timestampExportOption: columnExportOptions;
+  sortOrder: SortOrder;
 }
 
 interface TimeseriesWidgetLatestDataKeySettings extends TableWidgetDataKeySettings {
@@ -172,6 +175,7 @@ interface TimeseriesTableSource {
   timeseriesDatasource: TimeseriesDatasource;
   header: TimeseriesHeader[];
   rowDataTemplate: {[key: string]: any};
+  displayName: string;
 }
 
 @Component({
@@ -419,11 +423,38 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
     this.updateDatasources();
   }
 
-  public getTabLabel(source: TimeseriesTableSource){
-    if (this.useEntityLabel) {
-      return source.datasource.entityLabel || source.datasource.entityName;
-    } else {
-      return source.datasource.entityName;
+  private getTabLabel(source: Datasource):string {
+    const value = this.useEntityLabel
+      ? (source.entityLabel || source.entityName)
+      : source.entityName;
+
+    return this.utils.customTranslation(value);
+  }
+
+  private sortDatasources(source: TimeseriesTableSource[]) {
+    const property = this.settings?.sortOrder?.property;
+    const direction = this.settings?.sortOrder?.direction;
+    const isAsc = direction === Direction.ASC;
+
+    if (property === entityFields.name.keyName) {
+      const collator = new Intl.Collator(undefined, {
+        sensitivity: "variant",
+        numeric: true,
+        ignorePunctuation: false
+      });
+
+      source.sort((a, b) => {
+        const valueA = a.displayName || '';
+        const valueB = b.displayName || '';
+
+        return isAsc
+          ? collator.compare(valueA, valueB)
+          : collator.compare(valueB, valueA);
+      });
+    } else if (property === entityFields.createdTime.keyName) {
+      if (isAsc) {
+        source.reverse();
+      }
     }
   }
 
@@ -451,6 +482,7 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
         source.pageLink = new PageLink(pageSize, 0, null, sortOrder);
         source.rowDataTemplate = {};
         source.rowDataTemplate.Timestamp = null;
+        source.displayName = this.getTabLabel(datasource);
         if (this.showTimestamp) {
           source.displayedColumns.push('0');
         }
@@ -470,6 +502,7 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
       }
     }
     if (this.sources.length) {
+      this.sortDatasources(this.sources);
       this.sources.forEach((source, index) => {
         this.prepareDisplayedColumn(index);
         source.displayedColumns = this.displayedColumns[index].filter(value => value.display).map(value => value.def);
@@ -925,7 +958,7 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
     }
   }
 
-  customDataExport(): Observable<{[key: string]: any}[]> {
+  customDataExport(): Observable<Map<string, any>[]> {
     let columnsToExport = [];
     if (this.datasources.length) {
       this.datasources.forEach((datasource, index) => {
@@ -980,7 +1013,7 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
               tsRow = isDefined(sourcesLatest[datasourceData.datasource.name])
                 ? deepClone(sourcesLatest[datasourceData.datasource.name]) : {};
               if (columnsToExport.includes(timestampFieldName)) {
-                tsRow[timestampFieldName] = this.datePipe.transform(ts, this.dateFormatFilter);
+                tsRow[timestampFieldName] = toUtcDate(ts);
               }
               tsRow['Entity Name'] = this.useEntityLabel ? datasourceData.datasource.entityLabel : datasourceData.datasource.entityName;
               sourcesTsRows[tsKey] = tsRow;
@@ -1008,7 +1041,7 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
         });
       });
     }
-    const exportedData: Observable<{[key: string]: any}>[] = [];
+    const exportedData: Observable<Map<string, any>>[] = [];
     const outputTsRows: {[ts: string]: {[key: string]: Observable<any>}} = {};
 
     if (this.data.length) {
@@ -1043,33 +1076,61 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
       timestamps.sort();
       timestamps.forEach(timestamp => {
         const tsRow = outputTsRows[timestamp];
-        const dataObj: {[key: string]: Observable<any>} = {};
-        columnsToExport.forEach(key => dataObj[key] = isDefined(tsRow[key]) ? tsRow[key] : of(null));
-        if (Object.keys(dataObj).length) {
-          exportedData.push(forkJoin(dataObj));
+        const dataMap = new Map<string, Observable<any>>();
+        columnsToExport.forEach(key => {
+          dataMap.set(key, isDefined(tsRow[key]) ? tsRow[key] : of(null));
+        });
+        if (dataMap.size > 0) {
+          const orderedKeys = Array.from(dataMap.keys());
+          const orderedObservables = Array.from(dataMap.values());
+
+          exportedData.push(
+            forkJoin(orderedObservables).pipe(
+              map(resolvedValues => {
+                const orderedRow = new Map<string, any>();
+                orderedKeys.forEach((key, index) => {
+                  orderedRow.set(key, resolvedValues[index]);
+                });
+                return orderedRow;
+              })
+            )
+          );
         } else {
-          exportedData.push(of(dataObj));
+          exportedData.push(of(new Map<string, any>()));
         }
       });
 
       if (!exportedData.length) {
-        const dataObj: {[key: string]: Observable<any>} = {};
-        dataObj.Timestamp = of(null);
+        const dataMap = new Map<string, Observable<any>>();
+        dataMap.set(this.translate.instant('widgets.table.timestamp-column-name') || 'Timestamp', of(null));
         this.data.forEach((datasourceData) => {
           const key = datasourceData.dataKey.label;
-          dataObj[this.checkProperty(dataObj, key)] = of(null);
+          dataMap.set(key, of(null));
         });
-        if (Object.keys(dataObj).length) {
-          exportedData.push(forkJoin(dataObj));
+
+        if (dataMap.size > 0) {
+          const orderedKeys = Array.from(dataMap.keys());
+          const orderedObservables = Array.from(dataMap.values());
+          exportedData.push(
+            forkJoin(orderedObservables).pipe(
+              map(resolvedValues => {
+                const orderedRow = new Map<string, any>();
+                orderedKeys.forEach((key, index) => {
+                  orderedRow.set(key, resolvedValues[index]);
+                });
+                return orderedRow;
+              })
+            )
+          );
         } else {
-          exportedData.push(of(dataObj));
+          exportedData.push(of(new Map<string, any>()));
         }
       }
     }
     if (exportedData.length) {
       return forkJoin(exportedData);
     } else {
-      return of(exportedData);
+      return of([]);
     }
   }
 

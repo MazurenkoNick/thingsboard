@@ -93,7 +93,8 @@ public enum Resource {
     SECRET(EntityType.SECRET),
     REPORT_TEMPLATE(EntityType.REPORT_TEMPLATE),
     REPORT(EntityType.REPORT),
-    AI_MODEL(EntityType.AI_MODEL);
+    AI_MODEL(EntityType.AI_MODEL),
+    API_KEY(EntityType.API_KEY);
 
     private static final Map<EntityType, Resource> groupResourceByGroupType = new HashMap<>();
     private static final Map<EntityType, Resource> resourceByEntityType = new HashMap<>();
@@ -138,7 +139,7 @@ public enum Resource {
         operationsByResource.put(Resource.ASSET_PROFILE, Operation.defaultCFEntityOperations);
         operationsByResource.put(Resource.OTA_PACKAGE, Operation.defaultEntityOperations);
         operationsByResource.put(Resource.ASSET, Operation.defaultCFEntityOperations);
-        operationsByResource.put(Resource.CUSTOMER, Operation.defaultEntityOperations);
+        operationsByResource.put(Resource.CUSTOMER, Operation.defaultCFEntityOperations);
         operationsByResource.put(Resource.DASHBOARD, Operation.defaultEntityOperations);
         operationsByResource.put(Resource.ENTITY_VIEW, Operation.defaultEntityOperations);
         operationsByResource.put(Resource.EDGE, Operation.defaultEntityOperations);
@@ -177,6 +178,7 @@ public enum Resource {
         operationsByResource.put(Resource.REPORT_TEMPLATE, Operation.crudOperations);
         operationsByResource.put(Resource.REPORT, Operation.crudOperations);
         operationsByResource.put(Resource.AI_MODEL, Operation.crudOperations);
+        operationsByResource.put(Resource.API_KEY, Operation.crudOperations);
 
         resourcesByAuthority.put(Authority.SYS_ADMIN, Set.of(
                 Resource.ALL,
@@ -201,7 +203,8 @@ public enum Resource {
                 Resource.QUEUE_STATS,
                 Resource.NOTIFICATION,
                 Resource.MOBILE_APP_SETTINGS,
-                Resource.SECRET
+                Resource.SECRET,
+                Resource.API_KEY
         ));
 
         resourcesByAuthority.put(Authority.TENANT_ADMIN, Set.of(
@@ -252,7 +255,8 @@ public enum Resource {
                 Resource.JOB,
                 Resource.REPORT_TEMPLATE,
                 Resource.REPORT,
-                Resource.AI_MODEL
+                Resource.AI_MODEL,
+                Resource.API_KEY
         ));
 
         resourcesByAuthority.put(Authority.CUSTOMER_USER, Set.of(
@@ -287,7 +291,8 @@ public enum Resource {
                 Resource.ASSET_PROFILE,
                 Resource.MOBILE_APP_SETTINGS,
                 Resource.REPORT_TEMPLATE,
-                Resource.REPORT
+                Resource.REPORT,
+                Resource.API_KEY
         ));
 
     }

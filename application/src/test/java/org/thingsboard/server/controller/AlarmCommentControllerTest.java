@@ -72,6 +72,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.thingsboard.server.common.data.alarm.AlarmCommentSubType.COMMENT_DELETED;
 
 @Slf4j
 @ContextConfiguration(classes = {AlarmCommentControllerTest.Config.class})
@@ -299,8 +300,10 @@ public class AlarmCommentControllerTest extends AbstractControllerTest {
         AlarmComment expectedAlarmComment = AlarmComment.builder()
                 .alarmId(alarm.getId())
                 .type(AlarmCommentType.SYSTEM)
-                .comment(JacksonUtil.newObjectNode().put("text", String.format("User %s %s deleted his comment",
-                        savedCustomerAdministrator.getFirstName(), savedCustomerAdministrator.getLastName())))
+                .comment(JacksonUtil.newObjectNode()
+                        .put("text", String.format(COMMENT_DELETED.getText(), savedCustomerAdministrator.getTitle()))
+                        .put("subtype", COMMENT_DELETED.name())
+                        .put("userName", savedCustomerAdministrator.getTitle()))
                 .build();
         testLogEntityActionEntityEqClass(alarm, alarm.getId(), tenantId, customerId, customerAdminUserId, CUSTOMER_ADMIN_EMAIL, ActionType.DELETED_COMMENT, 1, expectedAlarmComment);
     }
@@ -329,8 +332,10 @@ public class AlarmCommentControllerTest extends AbstractControllerTest {
         AlarmComment expectedAlarmComment = AlarmComment.builder()
                 .alarmId(alarm.getId())
                 .type(AlarmCommentType.SYSTEM)
-                .comment(JacksonUtil.newObjectNode().put("text", String.format("User %s deleted his comment",
-                        TENANT_ADMIN_EMAIL)))
+                .comment(JacksonUtil.newObjectNode()
+                        .put("text", String.format(COMMENT_DELETED.getText(), TENANT_ADMIN_EMAIL))
+                        .put("subtype", COMMENT_DELETED.name())
+                        .put("userName", TENANT_ADMIN_EMAIL))
                 .build();
         testLogEntityActionEntityEqClass(alarm, alarm.getId(), tenantId, customerId, tenantAdminUserId, TENANT_ADMIN_EMAIL, ActionType.DELETED_COMMENT, 1, expectedAlarmComment);
     }

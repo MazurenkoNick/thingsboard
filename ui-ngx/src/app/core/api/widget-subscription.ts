@@ -32,7 +32,8 @@
 import {
   IWidgetSubscription,
   SubscriptionEntityInfo,
-  SubscriptionMessage, WidgetDataGenerationOptions,
+  SubscriptionMessage,
+  WidgetDataGenerationOptions,
   WidgetSubscriptionCallbacks,
   WidgetSubscriptionContext,
   WidgetSubscriptionOptions
@@ -68,6 +69,7 @@ import {
   Timewindow,
   timewindowTypeChanged,
   toHistoryTimewindow,
+  toUtcDate,
   WidgetTimewindow
 } from '@app/shared/models/time/time.models';
 import { forkJoin, Observable, of, ReplaySubject, Subject, throwError, timer } from 'rxjs';
@@ -1285,6 +1287,7 @@ export class WidgetSubscription implements IWidgetSubscription {
   }
 
   exportData(): {[key: string]: any}[] {
+    const timestampColumnTitle = this.ctx.translate.instant('widgets.table.timestamp-column-name');
     const exportedData: {[key: string]: any}[] = [];
     if (this.type === widgetType.timeseries || this.type === widgetType.latest) {
       if (this.data.length) {
@@ -1313,8 +1316,8 @@ export class WidgetSubscription implements IWidgetSubscription {
             const value = row[1];
             let tsRow = tsRows[tsKey];
             if (!tsRow) {
-              tsRow = this.latestData.length ? deepClone(latest[datasourceData.datasource.name]) : {};
-              tsRow.Timestamp = this.ctx.datePipe.transform(ts, 'yyyy-MM-dd HH:mm:ss');
+              tsRow = (this.latestData.length && latest[datasourceData.datasource.name]) ? deepClone(latest[datasourceData.datasource.name]) : {};
+              tsRow[timestampColumnTitle] = toUtcDate(ts);
               tsRow['Entity Name'] = datasourceData.datasource.entityName;
               tsRows[tsKey] = tsRow;
             }
@@ -1332,7 +1335,7 @@ export class WidgetSubscription implements IWidgetSubscription {
         timestamps.forEach((timestamp) => {
           const tsRow = tsRows[timestamp];
           const dataObj: {[key: string]: any} = {};
-          dataObj.Timestamp = tsRow.Timestamp;
+          dataObj[timestampColumnTitle] = tsRow[timestampColumnTitle];
           if (this.type === widgetType.timeseries && this.datasources.length > 1) {
             dataObj['Entity Name'] = tsRow['Entity Name'];
           }
@@ -1347,7 +1350,7 @@ export class WidgetSubscription implements IWidgetSubscription {
         });
         if (!exportedData.length) {
           const dataObj: {[key: string]: any} = {};
-          dataObj.Timestamp = null;
+          dataObj[timestampColumnTitle] = null;
           this.data.forEach((datasourceData) => {
             const key = datasourceData.dataKey.label;
             dataObj[this.checkProperty(dataObj, key)] = null;

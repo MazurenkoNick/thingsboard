@@ -47,9 +47,6 @@ import org.thingsboard.server.dao.entity.EntityDaoService;
 
 import java.util.List;
 
-/**
- * Created by Victor Basanets on 8/27/2017.
- */
 public interface EntityViewService extends EntityDaoService {
 
     EntityView saveEntityView(EntityView entityView);
@@ -63,6 +60,8 @@ public interface EntityViewService extends EntityDaoService {
     EntityViewInfo findEntityViewInfoById(TenantId tenantId, EntityViewId entityViewId);
 
     EntityView findEntityViewById(TenantId tenantId, EntityViewId entityViewId, boolean putInCache);
+
+    ListenableFuture<EntityView> findEntityViewByIdAsync(TenantId tenantId, EntityViewId entityViewId);
 
     EntityView findEntityViewByTenantIdAndName(TenantId tenantId, String name);
 
@@ -79,8 +78,6 @@ public interface EntityViewService extends EntityDaoService {
     PageData<EntityView> findEntityViewsByTenantIdAndCustomerIdAndType(TenantId tenantId, CustomerId customerId, PageLink pageLink, String type);
 
     ListenableFuture<List<EntityView>> findEntityViewsByQuery(TenantId tenantId, EntityViewSearchQuery query);
-
-    ListenableFuture<EntityView> findEntityViewByIdAsync(TenantId tenantId, EntityViewId entityViewId);
 
     ListenableFuture<List<EntityView>> findEntityViewsByTenantIdAndEntityIdAsync(TenantId tenantId, EntityId entityId);
 
@@ -117,4 +114,5 @@ public interface EntityViewService extends EntityDaoService {
     PageData<EntityViewInfo> findEntityViewInfosByTenantIdAndCustomerIdIncludingSubCustomers(TenantId tenantId, CustomerId customerId, PageLink pageLink);
 
     PageData<EntityViewInfo> findEntityViewInfosByTenantIdAndCustomerIdAndTypeIncludingSubCustomers(TenantId tenantId, CustomerId customerId, String type, PageLink pageLink);
+
 }

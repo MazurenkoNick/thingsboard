@@ -98,6 +98,12 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID>,
                                               @Param("customerId") UUID customerId,
                                               Pageable pageable);
 
+    Page<CustomerEntity> findByTenantIdAndParentCustomerId(UUID tenantId, UUID parentCustomerId, Pageable pageable);
+
+    @Query("SELECT c FROM CustomerEntity c WHERE c.tenantId = :tenantId AND (c.parentCustomerId IS NULL " +
+           "OR c.parentCustomerId = org.thingsboard.server.common.data.id.EntityId.NULL_UUID)")
+    Page<CustomerEntity> findByTenantIdAndNullParentCustomerId(UUID tenantId, Pageable pageable);
+
     @Query(value = "SELECT * FROM customer c WHERE c.tenant_id = :tenantId AND c.is_public IS TRUE AND " +
             "(c.parent_customer_id IS NULL OR c.parent_customer_id = '13814000-1dd2-11b2-8080-808080808080') ORDER BY c.id ASC LIMIT 1", nativeQuery = true)
     CustomerEntity findPublicCustomerByTenantIdAndNullCustomerId(@Param("tenantId") UUID tenantId);

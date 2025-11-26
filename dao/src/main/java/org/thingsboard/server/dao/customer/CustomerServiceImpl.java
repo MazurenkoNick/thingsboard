@@ -31,6 +31,7 @@
 package org.thingsboard.server.dao.customer;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,6 +92,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validateIds;
@@ -225,13 +227,13 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
     @Override
     @Transactional
     public Customer saveCustomer(Customer customer) {
-        return saveCustomer(customer, true, NameConflictStrategy.DEFAULT);
+        return saveCustomer(customer, NameConflictStrategy.DEFAULT);
     }
 
     @Override
     @Transactional
     public Customer saveCustomer(Customer customer, NameConflictStrategy nameConflictStrategy) {
-        return saveCustomer(customer, true, nameConflictStrategy);
+        return saveEntity(customer, () -> saveCustomer(customer, true, nameConflictStrategy));
     }
 
     private Customer saveCustomer(Customer customer, boolean doValidate) {
@@ -279,8 +281,13 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
                 }
             }
             publishEvictEvent(evictEvent);
-            eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(savedCustomer.getTenantId())
-                    .entityId(savedCustomer.getId()).entity(savedCustomer).created(customer.getId() == null).oldEntity(oldCustomer).build());
+            eventPublisher.publishEvent(SaveEntityEvent.builder()
+                    .tenantId(savedCustomer.getTenantId())
+                    .entityId(savedCustomer.getId())
+                    .entity(savedCustomer)
+                    .oldEntity(oldCustomer)
+                    .created(customer.getId() == null)
+                    .build());
             return savedCustomer;
         } catch (Exception e) {
             handleEvictEvent(evictEvent);
@@ -502,6 +509,11 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
     }
 
     @Override
+    public PageData<Customer> findCustomersByTenantIdAndParentCustomerId(TenantId tenantId, CustomerId parentCustomerId, PageLink pageLink) {
+        return customerDao.findByTenantIdAndParentCustomerId(tenantId, parentCustomerId, pageLink);
+    }
+
+    @Override
     public PageData<CustomerInfo> findCustomerInfosByTenantIdAndCustomerIdIncludingSubCustomers(TenantId tenantId, CustomerId customerId, PageLink pageLink) {
         log.trace("Executing findCustomerInfosByTenantIdAndCustomerIdIncludingSubCustomers, tenantId [{}], customerId [{}], pageLink [{}]", tenantId, customerId, pageLink);
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
@@ -539,6 +551,12 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
     @Override
     public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {
         return Optional.ofNullable(findCustomerById(tenantId, new CustomerId(entityId.getId())));
+    }
+
+    @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(findCustomerByIdAsync(tenantId, new CustomerId(entityId.getId())))
+                .transform(Optional::ofNullable, directExecutor());
     }
 
     @Override

@@ -32,6 +32,7 @@ package org.thingsboard.server.dao.user;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.UserAuthDetails;
 import org.thingsboard.server.common.data.UserInfo;
 import org.thingsboard.server.common.data.id.CustomMenuId;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -167,8 +168,12 @@ public interface UserService extends EntityDaoService {
 
     void updateUsersCustomMenuId(List<UserId> ids, CustomMenuId customMenuId);
 
+    boolean existsInEntityGroup(UserId id, EntityGroupId entityGroupId);
+
     PageData<User> findUsersByFilter(TenantId tenantId, UsersFilter filter, PageLink pageLink);
 
     boolean matchesFilter(TenantId tenantId, SystemLevelUsersFilter filter, User user);
+
+    UserAuthDetails findUserAuthDetailsByUserId(TenantId tenantId, UserId userId);
 
 }

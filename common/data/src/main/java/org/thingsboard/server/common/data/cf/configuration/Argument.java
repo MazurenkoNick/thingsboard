@@ -53,11 +53,15 @@ public class Argument {
     }
 
     public boolean hasRelationQuerySource() {
-        return hasDynamicSource() && CFArgumentDynamicSourceType.RELATION_PATH_QUERY.equals(refDynamicSourceConfiguration.getType());
+        return hasDynamicSource() && refDynamicSourceConfiguration.getType() == CFArgumentDynamicSourceType.RELATION_PATH_QUERY;
     }
 
-    public boolean hasCurrentOwnerSource() {
-        return hasDynamicSource() && CFArgumentDynamicSourceType.CURRENT_OWNER.equals(refDynamicSourceConfiguration.getType());
+    public boolean hasOwnerSource() {
+        return hasDynamicSource() && refDynamicSourceConfiguration.getType() == CFArgumentDynamicSourceType.CURRENT_OWNER;
+    }
+
+    public boolean hasTsRollingArgument() {
+        return ArgumentType.TS_ROLLING.equals(refEntityKey.getType());
     }
 
 }

@@ -50,8 +50,10 @@ import {
 } from '@shared/models/js-function.models';
 import { DomSanitizer } from '@angular/platform-browser';
 import { SecurityContext } from '@angular/core';
+import { AbstractControl, ValidationErrors, Validators } from '@angular/forms';
 
 const varsRegex = /\${([^}]*)}/g;
+const emailRegex = /^[A-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 
 export function onParentScrollOrWindowResize(el: Node): Observable<Event> {
   const scrollSubject = new Subject<Event>();
@@ -1162,3 +1164,11 @@ export function debounce<T extends (...args: any[]) => any>(
     timeout = setTimeout(later, wait);
   };
 }
+
+export const validateEmail = (control: AbstractControl): ValidationErrors | null => {
+  if (isUndefinedOrNull(control.value) || (typeof control.value === 'string' && control.value.length === 0)) {
+    return null;
+  }
+  return emailRegex.test(control.value) ? null : {email: true};
+};
+

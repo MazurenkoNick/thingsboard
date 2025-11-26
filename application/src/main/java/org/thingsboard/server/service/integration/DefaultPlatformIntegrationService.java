@@ -323,7 +323,7 @@ public class DefaultPlatformIntegrationService extends IntegrationActivityManage
 
     @Override
     public void processUplinkData(TbIntegrationEventProto data, IntegrationApiCallback callback) {
-        TenantId tenantId = new TenantId(new UUID(data.getTenantIdMSB(), data.getTenantIdLSB()));
+        TenantId tenantId = TenantId.fromUUID(new UUID(data.getTenantIdMSB(), data.getTenantIdLSB()));
         var eventSource = data.getSource();
         EntityId entityid = null;
         switch (eventSource) {
@@ -350,20 +350,13 @@ public class DefaultPlatformIntegrationService extends IntegrationActivityManage
 
     @Override
     public void processUplinkData(TbIntegrationTsDataProto data, IntegrationApiCallback integrationApiCallback) {
-        TenantId tenantId = new TenantId(new UUID(data.getTenantIdMSB(), data.getTenantIdLSB()));
+        TenantId tenantId = TenantId.fromUUID(new UUID(data.getTenantIdMSB(), data.getTenantIdLSB()));
         var eventSource = data.getSource();
-        EntityId entityid;
-        switch (eventSource) {
-            case INTEGRATION:
-                entityid = new IntegrationId(new UUID(data.getEntityIdMSB(), data.getEntityIdLSB()));
-                break;
-            case UPLINK_CONVERTER:
-            case DOWNLINK_CONVERTER:
-                entityid = new ConverterId(new UUID(data.getEntityIdMSB(), data.getEntityIdLSB()));
-                break;
-            default:
-                throw new RuntimeException("Not supported!");
-        }
+        EntityId entityid = switch (eventSource) {
+            case INTEGRATION -> new IntegrationId(new UUID(data.getEntityIdMSB(), data.getEntityIdLSB()));
+            case UPLINK_CONVERTER, DOWNLINK_CONVERTER -> new ConverterId(new UUID(data.getEntityIdMSB(), data.getEntityIdLSB()));
+            default -> throw new RuntimeException("Not supported!");
+        };
 
         List<TsKvEntry> statistics = KvProtoUtil.fromTsValueProtoList(data.getTsDataList());
         telemetrySubscriptionService.saveTimeseriesInternal(TimeseriesSaveRequest.builder()
@@ -432,7 +425,7 @@ public class DefaultPlatformIntegrationService extends IntegrationActivityManage
 
     @Override
     public void process(SessionInfoProto sessionInfo, PostTelemetryMsg msg, IntegrationCallback<Void> callback) {
-        TenantId tenantId = new TenantId(new UUID(sessionInfo.getTenantIdMSB(), sessionInfo.getTenantIdLSB()));
+        TenantId tenantId = TenantId.fromUUID(new UUID(sessionInfo.getTenantIdMSB(), sessionInfo.getTenantIdLSB()));
         DeviceId deviceId = new DeviceId(new UUID(sessionInfo.getDeviceIdMSB(), sessionInfo.getDeviceIdLSB()));
         onActivity(new IntegrationActivityKey(tenantId, deviceId), null, getCurrentTimeMillis());
         int dataPoints = 0;
@@ -452,7 +445,7 @@ public class DefaultPlatformIntegrationService extends IntegrationActivityManage
 
     @Override
     public void process(SessionInfoProto sessionInfo, PostAttributeMsg msg, IntegrationCallback<Void> callback) {
-        TenantId tenantId = new TenantId(new UUID(sessionInfo.getTenantIdMSB(), sessionInfo.getTenantIdLSB()));
+        TenantId tenantId = TenantId.fromUUID(new UUID(sessionInfo.getTenantIdMSB(), sessionInfo.getTenantIdLSB()));
         DeviceId deviceId = new DeviceId(new UUID(sessionInfo.getDeviceIdMSB(), sessionInfo.getDeviceIdLSB()));
         onActivity(new IntegrationActivityKey(tenantId, deviceId), null, getCurrentTimeMillis());
         JsonObject json = JsonUtils.getJsonObject(msg.getKvList());
@@ -525,7 +518,10 @@ public class DefaultPlatformIntegrationService extends IntegrationActivityManage
 
     private Device processGetOrCreateDevice(AbstractIntegration integration, String deviceName, String deviceType, String deviceLabel, String customerName, String groupName) {
         Device device = deviceService.findDeviceByTenantIdAndName(integration.getTenantId(), deviceName);
-        if (device == null && integration.isAllowCreateDevicesOrAssets()) {
+        if (device == null) {
+            if (!integration.isAllowCreateDevicesOrAssets()) {
+                throw new ThingsboardRuntimeException("Creating devices is forbidden!", ThingsboardErrorCode.PERMISSION_DENIED);
+            }
             device = new Device();
             device.setName(deviceName);
             device.setType(deviceType);
@@ -546,15 +542,16 @@ public class DefaultPlatformIntegrationService extends IntegrationActivityManage
 
             createRelationFromIntegration(integration, device.getId());
             pushDeviceCreatedEventToRuleEngine(integration, device);
-        } else {
-            throw new ThingsboardRuntimeException("Creating devices is forbidden!", ThingsboardErrorCode.PERMISSION_DENIED);
         }
         return device;
     }
 
     private Asset processGetOrCreateAsset(AbstractIntegration integration, String assetName, String assetType, String assetLabel, String customerName, String groupName) {
         Asset asset = assetService.findAssetByTenantIdAndName(integration.getTenantId(), assetName);
-        if (asset == null && integration.isAllowCreateDevicesOrAssets()) {
+        if (asset == null) {
+            if (!integration.isAllowCreateDevicesOrAssets()) {
+                throw new ThingsboardRuntimeException("Creating assets is forbidden!", ThingsboardErrorCode.PERMISSION_DENIED);
+            }
             asset = new Asset();
             asset.setName(assetName);
             asset.setType(assetType);
@@ -574,8 +571,6 @@ public class DefaultPlatformIntegrationService extends IntegrationActivityManage
 
             createRelationFromIntegration(integration, asset.getId());
             pushAssetCreatedEventToRuleEngine(integration, asset);
-        } else {
-            throw new ThingsboardRuntimeException("Creating assets is forbidden!", ThingsboardErrorCode.PERMISSION_DENIED);
         }
         return asset;
     }
@@ -829,7 +824,7 @@ public class DefaultPlatformIntegrationService extends IntegrationActivityManage
     }
 
     protected TenantId getTenantId(TransportProtos.SessionInfoProto sessionInfo) {
-        return new TenantId(new UUID(sessionInfo.getTenantIdMSB(), sessionInfo.getTenantIdLSB()));
+        return TenantId.fromUUID(new UUID(sessionInfo.getTenantIdMSB(), sessionInfo.getTenantIdLSB()));
     }
 
     protected DeviceId getDeviceId(TransportProtos.SessionInfoProto sessionInfo) {

@@ -35,9 +35,12 @@ import lombok.Data;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.role.Role;
 
+import java.io.Serial;
+
 @Data
 public class GroupPermissionInfo extends GroupPermission {
 
+    @Serial
     private static final long serialVersionUID = 2807343092519543363L;
 
     @Schema(description = "Represent set of permissions.")

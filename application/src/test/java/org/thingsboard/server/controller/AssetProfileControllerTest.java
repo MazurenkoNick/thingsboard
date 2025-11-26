@@ -54,6 +54,7 @@ import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetProfile;
 import org.thingsboard.server.common.data.asset.AssetProfileInfo;
 import org.thingsboard.server.common.data.audit.ActionType;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.AssetProfileId;
@@ -254,7 +255,7 @@ public class AssetProfileControllerTest extends AbstractControllerTest {
         loginDifferentTenant();
         doGet("/api/assetProfileInfo/" + assetProfile.getId())
                 .andExpect(status().isForbidden())
-                .andExpect(statusReason(containsString(UserController.YOU_DON_T_HAVE_PERMISSION_TO_PERFORM_THIS_OPERATION)));
+                .andExpect(statusReason(containsString("You don't have permission to perform '" + Operation.READ + "' operation")));
     }
 
     @Test

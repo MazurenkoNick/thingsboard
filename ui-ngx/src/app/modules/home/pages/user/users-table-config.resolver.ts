@@ -254,6 +254,12 @@ export class UsersTableConfigResolver  {
     } else {
       user.tenantId = new TenantId(authUser.tenantId);
     }
+    if (!user.additionalInfo.lang) {
+      delete user.additionalInfo.lang;
+    }
+    if (!user.additionalInfo.unitSystem) {
+      delete user.additionalInfo.unitSystem;
+    }
     return this.userService.saveUser(user).pipe(
       mergeMap((savedUser) => this.userService.getUserInfo(savedUser.id.id))
     );

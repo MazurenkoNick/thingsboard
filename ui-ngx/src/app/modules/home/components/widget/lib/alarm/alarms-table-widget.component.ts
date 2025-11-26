@@ -370,6 +370,15 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
 
     if (this.displayPagination) {
       this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
+
+      this.ctx.aliasController?.filtersChanged.pipe(
+        takeUntil(this.destroy$)
+      ).subscribe((filters) => {
+        let currentFilterId = this.ctx.defaultSubscription.options.alarmSource?.filterId;
+        if (currentFilterId && filters.includes(currentFilterId)) {
+          this.paginator.firstPage();
+        }
+      });
     }
     ((this.displayPagination ? merge(this.sort.sortChange, this.paginator.page) : this.sort.sortChange) as Observable<any>)
       .pipe(
@@ -1220,7 +1229,7 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
     }
   }
 
-  customDataExport(): Observable<{[key: string]: any}[]> {
+  customDataExport(): Observable<Map<string, any>[]> {
     if (this.subscription.alarmSource && this.subscription.alarmSource.type === DatasourceType.entity &&
         this.subscription.alarmSource.entityFilter) {
       const pageLink = deepClone(this.pageLink);
@@ -1257,28 +1266,42 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
           ? forkJoin(data.data.map((a, index) => from(this.alarmDataToExportedData(a, index, exportedColumns))))
           : of(data.data)),
         concatMap((data) => data),
-        toArray()
+        toArray(),
+        map(rows => rows.map(rowObject => new Map(Object.entries(rowObject))))
       );
     } else {
-      const exportedData: Observable<{[key: string]: any}>[] = [];
+      const exportedData: Observable<Map<string, any>>[] = [];
       const alarmsToExport = this.alarmsDatasource.alarms;
       alarmsToExport.forEach((alarm, index) => {
-        const dataObj: {[key: string]: Observable<any>} = {};
+        const dataMap = new Map<string, Observable<any>>();
         this.columns.forEach((column) => {
           if (this.includeColumnInExport(column)) {
-            dataObj[column.title] = this.cellContent(alarm, column, index, false, true);
+            dataMap.set(column.title, this.cellContent(alarm, column, index, false, true));
           }
         });
-        if (Object.keys(dataObj).length) {
-          exportedData.push(forkJoin(dataObj));
+        if (dataMap.size > 0) {
+          const orderedKeys = Array.from(dataMap.keys());
+          const orderedObservables = Array.from(dataMap.values());
+
+          exportedData.push(
+            forkJoin(orderedObservables).pipe(
+              map(resolvedValues => {
+                const orderedRow = new Map<string, any>();
+                orderedKeys.forEach((key, i) => {
+                  orderedRow.set(key, resolvedValues[i]);
+                });
+                return orderedRow;
+              })
+            )
+          );
         } else {
-          exportedData.push(of(dataObj));
+          exportedData.push(of(new Map<string, any>()));
         }
       });
       if (exportedData.length) {
         return forkJoin(exportedData);
       } else {
-        return of(exportedData);
+        return of([]);
       }
     }
   }

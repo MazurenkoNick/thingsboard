@@ -87,6 +87,6 @@ public interface RelationDao {
 
     List<EntityRelation> findRuleNodeToRuleChainRelations(RuleChainType ruleChainType, int limit);
 
-    List<EntityRelation> findByRelationPathQuery(TenantId tenantId, EntityRelationPathQuery relationPathQuery);
+    List<EntityRelation> findByRelationPathQuery(TenantId tenantId, EntityRelationPathQuery relationPathQuery, int limit);
 
 }
