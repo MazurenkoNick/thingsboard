@@ -28,39 +28,33 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.controller;
+package org.thingsboard.server.common.data.permission;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.thingsboard.server.common.data.UsageInfo;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.permission.Operation;
-import org.thingsboard.server.common.data.permission.Resource;
-import org.thingsboard.server.dao.usage.UsageInfoService;
-import org.thingsboard.server.queue.util.TbCoreComponent;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import org.thingsboard.server.common.data.security.Authority;
 
-import static org.thingsboard.server.common.data.exception.ThingsboardErrorCode.PERMISSION_DENIED;
+import java.util.Map;
+import java.util.Set;
 
-@RestController
-@TbCoreComponent
-@RequestMapping("/api")
-@Slf4j
-public class UsageInfoController extends BaseController {
+@Data
+@Schema
+public class AuthorityPermissionsInfo {
 
-    @Autowired
-    private UsageInfoService usageInfoService;
+    @Schema(description = "Map of permissions per authority level. Each authority (SYS_ADMIN, TENANT_ADMIN, CUSTOMER_USER) " +
+            "can have different sets of resource permissions. " +
+            "Format: {\"AUTHORITY\": {\"RESOURCE\": [\"OPERATION1\", \"OPERATION2\"]}}. " +
+            "Example: {\"TENANT_ADMIN\": {\"DEVICE\": [\"READ\", \"WRITE\"], \"DASHBOARD\": [\"READ\"]}, " +
+            "\"CUSTOMER_USER\": {\"DEVICE\": [\"READ\"]}}",
+            example = "{\"TENANT_ADMIN\": {\"DEVICE\": [\"READ\", \"WRITE\"], \"ALARM\": [\"READ\", \"CREATE\"]}, " +
+                    "\"CUSTOMER_USER\": {\"DEVICE\": [\"READ\"], \"ALARM\": [\"READ\"]}}")
+    private Map<Authority, Map<Resource, Set<Operation>>> operationsByResource;
 
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @GetMapping(value = "/usage")
-    public UsageInfo getTenantUsageInfo() throws ThingsboardException {
-        if (!getMergedUserPermissions(getCurrentUser(), false).hasGenericPermission(Resource.ALL, Operation.READ)) {
-            throw new ThingsboardException("You don't have permission to read UsageInfo!", PERMISSION_DENIED);
+    public Map<Resource, Set<Operation>> getPermissionsForAuthority(Authority authority) {
+        if (operationsByResource == null || authority == null) {
+            return null;
         }
-        return checkNotNull(usageInfoService.getUsageInfo(getCurrentUser().getTenantId()));
+        return operationsByResource.get(authority);
     }
 
 }

@@ -88,6 +88,9 @@ export class RelatedEntitiesAggregationComponentComponent implements ControlValu
   @Input({required: true})
   entityName: string;
 
+  @Input({required: true})
+  testScript: (expression?: string) => Observable<string>;
+
   @Input({ transform: booleanAttribute })
   readonly: boolean;
 

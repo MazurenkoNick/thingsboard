@@ -1001,6 +1001,8 @@ public class ModelConstants {
     public static final String API_KEY_EXPIRATION_TIME_COLUMN_NAME = "expiration_time";
     public static final String API_KEY_ENABLED_COLUMN_NAME = "enabled";
     public static final String API_KEY_DESCRIPTION_COLUMN_NAME = "description";
+    public static final String API_KEY_INTERNAL_COLUMN_NAME = "internal";
+    public static final String API_KEY_PERMISSIONS_COLUMN_NAME = "permissions";
 
     protected static final String[] NONE_AGGREGATION_COLUMNS = new String[]{LONG_VALUE_COLUMN, DOUBLE_VALUE_COLUMN, BOOLEAN_VALUE_COLUMN, STRING_VALUE_COLUMN, JSON_VALUE_COLUMN, KEY_COLUMN, TS_COLUMN};
 

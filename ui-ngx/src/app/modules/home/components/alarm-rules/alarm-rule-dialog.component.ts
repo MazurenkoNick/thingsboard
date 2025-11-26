@@ -46,8 +46,15 @@ import { EntityId } from '@shared/models/id/entity-id';
 import { AdditionalDebugActionConfig } from '@home/components/entity/debug/entity-debug-settings.model';
 import { COMMA, ENTER, SEMICOLON } from "@angular/cdk/keycodes";
 import { MatChipInputEvent } from "@angular/material/chips";
-import { AlarmRule, AlarmRuleConditionType, AlarmRuleExpressionType } from "@shared/models/alarm-rule.models";
+import {
+  AlarmRule,
+  AlarmRuleConditionType,
+  AlarmRuleExpressionType,
+  AlarmRuleTestScriptFn
+} from "@shared/models/alarm-rule.models";
 import { deepTrim } from "@core/utils";
+import { Observable } from "rxjs";
+import { switchMap } from "rxjs/operators";
 import { EntityService } from "@core/http/entity.service";
 import { Operation, Resource } from "@shared/models/security.models";
 import { UserPermissionsService } from "@core/http/user-permissions.service";
@@ -62,6 +69,7 @@ export interface AlarmRuleDialogData {
   additionalDebugActionConfig: AdditionalDebugActionConfig<(calculatedField: CalculatedField) => void>;
   isDirty?: boolean;
   readonly: boolean;
+  getTestScriptDialogFn: AlarmRuleTestScriptFn,
 }
 
 @Component({
@@ -235,5 +243,20 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
         }
       }
     });
+  }
+
+  onTestScript(expression: string): Observable<string> {
+    const calculatedFieldId = this.data.value?.id?.id;
+    if (calculatedFieldId) {
+      return this.calculatedFieldsService.getLatestCalculatedFieldDebugEvent(calculatedFieldId, {ignoreLoading: true})
+        .pipe(
+          switchMap(event => {
+            const args = event?.arguments ? JSON.parse(event.arguments) : null;
+            return this.data.getTestScriptDialogFn(this.fromGroupValue, expression, args, false);
+          }),
+          takeUntilDestroyed(this.destroyRef)
+        )
+    }
+    return this.data.getTestScriptDialogFn(this.fromGroupValue, expression, null, false);
   }
 }

@@ -32,8 +32,9 @@
 import { Component } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
-import { Device } from '@shared/models/device.models';
+import { Device, DeviceInfo } from '@shared/models/device.models';
 import { EntityTabsComponent } from '../../components/entity/entity-tabs.component';
+import { EntityId } from "@shared/models/id/entity-id";
 
 @Component({
   selector: 'tb-device-tabs',
@@ -42,12 +43,19 @@ import { EntityTabsComponent } from '../../components/entity/entity-tabs.compone
 })
 export class DeviceTabsComponent extends EntityTabsComponent<Device> {
 
+  ownerId: EntityId;
+
   constructor(protected store: Store<AppState>) {
     super(store);
   }
 
   ngOnInit() {
     super.ngOnInit();
+  }
+
+  protected setEntity(entity: DeviceInfo) {
+    this.ownerId = entity.customerId.id !== this.nullUid ? entity.customerId : entity.tenantId;
+    super.setEntity(entity);
   }
 
 }

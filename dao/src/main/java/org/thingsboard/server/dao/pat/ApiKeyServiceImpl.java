@@ -51,6 +51,7 @@ import org.thingsboard.server.common.data.pat.ApiKeyInfo;
 import org.thingsboard.server.dao.entity.AbstractCachedEntityService;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.service.validator.ApiKeyDataValidator;
+import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.Optional;
 import java.util.Set;
@@ -91,6 +92,10 @@ public class ApiKeyServiceImpl extends AbstractCachedEntityService<ApiKeyCacheKe
         log.trace("Executing saveApiKey [{}]", apiKeyInfo);
         try {
             var apiKey = new ApiKey(apiKeyInfo);
+            if (!TenantId.SYS_TENANT_ID.equals(apiKey.getTenantId()) || !apiKey.isInternal()) {
+                apiKey.setInternal(false);
+                apiKey.setPermissions(null);
+            }
             var old = apiKeyValidator.validate(apiKey, ApiKeyInfo::getTenantId);
             if (old == null) {
                 String value = generateApiKeySecret();
@@ -98,12 +103,34 @@ public class ApiKeyServiceImpl extends AbstractCachedEntityService<ApiKeyCacheKe
             } else {
                 apiKey.setValue(old.getValue());
             }
+
             var savedApiKey = apiKeyDao.save(tenantId, apiKey);
             eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(tenantId).entityId(savedApiKey.getId()).entity(savedApiKey).created(apiKey.getId() == null).build());
             if (old != null && old.isEnabled() != apiKey.isEnabled()) {
                 publishEvictEvent(new ApiKeyEvictEvent(apiKey.getValue()));
             }
             return savedApiKey;
+        } catch (Exception e) {
+            checkConstraintViolation(e, "api_key_value_unq_key", "API Key with such value already exists!");
+            throw e;
+        }
+    }
+
+    @Override
+    public ApiKey rotateInternalApiKey(TenantId tenantId, ApiKeyInfo apiKeyInfo) {
+        log.trace("Executing rotateInternalApiKey [{}]", apiKeyInfo);
+        var apiKey = new ApiKey(apiKeyInfo);
+        var old = apiKeyValidator.validate(apiKey, ApiKey::getTenantId);
+        if (!old.isInternal()) {
+            throw new IllegalArgumentException("Can't rotate non-internal API Key!");
+        }
+        String value = generateApiKeySecret();
+        apiKey.setValue(value);
+        try {
+            var rotatedApiKey = apiKeyDao.save(tenantId, apiKey);
+            eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(tenantId).entityId(rotatedApiKey.getId()).entity(rotatedApiKey).created(apiKey.getId() == null).build());
+            publishEvictEvent(new ApiKeyEvictEvent(apiKey.getValue()));
+            return rotatedApiKey;
         } catch (Exception e) {
             checkConstraintViolation(e, "api_key_value_unq_key", "API Key with such value already exists!");
             throw e;
@@ -139,6 +166,9 @@ public class ApiKeyServiceImpl extends AbstractCachedEntityService<ApiKeyCacheKe
     public void deleteApiKey(TenantId tenantId, ApiKey apiKey, boolean force) {
         UUID apiKeyId = apiKey.getUuidId();
         validateId(apiKeyId, id -> INCORRECT_API_KEY_ID + id);
+        if (apiKey.isInternal() && !force) {
+            throw new DataValidationException("Cannot delete internal API Key!");
+        }
         apiKeyDao.removeById(tenantId, apiKeyId);
         publishEvictEvent(new ApiKeyEvictEvent(apiKey.getValue()));
     }

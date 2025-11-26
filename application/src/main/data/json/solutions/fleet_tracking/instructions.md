@@ -17,7 +17,11 @@ You may always customize the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Fl
 
 We have already created four bus tracking devices and loaded some demo data for them. See device info and credentials below:
 
+<div class="tb-markdown-view table-wrapper">
+
 ${device_list_and_credentials}
+
+</div>
 
 Solution expects that the bus tracking device will upload "latitude", "longitude", "speed", "fuel" and "status" values.
 The most simple example of the expected payload is in JSON format:
@@ -44,7 +48,11 @@ Alarms are generated using three <a href="${DOCS_BASE_URL}/user-guide/device-pro
 
 As part of this solution, the following entities were created:
 
+<div class="tb-markdown-view table-wrapper">
+
 ${all_entities}
+
+</div>
 
 ### Edge computing
 

@@ -43,6 +43,8 @@ public interface ApiKeyService extends EntityDaoService {
 
     ApiKey saveApiKey(TenantId tenantId, ApiKeyInfo apiKey);
 
+    ApiKey rotateInternalApiKey(TenantId tenantId, ApiKeyInfo apiKeyInfo);
+
     void deleteApiKey(TenantId tenantId, ApiKey apiKey, boolean force);
 
     void deleteByUserId(TenantId tenantId, UserId userId);
