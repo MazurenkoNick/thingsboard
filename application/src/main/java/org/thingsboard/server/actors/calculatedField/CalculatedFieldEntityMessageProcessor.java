@@ -327,6 +327,9 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
             }
         } catch (Exception e) {
             log.debug("[{}][{}] Failed to process linked CF telemetry msg: {}", entityId, ctx.getCfId(), msg, e);
+            if (e instanceof CalculatedFieldException cfe) {
+                throw cfe;
+            }
             throw CalculatedFieldException.builder().ctx(ctx).eventEntity(entityId).cause(e).build();
         }
     }
