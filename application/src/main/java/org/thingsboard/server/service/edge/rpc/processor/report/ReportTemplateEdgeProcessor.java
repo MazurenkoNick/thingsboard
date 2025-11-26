@@ -84,7 +84,6 @@ public class ReportTemplateEdgeProcessor extends BaseReportTemplateProcessor imp
     private void saveOrUpdateReportTemplate(TenantId tenantId, ReportTemplateId reportTemplateId, ReportTemplateUpdateMsg reportTemplateUpdateMsg, Edge edge) {
         Boolean created = super.saveOrUpdateReportTemplate(tenantId, reportTemplateId, reportTemplateUpdateMsg);
         if (created) {
-            createRelationFromEdge(tenantId, edge.getId(), reportTemplateId);
             pushReportTemplateCreatedEventToRuleEngine(tenantId, edge, reportTemplateId);
         }
     }
