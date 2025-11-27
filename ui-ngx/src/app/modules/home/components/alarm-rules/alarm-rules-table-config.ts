@@ -41,7 +41,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { Direction } from '@shared/models/page/sort-order';
 import { MatDialog } from '@angular/material/dialog';
 import { PageLink } from '@shared/models/page/page-link';
-import { Observable, of } from 'rxjs';
+import { EMPTY, Observable, of } from 'rxjs';
 import { PageData } from '@shared/models/page/page-data';
 import { EntityId } from '@shared/models/id/entity-id';
 import { Store } from '@ngrx/store';
@@ -51,13 +51,17 @@ import { DestroyRef, Renderer2 } from '@angular/core';
 import { EntityDebugSettings } from '@shared/models/entity.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CalculatedFieldsService } from '@core/http/calculated-fields.service';
-import { catchError, filter, switchMap } from 'rxjs/operators';
+import { catchError, filter, switchMap, tap } from 'rxjs/operators';
 import {
   ArgumentEntityType,
+  ArgumentType,
   CalculatedField,
   CalculatedFieldAlarmRule,
+  CalculatedFieldEventArguments,
   CalculatedFieldsQuery,
   CalculatedFieldType,
+  getCalculatedFieldArgumentsEditorCompleter,
+  getCalculatedFieldArgumentsHighlights,
 } from '@shared/models/calculated-field.models';
 import { ImportExportService } from '@shared/import-export/import-export.service';
 import { EntityDebugSettingsService } from '@home/components/entity/debug/entity-debug-settings.service';
@@ -72,8 +76,13 @@ import {
 } from "@home/components/calculated-fields/components/debug-dialog/calculated-field-debug-dialog.component";
 import { AlarmSeverity, alarmSeverityTranslations } from "@shared/models/alarm.models";
 import { UtilsService } from "@core/services/utils.service";
-import { deepClone, getEntityDetailsPageURL } from "@core/utils";
+import { deepClone, getEntityDetailsPageURL, isObject } from "@core/utils";
 import { AlarmRuleTableHeaderComponent } from "@home/components/alarm-rules/alarm-rule-table-header.component";
+import { ActionNotificationShow } from "@core/notification/notification.actions";
+import {
+  CalculatedFieldScriptTestDialogComponent,
+  CalculatedFieldTestScriptDialogData
+} from "@home/components/calculated-fields/components/test-dialog/calculated-field-script-test-dialog.component";
 
 export class AlarmRulesTableConfig extends EntityTableConfig<any> {
 
@@ -160,14 +169,16 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
     this.columns.push(new EntityTableColumn<CalculatedFieldAlarmRule>('clearRule', 'alarm-rule.cleared', '70px',
       entity => checkBoxCell(!!entity.configuration.clearRule), ()=> { return {padding: 0, textAlign: 'center'}}, false));
 
-    this.cellActionDescriptors.push(
-      {
-        name: this.translate.instant('notification.copy-template'),
-        icon: 'content_copy',
-        isEnabled: () => true,
-        onAction: ($event, entity) => this.copyCalculatedField(entity)
-      }
-    );
+    if (!this.readonly) {
+      this.cellActionDescriptors.push(
+        {
+          name: this.translate.instant('notification.copy-template'),
+          icon: 'content_copy',
+          isEnabled: () => true,
+          onAction: ($event, entity) => this.copyCalculatedField(entity)
+        }
+      );
+    }
     this.cellActionDescriptors.push(
       {
         name: this.translate.instant('action.export'),
@@ -246,7 +257,10 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
 
   private copyCalculatedField(calculatedField: CalculatedField, isDirty = false): void {
     const copyCalculatedAlarmRule = deepClone(calculatedField);
-    copyCalculatedAlarmRule.entityId = null;
+    if (this.pageMode) {
+      copyCalculatedAlarmRule.entityId = null;
+    }
+    delete copyCalculatedAlarmRule.id;
     this.getCalculatedAlarmDialog(copyCalculatedAlarmRule, 'action.apply', isDirty)
       .subscribe((res) => {
         if (res) {
@@ -269,6 +283,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
         additionalDebugActionConfig: this.additionalDebugActionConfig,
         isDirty,
         readonly: this.readonly,
+        getTestScriptDialogFn: this.getTestScriptDialog.bind(this),
       },
       enterAnimationDuration: isDirty ? 0 : null,
     })
@@ -302,6 +317,19 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
     this.importExportService.openCalculatedFieldImportDialog()
       .pipe(
         filter(Boolean),
+        switchMap(calculatedField => {
+          if (calculatedField.type !== CalculatedFieldType.ALARM) {
+            this.store.dispatch(new ActionNotificationShow({
+              message: this.translate.instant('alarm-rule.import-invalid-alarm-rule-type'),
+              type: 'error',
+              verticalPosition: 'top',
+              horizontalPosition: 'left',
+              duration: 5000
+            }));
+            return EMPTY;
+          }
+          return of(calculatedField);
+        }),
         switchMap(calculatedField => this.getCalculatedAlarmDialog(this.updateImportedCalculatedField(calculatedField), 'action.add', true)),
         filter(Boolean),
         switchMap(calculatedField => this.calculatedFieldsService.saveCalculatedField(calculatedField)),
@@ -312,15 +340,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
   }
 
   private updateImportedCalculatedField(calculatedField: CalculatedField): CalculatedField {
-    if (calculatedField.type === CalculatedFieldType.GEOFENCING) {
-      calculatedField.configuration.zoneGroups = Object.keys(calculatedField.configuration.zoneGroups).reduce((acc, key) => {
-        const arg = calculatedField.configuration.zoneGroups[key];
-        acc[key] = arg.refEntityId?.entityType === ArgumentEntityType.Tenant
-          ? { ...arg, refEntityId: { id: this.tenantId, entityType: ArgumentEntityType.Tenant } }
-          : arg;
-        return acc;
-      }, {});
-    } else {
+    if (calculatedField.type === CalculatedFieldType.ALARM) {
       calculatedField.configuration.arguments = Object.keys(calculatedField.configuration.arguments).reduce((acc, key) => {
         const arg = calculatedField.configuration.arguments[key];
         acc[key] = arg.refEntityId?.entityType === ArgumentEntityType.Tenant
@@ -339,5 +359,43 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
       catchError(() => of(null)),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(() => this.updateData());
+  }
+
+  private getTestScriptDialog(calculatedField: CalculatedField, expression: string, argumentsObj?: CalculatedFieldEventArguments, openCalculatedFieldEdit = true): Observable<string> {
+    if (calculatedField.type === CalculatedFieldType.ALARM) {
+      const resultArguments = Object.keys(calculatedField.configuration.arguments).reduce((acc, key) => {
+        const type = calculatedField.configuration.arguments[key].refEntityKey.type;
+        acc[key] = isObject(argumentsObj) && argumentsObj.hasOwnProperty(key)
+          ? {...argumentsObj[key], type}
+          : type === ArgumentType.Rolling ? {values: [], type} : {value: '', type, ts: new Date().getTime()};
+        return acc;
+      }, {});
+      return this.dialog.open<CalculatedFieldScriptTestDialogComponent, CalculatedFieldTestScriptDialogData, string>(CalculatedFieldScriptTestDialogComponent,
+        {
+          disableClose: true,
+          panelClass: ['tb-dialog', 'tb-fullscreen-dialog', 'tb-fullscreen-dialog-gt-xs'],
+          data: {
+            arguments: resultArguments,
+            expression,
+            argumentsEditorCompleter: getCalculatedFieldArgumentsEditorCompleter(calculatedField.configuration.arguments),
+            argumentsHighlightRules: getCalculatedFieldArgumentsHighlights(calculatedField.configuration.arguments),
+            openCalculatedFieldEdit,
+            readonly: this.readonly
+          }
+        }).afterClosed()
+        .pipe(
+          filter(Boolean),
+          tap(expression => {
+            if (openCalculatedFieldEdit) {
+              this.editCalculatedField({
+                entityId: this.entityId, ...calculatedField,
+                configuration: {...calculatedField.configuration, expression} as any
+              }, true)
+            }
+          }),
+        );
+    } else {
+      return of(null);
+    }
   }
 }

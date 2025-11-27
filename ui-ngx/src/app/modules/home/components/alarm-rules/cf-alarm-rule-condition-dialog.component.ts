@@ -43,6 +43,7 @@ import {
   AlarmRuleCondition,
   AlarmRuleConditionType,
   AlarmRuleConditionTypeTranslationMap,
+  alarmRuleDefaultScript,
   AlarmRuleExpressionType
 } from "@shared/models/alarm-rule.models";
 import {
@@ -53,11 +54,13 @@ import {
 import { TbEditorCompleter } from "@shared/models/ace/completion.models";
 import { AceHighlightRules } from "@shared/models/ace/ace.models";
 import { ComplexOperation, complexOperationTranslationMap } from "@shared/models/query/query.models";
+import { Observable } from "rxjs";
 
 export interface CfAlarmRuleConditionDialogData {
   readonly: boolean;
   condition: AlarmRuleCondition;
   arguments?: Record<string, CalculatedFieldArgument>;
+  testScript: (expression: string) => Observable<string>;
 }
 
 @Component({
@@ -132,7 +135,7 @@ export class CfAlarmRuleConditionDialogComponent extends DialogComponent<CfAlarm
     this.conditionFormGroup.patchValue({
       expression: {
         type: this.condition?.expression?.type ?? AlarmRuleExpressionType.SIMPLE,
-        expression: this.condition?.expression?.expression ?? null,
+        expression: this.condition?.expression?.expression ?? alarmRuleDefaultScript,
         filters: this.condition?.expression?.filters ?? [],
         operation: this.condition?.expression?.operation ?? ComplexOperation.AND
       },
@@ -150,12 +153,6 @@ export class CfAlarmRuleConditionDialogComponent extends DialogComponent<CfAlarm
 
     this.durationDynamicModeControl.patchValue(!!this.condition?.value?.dynamicValueArgument, {emitEvent: false});
     this.repeatingDynamicModeControl.patchValue(!!this.condition?.count?.dynamicValueArgument, {emitEvent: false});
-
-    if (this.readonly) {
-      this.conditionFormGroup.disable({emitEvent: false});
-      this.durationDynamicModeControl.disable({emitEvent: false});
-      this.repeatingDynamicModeControl.disable({emitEvent: false});
-    }
 
     this.conditionFormGroup.get('type').valueChanges.pipe(
       takeUntilDestroyed()
@@ -183,6 +180,11 @@ export class CfAlarmRuleConditionDialogComponent extends DialogComponent<CfAlarm
 
     this.updateValidators(this.conditionFormGroup.get('type').value ?? AlarmRuleConditionType.SIMPLE);
     this.updateExpressionTypeValidator(this.condition?.expression?.type ?? 'SIMPLE');
+    if (this.readonly) {
+      this.conditionFormGroup.disable({emitEvent: false});
+      this.durationDynamicModeControl.disable({emitEvent: false});
+      this.repeatingDynamicModeControl.disable({emitEvent: false});
+    }
   }
 
   updateStaticValueValidator(type: AlarmRuleConditionType, dynamicValue: boolean) {
@@ -244,4 +246,11 @@ export class CfAlarmRuleConditionDialogComponent extends DialogComponent<CfAlarm
     this.dialogRef.close(this.conditionFormGroup.value as AlarmRuleCondition);
   }
 
+  onTestScript() {
+    this.data.testScript(this.conditionFormGroup.get('expression.expression').value).subscribe(
+      (expression) => {
+        this.conditionFormGroup.get('expression.expression').setValue(expression);
+        this.conditionFormGroup.get('expression.expression').markAsDirty();
+      })
+  }
 }

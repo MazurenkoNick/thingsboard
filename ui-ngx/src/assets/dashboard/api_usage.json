@@ -11647,7 +11647,7 @@
                             "hideQuickInterval": false
                         },
                         "aggregation": {
-                            "type": "SUM",
+                            "type": "NONE",
                             "limit": 25000
                         },
                         "timezone": null

@@ -578,8 +578,10 @@ message UplinkMsg {
   repeated CalculatedFieldUpdateMsg calculatedFieldUpdateMsg = 27;
   repeated CalculatedFieldRequestMsg calculatedFieldRequestMsg = 28;
   repeated AiModelUpdateMsg aiModelUpdateMsg = 29;
-  repeated ReportTemplateUpdateMsg reportTemplateUpdateMsg = 30;
-  repeated SchedulerEventUpdateMsg schedulerEventUpdateMsg = 31;
+  repeated UserUpdateMsg userUpdateMsg = 30;
+  repeated UserCredentialsUpdateMsg userCredentialsUpdateMsg = 31;
+  repeated ReportTemplateUpdateMsg reportTemplateUpdateMsg = 32;
+  repeated SchedulerEventUpdateMsg schedulerEventUpdateMsg = 33;
 }
 
 message UplinkResponseMsg {
