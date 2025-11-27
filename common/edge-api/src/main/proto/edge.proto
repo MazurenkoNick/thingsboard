@@ -571,6 +571,8 @@ message UplinkMsg {
   repeated CalculatedFieldUpdateMsg calculatedFieldUpdateMsg = 27;
   repeated CalculatedFieldRequestMsg calculatedFieldRequestMsg = 28;
   repeated AiModelUpdateMsg aiModelUpdateMsg = 29;
+  repeated UserUpdateMsg userUpdateMsg = 30;
+  repeated UserCredentialsUpdateMsg userCredentialsUpdateMsg = 31;
 }
 
 message UplinkResponseMsg {
