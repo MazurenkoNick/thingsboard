@@ -65,6 +65,7 @@ import { emptyPageData, PageData } from '@shared/models/page/page-data';
 import { TruncatePipe } from '@shared/pipe/truncate.pipe';
 import { ENTER } from '@angular/cdk/keycodes';
 import { MatFormFieldAppearance } from '@angular/material/form-field';
+import { coerceBoolean } from '@shared/decorators/coercion';
 
 export type CreateEntityGroupFunction = (groupType: EntityType, groupName?: string, ownerId?: EntityId) => Observable<EntityInfoData>;
 
@@ -132,6 +133,10 @@ export class EntityGroupListComponent implements ControlValueAccessor, OnInit, A
 
   @Input()
   disabled: boolean;
+
+  @Input()
+  @coerceBoolean()
+  syncIdsWithDB = false;
 
   @ViewChild('entityGroupInput') entityGroupInput: ElementRef<HTMLInputElement>;
   @ViewChild('entityGroupAutocomplete') matAutocomplete: MatAutocomplete;
@@ -224,7 +229,13 @@ export class EntityGroupListComponent implements ControlValueAccessor, OnInit, A
         this.entityGroupService.getEntityGroupEntityInfosByIds(ids, {ignoreLoading: true}).subscribe(
           (entityGroups) => {
             this.entityGroups = entityGroups;
-            this.entityGroupListFormGroup.get('entityGroups').setValue(this.entityGroups);
+            if (this.syncIdsWithDB && this.modelValue.length !== this.entityGroups.length) {
+              this.modelValue = this.entityGroups.map(entity => entity.id.id);
+              if (!this.modelValue.length) {
+                this.modelValue = null;
+              }
+              this.propagateChange(this.modelValue);
+            }
           }
         );
       }
