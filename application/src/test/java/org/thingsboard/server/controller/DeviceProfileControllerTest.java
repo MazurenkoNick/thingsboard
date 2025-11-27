@@ -273,7 +273,7 @@ public class DeviceProfileControllerTest extends AbstractControllerTest {
         loginDifferentTenant();
         doGet("/api/deviceProfileInfo/" + deviceProfile.getId())
                 .andExpect(status().isForbidden())
-                .andExpect(statusReason(containsString("You don't have permission to perform '" + Operation.READ + "' operation")));
+                .andExpect(statusReason(containsString(UserController.YOU_DON_T_HAVE_PERMISSION_TO_PERFORM_THIS_OPERATION)));
     }
 
     @Test
