@@ -48,6 +48,7 @@ import org.thingsboard.server.common.data.cf.configuration.aggregation.AggKeyInp
 import org.thingsboard.server.common.data.cf.configuration.aggregation.AggMetric;
 import org.thingsboard.server.common.data.cf.configuration.aggregation.RelatedEntitiesAggregationCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.dao.entity.EntityService;
 import org.thingsboard.server.service.cf.CalculatedFieldResult;
 import org.thingsboard.server.service.cf.TelemetryCalculatedFieldResult;
@@ -272,14 +273,14 @@ public class RelatedEntitiesAggregationCalculatedFieldState extends BaseCalculat
 
     @Override
     public JsonNode getArgumentsJson() {
+        Map<EntityId, Map<String, ArgumentEntry>> inputs = prepareInputs();
+        Map<EntityId, EntityInfo> entityIdEntityInfos = entityService.fetchEntityInfos(ctx.getTenantId(), null, inputs.keySet(), MergedUserPermissions.ALL);
         List<EntityArgument> entitiesArguments = new ArrayList<>();
-        prepareInputs().forEach((entityId, entityArguments) -> {
-            entityService.fetchEntityName(ctx.getTenantId(), entityId).ifPresent(entityName -> {
-                EntityInfo entityInfo = new EntityInfo(entityId, entityName);
-                JsonNode entityArgumentsJson = JacksonUtil.valueToTree(entityArguments.entrySet().stream()
-                        .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().jsonValue())));
-                entitiesArguments.add(new EntityArgument(entityInfo, entityArgumentsJson));
-            });
+        inputs.forEach((entityId, entityArguments) -> {
+            EntityInfo entityInfo = entityIdEntityInfos.get(entityId);
+            JsonNode entityArgumentsJson = JacksonUtil.valueToTree(entityArguments.entrySet().stream()
+                    .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().jsonValue())));
+            entitiesArguments.add(new EntityArgument(entityInfo, entityArgumentsJson));
         });
         return JacksonUtil.valueToTree(new RelatedEntitiesArgument(ArgumentEntryType.RELATED_ENTITIES, entitiesArguments));
     }

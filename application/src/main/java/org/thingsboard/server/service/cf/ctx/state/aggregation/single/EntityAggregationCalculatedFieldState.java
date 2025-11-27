@@ -36,6 +36,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.thingsboard.common.util.DebugModeUtil;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.script.api.tbel.TbUtils;
@@ -79,7 +80,7 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
     private long checkInterval;
     private Map<String, AggMetric> metrics;
 
-    private final EntityAggregationDebugArgumentsTracker debugTracker = new EntityAggregationDebugArgumentsTracker(new HashMap<>());
+    private EntityAggregationDebugArgumentsTracker debugTracker;
 
     private CalculatedFieldProcessingService cfProcessingService;
 
@@ -114,11 +115,14 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
 
     @Override
     public ListenableFuture<CalculatedFieldResult> performCalculation(Map<String, ArgumentEntry> updatedArgs, CalculatedFieldCtx ctx) throws Exception {
-        debugTracker.reset();
         createIntervalIfNotExist();
         long now = System.currentTimeMillis();
 
         if (DebugModeUtil.isDebugFailuresAvailable(ctx.getCalculatedField())) {
+            LazyInitializer<EntityAggregationDebugArgumentsTracker> lazy = LazyInitializer.<EntityAggregationDebugArgumentsTracker>builder()
+                            .setInitializer(() -> new EntityAggregationDebugArgumentsTracker(new HashMap<>()))
+                            .get();
+            debugTracker = lazy.get();
             debugTracker.recordUpdatedArgs(updatedArgs, arguments);
         }
 
@@ -301,7 +305,9 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
                 result.add(resultNode);
 
                 if (DebugModeUtil.isDebugFailuresAvailable(ctx.getCalculatedField())) {
-                    debugTracker.addInterval(interval);
+                    if (debugTracker != null) {
+                        debugTracker.addInterval(interval);
+                    }
                 }
             }
         });
@@ -330,6 +336,9 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
 
     @Override
     public JsonNode getArgumentsJson() {
+        if (debugTracker == null) {
+            return null;
+        }
         EntityAggregationDebugArguments debugArguments = debugTracker.toDebugArguments();
         return debugArguments == null ? null : JacksonUtil.valueToTree(debugArguments);
     }
@@ -340,10 +349,6 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
     }
 
     record EntityAggregationDebugArgumentsTracker(Map<AggIntervalEntry, Map<String, TbelCfArg>> processedIntervals) {
-
-        public void reset() {
-            processedIntervals.clear();
-        }
 
         public void addInterval(AggIntervalEntry interval) {
             processedIntervals.computeIfAbsent(interval, k -> new HashMap<>());
