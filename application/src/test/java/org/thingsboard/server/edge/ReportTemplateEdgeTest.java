@@ -31,6 +31,7 @@
 package org.thingsboard.server.edge;
 
 import com.google.protobuf.AbstractMessage;
+import org.awaitility.Awaitility;
 import org.junit.Assert;
 import org.junit.Test;
 import org.thingsboard.common.util.JacksonUtil;
@@ -50,11 +51,13 @@ import org.thingsboard.server.gen.edge.v1.UplinkMsg;
 import org.thingsboard.server.gen.edge.v1.UplinkResponseMsg;
 import org.thingsboard.server.service.edge.EdgeMsgConstructorUtils;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static org.awaitility.Awaitility.await;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DaoSqlTest
@@ -133,11 +136,15 @@ public class ReportTemplateEdgeTest extends AbstractEdgeTest {
         foundReportTemplate = doGet("/api/reportTemplate/" + reportTemplate.getId().getId(), ReportTemplate.class);
         compareExpectedAndActual(reportTemplate, foundReportTemplate);
 
-        edgeImitator.expectMessageAmount(1);
-        doDelete("/api/reportTemplate/" + reportTemplate.getUuidId())
-                .andExpect(status().isOk());
-        Assert.assertTrue(edgeImitator.waitForMessages());
-        compareDeletedExpectedAndActual(reportTemplate, edgeImitator.getLatestMessage());
+        edgeImitator.expectResponsesAmount(1);
+        edgeImitator.sendUplinkMsg(createDeleteUplinkMsg(reportTemplate));
+        Assert.assertTrue(edgeImitator.waitForResponses());
+        latestResponseMsg = edgeImitator.getLatestResponseMsg();
+        Assert.assertTrue(latestResponseMsg.getSuccess());
+
+        await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
+            doGet("/api/reportTemplate/" + reportTemplate.getId().getId(), ReportTemplate.class, status().isNotFound());
+        });
     }
 
     @Test
@@ -165,18 +172,21 @@ public class ReportTemplateEdgeTest extends AbstractEdgeTest {
         foundReportTemplate = doGet("/api/reportTemplate/" + reportTemplate.getId().getId(), ReportTemplate.class);
         compareExpectedAndActual(reportTemplate, foundReportTemplate);
 
-        edgeImitator.expectMessageAmount(1);
-        doDelete("/api/reportTemplate/" + reportTemplate.getUuidId())
-                .andExpect(status().isOk());
-        Assert.assertTrue(edgeImitator.waitForMessages());
-        compareDeletedExpectedAndActual(reportTemplate, edgeImitator.getLatestMessage());
+        edgeImitator.expectResponsesAmount(1);
+        edgeImitator.sendUplinkMsg(createDeleteUplinkMsg(reportTemplate));
+        Assert.assertTrue(edgeImitator.waitForResponses());
+        latestResponseMsg = edgeImitator.getLatestResponseMsg();
+        Assert.assertTrue(latestResponseMsg.getSuccess());
+
+        await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
+            doGet("/api/reportTemplate/" + reportTemplate.getId().getId(), ReportTemplate.class, status().isNotFound());
+        });
 
         changeEdgeOwnerFromCustomerToTenant(savedCustomer, 0);
         doDelete("/api/customer/" + savedCustomer.getUuidId())
                 .andExpect(status().isOk());
     }
 
-    // todo: use once removal from the edge side is implemented
     private UplinkMsg createDeleteUplinkMsg(ReportTemplate reportTemplate) throws Exception {
         UplinkMsg.Builder uplinkMsgBuilder = UplinkMsg.newBuilder();
         uplinkMsgBuilder.addReportTemplateUpdateMsg(

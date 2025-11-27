@@ -71,6 +71,10 @@ public class ReportTemplateEdgeProcessor extends BaseReportTemplateProcessor imp
                     saveOrUpdateReportTemplate(tenantId, reportTemplateId, reportTemplateUpdateMsg, edge);
                     yield Futures.immediateFuture(null);
                 }
+                case ENTITY_DELETED_RPC_MESSAGE -> {
+                    deleteReportTemplate(tenantId, reportTemplateId);
+                    yield Futures.immediateFuture(null);
+                }
                 default -> handleUnsupportedMsgType(reportTemplateUpdateMsg.getMsgType());
             };
         } catch (DataValidationException e) {
@@ -89,14 +93,8 @@ public class ReportTemplateEdgeProcessor extends BaseReportTemplateProcessor imp
     }
 
     private void pushReportTemplateCreatedEventToRuleEngine(TenantId tenantId, Edge edge, ReportTemplateId reportTemplateId) {
-        try {
-            ReportTemplate reportTemplate = edgeCtx.getReportTemplateService().findReportTemplateById(tenantId, reportTemplateId);
-            String reportTemplateAsString = JacksonUtil.toString(reportTemplate);
-            TbMsgMetaData msgMetaData = getEdgeActionTbMsgMetaData(edge, null);
-            pushEntityEventToRuleEngine(tenantId, reportTemplateId, null, TbMsgType.ENTITY_CREATED, reportTemplateAsString, msgMetaData);
-        } catch (Exception e) {
-            log.warn("[{}][{}] Failed to push report template action to rule engine: {}", tenantId, reportTemplateId, TbMsgType.ENTITY_CREATED.name(), e);
-        }
+        ReportTemplate reportTemplate = edgeCtx.getReportTemplateService().findReportTemplateById(tenantId, reportTemplateId);
+        pushReportTemplateEventToRuleEngine(tenantId, edge, reportTemplate, TbMsgType.ENTITY_CREATED);
     }
 
     @Override
