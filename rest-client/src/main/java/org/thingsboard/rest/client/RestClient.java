@@ -166,9 +166,8 @@ import org.thingsboard.server.common.data.integration.IntegrationInfo;
 import org.thingsboard.server.common.data.integration.IntegrationType;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
-import org.thingsboard.server.common.data.kv.IntervalType;
-import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.IntervalType;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.menu.CustomMenu;
@@ -5474,6 +5473,14 @@ public class RestClient implements Closeable {
                 throw exception;
             }
         }
+    }
+
+    public ReportTemplate saveReportTemplate(ReportTemplate reportTemplate) {
+        return restTemplate.postForEntity(baseURL + "/api/reportTemplate", reportTemplate, ReportTemplate.class).getBody();
+    }
+
+    public void deleteReportTemplate(ReportTemplateId reportTemplateId) {
+        restTemplate.delete(baseURL + "/api/reportTemplate/{reportTemplateId}", reportTemplateId.getId());
     }
 
     public Report createReport(Report report, byte[] data) {
