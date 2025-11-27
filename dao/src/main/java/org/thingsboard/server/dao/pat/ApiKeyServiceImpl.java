@@ -128,7 +128,7 @@ public class ApiKeyServiceImpl extends AbstractCachedEntityService<ApiKeyCacheKe
         apiKey.setValue(value);
         try {
             var rotatedApiKey = apiKeyDao.save(tenantId, apiKey);
-            eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(tenantId).entityId(rotatedApiKey.getId()).entity(rotatedApiKey).created(apiKey.getId() == null).build());
+            eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(tenantId).entityId(rotatedApiKey.getId()).entity(rotatedApiKey).oldEntity(old).created(false).build());
             publishEvictEvent(new ApiKeyEvictEvent(apiKey.getValue()));
             return rotatedApiKey;
         } catch (Exception e) {
@@ -142,6 +142,12 @@ public class ApiKeyServiceImpl extends AbstractCachedEntityService<ApiKeyCacheKe
         log.trace("Executing findApiKeyById [{}] [{}]", tenantId, apiKeyId);
         validateId(apiKeyId, id -> INCORRECT_API_KEY_ID + id);
         return apiKeyDao.findById(tenantId, apiKeyId.getId());
+    }
+
+    @Override
+    public ApiKey findApiKeyByDescription(TenantId tenantId, String description) {
+        log.trace("Executing findApiKeyByDescription [{}] [{}]", tenantId, description);
+        return apiKeyDao.findByDescription(tenantId, description);
     }
 
     @Override

@@ -147,3 +147,9 @@ DROP TABLE IF EXISTS calculated_field_link;
 ANALYZE calculated_field;
 
 -- REMOVAL OF CALCULATED FIELD LINKS PERSISTENCE END
+
+-- REMOVAL OF OLD TRENDZ SETTINGS
+
+DELETE FROM admin_settings AS settings WHERE settings.key = 'trendz';
+
+-- REMOVAL OF OLD TRENDZ SETTINGS END

@@ -229,7 +229,7 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
     }
 
     @Test
-    public void testUpdateDescriptionInternalApiKey() {
+    public void testUpdateDescriptionInternalApiKey_shouldFail() {
         Map<Resource, Set<Operation>> permissions = new HashMap<>();
         permissions.put(Resource.DEVICE, Set.of(Operation.READ));
         Map<Authority, Map<Resource, Set<Operation>>> operationsByResource = new HashMap<>();
@@ -246,15 +246,12 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
         ApiKey savedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
         Assert.assertTrue(savedApiKey.isInternal());
 
-        String description = "Updated internal key description";
-        savedApiKey.setDescription(description);
-        ApiKey updatedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, savedApiKey);
+        String newDescription = "Updated internal key description";
+        savedApiKey.setDescription(newDescription);
 
-        Assert.assertNotNull(updatedApiKey);
-        Assert.assertEquals(savedApiKey.getId(), updatedApiKey.getId());
-        Assert.assertEquals(description, updatedApiKey.getDescription());
-        Assert.assertTrue(updatedApiKey.isInternal());
-        Assert.assertEquals(savedApiKey.getValue(), updatedApiKey.getValue());
+        assertThatThrownBy(() -> apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, savedApiKey))
+                .isInstanceOf(DataValidationException.class)
+                .hasMessageContaining("Cannot update internal API key description!");
     }
 
     @Test
@@ -296,6 +293,42 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
         Assert.assertEquals(savedApiKey.getDescription(), foundApiKey.getDescription());
         Assert.assertEquals(savedApiKey.isEnabled(), foundApiKey.isEnabled());
         Assert.assertEquals(savedApiKey.getValue(), foundApiKey.getValue());
+    }
+
+    @Test
+    public void testFindApiKeyByDescription() {
+        String uniqueDescription = "Unique API Key Description for Search";
+        ApiKeyInfo apiKeyInfo = createApiKeyInfo(uniqueDescription);
+        ApiKey savedApiKey = apiKeyService.saveApiKey(tenantId, apiKeyInfo);
+
+        ApiKey foundApiKey = apiKeyService.findApiKeyByDescription(tenantId, uniqueDescription);
+
+        Assert.assertNotNull(foundApiKey);
+        Assert.assertEquals(savedApiKey.getId(), foundApiKey.getId());
+        Assert.assertEquals(uniqueDescription, foundApiKey.getDescription());
+        Assert.assertEquals(savedApiKey.isEnabled(), foundApiKey.isEnabled());
+        Assert.assertEquals(savedApiKey.getValue(), foundApiKey.getValue());
+    }
+
+    @Test
+    public void testFindApiKeyByDescription_whenTwoSameDescriptionExists_thenReturnFirst() {
+        String uniqueDescription = "Unique API Key Description for Search";
+
+        ApiKeyInfo apiKeyInfo = createApiKeyInfo(uniqueDescription);
+        apiKeyService.saveApiKey(tenantId, apiKeyInfo);
+
+        ApiKeyInfo apiKeyInfo2 = createApiKeyInfo(uniqueDescription);
+        apiKeyService.saveApiKey(tenantId, apiKeyInfo2);
+
+        ApiKey foundApiKey = apiKeyService.findApiKeyByDescription(tenantId, uniqueDescription);
+
+        Assert.assertNotNull(foundApiKey);
+    }
+
+    @Test
+    public void testFindApiKeyByDescription_notFound() {
+        ApiKey foundApiKey = apiKeyService.findApiKeyByDescription(tenantId, "Non-existent description");
+        Assert.assertNull(foundApiKey);
     }
 
     @Test
