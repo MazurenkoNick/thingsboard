@@ -50,13 +50,13 @@ export class SignupRequest {
   fields: FormGroup;
   recaptchaResponse: string;
 
-  constructor(firstName: string, lastName: string, email: string, password: string, recaptchaResponse: string, checkPassword: string) {
+  constructor(firstName: string, lastName: string, email: string, password: string, recaptchaResponse: string) {
     this.fields = new FormGroup({
       FIRST_NAME: new FormControl(firstName, [Validators.required, Validators.maxLength(256)]),
       LAST_NAME: new FormControl(lastName, [Validators.required, Validators.maxLength(256)]),
       EMAIL: new FormControl(email, [validateEmail]),
       PASSWORD: new FormControl(password),
-      CHECK_PASSWORD: new FormControl(checkPassword)
+      CHECK_PASSWORD: new FormControl(password)
     }, {
       validators: [passwordsMatchValidator('PASSWORD', 'CHECK_PASSWORD')]
     });
@@ -64,7 +64,7 @@ export class SignupRequest {
   }
 
   public static create(): SignupRequest {
-    return new SignupRequest('', '', '', '', '', '');
+    return new SignupRequest('', '', '', '', '');
   }
 }
 

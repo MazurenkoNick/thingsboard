@@ -47,7 +47,6 @@ import { WhiteLabelingService } from '@core/http/white-labeling.service';
 import { MatDialog } from '@angular/material/dialog';
 import { SignupDialogComponent, SignupDialogData } from '@modules/signup/pages/signup/signup-dialog.component';
 import { from } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UserPasswordPolicy } from '@shared/models/settings.models';
 import { passwordStrengthValidator } from '@shared/models/password.models';
 
@@ -86,14 +85,8 @@ export class SignupComponent extends PageComponent {
               private dialog: MatDialog,
               private fb: FormBuilder) {
     super(store);
-    this.route.data
-      .pipe(
-        takeUntilDestroyed()
-      )
-      .subscribe((data) => {
-        this.passwordPolicy = data['passwordPolicy'];
-        this.signup.get('fields.PASSWORD').setValidators(passwordStrengthValidator(this.passwordPolicy));
-      });
+    this.passwordPolicy = this.route.snapshot.data['passwordPolicy'];
+    this.signup.get('fields.PASSWORD').setValidators(passwordStrengthValidator(this.passwordPolicy));
   }
 
   signUp(): void {
