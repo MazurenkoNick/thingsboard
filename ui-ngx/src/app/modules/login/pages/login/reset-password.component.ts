@@ -35,10 +35,7 @@ import { PageComponent } from '@shared/components/page.component';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserPasswordPolicy } from '@shared/models/settings.models';
-import {
-  passwordsMatchValidator,
-  passwordStrengthValidator
-} from '@shared/models/password.models';
+import { passwordsMatchValidator, passwordStrengthValidator } from '@shared/models/password.models';
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 @Component({

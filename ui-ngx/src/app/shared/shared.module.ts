@@ -527,7 +527,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     SecretAutocompleteComponent,
     ReportTemplateAutocompleteComponent,
     TimeUnitInputComponent,
-    PasswordRequirementsTooltipComponent
+    PasswordRequirementsTooltipComponent,
   ],
   imports: [
     CommonModule,
@@ -822,7 +822,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     SecretAutocompleteComponent,
     ReportTemplateAutocompleteComponent,
     TimeUnitInputComponent,
-    PasswordRequirementsTooltipComponent
+    PasswordRequirementsTooltipComponent,
   ]
 })
 export class SharedModule { }

@@ -36,8 +36,9 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import {
   AbstractControl,
+  FormGroupDirective,
   UntypedFormBuilder,
-  UntypedFormGroup, FormGroupDirective,
+  UntypedFormGroup,
   ValidationErrors,
   ValidatorFn,
   Validators
@@ -69,13 +70,10 @@ import { AuthService } from '@core/auth/auth.service';
 import { UserPasswordPolicy } from '@shared/models/settings.models';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import {
-  passwordsMatchValidator,
-  passwordStrengthValidator
-} from '@shared/models/password.models';
-import {
   ApiKeysTableDialogComponent,
   ApiKeysTableDialogData
 } from '@home/components/api-key/api-keys-table-dialog.component';
+import { passwordsMatchValidator, passwordStrengthValidator } from '@shared/models/password.models';
 
 @Component({
   selector: 'tb-security',
