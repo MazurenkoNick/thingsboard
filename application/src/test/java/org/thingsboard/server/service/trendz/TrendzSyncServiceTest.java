@@ -50,8 +50,8 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.pat.ApiKey;
 import org.thingsboard.server.common.data.trendz.TrendzConfiguration;
-import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
 import org.thingsboard.server.common.data.trendz.TrendzSettings;
+import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResult;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResultType;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationStatus;
@@ -62,7 +62,6 @@ import org.thingsboard.server.dao.trendz.TrendzSettingsService;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -129,12 +128,12 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         TrendzSettings result = trendzSyncService.performSync(TenantId.SYS_TENANT_ID, currentUserId);
 
         assertNotNull(result);
-        assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, result.trendzSynchronizationResult().resultType());
+        assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, result.trendzSynchronizationResult().type());
         assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, result.trendzSynchronizationResult().status());
 
         TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
         assertNotNull(savedSettings);
-        assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, savedSettings.trendzSynchronizationResult().resultType());
+        assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, savedSettings.trendzSynchronizationResult().type());
     }
 
     @Test
@@ -152,9 +151,9 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         )).thenReturn(new ResponseEntity<>(trendzInfoResponse, HttpStatus.OK));
 
         ObjectNode syncResponse = JacksonUtil.newObjectNode();
-        syncResponse.put("trendzVersion", TEST_TRENDZ_VERSION);
-        syncResponse.put("syncStatus", TrendzSynchronizationResultType.SYNC_COMPLETED.name());
-        syncResponse.put("success", true);
+        syncResponse.put("version", TEST_TRENDZ_VERSION);
+        syncResponse.put("type", TrendzSynchronizationResultType.SYNC_COMPLETED.name());
+        syncResponse.put("status", TrendzSynchronizationStatus.SYNCED.name());
         syncResponse.put("message", "Sync completed successfully");
         when(systemSecurityService.getBaseUrl(eq(TenantId.SYS_TENANT_ID), any(), any())).thenReturn(TEST_EXTERNAL_TB_URL);
         when(restTemplate.exchange(
@@ -171,9 +170,9 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         TrendzSettings result = trendzSyncService.performSync(TenantId.SYS_TENANT_ID, currentUserId);
 
         assertNotNull(result);
-        assertEquals(TrendzSynchronizationResultType.SYNC_COMPLETED, result.trendzSynchronizationResult().resultType());
+        assertEquals(TrendzSynchronizationResultType.SYNC_COMPLETED, result.trendzSynchronizationResult().type());
         assertEquals(TrendzSynchronizationStatus.SYNCED, result.trendzSynchronizationResult().status());
-        assertEquals(TEST_TRENDZ_VERSION, result.trendzSynchronizationResult().trendzVersion());
+        assertEquals(TEST_TRENDZ_VERSION, result.trendzSynchronizationResult().version());
 
         ApiKey apiKey = apiKeyService.findApiKeyByDescription(TenantId.SYS_TENANT_ID, DefaultTrendzSyncService.TRENDZ_API_KEY_DESCRIPTION);
         assertNotNull(apiKey);
@@ -182,7 +181,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
 
         TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
         assertNotNull(savedSettings);
-        assertEquals(TrendzSynchronizationResultType.SYNC_COMPLETED, savedSettings.trendzSynchronizationResult().resultType());
+        assertEquals(TrendzSynchronizationResultType.SYNC_COMPLETED, savedSettings.trendzSynchronizationResult().type());
         assertEquals(TrendzSynchronizationStatus.SYNCED, savedSettings.trendzSynchronizationResult().status());
     }
 
@@ -198,7 +197,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         TrendzSettings result = trendzSyncService.performSync(TenantId.SYS_TENANT_ID, currentUserId);
 
         assertNotNull(result);
-        assertEquals(TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, result.trendzSynchronizationResult().resultType());
+        assertEquals(TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, result.trendzSynchronizationResult().type());
         assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, result.trendzSynchronizationResult().status());
 
         TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
@@ -219,9 +218,10 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         )).thenReturn(new ResponseEntity<>(trendzInfoResponse, HttpStatus.OK));
 
         ObjectNode syncResponse = JacksonUtil.newObjectNode();
-        syncResponse.put("trendzVersion", TEST_TRENDZ_VERSION);
-        syncResponse.put("syncStatus", TrendzSynchronizationResultType.SYNC_COMPLETED.name());
-        syncResponse.put("success", true);
+        syncResponse.put("version", TEST_TRENDZ_VERSION);
+        syncResponse.put("type", TrendzSynchronizationResultType.SYNC_COMPLETED.name());
+        syncResponse.put("status", TrendzSynchronizationStatus.SYNCED.name());
+        syncResponse.put("message", "Sync completed successfully");
         when(systemSecurityService.getBaseUrl(eq(TenantId.SYS_TENANT_ID), any(), any())).thenReturn(null);
         when(restTemplate.exchange(
                 eq(TEST_TRENDZ_URL + TRENDZ_SYNC_INIT_URI),
@@ -251,8 +251,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         TrendzHealthcheckResult result = trendzSyncService.performHealthcheck();
 
         assertNotNull(result);
-        assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, result.syncStatus());
-        assertFalse(result.success());
+        assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, result.type());
     }
 
     @Test
@@ -260,8 +259,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         TrendzHealthcheckResult result = trendzSyncService.performHealthcheck();
 
         assertNotNull(result);
-        assertEquals(TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, result.syncStatus());
-        assertFalse(result.success());
+        assertEquals(TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, result.type());
     }
 
     @Test
@@ -286,9 +284,10 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         )).thenReturn(new ResponseEntity<>(trendzInfoResponse, HttpStatus.OK));
 
         ObjectNode syncResponse = JacksonUtil.newObjectNode();
-        syncResponse.put("trendzVersion", TEST_TRENDZ_VERSION);
-        syncResponse.put("syncStatus", TrendzSynchronizationResultType.SYNC_COMPLETED.name());
-        syncResponse.put("success", true);
+        syncResponse.put("version", TEST_TRENDZ_VERSION);
+        syncResponse.put("type", TrendzSynchronizationResultType.SYNC_COMPLETED.name());
+        syncResponse.put("status", TrendzSynchronizationStatus.SYNCED.name());
+        syncResponse.put("message", "Sync completed successfully");
         when(systemSecurityService.getBaseUrl(eq(TenantId.SYS_TENANT_ID), any(), any())).thenReturn(TEST_EXTERNAL_TB_URL);
         when(restTemplate.exchange(
                 eq(TEST_TRENDZ_URL + TRENDZ_SYNC_INIT_URI),
@@ -304,9 +303,9 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         trendzSyncService.performSync(TenantId.SYS_TENANT_ID, currentUserId);
 
         ObjectNode healthcheckResponse = JacksonUtil.newObjectNode();
-        healthcheckResponse.put("trendzVersion", TEST_TRENDZ_VERSION);
-        healthcheckResponse.put("syncStatus", TrendzSynchronizationResultType.SYNC_COMPLETED.name());
-        healthcheckResponse.put("success", true);
+        healthcheckResponse.put("version", TEST_TRENDZ_VERSION);
+        healthcheckResponse.put("type", TrendzSynchronizationResultType.SYNC_COMPLETED.name());
+        healthcheckResponse.put("status", TrendzSynchronizationStatus.SYNCED.name());
         healthcheckResponse.put("message", "Healthcheck passed");
         when(restTemplate.exchange(
                 eq(TEST_TRENDZ_URL + TRENDZ_HEALTHCHECK_URI),
@@ -322,8 +321,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         TrendzHealthcheckResult result = trendzSyncService.performHealthcheck();
 
         assertNotNull(result);
-        assertTrue(result.success());
-        assertEquals(TrendzSynchronizationResultType.SYNC_COMPLETED, result.syncStatus());
+        assertEquals(TrendzSynchronizationResultType.SYNC_COMPLETED, result.type());
         assertEquals("Healthcheck passed", result.message());
     }
 
@@ -349,9 +347,10 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         )).thenReturn(new ResponseEntity<>(trendzInfoResponse, HttpStatus.OK));
 
         ObjectNode syncResponse = JacksonUtil.newObjectNode();
-        syncResponse.put("trendzVersion", TEST_TRENDZ_VERSION);
-        syncResponse.put("syncStatus", TrendzSynchronizationResultType.SYNC_COMPLETED.name());
-        syncResponse.put("success", true);
+        syncResponse.put("version", TEST_TRENDZ_VERSION);
+        syncResponse.put("type", TrendzSynchronizationResultType.SYNC_COMPLETED.name());
+        syncResponse.put("status", TrendzSynchronizationStatus.SYNCED.name());
+        syncResponse.put("message", "Sync completed successfully");
         when(systemSecurityService.getBaseUrl(eq(TenantId.SYS_TENANT_ID), any(), any())).thenReturn(TEST_EXTERNAL_TB_URL);
         when(restTemplate.exchange(
                 eq(TEST_TRENDZ_URL + TRENDZ_SYNC_INIT_URI),
@@ -376,9 +375,8 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         TrendzHealthcheckResult result = trendzSyncService.performHealthcheck();
 
         assertNotNull(result);
-        assertFalse(result.success());
-        assertEquals(TrendzSynchronizationResultType.SYNC_INTERNAL_ERROR, result.syncStatus());
-        assertEquals("Network error or Trendz is not reachable", result.message());
+        assertEquals(TrendzSynchronizationResultType.TRENDZ_URL_UNREACHABLE, result.type());
+        assertEquals(TrendzSynchronizationResultType.TRENDZ_URL_UNREACHABLE.getMessage(), result.message());
     }
 
 }

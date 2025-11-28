@@ -35,8 +35,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 
 public record TrendzHealthcheckResult(
-        @JsonProperty("trendzVersion") String trendzVersion,
-        @JsonProperty("syncStatus") TrendzSynchronizationResultType syncStatus,
-        @JsonProperty("success") boolean success,
+        @JsonProperty("version") String version,
+        @JsonProperty("type") TrendzSynchronizationResultType type,
+        @JsonProperty("status") TrendzSynchronizationStatus status,
         @JsonProperty("message") String message
 ) implements Serializable {}

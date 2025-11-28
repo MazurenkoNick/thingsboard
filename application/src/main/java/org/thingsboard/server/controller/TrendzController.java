@@ -75,7 +75,7 @@ public class TrendzController extends BaseController {
     public TrendzConfiguration getTrendzConfig(@AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
         accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.READ);
         TrendzSettings settings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
-        return settings.trendzConfiguration();
+        return settings != null ? settings.trendzConfiguration() : null;
     }
 
     @ApiOperation(value = "Save Trendz configuration (saveTrendzConfig)",
@@ -92,10 +92,7 @@ public class TrendzController extends BaseController {
     public TrendzConfiguration saveTrendzConfig(@RequestBody TrendzConfiguration config,
                                                 @AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
         accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.WRITE);
-        TrendzSettings existingSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
-        TrendzSynchronizationResult syncResult = existingSettings != null ? existingSettings.trendzSynchronizationResult()
-                : new TrendzSynchronizationResult(null, 0L, TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, TrendzSynchronizationStatus.NOT_AVAILABLE);
-
+        TrendzSynchronizationResult syncResult = new TrendzSynchronizationResult(null, 0L, TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, TrendzSynchronizationStatus.NOT_AVAILABLE);
         TrendzSettings newSettings = new TrendzSettings(config, syncResult);
         trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, newSettings);
         return config;
@@ -114,12 +111,15 @@ public class TrendzController extends BaseController {
             accessControlService.checkPermission(user, Resource.WHITE_LABELING, Operation.READ);
         }
         TrendzSettings settings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
-        return settings.trendzSynchronizationResult();
+        if (settings != null && settings.trendzSynchronizationResult() != null) {
+            return settings.trendzSynchronizationResult();
+        }
+        return new TrendzSynchronizationResult(null, 0L, TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, TrendzSynchronizationStatus.NOT_AVAILABLE);
     }
 
     @ApiOperation(value = "Perform Trendz healthcheck (performTrendzHealthcheck)",
             notes = "Performs healthcheck for Trendz integration. " +
-                    "Returns trendzVersion, syncStatus, success, and message. " +
+                    "Returns version, type, status, and message. " +
                     "Can only be performed if Trendz is already synchronized and integration is enabled." +
                     AVAILABLE_FOR_ANY_AUTHORIZED_USER)
     @GetMapping("/healthcheck")

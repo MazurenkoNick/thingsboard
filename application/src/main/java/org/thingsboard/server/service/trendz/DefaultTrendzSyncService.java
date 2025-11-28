@@ -32,6 +32,7 @@ package org.thingsboard.server.service.trendz;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,8 +55,8 @@ import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.trendz.TrendzConfiguration;
-import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
 import org.thingsboard.server.common.data.trendz.TrendzSettings;
+import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResult;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResultType;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationStatus;
@@ -82,8 +83,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
     public static final String TRENDZ_SYNC_INIT_URI = "/apiTrendz/publicApi/sync/init";
     public static final String TRENDZ_HEALTHCHECK_URI = "/apiTrendz/publicApi/sync/check";
 
-    private static final String MIN_SUPPORTED_VERSION = "1.14.1";
-    private static final int REQUEST_TIMEOUT_MS = 15000;
+    private static final String MIN_SUPPORTED_VERSION = "1.15.0";
 
     private final ApiKeyService apiKeyService;
     private final TrendzSettingsService trendzSettingsService;
@@ -98,10 +98,18 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
     @Value("${trendz.default_trendz_url:}")
     private String defaultTrendzUrl;
 
-    private final RestTemplate restTemplate = new RestTemplateBuilder()
-            .connectTimeout(Duration.of(REQUEST_TIMEOUT_MS, ChronoUnit.MILLIS))
-            .readTimeout(Duration.of(REQUEST_TIMEOUT_MS, ChronoUnit.MILLIS))
-            .build();
+    @Value("${trendz.request_timeout_ms:15000}")
+    private int requestTimeoutMs;
+
+    private RestTemplate restTemplate;
+
+    @PostConstruct
+    private void init() {
+        restTemplate = new RestTemplateBuilder()
+                .connectTimeout(Duration.of(requestTimeoutMs, ChronoUnit.MILLIS))
+                .readTimeout(Duration.of(requestTimeoutMs, ChronoUnit.MILLIS))
+                .build();
+    }
 
     @Override
     public TrendzSettings performSync(TenantId tenantId, UserId userId) {
@@ -139,8 +147,8 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
         String trendzVersion = trendzInfo.version();
 
-        TrendzSyncResponse syncResponse = processTrendzInitRequest(trendzUrl, tbUrl, trendzApiKey.getValue(), null);
-        if (syncResponse == null) {
+        TrendzHealthcheckResult syncResult = processTrendzInitRequest(trendzUrl, tbUrl, trendzApiKey.getValue(), null);
+        if (syncResult == null) {
             TrendzSettings settings = createSettings(
                     trendzUrl, tbUrl,
                     trendzVersion, updatedTs,
@@ -152,21 +160,20 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
             return settings;
         }
 
-        boolean synced = syncResponse.success();
         TrendzSettings settings = createSettings(
                 trendzUrl, tbUrl,
-                syncResponse.trendzVersion(), updatedTs,
-                syncResponse.resultType(),
-                synced ? TrendzSynchronizationStatus.SYNCED : TrendzSynchronizationStatus.AVAILABLE
+                syncResult.version(), updatedTs,
+                syncResult.type(),
+                syncResult.status()
         );
         trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
-        if (!synced) {
-            log.error("Trendz sync failed. Status: {}, Message: {}", syncResponse.resultType(), syncResponse.message());
+        if (syncResult.type() != TrendzSynchronizationResultType.SYNC_COMPLETED) {
+            log.error("Trendz sync failed. Status: {}, Message: {}", syncResult.type(), syncResult.message());
         }
 
         log.info("Trendz synchronization completed. Status: {}, Result: {}",
                 settings.trendzSynchronizationResult().status(),
-                settings.trendzSynchronizationResult().resultType());
+                settings.trendzSynchronizationResult().type());
         return settings;
     }
 
@@ -176,7 +183,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
             return new TrendzHealthcheckResult(
                     null,
                     TrendzSynchronizationResultType.SYNC_DISABLED,
-                    false,
+                    TrendzSynchronizationStatus.NOT_AVAILABLE,
                     TrendzSynchronizationResultType.SYNC_DISABLED.getMessage()
             );
         }
@@ -186,7 +193,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
             return new TrendzHealthcheckResult(
                     null,
                     TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED,
-                    false,
+                    TrendzSynchronizationStatus.NOT_AVAILABLE,
                     TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED.getMessage()
             );
         }
@@ -194,9 +201,9 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         ApiKey trendzApiKey = apiKeyService.findApiKeyByDescription(TenantId.SYS_TENANT_ID, TRENDZ_API_KEY_DESCRIPTION);
         if (trendzApiKey == null || !trendzApiKey.isInternal()) {
             return new TrendzHealthcheckResult(
-                    trendzSettings.trendzSynchronizationResult().trendzVersion(),
+                    trendzSettings.trendzSynchronizationResult().version(),
                     TrendzSynchronizationResultType.TRENDZ_AUTH_INVALID,
-                    false,
+                    TrendzSynchronizationStatus.NOT_AVAILABLE,
                     TrendzSynchronizationResultType.TRENDZ_AUTH_INVALID.getMessage()
             );
         }
@@ -215,9 +222,9 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         if (result == null) {
             return new TrendzHealthcheckResult(
                     null,
-                    TrendzSynchronizationResultType.SYNC_INTERNAL_ERROR,
-                    false,
-                    TrendzSynchronizationResultType.SYNC_INTERNAL_ERROR.getMessage()
+                    TrendzSynchronizationResultType.TRENDZ_URL_UNREACHABLE,
+                    TrendzSynchronizationStatus.AVAILABLE,
+                    TrendzSynchronizationResultType.TRENDZ_URL_UNREACHABLE.getMessage()
             );
         }
 
@@ -328,7 +335,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         return sendTrendzRequest(trendzUrl, TRENDZ_INFO_URI, HttpMethod.GET, null, JsonNode.class, "Checking Trendz reachability");
     }
 
-    private TrendzSyncResponse processTrendzInitRequest(String trendzUrl, String tbUrl, String currentApiKey, String prevApiKey) {
+    private TrendzHealthcheckResult processTrendzInitRequest(String trendzUrl, String tbUrl, String currentApiKey, String prevApiKey) {
         String externalTbUrl = systemSecurityService.getBaseUrl(TenantId.SYS_TENANT_ID, null, null);
 
         Map<String, Object> requestBody = new HashMap<>();
@@ -337,7 +344,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         requestBody.put("currentTbAccessToken", currentApiKey);
         requestBody.put("prevTbAccessToken", prevApiKey);
 
-        return sendTrendzRequest(trendzUrl, TRENDZ_SYNC_INIT_URI, HttpMethod.POST, requestBody, TrendzSyncResponse.class, "Initiating Trendz sync");
+        return sendTrendzRequest(trendzUrl, TRENDZ_SYNC_INIT_URI, HttpMethod.POST, requestBody, TrendzHealthcheckResult.class, "Initiating Trendz sync");
     }
 
     private boolean isVersionSupported(String version) {
@@ -451,12 +458,6 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
                               @JsonProperty("cloud") Boolean cloud,
                               @JsonProperty("test") Boolean test,
                               @JsonProperty("time") String time
-    ) implements Serializable {}
-
-    private record TrendzSyncResponse(@JsonProperty("trendzVersion") String trendzVersion,
-                                      @JsonProperty("syncStatus") TrendzSynchronizationResultType resultType,
-                                      @JsonProperty("success") boolean success,
-                                      @JsonProperty("message") String message
     ) implements Serializable {}
 
 }

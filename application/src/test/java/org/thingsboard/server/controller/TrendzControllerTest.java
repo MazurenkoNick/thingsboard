@@ -36,8 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.trendz.TrendzConfiguration;
-import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
 import org.thingsboard.server.common.data.trendz.TrendzSettings;
+import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResult;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResultType;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationStatus;
@@ -46,6 +46,7 @@ import org.thingsboard.server.dao.trendz.TrendzSettingsService;
 import org.thingsboard.server.dao.trendz.TrendzSyncService;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -121,6 +122,17 @@ public class TrendzControllerTest extends AbstractControllerTest {
     }
 
     @Test
+    public void testGetTrendzSync_asSysAdmin_whenNotExists_thenNull() throws Exception {
+        TrendzSynchronizationResult result = doGet("/api/trendz/sync", TrendzSynchronizationResult.class);
+
+        assertThat(result).isNotNull();
+        assertThat(result.version()).isNull();
+        assertEquals(0, result.updatedTs());
+        assertThat(result.type()).isEqualTo(TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED);
+        assertThat(result.status()).isEqualTo(TrendzSynchronizationStatus.NOT_AVAILABLE);
+    }
+
+    @Test
     public void testGetTrendzSync_asSysAdmin() throws Exception {
         TrendzConfiguration config = new TrendzConfiguration(TRENDZ_URL, TB_URL);
         TrendzSynchronizationResult syncResult = new TrendzSynchronizationResult(
@@ -135,8 +147,8 @@ public class TrendzControllerTest extends AbstractControllerTest {
         TrendzSynchronizationResult result = doGet("/api/trendz/sync", TrendzSynchronizationResult.class);
 
         assertThat(result).isNotNull();
-        assertThat(result.trendzVersion()).isEqualTo(TRENDZ_VERSION);
-        assertThat(result.resultType()).isEqualTo(TrendzSynchronizationResultType.SYNC_COMPLETED);
+        assertThat(result.version()).isEqualTo(TRENDZ_VERSION);
+        assertThat(result.type()).isEqualTo(TrendzSynchronizationResultType.SYNC_COMPLETED);
         assertThat(result.status()).isEqualTo(TrendzSynchronizationStatus.SYNCED);
     }
 
@@ -157,7 +169,7 @@ public class TrendzControllerTest extends AbstractControllerTest {
         TrendzSynchronizationResult result = doGet("/api/trendz/sync", TrendzSynchronizationResult.class);
 
         assertThat(result).isNotNull();
-        assertThat(result.trendzVersion()).isEqualTo(TRENDZ_VERSION);
+        assertThat(result.version()).isEqualTo(TRENDZ_VERSION);
     }
 
     @Test
@@ -165,7 +177,7 @@ public class TrendzControllerTest extends AbstractControllerTest {
         TrendzHealthcheckResult healthcheckResult = new TrendzHealthcheckResult(
                 TRENDZ_VERSION,
                 TrendzSynchronizationResultType.SYNC_COMPLETED,
-                true,
+                TrendzSynchronizationStatus.SYNCED,
                 "Healthcheck passed"
         );
 
@@ -174,8 +186,7 @@ public class TrendzControllerTest extends AbstractControllerTest {
         TrendzHealthcheckResult result = doGet("/api/trendz/healthcheck", TrendzHealthcheckResult.class);
 
         assertThat(result).isNotNull();
-        assertThat(result.success()).isTrue();
-        assertThat(result.trendzVersion()).isEqualTo(TRENDZ_VERSION);
+        assertThat(result.version()).isEqualTo(TRENDZ_VERSION);
         assertThat(result.message()).isEqualTo("Healthcheck passed");
     }
 
@@ -186,7 +197,7 @@ public class TrendzControllerTest extends AbstractControllerTest {
         TrendzHealthcheckResult healthcheckResult = new TrendzHealthcheckResult(
                 TRENDZ_VERSION,
                 TrendzSynchronizationResultType.SYNC_COMPLETED,
-                true,
+                TrendzSynchronizationStatus.SYNCED,
                 "Healthcheck passed"
         );
 
@@ -195,7 +206,6 @@ public class TrendzControllerTest extends AbstractControllerTest {
         TrendzHealthcheckResult result = doGet("/api/trendz/healthcheck", TrendzHealthcheckResult.class);
 
         assertThat(result).isNotNull();
-        assertThat(result.success()).isTrue();
     }
 
     @Test
@@ -213,7 +223,7 @@ public class TrendzControllerTest extends AbstractControllerTest {
         TrendzSynchronizationResult result = doPost("/api/trendz/connect", TrendzSynchronizationResult.class);
 
         assertThat(result).isNotNull();
-        assertThat(result.resultType()).isEqualTo(TrendzSynchronizationResultType.SYNC_COMPLETED);
+        assertThat(result.type()).isEqualTo(TrendzSynchronizationResultType.SYNC_COMPLETED);
         assertThat(result.status()).isEqualTo(TrendzSynchronizationStatus.SYNCED);
     }
 

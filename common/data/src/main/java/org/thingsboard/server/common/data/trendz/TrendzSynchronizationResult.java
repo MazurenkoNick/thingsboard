@@ -32,7 +32,7 @@ package org.thingsboard.server.common.data.trendz;
 
 import java.io.Serializable;
 
-public record TrendzSynchronizationResult(String trendzVersion,
+public record TrendzSynchronizationResult(String version,
                                           Long updatedTs,
-                                          TrendzSynchronizationResultType resultType,
+                                          TrendzSynchronizationResultType type,
                                           TrendzSynchronizationStatus status) implements Serializable {}

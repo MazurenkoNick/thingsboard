@@ -45,6 +45,8 @@ public enum TrendzSynchronizationResultType {
 
     TRENDZ_AUTH_INVALID("Trendz authentication failed. Invalid or missing Trendz API key."),
 
+    TRENDZ_URL_UNREACHABLE("Provided Trendz URL is not reachable."),
+
     TB_URL_MISMATCH("Provided ThingsBoard URL does not match the one stored in ThingsBoard."),
 
     TB_URL_UNREACHABLE("ThingsBoard URL is not reachable."),

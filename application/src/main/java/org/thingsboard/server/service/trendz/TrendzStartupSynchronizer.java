@@ -85,7 +85,7 @@ public class TrendzStartupSynchronizer {
             TrendzSettings result = trendzSyncService.performSync(TenantId.SYS_TENANT_ID, sysAdminUser.getId());
             log.info("Trendz startup synchronization completed. Status: {}, Result: {}",
                     result.trendzSynchronizationResult().status(),
-                    result.trendzSynchronizationResult().resultType());
+                    result.trendzSynchronizationResult().type());
         } catch (Exception e) {
             log.error("Error during Trendz startup synchronization", e);
         }
