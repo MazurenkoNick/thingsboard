@@ -44,6 +44,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.thingsboard.rule.engine.api.TimeseriesSaveRequest.Strategy;
 import org.thingsboard.server.actors.ActorSystemContext;
+import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
@@ -122,9 +123,10 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
                                                      ApiLimitService apiLimitService,
                                                      RelationService relationService,
                                                      OwnersCacheService ownersService,
+                                                     TbClusterService clusterService,
                                                      ActorSystemContext systemContext,
                                                      TelemetrySubscriptionService tsSubService) {
-        super(attributesService, timeseriesService, tsSubService, apiLimitService, relationService, ownersService);
+        super(attributesService, timeseriesService, tsSubService, apiLimitService, relationService, ownersService, clusterService);
         this.systemContext = systemContext;
     }
 
