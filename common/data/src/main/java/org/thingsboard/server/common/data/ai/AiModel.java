@@ -48,6 +48,7 @@ import org.thingsboard.server.common.data.id.AiModelId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.validation.Length;
 import org.thingsboard.server.common.data.validation.NoNullChar;
+import org.thingsboard.server.common.data.validation.NoXss;
 
 import java.io.Serial;
 
@@ -80,6 +81,7 @@ public final class AiModel extends BaseData<AiModelId> implements TenantEntity, 
     @NotBlank
     @NoNullChar
     @Length(min = 1, max = 255)
+    @NoXss
     @Schema(
             requiredMode = Schema.RequiredMode.REQUIRED,
             accessMode = Schema.AccessMode.READ_WRITE,

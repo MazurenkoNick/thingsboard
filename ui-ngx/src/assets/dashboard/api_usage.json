@@ -99,7 +99,10 @@
                         "showTimestamp": true,
                         "displayPagination": true,
                         "defaultPageSize": 10,
-                        "tabSortKey": "NAME_ASC"
+                        "sortOrder": {
+                            "property": "name",
+                            "direction": "ASC"
+                        }
                     },
                     "title": "{i18n:api-usage.exceptions}",
                     "dropShadow": true,
@@ -11644,7 +11647,7 @@
                             "hideQuickInterval": false
                         },
                         "aggregation": {
-                            "type": "SUM",
+                            "type": "NONE",
                             "limit": 25000
                         },
                         "timezone": null

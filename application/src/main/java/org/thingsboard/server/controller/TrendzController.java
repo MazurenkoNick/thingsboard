@@ -76,12 +76,17 @@ public class TrendzController extends BaseController {
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     public TrendzSettings saveTrendzSettings(@RequestBody TrendzSettings trendzSettings,
                                              @AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
-        accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.WRITE);
+        if (user.isSystemAdmin()) {
+            accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.WRITE);
+        } else {
+            accessControlService.checkPermission(user, Resource.WHITE_LABELING, Operation.WRITE);
+        }
         TenantId tenantId = user.getTenantId();
         trendzSettingsService.saveTrendzSettings(tenantId, trendzSettings);
         return trendzSettings;
     }
 
+    // TODO: delete Trendz settings
     @ApiOperation(value = "Get Trendz Settings (getTrendzSettings)",
             notes = "Retrieves Trendz settings for this tenant." +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)

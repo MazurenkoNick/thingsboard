@@ -100,11 +100,14 @@ public class DefaultUserPermissionsService implements UserPermissionsService {
         sysAdminGenericPermissions.put(Resource.NOTIFICATION, Set.of(Operation.ALL));
         sysAdminGenericPermissions.put(Resource.DOMAIN, Set.of(Operation.ALL));
         sysAdminGenericPermissions.put(Resource.OAUTH2_CLIENT, Set.of(Operation.ALL));
+        sysAdminGenericPermissions.put(Resource.OAUTH2_CONFIGURATION_TEMPLATE, Set.of(Operation.ALL));
+        sysAdminGenericPermissions.put(Resource.CUSTOM_MENU, Set.of(Operation.ALL));
         sysAdminGenericPermissions.put(Resource.MOBILE_APP, Set.of(Operation.ALL));
         sysAdminGenericPermissions.put(Resource.MOBILE_APP_BUNDLE, Set.of(Operation.ALL));
         sysAdminGenericPermissions.put(Resource.MOBILE_APP_SETTINGS, Set.of(Operation.ALL));
         sysAdminGenericPermissions.put(Resource.SECRET, Set.of(Operation.ALL));
         sysAdminGenericPermissions.put(Resource.API_KEY, Set.of(Operation.ALL));
+        sysAdminGenericPermissions.put(Resource.QUEUE, Set.of(Operation.ALL));
         sysAdminPermissions = new MergedUserPermissions(sysAdminGenericPermissions, new HashMap<>());
     }
 
@@ -189,7 +192,7 @@ public class DefaultUserPermissionsService implements UserPermissionsService {
         }
         usersByOwnerMap.forEach((ownerId, userIds) ->
                 userIds.forEach(userId -> evictMergedPermissionsToCache(tenantId,
-                                EntityType.CUSTOMER.equals(ownerId.getEntityType()) ? new CustomerId(ownerId.getId()) : new CustomerId(CustomerId.NULL_UUID), userId)));
+                        EntityType.CUSTOMER.equals(ownerId.getEntityType()) ? new CustomerId(ownerId.getId()) : new CustomerId(CustomerId.NULL_UUID), userId)));
     }
 
     private MergedUserPermissions getMergedPermissionsFromCache(TenantId tenantId, CustomerId customerId, UserId userId) {

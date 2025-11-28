@@ -36,8 +36,7 @@ import {
   NG_VALIDATORS,
   NG_VALUE_ACCESSOR,
   UntypedFormControl,
-  Validator,
-  Validators
+  Validator
 } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { deepClone, isDefinedAndNotNull } from '@core/utils';
@@ -65,6 +64,7 @@ import {
   CfAlarmScheduleDialogComponent
 } from "@home/components/alarm-rules/cf-alarm-schedule-dialog.component";
 import { coerceBoolean } from "@shared/decorators/coercion";
+import { Observable } from "rxjs";
 
 @Component({
   selector: 'tb-cf-alarm-rule-condition',
@@ -95,6 +95,13 @@ export class CfAlarmRuleConditionComponent implements ControlValueAccessor, Vali
 
   @Input()
   arguments: Record<string, CalculatedFieldArgument>;
+
+  @Input()
+  @coerceBoolean()
+  isClearCondition = false;
+
+  @Input({required: true})
+  testScript: (expression: string) => Observable<string>;
 
   alarmRuleConditionFormGroup = this.fb.group({
     type: ['SIMPLE'],
@@ -133,10 +140,8 @@ export class CfAlarmRuleConditionComponent implements ControlValueAccessor, Vali
   }
 
   writeValue(value: AlarmRuleCondition): void {
-    if (value) {
-      this.modelValue = value;
-      this.updateConditionInfo();
-    }
+    this.modelValue = value;
+    this.updateConditionInfo();
   }
 
   public conditionSet() {
@@ -162,7 +167,8 @@ export class CfAlarmRuleConditionComponent implements ControlValueAccessor, Vali
       data: {
         readonly: this.disabled,
         condition: this.disabled ? this.modelValue : deepClone(this.modelValue),
-        arguments: this.arguments
+        arguments: this.arguments,
+        testScript: this.testScript
       }
     }).afterClosed().subscribe((result) => {
       if (result) {

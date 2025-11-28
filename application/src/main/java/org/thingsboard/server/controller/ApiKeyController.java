@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
@@ -46,8 +47,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.ApiKeyId;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -71,6 +74,7 @@ import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.SYSTEM_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.USER_ID_PARAM_DESCRIPTION;
 
 @RestController
@@ -87,12 +91,29 @@ public class ApiKeyController extends BaseController {
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN','TENANT_ADMIN', 'CUSTOMER_USER')")
     @PostMapping(value = "/apiKey")
     public ApiKey saveApiKey(
-            @Parameter(description = "A JSON value representing the Api Key token.")
+            @Parameter(description = "A JSON value representing the API key.")
             @RequestBody @Valid ApiKeyInfo apiKeyInfo) throws ThingsboardException {
         User user = checkUserId(apiKeyInfo.getUserId(), Operation.WRITE);
         apiKeyInfo.setTenantId(user.getTenantId());
         checkEntity(apiKeyInfo.getId(), apiKeyInfo, Resource.API_KEY);
+        if (apiKeyInfo.getId() == null && apiKeyInfo.isInternal()) {
+            throw new ThingsboardException("Internal API key cannot be created!", ThingsboardErrorCode.PERMISSION_DENIED);
+        }
         return checkNotNull(apiKeyService.saveApiKey(apiKeyInfo.getTenantId(), apiKeyInfo));
+    }
+
+    @ApiOperation(value = "Rotate internal API key (rotateInternalApiKey)",
+            notes = "Regenerates the value of an internal API key." + SYSTEM_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAuthority('SYS_ADMIN')")
+    @PostMapping(value = "/apiKey/{id}/rotate")
+    @Hidden
+    public ApiKey rotateInternalApiKey(
+            @Parameter(description = API_KEY_ID_PARAM_DESCRIPTION, required = true)
+            @PathVariable UUID id) throws ThingsboardException {
+        ApiKeyId apiKeyId = new ApiKeyId(id);
+        ApiKey apiKey = checkApiKeyId(apiKeyId, Operation.WRITE);
+        checkUserId(apiKey.getUserId(), Operation.WRITE);
+        return checkNotNull(apiKeyService.rotateInternalApiKey(TenantId.SYS_TENANT_ID, apiKey));
     }
 
     @ApiOperation(value = "Get User Api Keys (getUserApiKeys)",

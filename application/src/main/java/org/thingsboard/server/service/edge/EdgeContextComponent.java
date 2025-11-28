@@ -115,7 +115,7 @@ import org.thingsboard.server.service.edge.rpc.processor.telemetry.TelemetryEdge
 import org.thingsboard.server.service.edge.rpc.processor.tenant.TenantEdgeProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.tenant.TenantProfileEdgeProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.translation.CustomTranslationEdgeProcessor;
-import org.thingsboard.server.service.edge.rpc.processor.user.UserEdgeProcessor;
+import org.thingsboard.server.service.edge.rpc.processor.user.UserProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.widget.WidgetBundleEdgeProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.widget.WidgetTypeEdgeProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.wl.WhiteLabelingEdgeProcessor;
@@ -344,9 +344,6 @@ public class EdgeContextComponent {
     private TenantProfileEdgeProcessor tenantProfileProcessor;
 
     @Autowired
-    private UserEdgeProcessor userProcessor;
-
-    @Autowired
     private WidgetBundleEdgeProcessor widgetBundleProcessor;
 
     @Autowired
@@ -402,8 +399,12 @@ public class EdgeContextComponent {
 
     @Autowired
     private AiModelService aiModelService;
+
     @Autowired
     private AiModelProcessor aiModelProcessor;
+
+    @Autowired
+    private UserProcessor userProcessor;
 
     public EdgeProcessor getProcessor(EdgeEventType edgeEventType) {
         EdgeProcessor processor = processorMap.get(edgeEventType);

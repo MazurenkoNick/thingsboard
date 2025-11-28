@@ -108,7 +108,7 @@ export class AlarmRuleFilterConfigComponent implements OnInit, ControlValueAcces
 
   panelMode = false;
 
-  buttonDisplayValue = this.translate.instant('alarm-rule.alarm-rule-filter');
+  buttonDisplayValue = this.translate.instant('alarm-rule.alarm-rule-filter-title');
 
   alarmRuleFilterConfigForm: FormGroup;
 
@@ -307,6 +307,9 @@ export class AlarmRuleFilterConfigComponent implements OnInit, ControlValueAcces
       const filterTextParts: string[] = [];
       if (this.alarmRuleFilterConfig?.name?.length) {
         filterTextParts.push(this.alarmRuleFilterConfig.name.map((type) => this.customTranslate(type)).join(', '));
+      }
+      if (this.alarmRuleFilterConfig?.entityType) {
+        filterTextParts.push(this.translate.instant( entityTypeTranslations.get(this.alarmRuleFilterConfig.entityType).type));
       }
       if (!filterTextParts.length) {
         this.buttonDisplayValue = this.translate.instant('alarm-rule.alarm-rule-filter-title');

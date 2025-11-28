@@ -30,4 +30,7 @@
  */
 package org.thingsboard.server.service.security.model.token;
 
-public record RawApiKey(String apiKey) {}
+import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.UserId;
+
+public record ApiKeyAuthRequest(String apiKey, UserId userId, CustomerId customerId) {}

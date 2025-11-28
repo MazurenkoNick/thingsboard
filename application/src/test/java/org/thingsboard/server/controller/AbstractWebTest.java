@@ -53,8 +53,6 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpHeaders;
@@ -68,6 +66,8 @@ import org.springframework.mock.http.MockHttpInputMessage;
 import org.springframework.mock.http.MockHttpOutputMessage;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockPart;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -187,6 +187,7 @@ import org.thingsboard.server.service.entitiy.tenant.profile.TbTenantProfileServ
 import org.thingsboard.server.service.security.auth.jwt.RefreshTokenRequest;
 import org.thingsboard.server.service.security.auth.rest.LoginRequest;
 import org.thingsboard.server.service.security.model.token.JwtTokenFactory;
+import org.thingsboard.server.service.system.SystemPatchApplier;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -327,17 +328,20 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
     @Autowired
     private JwtTokenFactory jwtTokenFactory;
 
-    @SpyBean
-    protected MailService mailService;
-
     @Autowired
     protected InMemoryStorage storage;
 
     @Autowired
     protected JdbcTemplate jdbcTemplate;
 
-    @MockBean
+    @MockitoSpyBean
+    protected MailService mailService;
+
+    @MockitoBean
     protected CfRocksDb cfRocksDb;
+
+    @MockitoBean
+    protected SystemPatchApplier systemPatchApplier;
 
     @Rule
     public TestRule watcher = new TestWatcher() {
@@ -778,9 +782,12 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
         this.apiKey = apiKey;
     }
 
-    protected void setApiKey(MockHttpServletRequestBuilder request) {
+    protected void setApiKey(MockHttpServletRequestBuilder request, UserId userId) {
         if (this.apiKey != null) {
             request.header(ThingsboardSecurityConfiguration.AUTHORIZATION_HEADER, API_KEY_HEADER_PREFIX + this.apiKey);
+        }
+        if (userId != null) {
+            request.header("X-User-Id", userId.toString());
         }
     }
 
@@ -898,7 +905,13 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
 
     protected ResultActions doGetWithApiKey(String urlTemplate, Object... urlVariables) throws Exception {
         MockHttpServletRequestBuilder getRequest = get(urlTemplate, urlVariables);
-        setApiKey(getRequest);
+        setApiKey(getRequest, null);
+        return mockMvc.perform(getRequest);
+    }
+
+    protected ResultActions doGetWithInternalApiKey(String urlTemplate, UserId userId, Object... urlVariables) throws Exception {
+        MockHttpServletRequestBuilder getRequest = get(urlTemplate, urlVariables);
+        setApiKey(getRequest, userId);
         return mockMvc.perform(getRequest);
     }
 
@@ -957,6 +970,30 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
         return readResponse(doGet(urlTemplate, vars).andExpect(status().isOk()), responseType);
     }
 
+    protected <T> T doGetTypedWithPageLinkAndInternalApiKey(String urlTemplate, TypeReference<T> responseType,
+                                                            PageLink pageLink, UserId userId,
+                                                            Object... urlVariables) throws Exception {
+        List<Object> pageLinkVariables = new ArrayList<>();
+        urlTemplate += "pageSize={pageSize}&page={page}";
+        pageLinkVariables.add(pageLink.getPageSize());
+        pageLinkVariables.add(pageLink.getPage());
+        if (StringUtils.isNotEmpty(pageLink.getTextSearch())) {
+            urlTemplate += "&textSearch={textSearch}";
+            pageLinkVariables.add(pageLink.getTextSearch());
+        }
+        if (pageLink.getSortOrder() != null) {
+            urlTemplate += "&sortProperty={sortProperty}&sortOrder={sortOrder}";
+            pageLinkVariables.add(pageLink.getSortOrder().getProperty());
+            pageLinkVariables.add(pageLink.getSortOrder().getDirection().name());
+        }
+
+        Object[] vars = new Object[urlVariables.length + pageLinkVariables.size()];
+        System.arraycopy(urlVariables, 0, vars, 0, urlVariables.length);
+        System.arraycopy(pageLinkVariables.toArray(), 0, vars, urlVariables.length, pageLinkVariables.size());
+
+        return readResponse(doGetWithInternalApiKey(urlTemplate, userId, vars).andExpect(status().isOk()), responseType);
+    }
+
     protected <T> T doGetTypedWithTimePageLink(String urlTemplate, TypeReference<T> responseType,
                                                TimePageLink pageLink,
                                                Object... urlVariables) throws Exception {
@@ -1008,10 +1045,9 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
         }
     }
 
-    protected <T, R> R doPostWithApiKey(String urlTemplate, T content, Class<R> responseClass, String... params) {
+    protected <T, R> R doPostWithApiKey(String urlTemplate, T content, Class<R> responseClass, UserId userId, String... params) {
         try {
-            return readResponse(doPostWithApiKey(urlTemplate, content, params).andExpect(status().isOk()), responseClass);
-
+            return readResponse(doPostWithApiKey(urlTemplate, content, userId, params).andExpect(status().isOk()), responseClass);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -1092,9 +1128,9 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
         return mockMvc.perform(postRequest);
     }
 
-    protected <T> ResultActions doPostWithApiKey(String urlTemplate, T content, String... params) throws Exception {
+    protected <T> ResultActions doPostWithApiKey(String urlTemplate, T content, UserId userId, String... params) throws Exception {
         MockHttpServletRequestBuilder postRequest = post(urlTemplate, params);
-        setApiKey(postRequest);
+        setApiKey(postRequest, userId);
         String json = json(content);
         postRequest.contentType(contentType).content(json);
         return mockMvc.perform(postRequest);
@@ -1134,9 +1170,16 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
         return mockMvc.perform(asyncDispatch(result));
     }
 
+    protected ResultActions doDeleteWithInternalApiKey(String urlTemplate, UserId userId, String... params) throws Exception {
+        MockHttpServletRequestBuilder deleteRequest = delete(urlTemplate);
+        setApiKey(deleteRequest, userId);
+        populateParams(deleteRequest, params);
+        return mockMvc.perform(deleteRequest);
+    }
+
     protected ResultActions doDeleteWithApiKey(String urlTemplate, String... params) throws Exception {
         MockHttpServletRequestBuilder deleteRequest = delete(urlTemplate);
-        setApiKey(deleteRequest);
+        setApiKey(deleteRequest, null);
         populateParams(deleteRequest, params);
         return mockMvc.perform(deleteRequest);
     }

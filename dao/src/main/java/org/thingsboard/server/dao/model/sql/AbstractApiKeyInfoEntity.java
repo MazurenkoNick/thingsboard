@@ -30,14 +30,18 @@
  */
 package org.thingsboard.server.dao.model.sql;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.Type;
 import org.thingsboard.server.common.data.id.ApiKeyId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.pat.ApiKeyInfo;
+import org.thingsboard.server.common.data.permission.AuthorityPermissionsInfo;
 import org.thingsboard.server.dao.model.BaseEntity;
 import org.thingsboard.server.dao.model.BaseSqlEntity;
 
@@ -46,6 +50,8 @@ import java.util.UUID;
 import static org.thingsboard.server.dao.model.ModelConstants.API_KEY_DESCRIPTION_COLUMN_NAME;
 import static org.thingsboard.server.dao.model.ModelConstants.API_KEY_ENABLED_COLUMN_NAME;
 import static org.thingsboard.server.dao.model.ModelConstants.API_KEY_EXPIRATION_TIME_COLUMN_NAME;
+import static org.thingsboard.server.dao.model.ModelConstants.API_KEY_INTERNAL_COLUMN_NAME;
+import static org.thingsboard.server.dao.model.ModelConstants.API_KEY_PERMISSIONS_COLUMN_NAME;
 import static org.thingsboard.server.dao.model.ModelConstants.API_KEY_TENANT_ID_COLUMN_NAME;
 import static org.thingsboard.server.dao.model.ModelConstants.API_KEY_USER_ID_COLUMN_NAME;
 
@@ -69,6 +75,13 @@ public abstract class AbstractApiKeyInfoEntity<T extends ApiKeyInfo> extends Bas
     @Column(name = API_KEY_DESCRIPTION_COLUMN_NAME)
     private String description;
 
+    @Column(name = API_KEY_INTERNAL_COLUMN_NAME)
+    private boolean internal;
+
+    @Type(JsonBinaryType.class)
+    @Column(name = API_KEY_PERMISSIONS_COLUMN_NAME, columnDefinition = "json")
+    private JsonNode permissions;
+
     public AbstractApiKeyInfoEntity() {
         super();
     }
@@ -80,6 +93,8 @@ public abstract class AbstractApiKeyInfoEntity<T extends ApiKeyInfo> extends Bas
         this.expirationTime = apiKeyInfo.getExpirationTime();
         this.description = apiKeyInfo.getDescription();
         this.enabled = apiKeyInfo.isEnabled();
+        this.internal = apiKeyInfo.isInternal();
+        this.permissions = toJson(apiKeyInfo.getPermissions());
     }
 
     protected ApiKeyInfo toApiKeyInfo() {
@@ -90,6 +105,8 @@ public abstract class AbstractApiKeyInfoEntity<T extends ApiKeyInfo> extends Bas
         apiKeyInfo.setEnabled(enabled);
         apiKeyInfo.setExpirationTime(expirationTime);
         apiKeyInfo.setDescription(description);
+        apiKeyInfo.setInternal(internal);
+        apiKeyInfo.setPermissions(fromJson(permissions, AuthorityPermissionsInfo.class));
         return apiKeyInfo;
     }
 

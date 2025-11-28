@@ -182,10 +182,10 @@ public class TwoFactorAuthConfigController extends BaseController {
 
     @ApiOperation(value = "Update 2FA account config (updateTwoFaAccountConfig)", notes =
             "Update config for a given provider type. \n" +
-            "Update request example:\n" +
-            "```\n{\n  \"useByDefault\": true\n}\n```\n" +
-            "Returns whole account's 2FA settings object.\n" +
-            ControllerConstants.AVAILABLE_FOR_ANY_AUTHORIZED_USER)
+                    "Update request example:\n" +
+                    "```\n{\n  \"useByDefault\": true\n}\n```\n" +
+                    "Returns whole account's 2FA settings object.\n" +
+                    ControllerConstants.AVAILABLE_FOR_ANY_AUTHORIZED_USER)
     @PutMapping("/account/config")
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
     public AccountTwoFaSettings updateTwoFaAccountConfig(@RequestParam TwoFaProviderType providerType,
@@ -201,8 +201,8 @@ public class TwoFactorAuthConfigController extends BaseController {
 
     @ApiOperation(value = "Delete 2FA account config (deleteTwoFaAccountConfig)", notes =
             "Delete 2FA config for a given 2FA provider type. \n" +
-            "Returns whole account's 2FA settings object.\n" +
-            ControllerConstants.AVAILABLE_FOR_ANY_AUTHORIZED_USER)
+                    "Returns whole account's 2FA settings object.\n" +
+                    ControllerConstants.AVAILABLE_FOR_ANY_AUTHORIZED_USER)
     @DeleteMapping("/account/config")
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
     public AccountTwoFaSettings deleteTwoFaAccountConfig(@RequestParam TwoFaProviderType providerType) throws ThingsboardException {
@@ -213,9 +213,9 @@ public class TwoFactorAuthConfigController extends BaseController {
 
     @ApiOperation(value = "Get available 2FA providers (getAvailableTwoFaProviders)", notes =
             "Get the list of provider types available for user to use (the ones configured by tenant or sysadmin).\n" +
-            "Example of response:\n" +
-            "```\n[\n  \"TOTP\",\n  \"EMAIL\",\n  \"SMS\"\n]\n```" +
-            ControllerConstants.AVAILABLE_FOR_ANY_AUTHORIZED_USER
+                    "Example of response:\n" +
+                    "```\n[\n  \"TOTP\",\n  \"EMAIL\",\n  \"SMS\"\n]\n```" +
+                    ControllerConstants.AVAILABLE_FOR_ANY_AUTHORIZED_USER
     )
     @GetMapping("/providers")
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER', 'MFA_CONFIGURATION_TOKEN')")
