@@ -64,7 +64,7 @@ import java.util.TimeZone;
 
 @Service
 @Slf4j
-@Profile("!install")
+@Profile("!install & !test")
 public class BasicSubscriptionService implements SubscriptionService, TbLicenseClientListener {
 
     private static final String MAX_DEVICES_KEY = "maxdevices";
