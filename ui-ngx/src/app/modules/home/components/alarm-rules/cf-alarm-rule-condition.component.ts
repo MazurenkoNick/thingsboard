@@ -35,7 +35,7 @@ import {
   FormBuilder,
   NG_VALIDATORS,
   NG_VALUE_ACCESSOR,
-  UntypedFormControl,
+  ValidationErrors,
   Validator
 } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
@@ -145,10 +145,10 @@ export class CfAlarmRuleConditionComponent implements ControlValueAccessor, Vali
   }
 
   public conditionSet() {
-    return this.modelValue && (this.modelValue.expression?.expression || this.modelValue.expression?.filters) || !this.required;
+    return this.modelValue && (this.modelValue.expression?.expression || this.modelValue.expression?.filters);
   }
 
-  public validate(c: UntypedFormControl) {
+  public validate(): ValidationErrors | null {
     return this.conditionSet() ? null : {
       alarmRuleCondition: {
         valid: false,
@@ -181,11 +181,11 @@ export class CfAlarmRuleConditionComponent implements ControlValueAccessor, Vali
 
   private updateConditionInfo() {
     this.alarmRuleConditionFormGroup.patchValue(
-      {
+      this.modelValue ? {
         type: this.modelValue?.type,
         expression: this.modelValue?.expression,
         schedule: this.modelValue?.schedule,
-      }, {emitEvent: false}
+      } : null, {emitEvent: false}
     );
     this.updateScheduleText();
     this.updateSpecText();
