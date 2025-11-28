@@ -78,9 +78,9 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
     public static final String TRENDZ_API_KEY_DESCRIPTION = "Internal API key used to authenticate with Trendz";
 
-    private static final String TRENDZ_INFO_URI = "/apiTrendz/publicApi/info";
-    private static final String TRENDZ_SYNC_INIT_URI = "/apiTrendz/publicApi/sync/init";
-    private static final String TRENDZ_HEALTHCHECK_URI = "/apiTrendz/publicApi/sync/check";
+    public static final String TRENDZ_INFO_URI = "/apiTrendz/publicApi/info";
+    public static final String TRENDZ_SYNC_INIT_URI = "/apiTrendz/publicApi/sync/init";
+    public static final String TRENDZ_HEALTHCHECK_URI = "/apiTrendz/publicApi/sync/check";
 
     private static final String MIN_SUPPORTED_VERSION = "1.14.1";
     private static final int REQUEST_TIMEOUT_MS = 15000;
@@ -156,7 +156,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         TrendzSettings settings = createSettings(
                 trendzUrl, tbUrl,
                 syncResponse.trendzVersion(), updatedTs,
-                synced ? TrendzSynchronizationResultType.SYNC_COMPLETED : syncResponse.resultType(),
+                syncResponse.resultType(),
                 synced ? TrendzSynchronizationStatus.SYNCED : TrendzSynchronizationStatus.AVAILABLE
         );
         trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
@@ -217,7 +217,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
                     null,
                     TrendzSynchronizationResultType.SYNC_INTERNAL_ERROR,
                     false,
-                    "Network error or Trendz is not reachable"
+                    TrendzSynchronizationResultType.SYNC_INTERNAL_ERROR.getMessage()
             );
         }
 
@@ -291,7 +291,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
                     trendzUrl, tbUrl,
                     null, updatedTs,
                     TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED,
-                    TrendzSynchronizationStatus.AVAILABLE
+                    TrendzSynchronizationStatus.NOT_AVAILABLE
             );
             trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
             log.warn("Trendz version info is not recognized from URL: {} - unexpected JSON structure", trendzUrl);
@@ -398,7 +398,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
             return trendzApiKey;
         }
 
-        log.info("Creating new Trendz internal API key with configured permissions");
+        log.trace("Creating new Trendz internal API key with configured permissions");
         ApiKeyInfo apiKeyInfo = new ApiKeyInfo();
         apiKeyInfo.setTenantId(TenantId.SYS_TENANT_ID);
         apiKeyInfo.setUserId(userId);

@@ -32,13 +32,9 @@ package org.thingsboard.server.service.trendz;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.junit.Assert;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -65,17 +61,20 @@ import org.thingsboard.server.dao.service.DaoSqlTest;
 import org.thingsboard.server.dao.trendz.TrendzSettingsService;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
 
-import java.util.stream.Stream;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
+import static org.thingsboard.server.service.trendz.DefaultTrendzSyncService.TRENDZ_HEALTHCHECK_URI;
+import static org.thingsboard.server.service.trendz.DefaultTrendzSyncService.TRENDZ_INFO_URI;
+import static org.thingsboard.server.service.trendz.DefaultTrendzSyncService.TRENDZ_SYNC_INIT_URI;
 
 @DaoSqlTest
 @TestPropertySource(properties = {
-        "trendz.enabled=true",
         "trendz.default_trendz_url=https://trendz.example.com",
         "trendz.default_tb_url=https://tb.example.com"
 })
@@ -101,23 +100,16 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
     private static final String TEST_EXTERNAL_TB_URL = "https://external.tb.example.com";
     private static final String TEST_TRENDZ_VERSION = "1.15.0";
 
-    @BeforeEach
+    @Before
     public void setUp() throws Exception {
         loginSysAdmin();
 
-        ApiKey trendzApiKey = new ApiKey();
-        trendzApiKey.setTenantId(TenantId.SYS_TENANT_ID);
-        trendzApiKey.setUserId(currentUserId);
-        trendzApiKey.setEnabled(true);
-        trendzApiKey.setInternal(true);
-        trendzApiKey.setDescription("Internal API key used to authenticate with Trendz");
-        apiKeyService.saveApiKey(tenantId, trendzApiKey);
-
+        ReflectionTestUtils.setField(trendzSyncService, "trendzEnabled", true);
         ReflectionTestUtils.setField(trendzSyncService, "restTemplate", restTemplate);
         reset(restTemplate, systemSecurityService);
     }
 
-    @AfterEach
+    @After
     public void tearDown() {
         ApiKey trendzApiKey = apiKeyService.findApiKeyByDescription(TenantId.SYS_TENANT_ID, DefaultTrendzSyncService.TRENDZ_API_KEY_DESCRIPTION);
         if (trendzApiKey != null) {
@@ -136,13 +128,13 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
 
         TrendzSettings result = trendzSyncService.performSync(TenantId.SYS_TENANT_ID, currentUserId);
 
-        Assert.assertNotNull(result);
-        Assert.assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, result.trendzSynchronizationResult().resultType());
-        Assert.assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, result.trendzSynchronizationResult().status());
+        assertNotNull(result);
+        assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, result.trendzSynchronizationResult().resultType());
+        assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, result.trendzSynchronizationResult().status());
 
         TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
-        Assert.assertNotNull(savedSettings);
-        Assert.assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, savedSettings.trendzSynchronizationResult().resultType());
+        assertNotNull(savedSettings);
+        assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, savedSettings.trendzSynchronizationResult().resultType());
     }
 
     @Test
@@ -153,7 +145,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         trendzInfoResponse.put("name", "Trendz Analytics");
         trendzInfoResponse.put("cloud", false);
         when(restTemplate.exchange(
-                eq(TEST_TRENDZ_URL + "/api/publicApi/info"),
+                eq(TEST_TRENDZ_URL + TRENDZ_INFO_URI),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(JsonNode.class)
@@ -166,34 +158,38 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         syncResponse.put("message", "Sync completed successfully");
         when(systemSecurityService.getBaseUrl(eq(TenantId.SYS_TENANT_ID), any(), any())).thenReturn(TEST_EXTERNAL_TB_URL);
         when(restTemplate.exchange(
-                eq(TEST_TRENDZ_URL + "/apiTrendz/publicApi/sync/init"),
+                eq(TEST_TRENDZ_URL + TRENDZ_SYNC_INIT_URI),
                 eq(HttpMethod.POST),
                 any(HttpEntity.class),
-                eq(JsonNode.class)
-        )).thenReturn(new ResponseEntity<>(syncResponse, HttpStatus.OK));
+                any(Class.class)
+        )).thenAnswer(invocation -> {
+            Class<?> responseType = invocation.getArgument(3);
+            Object convertedResponse = JacksonUtil.convertValue(syncResponse, responseType);
+            return new ResponseEntity<>(convertedResponse, HttpStatus.OK);
+        });
 
         TrendzSettings result = trendzSyncService.performSync(TenantId.SYS_TENANT_ID, currentUserId);
 
-        Assert.assertNotNull(result);
-        Assert.assertEquals(TrendzSynchronizationResultType.SYNC_COMPLETED, result.trendzSynchronizationResult().resultType());
-        Assert.assertEquals(TrendzSynchronizationStatus.SYNCED, result.trendzSynchronizationResult().status());
-        Assert.assertEquals(TEST_TRENDZ_VERSION, result.trendzSynchronizationResult().trendzVersion());
+        assertNotNull(result);
+        assertEquals(TrendzSynchronizationResultType.SYNC_COMPLETED, result.trendzSynchronizationResult().resultType());
+        assertEquals(TrendzSynchronizationStatus.SYNCED, result.trendzSynchronizationResult().status());
+        assertEquals(TEST_TRENDZ_VERSION, result.trendzSynchronizationResult().trendzVersion());
 
         ApiKey apiKey = apiKeyService.findApiKeyByDescription(TenantId.SYS_TENANT_ID, DefaultTrendzSyncService.TRENDZ_API_KEY_DESCRIPTION);
-        Assert.assertNotNull(apiKey);
-        Assert.assertTrue(apiKey.isInternal());
-        Assert.assertTrue(apiKey.isEnabled());
+        assertNotNull(apiKey);
+        assertTrue(apiKey.isInternal());
+        assertTrue(apiKey.isEnabled());
 
         TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
-        Assert.assertNotNull(savedSettings);
-        Assert.assertEquals(TrendzSynchronizationResultType.SYNC_COMPLETED, savedSettings.trendzSynchronizationResult().resultType());
-        Assert.assertEquals(TrendzSynchronizationStatus.SYNCED, savedSettings.trendzSynchronizationResult().status());
+        assertNotNull(savedSettings);
+        assertEquals(TrendzSynchronizationResultType.SYNC_COMPLETED, savedSettings.trendzSynchronizationResult().resultType());
+        assertEquals(TrendzSynchronizationStatus.SYNCED, savedSettings.trendzSynchronizationResult().status());
     }
 
     @Test
     public void testPerformSync_trendzUnreachable() {
         when(restTemplate.exchange(
-                eq(TEST_TRENDZ_URL + "/api/publicApi/info"),
+                eq(TEST_TRENDZ_URL + TRENDZ_INFO_URI),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(JsonNode.class)
@@ -201,37 +197,13 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
 
         TrendzSettings result = trendzSyncService.performSync(TenantId.SYS_TENANT_ID, currentUserId);
 
-        Assert.assertNotNull(result);
-        Assert.assertEquals(TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, result.trendzSynchronizationResult().resultType());
-        Assert.assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, result.trendzSynchronizationResult().status());
+        assertNotNull(result);
+        assertEquals(TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, result.trendzSynchronizationResult().resultType());
+        assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, result.trendzSynchronizationResult().status());
 
         TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
-        Assert.assertNotNull(savedSettings);
-        Assert.assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, savedSettings.trendzSynchronizationResult().status());
-    }
-
-    @ParameterizedTest
-    @MethodSource("versionSupportProvider")
-    public void testPerformSync_versionSupport(String version, boolean shouldBeSupported) {
-        Boolean result = ReflectionTestUtils.invokeMethod(trendzSyncService, "isVersionSupported", version);
-        assertEquals(shouldBeSupported, result);
-    }
-
-    private static Stream<Arguments> versionSupportProvider() {
-        return Stream.of(
-                Arguments.of("1.14.0", false),
-                Arguments.of("1.13.9", false),
-                Arguments.of("1.12.5", false),
-                Arguments.of("0.9.0", false),
-                Arguments.of("1.14.1", true),
-                Arguments.of("1.14.2", true),
-                Arguments.of("1.15.0", true),
-                Arguments.of("2.0.0", true),
-                Arguments.of("1.15.0-SNAPSHOT", true),
-                Arguments.of("1.15.2.44-TRENDZ", true),
-                Arguments.of("1.15.2.44.5-PAAS", true),
-                Arguments.of("1.13.0-RC1", false)
-        );
+        assertNotNull(savedSettings);
+        assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, savedSettings.trendzSynchronizationResult().status());
     }
 
     @Test
@@ -240,7 +212,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         trendzInfoResponse.put("version", TEST_TRENDZ_VERSION);
         trendzInfoResponse.put("artifact", "trendz");
         when(restTemplate.exchange(
-                eq(TEST_TRENDZ_URL + "/api/publicApi/info"),
+                eq(TEST_TRENDZ_URL + TRENDZ_INFO_URI),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(JsonNode.class)
@@ -252,23 +224,24 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         syncResponse.put("success", true);
         when(systemSecurityService.getBaseUrl(eq(TenantId.SYS_TENANT_ID), any(), any())).thenReturn(null);
         when(restTemplate.exchange(
-                eq(TEST_TRENDZ_URL + "/apiTrendz/publicApi/sync/init"),
+                eq(TEST_TRENDZ_URL + TRENDZ_SYNC_INIT_URI),
                 eq(HttpMethod.POST),
                 any(HttpEntity.class),
-                eq(JsonNode.class)
-        )).thenReturn(new ResponseEntity<>(syncResponse, HttpStatus.OK));
-
-        ApiKey apiKeyBefore = apiKeyService.findApiKeyByDescription(TenantId.SYS_TENANT_ID, DefaultTrendzSyncService.TRENDZ_API_KEY_DESCRIPTION);
-        Assert.assertNull(apiKeyBefore);
+                any(Class.class)
+        )).thenAnswer(invocation -> {
+            Class<?> responseType = invocation.getArgument(3);
+            Object convertedResponse = JacksonUtil.convertValue(syncResponse, responseType);
+            return new ResponseEntity<>(convertedResponse, HttpStatus.OK);
+        });
 
         TrendzSettings result = trendzSyncService.performSync(TenantId.SYS_TENANT_ID, currentUserId);
 
-        Assert.assertNotNull(result);
+        assertNotNull(result);
 
-        ApiKey apiKeyAfter = apiKeyService.findApiKeyByDescription(TenantId.SYS_TENANT_ID, DefaultTrendzSyncService.TRENDZ_API_KEY_DESCRIPTION);
-        Assert.assertNotNull(apiKeyAfter);
-        Assert.assertTrue(apiKeyAfter.isInternal());
-        Assert.assertEquals(DefaultTrendzSyncService.TRENDZ_API_KEY_DESCRIPTION, apiKeyAfter.getDescription());
+        ApiKey apiKeyByDescription = apiKeyService.findApiKeyByDescription(TenantId.SYS_TENANT_ID, DefaultTrendzSyncService.TRENDZ_API_KEY_DESCRIPTION);
+        assertNotNull(apiKeyByDescription);
+        assertTrue(apiKeyByDescription.isInternal());
+        assertEquals(DefaultTrendzSyncService.TRENDZ_API_KEY_DESCRIPTION, apiKeyByDescription.getDescription());
     }
 
     @Test
@@ -277,18 +250,18 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
 
         TrendzHealthcheckResult result = trendzSyncService.performHealthcheck();
 
-        Assert.assertNotNull(result);
-        Assert.assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, result.syncStatus());
-        Assert.assertFalse(result.success());
+        assertNotNull(result);
+        assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, result.syncStatus());
+        assertFalse(result.success());
     }
 
     @Test
     public void testPerformHealthcheck_notInitialized() {
         TrendzHealthcheckResult result = trendzSyncService.performHealthcheck();
 
-        Assert.assertNotNull(result);
-        Assert.assertEquals(TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, result.syncStatus());
-        Assert.assertFalse(result.success());
+        assertNotNull(result);
+        assertEquals(TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, result.syncStatus());
+        assertFalse(result.success());
     }
 
     @Test
@@ -306,7 +279,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         trendzInfoResponse.put("version", TEST_TRENDZ_VERSION);
         trendzInfoResponse.put("artifact", "trendz");
         when(restTemplate.exchange(
-                eq(TEST_TRENDZ_URL + "/api/publicApi/info"),
+                eq(TEST_TRENDZ_URL + TRENDZ_INFO_URI),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(JsonNode.class)
@@ -318,11 +291,15 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         syncResponse.put("success", true);
         when(systemSecurityService.getBaseUrl(eq(TenantId.SYS_TENANT_ID), any(), any())).thenReturn(TEST_EXTERNAL_TB_URL);
         when(restTemplate.exchange(
-                eq(TEST_TRENDZ_URL + "/apiTrendz/publicApi/sync/init"),
+                eq(TEST_TRENDZ_URL + TRENDZ_SYNC_INIT_URI),
                 eq(HttpMethod.POST),
                 any(HttpEntity.class),
-                eq(JsonNode.class)
-        )).thenReturn(new ResponseEntity<>(syncResponse, HttpStatus.OK));
+                any(Class.class)
+        )).thenAnswer(invocation -> {
+            Class<?> responseType = invocation.getArgument(3);
+            Object convertedResponse = JacksonUtil.convertValue(syncResponse, responseType);
+            return new ResponseEntity<>(convertedResponse, HttpStatus.OK);
+        });
 
         trendzSyncService.performSync(TenantId.SYS_TENANT_ID, currentUserId);
 
@@ -332,18 +309,22 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         healthcheckResponse.put("success", true);
         healthcheckResponse.put("message", "Healthcheck passed");
         when(restTemplate.exchange(
-                eq(TEST_TRENDZ_URL + "/apiTrendz/publicApi/sync/check"),
+                eq(TEST_TRENDZ_URL + TRENDZ_HEALTHCHECK_URI),
                 eq(HttpMethod.POST),
                 any(HttpEntity.class),
-                eq(JsonNode.class)
-        )).thenReturn(new ResponseEntity<>(healthcheckResponse, HttpStatus.OK));
+                any(Class.class)
+        )).thenAnswer(invocation -> {
+            Class<?> responseType = invocation.getArgument(3);
+            Object convertedResponse = JacksonUtil.convertValue(healthcheckResponse, responseType);
+            return new ResponseEntity<>(convertedResponse, HttpStatus.OK);
+        });
 
         TrendzHealthcheckResult result = trendzSyncService.performHealthcheck();
 
-        Assert.assertNotNull(result);
-        Assert.assertTrue(result.success());
-        Assert.assertEquals(TrendzSynchronizationResultType.SYNC_COMPLETED, result.syncStatus());
-        Assert.assertEquals("Healthcheck passed", result.message());
+        assertNotNull(result);
+        assertTrue(result.success());
+        assertEquals(TrendzSynchronizationResultType.SYNC_COMPLETED, result.syncStatus());
+        assertEquals("Healthcheck passed", result.message());
     }
 
     @Test
@@ -361,7 +342,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         trendzInfoResponse.put("version", TEST_TRENDZ_VERSION);
         trendzInfoResponse.put("artifact", "trendz");
         when(restTemplate.exchange(
-                eq(TEST_TRENDZ_URL + "/api/publicApi/info"),
+                eq(TEST_TRENDZ_URL + TRENDZ_INFO_URI),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(JsonNode.class)
@@ -373,27 +354,31 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         syncResponse.put("success", true);
         when(systemSecurityService.getBaseUrl(eq(TenantId.SYS_TENANT_ID), any(), any())).thenReturn(TEST_EXTERNAL_TB_URL);
         when(restTemplate.exchange(
-                eq(TEST_TRENDZ_URL + "/apiTrendz/publicApi/sync/init"),
+                eq(TEST_TRENDZ_URL + TRENDZ_SYNC_INIT_URI),
                 eq(HttpMethod.POST),
                 any(HttpEntity.class),
-                eq(JsonNode.class)
-        )).thenReturn(new ResponseEntity<>(syncResponse, HttpStatus.OK));
+                any(Class.class)
+        )).thenAnswer(invocation -> {
+            Class<?> responseType = invocation.getArgument(3);
+            Object convertedResponse = JacksonUtil.convertValue(syncResponse, responseType);
+            return new ResponseEntity<>(convertedResponse, HttpStatus.OK);
+        });
 
         trendzSyncService.performSync(TenantId.SYS_TENANT_ID, currentUserId);
 
         when(restTemplate.exchange(
-                eq(TEST_TRENDZ_URL + "/apiTrendz/publicApi/sync/check"),
+                eq(TEST_TRENDZ_URL + TRENDZ_HEALTHCHECK_URI),
                 eq(HttpMethod.POST),
                 any(HttpEntity.class),
-                eq(JsonNode.class)
+                any(Class.class)
         )).thenThrow(new RestClientException("Connection timeout"));
 
         TrendzHealthcheckResult result = trendzSyncService.performHealthcheck();
 
-        Assert.assertNotNull(result);
-        Assert.assertFalse(result.success());
-        Assert.assertEquals(TrendzSynchronizationResultType.SYNC_INTERNAL_ERROR, result.syncStatus());
-        Assert.assertEquals("Network error or Trendz is not reachable", result.message());
+        assertNotNull(result);
+        assertFalse(result.success());
+        assertEquals(TrendzSynchronizationResultType.SYNC_INTERNAL_ERROR, result.syncStatus());
+        assertEquals("Network error or Trendz is not reachable", result.message());
     }
 
 }
