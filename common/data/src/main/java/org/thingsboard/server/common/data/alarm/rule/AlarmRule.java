@@ -48,7 +48,7 @@ public class AlarmRule {
 
     @JsonIgnore
     public boolean requiresScheduledReevaluation() {
-        return condition.hasSchedule();
+        return condition.requiresScheduledReevaluation();
     }
 
 }

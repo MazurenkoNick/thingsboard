@@ -36,6 +36,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.AssertTrue;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -63,6 +64,20 @@ public abstract class AlarmCondition {
     @JsonIgnore
     public boolean hasSchedule() {
         return schedule != null && !(schedule.getStaticValue() instanceof AnyTimeSchedule);
+    }
+
+    @JsonIgnore
+    public boolean requiresScheduledReevaluation() {
+        return hasSchedule() || expression.requiresScheduledReevaluation();
+    }
+
+    @JsonIgnore
+    @AssertTrue(message = "Expressions requiring scheduled reevaluation can only be used with simple alarm conditions")
+    public boolean isValid() {
+        if (getType() != AlarmConditionType.SIMPLE && expression.requiresScheduledReevaluation()) {
+            return false;
+        }
+        return true;
     }
 
     @JsonIgnore

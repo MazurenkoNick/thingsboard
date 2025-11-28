@@ -28,28 +28,31 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.alarm.rule.condition.expression;
+package org.thingsboard.server.common.data.alarm.rule.condition.expression.predicate;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.alarm.rule.condition.AlarmConditionValue;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-        @Type(name = "SIMPLE", value = SimpleAlarmConditionExpression.class),
-        @Type(name = "TBEL", value = TbelAlarmConditionExpression.class),
-})
-public interface AlarmConditionExpression {
+import java.util.concurrent.TimeUnit;
 
-    @JsonIgnore
-    AlarmConditionExpressionType getType();
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class NoDataFilterPredicate implements KeyFilterPredicate {
 
-    @JsonIgnore
-    default boolean requiresScheduledReevaluation() {
-        return false;
+    @NotNull
+    private TimeUnit unit;
+    @Valid
+    @NotNull
+    private AlarmConditionValue<Long> duration;
+
+    @Override
+    public FilterPredicateType getType() {
+        return FilterPredicateType.NO_DATA;
     }
 
 }

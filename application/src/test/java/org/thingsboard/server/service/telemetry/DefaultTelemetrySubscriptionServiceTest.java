@@ -181,7 +181,7 @@ class DefaultTelemetrySubscriptionServiceTest {
         apiUsageState.setDbStorageState(ApiUsageStateValue.ENABLED);
         lenient().when(apiUsageStateService.getApiUsageState(tenantId)).thenReturn(apiUsageState);
 
-        lenient().when(partitionService.resolve(ServiceType.TB_CORE, tenantId, entityId)).thenReturn(tpi);
+        lenient().when(partitionService.resolve(eq(ServiceType.TB_CORE), eq(tenantId), any())).thenReturn(tpi);
 
         lenient().when(tsService.save(tenantId, entityId, sampleTimeseries, sampleTtl, false)).thenReturn(immediateFuture(TimeseriesSaveResult.of(sampleTimeseries.size(), listOfNNumbers(sampleTimeseries.size()))));
         lenient().when(tsService.saveWithoutLatest(tenantId, entityId, sampleTimeseries, sampleTtl, false)).thenReturn(immediateFuture(TimeseriesSaveResult.of(sampleTimeseries.size(), null)));
@@ -329,8 +329,6 @@ class DefaultTelemetrySubscriptionServiceTest {
         given(tbEntityViewService.findEntityViewsByTenantIdAndEntityIdAsync(tenantId, entityId)).willReturn(immediateFuture(List.of(entityView)));
         // mock that save latest call for entity view is successful
         given(tsService.saveLatest(tenantId, entityView.getId(), sampleTimeseries)).willReturn(immediateFuture(TimeseriesSaveResult.of(sampleTimeseries.size(), listOfNNumbers(sampleTimeseries.size()))));
-        // mock TPI for entity view
-        given(partitionService.resolve(ServiceType.TB_CORE, tenantId, entityView.getId())).willReturn(tpi);
 
         var request = TimeseriesSaveRequest.builder()
                 .tenantId(tenantId)
@@ -392,8 +390,6 @@ class DefaultTelemetrySubscriptionServiceTest {
         lenient().when(tbEntityViewService.findEntityViewsByTenantIdAndEntityIdAsync(tenantId, entityId)).thenReturn(immediateFuture(List.of(entityView)));
         // mock that save latest call for entity view is successful
         lenient().when(tsService.saveLatest(tenantId, entityView.getId(), sampleTimeseries)).thenReturn(immediateFuture(TimeseriesSaveResult.of(sampleTimeseries.size(), listOfNNumbers(sampleTimeseries.size()))));
-        // mock TPI for entity view
-        lenient().when(partitionService.resolve(ServiceType.TB_CORE, tenantId, entityView.getId())).thenReturn(tpi);
 
         var request = TimeseriesSaveRequest.builder()
                 .tenantId(tenantId)
