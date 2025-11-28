@@ -34,7 +34,6 @@ import { AuthService } from '@core/auth/auth.service';
 import { PageComponent } from '@shared/components/page.component';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UserPasswordPolicy } from '@shared/models/settings.models';
 import {
   passwordsMatchValidator,
@@ -63,10 +62,7 @@ export class CreatePasswordComponent extends PageComponent {
     super();
 
     this.activateToken = this.route.snapshot.queryParams['activateToken'] || '';
-
-    this.route.data
-      .pipe(takeUntilDestroyed())
-      .subscribe((data) => this.passwordPolicy = data['passwordPolicy']);
+    this.passwordPolicy = this.route.snapshot.data['passwordPolicy'];
 
     this.buildCreatePasswordForm();
   }
