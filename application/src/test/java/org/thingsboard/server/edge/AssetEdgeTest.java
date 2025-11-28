@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.edge;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.protobuf.AbstractMessage;
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,8 +40,6 @@ import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetInfo;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.AssetId;
-import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 import org.thingsboard.server.gen.edge.v1.AssetProfileUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.AssetUpdateMsg;
@@ -55,7 +52,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
+import static org.awaitility.Awaitility.await;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DaoSqlTest
@@ -298,12 +297,10 @@ public class AssetEdgeTest extends AbstractEdgeTest {
         edgeImitator.expectResponsesAmount(1);
         edgeImitator.sendUplinkMsg(upLinkMsgBuilder.build());
         Assert.assertTrue(edgeImitator.waitForResponses());
-        AssetInfo assetInfo = doGet("/api/asset/info/" + savedAsset.getUuidId(), AssetInfo.class);
-        Assert.assertNotNull(assetInfo);
-        List<AssetInfo> edgeAssets = doGetTypedWithPageLink("/api/entityGroup/" + assetsEntityGroup.getUuidId() + "/assets?",
-                new TypeReference<PageData<AssetInfo>>() {
-                }, new PageLink(100)).getData();
-        Assert.assertFalse(edgeAssets.contains(assetInfo));
+
+        await().atMost(30, TimeUnit.SECONDS).untilAsserted(() ->
+                doGet("/api/asset/info/" + savedAsset.getUuidId(), AssetInfo.class, status().isNotFound())
+        );
     }
 
     private Asset buildAssetForUplinkMsg(String name) {

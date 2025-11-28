@@ -35,7 +35,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
-import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.EdgeUtils;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
@@ -51,7 +50,6 @@ import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.msg.TbMsgType;
-import org.thingsboard.server.common.msg.TbMsgMetaData;
 import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.gen.edge.v1.AssetUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.DownlinkMsg;
@@ -85,7 +83,7 @@ public class AssetEdgeProcessor extends BaseAssetProcessor implements AssetProce
                                 new UUID(assetUpdateMsg.getEntityGroupIdMSB(), assetUpdateMsg.getEntityGroupIdLSB()));
                         edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, entityGroupId, assetId);
                     } else {
-                        removeAssetFromEdgeAllAssetGroup(tenantId, edge, assetId);
+                        deleteAsset(tenantId, edge, assetId);
                     }
                     yield Futures.immediateFuture(null);
                 }
@@ -118,29 +116,8 @@ public class AssetEdgeProcessor extends BaseAssetProcessor implements AssetProce
     }
 
     private void pushAssetCreatedEventToRuleEngine(TenantId tenantId, Edge edge, AssetId assetId) {
-        try {
-            Asset asset = edgeCtx.getAssetService().findAssetById(tenantId, assetId);
-            String assetAsString = JacksonUtil.toString(asset);
-            TbMsgMetaData msgMetaData = getEdgeActionTbMsgMetaData(edge, asset.getCustomerId());
-            pushEntityEventToRuleEngine(tenantId, assetId, asset.getCustomerId(), TbMsgType.ENTITY_CREATED, assetAsString, msgMetaData);
-        } catch (Exception e) {
-            log.warn("[{}][{}] Failed to push asset action to rule engine: {}", tenantId, assetId, TbMsgType.ENTITY_CREATED.name(), e);
-        }
-    }
-
-    private void removeAssetFromEdgeAllAssetGroup(TenantId tenantId, Edge edge, AssetId assetId) {
-        Asset assetToDelete = edgeCtx.getAssetService().findAssetById(tenantId, assetId);
-        if (assetToDelete != null) {
-            try {
-                EntityGroup edgeAssetGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), assetToDelete.getOwnerId().getEntityType(), EntityType.ASSET).get();
-                if (edgeAssetGroup != null) {
-                    edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, edgeAssetGroup.getId(), assetToDelete.getId());
-                }
-            } catch (Exception e) {
-                log.warn("[{}] Can't delete asset from edge asset 'All' group, asset id [{}]", tenantId, assetId, e);
-                throw new RuntimeException(e);
-            }
-        }
+        Asset asset = edgeCtx.getAssetService().findAssetById(tenantId, assetId);
+        pushEntityEventToRuleEngine(tenantId, edge, asset, TbMsgType.ENTITY_CREATED);
     }
 
     private void addAssetToEdgeAllAssetGroup(TenantId tenantId, Edge edge, AssetId assetId) {
