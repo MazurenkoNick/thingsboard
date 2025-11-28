@@ -81,6 +81,12 @@ public class UserEdgeProcessor extends BaseUserProcessor implements UserProcesso
                     yield Futures.immediateFuture(null);
                 }
                 case ENTITY_DELETED_RPC_MESSAGE -> {
+                    if (userUpdateMsg.hasEntityGroupIdMSB() && userUpdateMsg.hasEntityGroupIdLSB()) {
+                        EntityGroupId entityGroupId = new EntityGroupId(
+                                new UUID(userUpdateMsg.getEntityGroupIdMSB(), userUpdateMsg.getEntityGroupIdLSB()));
+                        edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, entityGroupId, userId);
+                        yield Futures.immediateFuture(null);
+                    }
                     deleteUserAndPushEntityDeletedEventToRuleEngine(tenantId, userId, edge);
                     yield Futures.immediateFuture(null);
                 }
