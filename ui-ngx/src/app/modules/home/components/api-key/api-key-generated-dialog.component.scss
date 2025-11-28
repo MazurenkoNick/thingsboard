@@ -29,9 +29,8 @@
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
 
-:host{
+:host {
   display: grid;
-  width: 500px;
   height: 100%;
   max-width: 100%;
   max-height: 100vh;
@@ -39,6 +38,20 @@
 
   .tb-install-instruction-text {
     min-height: 42px;
+  }
+
+  .insecure-url-warning {
+    .mat-icon {
+      color: #FAA405;
+    }
+  }
+
+  @media #{$mat-sm} {
+    width: 470px;
+  }
+
+  @media #{$mat-gt-sm} {
+    width: 720px;
   }
 }
 
