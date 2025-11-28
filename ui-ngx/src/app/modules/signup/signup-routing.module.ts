@@ -37,6 +37,7 @@ import { SignupComponent } from '@modules/signup/pages/signup/signup.component';
 import { EmailVerificationComponent } from '@modules/signup/pages/signup/email-verification.component';
 import { EmailVerifiedComponent } from '@modules/signup/pages/signup/email-verified.component';
 import { TbRecaptchaComponent } from '@modules/signup/pages/signup/tb-recaptcha.component';
+import { passwordPolicyResolver } from '@modules/login/login-routing.module';
 
 const routes: Routes = [
   {
@@ -46,7 +47,10 @@ const routes: Routes = [
       title: 'signup.signup',
       module: 'public'
     },
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    resolve: {
+      passwordPolicy: passwordPolicyResolver
+    }
   },
   {
     path: 'signup/emailVerification',
