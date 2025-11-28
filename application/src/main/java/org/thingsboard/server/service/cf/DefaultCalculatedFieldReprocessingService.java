@@ -30,10 +30,8 @@
  */
 package org.thingsboard.server.service.cf;
 
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -64,6 +62,7 @@ import org.thingsboard.server.common.data.kv.BasicTsKvEntry;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.util.TbPair;
+import org.thingsboard.server.common.msg.queue.TbCallback;
 import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
@@ -257,24 +256,11 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         return result;
     }
 
-    private Future<Void> saveResult(CFReprocessingCtx ctx, CalculatedFieldResult calculatedFieldResult, long ts, Strategy strategy) throws InterruptedException {
+    private Future<Void> saveResult(CFReprocessingCtx ctx, CalculatedFieldResult calculatedFieldResult, long ts, Strategy strategy) {
         JsonElement result = JsonParser.parseString(Objects.requireNonNull(calculatedFieldResult.stringValue()));
         log.trace("[{}][{}] Saving CF result: {}", ctx.getTenantId(), ctx.getEntityId(), result);
         SettableFuture<Void> future = SettableFuture.create();
-        saveTimeSeries(ctx.getTenantId(), ctx.getEntityId(), result, ts, strategy, future);
-        if (log.isTraceEnabled()) {
-            Futures.addCallback(future, new FutureCallback<>() {
-                @Override
-                public void onSuccess(Void v) {
-                    log.debug("[{}][{}] Saved CF result: {}", ctx.getTenantId(), ctx.getEntityId(), result);
-                }
-
-                @Override
-                public void onFailure(Throwable t) {
-                    log.error("[{}][{}] Failed to save CF result {}", ctx.getTenantId(), ctx.getEntityId(), result, t);
-                }
-            }, MoreExecutors.directExecutor());
-        }
+        saveTimeSeries(ctx.getTenantId(), ctx.getEntityId(), result, ts, strategy, TbCallback.wrap(future));
         return future;
     }
 
