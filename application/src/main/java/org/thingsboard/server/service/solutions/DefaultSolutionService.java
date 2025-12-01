@@ -146,6 +146,7 @@ import org.thingsboard.server.service.solutions.data.EdgeLinkInfo;
 import org.thingsboard.server.service.solutions.data.SolutionInstallContext;
 import org.thingsboard.server.service.solutions.data.UserCredentialsInfo;
 import org.thingsboard.server.service.solutions.data.definition.AssetDefinition;
+import org.thingsboard.server.service.solutions.data.definition.AssetProfileDefinition;
 import org.thingsboard.server.service.solutions.data.definition.CustomerDefinition;
 import org.thingsboard.server.service.solutions.data.definition.CustomerEntityDefinition;
 import org.thingsboard.server.service.solutions.data.definition.DashboardDefinition;
@@ -453,9 +454,9 @@ public class DefaultSolutionService implements SolutionService {
             }
         }
 
-        List<AssetProfile> assetProfiles = loadListOfEntitiesIfFileExists(solutionId, "asset_profiles.json", new TypeReference<>() {
+        List<AssetProfileDefinition> assetProfiles = loadListOfEntitiesIfFileExists(solutionId, "asset_profiles.json", new TypeReference<>() {
         });
-        assetProfiles.addAll(loadListOfEntitiesFromDirectory(solutionId, "asset_profiles", AssetProfile.class));
+        assetProfiles.addAll(loadListOfEntitiesFromDirectory(solutionId, "asset_profiles", AssetProfileDefinition.class));
         // Validate that entities with such name does not exist entities
         if (!assetProfiles.isEmpty()) {
             for (AssetProfile assetProfile : assetProfiles) {
@@ -813,9 +814,9 @@ public class DefaultSolutionService implements SolutionService {
     }
 
     private void provisionAssetProfiles(SolutionInstallContext ctx) {
-        List<AssetProfile> assetProfiles = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "asset_profiles.json", new TypeReference<>() {
+        List<AssetProfileDefinition> assetProfiles = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "asset_profiles.json", new TypeReference<>() {
         });
-        assetProfiles.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "asset_profiles", AssetProfile.class));
+        assetProfiles.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "asset_profiles", AssetProfileDefinition.class));
         assetProfiles.forEach(assetProfile -> {
             assetProfile.setId(null);
             assetProfile.setCreatedTime(0L);
@@ -840,8 +841,11 @@ public class DefaultSolutionService implements SolutionService {
             }
         });
 
-        assetProfiles = assetProfiles.stream().map(assetProfileService::saveAssetProfile).collect(Collectors.toList());
-        assetProfiles.forEach(ctx::register);
+        assetProfiles.forEach(assetProfileDefinition -> {
+            AssetProfile assetProfile = new AssetProfile(assetProfileDefinition);
+            assetProfile = assetProfileService.saveAssetProfile(assetProfile);
+            ctx.register(assetProfileDefinition, assetProfile);
+        });
     }
 
     private void provisionSchedulerEvents(SolutionInstallContext ctx) {

@@ -48,6 +48,7 @@ import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.service.solutions.data.definition.AssetDefinition;
+import org.thingsboard.server.service.solutions.data.definition.AssetProfileDefinition;
 import org.thingsboard.server.service.solutions.data.definition.CustomerDefinition;
 import org.thingsboard.server.service.solutions.data.definition.DashboardDefinition;
 import org.thingsboard.server.service.solutions.data.definition.DeviceDefinition;
@@ -150,8 +151,8 @@ public class SolutionInstallContext {
         createdEntities.put(deviceProfile.getUuidId(), new CreatedEntityInfo(deviceProfile.getName(), "Device profile", "Tenant"));
     }
 
-    public void register(AssetProfile assetProfile) {
-        register(assetProfile.getId());
+    public void register(AssetProfileDefinition definition, AssetProfile assetProfile) {
+        register(definition.getJsonId(), assetProfile.getId());
         createdEntities.put(assetProfile.getUuidId(), new CreatedEntityInfo(assetProfile.getName(), "Asset profile", "Tenant"));
     }
 
