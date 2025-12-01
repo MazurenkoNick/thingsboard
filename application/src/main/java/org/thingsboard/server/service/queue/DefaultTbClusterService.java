@@ -692,7 +692,7 @@ public class DefaultTbClusterService implements TbClusterService {
                 || (entityType == EntityType.ASSET && msg.getEvent() == ComponentLifecycleEvent.UPDATED)
                 || (entityType == EntityType.DEVICE && msg.getEvent() == ComponentLifecycleEvent.UPDATED);
 
-        boolean toRuleEngine = !toIntegrationExecutor && entityType != EntityType.USER;
+        boolean toRuleEngine = !toIntegrationExecutor;
 
         boolean toTbReport = entityType.isOneOf(EntityType.JOB, EntityType.TENANT);
         Set<String> tbReportServices = partitionService.getAllServiceIds(ServiceType.TB_REPORT);
