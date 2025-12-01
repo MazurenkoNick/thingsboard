@@ -31,6 +31,7 @@
 package org.thingsboard.server.dao.widget;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,12 +50,10 @@ import org.thingsboard.server.common.data.widget.WidgetType;
 import org.thingsboard.server.common.data.widget.WidgetTypeDetails;
 import org.thingsboard.server.common.data.widget.WidgetsBundle;
 import org.thingsboard.server.common.data.widget.WidgetsBundleFilter;
-import org.thingsboard.server.dao.entity.AbstractCachedEntityService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
 import org.thingsboard.server.dao.resource.ImageService;
-import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.service.PaginatedRemover;
 import org.thingsboard.server.dao.service.Validator;
@@ -64,7 +63,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
+import static org.thingsboard.server.dao.entity.AbstractEntityService.checkConstraintViolation;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validateIds;
 
@@ -74,7 +75,6 @@ public class WidgetsBundleServiceImpl implements WidgetsBundleService {
 
     private static final int DEFAULT_WIDGETS_BUNDLE_LIMIT = 300;
     public static final String INCORRECT_TENANT_ID = "Incorrect tenantId ";
-    public static final String INCORRECT_PAGE_LINK = "Incorrect page link ";
 
     @Autowired
     private WidgetsBundleDao widgetsBundleDao;
@@ -90,9 +90,6 @@ public class WidgetsBundleServiceImpl implements WidgetsBundleService {
 
     @Autowired
     private ImageService imageService;
-
-    @Autowired
-    private ResourceService resourceService;
 
     @Override
     public WidgetsBundle findWidgetsBundleById(TenantId tenantId, WidgetsBundleId widgetsBundleId) {
@@ -112,9 +109,9 @@ public class WidgetsBundleServiceImpl implements WidgetsBundleService {
                     .entityId(result.getId()).created(widgetsBundle.getId() == null).build());
             return result;
         } catch (Exception e) {
-            AbstractCachedEntityService.checkConstraintViolation(e,
-                    "uq_widgets_bundle_alias", "Widgets Bundle with such alias already exists!");
-            AbstractCachedEntityService.checkConstraintViolation(e, "widgets_bundle_external_id_unq_key", "Widgets Bundle with such external id already exists!");
+            checkConstraintViolation(e,
+                    "uq_widgets_bundle_alias", "Widgets Bundle with such alias already exists!",
+                    "widgets_bundle_external_id_unq_key", "Widgets Bundle with such external id already exists!");
             throw e;
         }
     }
@@ -284,9 +281,7 @@ public class WidgetsBundleServiceImpl implements WidgetsBundleService {
             }
             if (widgetsBundleDescriptor.has("widgetTypeFqns")) {
                 JsonNode widgetFqnsArrayJson = widgetsBundleDescriptor.get("widgetTypeFqns");
-                widgetFqnsArrayJson.forEach(fqnJson -> {
-                    widgetTypeFqns.add(fqnJson.asText());
-                });
+                widgetFqnsArrayJson.forEach(fqnJson -> widgetTypeFqns.add(fqnJson.asText()));
             }
             widgetTypeService.updateWidgetsBundleWidgetFqns(TenantId.SYS_TENANT_ID, widgetsBundle.getId(), widgetTypeFqns);
         });
@@ -311,22 +306,28 @@ public class WidgetsBundleServiceImpl implements WidgetsBundleService {
     }
 
     @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(widgetsBundleDao.findByIdAsync(tenantId, entityId.getId()))
+                .transform(Optional::ofNullable, directExecutor());
+    }
+
+    @Override
     public EntityType getEntityType() {
         return EntityType.WIDGETS_BUNDLE;
     }
 
-    private PaginatedRemover<TenantId, WidgetsBundle> tenantWidgetsBundleRemover =
-            new PaginatedRemover<TenantId, WidgetsBundle>() {
+    private final PaginatedRemover<TenantId, WidgetsBundle> tenantWidgetsBundleRemover = new PaginatedRemover<>() {
 
-                @Override
-                protected PageData<WidgetsBundle> findEntities(TenantId tenantId, TenantId id, PageLink pageLink) {
-                    return widgetsBundleDao.findTenantWidgetsBundlesByTenantId(id.getId(), pageLink);
-                }
+        @Override
+        protected PageData<WidgetsBundle> findEntities(TenantId tenantId, TenantId id, PageLink pageLink) {
+            return widgetsBundleDao.findTenantWidgetsBundlesByTenantId(id.getId(), pageLink);
+        }
 
-                @Override
-                protected void removeEntity(TenantId tenantId, WidgetsBundle entity) {
-                    deleteWidgetsBundle(tenantId, new WidgetsBundleId(entity.getUuidId()));
-                }
-            };
+        @Override
+        protected void removeEntity(TenantId tenantId, WidgetsBundle entity) {
+            deleteWidgetsBundle(tenantId, new WidgetsBundleId(entity.getUuidId()));
+        }
+
+    };
 
 }

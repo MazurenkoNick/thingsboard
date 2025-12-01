@@ -66,11 +66,10 @@ public class RefreshTokenProcessingFilter extends AbstractAuthenticationProcessi
     }
 
     @Override
-    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
-            throws AuthenticationException, IOException, ServletException {
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         if (!HttpMethod.POST.name().equals(request.getMethod())) {
-            if(log.isDebugEnabled()) {
-                log.debug("Authentication method not supported. Request method: " + request.getMethod());
+            if (log.isDebugEnabled()) {
+                log.debug("Authentication method not supported. Request method: {}", request.getMethod());
             }
             throw new AuthMethodNotSupportedException("Authentication method not supported");
         }
@@ -82,11 +81,11 @@ public class RefreshTokenProcessingFilter extends AbstractAuthenticationProcessi
             throw new AuthenticationServiceException("Invalid refresh token request payload");
         }
 
-        if (StringUtils.isBlank(refreshTokenRequest.getRefreshToken())) {
+        if (refreshTokenRequest == null || StringUtils.isBlank(refreshTokenRequest.refreshToken())) {
             throw new AuthenticationServiceException("Refresh token is not provided");
         }
 
-        RawAccessJwtToken token = new RawAccessJwtToken(refreshTokenRequest.getRefreshToken());
+        RawAccessJwtToken token = new RawAccessJwtToken(refreshTokenRequest.refreshToken());
 
         return this.getAuthenticationManager().authenticate(new RefreshAuthenticationToken(token));
     }
@@ -103,4 +102,5 @@ public class RefreshTokenProcessingFilter extends AbstractAuthenticationProcessi
         SecurityContextHolder.clearContext();
         failureHandler.onAuthenticationFailure(request, response, failed);
     }
+
 }

@@ -62,10 +62,11 @@ import {
   DataKeySettingsFunction
 } from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
 import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
-import { CompiledTbFunction, TbFunction } from '@shared/models/js-function.models';
+import { TbFunction } from '@shared/models/js-function.models';
 import { FormProperty, jsonFormSchemaToFormProperties } from '@shared/models/dynamic-form.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TbUnit } from '@shared/models/unit.models';
+import { ImageResourceInfo } from '@shared/models/resource.models';
 
 export enum widgetType {
   timeseries = 'timeseries',
@@ -85,6 +86,8 @@ export interface WidgetTypeData {
   configHelpLinkId: string;
   template: WidgetTypeTemplate;
 }
+
+export const widgetTitleAutocompleteValues = ['entityName', 'entityLabel'];
 
 export const widgetTypesData = new Map<widgetType, WidgetTypeData>(
   [
@@ -507,6 +510,14 @@ export const targetDeviceValid = (targetDevice?: TargetDevice): boolean =>
     ((targetDevice.type === TargetDeviceType.device && !!targetDevice.deviceId) ||
       (targetDevice.type === TargetDeviceType.entity && !!targetDevice.entityAliasId));
 
+export const widgetTypeHasTimewindow = (type: widgetType): boolean => {
+  return type === widgetType.timeseries || type === widgetType.alarm;
+}
+
+export const widgetTypeCanHaveTimewindow = (type: widgetType): boolean => {
+  return widgetTypeHasTimewindow(type) || type === widgetType.latest;
+}
+
 export const datasourcesHasAggregation = (datasources?: Array<Datasource>): boolean => {
   if (datasources) {
     const foundDatasource = datasources.find(datasource => {
@@ -640,11 +651,36 @@ export enum WidgetMobileActionType {
   deviceProvision = 'deviceProvision',
 }
 
+export interface ActionConfig {
+  title: string,
+  formControlName: string,
+  functionName: string,
+  functionArgs: string[],
+  helpId?: string
+}
+
+export enum ProvisionType {
+  auto = 'auto',
+  wiFi = 'wiFi',
+  ble = 'ble',
+  softAp = 'softAp'
+}
+
+export const provisionTypeTranslationMap = new Map<ProvisionType, string>(
+  [
+    [ ProvisionType.auto, 'widget-action.mobile.auto' ],
+    [ ProvisionType.wiFi, 'widget-action.mobile.wi-fi' ],
+    [ ProvisionType.ble, 'widget-action.mobile.ble' ],
+    [ ProvisionType.softAp, 'widget-action.mobile.soft-ap' ],
+  ]
+);
+
 export enum MapItemType {
   marker = 'marker',
   polygon = 'polygon',
   rectangle = 'rectangle',
-  circle = 'circle'
+  circle = 'circle',
+  polyline = 'polyline'
 }
 
 export const widgetActionTypes = Object.keys(WidgetActionType)
@@ -684,8 +720,11 @@ export const mapItemTypeTranslationMap = new Map<MapItemType, string>(
     [ MapItemType.polygon, 'widget-action.map-item.polygon' ],
     [ MapItemType.rectangle, 'widget-action.map-item.rectangle' ],
     [ MapItemType.circle, 'widget-action.map-item.circle' ],
+    [ MapItemType.polyline, 'widget-action.map-item.polyline' ]
   ]
 )
+
+export type ExportRow = {[key: string]: any} | Map<string, any>;
 
 export enum WidgetExportType {
   csv = 'csv',
@@ -707,6 +746,7 @@ export interface MobileLaunchResult {
 
 export interface MobileImageResult {
   imageUrl: string;
+  imageInfo?: ImageResourceInfo;
 }
 
 export interface MobileQrCodeResult {
@@ -738,10 +778,12 @@ export interface WidgetMobileActionResult<T extends MobileActionResult> {
 
 export interface ProvisionSuccessDescriptor {
   handleProvisionSuccessFunction: TbFunction;
+  provisionType?: string;
 }
 
 export interface ProcessImageDescriptor {
   processImageFunction: TbFunction;
+  saveToGallery?: boolean;
 }
 
 export interface ProcessLaunchResultDescriptor {
@@ -775,6 +817,7 @@ export interface WidgetMobileActionDescriptor extends WidgetMobileActionDescript
   type: WidgetMobileActionType;
   handleErrorFunction?: TbFunction;
   handleEmptyResultFunction?: TbFunction;
+  handleNonMobileFallbackFunction?: TbFunction;
 }
 
 export interface CustomActionDescriptor {
@@ -821,6 +864,8 @@ export interface MapItemTooltips {
   finishRect?: string;
   startCircle?: string;
   finishCircle?: string;
+  startPolyline?: string;
+  finishPolyline?: string;
 }
 
 export const mapItemTooltipsTranslation: Required<MapItemTooltips> = Object.freeze({
@@ -831,7 +876,9 @@ export const mapItemTooltipsTranslation: Required<MapItemTooltips> = Object.free
   startRect: 'widgets.maps.data-layer.polygon.rectangle-place-first-point-hint',
   finishRect: 'widgets.maps.data-layer.polygon.finish-rectangle-hint',
   startCircle: 'widgets.maps.data-layer.circle.place-circle-center-hint',
-  finishCircle: 'widgets.maps.data-layer.circle.finish-circle-hint'
+  finishCircle: 'widgets.maps.data-layer.circle.finish-circle-hint',
+  startPolyline: 'widgets.maps.data-layer.polyline.polyline-place-first-point-hint',
+  finishPolyline: 'widgets.maps.data-layer.polyline.finish-polyline-hint'
 })
 
 export interface WidgetActionDescriptor extends WidgetAction {
@@ -1145,5 +1192,4 @@ export abstract class WidgetSettingsComponent extends PageComponent implements
 
   protected onWidgetConfigSet(widgetConfig: WidgetConfigComponentData) {
   }
-
 }

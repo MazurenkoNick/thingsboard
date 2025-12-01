@@ -56,7 +56,7 @@
     labelText="self-registration.notification-recipient"
     requiredText="self-registration.notification-recipient-required"
     [entityType]="EntityType.NOTIFICATION_TARGET"
-    (createNew)="createTarget()">
+    (createNew)="createTarget($event)">
   </tb-entity-autocomplete>
   <section class="tb-form-panel no-padding-bottom stroked mb-5.5" formGroupName="redirect">
     <section class="tb-form-panel-title" translate>mobile.self-registration.redirect-settings</section>

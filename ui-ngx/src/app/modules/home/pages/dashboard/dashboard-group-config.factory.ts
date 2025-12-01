@@ -147,15 +147,15 @@ export class DashboardGroupConfigFactory implements EntityGroupStateConfigFactor
     );
 
     if (config.settings.detailsMode === EntityGroupDetailsMode.onRowClick &&
-        this.userPermissionsService.hasGroupEntityPermission(Operation.READ, config.entityGroup)) {
-        config.cellActionDescriptors.push(
-          {
-            name: this.translate.instant('dashboard.dashboard-details'),
-            icon: 'edit',
-            isEnabled: () => true,
-            onAction: ($event, entity) => config.onToggleEntityDetails($event, entity)
-          }
-        );
+      this.userPermissionsService.hasGroupEntityPermission(Operation.READ, config.entityGroup)) {
+      config.cellActionDescriptors.push(
+        {
+          name: this.translate.instant('dashboard.dashboard-details'),
+          icon: 'edit',
+          isEnabled: () => true,
+          onAction: ($event, entity) => config.onToggleEntityDetails($event, entity)
+        }
+      );
     }
 
     if (this.userPermissionsService.hasGroupEntityPermission(Operation.CREATE, config.entityGroup)) {
@@ -244,13 +244,13 @@ export class DashboardGroupConfigFactory implements EntityGroupStateConfigFactor
     }
     this.dialog.open<PublicDashboardLinkDialogComponent, PublicDashboardLinkDialogData>(
       PublicDashboardLinkDialogComponent, {
-      disableClose: true,
-      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
-      data: {
-        dashboard,
-        entityGroup: config.entityGroup
-      }
-    });
+        disableClose: true,
+        panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+        data: {
+          dashboard,
+          entityGroup: config.entityGroup
+        }
+      });
   }
 
   manageOwnerAndGroups($event: Event, dashboard: DashboardInfo, config: GroupEntityTableConfig<DashboardInfo>) {

@@ -33,6 +33,7 @@ package org.thingsboard.server.common.data.report.configuration.components;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.thingsboard.server.common.data.report.configuration.chart.ReportComponentSubType;
 
 import java.io.Serializable;
 
@@ -62,6 +63,6 @@ public interface ReportComponent extends Serializable {
 
     ReportComponentType getType();
 
-    String getSubType();
+    ReportComponentSubType getSubType();
 
 }

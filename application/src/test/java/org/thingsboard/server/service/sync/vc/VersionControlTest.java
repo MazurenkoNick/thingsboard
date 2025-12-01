@@ -70,10 +70,9 @@ import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
 import org.thingsboard.server.common.data.cf.configuration.ArgumentType;
 import org.thingsboard.server.common.data.cf.configuration.CalculatedFieldConfiguration;
-import org.thingsboard.server.common.data.cf.configuration.Output;
-import org.thingsboard.server.common.data.cf.configuration.OutputType;
 import org.thingsboard.server.common.data.cf.configuration.ReferencedEntityKey;
 import org.thingsboard.server.common.data.cf.configuration.SimpleCalculatedFieldConfiguration;
+import org.thingsboard.server.common.data.cf.configuration.TimeSeriesOutput;
 import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.converter.ConverterType;
 import org.thingsboard.server.common.data.debug.DebugSettings;
@@ -143,7 +142,9 @@ import org.thingsboard.server.common.data.sync.vc.VersionCreationResult;
 import org.thingsboard.server.common.data.sync.vc.VersionLoadResult;
 import org.thingsboard.server.common.data.sync.vc.request.create.ComplexVersionCreateRequest;
 import org.thingsboard.server.common.data.sync.vc.request.create.EntityTypeVersionCreateConfig;
+import org.thingsboard.server.common.data.sync.vc.request.create.SingleEntityVersionCreateRequest;
 import org.thingsboard.server.common.data.sync.vc.request.create.SyncStrategy;
+import org.thingsboard.server.common.data.sync.vc.request.create.VersionCreateConfig;
 import org.thingsboard.server.common.data.sync.vc.request.create.VersionCreateRequest;
 import org.thingsboard.server.common.data.sync.vc.request.load.EntityTypeVersionLoadConfig;
 import org.thingsboard.server.common.data.sync.vc.request.load.EntityTypeVersionLoadRequest;
@@ -310,7 +311,7 @@ public class VersionControlTest extends AbstractControllerTest {
         DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
         OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
         OtaPackage software = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.SOFTWARE);
-        Device device = createDevice(null, deviceProfile.getId(), "Device v1.0", "test1", newDevice -> {
+        Device device = createDevice(deviceProfile.getId(), "Device v1.0", "test1", newDevice -> {
             newDevice.setFirmwareId(firmware.getId());
             newDevice.setSoftwareId(software.getId());
         });
@@ -333,7 +334,7 @@ public class VersionControlTest extends AbstractControllerTest {
         createVersion("profiles", EntityType.DEVICE_PROFILE);
         OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
         OtaPackage software = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.SOFTWARE);
-        Device device = createDevice(null, deviceProfile.getId(), "Device of tenant 1", "test1", newDevice -> {
+        Device device = createDevice(deviceProfile.getId(), "Device of tenant 1", "test1", newDevice -> {
             newDevice.setFirmwareId(firmware.getId());
             newDevice.setSoftwareId(software.getId());
         });
@@ -569,7 +570,7 @@ public class VersionControlTest extends AbstractControllerTest {
     @Test
     public void testVcWithRelations_betweenTenants() throws Exception {
         Asset asset = createAsset(null, null, "Asset 1");
-        Device device = createDevice(null, null, "Device 1", "test1");
+        Device device = createDevice("Device 1", "test1");
         EntityRelation relation = createRelation(asset.getId(), device.getId());
         String versionId = createVersion("assets and devices", EntityType.ASSET, EntityType.DEVICE, EntityType.DEVICE_PROFILE, EntityType.ASSET_PROFILE);
 
@@ -595,11 +596,11 @@ public class VersionControlTest extends AbstractControllerTest {
     @Test
     public void testVcWithRelations_sameTenant() throws Exception {
         Asset asset = createAsset(null, null, "Asset 1");
-        Device device1 = createDevice(null, null, "Device 1", "test1");
+        Device device1 = createDevice("Device 1", "test1");
         EntityRelation relation1 = createRelation(device1.getId(), asset.getId());
         String versionId = createVersion("assets", EntityType.ASSET);
 
-        Device device2 = createDevice(null, null, "Device 2", "test2");
+        Device device2 = createDevice("Device 2", "test2");
         EntityRelation relation2 = createRelation(device2.getId(), asset.getId());
         List<EntityRelation> relations = findRelationsByTo(asset.getId());
         assertThat(relations).contains(relation1, relation2);
@@ -774,9 +775,40 @@ public class VersionControlTest extends AbstractControllerTest {
     }
 
     @Test
+    public void testDeviceGroupVcWithoutEntities_betweenTenants() throws Exception {
+        EntityGroup deviceGroup = createEntityGroup(tenantId1, EntityType.DEVICE, "Device group");
+        Device device = createDevice("Test device", "test1");
+        assignEntityToGroup(deviceGroup.getId(), device.getId());
+
+        SingleEntityVersionCreateRequest request = new SingleEntityVersionCreateRequest();
+        request.setEntityId(deviceGroup.getId());
+        VersionCreateConfig config = new VersionCreateConfig();
+        config.setSaveGroupEntities(false);
+        config.setSaveAttributes(true);
+        config.setSaveRelations(false);
+        config.setSavePermissions(false);
+        config.setSaveCredentials(false);
+        config.setSaveCalculatedFields(false);
+        request.setConfig(config);
+        request.setVersionName("device group without entities");
+        request.setBranch(branch);
+        String versionId = createVersion(request);
+
+        loginTenant2();
+        loadVersion(versionId, EntityType.DEVICE, EntityType.DEVICE_PROFILE);
+
+        EntityGroup importedDeviceGroup = findEntityGroup(deviceGroup.getName(), EntityType.DEVICE);
+        checkImportedEntity(tenantId1, tenantId1, deviceGroup, tenantId2, tenantId2, importedDeviceGroup);
+    }
+
+    private void assignEntityToGroup(EntityGroupId id, EntityId entityId) throws Exception {
+        doPost("/api/entityGroup/" + id.getId() + "/addEntities", List.of(entityId.getId().toString()));
+    }
+
+    @Test
     public void testVcWithCalculatedFields_betweenTenants() throws Exception {
         Asset asset = createAsset(null, null, "Asset 1");
-        Device device = createDevice(null, null, "Device 1", "test1");
+        Device device = createDevice("Device 1", "test1");
         CalculatedField calculatedField = createCalculatedField("CalculatedField1", device.getId(), asset.getId());
         String versionId = createVersion("calculated fields of asset and device", EntityType.ASSET, EntityType.DEVICE, EntityType.DEVICE_PROFILE, EntityType.ASSET_PROFILE);
 
@@ -802,7 +834,7 @@ public class VersionControlTest extends AbstractControllerTest {
     @Test
     public void testVcWithReferencedCalculatedFields_betweenTenants() throws Exception {
         Asset asset = createAsset(null, null, "Asset 1");
-        Device device = createDevice(null, null, "Device 1", "test1");
+        Device device = createDevice("Device 1", "test1");
         CalculatedField deviceCalculatedField = createCalculatedField("CalculatedField1", device.getId(), asset.getId());
         CalculatedField assetCalculatedField = createCalculatedField("CalculatedField2", asset.getId(), device.getId());
         String versionId = createVersion("calculated fields of asset and device", EntityType.ASSET, EntityType.DEVICE, EntityType.DEVICE_PROFILE, EntityType.ASSET_PROFILE);
@@ -823,7 +855,9 @@ public class VersionControlTest extends AbstractControllerTest {
             assertThat(importedField.getName()).isEqualTo(deviceCalculatedField.getName());
             assertThat(importedField.getType()).isEqualTo(deviceCalculatedField.getType());
             assertThat(importedField.getId()).isNotEqualTo(deviceCalculatedField.getId());
-            assertThat(importedField.getConfiguration().getArguments().get("T").getRefEntityId()).isEqualTo(importedAsset.getId());
+            assertThat(importedField.getConfiguration()).isInstanceOf(SimpleCalculatedFieldConfiguration.class);
+            SimpleCalculatedFieldConfiguration simpleCfg = (SimpleCalculatedFieldConfiguration) importedField.getConfiguration();
+            assertThat(simpleCfg.getArguments().get("T").getRefEntityId()).isEqualTo(importedAsset.getId());
         });
 
         List<CalculatedField> importedAssetCalculatedFields = findCalculatedFieldsByEntityId(importedAsset.getId());
@@ -832,7 +866,9 @@ public class VersionControlTest extends AbstractControllerTest {
             assertThat(importedField.getName()).isEqualTo(assetCalculatedField.getName());
             assertThat(importedField.getType()).isEqualTo(assetCalculatedField.getType());
             assertThat(importedField.getId()).isNotEqualTo(assetCalculatedField.getId());
-            assertThat(importedField.getConfiguration().getArguments().get("T").getRefEntityId()).isEqualTo(importedDevice.getId());
+            assertThat(importedField.getConfiguration()).isInstanceOf(SimpleCalculatedFieldConfiguration.class);
+            SimpleCalculatedFieldConfiguration simpleCfg = (SimpleCalculatedFieldConfiguration) importedField.getConfiguration();
+            assertThat(simpleCfg.getArguments().get("T").getRefEntityId()).isEqualTo(importedDevice.getId());
         });
     }
 
@@ -1098,7 +1134,7 @@ public class VersionControlTest extends AbstractControllerTest {
 
     @Test
     public void testReportTemplateVc_sameTenant() throws Exception {
-        Device device = createDevice(null, null, "Device 1", "test1");
+        Device device = createDevice("Device 1", "test1");
         ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report", device.getId());
         String versionId = createVersion("report template", EntityType.REPORT_TEMPLATE);
 
@@ -1113,7 +1149,7 @@ public class VersionControlTest extends AbstractControllerTest {
 
     @Test
     public void testReportTemplateVc_betweenTenants() throws Exception {
-        Device device = createDevice(null, null, "Device 1", "test1");
+        Device device = createDevice("Device 1", "test1");
         ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report", device.getId());
         String versionId = createVersion("report template", EntityType.REPORT_TEMPLATE);
 
@@ -1148,7 +1184,7 @@ public class VersionControlTest extends AbstractControllerTest {
     @Test
     public void testSchedulerEventGenerateReportV2ForVc_betweenTenants() throws Exception {
         createDeviceProfile(null, null, "Device profile v1.0");
-        Device device = createDevice(null, null, "Device 1", "test1");
+        Device device = createDevice("Device 1", "test1");
         ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report", device.getId());
         SchedulerEvent reportEvent = createSchedulerEventForGenerateReportType(tenantId1, null, "Report V2", reportTemplate.getId(), tenantAdminUserId);
         String versionId = createVersion("scheduler event with report V2", EntityType.DEVICE_PROFILE, EntityType.DEVICE, EntityType.REPORT_TEMPLATE, EntityType.SCHEDULER_EVENT);
@@ -1395,9 +1431,8 @@ public class VersionControlTest extends AbstractControllerTest {
         login(tenantAdmin2.getEmail(), tenantAdmin2.getEmail());
     }
 
-    private Device createDevice(CustomerId customerId, DeviceProfileId deviceProfileId, String name, String accessToken, Consumer<Device>... modifiers) {
+    private Device createDevice(DeviceProfileId deviceProfileId, String name, String accessToken, Consumer<Device>... modifiers) {
         Device device = new Device();
-        device.setCustomerId(customerId);
         device.setName(name);
         device.setLabel("lbl");
         device.setDeviceProfileId(deviceProfileId);
@@ -1632,9 +1667,8 @@ public class VersionControlTest extends AbstractControllerTest {
 
         config.setExpression("T - (100 - H) / 5");
 
-        Output output = new Output();
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setName("output");
-        output.setType(OutputType.TIME_SERIES);
 
         config.setOutput(output);
 

@@ -41,9 +41,10 @@ import { getEntityDetailsPageURL } from '@core/utils';
 import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { MatDialog } from '@angular/material/dialog';
 import {
-  AddConverterDialogComponent,
-  AddConverterDialogData
-} from '@home/components/converter/add-converter-dialog.component';
+  ConverterData,
+  ConverterDialogComponent,
+  ConverterDialogData
+} from '@home/components/converter/converter-dialog.component';
 import { Operation, Resource } from '@shared/models/security.models';
 import { IntegrationType } from '@shared/models/integration.models';
 import { coerceBoolean } from '@shared/decorators/coercion';
@@ -254,27 +255,44 @@ export class ConverterAutocompleteComponent implements ControlValueAccessor, OnI
     return text?.trim().length > 0;
   }
 
-  createConverter($event: Event, converterName: string) {
-    $event.preventDefault();
-    if (this.addNewConverter) {
-      this.converterAutocomplete.closePanel();
-      this.dialog.open<AddConverterDialogComponent, AddConverterDialogData,
-        Converter>(AddConverterDialogComponent, {
+  openConverterDialog($event: Event,isEdit: boolean = false, converterName?: string) {
+    $event.stopPropagation();
+
+    if (!this.addNewConverter) {
+      return;
+    }
+
+    this.converterAutocomplete.closePanel();
+    if (isEdit) {
+      this.converterService.getConverter((this.modelValue as ConverterId).id).subscribe((convertor) => {
+        this.openDialog(isEdit, convertor);
+      });
+    } else {
+      const newConverter = {
+        name: converterName?.trim() || '',
+        edgeTemplate: this.isEdgeTemplate,
+        type: this.converterType,
+        integrationType: this.integrationType
+      };
+      this.openDialog(isEdit, newConverter);
+    }
+  }
+
+  private openDialog (isEdit: boolean, converterData: Converter | ConverterData) {
+    this.dialog.open<ConverterDialogComponent, ConverterDialogData, Converter>(
+      ConverterDialogComponent, {
         disableClose: true,
         panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
         data: {
-          name: converterName.trim(),
-          edgeTemplate: this.isEdgeTemplate,
-          type: this.converterType,
-          integrationType: this.integrationType
+          isEdit,
+          convertor: converterData
         }
-      }).afterClosed().subscribe(
-        (entity) => {
-          if (entity) {
-            this.selectConverterFormGroup.get('entity').patchValue(entity);
-          }
-        }
-      );
-    }
-  }
+      }
+    ).afterClosed().subscribe((entity) => {
+      if (entity) {
+        this.selectConverterFormGroup.get('entity').patchValue(entity);
+      }
+    });
+  };
+
 }

@@ -38,6 +38,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Authority } from '@shared/models/authority.enum';
+import { MatFormFieldAppearance } from '@angular/material/form-field';
 
 @Component({
   selector: 'tb-group-entity-info',
@@ -47,6 +48,9 @@ import { Authority } from '@shared/models/authority.enum';
 export class GroupEntityInfoComponent {
 
   groupEntityValue?: GroupEntityInfo<EntityId>;
+
+  @Input()
+  appearance: MatFormFieldAppearance = 'fill';
 
   @Input()
   set groupEntity(value: GroupEntityInfo<EntityId>) {

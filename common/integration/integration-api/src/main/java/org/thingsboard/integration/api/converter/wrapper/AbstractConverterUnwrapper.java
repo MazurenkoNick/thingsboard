@@ -59,7 +59,7 @@ public abstract class AbstractConverterUnwrapper implements ConverterUnwrapper {
                 return;
             }
             JsonNode value = payloadJson.at(path);
-            if (!value.isMissingNode()) {
+            if (!value.isMissingNode() && !value.isNull()) {
                 kvMap.put(name, JacksonUtil.convertValue(value, Object.class));
             }
         });

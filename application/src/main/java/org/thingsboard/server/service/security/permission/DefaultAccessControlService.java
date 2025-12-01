@@ -31,7 +31,6 @@
 package org.thingsboard.server.service.security.permission;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.HasName;
@@ -60,13 +59,14 @@ public class DefaultAccessControlService implements AccessControlService {
 
     private final Map<Authority, Permissions> authorityPermissions = new HashMap<>();
 
-    public DefaultAccessControlService(
-            @Qualifier("sysAdminPermissions") Permissions sysAdminPermissions,
-            @Qualifier("tenantAdminPermissions") Permissions tenantAdminPermissions,
-            @Qualifier("customerUserPermissions") Permissions customerUserPermissions) {
+    public DefaultAccessControlService(SysAdminPermissions sysAdminPermissions,
+                                       TenantAdminPermissions tenantAdminPermissions,
+                                       CustomerUserPermissions customerUserPermissions,
+                                       MfaConfigurationPermissions mfaConfigurationPermissions) {
         authorityPermissions.put(Authority.SYS_ADMIN, sysAdminPermissions);
         authorityPermissions.put(Authority.TENANT_ADMIN, tenantAdminPermissions);
         authorityPermissions.put(Authority.CUSTOMER_USER, customerUserPermissions);
+        authorityPermissions.put(Authority.MFA_CONFIGURATION_TOKEN, mfaConfigurationPermissions);
     }
 
     @Override
@@ -167,7 +167,7 @@ public class DefaultAccessControlService implements AccessControlService {
             }
         }
         Optional<PermissionChecker> permissionChecker = permissions.getPermissionChecker(resource);
-        if (!permissionChecker.isPresent()) {
+        if (permissionChecker.isEmpty()) {
             if (throwException) {
                 permissionDenied();
             } else {
@@ -187,20 +187,19 @@ public class DefaultAccessControlService implements AccessControlService {
                 ThingsboardErrorCode.PERMISSION_DENIED);
     }
 
-    private <I extends EntityId, T extends TenantEntity>
-        void entityOperationPermissionDenied(Resource resource, Operation operation, I entityId, T entity) throws ThingsboardException {
-            EntityType entityType = entity != null ? entity.getEntityType() : entityId.getEntityType();
-            String message = "You don't have permission to perform '" + operation + "' operation with " + entityType;
-            if (entity instanceof HasName) {
-                message += " '" + ((HasName)entity).getName() + "'";
-            }
-            message += "!";
-            throw new ThingsboardException(message,
+    private <I extends EntityId, T extends TenantEntity> void entityOperationPermissionDenied(Resource resource, Operation operation, I entityId, T entity) throws ThingsboardException {
+        EntityType entityType = entity != null ? entity.getEntityType() : entityId.getEntityType();
+        String message = "You don't have permission to perform '" + operation + "' operation with " + entityType;
+        if (entity instanceof HasName) {
+            message += " '" + ((HasName) entity).getName() + "'";
+        }
+        message += "!";
+        throw new ThingsboardException(message,
                 ThingsboardErrorCode.PERMISSION_DENIED);
     }
 
     private void entityGroupOperationPermissionDenied(Operation operation, EntityGroup entityGroup) throws ThingsboardException {
-        throw new ThingsboardException("You don't have permission to perform '" + operation + "' operation with "+ entityGroup.getType() +" group '" + entityGroup.getName() + "'!",
+        throw new ThingsboardException("You don't have permission to perform '" + operation + "' operation with " + entityGroup.getType() + " group '" + entityGroup.getName() + "'!",
                 ThingsboardErrorCode.PERMISSION_DENIED);
     }
 

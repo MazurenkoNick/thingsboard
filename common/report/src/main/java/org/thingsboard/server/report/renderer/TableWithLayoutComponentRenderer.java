@@ -62,7 +62,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.thingsboard.server.report.util.ReportUtils.ENTITY_TIME_FIELDS;
-import static org.thingsboard.server.report.util.ReportUtils.formatValueWithPrecisionAndUnits;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.sortRowsByTableSortOrder;
 
@@ -146,7 +145,7 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
 
     private void populateHeadingVariables(C component, ComponentData componentData, Map<String, Object> vars) {
         Heading heading = component.getTableHeading();
-        String headingText = ThymeleafUtil.renderFromHtmlString(heading.getText(), componentData.getVariables());
+        String headingText = ThymeleafUtil.renderFromTextString(heading.getText(), componentData.getVariables());
         Font font = getHeadingFont(heading);
 
         vars.put("headingText", headingText);
@@ -185,11 +184,7 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
         if (value == null || value.isBlank()) {
             return "";
         }
-        value = defaultValue(key, value);
-        if (dataKey != null && (dataKey.getDecimals() != null || dataKey.getUnits() != null)) {
-            value = formatValueWithPrecisionAndUnits(value, dataKey);
-        }
-        return value;
+        return defaultValue(key, value);
     }
 
     protected Float defaultFontSize(String key) {

@@ -44,6 +44,7 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Repository
@@ -70,29 +71,23 @@ public class DefaultNativeDeviceRepository extends AbstractNativeRepository impl
     @Override
     public PageData<ProfileEntityIdInfo> findProfileEntityIdInfos(Pageable pageable) {
         String PROFILE_DEVICE_ID_INFO_QUERY = "SELECT tenant_id as tenantId, customer_id as customerId, device_profile_id as profileId, id as id FROM device ORDER BY created_time ASC LIMIT %s OFFSET %s";
-        return find(COUNT_QUERY, PROFILE_DEVICE_ID_INFO_QUERY, pageable, row -> {
-            var tenantIdObj = row.get("tenantId");
-            UUID tenantId = tenantIdObj != null ? ((UUID) tenantIdObj) : TenantId.SYS_TENANT_ID.getId();
-            DeviceId id = new DeviceId((UUID) row.get("id"));
-            CustomerId customerId = new CustomerId((UUID) row.get("customerId"));
-            EntityId ownerId = !customerId.isNullUid() ? customerId : TenantId.fromUUID(tenantId);
-            DeviceProfileId profileId = new DeviceProfileId((UUID) row.get("profileId"));
-            return ProfileEntityIdInfo.create(tenantId, ownerId, profileId, id);
-        });
+        return find(COUNT_QUERY, PROFILE_DEVICE_ID_INFO_QUERY, pageable, DefaultNativeDeviceRepository::toInfo);
     }
 
     @Override
     public PageData<ProfileEntityIdInfo> findProfileEntityIdInfosByTenantId(UUID tenantId, Pageable pageable) {
         String PROFILE_DEVICE_ID_INFO_QUERY = String.format("SELECT tenant_id as tenantId, customer_id as customerId, device_profile_id as profileId, id as id FROM device WHERE tenant_id = '%s' ORDER BY created_time ASC LIMIT %%s OFFSET %%s", tenantId);
-        return find(COUNT_QUERY, PROFILE_DEVICE_ID_INFO_QUERY, pageable, row -> {
-            var tenantIdObj = row.get("tenantId");
-            UUID tenantIdUuid = tenantIdObj != null ? (UUID) tenantIdObj : TenantId.SYS_TENANT_ID.getId();
-            DeviceId id = new DeviceId((UUID) row.get("id"));
-            CustomerId customerId = new CustomerId((UUID) row.get("customerId"));
-            EntityId ownerId = !customerId.isNullUid() ? customerId : TenantId.fromUUID(tenantIdUuid);
-            DeviceProfileId profileId = new DeviceProfileId((UUID) row.get("profileId"));
-            return ProfileEntityIdInfo.create(tenantIdUuid, ownerId, profileId, id);
-        });
+        return find(COUNT_QUERY, PROFILE_DEVICE_ID_INFO_QUERY, pageable, DefaultNativeDeviceRepository::toInfo);
+    }
+
+    private static ProfileEntityIdInfo toInfo(Map<String, Object> row) {
+        var tenantIdObj = row.get("tenantId");
+        UUID tenantId = tenantIdObj != null ? (UUID) tenantIdObj : TenantId.SYS_TENANT_ID.getId();
+        DeviceId id = new DeviceId((UUID) row.get("id"));
+        CustomerId customerId = new CustomerId((UUID) row.get("customerId"));
+        EntityId ownerId = !customerId.isNullUid() ? customerId : TenantId.fromUUID(tenantId);
+        DeviceProfileId profileId = new DeviceProfileId((UUID) row.get("profileId"));
+        return ProfileEntityIdInfo.create(tenantId, ownerId, profileId, id);
     }
 
 }

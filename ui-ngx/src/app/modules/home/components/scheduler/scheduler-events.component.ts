@@ -116,6 +116,7 @@ import { MatButton } from '@angular/material/button';
 import { TbPopoverService } from '@shared/components/popover.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CustomTranslatePipe } from '@shared/pipe/custom-translate.pipe';
+import { DomSanitizer } from "@angular/platform-browser";
 
 @Component({
   selector: 'tb-scheduler-events',
@@ -204,6 +205,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     private popoverService: TbPopoverService,
     private viewContainerRef: ViewContainerRef,
     private destroyRef: DestroyRef,
+    private sanitizer: DomSanitizer,
     @Optional() public widgetComponent: WidgetComponent
   ) {
     super();
@@ -708,7 +710,9 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     if (this.schedulerEventConfigTypes[typeName]) {
       typeName = this.schedulerEventConfigTypes[typeName].name;
     }
-    const title = `${event.name} - ${typeName}`;
+    typeName = this.sanitizer.sanitize(1, typeName)
+    const name = this.sanitizer.sanitize(1, event.name);
+    const title = `${name} - ${typeName}`;
     if (event.schedule.repeat && event.schedule.repeat.type === SchedulerRepeatType.TIMER) {
       repeatInterval = this.translate.instant(schedulerTimeUnitRepeatTranslationMap.get(event.schedule.repeat.timeUnit),
         {count: event.schedule.repeat.repeatInterval});
@@ -716,7 +720,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     return {
       id: event.id.id,
       title,
-      name: event.name,
+      name,
       type: typeName,
       info: this.eventInfo(event, start),
       start: start.toDate(),
@@ -725,7 +729,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     };
   }
 
-  private eventInfo(event: SchedulerEventWithCustomerInfo, startTime: _moment.Moment): string {
+  eventInfo(event: SchedulerEventWithCustomerInfo, startTime?: _moment.Moment): string {
     return scheduleInfo(event.schedule, this.translate, startTime);
   }
 
@@ -898,6 +902,9 @@ class WidgetSchedulerModeHandler extends SchedulerModeHandler {
     if (displayCustomer) {
       this._displayedColumns.push('customerTitle');
     }
+    if (this.settings.displaySchedule ?? false) {
+      this._displayedColumns.push('schedule');
+    }
     this._displayedColumns.push('actions');
     this.component.displayedColumns = this._displayedColumns;
 
@@ -1020,7 +1027,7 @@ class WidgetSchedulerModeHandler extends SchedulerModeHandler {
 class StandaloneSchedulerModeHandler extends SchedulerModeHandler {
 
   initialize(schedulerEventService: SchedulerEventService, _userPermissionsService: UserPermissionsService): void {
-    this._displayedColumns = ['createdTime', 'name', 'type', 'customerTitle', 'actions'];
+    this._displayedColumns = ['createdTime', 'name', 'type', 'customerTitle', 'schedule', 'actions'];
     if (this.component.deleteEnabled) {
       this._displayedColumns.unshift('select');
     }

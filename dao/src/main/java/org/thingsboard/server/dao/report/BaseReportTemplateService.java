@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.report;
 
+import com.google.common.util.concurrent.FluentFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -58,14 +59,15 @@ import org.thingsboard.server.exception.DataValidationException;
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validateIds;
 import static org.thingsboard.server.dao.service.Validator.validatePageLink;
 
-@Service("ReportTemplateDaoService")
 @Slf4j
 @RequiredArgsConstructor
+@Service("ReportTemplateDaoService")
 public class BaseReportTemplateService extends AbstractEntityService implements ReportTemplateService {
 
     public static final String INCORRECT_TENANT_ID = "Incorrect tenantId ";
@@ -94,7 +96,17 @@ public class BaseReportTemplateService extends AbstractEntityService implements 
 
     @Override
     public ReportTemplate saveReportTemplate(ReportTemplate reportTemplate) {
-        ReportTemplate oldReportTemplate = reportTemplateDataValidator.validate(reportTemplate, BaseReportTemplate::getTenantId);
+        return saveReportTemplate(reportTemplate, true);
+    }
+
+    @Override
+    public ReportTemplate saveReportTemplate(ReportTemplate reportTemplate, boolean doValidate) {
+        ReportTemplate oldReportTemplate = null;
+        if (doValidate) {
+            oldReportTemplate = reportTemplateDataValidator.validate(reportTemplate, BaseReportTemplate::getTenantId);
+        } else if (reportTemplate.getId() != null) {
+            oldReportTemplate = findReportTemplateById(reportTemplate.getTenantId(), reportTemplate.getId());
+        }
         try {
             TenantId tenantId = reportTemplate.getTenantId();
             log.trace("Executing saveReportTemplate [{}]", reportTemplate);
@@ -227,6 +239,12 @@ public class BaseReportTemplateService extends AbstractEntityService implements 
     }
 
     @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(reportTemplateDao.findByIdAsync(tenantId, entityId.getId()))
+                .transform(Optional::ofNullable, directExecutor());
+    }
+
+    @Override
     public long countByTenantId(TenantId tenantId) {
         return reportTemplateDao.countByTenantId(tenantId);
     }
@@ -235,4 +253,5 @@ public class BaseReportTemplateService extends AbstractEntityService implements 
     public EntityType getEntityType() {
         return EntityType.REPORT_TEMPLATE;
     }
+
 }

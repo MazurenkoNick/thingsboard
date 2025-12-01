@@ -278,6 +278,9 @@ import { SecretStorageDialogComponent } from '@shared/components/secret-storage/
 import { SecretAutocompleteComponent } from '@shared/components/secret-storage/secret-autocomplete.component';
 import { ReportTemplateAutocompleteComponent } from '@shared/components/report/report-template-autocomplete.component';
 import { FormRowDirective } from '@shared/directives/form-row.directive';
+import { TimeUnitInputComponent } from '@shared/components/time-unit-input.component';
+import { DateExpirationPipe } from '@shared/pipe/date-expiration.pipe';
+import { PasswordRequirementsTooltipComponent } from '@shared/components/password-requirements-tooltip.component';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -286,6 +289,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
 @NgModule({
   providers: [
     DatePipe,
+    SelectableColumnsPipe,
     MillisecondsToTimeStringPipe,
     EnumToArrayPipe,
     HighlightPipe,
@@ -462,6 +466,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     HasEntityGroupPermissionPipe,
     HasGroupEntityPermissionPipe,
     HasGroupEntityOrGenericPermissionPipe,
+    DateExpirationPipe,
     TbJsonToStringDirective,
     JsonObjectEditDialogComponent,
     HistorySelectorComponent,
@@ -526,7 +531,9 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     SecretFileInputComponent,
     SecretStorageDialogComponent,
     SecretAutocompleteComponent,
-    ReportTemplateAutocompleteComponent
+    ReportTemplateAutocompleteComponent,
+    TimeUnitInputComponent,
+    PasswordRequirementsTooltipComponent,
   ],
   imports: [
     CommonModule,
@@ -754,6 +761,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     SafePipe,
     ShortNumberPipe,
     SelectableColumnsPipe,
+    DateExpirationPipe,
     RouterModule,
     HasGenericPermissionPipe,
     HasEntityGroupPermissionPipe,
@@ -820,7 +828,9 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     SecretFileInputComponent,
     SecretStorageDialogComponent,
     SecretAutocompleteComponent,
-    ReportTemplateAutocompleteComponent
+    ReportTemplateAutocompleteComponent,
+    TimeUnitInputComponent,
+    PasswordRequirementsTooltipComponent,
   ]
 })
 export class SharedModule { }

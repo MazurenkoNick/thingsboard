@@ -48,6 +48,20 @@
           (click)="clear()">
     <mat-icon class="material-icons">close</mat-icon>
   </button>
+  <button *ngIf="selectConverterFormGroup.get('entity').value.id && !disabled && addNewConverter && (resource.CONVERTER | hasGenericPermission: operation.WRITE)"
+          type="button"
+          matSuffix mat-icon-button aria-label="Edit"
+          matTooltip="{{ 'converter.edit' | translate }}"
+          matTooltipPosition="above"
+          (click)="openConverterDialog($event, true)">
+    <mat-icon class="material-icons">edit</mat-icon>
+  </button>
+  <button *ngIf="!selectConverterFormGroup.get('entity').value && !disabled && addNewConverter && (resource.CONVERTER | hasGenericPermission: operation.WRITE)"
+          type="button"
+          mat-button color="primary" matSuffix
+          (click)="openConverterDialog($event, false, searchText)">
+    <span style="white-space: nowrap">{{'entity.create-new' | translate}}</span>
+  </button>
   <mat-autocomplete class="tb-autocomplete"
                     #entityAutocomplete="matAutocomplete"
                     [displayWith]="displayEntityFn">
@@ -63,7 +77,7 @@
               {{ 'converter.no-converters-matching' | translate:{entity: (searchText | truncate: true: 6: &apos;...&apos;)} }}
             </span>
             <span *ngIf="(resource.CONVERTER | hasGenericPermission: operation.WRITE)">
-              <a translate (click)="createConverter($event, searchText)">converter.create-new-converter</a>
+              <a translate (click)="openConverterDialog($event, false, searchText)">converter.create-new-converter</a>
             </span>
           }
         </div>

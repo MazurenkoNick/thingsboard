@@ -39,11 +39,9 @@ import java.util.Map;
 @Data
 public class TbSaveToCustomCassandraTableNodeConfiguration implements NodeConfiguration<TbSaveToCustomCassandraTableNodeConfiguration> {
 
-
     private String tableName;
     private Map<String, String> fieldsMapping;
     private int defaultTtl;
-
 
     @Override
     public TbSaveToCustomCassandraTableNodeConfiguration defaultConfiguration() {
@@ -55,4 +53,5 @@ public class TbSaveToCustomCassandraTableNodeConfiguration implements NodeConfig
         configuration.setFieldsMapping(map);
         return configuration;
     }
+
 }

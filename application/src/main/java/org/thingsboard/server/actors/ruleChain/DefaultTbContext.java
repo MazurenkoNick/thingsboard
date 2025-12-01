@@ -139,6 +139,7 @@ import org.thingsboard.server.dao.notification.NotificationTargetService;
 import org.thingsboard.server.dao.notification.NotificationTemplateService;
 import org.thingsboard.server.dao.oauth2.OAuth2ClientService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
+import org.thingsboard.server.dao.pat.ApiKeyService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.queue.QueueStatsService;
 import org.thingsboard.server.dao.relation.RelationService;
@@ -959,6 +960,11 @@ public class DefaultTbContext implements TbContext, TbPeContext {
     }
 
     @Override
+    public ApiKeyService getApiKeyService() {
+        return mainCtx.getApiKeyService();
+    }
+
+    @Override
     public boolean isExternalNodeForceAck() {
         return mainCtx.isExternalNodeForceAck();
     }
@@ -1268,18 +1274,16 @@ public class DefaultTbContext implements TbContext, TbPeContext {
     @Override
     public void checkTenantEntity(EntityId entityId) throws TbNodeException {
         TenantId actualTenantId = TenantIdLoader.findTenantId(this, entityId);
-        assertSameTenantId(actualTenantId, entityId);
+        if (!getTenantId().equals(actualTenantId)) {
+            throw new TbNodeException("Entity with id: '" + entityId + "' specified in the configuration doesn't belong to the current tenant.", true);
+        }
     }
 
     @Override
-    public <E extends HasId<I> & HasTenantId, I extends EntityId> void checkTenantEntity(E entity) throws TbNodeException {
+    public <E extends HasId<I> & HasTenantId, I extends EntityId> void checkTenantOrSystemEntity(E entity) throws TbNodeException {
         TenantId actualTenantId = entity.getTenantId();
-        assertSameTenantId(actualTenantId, entity.getId());
-    }
-
-    private void assertSameTenantId(TenantId tenantId, EntityId entityId) throws TbNodeException {
-        if (!getTenantId().equals(tenantId)) {
-            throw new TbNodeException("Entity with id: '" + entityId + "' specified in the configuration doesn't belong to the current tenant.", true);
+        if (!getTenantId().equals(actualTenantId) && !actualTenantId.isSysTenantId()) {
+            throw new TbNodeException("Entity with id: '" + entity.getId() + "' specified in the configuration doesn't belong to the current or system tenant.", true);
         }
     }
 

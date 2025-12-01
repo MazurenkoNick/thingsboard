@@ -37,7 +37,7 @@ import { catchError, debounceTime, map, share, switchMap, tap } from 'rxjs/opera
 import { Store } from '@ngrx/store';
 import { AppState } from '@app/core/core.state';
 import { AliasEntityType, EntityType } from '@shared/models/entity-type.models';
-import { BaseData } from '@shared/models/base-data';
+import { BaseData, getEntityDisplayName } from '@shared/models/base-data';
 import { EntityId } from '@shared/models/id/entity-id';
 import { EntityService } from '@core/http/entity.service';
 import { getCurrentAuthUser } from '@core/auth/auth.selectors';
@@ -163,11 +163,15 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
   @coerceArray()
   additionalClasses: Array<string>;
 
+  @Input()
+  @coerceBoolean()
+  useEntityDisplayName = false;
+
   @Output()
   entityChanged = new EventEmitter<BaseData<EntityId>>();
 
   @Output()
-  createNew = new EventEmitter<void>();
+  createNew = new EventEmitter<string>();
 
   @ViewChild('entityInput', {static: true}) entityInput: ElementRef;
 
@@ -329,6 +333,18 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
           this.entityRequiredText = 'admin.oauth2.domain-required';
           this.notFoundEntities = 'admin.oauth2.no-domain-text';
           break;
+        case EntityType.DEVICE_PROFILE:
+          this.entityText = 'device-profile.device-profile';
+          this.noEntitiesMatchingText = 'device-profile.no-device-profiles-matching';
+          this.entityRequiredText = 'device-profile.device-profile-required';
+          this.notFoundEntities = 'device-profile.no-device-profiles-text';
+          break;
+        case EntityType.ASSET_PROFILE:
+          this.entityText = 'asset-profile.asset-profile';
+          this.noEntitiesMatchingText = 'asset-profile.no-asset-profiles-matching';
+          this.entityRequiredText = 'asset-profile.asset-profile-required';
+          this.notFoundEntities = 'asset-profile.no-asset-profiles-text';
+          break;
         case AliasEntityType.CURRENT_CUSTOMER:
           this.entityText = 'customer.default-customer';
           this.noEntitiesMatchingText = 'customer.no-customers-matching';
@@ -461,7 +477,7 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
   }
 
   displayEntityFn(entity?: BaseData<EntityId>): string | undefined {
-    return entity ? entity.name : undefined;
+    return entity ? (this.useEntityDisplayName ? getEntityDisplayName(entity) : entity.name) : undefined;
   }
 
   private fetchEntities(searchText?: string): Observable<Array<BaseData<EntityId>>> {
@@ -517,9 +533,9 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
     return entityType;
   }
 
-  createNewEntity($event: Event) {
+  createNewEntity($event: Event, searchText?: string) {
     $event.stopPropagation();
-    this.createNew.emit();
+    this.createNew.emit(searchText);
   }
 
   openEntityDetailsNewTab($event: Event) {

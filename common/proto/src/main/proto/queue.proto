@@ -83,11 +83,12 @@ enum EntityTypeProto {
   MOBILE_APP            = 37;
   MOBILE_APP_BUNDLE     = 38;
   CALCULATED_FIELD      = 39;
-  CALCULATED_FIELD_LINK = 40;
+  // CALCULATED_FIELD_LINK = 40; - was removed in 4.3
   JOB                   = 41;
   SECRET                = 107;
   ADMIN_SETTINGS        = 42;
   AI_MODEL              = 43;
+  API_KEY               = 44;
 }
 
 enum ApiUsageRecordKeyProto {
@@ -103,6 +104,15 @@ enum ApiUsageRecordKeyProto {
   ACTIVE_DEVICES       = 9;
   INACTIVE_DEVICES     = 10;
   GENERATED_REPORTS_COUNT = 100;
+}
+
+message EntityIdProto {
+  int64 entityIdMSB = 1;
+  int64 entityIdLSB = 2;
+  // PE legacy field. Keep for backward compatibility.
+  string entityType = 3 [deprecated = true];
+  // New canonical field.
+  EntityTypeProto type = 4;
 }
 
 /**
@@ -924,6 +934,7 @@ message SingleValueArgumentProto {
   string argName = 1;
   TsValueProto value = 2;
   int64 version = 3;
+  EntityIdProto entityId = 4;
 }
 
 message TsDoubleValProto {
@@ -938,11 +949,37 @@ message TsRollingArgumentProto {
   repeated TsDoubleValProto tsValue = 4;
 }
 
+message GeofencingZoneProto {
+  EntityIdProto zoneId = 1;
+  int64 ts = 2;
+  string perimeterDefinition = 3;
+  int64 version = 4;
+  optional bool inside = 5;
+}
+
+message GeofencingArgumentProto {
+  string argName = 1;
+  repeated GeofencingZoneProto zones = 2;
+}
+
+message ArgumentIntervalProto {
+  string argName = 1;
+  int64 startTs = 2;
+  int64 endTs = 3;
+  int64 lastArgsRefreshTs = 4;
+  int64 lastMetricsEvalTs = 5;
+}
+
 message CalculatedFieldStateProto {
   CalculatedFieldEntityCtxIdProto id = 1;
   string type = 2;
   repeated SingleValueArgumentProto singleValueArguments = 3;
   repeated TsRollingArgumentProto rollingValueArguments = 4;
+  repeated GeofencingArgumentProto geofencingArguments = 5;
+  AlarmStateProto alarmState = 6;
+  int64 lastArgsUpdateTs = 7;
+  int64 lastMetricsEvalTs = 8;
+  repeated ArgumentIntervalProto aggregationArguments = 9;
 }
 
 //Used to report session state to tb-Service and persist this state in the cache on the tb-Service level.
@@ -1020,16 +1057,9 @@ message MergedUserPermissionsProto {
   repeated GroupUserPermissionsProto group = 2;
 }
 
-message EntityIdProto {
-    int64 entityIdMSB = 1;
-    int64 entityIdLSB = 2;
-    string entityType = 3;
-}
-
 message OwnersListProto {
     repeated EntityIdProto entityIds = 1;
 }
-
 
 /**
  * TB Core Data Structures
@@ -1342,6 +1372,8 @@ enum ComponentLifecycleEvent {
     DELETED       = 6;
     FAILED        = 7;
     DEACTIVATED   = 8;
+    RELATION_UPDATED = 9;
+    RELATION_DELETED = 10;
 }
 
 message ComponentLifecycleMsgProto {
@@ -1829,6 +1861,7 @@ message ToEdgeEventNotificationMsg {
 message ToCalculatedFieldMsg {
   CalculatedFieldTelemetryMsgProto telemetryMsg = 1;
   CalculatedFieldLinkedTelemetryMsgProto linkedTelemetryMsg = 2;
+  EntityActionEventProto eventMsg = 3;
 }
 
 message ToCalculatedFieldNotificationMsg {
@@ -2005,4 +2038,23 @@ message TaskResultProto {
 
 message ToTbReportNotificationMsg {
   ComponentLifecycleMsgProto componentLifecycleMsg = 1;
+}
+
+message EntityActionEventProto {
+  EntityIdProto tenantId = 1;
+  EntityIdProto entityId = 2;
+  string entity = 3;
+  string action = 4;
+}
+
+message AlarmStateProto {
+  repeated AlarmRuleStateProto createRuleStates = 1;
+  AlarmRuleStateProto clearRuleState = 2;
+}
+
+message AlarmRuleStateProto {
+  string severity = 1;
+  int64 eventCount = 2;
+  int64 firstEventTs = 3;
+  int64 lastCheckTs = 4;
 }

@@ -45,6 +45,7 @@ import { EntityId } from '@shared/models/id/entity-id';
 import { EntityType } from '@shared/models/entity-type.models';
 import { EntityGroup, EntityGroupInfo } from '@shared/models/entity-group.models';
 import { isArray } from '@core/utils';
+import { defaultHttpOptionsFromConfig, RequestConfig } from '@core/http/http-utils';
 
 @Injectable({
   providedIn: 'root'
@@ -76,6 +77,11 @@ export class UserPermissionsService {
         this.userOwnerId = allowedPermissionsInfo.userOwnerId;
       })
     );
+  }
+
+  public hasEntityPermission(entityId: EntityId, operation: Operation, config?: RequestConfig): Observable<boolean> {
+    return this.http.get<boolean>(`/api/permission/${entityId.entityType}/${entityId.id}/${operation}`,
+      defaultHttpOptionsFromConfig(config));
   }
 
   public getOperationsByResource(resource: Resource): Operation[] {

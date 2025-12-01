@@ -428,7 +428,8 @@ public class AdminController extends BaseController {
                     + SYSTEM_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('SYS_ADMIN')")
     @GetMapping(value = "/updates")
-    public UpdateMessage checkUpdates() {
+    public UpdateMessage checkUpdates() throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.READ);
         return updateService.checkUpdates();
     }
 
@@ -451,7 +452,8 @@ public class AdminController extends BaseController {
                     + SYSTEM_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('SYS_ADMIN')")
     @GetMapping(value = "/systemInfo")
-    public SystemInfo getSystemInfo() {
+    public SystemInfo getSystemInfo() throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.READ);
         return systemInfoService.getSystemInfo();
     }
 
@@ -460,7 +462,8 @@ public class AdminController extends BaseController {
                     + SYSTEM_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('SYS_ADMIN')")
     @GetMapping(value = "/featuresInfo")
-    public FeaturesInfo getFeaturesInfo() {
+    public FeaturesInfo getFeaturesInfo() throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.READ);
         return systemInfoService.getFeaturesInfo();
     }
 
@@ -469,8 +472,7 @@ public class AdminController extends BaseController {
             "further log in processing and generating access tokens. " + SYSTEM_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @GetMapping(value = "/mail/oauth2/loginProcessingUrl")
-    public String getMailProcessingUrl() throws ThingsboardException {
-        accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.READ);
+    public String getMailProcessingUrl() {
         return "\"/api/admin/mail/oauth2/code\"";
     }
 

@@ -29,3 +29,92 @@
 -- OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 --
 
+-- UPDATE TENANT PROFILE CONFIGURATION START
+
+UPDATE tenant_profile
+SET profile_data = jsonb_set(
+    profile_data,
+    '{configuration}',
+    jsonb_build_object(
+        'minAllowedScheduledUpdateIntervalInSecForCF', 60,
+        'maxRelationLevelPerCfArgument', 10,
+        'maxRelatedEntitiesToReturnPerCfArgument', 100,
+        'minAllowedDeduplicationIntervalInSecForCF', 60,
+        'minAllowedAggregationIntervalInSecForCF', 60
+    )
+    ||
+    jsonb_strip_nulls(profile_data -> 'configuration')
+)
+WHERE NOT (
+    jsonb_strip_nulls(profile_data -> 'configuration') ?& ARRAY[
+        'minAllowedScheduledUpdateIntervalInSecForCF',
+        'maxRelationLevelPerCfArgument',
+        'maxRelatedEntitiesToReturnPerCfArgument',
+        'minAllowedDeduplicationIntervalInSecForCF',
+        'minAllowedAggregationIntervalInSecForCF'
+    ]
+);
+
+-- UPDATE TENANT PROFILE CONFIGURATION END
+
+-- CALCULATED FIELD UNIQUE CONSTRAINT UPDATE START
+
+ALTER TABLE calculated_field DROP CONSTRAINT IF EXISTS calculated_field_unq_key;
+ALTER TABLE calculated_field ADD CONSTRAINT calculated_field_unq_key UNIQUE (entity_id, type, name);
+
+-- CALCULATED FIELD UNIQUE CONSTRAINT UPDATE END
+
+-- UPDATE CFS WITH CURRENT OWNER DYNAMIC SOURCE START
+
+UPDATE calculated_field cf
+SET configuration = (jsonb_set(cf.configuration::jsonb, '{arguments}',
+                               (SELECT jsonb_object_agg(k,
+                                    CASE
+                                        WHEN v ->> 'refDynamicSource' = 'CURRENT_OWNER'
+                                            THEN
+                                            (v - 'refDynamicSource') ||
+                                            jsonb_build_object(
+                                                    'refDynamicSourceConfiguration',
+                                                    jsonb_build_object('type', 'CURRENT_OWNER'))
+                                        ELSE v END)
+                                FROM jsonb_each(cf.configuration::jsonb -> 'arguments') AS e(k, v)),
+                               true)::text)
+WHERE (configuration::jsonb) ? 'arguments'
+  AND EXISTS (SELECT 1
+              FROM jsonb_each(configuration::jsonb -> 'arguments') AS e(k, v)
+              WHERE v ->> 'refDynamicSource' = 'CURRENT_OWNER');
+
+-- UPDATE CFS WITH CURRENT OWNER DYNAMIC SOURCE END
+
+-- CALCULATED FIELD UNIQUE CONSTRAINT UPDATE START
+
+ALTER TABLE calculated_field DROP CONSTRAINT IF EXISTS calculated_field_unq_key;
+ALTER TABLE calculated_field ADD CONSTRAINT calculated_field_unq_key UNIQUE (entity_id, type, name);
+
+-- CALCULATED FIELD UNIQUE CONSTRAINT UPDATE END
+
+-- CALCULATED FIELD OUTPUT STRATEGY UPDATE START
+
+UPDATE calculated_field
+SET configuration = jsonb_set(
+        configuration::jsonb,
+        '{output}',
+        (configuration::jsonb -> 'output')
+            || jsonb_build_object(
+                'strategy',
+                jsonb_build_object(
+                        'type', 'RULE_CHAIN'
+                )
+               ),
+        false
+                    )
+WHERE (configuration::jsonb -> 'output' -> 'strategy') IS NULL;
+
+-- CALCULATED FIELD OUTPUT STRATEGY UPDATE END
+
+-- REMOVAL OF CALCULATED FIELD LINKS PERSISTENCE START
+
+DROP TABLE IF EXISTS calculated_field_link;
+ANALYZE calculated_field;
+
+-- REMOVAL OF CALCULATED FIELD LINKS PERSISTENCE END

@@ -31,6 +31,7 @@
 package org.thingsboard.server.dao;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.edqs.fields.EntityFields;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -49,6 +50,10 @@ public interface Dao<T> {
     T findById(TenantId tenantId, UUID id);
 
     ListenableFuture<T> findByIdAsync(TenantId tenantId, UUID id);
+
+    default List<EntityInfo> findEntityInfosByNamePrefix(TenantId tenantId, String name) {
+        throw new UnsupportedOperationException();
+    }
 
     boolean existsById(TenantId tenantId, UUID id);
 

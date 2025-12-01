@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.scheduler;
 
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,12 +50,12 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.report.ScheduledReportQuery;
+import org.thingsboard.server.common.data.scheduler.ScheduledReportInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventTimeFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
-import org.thingsboard.server.common.data.scheduler.ScheduledReportInfo;
 import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.entity.AbstractEntityService;
 import org.thingsboard.server.dao.entity.EntityCountService;
@@ -68,12 +69,13 @@ import org.thingsboard.server.exception.DataValidationException;
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validateIds;
 
-@Service("SchedulerEventDaoService")
 @Slf4j
+@Service("SchedulerEventDaoService")
 public class BaseSchedulerEventService extends AbstractEntityService implements SchedulerEventService {
 
     public static final String INCORRECT_TENANT_ID = "Incorrect tenantId ";
@@ -159,15 +161,29 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
 
     @Override
     public SchedulerEvent saveSchedulerEvent(SchedulerEvent schedulerEvent) {
+        return saveSchedulerEvent(schedulerEvent, true);
+    }
+
+    @Override
+    public SchedulerEvent saveSchedulerEvent(SchedulerEvent schedulerEvent, boolean doValidate) {
+        return saveEntity(schedulerEvent, () -> doSaveSchedulerEvent(schedulerEvent, doValidate));
+    }
+
+    private SchedulerEvent doSaveSchedulerEvent(SchedulerEvent schedulerEvent, boolean doValidate) {
         log.trace("Executing saveSchedulerEvent [{}]", schedulerEvent);
-        schedulerEventValidator.validate(schedulerEvent, SchedulerEventInfo::getTenantId);
+        SchedulerEvent oldSchedulerEvent = null;
+        if (doValidate) {
+            oldSchedulerEvent = schedulerEventValidator.validate(schedulerEvent, SchedulerEventInfo::getTenantId);
+        } else if (schedulerEvent.getId() != null) {
+            oldSchedulerEvent = findSchedulerEventById(schedulerEvent.getTenantId(), schedulerEvent.getId());
+        }
         try {
             SchedulerEvent savedSchedulerEvent = schedulerEventDao.save(schedulerEvent.getTenantId(), schedulerEvent);
             if (schedulerEvent.getId() == null) {
                 entityCountService.publishCountEntityEvictEvent(schedulerEvent.getTenantId(), EntityType.SCHEDULER_EVENT);
             }
             eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(schedulerEvent.getTenantId())
-                    .entityId(savedSchedulerEvent.getId()).entity(savedSchedulerEvent).created(schedulerEvent.getId() == null).build());
+                    .entityId(savedSchedulerEvent.getId()).entity(savedSchedulerEvent).created(oldSchedulerEvent == null).build());
             return savedSchedulerEvent;
         } catch (Exception e) {
             checkConstraintViolation(e,
@@ -307,6 +323,12 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
     @Override
     public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {
         return Optional.ofNullable(findSchedulerEventById(tenantId, new SchedulerEventId(entityId.getId())));
+    }
+
+    @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(schedulerEventDao.findByIdAsync(tenantId, entityId.getId()))
+                .transform(Optional::ofNullable, directExecutor());
     }
 
     @Override

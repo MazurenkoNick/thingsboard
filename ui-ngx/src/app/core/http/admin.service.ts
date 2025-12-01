@@ -36,9 +36,10 @@ import { HttpClient } from '@angular/common/http';
 import {
   AdminSettings,
   AutoCommitSettings,
-  MailConfigTemplate,
   FeaturesInfo,
-  JwtSettings, LicenseUsageInfo,
+  JwtSettings,
+  LicenseUsageInfo,
+  MailConfigTemplate,
   MailServerSettings,
   RepositorySettings,
   RepositorySettingsInfo,

@@ -80,3 +80,7 @@ ALTER TABLE oauth2_client_registration_template ADD COLUMN IF NOT EXISTS basic_u
 ALTER TABLE component_descriptor ADD COLUMN IF NOT EXISTS has_secrets boolean default false;
 
 ALTER TABLE api_usage_state ADD COLUMN IF NOT EXISTS report_exec varchar(32) DEFAULT 'ENABLED';
+
+ALTER TABLE api_key ADD COLUMN IF NOT EXISTS internal boolean DEFAULT false;
+
+ALTER TABLE api_key ADD COLUMN IF NOT EXISTS permissions json;

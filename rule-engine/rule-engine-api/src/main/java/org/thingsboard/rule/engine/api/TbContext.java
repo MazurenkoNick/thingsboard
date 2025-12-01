@@ -91,6 +91,7 @@ import org.thingsboard.server.dao.notification.NotificationTargetService;
 import org.thingsboard.server.dao.notification.NotificationTemplateService;
 import org.thingsboard.server.dao.oauth2.OAuth2ClientService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
+import org.thingsboard.server.dao.pat.ApiKeyService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.queue.QueueStatsService;
 import org.thingsboard.server.dao.relation.RelationService;
@@ -270,7 +271,7 @@ public interface TbContext {
 
     void checkTenantEntity(EntityId entityId) throws TbNodeException;
 
-    <E extends HasId<I> & HasTenantId, I extends EntityId> void checkTenantEntity(E entity) throws TbNodeException;
+    <E extends HasId<I> & HasTenantId, I extends EntityId> void checkTenantOrSystemEntity(E entity) throws TbNodeException;
 
     boolean isLocalEntity(EntityId entityId);
 
@@ -389,6 +390,8 @@ public interface TbContext {
     JobService getJobService();
 
     JobManager getJobManager();
+
+    ApiKeyService getApiKeyService();
 
     boolean isExternalNodeForceAck();
 

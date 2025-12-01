@@ -31,6 +31,6 @@
 
 -->
 <div style="display: table; width: 100%;" [style.height]="height">
-  <div  style="display: table-cell;" [style]="headingStyle" [innerText]="text">
+  <div  style="display: table-cell;" [style]="headingStyle" [innerHTML]="text | safe: 'html'">
   </div>
 </div>

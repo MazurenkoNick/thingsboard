@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.actors;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -48,12 +49,12 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.common.util.DebugModeUtil;
 import org.thingsboard.common.util.EventUtil;
 import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.rule.engine.api.DashboardReportService;
 import org.thingsboard.rule.engine.api.DeviceStateManager;
 import org.thingsboard.rule.engine.api.JobManager;
 import org.thingsboard.rule.engine.api.MailService;
 import org.thingsboard.rule.engine.api.MqttClientSettings;
 import org.thingsboard.rule.engine.api.NotificationCenter;
-import org.thingsboard.rule.engine.api.DashboardReportService;
 import org.thingsboard.rule.engine.api.RuleEngineAiChatModelService;
 import org.thingsboard.rule.engine.api.SmsService;
 import org.thingsboard.rule.engine.api.notification.SlackService;
@@ -78,7 +79,6 @@ import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
 import org.thingsboard.server.common.data.kv.JsonDataEntry;
 import org.thingsboard.server.common.data.limit.LimitedApi;
-import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
 import org.thingsboard.server.common.data.plugin.ComponentLifecycleEvent;
 import org.thingsboard.server.common.data.rule.RuleNode;
@@ -126,13 +126,15 @@ import org.thingsboard.server.dao.notification.NotificationTargetService;
 import org.thingsboard.server.dao.notification.NotificationTemplateService;
 import org.thingsboard.server.dao.oauth2.OAuth2ClientService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
+import org.thingsboard.server.dao.owner.OwnerService;
+import org.thingsboard.server.dao.pat.ApiKeyService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.queue.QueueStatsService;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.report.ReportService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
-import org.thingsboard.server.dao.resource.TbResourceDataCache;
 import org.thingsboard.server.dao.resource.ResourceService;
+import org.thingsboard.server.dao.resource.TbResourceDataCache;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rule.RuleChainService;
 import org.thingsboard.server.dao.rule.RuleNodeStateService;
@@ -155,7 +157,6 @@ import org.thingsboard.server.service.apiusage.TbApiUsageStateService;
 import org.thingsboard.server.service.cf.CalculatedFieldProcessingService;
 import org.thingsboard.server.service.cf.CalculatedFieldQueueService;
 import org.thingsboard.server.service.cf.CalculatedFieldStateService;
-import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.component.ComponentDiscoveryService;
 import org.thingsboard.server.service.converter.DataConverterService;
 import org.thingsboard.server.service.edge.rpc.EdgeRpcService;
@@ -184,7 +185,6 @@ import org.thingsboard.server.service.transport.TbCoreToTransportService;
 import org.thingsboard.server.utils.DebugModeRateLimitsConfig;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -192,7 +192,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -690,6 +689,14 @@ public class ActorSystemContext {
     @Getter
     private SecretService secretService;
 
+    @Autowired
+    @Getter
+    private OwnerService ownerService;
+
+    @Autowired
+    @Getter
+    private ApiKeyService apiKeyService;
+
     @Value("${actors.session.max_concurrent_sessions_per_device:1}")
     @Getter
     private int maxConcurrentSessionsPerDevice;
@@ -777,6 +784,14 @@ public class ActorSystemContext {
     @Value("${actors.calculated_fields.calculation_timeout:5}")
     @Getter
     private long cfCalculationResultTimeout;
+
+    @Value("${actors.calculated_fields.check_interval:60}")
+    @Getter
+    private long cfCheckInterval;
+
+    @Value("${actors.alarms.reevaluation_interval:120}")
+    @Getter
+    private long alarmRulesReevaluationInterval;
 
     @Autowired
     @Getter
@@ -968,7 +983,7 @@ public class ActorSystemContext {
         Futures.addCallback(future, RULE_CHAIN_DEBUG_EVENT_ERROR_CALLBACK, MoreExecutors.directExecutor());
     }
 
-    public void persistCalculatedFieldDebugEvent(TenantId tenantId, CalculatedFieldId calculatedFieldId, EntityId entityId, Map<String, ArgumentEntry> arguments, UUID tbMsgId, TbMsgType tbMsgType, String result, String errorMessage) {
+    public void persistCalculatedFieldDebugEvent(TenantId tenantId, CalculatedFieldId calculatedFieldId, EntityId entityId, JsonNode arguments, UUID tbMsgId, String tbMsgType, String result, String errorMessage) {
         if (checkLimits(tenantId)) {
             try {
                 CalculatedFieldDebugEvent.CalculatedFieldDebugEventBuilder eventBuilder = CalculatedFieldDebugEvent.builder()
@@ -981,13 +996,10 @@ public class ActorSystemContext {
                     eventBuilder.msgId(tbMsgId);
                 }
                 if (tbMsgType != null) {
-                    eventBuilder.msgType(tbMsgType.name());
+                    eventBuilder.msgType(tbMsgType);
                 }
                 if (arguments != null) {
-                    eventBuilder.arguments(JacksonUtil.toString(
-                            arguments.entrySet().stream()
-                                    .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toTbelCfArg()))
-                    ));
+                    eventBuilder.arguments(JacksonUtil.toString(arguments));
                 }
                 if (result != null) {
                     eventBuilder.result(result);
@@ -995,8 +1007,9 @@ public class ActorSystemContext {
                 if (errorMessage != null) {
                     eventBuilder.error(errorMessage);
                 }
-
-                ListenableFuture<Void> future = eventService.saveAsync(eventBuilder.build());
+                CalculatedFieldDebugEvent event = eventBuilder.build();
+                log.debug("Persisting calculated field debug event: {}", event);
+                ListenableFuture<Void> future = eventService.saveAsync(event);
                 Futures.addCallback(future, CALCULATED_FIELD_DEBUG_EVENT_ERROR_CALLBACK, MoreExecutors.directExecutor());
             } catch (IllegalArgumentException ex) {
                 log.warn("Failed to persist calculated field debug message", ex);
@@ -1030,12 +1043,13 @@ public class ActorSystemContext {
         return getScheduler().scheduleWithFixedDelay(() -> ctx.tell(msg), delayInMs, periodInMs, TimeUnit.MILLISECONDS);
     }
 
-    public void scheduleMsgWithDelay(TbActorRef ctx, TbActorMsg msg, long delayInMs) {
+    public ScheduledFuture<?> scheduleMsgWithDelay(TbActorRef ctx, TbActorMsg msg, long delayInMs) {
         log.debug("Scheduling msg {} with delay {} ms", msg, delayInMs);
         if (delayInMs > 0) {
-            getScheduler().schedule(() -> ctx.tell(msg), delayInMs, TimeUnit.MILLISECONDS);
+            return getScheduler().schedule(() -> ctx.tell(msg), delayInMs, TimeUnit.MILLISECONDS);
         } else {
             ctx.tell(msg);
+            return null;
         }
     }
 

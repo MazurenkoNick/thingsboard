@@ -37,18 +37,16 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.thingsboard.common.util.JacksonUtil;
-import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
 import org.thingsboard.server.common.data.cf.configuration.ArgumentType;
-import org.thingsboard.server.common.data.cf.configuration.CFArgumentDynamicSourceType;
-import org.thingsboard.server.common.data.cf.configuration.Output;
-import org.thingsboard.server.common.data.cf.configuration.OutputType;
+import org.thingsboard.server.common.data.cf.configuration.CurrentOwnerDynamicSourceConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.ReferencedEntityKey;
 import org.thingsboard.server.common.data.cf.configuration.ScriptCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.SimpleCalculatedFieldConfiguration;
+import org.thingsboard.server.common.data.cf.configuration.TimeSeriesOutput;
 import org.thingsboard.server.common.data.debug.DebugSettings;
 import org.thingsboard.server.common.data.device.data.DefaultDeviceConfiguration;
 import org.thingsboard.server.common.data.device.data.DefaultDeviceTransportConfiguration;
@@ -66,6 +64,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.thingsboard.server.common.data.AttributeScope.SERVER_SCOPE;
 import static org.thingsboard.server.msa.ui.utils.EntityPrototypes.defaultCustomer;
 import static org.thingsboard.server.msa.ui.utils.EntityPrototypes.defaultDeviceProfile;
 import static org.thingsboard.server.msa.ui.utils.EntityPrototypes.defaultTenantAdmin;
@@ -109,7 +108,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
         CustomerId customerId = testRestClient.postCustomer(defaultCustomer(tenantId, "Customer 1")).getId();
 
         testRestClient.changeOwner(customerId, device.getId());
-        testRestClient.postTelemetryAttribute(customerId, AttributeScope.SERVER_SCOPE.name(), JacksonUtil.toJsonNode("{\"attrKey\":5}"));
+        testRestClient.postTelemetryAttribute(customerId, SERVER_SCOPE, JacksonUtil.toJsonNode("{\"attrKey\":5}"));
 
         CalculatedField savedCalculatedField = createSimpleCalculatedField(device.getId());
 
@@ -122,7 +121,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
                     assertThat(result.get("result").get(0).get("value").asText()).isEqualTo("105");
                 });
 
-        testRestClient.postTelemetryAttribute(customerId, AttributeScope.SERVER_SCOPE.name(), JacksonUtil.toJsonNode("{\"attrKey\":15}"));
+        testRestClient.postTelemetryAttribute(customerId, SERVER_SCOPE, JacksonUtil.toJsonNode("{\"attrKey\":15}"));
 
         await().alias("update telemetry -> perform calculation").atMost(TIMEOUT, TimeUnit.SECONDS)
                 .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
@@ -140,7 +139,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
     public void testPerformInitialCalculationWhenOwnerChanged() {
         testRestClient.login("sysadmin@thingsboard.org", "sysadmin");
 
-        testRestClient.postTelemetryAttribute(tenantId, AttributeScope.SERVER_SCOPE.name(), JacksonUtil.toJsonNode("{\"attrKey\":50}"));
+        testRestClient.postTelemetryAttribute(tenantId, SERVER_SCOPE, JacksonUtil.toJsonNode("{\"attrKey\":50}"));
 
         // login tenant admin
         testRestClient.getAndSetUserToken(tenantAdminId);
@@ -151,7 +150,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
         CustomerId customerId = testRestClient.postCustomer(defaultCustomer(tenantId, "Customer 2")).getId();
 
         testRestClient.changeOwner(customerId, device.getId());
-        testRestClient.postTelemetryAttribute(customerId, AttributeScope.SERVER_SCOPE.name(), JacksonUtil.toJsonNode("{\"attrKey\":5}"));
+        testRestClient.postTelemetryAttribute(customerId, SERVER_SCOPE, JacksonUtil.toJsonNode("{\"attrKey\":5}"));
 
         CalculatedField savedCalculatedField = createSimpleCalculatedField(device.getId());
 
@@ -236,7 +235,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
     public void testAddedNewEntityToProfile() {
         testRestClient.login("sysadmin@thingsboard.org", "sysadmin");
 
-        testRestClient.postTelemetryAttribute(tenantId, AttributeScope.SERVER_SCOPE.name(), JacksonUtil.toJsonNode("{\"attrKey\":50}"));
+        testRestClient.postTelemetryAttribute(tenantId, SERVER_SCOPE, JacksonUtil.toJsonNode("{\"attrKey\":50}"));
         // login tenant admin
         testRestClient.getAndSetUserToken(tenantAdminId);
 
@@ -248,7 +247,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
         customerDevice.setOwnerId(customerId);
         Device device = testRestClient.postDevice(deviceToken, customerDevice);
 
-        testRestClient.postTelemetryAttribute(customerId, AttributeScope.SERVER_SCOPE.name(), JacksonUtil.toJsonNode("{\"attrKey\":5}"));
+        testRestClient.postTelemetryAttribute(customerId, SERVER_SCOPE, JacksonUtil.toJsonNode("{\"attrKey\":5}"));
 
         CalculatedField savedCalculatedField = createSimpleCalculatedField(deviceProfileId);
 
@@ -273,7 +272,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
                     assertThat(result.get("result").get(0).get("value").asText()).isEqualTo("150");
                 });
 
-        testRestClient.postTelemetryAttribute(customerId, AttributeScope.SERVER_SCOPE.name(), JacksonUtil.toJsonNode("{\"attrKey\":80}"));
+        testRestClient.postTelemetryAttribute(customerId, SERVER_SCOPE, JacksonUtil.toJsonNode("{\"attrKey\":80}"));
 
         await().alias("update telemetry for customer -> perform calculation only for customer device").atMost(TIMEOUT, TimeUnit.SECONDS)
                 .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
@@ -302,16 +301,15 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
         SimpleCalculatedFieldConfiguration config = new SimpleCalculatedFieldConfiguration();
 
         Argument argument = new Argument();
-        ReferencedEntityKey refEntityKey = new ReferencedEntityKey("attrKey", ArgumentType.ATTRIBUTE, AttributeScope.SERVER_SCOPE);
+        ReferencedEntityKey refEntityKey = new ReferencedEntityKey("attrKey", ArgumentType.ATTRIBUTE, SERVER_SCOPE);
         argument.setRefEntityKey(refEntityKey);
-        argument.setRefDynamicSource(CFArgumentDynamicSourceType.CURRENT_OWNER);
+        argument.setRefDynamicSourceConfiguration(new CurrentOwnerDynamicSourceConfiguration());
         config.setArguments(Map.of("a", argument));
 
         config.setExpression("a + 100");
 
-        Output output = new Output();
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setName("result");
-        output.setType(OutputType.TIME_SERIES);
         output.setDecimalsByDefault(0);
         config.setOutput(output);
 
@@ -333,16 +331,14 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
         ReferencedEntityKey refEntityKey = new ReferencedEntityKey("key", ArgumentType.TS_ROLLING, null);
         argument.setTimeWindow(30000L);
         argument.setLimit(5);
-        argument.setRefDynamicSource(CFArgumentDynamicSourceType.CURRENT_OWNER);
+        argument.setRefDynamicSourceConfiguration(new CurrentOwnerDynamicSourceConfiguration());
         argument.setRefEntityKey(refEntityKey);
 
         config.setArguments(Map.of("rollingKey", argument));
 
         config.setExpression("return {\"avgValue\": rollingKey.avg()};");
 
-        Output output = new Output();
-        output.setType(OutputType.TIME_SERIES);
-        config.setOutput(output);
+        config.setOutput(new TimeSeriesOutput());
 
         calculatedField.setConfiguration(config);
 

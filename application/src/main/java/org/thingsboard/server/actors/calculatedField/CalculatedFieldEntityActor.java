@@ -36,6 +36,7 @@ import org.thingsboard.server.actors.TbActorCtx;
 import org.thingsboard.server.actors.TbActorException;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.msg.CalculatedFieldStatePartitionRestoreMsg;
 import org.thingsboard.server.common.msg.TbActorStopReason;
 import org.thingsboard.server.common.msg.ToCalculatedFieldSystemMsg;
 import org.thingsboard.server.common.msg.cf.CalculatedFieldPartitionChangeMsg;
@@ -66,7 +67,7 @@ public class CalculatedFieldEntityActor extends AbstractCalculatedFieldActor {
     @Override
     public void destroy(TbActorStopReason stopReason, Throwable cause) throws TbActorException {
         log.debug("[{}] Stopping CF entity actor.", processor.tenantId);
-        processor.stop();
+        processor.stop(false);
     }
 
     @Override
@@ -78,11 +79,17 @@ public class CalculatedFieldEntityActor extends AbstractCalculatedFieldActor {
             case CF_STATE_RESTORE_MSG:
                 processor.process((CalculatedFieldStateRestoreMsg) msg);
                 break;
+            case CF_STATE_PARTITION_RESTORE_MSG:
+                processor.process((CalculatedFieldStatePartitionRestoreMsg) msg);
+                break;
             case CF_ENTITY_INIT_CF_MSG:
                 processor.process((EntityInitCalculatedFieldMsg) msg);
                 break;
             case CF_ENTITY_DELETE_MSG:
                 processor.process((CalculatedFieldEntityDeleteMsg) msg);
+                break;
+            case CF_RELATION_ACTION_MSG:
+                processor.process((CalculatedFieldRelationActionMsg) msg);
                 break;
             case CF_ENTITY_TELEMETRY_MSG:
                 processor.process((EntityCalculatedFieldTelemetryMsg) msg);
@@ -92,6 +99,12 @@ public class CalculatedFieldEntityActor extends AbstractCalculatedFieldActor {
                 break;
             case CF_ARGUMENT_RESET_MSG:
                 processor.process((CalculatedFieldArgumentResetMsg) msg);
+                break;
+            case CF_REEVALUATE_MSG:
+                processor.process((CalculatedFieldReevaluateMsg) msg);
+                break;
+            case CF_ALARM_ACTION_MSG:
+                processor.process((CalculatedFieldAlarmActionMsg) msg);
                 break;
             default:
                 return false;
@@ -103,4 +116,5 @@ public class CalculatedFieldEntityActor extends AbstractCalculatedFieldActor {
     void logProcessingException(Exception e) {
         log.warn("[{}][{}] Processing failure", tenantId, processor.entityId, e);
     }
+
 }

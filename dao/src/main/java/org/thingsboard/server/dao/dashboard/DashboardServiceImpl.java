@@ -33,6 +33,7 @@ package org.thingsboard.server.dao.dashboard;
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -84,6 +85,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validateIds;
@@ -96,6 +98,7 @@ public class DashboardServiceImpl extends AbstractEntityService implements Dashb
 
     public static final String INCORRECT_DASHBOARD_ID = "Incorrect dashboardId ";
     public static final String INCORRECT_TENANT_ID = "Incorrect tenantId ";
+
     @Autowired
     private DashboardDao dashboardDao;
 
@@ -187,6 +190,10 @@ public class DashboardServiceImpl extends AbstractEntityService implements Dashb
 
     @Override
     public Dashboard saveDashboard(Dashboard dashboard, boolean doValidate) {
+        return saveEntity(dashboard, () -> doSaveDashboard(dashboard, doValidate));
+    }
+
+    private Dashboard doSaveDashboard(Dashboard dashboard, boolean doValidate) {
         log.trace("Executing saveDashboard [{}]", dashboard);
         if (doValidate) {
             dashboardValidator.validate(dashboard, Dashboard::getTenantId);
@@ -444,6 +451,12 @@ public class DashboardServiceImpl extends AbstractEntityService implements Dashb
     @Override
     public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {
         return Optional.ofNullable(findDashboardById(tenantId, new DashboardId(entityId.getId())));
+    }
+
+    @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(findDashboardByIdAsync(tenantId, new DashboardId(entityId.getId())))
+                .transform(Optional::ofNullable, directExecutor());
     }
 
     @Override
