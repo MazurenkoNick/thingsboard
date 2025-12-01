@@ -75,7 +75,7 @@ public class TrendzController extends BaseController {
     public TrendzConfiguration getTrendzConfig(@AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
         accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.READ);
         TrendzSettings settings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
-        return settings != null ? settings.trendzConfiguration() : null;
+        return settings != null ? settings.trendzConfiguration() : new TrendzConfiguration(null, null);
     }
 
     @ApiOperation(value = "Save Trendz configuration (saveTrendzConfig)",
