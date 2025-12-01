@@ -28,41 +28,50 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.report;
+package org.thingsboard.server.service.edge.rpc.fetch;
 
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.thingsboard.server.common.data.EdgeUtils;
+import org.thingsboard.server.common.data.edge.Edge;
+import org.thingsboard.server.common.data.edge.EdgeEvent;
+import org.thingsboard.server.common.data.edge.EdgeEventActionType;
+import org.thingsboard.server.common.data.edge.EdgeEventType;
 import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateInfo;
 import org.thingsboard.server.common.data.report.ReportTemplateQuery;
-import org.thingsboard.server.common.data.report.ReportTemplateType;
-import org.thingsboard.server.dao.entity.EntityDaoService;
+import org.thingsboard.server.dao.report.ReportTemplateService;
 
-import java.util.List;
+@AllArgsConstructor
+@Slf4j
+public class ReportTemplateEdgeEventFetcher extends BasePageableEdgeEventFetcher<ReportTemplateInfo> {
 
-public interface ReportTemplateService extends EntityDaoService {
+    private final ReportTemplateService reportTemplateService;
+    private final CustomerId customerId;
 
-    ReportTemplate findReportTemplateById(TenantId tenantId, ReportTemplateId reportTemplateId);
+    @Override
+    PageData<ReportTemplateInfo> fetchEntities(TenantId tenantId, Edge edge, PageLink pageLink) {
+        ReportTemplateQuery query = new ReportTemplateQuery(pageLink, false, null, null);
+        if (customerId == null) {
+            return reportTemplateService.findReportTemplates(tenantId, query);
+        } else {
+            return reportTemplateService.findCustomerReportTemplates(tenantId, customerId, query);
+        }
+    }
 
-    ReportTemplateInfo findReportTemplateInfoById(TenantId tenantId, ReportTemplateId reportTemplateId);
-
-    ReportTemplate saveReportTemplate(ReportTemplate reportTemplate);
-
-    ReportTemplate saveReportTemplate(ReportTemplate reportTemplate, boolean doValidate);
-
-    void deleteReportTemplate(TenantId tenantId, ReportTemplateId reportTemplateId);
-
-    List<ReportTemplateInfo> findReportTemplateInfoByIds(TenantId tenantId, List<ReportTemplateId> reportTemplateIds);
-
-    PageData<ReportTemplateInfo> findReportTemplates(TenantId tenantId, ReportTemplateQuery query);
-
-    PageData<ReportTemplateInfo> findCustomerReportTemplates(TenantId tenantId, CustomerId customerId, ReportTemplateQuery query);
-
-    void deleteReportTemplatesByTenantId(TenantId tenantId);
-
-    void deleteReportTemplatesByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId);
+    @Override
+    EdgeEvent constructEdgeEvent(TenantId tenantId, Edge edge, ReportTemplateInfo reportTemplateInfo) {
+        return EdgeUtils.constructEdgeEvent(
+                tenantId,
+                edge.getId(),
+                EdgeEventType.REPORT_TEMPLATE,
+                EdgeEventActionType.ADDED,
+                reportTemplateInfo.getId(),
+                null
+        );
+    }
 
 }

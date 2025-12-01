@@ -28,41 +28,16 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.report;
+package org.thingsboard.server.service.edge.rpc.processor.report;
 
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.ReportTemplateId;
+import com.google.common.util.concurrent.ListenableFuture;
+import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.report.ReportTemplate;
-import org.thingsboard.server.common.data.report.ReportTemplateInfo;
-import org.thingsboard.server.common.data.report.ReportTemplateQuery;
-import org.thingsboard.server.common.data.report.ReportTemplateType;
-import org.thingsboard.server.dao.entity.EntityDaoService;
+import org.thingsboard.server.gen.edge.v1.ReportTemplateUpdateMsg;
+import org.thingsboard.server.service.edge.rpc.processor.EdgeProcessor;
 
-import java.util.List;
+public interface ReportTemplateProcessor extends EdgeProcessor {
 
-public interface ReportTemplateService extends EntityDaoService {
-
-    ReportTemplate findReportTemplateById(TenantId tenantId, ReportTemplateId reportTemplateId);
-
-    ReportTemplateInfo findReportTemplateInfoById(TenantId tenantId, ReportTemplateId reportTemplateId);
-
-    ReportTemplate saveReportTemplate(ReportTemplate reportTemplate);
-
-    ReportTemplate saveReportTemplate(ReportTemplate reportTemplate, boolean doValidate);
-
-    void deleteReportTemplate(TenantId tenantId, ReportTemplateId reportTemplateId);
-
-    List<ReportTemplateInfo> findReportTemplateInfoByIds(TenantId tenantId, List<ReportTemplateId> reportTemplateIds);
-
-    PageData<ReportTemplateInfo> findReportTemplates(TenantId tenantId, ReportTemplateQuery query);
-
-    PageData<ReportTemplateInfo> findCustomerReportTemplates(TenantId tenantId, CustomerId customerId, ReportTemplateQuery query);
-
-    void deleteReportTemplatesByTenantId(TenantId tenantId);
-
-    void deleteReportTemplatesByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId);
+    ListenableFuture<Void> processReportTemplateMsgFromEdge(TenantId tenantId, Edge edge, ReportTemplateUpdateMsg reportTemplateUpdateMsg);
 
 }

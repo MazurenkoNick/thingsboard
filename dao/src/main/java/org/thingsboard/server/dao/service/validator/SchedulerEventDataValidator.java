@@ -55,6 +55,7 @@ import org.thingsboard.server.dao.customer.CustomerDao;
 import org.thingsboard.server.dao.device.DeviceProfileService;
 import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
+import org.thingsboard.server.dao.scheduler.SchedulerEventDao;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.exception.DataValidationException;
@@ -85,9 +86,21 @@ public class SchedulerEventDataValidator extends DataValidator<SchedulerEvent> {
     @Autowired
     private CustomerDao customerDao;
 
+    @Autowired
+    private SchedulerEventDao schedulerEventDao;
+
     @Override
     protected void validateCreate(TenantId tenantId, SchedulerEvent data) {
         validateNumberOfEntitiesPerTenant(tenantId, EntityType.SCHEDULER_EVENT);
+    }
+
+    @Override
+    protected SchedulerEvent validateUpdate(TenantId tenantId, SchedulerEvent data) {
+        SchedulerEvent old = schedulerEventDao.findById(data.getTenantId(), data.getUuidId());
+        if (old == null) {
+            throw new DataValidationException("Can't update non existing entity!");
+        }
+        return old;
     }
 
     @Override
