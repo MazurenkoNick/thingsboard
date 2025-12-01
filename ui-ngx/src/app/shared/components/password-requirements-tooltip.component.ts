@@ -29,48 +29,40 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-
-import { Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
-import { TbPopoverComponent } from '@shared/components/popover.component';
-import { ApiKeyService } from '@core/http/api-key.service';
+import { Component, Input, ViewEncapsulation } from '@angular/core';
+import { CdkOverlayOrigin, ConnectionPositionPair } from '@angular/cdk/overlay';
+import { passwordErrorRules } from '@shared/models/password.models';
+import { AbstractControl } from '@angular/forms';
+import { UserPasswordPolicy } from '@shared/models/settings.models';
+import { POSITION_MAP } from '@shared/models/overlay.models';
 
 @Component({
-  selector: 'tb-edit-api-key-description-panel',
-  templateUrl: './edit-api-key-description-panel.component.html',
-  styleUrls: ['./edit-api-key-description-panel.component.scss'],
+  selector: 'tb-password-requirements-tooltip',
+  templateUrl: './password-requirements-tooltip.component.html',
+  styleUrl: './password-requirements-tooltip.component.scss',
   encapsulation: ViewEncapsulation.None
 })
-export class EditApiKeyDescriptionPanelComponent implements OnInit {
+export class PasswordRequirementsTooltipComponent {
+  @Input() passwordControl: AbstractControl;
+  @Input() passwordPolicy: UserPasswordPolicy;
+  @Input() trigger: CdkOverlayOrigin;
 
-  @Input()
-  apiKeyId: string;
+  passwordErrorRules = passwordErrorRules;
+  isTooltipOpen = false;
 
-  @Input()
-  description: string;
+  overlayPositions: ConnectionPositionPair[] = [
+    {...POSITION_MAP.top, offsetY: -20}
+  ];
 
-  @Output()
-  descriptionApplied = new EventEmitter<string>();
-
-  descriptionFormControl = this.fb.control<string>(null, Validators.required);
-
-  constructor(private fb: FormBuilder,
-              private popover: TbPopoverComponent<EditApiKeyDescriptionPanelComponent>,
-              private apiKeyService: ApiKeyService) {}
-
-  ngOnInit(): void {
-    this.descriptionFormControl.setValue(this.description, {emitEvent: false});
+  checkForError(errorName: string): boolean {
+    return this.passwordControl?.hasError(errorName) ?? false;
   }
 
-  cancel() {
-    this.popover.hide();
+  onFocus(): void {
+    this.isTooltipOpen = true;
   }
 
-  applyDescription() {
-    const description = this.descriptionFormControl.value.trim();
-    this.apiKeyService.updateApiKeyDescription(this.apiKeyId, description).subscribe(() => {
-      this.descriptionApplied.emit(description);
-    });
+  onBlur(): void {
+    this.isTooltipOpen = false;
   }
-
 }
