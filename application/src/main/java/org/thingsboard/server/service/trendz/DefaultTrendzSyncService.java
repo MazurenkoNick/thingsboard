@@ -67,7 +67,6 @@ import org.thingsboard.server.service.security.system.SystemSecurityService;
 
 import java.io.Serializable;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -106,27 +105,22 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
     @PostConstruct
     private void init() {
         restTemplate = new RestTemplateBuilder()
-                .connectTimeout(Duration.of(requestTimeoutMs, ChronoUnit.MILLIS))
-                .readTimeout(Duration.of(requestTimeoutMs, ChronoUnit.MILLIS))
+                .connectTimeout(Duration.ofMillis(requestTimeoutMs))
+                .readTimeout(Duration.ofMillis(requestTimeoutMs))
                 .build();
     }
 
     @Override
     public TrendzSettings performSync(TenantId tenantId, UserId userId) {
         if (!trendzEnabled) {
-            TrendzSettings settings = createSettings(
-                    null, null,
-                    null, 0L,
+            return saveTrendzSettings(null, null, null, 0L,
                     TrendzSynchronizationResultType.SYNC_DISABLED,
-                    TrendzSynchronizationStatus.NOT_AVAILABLE
-            );
-            trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
-            return settings;
+                    TrendzSynchronizationStatus.NOT_AVAILABLE);
         }
 
         TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
 
-        if (trendzSettings == null || trendzSettings.trendzConfiguration() == null || trendzSettings.trendzConfiguration().tbUrl() == null || trendzSettings.trendzConfiguration().trendzUrl() == null) {
+        if (!isValidTrendzSettings(trendzSettings)) {
             trendzSettings = createDefaultTrendzSettings();
         }
 
@@ -134,14 +128,9 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         String trendzUrl = trendzSettings.trendzConfiguration().trendzUrl();
 
         if (tbUrl == null || trendzUrl == null) {
-            TrendzSettings settings = createSettings(
-                    trendzUrl, tbUrl,
-                    null, 0L,
+            return saveTrendzSettings(trendzUrl, tbUrl, null, 0L,
                     TrendzSynchronizationResultType.SYNC_DISABLED,
-                    TrendzSynchronizationStatus.NOT_AVAILABLE
-            );
-            trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
-            return settings;
+                    TrendzSynchronizationStatus.NOT_AVAILABLE);
         }
 
         log.info("Starting Trendz synchronization. Trendz URL: {}, TB URL: {}", trendzUrl, tbUrl);
@@ -160,24 +149,13 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
         TrendzHealthcheckResult syncResult = processTrendzInitRequest(trendzUrl, tbUrl, trendzApiKey.getValue(), null);
         if (syncResult == null) {
-            TrendzSettings settings = createSettings(
-                    trendzUrl, tbUrl,
-                    trendzVersion, updatedTs,
-                    TrendzSynchronizationResultType.SYNC_INTERNAL_ERROR,
-                    TrendzSynchronizationStatus.AVAILABLE
-            );
-            trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
             log.error("Failed to initiate synchronization with Trendz");
-            return settings;
+            return saveTrendzSettings(trendzUrl, tbUrl, trendzVersion, updatedTs,
+                    TrendzSynchronizationResultType.SYNC_INTERNAL_ERROR,
+                    TrendzSynchronizationStatus.AVAILABLE);
         }
 
-        TrendzSettings settings = createSettings(
-                trendzUrl, tbUrl,
-                syncResult.version(), updatedTs,
-                syncResult.type(),
-                syncResult.status()
-        );
-        trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
+        TrendzSettings settings = saveTrendzSettings(trendzUrl, tbUrl, syncResult.version(), updatedTs, syncResult.type(), syncResult.status());
         if (syncResult.type() != TrendzSynchronizationResultType.SYNC_COMPLETED) {
             log.error("Trendz sync failed. Status: {}, Message: {}", syncResult.type(), syncResult.message());
         }
@@ -283,7 +261,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
                 return;
             }
 
-            log.trace("Notifying Trendz about API key rotation. API Key ID: {}", newApiKey.getId());
+            log.debug("Notifying Trendz about API key rotation. API Key ID: {}", newApiKey.getId());
 
             TrendzSettings settings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
             if (settings == null || settings.trendzConfiguration() == null) {
@@ -330,13 +308,9 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         // Step 1: Check if Trendz is reachable (get raw JSON response)
         JsonNode rawResponse = checkTrendzReachability(trendzUrl);
         if (rawResponse == null) {
-            TrendzSettings settings = createSettings(
-                    trendzUrl, tbUrl,
-                    null, updatedTs,
+            saveTrendzSettings(trendzUrl, tbUrl, null, updatedTs,
                     TrendzSynchronizationResultType.TRENDZ_URL_UNREACHABLE,
-                    TrendzSynchronizationStatus.NOT_AVAILABLE
-            );
-            trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
+                    TrendzSynchronizationStatus.NOT_AVAILABLE);
             log.warn("Trendz is not reachable at URL: {}", trendzUrl);
             return null;
         }
@@ -346,26 +320,18 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         try {
             trendzInfo = JacksonUtil.convertValue(rawResponse, TrendzInfo.class);
         } catch (Exception e) {
-            TrendzSettings settings = createSettings(
-                    trendzUrl, tbUrl,
-                    null, updatedTs,
+            saveTrendzSettings(trendzUrl, tbUrl, null, updatedTs,
                     TrendzSynchronizationResultType.SYNC_INTERNAL_ERROR,
-                    TrendzSynchronizationStatus.NOT_AVAILABLE
-            );
-            trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
-            log.warn("Trendz version info is not recognized from URL: {} - unexpected JSON structure", trendzUrl);
+                    TrendzSynchronizationStatus.NOT_AVAILABLE);
+            log.warn("Trendz version info is not recognized from URL: {} - unexpected JSON structure", trendzUrl, e);
             return null;
         }
 
         // Step 3: Validate version field is present and the Trendz version is supported
         if (trendzInfo != null && !isVersionSupported(trendzInfo.version())) {
-            TrendzSettings settings = createSettings(
-                    trendzUrl, tbUrl,
-                    trendzInfo.version(), updatedTs,
+            saveTrendzSettings(trendzUrl, tbUrl, trendzInfo.version(), updatedTs,
                     TrendzSynchronizationResultType.TRENDZ_UNSUPPORTED_VERSION,
-                    TrendzSynchronizationStatus.AVAILABLE
-            );
-            trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
+                    TrendzSynchronizationStatus.AVAILABLE);
             log.warn("Trendz version {} is not supported. Minimum required version: {}", trendzInfo.version(), MIN_SUPPORTED_VERSION);
             return null;
         }
@@ -400,6 +366,11 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
     }
 
     private boolean isVersionSupported(String version) {
+        if (version == null || version.isBlank()) {
+            log.warn("Version is null or empty, treating as unsupported");
+            return false;
+        }
+
         try {
             String cleanVersion = version.split("-")[0]; // Remove suffix if present
             String[] versionParts = cleanVersion.split("\\.");
@@ -417,8 +388,11 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
             }
 
             return true;
+        } catch (NumberFormatException e) {
+            log.error("Failed to parse version '{}': Invalid number format in version string", version, e);
+            return false;
         } catch (Exception e) {
-            log.error("Failed to parse version: {}", version, e);
+            log.error("Failed to parse version '{}': {}", version, e.getMessage(), e);
             return false;
         }
     }
@@ -442,9 +416,10 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
                 log.debug("{} completed successfully", operationName);
                 return response.getBody();
             }
+            log.warn("{} received non-successful response: {}", operationName, response.getStatusCode());
             return null;
         } catch (Exception e) {
-            log.error("{} failed at {}: {}", operationName, trendzUrl, e.getMessage());
+            log.error("{} failed at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
             return null;
         }
     }
@@ -457,7 +432,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
             return trendzApiKey;
         }
 
-        log.trace("Creating new Trendz internal API key with configured permissions");
+        log.info("Creating new Trendz internal API key with configured permissions");
         ApiKeyInfo apiKeyInfo = new ApiKeyInfo();
         apiKeyInfo.setTenantId(TenantId.SYS_TENANT_ID);
         apiKeyInfo.setUserId(userId);
@@ -502,6 +477,22 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         AuthorityPermissionsInfo permissionsInfo = new AuthorityPermissionsInfo();
         permissionsInfo.setOperationsByResource(permissions);
         return permissionsInfo;
+    }
+
+    private TrendzSettings saveTrendzSettings(String trendzUrl, String tbUrl,
+                                              String version, long updatedTs,
+                                              TrendzSynchronizationResultType resultType,
+                                              TrendzSynchronizationStatus status) {
+        TrendzSettings settings = createSettings(trendzUrl, tbUrl, version, updatedTs, resultType, status);
+        trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
+        return settings;
+    }
+
+    private boolean isValidTrendzSettings(TrendzSettings settings) {
+        return settings != null
+                && settings.trendzConfiguration() != null
+                && settings.trendzConfiguration().tbUrl() != null
+                && settings.trendzConfiguration().trendzUrl() != null;
     }
 
     private record TrendzInfo(@JsonProperty("version") String version,
