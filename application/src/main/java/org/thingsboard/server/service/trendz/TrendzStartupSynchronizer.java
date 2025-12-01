@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.service.trendz;
 
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -45,6 +44,7 @@ import org.thingsboard.server.common.msg.queue.ServiceType;
 import org.thingsboard.server.dao.trendz.TrendzSyncService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.queue.discovery.PartitionService;
+import org.thingsboard.server.queue.util.AfterStartUp;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 
 import java.util.concurrent.ExecutorService;
@@ -61,9 +61,9 @@ public class TrendzStartupSynchronizer {
     private final UserService userService;
     private final PartitionService partitionService;
 
-    @PostConstruct
-    private void init() {
-        if (!partitionService.isMyPartition(ServiceType.TB_CORE, TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID)) {
+    @AfterStartUp(order = AfterStartUp.REGULAR_SERVICE)
+    private void startSyncProcess() {
+        if (!partitionService.isSystemPartitionMine(ServiceType.TB_CORE)) {
             return;
         }
         ExecutorService executor = Executors.newSingleThreadExecutor(ThingsBoardThreadFactory.forName("trendz-startup-sync"));

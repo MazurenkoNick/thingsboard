@@ -55,8 +55,8 @@ import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.trendz.TrendzConfiguration;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
 import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
+import org.thingsboard.server.common.data.trendz.TrendzSettings;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResult;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResultType;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationStatus;
@@ -126,12 +126,23 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
         TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
 
-        if (trendzSettings == null || trendzSettings.trendzConfiguration() == null) {
+        if (trendzSettings == null || trendzSettings.trendzConfiguration() == null || trendzSettings.trendzConfiguration().tbUrl() == null || trendzSettings.trendzConfiguration().trendzUrl() == null) {
             trendzSettings = createDefaultTrendzSettings();
         }
 
         String tbUrl = trendzSettings.trendzConfiguration().tbUrl();
         String trendzUrl = trendzSettings.trendzConfiguration().trendzUrl();
+
+        if (tbUrl == null || trendzUrl == null) {
+            TrendzSettings settings = createSettings(
+                    trendzUrl, tbUrl,
+                    null, 0L,
+                    TrendzSynchronizationResultType.SYNC_DISABLED,
+                    TrendzSynchronizationStatus.NOT_AVAILABLE
+            );
+            trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
+            return settings;
+        }
 
         log.info("Starting Trendz synchronization. Trendz URL: {}, TB URL: {}", trendzUrl, tbUrl);
 
@@ -198,17 +209,48 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
             );
         }
 
+        String trendzUrl = trendzSettings.trendzConfiguration().trendzUrl();
+        JsonNode rawResponse = checkTrendzReachability(trendzUrl);
+        if (rawResponse == null) {
+            return new TrendzHealthcheckResult(
+                    trendzSettings.trendzSynchronizationResult().version(),
+                    TrendzSynchronizationResultType.TRENDZ_URL_UNREACHABLE,
+                    TrendzSynchronizationStatus.NOT_AVAILABLE,
+                    TrendzSynchronizationResultType.TRENDZ_URL_UNREACHABLE.getMessage()
+            );
+        }
+
+        TrendzInfo trendzInfo;
+        try {
+            trendzInfo = JacksonUtil.convertValue(rawResponse, TrendzInfo.class);
+        } catch (Exception e) {
+            return new TrendzHealthcheckResult(
+                    trendzSettings.trendzSynchronizationResult().version(),
+                    TrendzSynchronizationResultType.SYNC_INTERNAL_ERROR,
+                    TrendzSynchronizationStatus.NOT_AVAILABLE,
+                    TrendzSynchronizationResultType.SYNC_INTERNAL_ERROR.getMessage()
+            );
+        }
+
+        if (trendzInfo != null && !isVersionSupported(trendzInfo.version())) {
+            return new TrendzHealthcheckResult(
+                    trendzSettings.trendzSynchronizationResult().version(),
+                    TrendzSynchronizationResultType.TRENDZ_UNSUPPORTED_VERSION,
+                    TrendzSynchronizationStatus.AVAILABLE,
+                    TrendzSynchronizationResultType.TRENDZ_UNSUPPORTED_VERSION.getMessage()
+            );
+        }
+
         ApiKey trendzApiKey = apiKeyService.findApiKeyByDescription(TenantId.SYS_TENANT_ID, TRENDZ_API_KEY_DESCRIPTION);
         if (trendzApiKey == null || !trendzApiKey.isInternal()) {
             return new TrendzHealthcheckResult(
                     trendzSettings.trendzSynchronizationResult().version(),
                     TrendzSynchronizationResultType.TRENDZ_AUTH_INVALID,
-                    TrendzSynchronizationStatus.NOT_AVAILABLE,
+                    TrendzSynchronizationStatus.AVAILABLE,
                     TrendzSynchronizationResultType.TRENDZ_AUTH_INVALID.getMessage()
             );
         }
 
-        String trendzUrl = trendzSettings.trendzConfiguration().trendzUrl();
         return sendHealthcheckRequest(trendzUrl, trendzApiKey.getValue());
     }
 
@@ -264,14 +306,24 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
     }
 
     private TrendzSettings createDefaultTrendzSettings() {
+        TrendzSettings settings;
         if (StringUtils.isNotBlank(defaultTbUrl) && StringUtils.isNotBlank(defaultTrendzUrl)) {
-            TrendzConfiguration configuration = new TrendzConfiguration(defaultTrendzUrl, defaultTbUrl);
-            TrendzSettings settings = new TrendzSettings(configuration, null);
-            trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
-            return settings;
+            settings = createSettings(
+                    defaultTrendzUrl, defaultTbUrl,
+                    null, 0L,
+                    TrendzSynchronizationResultType.SYNC_DISABLED,
+                    TrendzSynchronizationStatus.NOT_AVAILABLE
+            );
         } else {
-            throw new IllegalStateException("Trendz configuration is not set. Please configure Trendz URLs first.");
+            settings = createSettings(
+                    null, null,
+                    null, 0L,
+                    TrendzSynchronizationResultType.SYNC_DISABLED,
+                    TrendzSynchronizationStatus.NOT_AVAILABLE
+            );
         }
+        trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
+        return settings;
     }
 
     private TrendzInfo validateTrendzConnectionInfo(String trendzUrl, String tbUrl, long updatedTs) {
@@ -281,7 +333,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
             TrendzSettings settings = createSettings(
                     trendzUrl, tbUrl,
                     null, updatedTs,
-                    TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED,
+                    TrendzSynchronizationResultType.TRENDZ_URL_UNREACHABLE,
                     TrendzSynchronizationStatus.NOT_AVAILABLE
             );
             trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
@@ -297,7 +349,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
             TrendzSettings settings = createSettings(
                     trendzUrl, tbUrl,
                     null, updatedTs,
-                    TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED,
+                    TrendzSynchronizationResultType.SYNC_INTERNAL_ERROR,
                     TrendzSynchronizationStatus.NOT_AVAILABLE
             );
             trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
