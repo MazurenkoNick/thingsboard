@@ -39,12 +39,12 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.report.ScheduledReportQuery;
+import org.thingsboard.server.common.data.scheduler.ScheduledReportInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventTimeFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
-import org.thingsboard.server.common.data.scheduler.ScheduledReportInfo;
 import org.thingsboard.server.dao.entity.EntityDaoService;
 
 import java.util.List;
@@ -70,6 +70,8 @@ public interface SchedulerEventService extends EntityDaoService {
     List<SchedulerEventWithCustomerInfo> findAllSchedulerEventsByTenantIdAndEventTimeFilter(TenantId tenantId, SchedulerEventTimeFilter filter, String searchText);
 
     SchedulerEvent saveSchedulerEvent(SchedulerEvent schedulerEvent);
+
+    SchedulerEvent saveSchedulerEvent(SchedulerEvent schedulerEvent, boolean doValidate);
 
     void deleteSchedulerEvent(TenantId tenantId, SchedulerEventId schedulerEventId);
 

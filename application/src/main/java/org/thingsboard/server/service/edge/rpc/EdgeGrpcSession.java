@@ -91,6 +91,7 @@ import org.thingsboard.server.gen.edge.v1.EntityViewUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.EntityViewsRequestMsg;
 import org.thingsboard.server.gen.edge.v1.RelationRequestMsg;
 import org.thingsboard.server.gen.edge.v1.RelationUpdateMsg;
+import org.thingsboard.server.gen.edge.v1.ReportTemplateUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.RequestMsg;
 import org.thingsboard.server.gen.edge.v1.RequestMsgType;
 import org.thingsboard.server.gen.edge.v1.ResourceUpdateMsg;
@@ -98,6 +99,7 @@ import org.thingsboard.server.gen.edge.v1.ResponseMsg;
 import org.thingsboard.server.gen.edge.v1.RuleChainMetadataRequestMsg;
 import org.thingsboard.server.gen.edge.v1.RuleChainMetadataUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.RuleChainUpdateMsg;
+import org.thingsboard.server.gen.edge.v1.SchedulerEventUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.SyncCompletedMsg;
 import org.thingsboard.server.gen.edge.v1.UplinkMsg;
 import org.thingsboard.server.gen.edge.v1.UplinkResponseMsg;
@@ -1002,6 +1004,16 @@ public abstract class EdgeGrpcSession implements Closeable {
             if (uplinkMsg.getCalculatedFieldUpdateMsgCount() > 0) {
                 for (CalculatedFieldUpdateMsg calculatedFieldUpdateMsg : uplinkMsg.getCalculatedFieldUpdateMsgList()) {
                     result.add(ctx.getCalculatedFieldProcessor().processCalculatedFieldMsgFromEdge(edge.getTenantId(), edge, calculatedFieldUpdateMsg));
+                }
+            }
+            if (uplinkMsg.getReportTemplateUpdateMsgCount() > 0) {
+                for (ReportTemplateUpdateMsg reportTemplateUpdateMsg : uplinkMsg.getReportTemplateUpdateMsgList()) {
+                    result.add(ctx.getReportTemplateProcessor().processReportTemplateMsgFromEdge(edge.getTenantId(), edge, reportTemplateUpdateMsg));
+                }
+            }
+            if (uplinkMsg.getSchedulerEventUpdateMsgCount() > 0) {
+                for (SchedulerEventUpdateMsg schedulerEventUpdateMsg : uplinkMsg.getSchedulerEventUpdateMsgList()) {
+                    result.add(ctx.getSchedulerEventProcessor().processSchedulerEventMsgFromEdge(edge.getTenantId(), edge, schedulerEventUpdateMsg));
                 }
             }
             if (uplinkMsg.getAiModelUpdateMsgCount() > 0) {

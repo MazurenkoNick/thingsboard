@@ -28,20 +28,15 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.cf;
+package org.thingsboard.server.service.edge.rpc.processor.scheduler;
 
-import org.thingsboard.server.common.data.id.CalculatedFieldId;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.msg.TbMsg;
+import com.google.common.util.concurrent.ListenableFuture;
+import org.thingsboard.server.common.data.edge.Edge;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.gen.edge.v1.SchedulerEventUpdateMsg;
+import org.thingsboard.server.service.edge.rpc.processor.EdgeProcessor;
 
-import java.util.List;
+public interface SchedulerEventProcessor extends EdgeProcessor {
 
-public interface CalculatedFieldResult {
-
-    TbMsg toTbMsg(EntityId entityId, String cfName, List<CalculatedFieldId> cfIds);
-
-    String stringValue();
-
-    boolean isEmpty();
-
+    ListenableFuture<Void> processSchedulerEventMsgFromEdge(TenantId tenantId, Edge edge, SchedulerEventUpdateMsg schedulerEventUpdateMsg);
 }

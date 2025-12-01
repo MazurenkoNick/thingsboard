@@ -149,6 +149,7 @@ public class EntityIdFactory {
             case DOMAIN -> new DomainId(uuid);
             case CALCULATED_FIELD -> new CalculatedFieldId(uuid);
             case SECRET -> new SecretId(uuid);
+            case REPORT_TEMPLATE -> new ReportTemplateId(uuid);
             case AI_MODEL -> new AiModelId(uuid);
             default -> throw new IllegalArgumentException("EdgeEventType " + edgeEventType + " is not supported!");
         };

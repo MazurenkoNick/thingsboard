@@ -166,9 +166,8 @@ import org.thingsboard.server.common.data.integration.IntegrationInfo;
 import org.thingsboard.server.common.data.integration.IntegrationType;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
-import org.thingsboard.server.common.data.kv.IntervalType;
-import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.IntervalType;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.menu.CustomMenu;
@@ -3136,6 +3135,45 @@ public class RestClient implements Closeable {
         }
     }
 
+    public PageData<SchedulerEvent> getEdgeSchedulerEvents(EdgeId edgeId, PageLink pageLink) {
+        Map<String, String> params = new HashMap<>();
+        params.put("edgeId", edgeId.getId().toString());
+        addPageLinkToParam(params, pageLink);
+        return restTemplate.exchange(
+                baseURL + "/api/edge/{edgeId}/schedulerEvents?" + getUrlParams(pageLink),
+                HttpMethod.GET, HttpEntity.EMPTY,
+                new ParameterizedTypeReference<PageData<SchedulerEvent>>() {
+                }, params).getBody();
+    }
+
+    public Optional<SchedulerEvent> assignSchedulerEventToEdge(EdgeId edgeId, SchedulerEventId schedulerEventId) {
+        try {
+            ResponseEntity<SchedulerEvent> schedulerEvent = restTemplate.postForEntity(baseURL + "/api/edge/{edgeId}/schedulerEvent/{schedulerEventId}",
+                    null, SchedulerEvent.class, edgeId.getId(), schedulerEventId.getId());
+            return Optional.ofNullable(schedulerEvent.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public Optional<SchedulerEvent> unassignSchedulerEventFromEdge(EdgeId edgeId, SchedulerEventId schedulerEventId) {
+        try {
+            ResponseEntity<SchedulerEvent> schedulerEvent = restTemplate.exchange(baseURL + "/api/edge/{edgeId}/schedulerEvent/{schedulerEventId}",
+                    HttpMethod.DELETE, HttpEntity.EMPTY, SchedulerEvent.class, edgeId.getId(), schedulerEventId.getId());
+            return Optional.ofNullable(schedulerEvent.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
     public List<EntityGroupInfo> getAllEdgeEntityGroups(EdgeId edgeId, EntityType groupType) {
         return restTemplate.exchange(
                 baseURL + "/api/allEntityGroups/edge/{edgeId}/{groupType}",
@@ -5435,6 +5473,14 @@ public class RestClient implements Closeable {
                 throw exception;
             }
         }
+    }
+
+    public ReportTemplate saveReportTemplate(ReportTemplate reportTemplate) {
+        return restTemplate.postForEntity(baseURL + "/api/reportTemplate", reportTemplate, ReportTemplate.class).getBody();
+    }
+
+    public void deleteReportTemplate(ReportTemplateId reportTemplateId) {
+        restTemplate.delete(baseURL + "/api/reportTemplate/{reportTemplateId}", reportTemplateId.getId());
     }
 
     public Report createReport(Report report, byte[] data) {
