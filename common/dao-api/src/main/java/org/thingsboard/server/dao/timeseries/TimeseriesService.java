@@ -84,5 +84,8 @@ public interface TimeseriesService {
 
     List<String> findAllKeysByEntityIds(TenantId tenantId, List<EntityId> entityIds);
 
+    ListenableFuture<List<String>> findAllKeysByEntityIdsAsync(TenantId tenantId, List<EntityId> entityIds);
+
     void cleanup(long systemTtl);
+
 }
