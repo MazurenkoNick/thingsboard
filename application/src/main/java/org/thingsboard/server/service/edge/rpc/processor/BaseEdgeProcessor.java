@@ -44,6 +44,7 @@ import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EdgeUtils;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EntityView;
+import org.thingsboard.server.common.data.HasCustomerId;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.edge.Edge;
@@ -63,6 +64,7 @@ import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityIdFactory;
 import org.thingsboard.server.common.data.id.EntityViewId;
+import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.IntegrationId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RuleChainId;
@@ -427,6 +429,29 @@ public abstract class BaseEdgeProcessor implements EdgeProcessor {
         relation.setTypeGroup(RelationTypeGroup.COMMON);
         relation.setType(EntityRelation.EDGE_TYPE);
         edgeCtx.getRelationService().saveRelation(tenantId, relation);
+    }
+
+    protected <T extends HasId<? extends EntityId>> void pushEntityEventToRuleEngine(TenantId tenantId, T entity, TbMsgType msgType) {
+        pushEntityEventToRuleEngine(tenantId, null, entity, msgType);
+    }
+
+    protected <T extends HasId<? extends EntityId>> void pushEntityEventToRuleEngine(TenantId tenantId, Edge edge, T entity, TbMsgType msgType) {
+        try {
+            String entityAsString = JacksonUtil.toString(entity);
+            CustomerId customerId = getCustomerId(entity);
+            TbMsgMetaData tbMsgMetaData = edge == null ? TbMsgMetaData.EMPTY : getEdgeActionTbMsgMetaData(edge, customerId);
+
+            pushEntityEventToRuleEngine(tenantId, entity.getId(), customerId, msgType, entityAsString, tbMsgMetaData);
+        } catch (Exception e) {
+            log.warn("[{}][{}] Failed to push entity action for {} to rule engine: {}", tenantId, entity.getId(), entity.getId().getEntityType(), msgType.name(), e);
+        }
+    }
+
+    private <T extends HasId<? extends EntityId>> CustomerId getCustomerId(T entity) {
+        if (entity instanceof HasCustomerId hasCustomer) {
+            return hasCustomer.getCustomerId();
+        }
+        return null;
     }
 
     protected TbMsgMetaData getEdgeActionTbMsgMetaData(Edge edge, CustomerId customerId) {

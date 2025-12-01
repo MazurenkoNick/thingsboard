@@ -100,7 +100,7 @@ public class DeviceEdgeProcessor extends BaseDeviceProcessor implements DevicePr
                                 new UUID(deviceUpdateMsg.getEntityGroupIdMSB(), deviceUpdateMsg.getEntityGroupIdLSB()));
                         edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, entityGroupId, deviceId);
                     } else {
-                        removeDeviceFromEdgeAllDeviceGroup(tenantId, edge, deviceId);
+                        deleteDevice(tenantId, edge, deviceId);
                     }
                     yield Futures.immediateFuture(null);
                 }
@@ -146,14 +146,8 @@ public class DeviceEdgeProcessor extends BaseDeviceProcessor implements DevicePr
     }
 
     private void pushDeviceCreatedEventToRuleEngine(TenantId tenantId, Edge edge, DeviceId deviceId) {
-        try {
-            Device device = edgeCtx.getDeviceService().findDeviceById(tenantId, deviceId);
-            String deviceAsString = JacksonUtil.toString(device);
-            TbMsgMetaData msgMetaData = getEdgeActionTbMsgMetaData(edge, device.getCustomerId());
-            pushEntityEventToRuleEngine(tenantId, deviceId, device.getCustomerId(), TbMsgType.ENTITY_CREATED, deviceAsString, msgMetaData);
-        } catch (Exception e) {
-            log.warn("[{}][{}] Failed to push device action to rule engine: {}", tenantId, deviceId, TbMsgType.ENTITY_CREATED.name(), e);
-        }
+        Device device = edgeCtx.getDeviceService().findDeviceById(tenantId, deviceId);
+        pushEntityEventToRuleEngine(tenantId, edge, device, TbMsgType.ENTITY_CREATED);
     }
 
     private void addDeviceToEdgeAllDeviceGroup(TenantId tenantId, Edge edge, DeviceId deviceId) {
@@ -166,21 +160,6 @@ public class DeviceEdgeProcessor extends BaseDeviceProcessor implements DevicePr
         } catch (Exception e) {
             log.warn("[{}] Can't add device to edge device group, device id [{}]", tenantId, deviceId, e);
             throw new RuntimeException(e);
-        }
-    }
-
-    private void removeDeviceFromEdgeAllDeviceGroup(TenantId tenantId, Edge edge, DeviceId deviceId) {
-        Device deviceToDelete = edgeCtx.getDeviceService().findDeviceById(tenantId, deviceId);
-        if (deviceToDelete != null) {
-            try {
-                EntityGroup edgeDeviceGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), deviceToDelete.getOwnerId().getEntityType(), EntityType.DEVICE).get();
-                if (edgeDeviceGroup != null) {
-                    edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, edgeDeviceGroup.getId(), deviceToDelete.getId());
-                }
-            } catch (Exception e) {
-                log.warn("[{}] Can't delete device from edge device 'All' group, device id [{}]", tenantId, deviceId, e);
-                throw new RuntimeException(e);
-            }
         }
     }
 

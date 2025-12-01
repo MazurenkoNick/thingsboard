@@ -38,10 +38,12 @@ import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.gen.edge.v1.DeviceCredentialsUpdateMsg;
@@ -146,4 +148,15 @@ public abstract class BaseDeviceProcessor extends BaseEdgeProcessor {
 
     protected abstract void setCustomerId(TenantId tenantId, CustomerId customerId, Device device, DeviceUpdateMsg deviceUpdateMsg);
 
+    protected void deleteDevice(TenantId tenantId, DeviceId deviceId) {
+        deleteDevice(tenantId, null, deviceId);
+    }
+
+    protected void deleteDevice(TenantId tenantId, Edge edge, DeviceId deviceId) {
+        Device deviceById = edgeCtx.getDeviceService().findDeviceById(tenantId, deviceId);
+        if (deviceById != null) {
+            edgeCtx.getDeviceService().deleteDevice(tenantId, deviceId);
+            pushEntityEventToRuleEngine(tenantId, edge, deviceById, TbMsgType.ENTITY_DELETED);
+        }
+    }
 }
