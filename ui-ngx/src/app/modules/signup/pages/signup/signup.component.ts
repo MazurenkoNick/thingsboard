@@ -36,7 +36,7 @@ import { AppState } from '@core/core.state';
 import { PageComponent } from '@shared/components/page.component';
 import { FormBuilder } from '@angular/forms';
 import { SignupRequest, SignupRequestValues, SignUpResult } from '@shared/models/signup.models';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
 import { TranslateService } from '@ngx-translate/core';
 import { SignupService } from '@core/http/signup.service';
@@ -47,6 +47,8 @@ import { WhiteLabelingService } from '@core/http/white-labeling.service';
 import { MatDialog } from '@angular/material/dialog';
 import { SignupDialogComponent, SignupDialogData } from '@modules/signup/pages/signup/signup-dialog.component';
 import { from } from 'rxjs';
+import { UserPasswordPolicy } from '@shared/models/settings.models';
+import { passwordStrengthValidator } from '@shared/models/password.models';
 
 @Component({
   selector: 'tb-signup',
@@ -63,14 +65,15 @@ export class SignupComponent extends PageComponent {
     fields: this.signupRequest.fields,
     recaptchaResponse: [this.signupRequest.recaptchaResponse]
   })
-  passwordCheck: string;
   acceptPrivacyPolicy: boolean;
   acceptTermsOfUse: boolean;
   signupParams = this.selfRegistrationService.signUpParams;
+  passwordPolicy: UserPasswordPolicy;
 
   @HostBinding('class') class = 'tb-custom-css';
 
   constructor(protected store: Store<AppState>,
+              private route: ActivatedRoute,
               private router: Router,
               private authService: AuthService,
               private signupService: SignupService,
@@ -82,21 +85,24 @@ export class SignupComponent extends PageComponent {
               private dialog: MatDialog,
               private fb: FormBuilder) {
     super(store);
+    this.passwordPolicy = this.route.snapshot.data['passwordPolicy'];
+    this.signup.get('fields.PASSWORD').setValidators(passwordStrengthValidator(this.passwordPolicy));
   }
 
   signUp(): void {
     if (this.signup.valid) {
       if (this.validateSignUpRequest()) {
+        const signupRequestValue = this.signup.value;
+        delete signupRequestValue.fields.CHECK_PASSWORD;
         if (this.signupParams?.captcha?.version === 'v2') {
-          this.executeSignup(this.signup.value as SignupRequestValues);
+          this.executeSignup(signupRequestValue as SignupRequestValues);
         } else {
           from(this.reCaptchaV3Service.executeAsPromise(this.signupParams?.captcha?.siteKey,
             this.signupParams?.captcha?.logActionName, {useGlobalDomain: true})).subscribe(
             {
               next: (token) => {
-                const signupRequest = this.signup.value as SignupRequestValues;
-                signupRequest.recaptchaResponse = token;
-                this.executeSignup(signupRequest);
+                signupRequestValue.recaptchaResponse = token;
+                this.executeSignup(signupRequestValue as SignupRequestValues);
               },
               error: err => {
                 this.store.dispatch(new ActionNotificationShow({ message: 'ReCaptcha error: ' + err,
@@ -149,16 +155,6 @@ export class SignupComponent extends PageComponent {
   }
 
   private validateSignUpRequest(): boolean {
-    if (this.passwordCheck !== this.signup.get('fields.PASSWORD').value) {
-      this.store.dispatch(new ActionNotificationShow({ message: this.translate.instant('login.passwords-mismatch-error'),
-        type: 'error' }));
-      return false;
-    }
-    if (this.signup.get('fields.PASSWORD').value.length < 6) {
-      this.store.dispatch(new ActionNotificationShow({ message: this.translate.instant('signup.password-length-message'),
-        type: 'error' }));
-      return false;
-    }
     if (this.signupParams?.captcha?.version === 'v2' &&
       (!this.signup.get('recaptchaResponse').value || this.signup.get('recaptchaResponse').value.length < 1)) {
       this.store.dispatch(new ActionNotificationShow({ message: this.translate.instant('signup.no-captcha-message'),
