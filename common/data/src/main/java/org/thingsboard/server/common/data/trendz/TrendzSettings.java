@@ -32,5 +32,5 @@ package org.thingsboard.server.common.data.trendz;
 
 import java.io.Serializable;
 
-public record TrendzSettings(TrendzConfiguration trendzConfiguration,
-                             TrendzSynchronizationResult trendzSynchronizationResult) implements Serializable {}
+public record TrendzSettings(TrendzConfiguration configuration,
+                             TrendzSynchronizationResult synchronizationResult) implements Serializable {}

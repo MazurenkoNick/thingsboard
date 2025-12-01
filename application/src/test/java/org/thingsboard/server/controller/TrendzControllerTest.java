@@ -108,8 +108,8 @@ public class TrendzControllerTest extends AbstractControllerTest {
 
         TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
         assertThat(savedSettings).isNotNull();
-        assertThat(savedSettings.trendzConfiguration().trendzUrl()).isEqualTo(TRENDZ_URL);
-        assertThat(savedSettings.trendzConfiguration().tbUrl()).isEqualTo(TB_URL);
+        assertThat(savedSettings.configuration().trendzUrl()).isEqualTo(TRENDZ_URL);
+        assertThat(savedSettings.configuration().tbUrl()).isEqualTo(TB_URL);
     }
 
     @Test

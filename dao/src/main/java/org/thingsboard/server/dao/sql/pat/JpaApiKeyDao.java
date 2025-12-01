@@ -61,8 +61,8 @@ public class JpaApiKeyDao extends JpaAbstractDao<ApiKeyEntity, ApiKey> implement
     }
 
     @Override
-    public ApiKey findByDescription(TenantId tenantId, String description) {
-        return DaoUtil.getData(apiKeyRepository.findFirstByTenantIdAndDescription(tenantId.getId(), description));
+    public ApiKey findInternalByDescription(TenantId tenantId, String description) {
+        return DaoUtil.getData(apiKeyRepository.findFirstByTenantIdAndDescriptionAndInternal(tenantId.getId(), description, true));
     }
 
     @Override

@@ -110,7 +110,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
 
     @After
     public void tearDown() {
-        ApiKey trendzApiKey = apiKeyService.findApiKeyByDescription(TenantId.SYS_TENANT_ID, DefaultTrendzSyncService.TRENDZ_API_KEY_DESCRIPTION);
+        ApiKey trendzApiKey = apiKeyService.findInternalApiKeyByDescription(TenantId.SYS_TENANT_ID, DefaultTrendzSyncService.TRENDZ_API_KEY_DESCRIPTION);
         if (trendzApiKey != null) {
             apiKeyService.deleteApiKey(TenantId.SYS_TENANT_ID, trendzApiKey, true);
         }
@@ -128,12 +128,12 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         TrendzSettings result = trendzSyncService.performSync(TenantId.SYS_TENANT_ID, currentUserId);
 
         assertNotNull(result);
-        assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, result.trendzSynchronizationResult().type());
-        assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, result.trendzSynchronizationResult().status());
+        assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, result.synchronizationResult().type());
+        assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, result.synchronizationResult().status());
 
         TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
         assertNotNull(savedSettings);
-        assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, savedSettings.trendzSynchronizationResult().type());
+        assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, savedSettings.synchronizationResult().type());
     }
 
     @Test
@@ -170,19 +170,19 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         TrendzSettings result = trendzSyncService.performSync(TenantId.SYS_TENANT_ID, currentUserId);
 
         assertNotNull(result);
-        assertEquals(TrendzSynchronizationResultType.SYNC_COMPLETED, result.trendzSynchronizationResult().type());
-        assertEquals(TrendzSynchronizationStatus.SYNCED, result.trendzSynchronizationResult().status());
-        assertEquals(TEST_TRENDZ_VERSION, result.trendzSynchronizationResult().version());
+        assertEquals(TrendzSynchronizationResultType.SYNC_COMPLETED, result.synchronizationResult().type());
+        assertEquals(TrendzSynchronizationStatus.SYNCED, result.synchronizationResult().status());
+        assertEquals(TEST_TRENDZ_VERSION, result.synchronizationResult().version());
 
-        ApiKey apiKey = apiKeyService.findApiKeyByDescription(TenantId.SYS_TENANT_ID, DefaultTrendzSyncService.TRENDZ_API_KEY_DESCRIPTION);
+        ApiKey apiKey = apiKeyService.findInternalApiKeyByDescription(TenantId.SYS_TENANT_ID, DefaultTrendzSyncService.TRENDZ_API_KEY_DESCRIPTION);
         assertNotNull(apiKey);
         assertTrue(apiKey.isInternal());
         assertTrue(apiKey.isEnabled());
 
         TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
         assertNotNull(savedSettings);
-        assertEquals(TrendzSynchronizationResultType.SYNC_COMPLETED, savedSettings.trendzSynchronizationResult().type());
-        assertEquals(TrendzSynchronizationStatus.SYNCED, savedSettings.trendzSynchronizationResult().status());
+        assertEquals(TrendzSynchronizationResultType.SYNC_COMPLETED, savedSettings.synchronizationResult().type());
+        assertEquals(TrendzSynchronizationStatus.SYNCED, savedSettings.synchronizationResult().status());
     }
 
     @Test
@@ -197,12 +197,12 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         TrendzSettings result = trendzSyncService.performSync(TenantId.SYS_TENANT_ID, currentUserId);
 
         assertNotNull(result);
-        assertEquals(TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, result.trendzSynchronizationResult().type());
-        assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, result.trendzSynchronizationResult().status());
+        assertEquals(TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, result.synchronizationResult().type());
+        assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, result.synchronizationResult().status());
 
         TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
         assertNotNull(savedSettings);
-        assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, savedSettings.trendzSynchronizationResult().status());
+        assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, savedSettings.synchronizationResult().status());
     }
 
     @Test
@@ -238,7 +238,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
 
         assertNotNull(result);
 
-        ApiKey apiKeyByDescription = apiKeyService.findApiKeyByDescription(TenantId.SYS_TENANT_ID, DefaultTrendzSyncService.TRENDZ_API_KEY_DESCRIPTION);
+        ApiKey apiKeyByDescription = apiKeyService.findInternalApiKeyByDescription(TenantId.SYS_TENANT_ID, DefaultTrendzSyncService.TRENDZ_API_KEY_DESCRIPTION);
         assertNotNull(apiKeyByDescription);
         assertTrue(apiKeyByDescription.isInternal());
         assertEquals(DefaultTrendzSyncService.TRENDZ_API_KEY_DESCRIPTION, apiKeyByDescription.getDescription());

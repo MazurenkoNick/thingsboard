@@ -44,7 +44,7 @@ public interface ApiKeyRepository extends JpaRepository<ApiKeyEntity, UUID> {
 
     ApiKeyEntity findByValue(String value);
 
-    ApiKeyEntity findFirstByTenantIdAndDescription(UUID tenantId, String description);
+    ApiKeyEntity findFirstByTenantIdAndDescriptionAndInternal(UUID tenantId, String description, boolean internal);
 
     @Transactional
     @Modifying

@@ -75,7 +75,7 @@ public class TrendzController extends BaseController {
     public TrendzConfiguration getTrendzConfig(@AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
         accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.READ);
         TrendzSettings settings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
-        return settings != null ? settings.trendzConfiguration() : new TrendzConfiguration(null, null);
+        return settings != null ? settings.configuration() : new TrendzConfiguration(null, null);
     }
 
     @ApiOperation(value = "Save Trendz configuration (saveTrendzConfig)",
@@ -92,27 +92,31 @@ public class TrendzController extends BaseController {
     public TrendzConfiguration saveTrendzConfig(@RequestBody TrendzConfiguration config,
                                                 @AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
         accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.WRITE);
+        TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+        if (trendzSettings != null && trendzSettings.configuration() != null && trendzSettings.configuration().equals(config)) {
+            return trendzSettings.configuration();
+        }
         TrendzSynchronizationResult syncResult = new TrendzSynchronizationResult(null, 0L, TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, TrendzSynchronizationStatus.NOT_AVAILABLE);
         TrendzSettings newSettings = new TrendzSettings(config, syncResult);
         trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, newSettings);
         return config;
     }
 
-    @ApiOperation(value = "Get Trendz synchronization result (getTrendzSync)",
+    @ApiOperation(value = "Get Trendz synchronization result (getTrendzSyncResult)",
             notes = "Retrieves Trendz synchronization result and status. " +
                     "Returns trendzVersion, updatedTs, resultType, and status." +
                     AVAILABLE_FOR_ANY_AUTHORIZED_USER)
     @GetMapping("/sync")
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
-    public TrendzSynchronizationResult getTrendzSync(@AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
+    public TrendzSynchronizationResult getTrendzSyncResult(@AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
         if (user.isSystemAdmin()) {
             accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.READ);
         } else {
             accessControlService.checkPermission(user, Resource.WHITE_LABELING, Operation.READ);
         }
         TrendzSettings settings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
-        if (settings != null && settings.trendzSynchronizationResult() != null) {
-            return settings.trendzSynchronizationResult();
+        if (settings != null && settings.synchronizationResult() != null) {
+            return settings.synchronizationResult();
         }
         return new TrendzSynchronizationResult(null, 0L, TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, TrendzSynchronizationStatus.NOT_AVAILABLE);
     }
@@ -142,7 +146,7 @@ public class TrendzController extends BaseController {
     public TrendzSynchronizationResult connectToTrendz(@AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
         accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.WRITE);
         TrendzSettings result = trendzSyncService.performSync(TenantId.SYS_TENANT_ID, user.getId());
-        return result.trendzSynchronizationResult();
+        return result.synchronizationResult();
     }
 
 }

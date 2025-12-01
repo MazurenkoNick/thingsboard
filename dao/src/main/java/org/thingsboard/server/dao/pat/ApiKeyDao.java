@@ -41,7 +41,7 @@ public interface ApiKeyDao extends Dao<ApiKey> {
 
     ApiKey findByValue(String value);
 
-    ApiKey findByDescription(TenantId tenantId, String description);
+    ApiKey findInternalByDescription(TenantId tenantId, String description);
 
     Set<String> deleteByTenantId(TenantId tenantId);
 

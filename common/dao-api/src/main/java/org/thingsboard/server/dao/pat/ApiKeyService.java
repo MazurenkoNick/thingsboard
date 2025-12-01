@@ -53,7 +53,7 @@ public interface ApiKeyService extends EntityDaoService {
 
     ApiKey findApiKeyById(TenantId tenantId, ApiKeyId apiKeyId);
 
-    ApiKey findApiKeyByDescription(TenantId tenantId, String description);
+    ApiKey findInternalApiKeyByDescription(TenantId tenantId, String description);
 
     PageData<ApiKeyInfo> findApiKeysByUserId(TenantId tenantId, UserId userId, PageLink pageLink);
 
