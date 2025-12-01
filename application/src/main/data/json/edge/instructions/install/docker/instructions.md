@@ -9,7 +9,7 @@ Install <a href="https://docs.docker.com/engine/install/" target="_blank"> Docke
 ThingsBoard Edge supports both **in-memory** and **Kafka** queues for message storage and communication between ThingsBoard services.
 It also supports **SQL** and **hybrid** database configurations.
 In this guide, we’ll use the **in-memory** queue and an **SQL** database.
-For more details about the hybrid setup, please refer to the official installation instructions on the <a href="https://thingsboard.io/docs/user-guide/install/edge/docker/#step-2-choose-queue-andor-database-services" target="_blank">ThingsBoard documentation site</a>.
+For more details about the hybrid setup, please refer to the official installation instructions on the <a href="https://thingsboard.io/docs/user-guide/install/pe/edge/docker/#step-2-choose-queue-andor-database-services" target="_blank">ThingsBoard documentation site</a>.
 
 Now, create a Docker Compose file for the ThingsBoard Edge service:
 
