@@ -295,6 +295,7 @@ import {
 import {
   ComparisonKeyRowComponent
 } from '@home/components/widget/lib/settings/common/chart/comparison-key-row.component';
+import { AxisScaleRowComponent } from './axis-scale-row.component';
 
 @NgModule({
   declarations: [
@@ -405,7 +406,8 @@ import {
     DataKeysComponent,
     DataKeyConfigDialogComponent,
     DataKeyConfigComponent,
-    WidgetSettingsComponent
+    WidgetSettingsComponent,
+    AxisScaleRowComponent
   ],
   imports: [
     CommonModule,
@@ -491,7 +493,8 @@ import {
     DataKeysComponent,
     DataKeyConfigDialogComponent,
     DataKeyConfigComponent,
-    WidgetSettingsComponent
+    WidgetSettingsComponent,
+    AxisScaleRowComponent
   ],
   providers: [
     ColorSettingsComponentService,
