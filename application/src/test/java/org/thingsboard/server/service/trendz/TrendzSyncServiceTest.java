@@ -50,8 +50,8 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.pat.ApiKey;
 import org.thingsboard.server.common.data.trendz.TrendzConfiguration;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
 import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
+import org.thingsboard.server.common.data.trendz.TrendzSettings;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResult;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResultType;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationStatus;
@@ -68,9 +68,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
-import static org.thingsboard.server.service.trendz.DefaultTrendzSyncService.TRENDZ_HEALTHCHECK_URI;
-import static org.thingsboard.server.service.trendz.DefaultTrendzSyncService.TRENDZ_INFO_URI;
-import static org.thingsboard.server.service.trendz.DefaultTrendzSyncService.TRENDZ_SYNC_INIT_URI;
+import static org.thingsboard.server.service.trendz.TrendzClient.TRENDZ_HEALTHCHECK_URI;
+import static org.thingsboard.server.service.trendz.TrendzClient.TRENDZ_INFO_URI;
+import static org.thingsboard.server.service.trendz.TrendzClient.TRENDZ_SYNC_INIT_URI;
 
 @DaoSqlTest
 @TestPropertySource(properties = {
@@ -81,6 +81,9 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
 
     @MockitoSpyBean
     private DefaultTrendzSyncService trendzSyncService;
+
+    @MockitoSpyBean
+    private TrendzClient trendzClient;
 
     @MockitoBean
     private RestTemplate restTemplate;
@@ -104,7 +107,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         loginSysAdmin();
 
         ReflectionTestUtils.setField(trendzSyncService, "trendzEnabled", true);
-        ReflectionTestUtils.setField(trendzSyncService, "restTemplate", restTemplate);
+        ReflectionTestUtils.setField(trendzClient, "restTemplate", restTemplate);
         reset(restTemplate, systemSecurityService);
     }
 
@@ -197,7 +200,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         TrendzSettings result = trendzSyncService.performSync(TenantId.SYS_TENANT_ID, currentUserId);
 
         assertNotNull(result);
-        assertEquals(TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, result.synchronizationResult().type());
+        assertEquals(TrendzSynchronizationResultType.TRENDZ_URL_UNREACHABLE, result.synchronizationResult().type());
         assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, result.synchronizationResult().status());
 
         TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
@@ -259,7 +262,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         TrendzHealthcheckResult result = trendzSyncService.performHealthcheck();
 
         assertNotNull(result);
-        assertEquals(TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, result.type());
+        assertEquals(TrendzSynchronizationResultType.TRENDZ_URL_UNREACHABLE, result.type());
     }
 
     @Test

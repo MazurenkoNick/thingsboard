@@ -36,8 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.trendz.TrendzConfiguration;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
 import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
+import org.thingsboard.server.common.data.trendz.TrendzSettings;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResult;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResultType;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationStatus;
@@ -209,7 +209,7 @@ public class TrendzControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    public void testConnectToTrendz_asSysAdmin() throws Exception {
+    public void testConnectToTrendz_asSysAdmin() {
         TrendzConfiguration config = new TrendzConfiguration(TRENDZ_URL, TB_URL);
         TrendzSynchronizationResult syncResult = new TrendzSynchronizationResult(
                 TRENDZ_VERSION, System.currentTimeMillis(),
