@@ -109,6 +109,12 @@ $main-color: var(--tb-primary-500);
           .mat-divider {
             --mat-divider-color: #{$main-color};
           }
+          .api-item-content {
+            .api-item-title {
+              font-weight: 500;
+              color: $main-color;
+            }
+          }
         }
 
         .api-item-content {
@@ -122,8 +128,9 @@ $main-color: var(--tb-primary-500);
             display: flex;
             flex: 1;
             font-size: 14px;
-            font-weight: 500;
-            color: $main-color;
+            line-height: 20px;
+            font-weight: 400;
+            color: rgba(0, 0, 0, 0.54);
           }
           .api-item-statistic {
             display: flex;
