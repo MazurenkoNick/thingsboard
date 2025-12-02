@@ -118,3 +118,6 @@ DROP TABLE IF EXISTS calculated_field_link;
 ANALYZE calculated_field;
 
 -- REMOVAL OF CALCULATED FIELD LINKS PERSISTENCE END
+
+ALTER TABLE custom_menu ADD COLUMN IF NOT EXISTS user_group_names text[];
+

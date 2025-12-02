@@ -135,6 +135,7 @@ public class ModelConstants {
     public static final String CUSTOM_MENU_SCOPE = "scope";
     public static final String CUSTOM_MENU_ASSIGNEE_TYPE = "assignee_type";
     public static final String CUSTOM_MENU_CONFIG = "config";
+    public static final String CUSTOM_MENU_USER_GROUP_NAMES = "user_group_names";
 
     /**
      * Custom translation constants.

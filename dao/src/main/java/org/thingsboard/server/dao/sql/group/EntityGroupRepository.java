@@ -41,6 +41,7 @@ import org.thingsboard.server.common.data.edqs.fields.EntityGroupFields;
 import org.thingsboard.server.dao.model.sql.EntityGroupEntity;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public interface EntityGroupRepository extends JpaRepository<EntityGroupEntity, UUID> {
@@ -144,5 +145,14 @@ public interface EntityGroupRepository extends JpaRepository<EntityGroupEntity, 
     @Query("SELECT new org.thingsboard.server.common.data.edqs.fields.EntityGroupFields(eg.id, eg.createdTime, " +
             "eg.name, eg.version, eg.type, eg.additionalInfo, eg.ownerId, eg.ownerType) FROM EntityGroupEntity eg WHERE eg.id > :id ORDER BY eg.id")
     List<EntityGroupFields> findNextBatch(@Param("id") UUID id, Limit limit);
+
+    @Query("SELECT DISTINCT e.name FROM EntityGroupEntity e " +
+            "JOIN RelationEntity re ON re.fromId = e.id  " +
+            "AND re.toId = :userId " +
+            "AND re.toType = 'USER' " +
+            "AND re.fromType = 'ENTITY_GROUP' " +
+            "AND re.relationTypeGroup = 'FROM_ENTITY_GROUP' " +
+            "AND re.relationType = 'Contains'")
+    Set<String> findUserGroupNamesByUserId(@Param("userId") UUID userId);
 
 }

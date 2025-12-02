@@ -46,6 +46,7 @@ import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.group.EntityGroupInfo;
 import org.thingsboard.server.common.data.id.CustomMenuId;
 import org.thingsboard.server.common.data.menu.CMAssigneeType;
@@ -259,8 +260,20 @@ public class CustomMenuControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    public void testCreateTenantMenuWithUserList() throws Exception {
+    public void testTenantMenuPriority() throws Exception {
         loginTenantAdmin();
+
+        EntityGroup tenantAdminGroup = new EntityGroup();
+        tenantAdminGroup.setType(EntityType.USER);
+        tenantAdminGroup.setName("Tenant engineers");
+        tenantAdminGroup = doPost("/api/entityGroup", tenantAdminGroup, EntityGroup.class);
+
+        User user = new User();
+        user.setAuthority(Authority.TENANT_ADMIN);
+        user.setTenantId(tenantId);
+        String testTenantEmail = "tenantAdmin123@thingsboard.org";
+        user.setEmail(testTenantEmail);
+        user = createUser(user, "tenant", tenantAdminGroup.getId());
 
         CustomMenu defaultTenantMenu = new CustomMenu();
         defaultTenantMenu.setName(RandomStringUtils.randomAlphabetic(10));
@@ -269,30 +282,143 @@ public class CustomMenuControllerTest extends AbstractControllerTest {
         defaultTenantMenu = doPost("/api/customMenu", defaultTenantMenu, CustomMenu.class);
         idsToRemove.add(defaultTenantMenu.getUuidId());
 
-        CustomMenuConfig defaultTenantMenuConfig = putRandomMenuConfig(defaultTenantMenu.getId());
+        CustomMenuConfig defaultConfig = putRandomMenuConfig(defaultTenantMenu.getId());
 
+        // CHECK USER GROUPS MENU OVERRIDES ALL USERS
+        CustomMenu menuForUserGroup = new CustomMenu();
+        menuForUserGroup.setName(RandomStringUtils.randomAlphabetic(10));
+        menuForUserGroup.setScope(CMScope.TENANT);
+        menuForUserGroup.setAssigneeType(CMAssigneeType.USER_GROUPS);
+        String[] groupNames = new String[]{"Tenant engineers"};
+        menuForUserGroup.setUserGroupNames(groupNames);
+
+        menuForUserGroup = doPost("/api/customMenu", menuForUserGroup, CustomMenu.class);
+        idsToRemove.add(menuForUserGroup.getUuidId());
+        CustomMenuConfig userGroupConfig = putRandomMenuConfig(menuForUserGroup.getId());
+
+        List<EntityInfo> entityInfos = readResponse(doGet("/api/customMenu/" + menuForUserGroup.getId() + "/assigneeList")
+                .andExpect(status().isOk()), new TypeReference<List<EntityInfo>>() {
+        });
+        assertThat(entityInfos).isEmpty();
+
+        loginUser(testTenantEmail, "tenant");
+        JsonNode currentMenu = doGet("/api/customMenu", JsonNode.class);
+        assertCustomMenuConfig(currentMenu, userGroupConfig);
+
+        // CHECK USER LIST MENU OVERRIDES USER GROUPS
+        loginTenantAdmin();
         CustomMenu menuForSpecificUsers = new CustomMenu();
         menuForSpecificUsers.setName(RandomStringUtils.randomAlphabetic(10));
         menuForSpecificUsers.setScope(CMScope.TENANT);
         menuForSpecificUsers.setAssigneeType(CMAssigneeType.USERS);
 
-        menuForSpecificUsers = doPost("/api/customMenu?assignToList=" + tenantAdminUserId, menuForSpecificUsers, CustomMenu.class);
+        menuForSpecificUsers = doPost("/api/customMenu?assignToList=" + user.getId().getId(), menuForSpecificUsers, CustomMenu.class);
         idsToRemove.add(menuForSpecificUsers.getUuidId());
-        CustomMenuConfig tenantMenuConfig = putRandomMenuConfig(menuForSpecificUsers.getId());
+        CustomMenuConfig userConfig = putRandomMenuConfig(menuForSpecificUsers.getId());
 
-        //check assignee list
-        List<EntityInfo> entityInfos = readResponse(doGet("/api/customMenu/" + menuForSpecificUsers.getId() + "/assigneeList")
+        List<EntityInfo> entityInfos2 = readResponse(doGet("/api/customMenu/" + menuForSpecificUsers.getId() + "/assigneeList")
                 .andExpect(status().isOk()), new TypeReference<List<EntityInfo>>() {
         });
-        assertThat(entityInfos).hasSize(1);
-        assertThat(entityInfos.get(0).getId()).isEqualTo(tenantAdminUserId);
+        assertThat(entityInfos2).hasSize(1);
+        assertThat(entityInfos2.get(0).getId()).isEqualTo(user.getId());
 
-        JsonNode currentMenu = doGet("/api/customMenu", JsonNode.class);
-        assertCustomMenuConfig(currentMenu, tenantMenuConfig);
+        loginUser(testTenantEmail, "tenant");
+        JsonNode currentMenu2 = doGet("/api/customMenu", JsonNode.class);
+        assertCustomMenuConfig(currentMenu2, userConfig);
 
+        // CHECK DEFAULT MENU FOR ALL OTHERS TENANT ADMINS
         loginUser(SECOND_TENANT_ADMIN_EMAIL, TENANT_ADMIN_PASSWORD);
         JsonNode secondTenantAdminCurrentMenu = doGet("/api/customMenu", JsonNode.class);
-        assertCustomMenuConfig(secondTenantAdminCurrentMenu, defaultTenantMenuConfig);
+        assertCustomMenuConfig(secondTenantAdminCurrentMenu, defaultConfig);
+    }
+
+    @Test
+    public void testCustomerMenuPriority() throws Exception {
+        loginTenantAdmin();
+        CustomMenuInfo tenantDefaultMenu = createDefaultCustomMenu("Tenant level customer menu ", CMScope.CUSTOMER);
+        tenantDefaultMenu = doPost("/api/customMenu", tenantDefaultMenu, CustomMenu.class);
+        CustomMenuConfig tenantMenuConfig = putRandomMenuConfig(tenantDefaultMenu.getId());
+
+        CustomMenu tenantUserGroupMenu = new CustomMenu();
+        tenantUserGroupMenu.setName(RandomStringUtils.randomAlphabetic(10));
+        tenantUserGroupMenu.setScope(CMScope.CUSTOMER);
+        tenantUserGroupMenu.setAssigneeType(CMAssigneeType.USER_GROUPS);
+        String[] groupNames = new String[]{"Customer engineers"};
+        tenantUserGroupMenu.setUserGroupNames(groupNames);
+
+        tenantUserGroupMenu = doPost("/api/customMenu", tenantUserGroupMenu, CustomMenu.class);
+        idsToRemove.add(tenantUserGroupMenu.getUuidId());
+        CustomMenuConfig tenantUserGroupMenuConfig = putRandomMenuConfig(tenantUserGroupMenu.getId());
+
+        loginCustomerAdminUser();
+        CustomMenuInfo customerDefaultMenu = createDefaultCustomMenu("Test customer menu", CMScope.CUSTOMER);
+        customerDefaultMenu = doPost("/api/customMenu", customerDefaultMenu, CustomMenu.class);
+        CustomMenuConfig customerDefaultConfig = putRandomMenuConfig(customerDefaultMenu.getId());
+
+        EntityGroup customerGroup = new EntityGroup();
+        customerGroup.setType(EntityType.USER);
+        customerGroup.setName("Customer engineers");
+        customerGroup = doPost("/api/entityGroup", customerGroup, EntityGroup.class);
+
+        User user = new User();
+        user.setAuthority(Authority.CUSTOMER_USER);
+        user.setTenantId(tenantId);
+        user.setCustomerId(customerId);
+        String testCustomerEmail = "customer123@thingsboard.org";
+        user.setEmail(testCustomerEmail);
+        user = createUser(user, "customer", customerGroup.getId());
+
+        loginUser(testCustomerEmail, "customer");
+        JsonNode currentCustomerMenu = doGet("/api/customMenu", JsonNode.class);
+        assertCustomMenuConfig(currentCustomerMenu, tenantUserGroupMenuConfig);
+
+        // CHECK USER GROUPS MENU OVERRIDES SIMILAR TENANT GROUPS
+        loginCustomerAdminUser();
+        CustomMenu customerUserGroupMenu = new CustomMenu();
+        customerUserGroupMenu.setName(RandomStringUtils.randomAlphabetic(10));
+        customerUserGroupMenu.setScope(CMScope.CUSTOMER);
+        customerUserGroupMenu.setAssigneeType(CMAssigneeType.USER_GROUPS);
+        customerUserGroupMenu.setUserGroupNames(groupNames);
+
+        customerUserGroupMenu = doPost("/api/customMenu", customerUserGroupMenu, CustomMenu.class);
+        idsToRemove.add(customerUserGroupMenu.getUuidId());
+        CustomMenuConfig userGroupConfig = putRandomMenuConfig(customerUserGroupMenu.getId());
+
+        List<EntityInfo> entityInfos = readResponse(doGet("/api/customMenu/" + customerUserGroupMenu.getId() + "/assigneeList")
+                .andExpect(status().isOk()), new TypeReference<List<EntityInfo>>() {
+        });
+        assertThat(entityInfos).isEmpty();
+
+        loginUser(testCustomerEmail, "customer");
+        JsonNode currentMenu = doGet("/api/customMenu", JsonNode.class);
+        assertCustomMenuConfig(currentMenu, userGroupConfig);
+
+        // CHECK USER LIST MENU OVERRIDES USER GROUPS
+        loginCustomerAdminUser();
+
+        CustomMenu menuForSpecificUsers = new CustomMenu();
+        menuForSpecificUsers.setName(RandomStringUtils.randomAlphabetic(10));
+        menuForSpecificUsers.setScope(CMScope.CUSTOMER);
+        menuForSpecificUsers.setAssigneeType(CMAssigneeType.USERS);
+
+        menuForSpecificUsers = doPost("/api/customMenu?assignToList=" + user.getId().getId(), menuForSpecificUsers, CustomMenu.class);
+        idsToRemove.add(menuForSpecificUsers.getUuidId());
+        CustomMenuConfig userConfig = putRandomMenuConfig(menuForSpecificUsers.getId());
+
+        List<EntityInfo> entityInfos2 = readResponse(doGet("/api/customMenu/" + menuForSpecificUsers.getId() + "/assigneeList")
+                .andExpect(status().isOk()), new TypeReference<List<EntityInfo>>() {
+        });
+        assertThat(entityInfos2).hasSize(1);
+        assertThat(entityInfos2.get(0).getId()).isEqualTo(user.getId());
+
+        loginUser(testCustomerEmail, "customer");
+        JsonNode currentMenu2 = doGet("/api/customMenu", JsonNode.class);
+        assertCustomMenuConfig(currentMenu2, userConfig);
+
+        // CHECK DEFAULT MENU FOR ALL OTHERS CUSTOMER USERS
+        loginCustomerAdminUser();
+        JsonNode currentMenu3 = doGet("/api/customMenu", JsonNode.class);
+        assertCustomMenuConfig(currentMenu3, customerDefaultConfig);
     }
 
     @Test
