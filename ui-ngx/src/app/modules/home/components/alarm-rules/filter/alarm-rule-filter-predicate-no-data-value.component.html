@@ -1,0 +1,92 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<div class="tb-form-panel no-border no-gap no-padding" [formGroup]="filterPredicateValueNoDataFormGroup">
+  <div class="tb-form-row no-padding no-border column-xs">
+    <mat-form-field hideRequiredMarker class="flex-1 w-full max-w-30% xs:max-w-full" appearance="outline" subscriptSizing="dynamic">
+      <mat-select [formControl]="dynamicModeControl" placeholder="{{'filter.dynamic-source-type' | translate}}">
+        <mat-option [value]="false">{{'alarm-rule.static' | translate}}</mat-option>
+        <mat-option [value]="true">{{'alarm-rule.dynamic' | translate}}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <ng-container formGroupName="duration">
+      @if (!dynamicModeControl.value) {
+        <mat-form-field hideRequiredMarker class="flex-1" appearance="outline" subscriptSizing="dynamic">
+          <input required type="number" matInput formControlName="staticValue" min="1"
+                 placeholder="{{'filter.value' | translate}}">
+            @if (filterPredicateValueNoDataFormGroup.get('duration.staticValue').touched && filterPredicateValueNoDataFormGroup.get('duration.staticValue').errors) {
+              <mat-icon matSuffix
+                        matTooltipPosition="above"
+                        matTooltipClass="tb-error-tooltip"
+                        [matTooltip]="(filterPredicateValueNoDataFormGroup.get('duration.staticValue').hasError('required') ? 'alarm-rule.value-required' : 'alarm-rule.min-value') | translate"
+                        class="tb-error">
+                warning
+              </mat-icon>
+            }
+        </mat-form-field>
+      } @else {
+        <mat-form-field class="flex-1 w-full" appearance="outline" subscriptSizing="dynamic">
+          <mat-select formControlName="dynamicValueArgument" placeholder="{{ 'action.set' | translate }}">
+            @for (argument of argumentsList; track argument) {
+              <mat-option [value]="argument" [disabled]="argument === argumentInUse">{{ argument }}</mat-option>
+            }
+          </mat-select>
+          @if (filterPredicateValueNoDataFormGroup.get('duration.dynamicValueArgument').touched && filterPredicateValueNoDataFormGroup.get('duration.dynamicValueArgument').errors) {
+            <mat-icon matSuffix
+                      matTooltipPosition="above"
+                      matTooltipClass="tb-error-tooltip"
+                      [matTooltip]="(filterPredicateValueNoDataFormGroup.get('duration.dynamicValueArgument').hasError('required') ? 'calculated-fields.hint.argument-name-required' : 'alarm-rule.argument-in-use') | translate"
+                      class="tb-error !block">
+              warning
+            </mat-icon>
+          }
+          @if (filterPredicateValueNoDataFormGroup.get('duration.dynamicValueArgument').hasError('argumentInUse')) {
+            <mat-icon matSuffix
+                      matTooltipPosition="above"
+                      matTooltipClass="tb-error-tooltip"
+                      [matTooltip]="'alarm-rule.argument-in-use' | translate"
+                      class="tb-error !block">
+              warning
+            </mat-icon>
+          }
+        </mat-form-field>
+      }
+    </ng-container>
+    <mat-form-field class="mat-block flex-1" appearance="outline" subscriptSizing="dynamic">
+      <mat-select formControlName="unit" required placeholder="{{'alarm-rule.time-unit' | translate}}">
+        <mat-option *ngFor="let timeUnit of timeUnits" [value]="timeUnit">
+          {{ timeUnitsTranslationMap.get(timeUnit) | translate }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+</div>

@@ -28,74 +28,31 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-@import '../../../../../scss/constants';
+package org.thingsboard.server.common.data.alarm.rule.condition.expression.predicate;
 
-:host {
-  min-height: 200px;
-  min-width: 300px;
-  @media #{$mat-gt-xs} {
-    min-width: 550px;
-  }
-  .fields-group {
-    height: 100%;
-    padding: 0 16px 8px;
-    border: 1px groove rgba(0, 0, 0, .25);
-    border-radius: 4px;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.alarm.rule.condition.AlarmConditionValue;
 
-    legend {
-      color: rgba(0, 0, 0, .7);
-      width: fit-content;
+import java.util.concurrent.TimeUnit;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class NoDataFilterPredicate implements KeyFilterPredicate {
+
+    @NotNull
+    private TimeUnit unit;
+    @Valid
+    @NotNull
+    private AlarmConditionValue<Long> duration;
+
+    @Override
+    public FilterPredicateType getType() {
+        return FilterPredicateType.NO_DATA;
     }
 
-    legend + * {
-      display: block;
-      margin-top: 16px;
-    }
-  }
-
-  .tb-prompt {
-    margin: 30px 0;
-  }
-
-  mat-expansion-panel.entity-type-config {
-    box-shadow: none;
-    border: 1px groove rgba(0, 0, 0, .25);
-    .mat-expansion-panel-header {
-      padding: 0 24px 0 8px;
-      height: 48px;
-    }
-    .entity-type-config-content {
-      padding: 0 8px 8px;
-    }
-  }
-}
-
-:host ::ng-deep {
-  .mat-expansion-panel.entity-type-config {
-    .entity-type-config-content {
-      .checkbox-pre-line {
-        .mdc-form-field {
-          .mdc-label {
-            white-space: pre-line;
-          }
-        }
-      }
-    }
-  }
-  .mat-expansion-panel.entity-type-config {
-    .mat-expansion-panel-body {
-      padding: 0;
-    }
-    &.load .mat-expansion-panel-content {
-      height: 0;
-      visibility: hidden;
-    }
-    .entity-type-config-content {
-      .mat-mdc-checkbox {
-        label {
-          white-space: nowrap;
-        }
-      }
-    }
-  }
 }

@@ -33,52 +33,60 @@ import { Component, DestroyRef, forwardRef, Input, OnChanges, OnInit, SimpleChan
 import {
   ControlValueAccessor,
   FormBuilder,
-  FormGroup,
   NG_VALIDATORS,
   NG_VALUE_ACCESSOR,
   ValidationErrors,
   Validator,
-  ValidatorFn,
   Validators
 } from '@angular/forms';
-import { EntityKeyValueType } from '@shared/models/query/query.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CalculatedFieldArgument } from "@shared/models/calculated-field.models";
-import { AlarmRuleValue } from "@shared/models/alarm-rule.models";
-import { FormControlsFrom } from "@shared/models/tenant.model";
+import { TimeUnit, timeUnitTranslations } from "@home/components/rule-node/rule-node-config.models";
+import { AlarmRuleFilterPredicateType, NoDataAlarmRuleFilterPredicate } from "@shared/models/alarm-rule.models";
 import { isDefinedAndNotNull } from "@core/utils";
 
 @Component({
-  selector: 'tb-alarm-rule-filter-predicate-value',
-  templateUrl: './alarm-rule-filter-predicate-value.component.html',
+  selector: 'tb-alarm-rule-filter-predicate-no-data-value',
+  templateUrl: './alarm-rule-filter-predicate-no-data-value.component.html',
   styleUrls: [],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => AlarmRuleFilterPredicateValueComponent),
+      useExisting: forwardRef(() => AlarmRuleFilterPredicateNoDataValueComponent),
       multi: true
     },
     {
       provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => AlarmRuleFilterPredicateValueComponent),
+      useExisting: forwardRef(() => AlarmRuleFilterPredicateNoDataValueComponent),
       multi: true
     }
   ]
 })
-export class AlarmRuleFilterPredicateValueComponent implements ControlValueAccessor, Validator, OnInit, OnChanges {
+export class AlarmRuleFilterPredicateNoDataValueComponent implements ControlValueAccessor, Validator, OnInit, OnChanges {
 
   @Input()
   arguments: Record<string, CalculatedFieldArgument>;
 
   @Input()
-  valueType: EntityKeyValueType;
+  valueType: AlarmRuleFilterPredicateType;
 
   @Input()
   argumentInUse: string;
 
-  valueTypeEnum = EntityKeyValueType;
+  valueTypeEnum = AlarmRuleFilterPredicateType;
 
-  filterPredicateValueFormGroup: FormGroup<FormControlsFrom<AlarmRuleValue<string | number | boolean>>>;
+  filterPredicateValueNoDataFormGroup = this.fb.group({
+    type: ['NO_DATA'],
+    unit: [TimeUnit.MINUTES, Validators.required],
+    duration: this.fb.group({
+      staticValue: [null as null | number, [Validators.required, Validators.min(1)]],
+      dynamicValueArgument: ['', Validators.required]
+    })
+  });
+
+  timeUnits = [TimeUnit.MINUTES, TimeUnit.HOURS, TimeUnit.DAYS];
+  timeUnitsTranslationMap = timeUnitTranslations;
+
 
   dynamicModeControl = this.fb.control(false);
 
@@ -92,31 +100,7 @@ export class AlarmRuleFilterPredicateValueComponent implements ControlValueAcces
 
   ngOnInit(): void {
     this.argumentsList = this.arguments ? Object.keys(this.arguments): [];
-    let defaultValue: string | number | boolean;
-    let defaultValueValidators: ValidatorFn[];
-    switch (this.valueType) {
-      case EntityKeyValueType.STRING:
-        defaultValue = '';
-        defaultValueValidators = [];
-        break;
-      case EntityKeyValueType.NUMERIC:
-        defaultValue = 0;
-        defaultValueValidators = [Validators.required];
-        break;
-      case EntityKeyValueType.BOOLEAN:
-        defaultValue = false;
-        defaultValueValidators = [];
-        break;
-      case EntityKeyValueType.DATE_TIME:
-        defaultValue = Date.now();
-        defaultValueValidators = [Validators.required];
-        break;
-    }
-    this.filterPredicateValueFormGroup = this.fb.group({
-      staticValue: [defaultValue, defaultValueValidators],
-      dynamicValueArgument: ['', Validators.required]
-    });
-    this.filterPredicateValueFormGroup.valueChanges.pipe(
+    this.filterPredicateValueNoDataFormGroup.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
       this.updateModel();
@@ -131,9 +115,9 @@ export class AlarmRuleFilterPredicateValueComponent implements ControlValueAcces
       const argumentInUseChanges = changes.argumentInUse;
       if (!argumentInUseChanges.firstChange && argumentInUseChanges.currentValue !== argumentInUseChanges.previousValue) {
         if (this.dynamicModeControl.value) {
-          if (this.argumentInUse === this.filterPredicateValueFormGroup.get('dynamicValueArgument').value) {
-            this.filterPredicateValueFormGroup.get('dynamicValueArgument').setErrors({argumentInUse: true});
-            this.filterPredicateValueFormGroup.updateValueAndValidity();
+          if (this.argumentInUse === this.filterPredicateValueNoDataFormGroup.get('duration.dynamicValueArgument').value) {
+            this.filterPredicateValueNoDataFormGroup.get('duration.dynamicValueArgument').setErrors({argumentInUse: true});
+            this.filterPredicateValueNoDataFormGroup.updateValueAndValidity();
           }
         }
       }
@@ -142,10 +126,10 @@ export class AlarmRuleFilterPredicateValueComponent implements ControlValueAcces
 
   setDisabledState(isDisabled: boolean): void {
     if (isDisabled) {
-      this.filterPredicateValueFormGroup.disable({emitEvent: false});
+      this.filterPredicateValueNoDataFormGroup.disable({emitEvent: false});
       this.dynamicModeControl.disable({emitEvent: false});
     } else {
-      this.filterPredicateValueFormGroup.enable({emitEvent: false});
+      this.filterPredicateValueNoDataFormGroup.enable({emitEvent: false});
       this.dynamicModeControl.enable({emitEvent: false});
       this.updateValueModeValidators(this.dynamicModeControl.value);
     }
@@ -153,17 +137,17 @@ export class AlarmRuleFilterPredicateValueComponent implements ControlValueAcces
 
   private updateValueModeValidators(isDynamicMode: boolean): void {
     if (isDynamicMode) {
-      this.filterPredicateValueFormGroup.get('staticValue').disable({emitEvent: false});
-      this.filterPredicateValueFormGroup.get('dynamicValueArgument').enable();
+      this.filterPredicateValueNoDataFormGroup.get('duration.staticValue').disable({emitEvent: false});
+      this.filterPredicateValueNoDataFormGroup.get('duration.dynamicValueArgument').enable();
       setTimeout(()=> {
-        if (this.filterPredicateValueFormGroup.get('dynamicValueArgument').value && this.argumentInUse === this.filterPredicateValueFormGroup.get('dynamicValueArgument').value) {
-          this.filterPredicateValueFormGroup.get('dynamicValueArgument').setErrors({argumentInUse: true});
-          this.filterPredicateValueFormGroup.updateValueAndValidity();
+        if (this.filterPredicateValueNoDataFormGroup.get('duration.dynamicValueArgument').value && this.argumentInUse === this.filterPredicateValueNoDataFormGroup.get('dynamicValueArgument').value) {
+          this.filterPredicateValueNoDataFormGroup.get('duration.dynamicValueArgument').setErrors({argumentInUse: true});
+          this.filterPredicateValueNoDataFormGroup.updateValueAndValidity();
         }
       }, 0);
     } else {
-      this.filterPredicateValueFormGroup.get('dynamicValueArgument').disable({emitEvent: false});
-      this.filterPredicateValueFormGroup.get('staticValue').enable();
+      this.filterPredicateValueNoDataFormGroup.get('duration.dynamicValueArgument').disable({emitEvent: false});
+      this.filterPredicateValueNoDataFormGroup.get('duration.staticValue').enable();
     }
   }
 
@@ -175,23 +159,23 @@ export class AlarmRuleFilterPredicateValueComponent implements ControlValueAcces
   }
 
   validate(): ValidationErrors | null {
-    return this.filterPredicateValueFormGroup.valid ? null : {
+    return this.filterPredicateValueNoDataFormGroup.valid ? null : {
       filterPredicateValue: {valid: false}
     };
   }
 
-  writeValue(predicateValue: AlarmRuleValue<string | number | boolean>): void {
-    if (isDefinedAndNotNull(predicateValue.dynamicValueArgument)) {
+  writeValue(predicateValue: NoDataAlarmRuleFilterPredicate): void {
+    if (isDefinedAndNotNull(predicateValue.duration.dynamicValueArgument)) {
       const availableArgument = this.argumentsList.filter(arg => arg !== this.argumentInUse);
-      if (!availableArgument.includes(predicateValue.dynamicValueArgument)) {
-        predicateValue.dynamicValueArgument = '';
+      if (!availableArgument.includes(predicateValue.duration.dynamicValueArgument)) {
+        predicateValue.duration.dynamicValueArgument = '';
       }
       this.dynamicModeControl.patchValue(true, {emitEvent: false});
     }
-    this.filterPredicateValueFormGroup.patchValue(predicateValue, {emitEvent: false});
+    this.filterPredicateValueNoDataFormGroup.patchValue(predicateValue, {emitEvent: false});
   }
 
   private updateModel() {
-    this.propagateChange(this.filterPredicateValueFormGroup.value);
+    this.propagateChange(this.filterPredicateValueNoDataFormGroup.value);
   }
 }
