@@ -86,7 +86,7 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
     debugSettings: [],
     entityId: this.fb.group({
       entityType: this.fb.control<EntityType | AliasEntityType | null>(null, Validators.required),
-      id: ['', Validators.required],
+      id: [null as null | string, Validators.required],
     }),
     configuration: this.fb.group({
       arguments: this.fb.control({}),
@@ -133,7 +133,6 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
     if (this.userPermissionsService.hasGenericPermission(Resource.ASSET_PROFILE, Operation.WRITE)) {
       this.alarmRuleEntityTypeList.push(EntityType.ASSET_PROFILE);
     }
-    this.observeIsLoading();
     this.applyDialogData();
 
     if (this.data.readonly) {
@@ -230,19 +229,6 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
     if (!this.ownerId && entityId) {
       this.getOwnerByEntityTypeAndId(entityId.entityType as EntityType, entityId.id);
     }
-  }
-
-  private observeIsLoading(): void {
-    this.isLoading$.pipe(takeUntilDestroyed()).subscribe(loading => {
-      if (loading) {
-        this.fieldFormGroup.disable({emitEvent: false});
-      } else if (!this.data.readonly) {
-        this.fieldFormGroup.enable({emitEvent: false});
-        if (this.data.isDirty) {
-          this.fieldFormGroup.markAsDirty();
-        }
-      }
-    });
   }
 
   onTestScript(expression: string): Observable<string> {

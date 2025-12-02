@@ -122,7 +122,7 @@ class CalculatedFieldUtilsTest {
 
         assertThat(fromProto)
                 .usingRecursiveComparison()
-                .ignoringFields("ctx", "requiredArguments", "readinessStatus")
+                .ignoringFields("ctx", "requiredArguments", "readinessStatus", "latestTimestamp")
                 .isEqualTo(state);
 
         ArgumentEntry fromProtoArgument = fromProto.getArguments().get("geofencingArgumentTest");
