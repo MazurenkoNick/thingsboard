@@ -41,7 +41,10 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResultType;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationStatus;
@@ -124,6 +127,29 @@ public class TrendzClient {
         } catch (Exception e) {
             log.error("{} failed at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
             return null;
+        }
+    }
+
+    public ResponseEntity<byte[]> sendTrendzProxyRequest(String trendzUrl, String uriPath, HttpMethod method,
+                                                         byte[] body, HttpHeaders headers) throws ThingsboardException {
+        try {
+            String url = normalizeUrl(trendzUrl) + uriPath;
+            log.debug("Trendz proxy request at: {}", url);
+
+            ResponseEntity<byte[]> response = restTemplate.exchange(
+                    url, method, new HttpEntity<>(body, headers), byte[].class
+            );
+
+            log.debug("Trendz proxy request completed successfully");
+            return response;
+        } catch (RestClientResponseException e) {
+            log.warn("Trendz proxy request received non-successful response: {}", e.getStatusCode());
+            return ResponseEntity.status(e.getStatusCode())
+                    .headers(e.getResponseHeaders())
+                    .body(e.getResponseBodyAsByteArray());
+        } catch (Exception e) {
+            log.error("Trendz proxy request failed at {} [{}]: {}", trendzUrl, uriPath, e.getMessage(), e);
+            throw new ThingsboardException("Trendz proxy request unexpected error", e, ThingsboardErrorCode.GENERAL);
         }
     }
 

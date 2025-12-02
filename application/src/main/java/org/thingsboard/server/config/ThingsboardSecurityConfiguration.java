@@ -100,6 +100,7 @@ public class ThingsboardSecurityConfiguration {
     public static final String TOKEN_REFRESH_ENTRY_POINT = "/api/auth/token";
     protected static final String[] NON_TOKEN_BASED_AUTH_ENTRY_POINTS = new String[]{"/index.html", "/assets/**", "/static/**", "/api/noauth/**", "/webjars/**", "/api/license/**", "/api/images/public/**", "/.well-known/**"};
     public static final String TOKEN_BASED_AUTH_ENTRY_POINT = "/api/**";
+    protected static final String[] TRENDZ_NON_TOKEN_BASED_AUTH_ENTRY_POINTS = new String[]{"/apiTrendz/**", "/trendz/**"};
     public static final String WS_ENTRY_POINT = "/api/ws/**";
     public static final String MAIL_OAUTH2_PROCESSING_ENTRY_POINT = "/api/admin/mail/oauth2/code";
     public static final String DEVICE_CONNECTIVITY_CERTIFICATE_DOWNLOAD_ENTRY_POINT = "/api/device-connectivity/*/certificate/download";
@@ -208,7 +209,10 @@ public class ThingsboardSecurityConfiguration {
 
     private SkipPathRequestMatcher buildSkipPathRequestMatcher() {
         List<String> pathsToSkip = Stream.concat(
-                Arrays.stream(NON_TOKEN_BASED_AUTH_ENTRY_POINTS),
+                Stream.concat(
+                        Arrays.stream(NON_TOKEN_BASED_AUTH_ENTRY_POINTS),
+                        Arrays.stream(TRENDZ_NON_TOKEN_BASED_AUTH_ENTRY_POINTS)
+                ),
                 Stream.of(
                         WS_ENTRY_POINT,
                         TOKEN_REFRESH_ENTRY_POINT,
@@ -216,7 +220,8 @@ public class ThingsboardSecurityConfiguration {
                         PUBLIC_LOGIN_ENTRY_POINT,
                         DEVICE_API_ENTRY_POINT,
                         MAIL_OAUTH2_PROCESSING_ENTRY_POINT,
-                        DEVICE_CONNECTIVITY_CERTIFICATE_DOWNLOAD_ENTRY_POINT)).toList();
+                        DEVICE_CONNECTIVITY_CERTIFICATE_DOWNLOAD_ENTRY_POINT)
+        ).toList();
         return new SkipPathRequestMatcher(pathsToSkip, TOKEN_BASED_AUTH_ENTRY_POINT);
     }
 
@@ -266,6 +271,7 @@ public class ThingsboardSecurityConfiguration {
                 .sessionManagement(config -> config.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(config -> config
                         .requestMatchers(NON_TOKEN_BASED_AUTH_ENTRY_POINTS).permitAll() // static resources, user activation and password reset end-points (webjars included)
+                        .requestMatchers(TRENDZ_NON_TOKEN_BASED_AUTH_ENTRY_POINTS).permitAll() // Trendz resources and end-points
                         .requestMatchers(
                                 FORM_BASED_LOGIN_ENTRY_POINT, // Login end-point
                                 PUBLIC_LOGIN_ENTRY_POINT, // Public login end-point
