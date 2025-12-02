@@ -32,18 +32,10 @@ package org.thingsboard.server.service.trendz;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -66,7 +58,6 @@ import org.thingsboard.server.dao.trendz.TrendzSyncService;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
 
 import java.io.Serializable;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -78,15 +69,12 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
     public static final String TRENDZ_API_KEY_DESCRIPTION = "Internal API key used to authenticate with Trendz";
 
-    public static final String TRENDZ_INFO_URI = "/apiTrendz/publicApi/info";
-    public static final String TRENDZ_SYNC_INIT_URI = "/apiTrendz/publicApi/sync/init";
-    public static final String TRENDZ_HEALTHCHECK_URI = "/apiTrendz/publicApi/sync/check";
-
     private static final String MIN_SUPPORTED_VERSION = "1.15.0";
 
     private final ApiKeyService apiKeyService;
     private final TrendzSettingsService trendzSettingsService;
     private final SystemSecurityService systemSecurityService;
+    private final TrendzClient trendzClient;
 
     @Value("${trendz.enabled:true}")
     private boolean trendzEnabled;
@@ -96,19 +84,6 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
     @Value("${trendz.default_trendz_url:}")
     private String defaultTrendzUrl;
-
-    @Value("${trendz.request_timeout_ms:15000}")
-    private int requestTimeoutMs;
-
-    private RestTemplate restTemplate;
-
-    @PostConstruct
-    private void init() {
-        restTemplate = new RestTemplateBuilder()
-                .connectTimeout(Duration.ofMillis(requestTimeoutMs))
-                .readTimeout(Duration.ofMillis(requestTimeoutMs))
-                .build();
-    }
 
     @Override
     public TrendzSettings performSync(TenantId tenantId, UserId userId) {
@@ -147,7 +122,8 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
         String trendzVersion = trendzInfo.version();
 
-        TrendzHealthcheckResult syncResult = processTrendzInitRequest(trendzUrl, tbUrl, trendzApiKey.getValue(), null);
+        String externalTbUrl = systemSecurityService.getBaseUrl(TenantId.SYS_TENANT_ID, null, null);
+        TrendzHealthcheckResult syncResult = trendzClient.processTrendzInitRequest(trendzUrl, tbUrl, externalTbUrl != null ? externalTbUrl : tbUrl, trendzApiKey.getValue(), null);
         if (syncResult == null) {
             log.error("Failed to initiate synchronization with Trendz");
             return saveTrendzSettings(trendzUrl, tbUrl, trendzVersion, updatedTs,
@@ -188,7 +164,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         }
 
         String trendzUrl = trendzSettings.configuration().trendzUrl();
-        JsonNode rawResponse = checkTrendzReachability(trendzUrl);
+        JsonNode rawResponse = trendzClient.checkTrendzReachability(trendzUrl);
         if (rawResponse == null) {
             return new TrendzHealthcheckResult(
                     trendzSettings.synchronizationResult().version(),
@@ -229,26 +205,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
             );
         }
 
-        return sendHealthcheckRequest(trendzUrl, trendzApiKey.getValue());
-    }
-
-    private TrendzHealthcheckResult sendHealthcheckRequest(String trendzUrl, String apiKey) {
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("apiKey", apiKey);
-
-        TrendzHealthcheckResult result = sendTrendzRequest(trendzUrl, TRENDZ_HEALTHCHECK_URI, HttpMethod.POST,
-                requestBody, TrendzHealthcheckResult.class, "Performing Trendz healthcheck");
-
-        if (result == null) {
-            return new TrendzHealthcheckResult(
-                    null,
-                    TrendzSynchronizationResultType.TRENDZ_URL_UNREACHABLE,
-                    TrendzSynchronizationStatus.AVAILABLE,
-                    TrendzSynchronizationResultType.TRENDZ_URL_UNREACHABLE.getMessage()
-            );
-        }
-
-        return result;
+        return trendzClient.sendHealthcheckRequest(trendzUrl, trendzApiKey.getValue());
     }
 
     @Override
@@ -277,7 +234,8 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
                 return;
             }
 
-            processTrendzInitRequest(trendzUrl, tbUrl, newApiKey.getValue(), oldApiKey != null ? oldApiKey.getValue() : null);
+            String externalTbUrl = systemSecurityService.getBaseUrl(TenantId.SYS_TENANT_ID, null, null);
+            trendzClient.processTrendzInitRequest(trendzUrl, tbUrl, externalTbUrl != null ? externalTbUrl : tbUrl, newApiKey.getValue(), oldApiKey != null ? oldApiKey.getValue() : null);
         } catch (Exception e) {
             log.error("Error notifying Trendz about API key rotation", e);
         }
@@ -306,7 +264,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
     private TrendzInfo validateTrendzConnectionInfo(String trendzUrl, String tbUrl, long updatedTs) {
         // Step 1: Check if Trendz is reachable (get raw JSON response)
-        JsonNode rawResponse = checkTrendzReachability(trendzUrl);
+        JsonNode rawResponse = trendzClient.checkTrendzReachability(trendzUrl);
         if (rawResponse == null) {
             saveTrendzSettings(trendzUrl, tbUrl, null, updatedTs,
                     TrendzSynchronizationResultType.TRENDZ_URL_UNREACHABLE,
@@ -349,22 +307,6 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         return new TrendzSettings(config, syncResult);
     }
 
-    private JsonNode checkTrendzReachability(String trendzUrl) {
-        return sendTrendzRequest(trendzUrl, TRENDZ_INFO_URI, HttpMethod.GET, null, JsonNode.class, "Checking Trendz reachability");
-    }
-
-    private TrendzHealthcheckResult processTrendzInitRequest(String trendzUrl, String tbUrl, String currentApiKey, String prevApiKey) {
-        String externalTbUrl = systemSecurityService.getBaseUrl(TenantId.SYS_TENANT_ID, null, null);
-
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("internalTbUrl", tbUrl);
-        requestBody.put("externalTbUrl", externalTbUrl != null ? externalTbUrl : tbUrl);
-        requestBody.put("currentTbAccessToken", currentApiKey);
-        requestBody.put("prevTbAccessToken", prevApiKey);
-
-        return sendTrendzRequest(trendzUrl, TRENDZ_SYNC_INIT_URI, HttpMethod.POST, requestBody, TrendzHealthcheckResult.class, "Initiating Trendz sync");
-    }
-
     private boolean isVersionSupported(String version) {
         if (version == null || version.isBlank()) {
             log.warn("Version is null or empty, treating as unsupported");
@@ -394,33 +336,6 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         } catch (Exception e) {
             log.error("Failed to parse version '{}': {}", version, e.getMessage(), e);
             return false;
-        }
-    }
-
-    private String normalizeUrl(String url) {
-        return url != null && url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
-    }
-
-    private <T> T sendTrendzRequest(String trendzUrl, String uriPath, HttpMethod method,
-                                    Map<String, Object> requestBody, Class<T> responseType, String operationName) {
-        try {
-            String url = normalizeUrl(trendzUrl) + uriPath;
-            log.debug("{} at: {}", operationName, url);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
-
-            ResponseEntity<T> response = restTemplate.exchange(url, method, request, responseType);
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                log.debug("{} completed successfully", operationName);
-                return response.getBody();
-            }
-            log.warn("{} received non-successful response: {}", operationName, response.getStatusCode());
-            return null;
-        } catch (Exception e) {
-            log.error("{} failed at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
-            return null;
         }
     }
 

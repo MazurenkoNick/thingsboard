@@ -108,12 +108,7 @@ public class TrendzController extends BaseController {
                     AVAILABLE_FOR_ANY_AUTHORIZED_USER)
     @GetMapping("/sync")
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
-    public TrendzSynchronizationResult getTrendzSyncResult(@AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
-        if (user.isSystemAdmin()) {
-            accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.READ);
-        } else {
-            accessControlService.checkPermission(user, Resource.WHITE_LABELING, Operation.READ);
-        }
+    public TrendzSynchronizationResult getTrendzSyncResult() {
         TrendzSettings settings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
         if (settings != null && settings.synchronizationResult() != null) {
             return settings.synchronizationResult();
@@ -128,12 +123,7 @@ public class TrendzController extends BaseController {
                     AVAILABLE_FOR_ANY_AUTHORIZED_USER)
     @GetMapping("/healthcheck")
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
-    public TrendzHealthcheckResult performTrendzHealthcheck(@AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
-        if (user.isSystemAdmin()) {
-            accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.READ);
-        } else {
-            accessControlService.checkPermission(user, Resource.WHITE_LABELING, Operation.READ);
-        }
+    public TrendzHealthcheckResult performTrendzHealthcheck() {
         return trendzSyncService.performHealthcheck();
     }
 
