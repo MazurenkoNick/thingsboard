@@ -41,6 +41,9 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.Dao;
 
+import java.util.Optional;
+import java.util.Set;
+
 
 public interface CustomMenuDao extends Dao<CustomMenu> {
 
@@ -53,4 +56,6 @@ public interface CustomMenuDao extends Dao<CustomMenu> {
     void removeByTenantId(TenantId tenantId);
 
     PageData<CustomMenu> findByTenantId(TenantId tenantId, PageLink pageLink);
+
+    Optional<CustomMenu> findFirstByScopeAndUserGroupNames(TenantId tenantId, CustomerId customerId, CMScope scope, Set<String> userGroupNames);
 }

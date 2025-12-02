@@ -30,12 +30,14 @@
  */
 package org.thingsboard.server.dao.model.sql;
 
+import io.hypersistence.utils.hibernate.type.array.StringArrayType;
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.Type;
 import org.thingsboard.server.common.data.id.CustomMenuId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -43,6 +45,7 @@ import org.thingsboard.server.common.data.menu.CMAssigneeType;
 import org.thingsboard.server.common.data.menu.CMScope;
 import org.thingsboard.server.common.data.menu.CustomMenuInfo;
 import org.thingsboard.server.dao.model.BaseSqlEntity;
+import org.thingsboard.server.dao.model.ModelConstants;
 
 import java.util.UUID;
 
@@ -74,6 +77,10 @@ public abstract class AbstractCustomMenuEntity<T extends CustomMenuInfo> extends
     @Enumerated(EnumType.STRING)
     private CMAssigneeType assigneeType;
 
+    @Type(StringArrayType.class)
+    @Column(name = ModelConstants.CUSTOM_MENU_USER_GROUP_NAMES, columnDefinition = "text[]")
+    private String[] userGroupNames;
+
     public AbstractCustomMenuEntity() {
         super();
     }
@@ -89,6 +96,7 @@ public abstract class AbstractCustomMenuEntity<T extends CustomMenuInfo> extends
         this.name = customMenuInfo.getName();
         this.scope = customMenuInfo.getScope();
         this.assigneeType = customMenuInfo.getAssigneeType();
+        this.userGroupNames = customMenuInfo.getUserGroupNames();
     }
 
     public AbstractCustomMenuEntity(CustomMenuInfoEntity customMenuInfoEntity) {
@@ -98,6 +106,7 @@ public abstract class AbstractCustomMenuEntity<T extends CustomMenuInfo> extends
         this.name = customMenuInfoEntity.getName();
         this.scope = customMenuInfoEntity.getScope();
         this.assigneeType = customMenuInfoEntity.getAssigneeType();
+        this.userGroupNames = customMenuInfoEntity.getUserGroupNames();
     }
 
     protected CustomMenuInfo toCustomMenuInfo() {
@@ -112,6 +121,7 @@ public abstract class AbstractCustomMenuEntity<T extends CustomMenuInfo> extends
         customMenuInfo.setName(name);
         customMenuInfo.setScope(scope);
         customMenuInfo.setAssigneeType(assigneeType);
+        customMenuInfo.setUserGroupNames(userGroupNames);
         return customMenuInfo;
     }
 

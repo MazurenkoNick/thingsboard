@@ -2079,6 +2079,8 @@
         "assignee-customers": "Customers list",
         "assignee-tenant-all": "All tenant users",
         "assignee-users": "Users list",
+        "assignee-user-group-names": "User group names",
+        "user-group-name": "User group name",
         "assign-to": "Assign to",
         "manage-assignees": "Manage custom menu assignees",
         "manage-config": "Manage custom menu config",

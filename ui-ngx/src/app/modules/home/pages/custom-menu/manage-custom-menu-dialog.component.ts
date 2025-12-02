@@ -62,6 +62,8 @@ import { ActionNotificationShow } from '@core/notification/notification.actions'
 import { TranslateService } from '@ngx-translate/core';
 import { DialogService } from '@core/services/dialog.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { StringItemsOption } from '@shared/components/string-items-list.component';
+import { EntityGroupService } from '@core/http/entity-group.service';
 
 export interface ManageCustomMenuDialogData {
   add: boolean;
@@ -105,6 +107,7 @@ export class ManageCustomMenuDialogComponent
   assigneeTypes: CMAssigneeType[] = [];
 
   fetchUsersFunction = this.fetchUsers.bind(this);
+  fetchGroupsFunction = this.fetchGroups.bind(this);
 
   constructor(protected store: Store<AppState>,
               protected router: Router,
@@ -112,6 +115,7 @@ export class ManageCustomMenuDialogComponent
               public dialogRef: MatDialogRef<ManageCustomMenuDialogComponent, ManageCustomMenuDialogResult>,
               private customMenuService: CustomMenuService,
               private userService: UserService,
+              private groupService: EntityGroupService,
               private dialogService: DialogService,
               private translate: TranslateService,
               private fb: UntypedFormBuilder,
@@ -125,7 +129,8 @@ export class ManageCustomMenuDialogComponent
       scope: [this.data.add ? (this.authUser.authority === Authority.TENANT_ADMIN ? CMScope.TENANT : CMScope.CUSTOMER)
         : this.data.customMenu.scope],
       assigneeType: [this.data.add ? CMAssigneeType.NO_ASSIGN: this.data.customMenu.assigneeType],
-      assignToList: [this.data.add ? null : this.data.assigneeList]
+      assignToList: [this.data.add ? null : this.data.assigneeList],
+      userGroupNames: [this.data.add ? null : this.data.customMenu.userGroupNames],
     });
     this.title = this.data.add ? 'custom-menu.add' : 'custom-menu.manage-assignees';
     this.updateAssigneeTypes(this.data.add);
@@ -151,13 +156,13 @@ export class ManageCustomMenuDialogComponent
   private updateAssigneeTypes(updateAssigneeList = true) {
     const scope: CMScope = this.customMenuFormGroup.get('scope').value;
     if (scope === CMScope.TENANT) {
-      this.assigneeTypes = [CMAssigneeType.NO_ASSIGN, CMAssigneeType.ALL, CMAssigneeType.USERS];
+      this.assigneeTypes = [CMAssigneeType.NO_ASSIGN, CMAssigneeType.ALL, CMAssigneeType.USERS, CMAssigneeType.USER_GROUPS];
       const assigneeType: CMAssigneeType = this.customMenuFormGroup.get('assigneeType').value;
       if (assigneeType === CMAssigneeType.CUSTOMERS) {
         this.customMenuFormGroup.get('assigneeType').patchValue(CMAssigneeType.NO_ASSIGN, {emitEvent: false});
       }
     } else {
-      this.assigneeTypes = [CMAssigneeType.NO_ASSIGN, CMAssigneeType.ALL, CMAssigneeType.USERS, CMAssigneeType.CUSTOMERS];
+      this.assigneeTypes = [CMAssigneeType.NO_ASSIGN, CMAssigneeType.ALL, CMAssigneeType.USERS, CMAssigneeType.USER_GROUPS, CMAssigneeType.CUSTOMERS];
     }
     if (updateAssigneeList) {
       this.updateAssignToList();
@@ -167,14 +172,21 @@ export class ManageCustomMenuDialogComponent
   private updateAssignToList() {
     const assigneeType: CMAssigneeType = this.customMenuFormGroup.get('assigneeType').value;
     this.customMenuFormGroup.get('assignToList').patchValue(null, {emitEvent: false});
+    this.customMenuFormGroup.get('userGroupNames').patchValue(null, {emitEvent: false});
     switch (assigneeType) {
       case CMAssigneeType.NO_ASSIGN:
       case CMAssigneeType.ALL:
         this.customMenuFormGroup.get('assignToList').disable({emitEvent: false});
+        this.customMenuFormGroup.get('userGroupNames').disable({emitEvent: false});
         break;
       case CMAssigneeType.CUSTOMERS:
       case CMAssigneeType.USERS:
         this.customMenuFormGroup.get('assignToList').enable({emitEvent: false});
+        this.customMenuFormGroup.get('userGroupNames').disable({emitEvent: false});
+        break;
+      case CMAssigneeType.USER_GROUPS:
+        this.customMenuFormGroup.get('assignToList').disable({emitEvent: false});
+        this.customMenuFormGroup.get('userGroupNames').enable({emitEvent: false});
         break;
     }
   }
@@ -198,6 +210,9 @@ export class ManageCustomMenuDialogComponent
         scope: this.customMenuFormGroup.get('scope').value,
         assigneeType: this.customMenuFormGroup.get('assigneeType').value
       };
+      if (customMenuInfo.assigneeType === CMAssigneeType.USER_GROUPS) {
+        customMenuInfo.userGroupNames = this.customMenuFormGroup.get('userGroupNames').value;
+      }
       const assignToList: string[] = this.customMenuFormGroup.get('assignToList').value || [];
       this.handleMenuSaveOperation(
         customMenuInfo,
@@ -213,7 +228,12 @@ export class ManageCustomMenuDialogComponent
     if (this.customMenuFormGroup.valid) {
       const customMenu = this.data.customMenu;
       const assigneeType: CMAssigneeType = this.customMenuFormGroup.get('assigneeType').value;
-      const assignToList: string[] = this.customMenuFormGroup.get('assignToList').value || [];
+      let assignToList: string[] = [];
+      if (assigneeType === CMAssigneeType.USER_GROUPS) {
+        assignToList = this.customMenuFormGroup.get('userGroupNames').value || [];
+      } else {
+        assignToList = this.customMenuFormGroup.get('assignToList').value || [];
+      }
       this.handleMenuSaveOperation(
         customMenu,
         this.customMenuService.assignCustomMenu(customMenu.id.id, assigneeType, assignToList, false,
@@ -284,5 +304,27 @@ export class ManageCustomMenuDialogComponent
     return usersObservable.pipe(
       map(pageData => pageData.data)
     );
+  }
+
+  fetchGroups(searchText?: string): Observable<Array<StringItemsOption>> {
+    const scope: CMScope = this.customMenuFormGroup.get('scope').value;
+    const pageLink = new PageLink(50, 0, searchText, {
+      property: 'name',
+      direction: Direction.ASC
+    });
+    if (scope === CMScope.TENANT || scope === CMScope.CUSTOMER && this.authUser.authority === Authority.CUSTOMER_USER) {
+      return this.groupService.getEntityGroups(pageLink, EntityType.USER, false, {ignoreLoading: true}).pipe(
+        map(pageData => pageData.data
+          .filter(group => !group.groupAll)
+          .map(group => ({value: group.name, name: group.name}))),
+      );
+    } else {
+      const allowGroups = ["Customer Administrators", "Customer Users"];
+      const normalizedSearchText = searchText.trim().toLowerCase();
+      const filteredGroup = allowGroups
+        .filter(group => group.toLowerCase().includes(normalizedSearchText))
+        .map(group => ({value: group, name: group}));
+      return of(filteredGroup);
+    }
   }
 }
