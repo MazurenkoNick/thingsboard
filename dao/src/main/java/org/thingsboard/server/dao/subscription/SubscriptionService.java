@@ -32,8 +32,10 @@ package org.thingsboard.server.dao.subscription;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.thingsboard.server.common.data.LicenseInfo;
+import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.subscription.SubscriptionException;
+import org.thingsboard.server.common.data.subscription.SubscriptionInfo;
 
 public interface SubscriptionService {
 
@@ -48,5 +50,11 @@ public interface SubscriptionService {
     boolean isDevelopment(TenantId tenantId) throws SubscriptionException;
 
     LicenseInfo getLicenseInfo();
+
+    int getLicenseVersion();
+
+    SubscriptionInfo getSubscriptionInfo();
+
+    SubscriptionInfo refreshLicense();
 
 }

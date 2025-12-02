@@ -29,50 +29,44 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { AuthUser, User } from '@shared/models/user.model';
-import { UserSettings } from '@shared/models/user-settings.models';
-import { TrendzSettings } from '@shared/models/trendz-settings.models';
+import { Component, Inject } from '@angular/core';
+import { DialogComponent } from '@shared/components/dialog.component';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import { Router } from '@angular/router';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
-export interface SysParamsState {
-  userTokenAccessEnabled: boolean;
-  allowedDashboardIds: string[];
-  edgesSupportEnabled: boolean;
-  whiteLabelingAllowed: boolean;
-  customerWhiteLabelingAllowed: boolean;
-  hasRepository: boolean;
-  tbelEnabled: boolean;
-  persistDeviceStateToTelemetry: boolean;
-  mobileQrEnabled: boolean;
-  userSettings: UserSettings;
-  maxResourceSize: number;
-  maxDebugModeDurationMinutes: number;
-  maxDataPointsPerRollingArg: number;
-  maxArgumentsPerCF: number;
-  minAllowedDeduplicationIntervalInSecForCF: number;
-  minAllowedAggregationIntervalInSecForCF: number;
-  minAllowedScheduledUpdateIntervalInSecForCF: number;
-  maxRelationLevelPerCfArgument: number;
-  ruleChainDebugPerTenantLimitsConfiguration?: string;
-  calculatedFieldDebugPerTenantLimitsConfiguration?: string;
-  integrationDebugPerTenantLimitsConfiguration?: string;
-  converterDebugPerTenantLimitsConfiguration?: string;
-  availableLocales: string[];
-  trendzSettings: TrendzSettings;
-  licenseVersion: number;
+export interface AddLicenseItemDialogData {
+  itemName: string;
+  add: boolean;
+  isPerpetual: boolean;
+  licensePortalUrl: string;
 }
 
-export interface SysParams extends SysParamsState {
-  maxDatapointsLimit: number;
-}
+@Component({
+  selector: 'tb-add-license-item-dialog',
+  templateUrl: './add-license-item-dialog.component.html',
+  styleUrls: ['./add-license-item-dialog.component.scss']
+})
+export class AddLicenseItemDialogComponent extends DialogComponent<AddLicenseItemDialogComponent, boolean> {
 
-export interface AuthPayload extends SysParamsState {
-  authUser: AuthUser;
-  userDetails: User;
-  forceFullscreen: boolean;
-}
+  constructor(protected store: Store<AppState>,
+              protected router: Router,
+              @Inject(MAT_DIALOG_DATA) public data: AddLicenseItemDialogData,
+              public dialogRef: MatDialogRef<AddLicenseItemDialogComponent, boolean>) {
+    super(store, router, dialogRef);
+  }
 
-export interface AuthState extends AuthPayload {
-  isAuthenticated: boolean;
-  isUserLoaded: boolean;
-  lastPublicDashboardId: string;
+  cancel(): void {
+    this.dialogRef.close(false);
+  }
+
+  refresh(): void {
+    this.dialogRef.close(true);
+  }
+
+  goToLicensePortal() {
+    window.open(this.data.licensePortalUrl, '_blank');
+  }
+
 }

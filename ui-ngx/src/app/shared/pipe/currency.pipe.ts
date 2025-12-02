@@ -29,50 +29,21 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { AuthUser, User } from '@shared/models/user.model';
-import { UserSettings } from '@shared/models/user-settings.models';
-import { TrendzSettings } from '@shared/models/trendz-settings.models';
+import { Pipe, PipeTransform } from '@angular/core';
 
-export interface SysParamsState {
-  userTokenAccessEnabled: boolean;
-  allowedDashboardIds: string[];
-  edgesSupportEnabled: boolean;
-  whiteLabelingAllowed: boolean;
-  customerWhiteLabelingAllowed: boolean;
-  hasRepository: boolean;
-  tbelEnabled: boolean;
-  persistDeviceStateToTelemetry: boolean;
-  mobileQrEnabled: boolean;
-  userSettings: UserSettings;
-  maxResourceSize: number;
-  maxDebugModeDurationMinutes: number;
-  maxDataPointsPerRollingArg: number;
-  maxArgumentsPerCF: number;
-  minAllowedDeduplicationIntervalInSecForCF: number;
-  minAllowedAggregationIntervalInSecForCF: number;
-  minAllowedScheduledUpdateIntervalInSecForCF: number;
-  maxRelationLevelPerCfArgument: number;
-  ruleChainDebugPerTenantLimitsConfiguration?: string;
-  calculatedFieldDebugPerTenantLimitsConfiguration?: string;
-  integrationDebugPerTenantLimitsConfiguration?: string;
-  converterDebugPerTenantLimitsConfiguration?: string;
-  availableLocales: string[];
-  trendzSettings: TrendzSettings;
-  licenseVersion: number;
-}
+@Pipe({
+  name: 'tbCurrency'
+})
+export class TbCurrencyPipe implements PipeTransform {
 
-export interface SysParams extends SysParamsState {
-  maxDatapointsLimit: number;
-}
+  constructor() {
+  }
 
-export interface AuthPayload extends SysParamsState {
-  authUser: AuthUser;
-  userDetails: User;
-  forceFullscreen: boolean;
-}
-
-export interface AuthState extends AuthPayload {
-  isAuthenticated: boolean;
-  isUserLoaded: boolean;
-  lastPublicDashboardId: string;
+  transform(amount: number, args?: any): string {
+    if (args?.short) {
+      return (amount >= 0 ? '$' : '-$') + (Math.abs(amount) / 100).toFixed(2);
+    } else {
+      return (amount >= 0 ? '' : '-') + (Math.abs(amount) / 100).toFixed(2) + ' USD';
+    }
+  }
 }

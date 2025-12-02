@@ -63,3 +63,41 @@ export const subscriptionErrorsMap = new Map<SubscriptionErrorCode, Map<Subscrip
     )]
   ]
 );
+
+export enum PlanUiType {
+  TbMaker = 'TbMaker',
+  TbPrototype = 'TbPrototype',
+  TbStartup = 'TbStartup',
+  TbBusiness = 'TbBusiness',
+  TbBusinessPlus = 'TbBusinessPlus',
+  TbPerpetual = 'TbPerpetual'
+}
+
+export interface SubscriptionInfo {
+  subscriptionId: string;
+  subscriptionPlanName: string;
+  planUiType: PlanUiType;
+  perpetual: boolean;
+  offline: boolean;
+  currentPeriodStartTs: number;
+  currentPeriodEndTs: number;
+  endTs: number;
+  upcomingInvoiceDate: number;
+  upcomingInvoiceAmountDue: number;
+  planExtraDeviceEnabled: boolean;
+  planEdgeEnabled: boolean;
+  planTrendzEnabled: boolean;
+
+  dataTs: number;
+  licenseServerEndpoint: string;
+
+  maxDevices: number;
+  maxAssets: number;
+  whiteLabelingEnabled: boolean;
+  edgeEnabled: boolean;
+  trendzEnabled: boolean;
+  development: boolean;
+
+  devicesCount: number;
+  assetsCount: number;
+}

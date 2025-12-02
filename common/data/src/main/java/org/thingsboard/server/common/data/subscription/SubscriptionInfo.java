@@ -28,41 +28,38 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data;
+package org.thingsboard.server.common.data.subscription;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
-
-import java.util.List;
-import java.util.Set;
 
 @Data
-public class SystemParams {
-    boolean userTokenAccessEnabled;
-    List<String> allowedDashboardIds;
-    boolean edgesSupportEnabled;
-    boolean hasRepository;
-    boolean tbelEnabled;
-    boolean persistDeviceStateToTelemetry;
-    JsonNode userSettings;
-    long maxDatapointsLimit;
-    long maxResourceSize;
-    boolean whiteLabelingAllowed;
-    boolean customerWhiteLabelingAllowed;
-    Set<String> availableLocales;
-    boolean mobileQrEnabled;
-    int maxDebugModeDurationMinutes;
-    String ruleChainDebugPerTenantLimitsConfiguration;
-    String integrationDebugPerTenantLimitsConfiguration;
-    String converterDebugPerTenantLimitsConfiguration;
-    String calculatedFieldDebugPerTenantLimitsConfiguration;
-    long maxArgumentsPerCF;
-    long maxDataPointsPerRollingArg;
-    int minAllowedScheduledUpdateIntervalInSecForCF;
-    int maxRelationLevelPerCfArgument;
-    long minAllowedDeduplicationIntervalInSecForCF;
-    long minAllowedAggregationIntervalInSecForCF;
-    TrendzSettings trendzSettings;
-    int licenseVersion;
+public class SubscriptionInfo {
+
+    private String subscriptionId;
+    private String subscriptionPlanName;
+    private String planUiType;
+    private boolean isPerpetual;
+    private boolean isOffline;
+    private Long currentPeriodStartTs;
+    private Long currentPeriodEndTs;
+    private Long endTs;
+    private Long upcomingInvoiceDate;
+    private Long upcomingInvoiceAmountDue;
+    private boolean planExtraDeviceEnabled;
+    private boolean planEdgeEnabled;
+    private boolean planTrendzEnabled;
+
+    private long dataTs;
+    private String licenseServerEndpoint;
+
+    private long maxDevices;
+    private long maxAssets;
+    private boolean whiteLabelingEnabled;
+    private boolean edgeEnabled;
+    private boolean trendzEnabled;
+    private boolean development;
+
+    private long devicesCount;
+    private long assetsCount;
+
 }

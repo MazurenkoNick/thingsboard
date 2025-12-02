@@ -59,6 +59,8 @@ import { JsResourceComponent } from '@home/pages/admin/resource/js-resource.comp
 import { NgxFlowModule } from '@flowjs/ngx-flow';
 import { TrendzSettingsComponent } from '@home/pages/admin/trendz-settings.component';
 import { ResourceLibraryTabsComponent } from '@home/pages/admin/resource/resource-library-tabs.component';
+import { LicenseManagementComponent } from '@home/pages/admin/license-management.component';
+import { AddLicenseItemDialogComponent } from '@home/pages/admin/add-license-item-dialog.component';
 
 @NgModule({
   declarations:
@@ -85,7 +87,9 @@ import { ResourceLibraryTabsComponent } from '@home/pages/admin/resource/resourc
       RepositoryAdminSettingsComponent,
       AutoCommitAdminSettingsComponent,
       TwoFactorAuthSettingsComponent,
-      TrendzSettingsComponent
+      TrendzSettingsComponent,
+      LicenseManagementComponent,
+      AddLicenseItemDialogComponent
     ],
   imports: [
     CommonModule,

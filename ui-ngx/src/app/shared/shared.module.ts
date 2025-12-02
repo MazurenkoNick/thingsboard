@@ -281,6 +281,7 @@ import { FormRowDirective } from '@shared/directives/form-row.directive';
 import { TimeUnitInputComponent } from '@shared/components/time-unit-input.component';
 import { DateExpirationPipe } from '@shared/pipe/date-expiration.pipe';
 import { PasswordRequirementsTooltipComponent } from '@shared/components/password-requirements-tooltip.component';
+import { TbCurrencyPipe } from '@shared/pipe/currency.pipe';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -307,6 +308,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     HtmlWithImagePipe,
     CustomTranslatePipe,
     DurationLeftPipe,
+    TbCurrencyPipe,
     {
       provide: FlowInjectionToken,
       useValue: Flow
@@ -458,6 +460,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     ImagePipe,
     HtmlWithImagePipe,
     CustomTranslatePipe,
+    TbCurrencyPipe,
     SafePipe,
     ShortNumberPipe,
     SelectableColumnsPipe,
@@ -758,6 +761,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     ImagePipe,
     HtmlWithImagePipe,
     CustomTranslatePipe,
+    TbCurrencyPipe,
     SafePipe,
     ShortNumberPipe,
     SelectableColumnsPipe,
