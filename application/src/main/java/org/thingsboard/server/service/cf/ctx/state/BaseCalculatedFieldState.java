@@ -177,15 +177,15 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState, 
             newTs = singleValueArgumentEntry.getTs();
         } else if (entry instanceof TsRollingArgumentEntry tsRollingArgumentEntry) {
             Map.Entry<Long, Double> lastEntry = tsRollingArgumentEntry.getTsRecords().lastEntry();
-            newTs = (lastEntry != null) ? lastEntry.getKey() : System.currentTimeMillis();
+            newTs = (lastEntry != null) ? lastEntry.getKey() : -1L;
         } else if (entry instanceof RelatedEntitiesArgumentEntry relatedEntitiesArgumentEntry) {
             newTs = relatedEntitiesArgumentEntry.getEntityInputs().values().stream()
-                    .mapToLong(e -> (e instanceof SingleValueArgumentEntry s) ? s.getTs() : 0L)
+                    .mapToLong(e -> (e instanceof SingleValueArgumentEntry s) ? s.getTs() : -1L)
                     .max()
-                    .orElse(0L);
+                    .orElse(-1L);
         } else if (entry instanceof GeofencingArgumentEntry geofencingArgumentEntry) {
             newTs = geofencingArgumentEntry.getZoneStates().values().stream()
-                    .mapToLong(GeofencingZoneState::getTs).max().orElse(0L);
+                    .mapToLong(GeofencingZoneState::getTs).max().orElse(-1L);
         }
         this.latestTimestamp = Math.max(this.latestTimestamp, newTs);
     }

@@ -54,6 +54,8 @@ import org.thingsboard.server.gen.transport.TransportProtos.TsKvProto;
 @AllArgsConstructor
 public class SingleValueArgumentEntry implements ArgumentEntry {
 
+    public static final Long DEFAULT_VERSION = -1L;
+
     @Nullable
     protected EntityId entityId;
 
@@ -62,8 +64,6 @@ public class SingleValueArgumentEntry implements ArgumentEntry {
     protected Long version;
 
     protected boolean forceResetPrevious;
-
-    public static final Long DEFAULT_VERSION = -1L;
 
     public SingleValueArgumentEntry(EntityId entityId, ArgumentEntry entry) {
         this(entry);

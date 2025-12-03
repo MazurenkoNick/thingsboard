@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, Inject, OnInit, ViewChild } from '@angular/core';
+import { Component, Inject, ViewChild } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
@@ -66,7 +66,7 @@ export interface AlarmDetailsDialogData {
   templateUrl: './alarm-details-dialog.component.html',
   styleUrls: ['./alarm-details-dialog.component.scss']
 })
-export class AlarmDetailsDialogComponent extends DialogComponent<AlarmDetailsDialogComponent, boolean> implements OnInit {
+export class AlarmDetailsDialogComponent extends DialogComponent<AlarmDetailsDialogComponent, boolean> {
 
   alarmId: string;
   alarmFormGroup: UntypedFormGroup;
@@ -143,13 +143,12 @@ export class AlarmDetailsDialogComponent extends DialogComponent<AlarmDetailsDia
       this.alarmFormGroup.get('startTime')
         .patchValue(this.datePipe.transform(alarm.startTs, 'yyyy-MM-dd HH:mm:ss'));
     }
-    if (alarm.startTs || alarm.endTs) {
+    if (alarm.startTs || alarm.clearTs) {
       let duration = '';
-      if (alarm.startTs && (alarm.status === AlarmStatus.ACTIVE_ACK || alarm.status === AlarmStatus.ACTIVE_UNACK)) {
+      if (alarm.startTs && !alarm.cleared) {
         duration = this.millisecondsToTimeStringPipe.transform(Date.now() - alarm.startTs);
-      }
-      if (alarm.endTs && (alarm.status === AlarmStatus.CLEARED_ACK || alarm.status === AlarmStatus.CLEARED_UNACK)) {
-        duration = this.millisecondsToTimeStringPipe.transform(alarm.endTs - alarm.startTs);
+      } else if (alarm.clearTs && alarm.cleared) {
+        duration = this.millisecondsToTimeStringPipe.transform(alarm.clearTs - alarm.startTs);
       }
       this.alarmFormGroup.get('duration').patchValue(duration);
     }
@@ -164,9 +163,6 @@ export class AlarmDetailsDialogComponent extends DialogComponent<AlarmDetailsDia
     } else {
       this.alarmFormGroup.get('alarmDetails').patchValue(null);
     }
-  }
-
-  ngOnInit(): void {
   }
 
   close(): void {
