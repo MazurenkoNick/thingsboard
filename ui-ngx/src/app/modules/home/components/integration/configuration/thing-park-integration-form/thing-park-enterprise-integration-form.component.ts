@@ -72,6 +72,6 @@ export class ThingParkEnterpriseIntegrationFormComponent extends ThingParkIntegr
 
   setDisabledState(isDisabled: boolean) {
     super.setDisabledState(isDisabled);
-    this.thingParkConfigForm.get('enableSecurity').disable({emitEvent: true});
+    this.thingParkConfigForm.get('enableSecurity').disable({emitEvent: false});
   }
 }
