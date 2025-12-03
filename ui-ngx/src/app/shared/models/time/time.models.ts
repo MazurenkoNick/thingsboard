@@ -184,6 +184,7 @@ export interface Timewindow {
   history?: HistoryWindow;
   aggregation?: Aggregation;
   timezone?: string;
+  hideSaveAsDefault?: boolean;
 }
 
 export interface SubscriptionAggregation extends Aggregation {
@@ -354,6 +355,9 @@ export const initModelFromDefaultTimewindow = (value: Timewindow, quickIntervalO
     }
     if (value.hideTimezone) {
       model.hideTimezone = value.hideTimezone;
+    }
+    if (value.hideSaveAsDefault) {
+      model.hideSaveAsDefault = value.hideSaveAsDefault;
     }
 
     model.selectedTab = getTimewindowType(value);
@@ -1141,6 +1145,9 @@ export const cloneSelectedTimewindow = (timewindow: Timewindow): Timewindow => {
   }
   if (timewindow.hideTimezone) {
     cloned.hideTimezone = timewindow.hideTimezone;
+  }
+  if (timewindow.hideSaveAsDefault) {
+    cloned.hideSaveAsDefault = timewindow.hideSaveAsDefault;
   }
   if (isDefined(timewindow.selectedTab)) {
     cloned.selectedTab = timewindow.selectedTab;
