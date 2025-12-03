@@ -50,8 +50,7 @@ public class TrendzProxyController extends BaseController {
 
     @ApiOperation(value = "Forward Requests to Trendz",
             notes = "Forward Requests to Trendz by Trendz internal url." +
-                    "Can only be used if Trendz is already synchronized and integration is enabled."
-    )
+                    "Can only be used if Trendz is already synchronized and integration is enabled.")
     @RequestMapping({"/apiTrendz/**", "/trendz/**"})
     public ResponseEntity<byte[]> handleTrendzRequests(HttpServletRequest request, @RequestBody(required = false) byte[] body) throws ThingsboardException {
         return trendzProxyService.proxy(request, body);
