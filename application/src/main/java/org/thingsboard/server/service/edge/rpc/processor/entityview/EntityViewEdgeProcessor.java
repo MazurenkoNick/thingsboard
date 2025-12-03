@@ -65,7 +65,7 @@ import java.util.UUID;
 public class EntityViewEdgeProcessor extends BaseEntityViewProcessor implements EntityViewProcessor {
 
     @Override
-    public ListenableFuture<Void> processEntityViewMsgFromEdge(TenantId tenantId, Edge edge, EntityViewUpdateMsg entityViewUpdateMsg) {
+    public ListenableFuture<Void> processEntityViewMsgFromEdge(TenantId tenantId, Edge edge, EntityViewUpdateMsg entityViewUpdateMsg, EdgeVersion edgeVersion) {
         log.trace("[{}] executing processEntityViewMsgFromEdge [{}] from edge [{}]", tenantId, entityViewUpdateMsg, edge.getId());
         EntityViewId entityViewId = new EntityViewId(new UUID(entityViewUpdateMsg.getIdMSB(), entityViewUpdateMsg.getIdLSB()));
         try {
@@ -81,8 +81,10 @@ public class EntityViewEdgeProcessor extends BaseEntityViewProcessor implements 
                         EntityGroupId entityGroupId = new EntityGroupId(
                                 new UUID(entityViewUpdateMsg.getEntityGroupIdMSB(), entityViewUpdateMsg.getEntityGroupIdLSB()));
                         edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, entityGroupId, entityViewId);
-                    } else {
+                    } else if (edgeVersion.getNumber() >= EdgeVersion.V_4_3_0_VALUE) {
                         deleteEntityView(tenantId, edge, entityViewId);
+                    } else {
+                        removeEntityViewFromEdgeAllEntityViewGroup(tenantId, edge, entityViewId);
                     }
                     yield Futures.immediateFuture(null);
                 }
@@ -129,6 +131,21 @@ public class EntityViewEdgeProcessor extends BaseEntityViewProcessor implements 
         } catch (Exception e) {
             log.warn("Can't add entity view to edge entity view group, entity view id [{}]", entityViewId, e);
             throw new RuntimeException(e);
+        }
+    }
+
+    private void removeEntityViewFromEdgeAllEntityViewGroup(TenantId tenantId, Edge edge, EntityViewId entityViewId) {
+        EntityView entityViewToDelete = edgeCtx.getEntityViewService().findEntityViewById(tenantId, entityViewId);
+        if (entityViewToDelete != null) {
+            try {
+                EntityGroup edgeEntityViewGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), entityViewToDelete.getOwnerId().getEntityType(), EntityType.ENTITY_VIEW).get();
+                if (edgeEntityViewGroup != null) {
+                    edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, edgeEntityViewGroup.getId(), entityViewToDelete.getId());
+                }
+            } catch (Exception e) {
+                log.warn("[{}] Can't delete entity view from edge entity view 'All' group, entity view id [{}]", tenantId, entityViewId, e);
+                throw new RuntimeException(e);
+            }
         }
     }
 

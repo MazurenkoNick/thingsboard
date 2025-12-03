@@ -66,7 +66,7 @@ import java.util.UUID;
 public class AssetEdgeProcessor extends BaseAssetProcessor implements AssetProcessor {
 
     @Override
-    public ListenableFuture<Void> processAssetMsgFromEdge(TenantId tenantId, Edge edge, AssetUpdateMsg assetUpdateMsg) {
+    public ListenableFuture<Void> processAssetMsgFromEdge(TenantId tenantId, Edge edge, AssetUpdateMsg assetUpdateMsg, EdgeVersion edgeVersion) {
         log.trace("[{}] executing processAssetMsgFromEdge [{}] from edge [{}]", tenantId, assetUpdateMsg, edge.getId());
         AssetId assetId = new AssetId(new UUID(assetUpdateMsg.getIdMSB(), assetUpdateMsg.getIdLSB()));
         try {
@@ -82,8 +82,10 @@ public class AssetEdgeProcessor extends BaseAssetProcessor implements AssetProce
                         EntityGroupId entityGroupId = new EntityGroupId(
                                 new UUID(assetUpdateMsg.getEntityGroupIdMSB(), assetUpdateMsg.getEntityGroupIdLSB()));
                         edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, entityGroupId, assetId);
-                    } else {
+                    } else if (edgeVersion.getNumber() >= EdgeVersion.V_4_3_0_VALUE) {
                         deleteAsset(tenantId, edge, assetId);
+                    } else {
+                        removeAssetFromEdgeAllAssetGroup(tenantId, edge, assetId);
                     }
                     yield Futures.immediateFuture(null);
                 }
@@ -130,6 +132,21 @@ public class AssetEdgeProcessor extends BaseAssetProcessor implements AssetProce
         } catch (Exception e) {
             log.warn("Can't add asset to edge asset group, asset id [{}]", assetId, e);
             throw new RuntimeException(e);
+        }
+    }
+
+    private void removeAssetFromEdgeAllAssetGroup(TenantId tenantId, Edge edge, AssetId assetId) {
+        Asset assetToDelete = edgeCtx.getAssetService().findAssetById(tenantId, assetId);
+        if (assetToDelete != null) {
+            try {
+                EntityGroup edgeAssetGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), assetToDelete.getOwnerId().getEntityType(), EntityType.ASSET).get();
+                if (edgeAssetGroup != null) {
+                    edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, edgeAssetGroup.getId(), assetToDelete.getId());
+                }
+            } catch (Exception e) {
+                log.warn("[{}] Can't delete asset from edge asset 'All' group, asset id [{}]", tenantId, assetId, e);
+                throw new RuntimeException(e);
+            }
         }
     }
 

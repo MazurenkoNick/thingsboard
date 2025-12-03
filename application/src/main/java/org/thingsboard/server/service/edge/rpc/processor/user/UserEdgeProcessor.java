@@ -69,7 +69,7 @@ import java.util.UUID;
 public class UserEdgeProcessor extends BaseUserProcessor implements UserProcessor {
 
     @Override
-    public ListenableFuture<Void> processUserMsgFromEdge(TenantId tenantId, Edge edge, UserUpdateMsg userUpdateMsg) {
+    public ListenableFuture<Void> processUserMsgFromEdge(TenantId tenantId, Edge edge, UserUpdateMsg userUpdateMsg, EdgeVersion edgeVersion) {
         log.trace("[{}] executing processUserMsgFromEdge [{}] from edge [{}]", tenantId, userUpdateMsg, edge.getId());
         UserId userId = new UserId(new UUID(userUpdateMsg.getIdMSB(), userUpdateMsg.getIdLSB()));
         try {
@@ -86,8 +86,9 @@ public class UserEdgeProcessor extends BaseUserProcessor implements UserProcesso
                                 new UUID(userUpdateMsg.getEntityGroupIdMSB(), userUpdateMsg.getEntityGroupIdLSB()));
                         edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, entityGroupId, userId);
                         yield Futures.immediateFuture(null);
+                    } else if (edgeVersion.getNumber() >= EdgeVersion.V_4_3_0_VALUE) {
+                        deleteUserAndPushEntityDeletedEventToRuleEngine(tenantId, userId, edge);
                     }
-                    deleteUserAndPushEntityDeletedEventToRuleEngine(tenantId, userId, edge);
                     yield Futures.immediateFuture(null);
                 }
                 default -> handleUnsupportedMsgType(userUpdateMsg.getMsgType());

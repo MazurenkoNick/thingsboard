@@ -83,7 +83,7 @@ import java.util.UUID;
 public class DeviceEdgeProcessor extends BaseDeviceProcessor implements DeviceProcessor {
 
     @Override
-    public ListenableFuture<Void> processDeviceMsgFromEdge(TenantId tenantId, Edge edge, DeviceUpdateMsg deviceUpdateMsg) {
+    public ListenableFuture<Void> processDeviceMsgFromEdge(TenantId tenantId, Edge edge, DeviceUpdateMsg deviceUpdateMsg, EdgeVersion edgeVersion) {
         log.trace("[{}] executing processDeviceMsgFromEdge [{}] from edge [{}]", tenantId, deviceUpdateMsg, edge.getId());
         DeviceId deviceId = new DeviceId(new UUID(deviceUpdateMsg.getIdMSB(), deviceUpdateMsg.getIdLSB()));
         try {
@@ -99,8 +99,10 @@ public class DeviceEdgeProcessor extends BaseDeviceProcessor implements DevicePr
                         EntityGroupId entityGroupId = new EntityGroupId(
                                 new UUID(deviceUpdateMsg.getEntityGroupIdMSB(), deviceUpdateMsg.getEntityGroupIdLSB()));
                         edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, entityGroupId, deviceId);
-                    } else {
+                    } else if (edgeVersion.getNumber() >= EdgeVersion.V_4_3_0_VALUE) {
                         deleteDevice(tenantId, edge, deviceId);
+                    } else {
+                        removeDeviceFromEdgeAllDeviceGroup(tenantId, edge, deviceId);
                     }
                     yield Futures.immediateFuture(null);
                 }
@@ -129,6 +131,21 @@ public class DeviceEdgeProcessor extends BaseDeviceProcessor implements DevicePr
             edgeSynchronizationManager.getEdgeId().remove();
         }
         return Futures.immediateFuture(null);
+    }
+
+    private void removeDeviceFromEdgeAllDeviceGroup(TenantId tenantId, Edge edge, DeviceId deviceId) {
+        Device deviceToDelete = edgeCtx.getDeviceService().findDeviceById(tenantId, deviceId);
+        if (deviceToDelete != null) {
+            try {
+                EntityGroup edgeDeviceGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), deviceToDelete.getOwnerId().getEntityType(), EntityType.DEVICE).get();
+                if (edgeDeviceGroup != null) {
+                    edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, edgeDeviceGroup.getId(), deviceToDelete.getId());
+                }
+            } catch (Exception e) {
+                log.warn("[{}] Can't delete device from edge device 'All' group, device id [{}]", tenantId, deviceId, e);
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     private void saveOrUpdateDevice(TenantId tenantId, DeviceId deviceId, DeviceUpdateMsg deviceUpdateMsg, Edge edge) throws ThingsboardException {
