@@ -135,17 +135,7 @@ public class DeviceEdgeProcessor extends BaseDeviceProcessor implements DevicePr
 
     private void removeDeviceFromEdgeAllDeviceGroup(TenantId tenantId, Edge edge, DeviceId deviceId) {
         Device deviceToDelete = edgeCtx.getDeviceService().findDeviceById(tenantId, deviceId);
-        if (deviceToDelete != null) {
-            try {
-                EntityGroup edgeDeviceGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), deviceToDelete.getOwnerId().getEntityType(), EntityType.DEVICE).get();
-                if (edgeDeviceGroup != null) {
-                    edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, edgeDeviceGroup.getId(), deviceToDelete.getId());
-                }
-            } catch (Exception e) {
-                log.warn("[{}] Can't delete device from edge device 'All' group, device id [{}]", tenantId, deviceId, e);
-                throw new RuntimeException(e);
-            }
-        }
+        removeEntityFromEdgeAllGroup(tenantId, edge, deviceToDelete);
     }
 
     private void saveOrUpdateDevice(TenantId tenantId, DeviceId deviceId, DeviceUpdateMsg deviceUpdateMsg, Edge edge) throws ThingsboardException {
@@ -168,16 +158,8 @@ public class DeviceEdgeProcessor extends BaseDeviceProcessor implements DevicePr
     }
 
     private void addDeviceToEdgeAllDeviceGroup(TenantId tenantId, Edge edge, DeviceId deviceId) {
-        try {
-            Device device = edgeCtx.getDeviceService().findDeviceById(tenantId, deviceId);
-            EntityGroup edgeDeviceGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), device.getOwnerId().getEntityType(), EntityType.DEVICE).get();
-            if (edgeDeviceGroup != null) {
-                edgeCtx.getEntityGroupService().addEntityToEntityGroup(tenantId, edgeDeviceGroup.getId(), deviceId);
-            }
-        } catch (Exception e) {
-            log.warn("[{}] Can't add device to edge device group, device id [{}]", tenantId, deviceId, e);
-            throw new RuntimeException(e);
-        }
+        Device device = edgeCtx.getDeviceService().findDeviceById(tenantId, deviceId);
+        addEntityToEdgeAllGroup(tenantId, edge, device);
     }
 
     @Override

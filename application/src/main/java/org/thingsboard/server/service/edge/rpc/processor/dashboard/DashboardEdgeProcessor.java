@@ -114,31 +114,13 @@ public class DashboardEdgeProcessor extends BaseDashboardProcessor implements Da
     }
 
     private void addDashboardToEdgeAllDashboardGroup(TenantId tenantId, Edge edge, DashboardId dashboardId) {
-        try {
-            Dashboard dashboard = edgeCtx.getDashboardService().findDashboardById(tenantId, dashboardId);
-            EntityGroup edgeDashboardGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), dashboard.getOwnerId().getEntityType(), EntityType.DASHBOARD).get();
-            if (edgeDashboardGroup != null) {
-                edgeCtx.getEntityGroupService().addEntityToEntityGroup(tenantId, edgeDashboardGroup.getId(), dashboardId);
-            }
-        } catch (Exception e) {
-            log.warn("[{}] Can't add dashboard to edge dashboard group, dashboard id [{}]", tenantId, dashboardId, e);
-            throw new RuntimeException(e);
-        }
+        Dashboard dashboard = edgeCtx.getDashboardService().findDashboardById(tenantId, dashboardId);
+        addEntityToEdgeAllGroup(tenantId, edge, dashboard);
     }
 
     private void removeDashboardFromEdgeAllDashboardGroup(TenantId tenantId, Edge edge, DashboardId dashboardId) {
         Dashboard dashboardToDelete = edgeCtx.getDashboardService().findDashboardById(tenantId, dashboardId);
-        if (dashboardToDelete != null) {
-            try {
-                EntityGroup edgeDashboardGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), dashboardToDelete.getOwnerId().getEntityType(), EntityType.DASHBOARD).get();
-                if (edgeDashboardGroup != null) {
-                    edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, edgeDashboardGroup.getId(), dashboardToDelete.getId());
-                }
-            } catch (Exception e) {
-                log.warn("[{}] Can't delete dashboard from edge dashboard 'All' group, dashboard id [{}]", tenantId, dashboardToDelete, e);
-                throw new RuntimeException(e);
-            }
-        }
+        removeEntityFromEdgeAllGroup(tenantId, edge, dashboardToDelete);
     }
 
     @Override
