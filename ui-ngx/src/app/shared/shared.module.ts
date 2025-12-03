@@ -282,6 +282,7 @@ import { TimeUnitInputComponent } from '@shared/components/time-unit-input.compo
 import { DateExpirationPipe } from '@shared/pipe/date-expiration.pipe';
 import { PasswordRequirementsTooltipComponent } from '@shared/components/password-requirements-tooltip.component';
 import { TbCurrencyPipe } from '@shared/pipe/currency.pipe';
+import { RequestEdgeDialogComponent } from '@shared/components/dialog/request-edge-dialog.component';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -435,6 +436,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     MaterialIconsDialogComponent,
     WhiteLabelingFeatureDialogComponent,
     EntityLimitDialogComponent,
+    RequestEdgeDialogComponent,
     ColorInputComponent,
     MaterialIconSelectComponent,
     NodeScriptTestDialogComponent,
@@ -735,6 +737,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     MaterialIconsDialogComponent,
     WhiteLabelingFeatureDialogComponent,
     EntityLimitDialogComponent,
+    RequestEdgeDialogComponent,
     ColorInputComponent,
     MaterialIconSelectComponent,
     NodeScriptTestDialogComponent,

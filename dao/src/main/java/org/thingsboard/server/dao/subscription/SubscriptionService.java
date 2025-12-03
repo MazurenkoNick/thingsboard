@@ -47,6 +47,10 @@ public interface SubscriptionService {
 
     boolean whiteLabelingEnabled(TenantId tenantId) throws SubscriptionException;
 
+    boolean edgeEnabled(TenantId tenantId) throws SubscriptionException;
+
+    boolean trendzEnabled(TenantId tenantId) throws SubscriptionException;
+
     boolean isDevelopment(TenantId tenantId) throws SubscriptionException;
 
     LicenseInfo getLicenseInfo();

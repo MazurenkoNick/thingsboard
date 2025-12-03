@@ -29,52 +29,28 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { AuthUser, User } from '@shared/models/user.model';
-import { UserSettings } from '@shared/models/user-settings.models';
-import { TrendzSettings } from '@shared/models/trendz-settings.models';
+import { Component, OnInit } from '@angular/core';
+import { PageComponent } from '@shared/components/page.component';
+import { MatDialog } from '@angular/material/dialog';
+import { RequestEdgeDialogComponent } from '@shared/components/dialog/request-edge-dialog.component';
 
-export interface SysParamsState {
-  userTokenAccessEnabled: boolean;
-  allowedDashboardIds: string[];
-  edgesSupportEnabled: boolean;
-  whiteLabelingAllowed: boolean;
-  customerWhiteLabelingAllowed: boolean;
-  hasRepository: boolean;
-  tbelEnabled: boolean;
-  persistDeviceStateToTelemetry: boolean;
-  mobileQrEnabled: boolean;
-  userSettings: UserSettings;
-  maxResourceSize: number;
-  maxDebugModeDurationMinutes: number;
-  maxDataPointsPerRollingArg: number;
-  maxArgumentsPerCF: number;
-  minAllowedDeduplicationIntervalInSecForCF: number;
-  minAllowedAggregationIntervalInSecForCF: number;
-  minAllowedScheduledUpdateIntervalInSecForCF: number;
-  maxRelationLevelPerCfArgument: number;
-  ruleChainDebugPerTenantLimitsConfiguration?: string;
-  calculatedFieldDebugPerTenantLimitsConfiguration?: string;
-  integrationDebugPerTenantLimitsConfiguration?: string;
-  converterDebugPerTenantLimitsConfiguration?: string;
-  availableLocales: string[];
-  trendzSettings: TrendzSettings;
-  licenseVersion: number;
-  edgeEnabled: boolean;
-  trendzEnabled: boolean;
-}
+@Component({
+  selector: 'tb-request-edge',
+  templateUrl: './request-edge.component.html',
+  styleUrls: ['./request-edge.component.scss']
+})
+export class RequestEdgeComponent extends PageComponent implements OnInit {
 
-export interface SysParams extends SysParamsState {
-  maxDatapointsLimit: number;
-}
+  constructor(private dialog: MatDialog) {
+    super();
+  }
 
-export interface AuthPayload extends SysParamsState {
-  authUser: AuthUser;
-  userDetails: User;
-  forceFullscreen: boolean;
-}
+  ngOnInit() {
+    this.dialog.open<RequestEdgeDialogComponent>(RequestEdgeDialogComponent,
+      {
+        disableClose: true,
+        panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      });
+  }
 
-export interface AuthState extends AuthPayload {
-  isAuthenticated: boolean;
-  isUserLoaded: boolean;
-  lastPublicDashboardId: string;
 }

@@ -33,83 +33,142 @@
 $enabled-color: #198038;
 
 :host {
-  table.subscription-details {
-    border-spacing: 0;
-    padding: 0;
-    border-collapse: collapse;
-    table-layout: auto;
-    width: 100%;
 
-    td {
-      height: 44px;
-      padding-left: 16px;
+  .mat-mdc-card.license-card {
+    @media #{$mat-md} {
+      width: 600px;
     }
+    @media #{$mat-lg} {
+      width: 720px;
+    }
+    @media #{$mat-xl} {
+      width: 1000px;
+    }
+  }
 
-    &:not(.items) {
-      tr:not(:last-child) {
-        td {
-          padding-bottom: 12px;
+  .subscription {
+    display: flex;
+    &.info {
+      flex-direction: row;
+      gap: 16px;
+      @media #{$mat-xs} {
+        flex-direction: column;
+      }
+      @media #{$mat-gt-md} {
+        padding-left: 16px;
+      }
+      .info-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        .info-row {
+          width: 100%;
+          height: 40px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          @media #{$mat-gt-md} {
+            flex-direction: row;
+            align-items: center;
+            gap: 16px;
+            .label {
+              min-width: 184px;
+            }
+          }
+        }
+      }
+      .action-container {
+        width: 225px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        .action-row {
+          width: 100%;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          .mdc-button {
+            width: 100%;
+          }
+        }
+        .last-update-section {
+          width: 100%;
+          height: 40px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          .last-update-text {
+            font-size: 14px;
+            line-height: 14px;
+            font-weight: 400;
+            color: rgba(0, 0, 0, 0.38);
+          }
+          .last-update-ts {
+            font-size: 16px;
+            line-height: 20px;
+            font-weight: 400;
+            color: rgba(0, 0, 0, 0.54);
+          }
         }
       }
     }
-
-    td.label {
-      min-width: 200px;
-      color: var(--tb-primary-500);
-      font-size: 16px;
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    td.value {
-      width: 100%;
-      color: rgba(0, 0, 0, 0.76);
-      font-size: 16px;
-    }
-
-    td.action {
-      min-width: 240px;
-      .mdc-button {
-        width: 100%;
-      }
-      .last-update-text {
-        font-size: 14px;
-        font-weight: 400;
-        color: rgba(0, 0, 0, 0.38);
-      }
-      .last-update-ts {
-        font-size: 16px;
-        font-weight: 400;
-        color: rgba(0, 0, 0, 0.54);
-      }
-    }
-
     &.items {
-      td {
+      flex-direction: column;
+      .item-row {
         height: 40px;
-        border-bottom: solid 1px rgba(0, 0, 0, 0.12);
-      }
-      td:last-child {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding-left: 16px;
         padding-right: 16px;
-      }
-      td.label {
-        width: 100%;
-      }
-      td.progress {
-        padding-right: 8px;
-        min-width: 224px;
-        .mat-mdc-progress-bar {
-          border-radius: 6px;
-          --mdc-linear-progress-track-height: 8px;
-          --mdc-linear-progress-active-indicator-height: 8px;
-          --mdc-linear-progress-track-color: #{rgba($enabled-color, 0.06)};
-          --mdc-linear-progress-active-indicator-color: #{$enabled-color};
+        border-bottom: solid 1px rgba(0, 0, 0, 0.12);
+        &.column-xs {
+          .choose-prototype-xs {
+            display: none;
+          }
+          .choose-prototype {
+            display: block;
+          }
+          @media #{$mat-xs} {
+            height: auto;
+            flex-direction: column;
+            align-items: stretch;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            gap: 4px;
+            .usage-row {
+              justify-content: space-between;
+            }
+            .choose-prototype-xs {
+              display: block;
+            }
+            .choose-prototype {
+              display: none;
+            }
+          }
         }
-      }
-      td.value {
-        width: auto;
+        .usage-row {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          gap: 24px;
+          .mat-mdc-progress-bar {
+            width: 200px;
+            border-radius: 6px;
+            --mdc-linear-progress-track-height: 8px;
+            --mdc-linear-progress-active-indicator-height: 8px;
+            --mdc-linear-progress-track-color: #{rgba($enabled-color, 0.06)};
+            --mdc-linear-progress-active-indicator-color: #{$enabled-color};
+          }
+          .usage-count {
+            min-width: 120px;
+            white-space: nowrap;
+            text-align: right;
+          }
+        }
         .status {
           font-size: 14px;
           font-weight: 400;
@@ -132,6 +191,20 @@ $enabled-color: #198038;
           }
         }
       }
+    }
+    .label {
+      color: var(--tb-primary-500);
+      font-size: 16px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .value {
+      color: rgba(0, 0, 0, 0.76);
+      font-size: 16px;
+      font-weight: 400;
+      white-space: normal;
     }
   }
 }

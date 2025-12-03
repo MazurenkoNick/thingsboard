@@ -29,52 +29,37 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { AuthUser, User } from '@shared/models/user.model';
-import { UserSettings } from '@shared/models/user-settings.models';
-import { TrendzSettings } from '@shared/models/trendz-settings.models';
+import { Component, ViewEncapsulation } from '@angular/core';
+import { MatDialogRef } from '@angular/material/dialog';
+import { DialogComponent } from '@shared/components/dialog.component';
+import { AppState } from '@core/core.state';
+import { Router } from '@angular/router';
+import { Store } from '@ngrx/store';
 
-export interface SysParamsState {
-  userTokenAccessEnabled: boolean;
-  allowedDashboardIds: string[];
-  edgesSupportEnabled: boolean;
-  whiteLabelingAllowed: boolean;
-  customerWhiteLabelingAllowed: boolean;
-  hasRepository: boolean;
-  tbelEnabled: boolean;
-  persistDeviceStateToTelemetry: boolean;
-  mobileQrEnabled: boolean;
-  userSettings: UserSettings;
-  maxResourceSize: number;
-  maxDebugModeDurationMinutes: number;
-  maxDataPointsPerRollingArg: number;
-  maxArgumentsPerCF: number;
-  minAllowedDeduplicationIntervalInSecForCF: number;
-  minAllowedAggregationIntervalInSecForCF: number;
-  minAllowedScheduledUpdateIntervalInSecForCF: number;
-  maxRelationLevelPerCfArgument: number;
-  ruleChainDebugPerTenantLimitsConfiguration?: string;
-  calculatedFieldDebugPerTenantLimitsConfiguration?: string;
-  integrationDebugPerTenantLimitsConfiguration?: string;
-  converterDebugPerTenantLimitsConfiguration?: string;
-  availableLocales: string[];
-  trendzSettings: TrendzSettings;
-  licenseVersion: number;
-  edgeEnabled: boolean;
-  trendzEnabled: boolean;
-}
+@Component({
+  selector: 'tb-request-edge-dialog',
+  templateUrl: './request-edge-dialog.component.html',
+  styleUrls: ['./request-feature-dialog-styles.scss'],
+  encapsulation: ViewEncapsulation.None
+})
+export class RequestEdgeDialogComponent extends DialogComponent<RequestEdgeDialogComponent>{
 
-export interface SysParams extends SysParamsState {
-  maxDatapointsLimit: number;
-}
+  constructor(protected store: Store<AppState>,
+              protected router: Router,
+              public dialogRef: MatDialogRef<RequestEdgeDialogComponent>) {
+    super(store,  router, dialogRef);
+  }
 
-export interface AuthPayload extends SysParamsState {
-  authUser: AuthUser;
-  userDetails: User;
-  forceFullscreen: boolean;
-}
+  requestAccess($event: Event) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+  }
 
-export interface AuthState extends AuthPayload {
-  isAuthenticated: boolean;
-  isUserLoaded: boolean;
-  lastPublicDashboardId: string;
+  learnMore($event: Event) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+  }
+
 }

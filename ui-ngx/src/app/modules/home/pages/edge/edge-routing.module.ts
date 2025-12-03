@@ -59,7 +59,7 @@ import { deviceGroupsRoute } from '@home/pages/device/device-routing.module';
 import { entityViewGroupsRoute } from '@home/pages/entity-view/entity-view-routing.module';
 import { edgeEntitiesTitle, entityGroupsTitle, resolveGroupParams } from '@shared/models/entity-group.models';
 import { EntityGroupsTableConfigResolver } from '@home/components/group/entity-groups-table-config.resolver';
-import { EntityGroupResolver, groupEntitiesLabelFunction } from '@home/pages/group/entity-group.shared';
+import { EntityGroupResolver } from '@home/pages/group/entity-group.shared';
 import { GroupEntitiesTableComponent } from '@home/components/group/group-entities-table.component';
 import { RouterTabsComponent } from '@home/components/router-tabs.component';
 import { EdgesTableConfigResolver } from '@home/pages/edge/edges-table-config.resolver';
@@ -68,6 +68,10 @@ import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { EdgeService } from '@core/http/edge.service';
 import { MenuId } from '@core/services/menu.models';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import { getCurrentAuthState } from '@core/auth/auth.selectors';
+import { RequestEdgeComponent } from '@home/pages/edge/request-edge.component';
 
 @Injectable()
 export class EdgeTitleResolver  {
@@ -84,6 +88,15 @@ export class EdgeTitleResolver  {
     } else {
       return of(null);
     }
+  }
+}
+
+const disabledEdgeReplaceComponentFunction = (store: Store<AppState>) => {
+  const authState = getCurrentAuthState(store);
+  if (authState.licenseVersion > 1 && !authState.edgeEnabled) {
+    return RequestEdgeComponent;
+  } else {
+    return null;
   }
 }
 
@@ -423,7 +436,8 @@ const edgeRuleChainTemplatesRoute: Route = {
       data: {
         auth: [Authority.TENANT_ADMIN],
         title: 'edge.rulechain-templates',
-        ruleChainsType: 'edges'
+        ruleChainsType: 'edges',
+        replaceComponent: disabledEdgeReplaceComponentFunction
       },
       resolve: {
         entitiesTableConfig: RuleChainsTableConfigResolver
@@ -489,7 +503,8 @@ const edgeConverterTemplatesRoute: Route = {
       data: {
         auth: [Authority.TENANT_ADMIN],
         title: 'edge.converter-templates',
-        convertersType: 'edges'
+        convertersType: 'edges',
+        replaceComponent: disabledEdgeReplaceComponentFunction
       },
       resolve: {
         entitiesTableConfig: ConvertersTableConfigResolver
@@ -528,7 +543,8 @@ const edgeIntegrationTemplatesRoute: Route = {
       data: {
         auth: [Authority.TENANT_ADMIN],
         title: 'edge.integration-templates',
-        integrationsType: 'edges'
+        integrationsType: 'edges',
+        replaceComponent: disabledEdgeReplaceComponentFunction
       },
       resolve: {
         entitiesTableConfig: IntegrationsTableConfigResolver
@@ -583,7 +599,8 @@ export const edgesRoute = (root = false): Route => {
           (route.data.customerTitle ? (route.data.customerTitle + ': ') : '') +
           translate.instant(root ? 'edge.instances' : 'edge.edge-instances'),
         icon: 'router'
-      }
+      },
+      replaceComponent: disabledEdgeReplaceComponentFunction
     },
     children: [
       {

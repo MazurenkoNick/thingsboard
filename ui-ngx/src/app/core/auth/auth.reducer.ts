@@ -60,7 +60,9 @@ const emptyUserAuthState: AuthPayload = {
   allowedDashboardIds: [],
   availableLocales: env.supportedLangs,
   trendzSettings: initialTrendzSettings,
-  licenseVersion: 0
+  licenseVersion: 0,
+  edgeEnabled: false,
+  trendzEnabled: false
 };
 
 export const initialState: AuthState = {

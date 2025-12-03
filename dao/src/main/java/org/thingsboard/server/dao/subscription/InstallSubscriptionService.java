@@ -65,6 +65,16 @@ public class InstallSubscriptionService implements SubscriptionService {
     }
 
     @Override
+    public boolean edgeEnabled(TenantId tenantId) throws SubscriptionException {
+        return false;
+    }
+
+    @Override
+    public boolean trendzEnabled(TenantId tenantId) throws SubscriptionException {
+        return false;
+    }
+
+    @Override
     public boolean isDevelopment(TenantId tenantId) throws SubscriptionException {
         return false;
     }

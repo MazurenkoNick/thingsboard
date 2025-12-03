@@ -286,6 +286,16 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     }
 
     @Override
+    public boolean edgeEnabled(TenantId tenantId) throws SubscriptionException {
+        return this.tbLicenseClient.getPlanBooleanValue(PlanDataConstants.EDGE_KEY);
+    }
+
+    @Override
+    public boolean trendzEnabled(TenantId tenantId) throws SubscriptionException {
+        return this.tbLicenseClient.getPlanBooleanValue(PlanDataConstants.TRENDZ_KEY);
+    }
+
+    @Override
     public boolean isDevelopment(TenantId tenantId) throws SubscriptionException {
         try {
             return this.tbLicenseClient.getPlanBooleanValue(PlanDataConstants.DEVELOPMENT_KEY);
