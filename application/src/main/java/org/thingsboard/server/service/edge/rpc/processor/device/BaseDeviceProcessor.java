@@ -36,9 +36,8 @@ import org.springframework.data.util.Pair;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.Device;
-import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.edge.Edge;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
@@ -78,27 +77,21 @@ public abstract class BaseDeviceProcessor extends BaseEdgeProcessor {
                 changeOwnerIfRequired(tenantId, device.getCustomerId(), deviceId);
                 device.setId(deviceId);
             }
-            String deviceName = device.getName();
-            Device deviceByName = edgeCtx.getDeviceService().findDeviceByTenantIdAndName(tenantId, deviceName);
-            if (deviceByName != null && !deviceByName.getId().equals(deviceId)) {
-                deviceName = deviceName + "_" + StringUtils.randomAlphabetic(15);
-                log.warn("[{}] Device with name {} already exists. Renaming device name to {}",
-                        tenantId, device.getName(), deviceName);
-                deviceNameUpdated = true;
-            }
-            device.setName(deviceName);
-            setCustomerId(tenantId, created ? null : deviceById.getCustomerId(), device, deviceUpdateMsg);
+            if (isSaveRequired(deviceById, device)) {
+                deviceNameUpdated = updateDeviceNameIfDuplicateExists(tenantId, deviceId, device);
+                setCustomerId(tenantId, created ? null : deviceById.getCustomerId(), device, deviceUpdateMsg);
 
-            deviceValidator.validate(device, Device::getTenantId);
-            if (created) {
-                device.setId(deviceId);
-            }
-            Device savedDevice = edgeCtx.getDeviceService().saveDevice(device, false);
-            if (created) {
-                edgeCtx.getEntityGroupService().addEntityToEntityGroupAll(savedDevice.getTenantId(), savedDevice.getOwnerId(), savedDevice.getId());
+                deviceValidator.validate(device, Device::getTenantId);
+                if (created) {
+                    device.setId(deviceId);
+                }
+                Device savedDevice = edgeCtx.getDeviceService().saveDevice(device, false);
+                if (created) {
+                    edgeCtx.getEntityGroupService().addEntityToEntityGroupAll(savedDevice.getTenantId(), savedDevice.getOwnerId(), savedDevice.getId());
+                }
+                tbClusterService.onDeviceUpdated(savedDevice, created ? null : device);
             }
             safeAddToEntityGroup(tenantId, deviceUpdateMsg, deviceId);
-            tbClusterService.onDeviceUpdated(savedDevice, created ? null : device);
         } catch (Exception e) {
             log.error("[{}] Failed to process device update msg [{}]", tenantId, deviceUpdateMsg, e);
             throw e;
@@ -114,6 +107,15 @@ public abstract class BaseDeviceProcessor extends BaseEdgeProcessor {
                     deviceUpdateMsg.getEntityGroupIdLSB());
             safeAddEntityToGroup(tenantId, new EntityGroupId(entityGroupUUID), deviceId);
         }
+    }
+
+    private boolean updateDeviceNameIfDuplicateExists(TenantId tenantId, DeviceId deviceId, Device device) {
+        Device deviceByName = edgeCtx.getDeviceService().findDeviceByTenantIdAndName(tenantId, device.getName());
+
+        return generateUniqueNameIfDuplicateExists(tenantId, deviceId, device, deviceByName).map(uniqueName -> {
+            device.setName(uniqueName);
+            return true;
+        }).orElse(false);
     }
 
     protected void updateDeviceCredentials(TenantId tenantId, DeviceCredentialsUpdateMsg deviceCredentialsUpdateMsg) {
