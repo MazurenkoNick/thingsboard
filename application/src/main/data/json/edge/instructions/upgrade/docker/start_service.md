@@ -13,7 +13,6 @@ services:
 ```
 
 Make sure your image is set to **tb-edge-pe:${TB_EDGE_VERSION}**.
-
 Execute the following commands to up this docker compose directly:
 
 ```bash
