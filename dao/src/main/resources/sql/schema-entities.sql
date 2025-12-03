@@ -1129,6 +1129,7 @@ CREATE TABLE IF NOT EXISTS custom_menu (
     name varchar(255) NOT NULL,
     scope VARCHAR(16),
     assignee_type VARCHAR(16),
+    user_group_names text[],
     config VARCHAR(10000000)
 );
 

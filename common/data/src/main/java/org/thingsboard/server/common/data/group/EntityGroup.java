@@ -46,6 +46,7 @@ import org.thingsboard.server.common.data.ExportableNoTenantIdEntity;
 import org.thingsboard.server.common.data.HasName;
 import org.thingsboard.server.common.data.HasOwnerId;
 import org.thingsboard.server.common.data.HasVersion;
+import org.thingsboard.server.common.data.id.CustomMenuId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.validation.Length;

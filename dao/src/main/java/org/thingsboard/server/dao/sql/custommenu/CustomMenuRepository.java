@@ -40,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.common.data.menu.CMScope;
 import org.thingsboard.server.dao.model.sql.CustomMenuEntity;
 
+import java.util.Optional;
 import java.util.UUID;
 
 
@@ -58,4 +59,14 @@ public interface CustomMenuRepository extends JpaRepository<CustomMenuEntity, UU
 
     @Query("SELECT m FROM CustomMenuEntity m WHERE m.tenantId = :tenantId")
     Page<CustomMenuEntity> findByTenantId(@Param("tenantId") UUID tenantId, Pageable pageable);
+
+    @Query(value = "SELECT m.* FROM custom_menu m WHERE m.tenant_id   = :tenantId " +
+            "AND m.customer_id = :customerId " +
+            "AND m.scope = :scope " +
+            "AND m.assignee_type = 'USER_GROUPS' " +
+            "AND m.user_group_names && CAST(:userGroupNames AS text[]) LIMIT 1", nativeQuery = true)
+    Optional<CustomMenuEntity> findFirstByScopeAndUserGroupNames(@Param("tenantId") UUID tenantId,
+                                                                 @Param("customerId") UUID customerId,
+                                                                 @Param("scope") String scope,
+                                                                 @Param("userGroupNames") String[] userGroupNames);
 }
