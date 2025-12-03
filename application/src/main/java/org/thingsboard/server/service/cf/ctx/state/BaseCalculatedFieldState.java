@@ -130,7 +130,7 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState {
             newTs = singleValueArgumentEntry.getTs();
         } else if (entry instanceof TsRollingArgumentEntry tsRollingArgumentEntry) {
             Map.Entry<Long, Double> lastEntry = tsRollingArgumentEntry.getTsRecords().lastEntry();
-            newTs = (lastEntry != null) ? lastEntry.getKey() : System.currentTimeMillis();
+            newTs = (lastEntry != null) ? lastEntry.getKey() : -1;
         }
         this.latestTimestamp = Math.max(this.latestTimestamp, newTs);
     }

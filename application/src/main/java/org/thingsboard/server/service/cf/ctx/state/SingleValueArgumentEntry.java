@@ -52,6 +52,8 @@ import org.thingsboard.server.gen.transport.TransportProtos.TsKvProto;
 @AllArgsConstructor
 public class SingleValueArgumentEntry implements ArgumentEntry {
 
+    public static final Long DEFAULT_VERSION = -1L;
+
     private long ts;
     private BasicKvEntry kvEntryValue;
     private Long version;
