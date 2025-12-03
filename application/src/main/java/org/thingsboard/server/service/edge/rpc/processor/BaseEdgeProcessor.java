@@ -565,9 +565,9 @@ public abstract class BaseEdgeProcessor implements EdgeProcessor {
         EntityType entityType = entityId.getEntityType();
         try {
             EntityType ownerType = entity.getOwnerId().getEntityType();
-            EntityGroup edgeDashboardGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), ownerType, entityType).get();
-            if (edgeDashboardGroup != null) {
-                edgeCtx.getEntityGroupService().addEntityToEntityGroup(tenantId, edgeDashboardGroup.getId(), entityId);
+            EntityGroup edgeEntityGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), ownerType, entityType).get();
+            if (edgeEntityGroup != null) {
+                edgeCtx.getEntityGroupService().addEntityToEntityGroup(tenantId, edgeEntityGroup.getId(), entityId);
             }
         } catch (Exception e) {
             log.warn("[{}] Can't add entity to edge {} 'All' group, entity id [{}]", tenantId, entityType, entityId, e);
@@ -583,9 +583,9 @@ public abstract class BaseEdgeProcessor implements EdgeProcessor {
         EntityType entityType = entityId.getEntityType();
         try {
             EntityType ownerType = entity.getOwnerId().getEntityType();
-            EntityGroup edgeDeviceGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), ownerType, entityType).get();
-            if (edgeDeviceGroup != null) {
-                edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, edgeDeviceGroup.getId(), entityId);
+            EntityGroup edgeEntityGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), ownerType, entityType).get();
+            if (edgeEntityGroup != null) {
+                edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, edgeEntityGroup.getId(), entityId);
             }
         } catch (Exception e) {
             log.warn("[{}] Can't delete entity from edge {} 'All' group, entity id [{}]", tenantId, entityType, entityId, e);
