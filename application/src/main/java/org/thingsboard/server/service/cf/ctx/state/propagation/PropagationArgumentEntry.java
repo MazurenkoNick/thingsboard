@@ -85,4 +85,15 @@ public class PropagationArgumentEntry implements ArgumentEntry {
         return new TbelCfPropagationArg(propagationEntityIds);
     }
 
+    public boolean addPropagationEntityId(EntityId propagationEntityId) {
+        if (propagationEntityIds.contains(propagationEntityId)) {
+            return false;
+        }
+        return propagationEntityIds.add(propagationEntityId);
+    }
+
+    public boolean removePropagationEntityId(EntityId relatedEntityId) {
+        return propagationEntityIds.remove(relatedEntityId);
+    }
+
 }

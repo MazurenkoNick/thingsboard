@@ -40,6 +40,7 @@ import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.cf.configuration.Output;
 import org.thingsboard.server.common.data.cf.configuration.OutputType;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.util.CollectionsUtil;
 import org.thingsboard.server.service.cf.CalculatedFieldResult;
 import org.thingsboard.server.service.cf.PropagationCalculatedFieldResult;
 import org.thingsboard.server.service.cf.TelemetryCalculatedFieldResult;
@@ -49,6 +50,7 @@ import org.thingsboard.server.service.cf.ctx.state.ScriptCalculatedFieldState;
 import org.thingsboard.server.service.cf.ctx.state.SingleValueArgumentEntry;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.thingsboard.server.common.data.cf.configuration.PropagationCalculatedFieldConfiguration.PROPAGATION_CONFIG_ARGUMENT;
@@ -78,20 +80,26 @@ public class PropagationCalculatedFieldState extends ScriptCalculatedFieldState 
 
     @Override
     public ListenableFuture<CalculatedFieldResult> performCalculation(Map<String, ArgumentEntry> updatedArgs, CalculatedFieldCtx ctx) {
-        ArgumentEntry argumentEntry = arguments.get(PROPAGATION_CONFIG_ARGUMENT);
-        if (!(argumentEntry instanceof PropagationArgumentEntry propagationArgumentEntry) || propagationArgumentEntry.isEmpty()) {
+        List<EntityId> propagationEntityIds;
+        if (CollectionsUtil.isNotEmpty(updatedArgs) && updatedArgs.size() == 1 && updatedArgs.containsKey(PROPAGATION_CONFIG_ARGUMENT)) {
+            propagationEntityIds = ((PropagationArgumentEntry) updatedArgs.get(PROPAGATION_CONFIG_ARGUMENT)).getPropagationEntityIds();
+        } else {
+            PropagationArgumentEntry propagationArgumentEntry = (PropagationArgumentEntry) arguments.get(PROPAGATION_CONFIG_ARGUMENT);
+            propagationEntityIds = propagationArgumentEntry.getPropagationEntityIds();
+        }
+        if (propagationEntityIds.isEmpty()) {
             return Futures.immediateFuture(PropagationCalculatedFieldResult.builder().build());
         }
         if (ctx.isApplyExpressionForResolvedArguments()) {
             return Futures.transform(super.performCalculation(updatedArgs, ctx), telemetryCfResult ->
                             PropagationCalculatedFieldResult.builder()
-                                    .propagationEntityIds(propagationArgumentEntry.getPropagationEntityIds())
+                                    .propagationEntityIds(propagationEntityIds)
                                     .result((TelemetryCalculatedFieldResult) telemetryCfResult)
                                     .build(),
                     MoreExecutors.directExecutor());
         }
         return Futures.immediateFuture(PropagationCalculatedFieldResult.builder()
-                .propagationEntityIds(propagationArgumentEntry.getPropagationEntityIds())
+                .propagationEntityIds(propagationEntityIds)
                 .result(toTelemetryResult(ctx))
                 .build());
     }
@@ -118,6 +126,14 @@ public class PropagationCalculatedFieldState extends ScriptCalculatedFieldState 
         ObjectNode result = toSimpleResult(output.getType() == OutputType.TIME_SERIES, valuesNode);
         telemetryCfBuilder.result(result);
         return telemetryCfBuilder.build();
+    }
+
+    public PropagationArgumentEntry getPropagationArgument() {
+        return (PropagationArgumentEntry) arguments.get(PROPAGATION_CONFIG_ARGUMENT);
+    }
+
+    public void resetReadinessStatus() {
+        readinessStatus = checkReadiness(requiredArguments, arguments);
     }
 
 }
