@@ -135,11 +135,14 @@ public class DefaultTranslationService implements TranslationService {
             fullTranslation = TRANSLATION_VALUE_MAP.getOrDefault(localeCode, TRANSLATION_VALUE_MAP.get(DEFAULT_LOCALE_CODE)).deepCopy();
         }
         ObjectNode loginPageTranslation = newObjectNode();
+        ObjectNode securityNode = newObjectNode();
+        securityNode.set("2fa", fullTranslation.get("security").get("2fa"));
+        securityNode.set("password-requirement", fullTranslation.get("security").get("password-requirement"));
         loginPageTranslation.set("login", fullTranslation.get("login"));
         loginPageTranslation.set("signup", fullTranslation.get("signup"));
         loginPageTranslation.set("common", fullTranslation.get("common"));
         loginPageTranslation.set("action", fullTranslation.get("action"));
-        loginPageTranslation.set("security", newObjectNode().set("2fa", fullTranslation.get("security").get("2fa")));
+        loginPageTranslation.set("security", securityNode);
         loginPageTranslation.set("access", fullTranslation.get("access"));
         loginPageTranslation.set("user", newObjectNode().set("invalid-email-format", fullTranslation.get("user").get("invalid-email-format")));
         return loginPageTranslation;

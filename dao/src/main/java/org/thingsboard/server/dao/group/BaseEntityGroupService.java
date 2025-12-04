@@ -107,6 +107,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
@@ -1292,6 +1293,11 @@ public class BaseEntityGroupService extends AbstractCachedEntityService<EntityGr
     @Override
     public boolean containsLastTenantAdmin(TenantId tenantId, List<UserId> usersToRemove) {
         return userService.countUsersByTenantIdAndRoleIdAndIdNotIn(tenantId, getTenantAdminRoleId(), usersToRemove) == 0;
+    }
+
+    @Override
+    public Set<String> findUserGroupNamesByUserId(TenantId tenantId, UserId userId) {
+        return entityGroupDao.findUserGroupNamesByUserId(tenantId, userId);
     }
 
     private RoleId getTenantAdminRoleId() {

@@ -105,7 +105,7 @@
                         }
                     },
                     "title": "{i18n:api-usage.exceptions}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": {
                         "fontSize": "16px",
@@ -125,7 +125,8 @@
                     "pageSize": 1024,
                     "noDataDisplayMessage": "",
                     "configMode": "basic",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "enableDataExport": false
                 },
                 "id": "a669cf86-e715-efa4-dd9a-b839abf499e9",
@@ -500,7 +501,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -633,7 +634,7 @@
                         "tooltipLabelColor": "rgba(0, 0, 0, 0.76)"
                     },
                     "title": "{i18n:api-usage.queue-stats}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -644,14 +645,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -676,7 +677,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -980,7 +981,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -1113,7 +1114,7 @@
                         "tooltipLabelColor": "rgba(0, 0, 0, 0.76)"
                     },
                     "title": "{i18n:api-usage.processing-failures-and-timeouts}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -1124,14 +1125,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -1156,7 +1157,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -1334,7 +1335,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -1453,7 +1454,7 @@
                             "weight": "500",
                             "lineHeight": "16px"
                         },
-                        "legendValueColor": "rgba(0, 0, 0, 0.87)",
+                        "legendValueColor": "rgba(0, 0, 0, 0.76)",
                         "tooltipLabelFont": {
                             "family": "Roboto",
                             "size": 12,
@@ -1464,10 +1465,11 @@
                         },
                         "tooltipLabelColor": "rgba(0, 0, 0, 0.76)",
                         "tooltipHideZeroValues": null,
-                        "padding": "12px"
+                        "padding": "12px",
+                        "tooltipStackedShowTotal": false
                     },
                     "title": "{i18n:api-usage.transport-messages-hourly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -1480,16 +1482,16 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
-                    "widgetStyle": {},
+                    "widgetStyle": null,
                     "widgetCss": "",
                     "pageSize": 1024,
                     "units": "",
@@ -1512,7 +1514,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -1689,7 +1691,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -1822,7 +1824,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.transport-data-point-hourly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -1835,14 +1837,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -1867,7 +1869,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -2080,7 +2082,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -2213,7 +2215,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.rule-engine-hourly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -2221,7 +2223,12 @@
                         "headerButton": [
                             {
                                 "name": "{i18n:api-usage.view-statistics}",
+                                "buttonType": "icon",
                                 "icon": "show_chart",
+                                "buttonColor": "rgba(0, 0, 0, 0.54)",
+                                "customButtonStyle": {},
+                                "useShowWidgetActionFunction": null,
+                                "showWidgetActionFunction": "return true;",
                                 "type": "openDashboardState",
                                 "targetDashboardStateId": "rule_engine_statistics",
                                 "setEntityId": false,
@@ -2237,14 +2244,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -2269,7 +2276,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -2482,7 +2489,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -2615,7 +2622,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.data-points-storage-days-hourly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -2628,14 +2635,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -2660,7 +2667,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -2846,7 +2853,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -2979,7 +2986,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.transport-msg-daily-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -2990,14 +2997,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -3022,7 +3029,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -3213,7 +3220,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -3346,7 +3353,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.transport-msg-monthly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -3357,14 +3364,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -3389,7 +3396,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -3577,7 +3584,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -3710,7 +3717,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.transport-data-points-daily-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -3721,14 +3728,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -3753,7 +3760,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -3995,7 +4002,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -4128,7 +4135,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.transport-data-points-monthly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -4139,14 +4146,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -4171,7 +4178,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -4403,7 +4410,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -4536,7 +4543,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.rule-engine-daily-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -4567,14 +4574,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -4599,7 +4606,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -4841,7 +4848,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -4974,7 +4981,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.rule-engine-monthly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -5005,14 +5012,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -5037,7 +5044,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -5216,7 +5223,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -5349,7 +5356,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.javascript-function-executions-hourly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -5360,14 +5367,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -5392,7 +5399,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -5580,7 +5587,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -5713,7 +5720,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.javascript-function-executions-daily-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -5724,14 +5731,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -5756,7 +5763,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -5949,7 +5956,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -6082,7 +6089,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.javascript-function-executions-monthly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -6093,14 +6100,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -6125,7 +6132,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -6304,7 +6311,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -6437,7 +6444,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.tbel-function-executions-hourly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -6448,14 +6455,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -6480,7 +6487,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -6668,7 +6675,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -6801,7 +6808,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.tbel-function-executions-daily-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -6812,14 +6819,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -6844,7 +6851,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -7037,7 +7044,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -7170,7 +7177,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.tbel-function-executions-monthly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -7181,14 +7188,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -7213,7 +7220,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -7401,7 +7408,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -7534,7 +7541,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.data-points-storage-days-daily-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -7545,14 +7552,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -7577,7 +7584,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -7775,7 +7782,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -7908,7 +7915,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.data-points-storage-days-monthly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -7919,14 +7926,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -7951,7 +7958,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -8130,7 +8137,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -8263,7 +8270,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.alarms-created-hourly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -8274,14 +8281,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -8306,7 +8313,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -8494,7 +8501,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -8627,7 +8634,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.alarms-created-daily-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -8638,14 +8645,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -8670,7 +8677,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -8868,7 +8875,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -9001,7 +9008,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.alarms-created-monthly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -9012,14 +9019,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -9044,7 +9051,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -9223,7 +9230,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -9356,7 +9363,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.emails-hourly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -9367,14 +9374,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -9399,7 +9406,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -9587,7 +9594,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -9720,7 +9727,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.emails-daily-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -9731,14 +9738,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -9763,7 +9770,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -9956,7 +9963,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -10089,7 +10096,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.emails-monthly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -10100,14 +10107,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -10132,7 +10139,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -10311,7 +10318,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -10444,7 +10451,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.sms-messages-hourly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -10455,14 +10462,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -10487,7 +10494,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -10675,7 +10682,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -10808,7 +10815,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.sms-messages-daily-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -10819,14 +10826,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -10851,7 +10858,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -11044,7 +11051,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -11177,7 +11184,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.sms-messages-monthly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -11188,14 +11195,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -11220,7 +11227,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -11518,10 +11525,10 @@
                     "decimals": null,
                     "showTitleIcon": false,
                     "titleTooltip": "",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": false,
                     "widgetStyle": {},
-                    "widgetCss": ".tb-widget-header {\n    height: 48px;\n    align-items: center !important;\n    padding: 5px 10px 0 10px;\n}",
+                    "widgetCss": ".tb-widget-header {\n    height: 48px;\n    align-items: center !important;\n    padding: 5px 10px 0 10px;\n}\n\n@media screen and (min-width: 960px) {\n    .tb-widget {\n        margin-right: 0px !important;\n    }\n}",
                     "titleStyle": {},
                     "pageSize": 1024,
                     "noDataDisplayMessage": "",
@@ -11548,14 +11555,16 @@
                         ]
                     },
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": null,
                         "weight": "500",
                         "style": null,
-                        "lineHeight": "21px"
+                        "lineHeight": "20px"
                     },
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
+                    "margin": "12px",
                     "enableDataExport": false
                 },
                 "row": 0,
@@ -11752,7 +11761,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -11885,7 +11894,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.reports-created-hourly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -11896,14 +11905,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -11928,7 +11937,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -12116,7 +12125,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -12249,7 +12258,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.reports-created-daily-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -12260,14 +12269,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -12292,7 +12301,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -12490,7 +12499,7 @@
                             "weight": "400",
                             "lineHeight": "16px"
                         },
-                        "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+                        "legendLabelColor": "rgba(0, 0, 0, 0.54)",
                         "legendConfig": {
                             "direction": "column",
                             "position": "bottom",
@@ -12623,7 +12632,7 @@
                         "padding": "12px"
                     },
                     "title": "{i18n:api-usage.reports-created-monthly-activity}",
-                    "dropShadow": true,
+                    "dropShadow": false,
                     "enableFullscreen": true,
                     "titleStyle": null,
                     "configMode": "basic",
@@ -12634,14 +12643,14 @@
                     "useDashboardTimewindow": false,
                     "displayTimewindow": true,
                     "titleFont": {
-                        "size": 16,
+                        "size": 14,
                         "sizeUnit": "px",
                         "family": "Roboto",
                         "weight": "500",
                         "style": "normal",
-                        "lineHeight": "24px"
+                        "lineHeight": "20px"
                     },
-                    "titleColor": "rgba(0, 0, 0, 0.87)",
+                    "titleColor": "rgba(0, 0, 0, 0.54)",
                     "titleTooltip": "",
                     "widgetStyle": {},
                     "widgetCss": "",
@@ -12666,7 +12675,7 @@
                         "displayTypePrefix": true
                     },
                     "margin": "0px",
-                    "borderRadius": "4px",
+                    "borderRadius": "12px",
                     "iconSize": "0px",
                     "enableDataExport": false
                 },
@@ -12693,13 +12702,13 @@
                             "backgroundColor": "#eeeeee",
                             "color": "rgba(0,0,0,0.870588)",
                             "columns": 12,
-                            "margin": 8,
+                            "margin": 12,
                             "backgroundSizeMode": "100%",
                             "autoFillHeight": true,
                             "backgroundImageUrl": null,
                             "mobileAutoFillHeight": true,
                             "mobileRowHeight": 100,
-                            "outerMargin": true,
+                            "outerMargin": false,
                             "layoutType": "divider",
                             "minColumns": 12,
                             "viewFormat": "grid",
@@ -12749,7 +12758,7 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
+                            "margin": 12,
                             "outerMargin": true,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
@@ -12799,7 +12808,7 @@
                             "backgroundColor": "#eeeeee",
                             "color": "rgba(0,0,0,0.870588)",
                             "columns": 24,
-                            "margin": 8,
+                            "margin": 12,
                             "backgroundSizeMode": "100%",
                             "autoFillHeight": true,
                             "backgroundImageUrl": null,
@@ -12833,8 +12842,8 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
-                            "outerMargin": true,
+                            "margin": 12,
+                            "outerMargin": false,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
                             "viewFormat": "grid",
@@ -12879,7 +12888,7 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
+                            "margin": 12,
                             "outerMargin": true,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
@@ -12911,8 +12920,8 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
-                            "outerMargin": true,
+                            "margin": 12,
+                            "outerMargin": false,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
                             "viewFormat": "grid",
@@ -12957,7 +12966,7 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
+                            "margin": 12,
                             "outerMargin": true,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
@@ -12989,8 +12998,8 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
-                            "outerMargin": true,
+                            "margin": 12,
+                            "outerMargin": false,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
                             "viewFormat": "grid",
@@ -13035,7 +13044,7 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
+                            "margin": 12,
                             "outerMargin": true,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
@@ -13067,8 +13076,8 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
-                            "outerMargin": true,
+                            "margin": 12,
+                            "outerMargin": false,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
                             "viewFormat": "grid",
@@ -13114,7 +13123,7 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
+                            "margin": 12,
                             "outerMargin": true,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
@@ -13146,8 +13155,8 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
-                            "outerMargin": true,
+                            "margin": 12,
+                            "outerMargin": false,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
                             "viewFormat": "grid",
@@ -13193,7 +13202,7 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
+                            "margin": 12,
                             "outerMargin": true,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
@@ -13225,8 +13234,8 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
-                            "outerMargin": true,
+                            "margin": 12,
+                            "outerMargin": false,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
                             "viewFormat": "grid",
@@ -13271,7 +13280,7 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
+                            "margin": 12,
                             "outerMargin": true,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
@@ -13303,8 +13312,8 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
-                            "outerMargin": true,
+                            "margin": 12,
+                            "outerMargin": false,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
                             "viewFormat": "grid",
@@ -13350,7 +13359,7 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
+                            "margin": 12,
                             "outerMargin": true,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
@@ -13382,8 +13391,8 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
-                            "outerMargin": true,
+                            "margin": 12,
+                            "outerMargin": false,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
                             "viewFormat": "grid",
@@ -13429,7 +13438,7 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
+                            "margin": 12,
                             "outerMargin": true,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
@@ -13461,8 +13470,8 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
-                            "outerMargin": true,
+                            "margin": 12,
+                            "outerMargin": false,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
                             "viewFormat": "grid",
@@ -13508,7 +13517,7 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
+                            "margin": 12,
                             "outerMargin": true,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
@@ -13540,8 +13549,8 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
-                            "outerMargin": true,
+                            "margin": 12,
+                            "outerMargin": false,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
                             "viewFormat": "grid",
@@ -13587,7 +13596,7 @@
                             "layoutType": "divider",
                             "backgroundColor": "#eeeeee",
                             "columns": 12,
-                            "margin": 8,
+                            "margin": 12,
                             "outerMargin": true,
                             "backgroundSizeMode": "100%",
                             "minColumns": 12,
@@ -13624,21 +13633,15 @@
         },
         "filters": {},
         "timewindow": {
-            "hideAggregation": false,
-            "hideAggInterval": false,
-            "hideTimezone": false,
             "selectedTab": 0,
             "realtime": {
                 "realtimeType": 0,
-                "timewindowMs": 86400000,
-                "quickInterval": "CURRENT_DAY",
-                "interval": 3600000
+                "timewindowMs": 86400000
             },
             "aggregation": {
                 "type": "NONE",
                 "limit": 50000
-            },
-            "timezone": null
+            }
         },
         "settings": {
             "stateControllerId": "entity",
@@ -13654,7 +13657,7 @@
             "dashboardLogoUrl": null,
             "hideToolbar": false,
             "showUpdateDashboardImage": false,
-            "dashboardCss": ""
+            "dashboardCss": ".tb-widget-actions {\n  --mat-icon-color: rgba(0, 0, 0, 0.54);\n}"
         }
     },
     "name": "Api Usage"

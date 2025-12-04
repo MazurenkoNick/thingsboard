@@ -80,16 +80,28 @@
                 </mat-form-field>
                 <mat-form-field class="mat-block tb-appearance-transparent">
                   <mat-label translate>signup.create-password</mat-label>
-                  <input matInput type="password" formControlName="PASSWORD" required/>
+                  <input matInput
+                         type="password"
+                         formControlName="PASSWORD"
+                         required
+                         cdkOverlayOrigin
+                         #passwordTrigger="cdkOverlayOrigin"
+                         (focus)="passwordTooltip.onFocus()"
+                         (blur)="passwordTooltip.onBlur()"/>
                   <tb-toggle-password matSuffix></tb-toggle-password>
                   <mat-icon matPrefix>lock</mat-icon>
+                  <mat-error *ngIf="this.signup.get('fields.PASSWORD').errors">
+                    {{ 'security.password-requirement.password-not-meet-requirements' | translate }}
+                  </mat-error>
                 </mat-form-field>
                 <mat-form-field class="mat-block tb-appearance-transparent">
                   <mat-label translate>signup.repeat-password</mat-label>
-                  <input matInput type="password" [(ngModel)]="passwordCheck"
-                         [ngModelOptions]="{standalone: true}" required/>
+                  <input matInput type="password" formControlName="CHECK_PASSWORD"/>
                   <tb-toggle-password matSuffix></tb-toggle-password>
                   <mat-icon matPrefix>lock</mat-icon>
+                  <mat-error *ngIf="signup.get('fields.CHECK_PASSWORD').hasError('passwordsNotMatch')">
+                    {{ 'security.password-requirement.new-passwords-not-match' | translate }}
+                  </mat-error>
                 </mat-form-field>
               </div>
               <div class="tb-recaptcha flex flex-col">
@@ -127,3 +139,8 @@
     </mat-card-content>
   </mat-card>
 </div>
+<tb-password-requirements-tooltip #passwordTooltip
+                                  [passwordControl]="signup.get('fields.PASSWORD')"
+                                  [passwordPolicy]="passwordPolicy"
+                                  [trigger]="passwordTrigger">
+</tb-password-requirements-tooltip>

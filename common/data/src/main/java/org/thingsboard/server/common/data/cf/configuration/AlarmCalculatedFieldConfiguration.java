@@ -103,4 +103,12 @@ public class AlarmCalculatedFieldConfiguration implements ArgumentsBasedCalculat
         });
     }
 
+    public boolean propagationSettingsEqual(AlarmCalculatedFieldConfiguration other) {
+        return this.propagate == other.propagate &&
+               this.propagateToOwner == other.propagateToOwner &&
+               this.propagateToOwnerHierarchy == other.propagateToOwnerHierarchy &&
+               this.propagateToTenant == other.propagateToTenant &&
+               Objects.equals(this.propagateRelationTypes, other.propagateRelationTypes);
+    }
+
 }

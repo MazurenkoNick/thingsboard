@@ -85,7 +85,7 @@ export class OpcUaIntegrationFormComponent extends IntegrationForm implements Co
     this.opcIntegrationConfigForm = this.fb.group({
       applicationName: '',
       applicationUri: '',
-      host: ['localhost', Validators.required],
+      host: ['', Validators.required],
       port: [49320, [Validators.required, Validators.min(1), Validators.max(65535)]],
       endpointUrl: ['', []],
       scanPeriodInSeconds: [10, Validators.required],

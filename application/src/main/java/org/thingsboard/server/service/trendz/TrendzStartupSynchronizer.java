@@ -87,6 +87,8 @@ public class TrendzStartupSynchronizer {
             User sysAdminUser = userService.findSysAdmins(pageLink).getData().get(0);
             TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
             if (isSyncedUp(trendzSettings)) {
+                log.trace("Trendz is already synced up. Status: {}, Result: {}",
+                        trendzSettings.synchronizationResult().status(), trendzSettings.synchronizationResult().type());
                 return;
             }
             TrendzSettings result = trendzSyncService.performSync(TenantId.SYS_TENANT_ID, sysAdminUser.getId());

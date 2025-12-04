@@ -101,6 +101,7 @@ public class CalculatedFieldCtx implements Closeable {
     private CalculatedField calculatedField;
 
     private CalculatedFieldId cfId;
+    private String cfName;
     private TenantId tenantId;
     private EntityId entityId;
     private CalculatedFieldType cfType;
@@ -145,6 +146,7 @@ public class CalculatedFieldCtx implements Closeable {
         this.calculatedField = calculatedField;
 
         this.cfId = calculatedField.getId();
+        this.cfName = calculatedField.getName();
         this.tenantId = calculatedField.getTenantId();
         this.entityId = calculatedField.getEntityId();
         this.cfType = calculatedField.getType();
@@ -225,7 +227,7 @@ public class CalculatedFieldCtx implements Closeable {
         this.maxSingleValueArgumentSize = systemContext.getApiLimitService().getLimit(tenantId, DefaultTenantProfileConfiguration::getMaxSingleValueArgumentSizeInKBytes) * 1024;
     }
 
-    public boolean isRequiresScheduledReevaluation() {
+    public boolean requiresScheduledReevaluation() {
         long now = System.currentTimeMillis();
         if (calculatedField.getConfiguration() instanceof EntityAggregationCalculatedFieldConfiguration entityAggregationConfig) {
             Watermark watermark = entityAggregationConfig.getWatermark();
@@ -245,8 +247,8 @@ public class CalculatedFieldCtx implements Closeable {
         }
         boolean requiresScheduledReevaluation = calculatedField.getConfiguration().requiresScheduledReevaluation();
         if (calculatedField.getConfiguration() instanceof AlarmCalculatedFieldConfiguration) {
-            long reevaluationIntervalMillis = TimeUnit.SECONDS.toMillis(systemContext.getAlarmRulesReevaluationInterval());
             if (requiresScheduledReevaluation) {
+                long reevaluationIntervalMillis = TimeUnit.SECONDS.toMillis(systemContext.getAlarmRulesReevaluationInterval());
                 if (now - lastReevaluationTs >= reevaluationIntervalMillis) {
                     lastReevaluationTs = now;
                     return true;
@@ -653,6 +655,9 @@ public class CalculatedFieldCtx implements Closeable {
             var otherConfig = (AlarmCalculatedFieldConfiguration) other.getCalculatedField().getConfiguration();
             if (!thisConfig.rulesEqual(otherConfig, AlarmRule::equals)) {
                 // if the rules have any changes not tracked by hasStateChanges
+                return true;
+            }
+            if (!thisConfig.propagationSettingsEqual(otherConfig)) {
                 return true;
             }
         }

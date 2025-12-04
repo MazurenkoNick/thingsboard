@@ -57,6 +57,7 @@ import org.thingsboard.server.service.edge.rpc.fetch.OAuth2EdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.OtaPackagesEdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.PublicCustomerUserGroupEdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.QueuesEdgeEventFetcher;
+import org.thingsboard.server.service.edge.rpc.fetch.ReportTemplateEdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.RuleChainsEdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.SchedulerEventsEdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.SecretEdgeEventFetcher;
@@ -135,6 +136,10 @@ public class EdgeSyncCursor {
             fetchers.add(new CustomMenuEdgeEventFetcher(ctx.getCustomMenuService()));
             fetchers.add(new EncryptionKeyEdgeEventFetcher(ctx.getEncryptionService()));
             fetchers.add(new SecretEdgeEventFetcher(ctx.getSecretService()));
+            fetchers.add(new ReportTemplateEdgeEventFetcher(ctx.getReportTemplateService(), null));
+            if (EntityType.CUSTOMER.equals(edge.getOwnerId().getEntityType())) {
+                fetchers.add(new ReportTemplateEdgeEventFetcher(ctx.getReportTemplateService(), new CustomerId(edge.getOwnerId().getId())));
+            }
         }
     }
 

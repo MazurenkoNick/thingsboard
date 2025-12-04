@@ -277,6 +277,7 @@ import { ReportTemplateAutocompleteComponent } from '@shared/components/report/r
 import { FormRowDirective } from '@shared/directives/form-row.directive';
 import { TimeUnitInputComponent } from '@shared/components/time-unit-input.component';
 import { DateExpirationPipe } from '@shared/pipe/date-expiration.pipe';
+import { PasswordRequirementsTooltipComponent } from '@shared/components/password-requirements-tooltip.component';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -526,6 +527,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     SecretAutocompleteComponent,
     ReportTemplateAutocompleteComponent,
     TimeUnitInputComponent,
+    PasswordRequirementsTooltipComponent,
   ],
   imports: [
     CommonModule,
@@ -820,6 +822,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     SecretAutocompleteComponent,
     ReportTemplateAutocompleteComponent,
     TimeUnitInputComponent,
+    PasswordRequirementsTooltipComponent,
   ]
 })
 export class SharedModule { }
