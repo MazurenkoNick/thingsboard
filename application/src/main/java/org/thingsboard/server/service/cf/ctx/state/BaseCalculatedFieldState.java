@@ -46,7 +46,7 @@ import static org.thingsboard.server.utils.CalculatedFieldUtils.toSingleValueArg
 @AllArgsConstructor
 public abstract class BaseCalculatedFieldState implements CalculatedFieldState {
 
-    private static final long DEFAULT_LAST_UPDATE_TS = -1L;
+    static final long DEFAULT_LAST_UPDATE_TS = -1L;
 
     protected List<String> requiredArguments;
     protected Map<String, ArgumentEntry> arguments;

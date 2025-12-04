@@ -34,7 +34,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.script.api.tbel.TbelCfArg;
 import org.thingsboard.script.api.tbel.TbelCfSingleValueArg;
@@ -47,8 +46,9 @@ import org.thingsboard.server.common.util.ProtoUtils;
 import org.thingsboard.server.gen.transport.TransportProtos.AttributeValueProto;
 import org.thingsboard.server.gen.transport.TransportProtos.TsKvProto;
 
+import static org.thingsboard.server.service.cf.ctx.state.BaseCalculatedFieldState.DEFAULT_LAST_UPDATE_TS;
+
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public class SingleValueArgumentEntry implements ArgumentEntry {
 
@@ -59,6 +59,11 @@ public class SingleValueArgumentEntry implements ArgumentEntry {
     private Long version;
 
     private boolean forceResetPrevious;
+
+    public SingleValueArgumentEntry() {
+        this.ts = DEFAULT_LAST_UPDATE_TS;
+        this.version = DEFAULT_VERSION;
+    }
 
     public SingleValueArgumentEntry(TsKvProto entry) {
         this.ts = entry.getTs();
