@@ -1,4 +1,5 @@
 {
+  "reprocessingOrder": 2,
   "type": "RELATED_ENTITIES_AGGREGATION",
   "name": "AQI Sensor Aggregation",
   "entityId": {
@@ -70,7 +71,7 @@
         "type": "RULE_CHAIN"
       }
     },
-    "useLatestTs": false,
+    "useLatestTs": true,
     "scheduledUpdateInterval": 60,
     "scheduledUpdateEnabled": true
   }

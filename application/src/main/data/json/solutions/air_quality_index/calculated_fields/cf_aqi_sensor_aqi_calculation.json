@@ -1,4 +1,5 @@
 {
+  "reprocessingOrder": 0,
   "type": "SCRIPT",
   "name": "AQI Calculation",
   "entityId": {
