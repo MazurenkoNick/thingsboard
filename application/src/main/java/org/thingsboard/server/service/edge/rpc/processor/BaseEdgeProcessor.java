@@ -48,6 +48,7 @@ import org.thingsboard.server.common.data.HasCustomerId;
 import org.thingsboard.server.common.data.HasName;
 import org.thingsboard.server.common.data.HasVersion;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.HasOwnerId;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.edge.Edge;
@@ -580,6 +581,42 @@ public abstract class BaseEdgeProcessor implements EdgeProcessor {
 
     protected static String generateRandomAlphabeticString(String prefix) {
         return prefix + "_" + StringUtils.randomAlphabetic(15);
+    }
+
+    protected <T extends HasOwnerId & HasId<? extends EntityId>> void addEntityToEdgeAllGroup(TenantId tenantId, Edge edge, T entity) {
+        if (entity == null) {
+            return;
+        }
+        EntityId entityId = entity.getId();
+        EntityType entityType = entityId.getEntityType();
+        try {
+            EntityType ownerType = entity.getOwnerId().getEntityType();
+            EntityGroup edgeEntityGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), ownerType, entityType).get();
+            if (edgeEntityGroup != null) {
+                edgeCtx.getEntityGroupService().addEntityToEntityGroup(tenantId, edgeEntityGroup.getId(), entityId);
+            }
+        } catch (Exception e) {
+            log.warn("[{}] Can't add entity to edge {} 'All' group, entity id [{}]", tenantId, entityType, entityId, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected <T extends HasOwnerId & HasId<? extends EntityId>> void removeEntityFromEdgeAllGroup(TenantId tenantId, Edge edge, T entity) {
+        if (entity == null) {
+            return;
+        }
+        EntityId entityId = entity.getId();
+        EntityType entityType = entityId.getEntityType();
+        try {
+            EntityType ownerType = entity.getOwnerId().getEntityType();
+            EntityGroup edgeEntityGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), ownerType, entityType).get();
+            if (edgeEntityGroup != null) {
+                edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, edgeEntityGroup.getId(), entityId);
+            }
+        } catch (Exception e) {
+            log.warn("[{}] Can't delete entity from edge {} 'All' group, entity id [{}]", tenantId, entityType, entityId, e);
+            throw new RuntimeException(e);
+        }
     }
 
 }
