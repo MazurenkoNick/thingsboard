@@ -40,7 +40,9 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.trendz.TrendzSettings;
+import org.thingsboard.server.common.data.trendz.TrendzSynchronizationStatus;
 import org.thingsboard.server.common.msg.queue.ServiceType;
+import org.thingsboard.server.dao.trendz.TrendzSettingsService;
 import org.thingsboard.server.dao.trendz.TrendzSyncService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.queue.discovery.PartitionService;
@@ -58,6 +60,7 @@ import java.util.concurrent.Executors;
 public class TrendzStartupSynchronizer {
 
     private final TrendzSyncService trendzSyncService;
+    private final TrendzSettingsService trendzSettingsService;
     private final UserService userService;
     private final PartitionService partitionService;
 
@@ -82,6 +85,10 @@ public class TrendzStartupSynchronizer {
         try {
             PageLink pageLink = new PageLink(1, 0, null, new SortOrder("createdTime", SortOrder.Direction.ASC));
             User sysAdminUser = userService.findSysAdmins(pageLink).getData().get(0);
+            TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+            if (isSyncedUp(trendzSettings)) {
+                return;
+            }
             TrendzSettings result = trendzSyncService.performSync(TenantId.SYS_TENANT_ID, sysAdminUser.getId());
             log.info("Trendz startup synchronization completed. Status: {}, Result: {}",
                     result.synchronizationResult().status(),
@@ -89,6 +96,12 @@ public class TrendzStartupSynchronizer {
         } catch (Exception e) {
             log.error("Error during Trendz startup synchronization", e);
         }
+    }
+
+    private boolean isSyncedUp(TrendzSettings settings) {
+        return settings.synchronizationResult() != null
+                && settings.synchronizationResult().status() != null
+                && settings.synchronizationResult().status() != TrendzSynchronizationStatus.NOT_AVAILABLE;
     }
 
 }

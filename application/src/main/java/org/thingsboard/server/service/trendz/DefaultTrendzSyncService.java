@@ -95,7 +95,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
         TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
 
-        if (!isValidTrendzSettings(trendzSettings)) {
+        if (!isValidTrendzConfiguration(trendzSettings)) {
             trendzSettings = createDefaultTrendzSettings();
         }
 
@@ -403,7 +403,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         return settings;
     }
 
-    private boolean isValidTrendzSettings(TrendzSettings settings) {
+    private boolean isValidTrendzConfiguration(TrendzSettings settings) {
         return settings != null
                 && settings.configuration() != null
                 && settings.configuration().tbUrl() != null
