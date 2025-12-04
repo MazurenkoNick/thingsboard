@@ -157,4 +157,4 @@ CREATE INDEX IF NOT EXISTS idx_ai_model_tenant_id ON ai_model(tenant_id);
 
 CREATE INDEX IF NOT EXISTS idx_report_template_tenant_id ON report_template(tenant_id);
 
-CREATE INDEX IF NOT EXISTS idx_api_key_user_id ON api_key(user_id);
+CREATE INDEX IF NOT EXISTS idx_api_key_tenant_id_user_id ON api_key(tenant_id, user_id);
