@@ -263,7 +263,8 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
 
         return Futures.transform(tsKvListFuture, tsKvList -> {
             log.debug("[{}][{}] Fetched timeseries for latest for query {}: {}", tenantId, entityId, query, tsKvList);
-            TsKvEntry tsKvEntry = tsKvList.isEmpty() || tsKvList.get(0) == null ?
+            boolean noValidEntry = tsKvList.isEmpty() || tsKvList.get(0) == null || tsKvList.get(0).getValue() == null;
+            TsKvEntry tsKvEntry = noValidEntry ?
                     createDefaultTsKvEntry(argument, reprocessingStartTs) :
                     tsKvList.get(0);
             return transformSingleValueArgument(tsKvEntry);

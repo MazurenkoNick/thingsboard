@@ -56,6 +56,8 @@ import java.util.stream.Collectors;
 @Getter
 public abstract class BaseCalculatedFieldState implements CalculatedFieldState, Closeable {
 
+    private static final long DEFAULT_LAST_UPDATE_TS = -1L;
+
     protected final EntityId entityId;
     protected CalculatedFieldCtx ctx;
     protected TbActorRef actorCtx;
@@ -63,7 +65,7 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState, 
 
     protected Map<String, ArgumentEntry> arguments = new HashMap<>();
     protected boolean sizeExceedsLimit;
-    protected long latestTimestamp = -1;
+    protected long latestTimestamp = DEFAULT_LAST_UPDATE_TS;
     protected ReadinessStatus readinessStatus;
 
     @Setter
@@ -177,15 +179,15 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState, 
             newTs = singleValueArgumentEntry.getTs();
         } else if (entry instanceof TsRollingArgumentEntry tsRollingArgumentEntry) {
             Map.Entry<Long, Double> lastEntry = tsRollingArgumentEntry.getTsRecords().lastEntry();
-            newTs = (lastEntry != null) ? lastEntry.getKey() : -1L;
+            newTs = (lastEntry != null) ? lastEntry.getKey() : DEFAULT_LAST_UPDATE_TS;
         } else if (entry instanceof RelatedEntitiesArgumentEntry relatedEntitiesArgumentEntry) {
             newTs = relatedEntitiesArgumentEntry.getEntityInputs().values().stream()
-                    .mapToLong(e -> (e instanceof SingleValueArgumentEntry s) ? s.getTs() : -1L)
+                    .mapToLong(e -> (e instanceof SingleValueArgumentEntry s) ? s.getTs() : DEFAULT_LAST_UPDATE_TS)
                     .max()
-                    .orElse(-1L);
+                    .orElse(DEFAULT_LAST_UPDATE_TS);
         } else if (entry instanceof GeofencingArgumentEntry geofencingArgumentEntry) {
             newTs = geofencingArgumentEntry.getZoneStates().values().stream()
-                    .mapToLong(GeofencingZoneState::getTs).max().orElse(-1L);
+                    .mapToLong(GeofencingZoneState::getTs).max().orElse(DEFAULT_LAST_UPDATE_TS);
         }
         this.latestTimestamp = Math.max(this.latestTimestamp, newTs);
     }
