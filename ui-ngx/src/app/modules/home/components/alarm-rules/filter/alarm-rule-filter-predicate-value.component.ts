@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, DestroyRef, forwardRef, Input, OnInit } from '@angular/core';
+import { Component, DestroyRef, forwardRef, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import {
   ControlValueAccessor,
   FormBuilder,
@@ -46,6 +46,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CalculatedFieldArgument } from "@shared/models/calculated-field.models";
 import { AlarmRuleValue } from "@shared/models/alarm-rule.models";
 import { FormControlsFrom } from "@shared/models/tenant.model";
+import { isDefinedAndNotNull } from "@core/utils";
 
 @Component({
   selector: 'tb-alarm-rule-filter-predicate-value',
@@ -64,7 +65,7 @@ import { FormControlsFrom } from "@shared/models/tenant.model";
     }
   ]
 })
-export class AlarmRuleFilterPredicateValueComponent implements ControlValueAccessor, Validator, OnInit {
+export class AlarmRuleFilterPredicateValueComponent implements ControlValueAccessor, Validator, OnInit, OnChanges {
 
   @Input()
   arguments: Record<string, CalculatedFieldArgument>;
@@ -125,6 +126,20 @@ export class AlarmRuleFilterPredicateValueComponent implements ControlValueAcces
     ).subscribe(value => this.updateValueModeValidators(value));
   }
 
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.argumentInUse) {
+      const argumentInUseChanges = changes.argumentInUse;
+      if (!argumentInUseChanges.firstChange && argumentInUseChanges.currentValue !== argumentInUseChanges.previousValue) {
+        if (this.dynamicModeControl.value) {
+          if (this.argumentInUse === this.filterPredicateValueFormGroup.get('dynamicValueArgument').value) {
+            this.filterPredicateValueFormGroup.get('dynamicValueArgument').setErrors({argumentInUse: true});
+            this.filterPredicateValueFormGroup.updateValueAndValidity();
+          }
+        }
+      }
+    }
+  }
+
   setDisabledState(isDisabled: boolean): void {
     if (isDisabled) {
       this.filterPredicateValueFormGroup.disable({emitEvent: false});
@@ -140,6 +155,12 @@ export class AlarmRuleFilterPredicateValueComponent implements ControlValueAcces
     if (isDynamicMode) {
       this.filterPredicateValueFormGroup.get('staticValue').disable({emitEvent: false});
       this.filterPredicateValueFormGroup.get('dynamicValueArgument').enable();
+      setTimeout(()=> {
+        if (this.filterPredicateValueFormGroup.get('dynamicValueArgument').value && this.argumentInUse === this.filterPredicateValueFormGroup.get('dynamicValueArgument').value) {
+          this.filterPredicateValueFormGroup.get('dynamicValueArgument').setErrors({argumentInUse: true});
+          this.filterPredicateValueFormGroup.updateValueAndValidity();
+        }
+      }, 0);
     } else {
       this.filterPredicateValueFormGroup.get('dynamicValueArgument').disable({emitEvent: false});
       this.filterPredicateValueFormGroup.get('staticValue').enable();
@@ -160,8 +181,14 @@ export class AlarmRuleFilterPredicateValueComponent implements ControlValueAcces
   }
 
   writeValue(predicateValue: AlarmRuleValue<string | number | boolean>): void {
+    if (isDefinedAndNotNull(predicateValue.dynamicValueArgument)) {
+      const availableArgument = this.argumentsList.filter(arg => arg !== this.argumentInUse);
+      if (!availableArgument.includes(predicateValue.dynamicValueArgument)) {
+        predicateValue.dynamicValueArgument = '';
+      }
+      this.dynamicModeControl.patchValue(true, {emitEvent: false});
+    }
     this.filterPredicateValueFormGroup.patchValue(predicateValue, {emitEvent: false});
-    this.dynamicModeControl.patchValue(!!predicateValue.dynamicValueArgument?.length, {emitEvent: false});
   }
 
   private updateModel() {

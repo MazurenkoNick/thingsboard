@@ -41,7 +41,6 @@ import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
-import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
@@ -71,6 +70,9 @@ import org.thingsboard.server.service.telemetry.TbTelemetryService;
 
 import java.util.Collection;
 import java.util.List;
+
+import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getIntervalTs;
+import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getIntervalType;
 
 @RequiredArgsConstructor
 @TbCoreComponent
@@ -138,7 +140,7 @@ public class LocalReportDataService implements ReportDataService {
     @Override
     public List<TsKvEntry> getTimeseries(EntityId entityId, List<String> keys, Long startTs, Long endTs, Interval interval, String timeZone, Aggregation agg, SortOrder.Direction sortOrder,
                                          Integer limit, boolean useStrictDataTypes, TbReportCtx ctx) {
-        return tbTelemetryService.getTimeseries(entityId, keys, startTs, endTs, interval.getIntervalType(), interval.getInterval(), timeZone, limit, agg, sortOrder.name(), useStrictDataTypes, getSecurityUser(ctx)).get(); // .get() will be interrupted on task processing timeout
+        return tbTelemetryService.getTimeseries(entityId, keys, startTs, endTs, getIntervalType(interval), getIntervalTs(interval), timeZone, limit, agg, sortOrder.name(), useStrictDataTypes, getSecurityUser(ctx)).get(); // .get() will be interrupted on task processing timeout
     }
 
     @SneakyThrows

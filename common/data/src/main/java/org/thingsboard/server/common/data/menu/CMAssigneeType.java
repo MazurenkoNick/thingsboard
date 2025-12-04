@@ -32,6 +32,6 @@ package org.thingsboard.server.common.data.menu;
 
 public enum CMAssigneeType {
 
-    NO_ASSIGN, ALL, CUSTOMERS, USERS;
+    NO_ASSIGN, ALL, CUSTOMERS, USERS, USER_GROUPS;
 
 }

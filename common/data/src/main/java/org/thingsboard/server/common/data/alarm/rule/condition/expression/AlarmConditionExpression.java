@@ -47,4 +47,9 @@ public interface AlarmConditionExpression {
     @JsonIgnore
     AlarmConditionExpressionType getType();
 
+    @JsonIgnore
+    default boolean requiresScheduledReevaluation() {
+        return false;
+    }
+
 }

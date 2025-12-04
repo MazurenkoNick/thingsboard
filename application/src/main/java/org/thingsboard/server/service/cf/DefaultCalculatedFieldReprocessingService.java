@@ -43,6 +43,7 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.rule.engine.api.TimeseriesSaveRequest.Strategy;
 import org.thingsboard.server.actors.ActorSystemContext;
 import org.thingsboard.server.cluster.TbClusterService;
+import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
@@ -57,8 +58,9 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.CfReprocessingTask;
 import org.thingsboard.server.common.data.kv.Aggregation;
+import org.thingsboard.server.common.data.kv.AttributeKvEntry;
+import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
 import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
-import org.thingsboard.server.common.data.kv.BasicTsKvEntry;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.util.TbPair;
@@ -96,7 +98,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.createDefaultKvEntry;
+import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.createDefaultAttributeEntry;
+import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.createDefaultTsKvEntry;
 import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.createStateByType;
 import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.transformSingleValueArgument;
 
@@ -224,21 +227,47 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         return state;
     }
 
+    protected List<ListenableFuture<Map.Entry<EntityId, AttributeKvEntry>>> fetchGeofencingEntityIdToKvEntriesFutures(TenantId tenantId, List<EntityId> geofencingEntities, Argument argument, long reprocessingStartTs) {
+        return geofencingEntities.stream()
+                .map(entityId -> {
+                    AttributeScope scope = argument.getRefEntityKey().getScope();
+                    String key = argument.getRefEntityKey().getKey();
+                    var attributesFuture = attributesService.find(tenantId, entityId, scope, key);
+                    return Futures.transform(attributesFuture, resultOpt -> {
+                        AttributeKvEntry attributeKvEntry = resultOpt.isEmpty() ?
+                                createDefaultAttributeEntry(argument, reprocessingStartTs) :
+                                new BaseAttributeKvEntry(resultOpt.get(), reprocessingStartTs, resultOpt.get().getVersion());
+                        return Map.entry(entityId, attributeKvEntry);
+                    }, calculatedFieldCallbackExecutor);
+                }).collect(Collectors.toList());
+    }
+
+    protected ListenableFuture<ArgumentEntry> fetchAttribute(TenantId tenantId, EntityId entityId, Argument argument, long reprocessingStartTs) {
+        log.trace("[{}][{}] Fetching attribute for key {}", tenantId, entityId, argument.getRefEntityKey());
+        var attributeOptFuture = attributesService.find(tenantId, entityId, argument.getRefEntityKey().getScope(), argument.getRefEntityKey().getKey());
+
+        return Futures.transform(attributeOptFuture, attrOpt -> {
+            log.debug("[{}][{}] Fetched attribute for key {}: {}", tenantId, entityId, argument.getRefEntityKey(), attrOpt);
+            AttributeKvEntry attributeKvEntry = attrOpt.isEmpty() ?
+                    createDefaultAttributeEntry(argument, reprocessingStartTs) :
+                    new BaseAttributeKvEntry(attrOpt.get(), reprocessingStartTs, attrOpt.get().getVersion());
+            return transformSingleValueArgument(attributeKvEntry);
+        }, calculatedFieldCallbackExecutor);
+    }
+
     @Override
-    protected ListenableFuture<ArgumentEntry> fetchTsLatest(TenantId tenantId, EntityId entityId, Argument argument, long startTs) {
-        ReadTsKvQuery query = new BaseReadTsKvQuery(argument.getRefEntityKey().getKey(), 0, startTs, 0, 1, Aggregation.NONE);
+    protected ListenableFuture<ArgumentEntry> fetchTsLatest(TenantId tenantId, EntityId entityId, Argument argument, long reprocessingStartTs) {
+        ReadTsKvQuery query = new BaseReadTsKvQuery(argument.getRefEntityKey().getKey(), 0, reprocessingStartTs, 0, 1, Aggregation.NONE);
         log.trace("[{}][{}] Fetching timeseries for latest for query {}", tenantId, entityId, query);
         ListenableFuture<List<TsKvEntry>> tsKvListFuture = timeseriesService.findAll(tenantId, entityId, List.of(query));
 
         return Futures.transform(tsKvListFuture, tsKvList -> {
             log.debug("[{}][{}] Fetched timeseries for latest for query {}: {}", tenantId, entityId, query, tsKvList);
-            TsKvEntry tsKvEntry;
-            if (tsKvList.isEmpty() || tsKvList.get(0) == null || tsKvList.get(0).getValue() == null) {
-                tsKvEntry = new BasicTsKvEntry(startTs, createDefaultKvEntry(argument), SingleValueArgumentEntry.DEFAULT_VERSION);
-            } else {
-                tsKvEntry = tsKvList.get(0);
-            }
-            return transformSingleValueArgument(Optional.of(tsKvEntry));
+            boolean noValidEntry = tsKvList.isEmpty() || tsKvList.get(0) == null || tsKvList.get(0).getValue() == null;
+            TsKvEntry tsKvEntry = noValidEntry ?
+                    createDefaultTsKvEntry(argument, reprocessingStartTs) :
+                    tsKvList.get(0);
+            return transformSingleValueArgument(tsKvEntry);
         }, calculatedFieldCallbackExecutor);
     }
 

@@ -146,8 +146,10 @@ public class CustomMenuController extends BaseController {
                     "There are three default (assignee type: ALL) menus configured on the system level for each scope and if no other menu is configured for user, " +
                     "system configuration of the corresponding scope will be applied." +
                     "If a custom menu with assignee type ALL is configured on the tenant level, it overrides the menu configuration of the corresponding scope on the system level. " +
+                    "If a custom menu with assignee type USER_GROUPS is configured on the tenant level, it overrides default tenant menu." +
                     "If a custom menu with assignee type CUSTOMERS is configured on tenant level for specific customer, it will be applied to all customer users." +
                     "If a custom menu with assignee type ALL is configured on the customer level, it overrides the menu assigned on tenant level." +
+                    "If a custom menu with assignee type USER_GROUPS is configured on the customer level, it overrides default customer menu." +
                     "If a custom menu is assigned to specific user, it overrides all other configuration.")
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
     @GetMapping(value = "/customMenu")
@@ -248,7 +250,7 @@ public class CustomMenuController extends BaseController {
     @PostMapping(value = "/customMenu")
     public CustomMenu createCustomMenu(
             @Parameter(description = "A list of entity ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")))
-            @RequestParam(name = "assignToList", required = false) UUID[] ids,
+            @RequestParam(name = "assignToList", required = false) String[] ids,
             @Parameter(description = "Use force if you want to create default menu that conflicts with the existing one (old one will be update NO_ASSIGN assignee type)")
             @RequestParam(name = "force", required = false) boolean force,
             @Parameter(description = "A JSON value representing the custom menu basic info fields")
@@ -275,11 +277,12 @@ public class CustomMenuController extends BaseController {
                                              @PathVariable("assigneeType") CMAssigneeType assigneeType,
                                              @Parameter(description = "Use force if you want to override default menu")
                                              @RequestParam(name = "force", required = false) boolean force,
-                                             @RequestBody(required = false) UUID[] entityIds) throws ThingsboardException {
+                                             @RequestBody(required = false) String[] assigneeList) throws ThingsboardException {
         CustomMenuId customMenuId = new CustomMenuId(id);
         CustomMenu customMenu = checkCustomMenuId(customMenuId, Operation.WRITE);
-        List<EntityId> assigneeList = getAssigneeList(assigneeType, entityIds);
-        tbCustomMenuService.updateAssigneeList(customMenu, assigneeType, assigneeList, force);
+        List<EntityId> assigneeIds = getAssigneeList(assigneeType, assigneeList);
+        tbCustomMenuService.updateAssigneeList(customMenu, assigneeType, assigneeIds,
+                (assigneeType == CMAssigneeType.USER_GROUPS) ? assigneeList : new String[0], force);
     }
 
     @ApiOperation(value = "Delete custom menu (deleteCustomMenu)",
@@ -303,25 +306,24 @@ public class CustomMenuController extends BaseController {
         return Hashing.sha256().hashString(customMenu, StandardCharsets.UTF_8).toString();
     }
 
-    private List<EntityId> getAssigneeList(CMAssigneeType type, UUID[] ids) throws ThingsboardException {
+    private List<EntityId> getAssigneeList(CMAssigneeType type, String[] ids) throws ThingsboardException {
         List<EntityId> assignToList = new ArrayList<>();
         if (ids == null) {
             return assignToList;
         }
         switch (type) {
-            case NO_ASSIGN:
-            case ALL:
+            case NO_ASSIGN, ALL, USER_GROUPS:
                 break;
             case CUSTOMERS:
-                for (UUID id : ids) {
-                    CustomerId customerId = new CustomerId(id);
+                for (String id : ids) {
+                    CustomerId customerId = new CustomerId(UUID.fromString(id));
                     checkCustomerId(customerId, Operation.WRITE);
                     assignToList.add(customerId);
                 }
                 break;
             case USERS:
-                for (UUID id : ids) {
-                    UserId userId = new UserId(id);
+                for (String id : ids) {
+                    UserId userId = new UserId(UUID.fromString(id));
                     checkUserId(userId, Operation.WRITE);
                     assignToList.add(userId);
                 }

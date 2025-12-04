@@ -69,7 +69,7 @@ import java.util.UUID;
 public class UserEdgeProcessor extends BaseUserProcessor implements UserProcessor {
 
     @Override
-    public ListenableFuture<Void> processUserMsgFromEdge(TenantId tenantId, Edge edge, UserUpdateMsg userUpdateMsg) {
+    public ListenableFuture<Void> processUserMsgFromEdge(TenantId tenantId, Edge edge, UserUpdateMsg userUpdateMsg, EdgeVersion edgeVersion) {
         log.trace("[{}] executing processUserMsgFromEdge [{}] from edge [{}]", tenantId, userUpdateMsg, edge.getId());
         UserId userId = new UserId(new UUID(userUpdateMsg.getIdMSB(), userUpdateMsg.getIdLSB()));
         try {
@@ -81,7 +81,14 @@ public class UserEdgeProcessor extends BaseUserProcessor implements UserProcesso
                     yield Futures.immediateFuture(null);
                 }
                 case ENTITY_DELETED_RPC_MESSAGE -> {
-                    deleteUserAndPushEntityDeletedEventToRuleEngine(tenantId, userId, edge);
+                    if (userUpdateMsg.hasEntityGroupIdMSB() && userUpdateMsg.hasEntityGroupIdLSB()) {
+                        EntityGroupId entityGroupId = new EntityGroupId(
+                                new UUID(userUpdateMsg.getEntityGroupIdMSB(), userUpdateMsg.getEntityGroupIdLSB()));
+                        edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, entityGroupId, userId);
+                        yield Futures.immediateFuture(null);
+                    } else if (edgeVersion.getNumber() >= EdgeVersion.V_4_3_0_VALUE) {
+                        deleteUserAndPushEntityDeletedEventToRuleEngine(tenantId, userId, edge);
+                    }
                     yield Futures.immediateFuture(null);
                 }
                 default -> handleUnsupportedMsgType(userUpdateMsg.getMsgType());
@@ -126,16 +133,8 @@ public class UserEdgeProcessor extends BaseUserProcessor implements UserProcesso
     }
 
     private void addUserToEdgeAllUserGroup(TenantId tenantId, Edge edge, UserId userId) {
-        try {
-            User user = edgeCtx.getUserService().findUserById(tenantId, userId);
-            EntityGroup edgeUserGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), user.getOwnerId().getEntityType(), EntityType.USER).get();
-            if (edgeUserGroup != null) {
-                edgeCtx.getEntityGroupService().addEntityToEntityGroup(tenantId, edgeUserGroup.getId(), userId);
-            }
-        } catch (Exception e) {
-            log.warn("[{}] Can't add user to edge user group, user id [{}]", tenantId, userId, e);
-            throw new RuntimeException(e);
-        }
+        User user = edgeCtx.getUserService().findUserById(tenantId, userId);
+        addEntityToEdgeAllGroup(tenantId, edge, user);
     }
 
     private void pushUserCreatedEventToRuleEngine(TenantId tenantId, Edge edge, UserId userId) {
