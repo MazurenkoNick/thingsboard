@@ -95,10 +95,6 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
         TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
 
-        if (isSyncedUp(trendzSettings)) {
-            return trendzSettings;
-        }
-
         if (!isValidTrendzConfiguration(trendzSettings)) {
             trendzSettings = createDefaultTrendzSettings();
         }
@@ -412,12 +408,6 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
                 && settings.configuration() != null
                 && settings.configuration().tbUrl() != null
                 && settings.configuration().trendzUrl() != null;
-    }
-
-    private boolean isSyncedUp(TrendzSettings settings) {
-        return isValidTrendzConfiguration(settings) && settings.synchronizationResult() != null
-                && settings.synchronizationResult().status() != null
-                && settings.synchronizationResult().status() != TrendzSynchronizationStatus.NOT_AVAILABLE;
     }
 
     private record TrendzInfo(@JsonProperty("version") String version,
