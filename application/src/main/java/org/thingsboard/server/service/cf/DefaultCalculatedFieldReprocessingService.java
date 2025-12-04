@@ -236,7 +236,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
                     return Futures.transform(attributesFuture, resultOpt -> {
                         AttributeKvEntry attributeKvEntry = resultOpt.isEmpty() ?
                                 createDefaultAttributeEntry(argument, reprocessingStartTs) :
-                                new BaseAttributeKvEntry(resultOpt.get(), reprocessingStartTs, SingleValueArgumentEntry.DEFAULT_VERSION);
+                                new BaseAttributeKvEntry(resultOpt.get(), reprocessingStartTs, resultOpt.get().getVersion());
                         return Map.entry(entityId, attributeKvEntry);
                     }, calculatedFieldCallbackExecutor);
                 }).collect(Collectors.toList());
@@ -250,7 +250,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             log.debug("[{}][{}] Fetched attribute for key {}: {}", tenantId, entityId, argument.getRefEntityKey(), attrOpt);
             AttributeKvEntry attributeKvEntry = attrOpt.isEmpty() ?
                     createDefaultAttributeEntry(argument, reprocessingStartTs) :
-                    new BaseAttributeKvEntry(attrOpt.get(), reprocessingStartTs, SingleValueArgumentEntry.DEFAULT_VERSION);
+                    new BaseAttributeKvEntry(attrOpt.get(), reprocessingStartTs, attrOpt.get().getVersion());
             return transformSingleValueArgument(attributeKvEntry);
         }, calculatedFieldCallbackExecutor);
     }

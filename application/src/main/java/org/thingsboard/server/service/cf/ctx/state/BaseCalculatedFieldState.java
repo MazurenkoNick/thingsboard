@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
 @Getter
 public abstract class BaseCalculatedFieldState implements CalculatedFieldState, Closeable {
 
-    private static final long DEFAULT_LAST_UPDATE_TS = -1L;
+    static final long DEFAULT_LAST_UPDATE_TS = -1L;
 
     protected final EntityId entityId;
     protected CalculatedFieldCtx ctx;
@@ -164,7 +164,7 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState, 
             return valuesNode;
         }
         long latestTs = getLatestTimestamp();
-        if (latestTs == -1) {
+        if (latestTs == DEFAULT_LAST_UPDATE_TS) {
             return valuesNode;
         }
         ObjectNode resultNode = JacksonUtil.newObjectNode();
