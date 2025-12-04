@@ -321,7 +321,7 @@ public class DefaultCalculatedFieldReprocessingService implements CalculatedFiel
             log.debug("[{}][{}] Fetched attribute for key {}: {}", tenantId, entityId, argument.getRefEntityKey(), attrOpt);
             AttributeKvEntry attributeKvEntry = attrOpt.isEmpty() ?
                     createDefaultAttributeEntry(argument, reprocessingStartTs) :
-                    new BaseAttributeKvEntry(attrOpt.get(), reprocessingStartTs, SingleValueArgumentEntry.DEFAULT_VERSION);
+                    new BaseAttributeKvEntry(attrOpt.get(), reprocessingStartTs, attrOpt.get().getVersion());
             return transformSingleValueArgument(attributeKvEntry);
         }, calculatedFieldCallbackExecutor);
     }
