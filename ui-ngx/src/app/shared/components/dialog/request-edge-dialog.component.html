@@ -33,7 +33,8 @@
 <div class="request-feature-dialog">
   <div class="request-feature-title">{{ 'subscription.request-edge-title' | translate }}</div>
   <div class="request-feature-text">{{ 'subscription.request-edge-text' | translate }}</div>
-  <div class="request-feature-cards">
+  <div class="request-feature-cards-container">
+    <div class="request-feature-cards">
     <div class="request-feature-card">
       <div class="feature-title">
         <tb-icon color="primary" class="tb-mat-24">battery_charging_full</tb-icon>
@@ -75,6 +76,7 @@
       <div class="feature-text">{{ 'subscription.edge-card-efficiency-text' | translate }}</div>
     </div>
   </div>
+  </div>
   <div class="request-feature-actions">
     <div class="request-feature-action-text">{{ 'subscription.request-edge-action-text' | translate }}</div>
     <div class="flex flex-row gap-2">
@@ -86,5 +88,9 @@
       </button>
     </div>
   </div>
-  <div class="request-feature-sysadmin-prompt" [innerHTML]="('subscription.request-feature-sysadmin-text' | translate) | safe: 'html'"></div>
+  <div class="request-feature-sysadmin-prompt">
+    {{ 'subscription.request-feature-sysadmin-text' | translate }}
+    <a href="" (click)="loginAsSysAdmin($event)"> {{ 'subscription.login-here' | translate }} </a>
+    {{ 'subscription.to-get-addon' | translate }}
+  </div>
 </div>

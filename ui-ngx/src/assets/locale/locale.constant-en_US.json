@@ -12481,7 +12481,9 @@
         "add-license-item-step-second": "Once you login, we will automatically open the corresponding {{ package }} details.",
         "add-license-item-step-third": "Add \"{{ item }}\" to your {{ package }}.",
         "add-license-item-step-fourth": "Once completed, click \"Refresh license info\" below to refresh {{ package }} immediately.",
-        "request-feature-sysadmin-text": "Are you the System Administrator? <a href=\"/login\">Login here</a> to get the add-on.",
+        "request-feature-sysadmin-text": "Are you the System Administrator?",
+        "login-here": "Login here",
+        "to-get-addon": "to get the addon.",
         "request-edge-title": "Keep your sites running even when the network doesn’t",
         "request-edge-text": "Deploy Edge instances to distribute processing and analysis across your infrastructure. Key capabilities:",
         "request-edge-action-text": "Edge Management is available as an add-on. Contact your System Administrator to enable it.",
@@ -12496,7 +12498,9 @@
         "edge-card-security-title": "Security",
         "edge-card-security-text": "Provides a secure buffer between OT devices and the public cloud",
         "edge-card-efficiency-title": "Efficiency",
-        "edge-card-efficiency-text": "Normalizes and aggregates data close to the source, easing cloud workload"
+        "edge-card-efficiency-text": "Normalizes and aggregates data close to the source, easing cloud workload",
+        "edge-request-sent-title": "We have sent an automated request to your System Administrator to enable the Edge Add-on",
+        "edge-request-sent-text": "Please allow some time for them to review the request and update the settings. You may need to refresh this page to see the changes."
     },
     "subscription-error": {
       "title": "Subscription violation",

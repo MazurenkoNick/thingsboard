@@ -35,6 +35,9 @@ import { DialogComponent } from '@shared/components/dialog.component';
 import { AppState } from '@core/core.state';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
+import { AuthService } from '@core/auth/auth.service';
+import { DialogService } from '@core/services/dialog.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'tb-request-edge-dialog',
@@ -46,7 +49,10 @@ export class RequestEdgeDialogComponent extends DialogComponent<RequestEdgeDialo
 
   constructor(protected store: Store<AppState>,
               protected router: Router,
-              public dialogRef: MatDialogRef<RequestEdgeDialogComponent>) {
+              protected dialogRef: MatDialogRef<RequestEdgeDialogComponent>,
+              private authService: AuthService,
+              private dialogs: DialogService,
+              private translate: TranslateService) {
     super(store,  router, dialogRef);
   }
 
@@ -54,12 +60,27 @@ export class RequestEdgeDialogComponent extends DialogComponent<RequestEdgeDialo
     if ($event) {
       $event.stopPropagation();
     }
+    this.dialogs.alert(
+      this.translate.instant('subscription.edge-request-sent-title'),
+      this.translate.instant('subscription.edge-request-sent-text'),
+      this.translate.instant('action.close')
+    );
   }
 
   learnMore($event: Event) {
     if ($event) {
       $event.stopPropagation();
     }
+    window.open('https://thingsboard.io/products/thingsboard-edge/', '_blank');
+  }
+
+  loginAsSysAdmin($event: Event) {
+    if ($event) {
+      $event.preventDefault();
+      $event.stopPropagation();
+    }
+    this.authService.redirectUrl = '/license';
+    this.authService.logout();
   }
 
 }

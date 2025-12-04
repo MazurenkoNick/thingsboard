@@ -29,32 +29,49 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, ElementRef, OnInit, Renderer2 } from '@angular/core';
-import { PageComponent } from '@shared/components/page.component';
-import { MatDialog } from '@angular/material/dialog';
-import { RequestEdgeDialogComponent } from '@shared/components/dialog/request-edge-dialog.component';
-import { DynamicMatDialog } from '@shared/components/dialog/dynamic/dynamic-dialog';
+import {
+  Overlay,
+  ScrollStrategyOptions,
+  OverlayKeyboardDispatcher, OverlayOutsideClickDispatcher, OverlayPositionBuilder
+} from '@angular/cdk/overlay';
+import { ComponentFactoryResolver, Inject, Injectable, Injector, NgZone } from '@angular/core';
+import { DynamicOverlayContainer } from './dynamic-overlay-container';
+import { DOCUMENT, Location } from '@angular/common';
+import { Directionality } from '@angular/cdk/bidi';
 
-@Component({
-  selector: 'tb-request-edge',
-  templateUrl: './request-edge.component.html',
-  styleUrls: ['./request-edge.component.scss']
-})
-export class RequestEdgeComponent extends PageComponent implements OnInit {
+@Injectable()
+export class DynamicOverlay extends Overlay {
 
-  constructor(private dialog: DynamicMatDialog,
-              private elementRef: ElementRef,
-              private renderer: Renderer2) {
-    super();
+  private _dynamicOverlayContainer: DynamicOverlayContainer;
+
+  constructor( scrollStrategies: ScrollStrategyOptions,
+               _overlayContainer: DynamicOverlayContainer,
+               _componentFactoryResolver: ComponentFactoryResolver,
+               _positionBuilder: OverlayPositionBuilder,
+               _keyboardDispatcher: OverlayKeyboardDispatcher,
+               _injector: Injector,
+               _ngZone: NgZone,
+               @Inject(DOCUMENT) document: Document,
+               _directionality: Directionality,
+               _location: Location,
+               _outsideClickDispatcher: OverlayOutsideClickDispatcher) {
+
+    super( scrollStrategies,
+      _overlayContainer,
+      _componentFactoryResolver,
+      _positionBuilder,
+      _keyboardDispatcher,
+      _injector,
+      _ngZone,
+      document,
+      _directionality,
+      _location,
+      _outsideClickDispatcher);
+
+    this._dynamicOverlayContainer = _overlayContainer;
   }
 
-  ngOnInit() {
-    this.dialog.setContainerElement( this.elementRef.nativeElement, this.renderer );
-    this.dialog.open<RequestEdgeDialogComponent>(RequestEdgeDialogComponent,
-      {
-        disableClose: true,
-        panelClass: ['tb-dialog', 'tb-fullscreen-dialog-lt-lg'],
-      });
+  public setContainerElement(containerElement:HTMLElement ): void {
+    this._dynamicOverlayContainer.setContainerElement( containerElement );
   }
-
 }

@@ -29,32 +29,14 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, ElementRef, OnInit, Renderer2 } from '@angular/core';
-import { PageComponent } from '@shared/components/page.component';
-import { MatDialog } from '@angular/material/dialog';
-import { RequestEdgeDialogComponent } from '@shared/components/dialog/request-edge-dialog.component';
-import { DynamicMatDialog } from '@shared/components/dialog/dynamic/dynamic-dialog';
+import { OverlayContainer } from "@angular/cdk/overlay";
+import { Injectable } from "@angular/core";
 
-@Component({
-  selector: 'tb-request-edge',
-  templateUrl: './request-edge.component.html',
-  styleUrls: ['./request-edge.component.scss']
-})
-export class RequestEdgeComponent extends PageComponent implements OnInit {
+@Injectable()
+export class DynamicOverlayContainer extends OverlayContainer {
 
-  constructor(private dialog: DynamicMatDialog,
-              private elementRef: ElementRef,
-              private renderer: Renderer2) {
-    super();
+  public setContainerElement( containerElement:HTMLElement ):void {
+
+    this._containerElement = containerElement;
   }
-
-  ngOnInit() {
-    this.dialog.setContainerElement( this.elementRef.nativeElement, this.renderer );
-    this.dialog.open<RequestEdgeDialogComponent>(RequestEdgeDialogComponent,
-      {
-        disableClose: true,
-        panelClass: ['tb-dialog', 'tb-fullscreen-dialog-lt-lg'],
-      });
-  }
-
 }

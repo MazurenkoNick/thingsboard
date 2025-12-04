@@ -29,32 +29,34 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, ElementRef, OnInit, Renderer2 } from '@angular/core';
-import { PageComponent } from '@shared/components/page.component';
-import { MatDialog } from '@angular/material/dialog';
-import { RequestEdgeDialogComponent } from '@shared/components/dialog/request-edge-dialog.component';
-import { DynamicMatDialog } from '@shared/components/dialog/dynamic/dynamic-dialog';
+import { OverlayModule } from '@angular/cdk/overlay';
+import { NgModule } from '@angular/core';
+import { DEFAULT_DIALOG_CONFIG, DialogConfig, DialogModule } from '@angular/cdk/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
+import { DynamicDialog, DynamicMatDialog } from './dynamic-dialog';
+import { DynamicOverlay } from './dynamic-overlay';
+import { DynamicOverlayContainer } from './dynamic-overlay-container';
 
-@Component({
-  selector: 'tb-request-edge',
-  templateUrl: './request-edge.component.html',
-  styleUrls: ['./request-edge.component.scss']
-})
-export class RequestEdgeComponent extends PageComponent implements OnInit {
-
-  constructor(private dialog: DynamicMatDialog,
-              private elementRef: ElementRef,
-              private renderer: Renderer2) {
-    super();
+export const DYNAMIC_MAT_DIALOG_PROVIDERS = [
+  DynamicOverlayContainer,
+  DynamicOverlay,
+  DynamicDialog,
+  DynamicMatDialog,
+  {
+    provide: DEFAULT_DIALOG_CONFIG,
+    useValue: {
+      ...new DialogConfig()
+    }
   }
+];
 
-  ngOnInit() {
-    this.dialog.setContainerElement( this.elementRef.nativeElement, this.renderer );
-    this.dialog.open<RequestEdgeDialogComponent>(RequestEdgeDialogComponent,
-      {
-        disableClose: true,
-        panelClass: ['tb-dialog', 'tb-fullscreen-dialog-lt-lg'],
-      });
-  }
-
+@NgModule( {
+  imports: [
+    OverlayModule,
+    DialogModule,
+    MatDialogModule
+  ],
+  providers: DYNAMIC_MAT_DIALOG_PROVIDERS
+} )
+export class DynamicMatDialogModule {
 }
