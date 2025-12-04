@@ -1698,6 +1698,17 @@ edges:
     # How often to report edge communication stats in milliseconds
     report-interval-millis: "${EDGES_STATS_REPORT_INTERVAL_MS:600000}"
 
+# Trendz parameters
+trendz:
+  # Enable/disable Trendz synchronization
+  enabled: "${TRENDZ_ENABLED:true}"
+  # Default ThingsBoard URL used for startup synchronization
+  default_tb_url: "${TRENDZ_DEFAULT_TB_URL:}"
+  # Default Trendz URL used for startup synchronization
+  default_trendz_url: "${TRENDZ_DEFAULT_URL:}"
+  # Request timeout in ms
+  request_timeout_ms: "${TRENDZ_REQUEST_TIMEOUT_MS:15000}"
+
 # Spring doc common parameters
 springdoc:
   # If false swagger API docs will be unavailable

@@ -111,11 +111,8 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
         AuthorityPermissionsInfo authorityPermissionsInfo = new AuthorityPermissionsInfo();
         authorityPermissionsInfo.setOperationsByResource(operationsByResource);
 
-        ApiKeyInfo apiKeyInfo = createApiKeyInfo(TEST_API_KEY_DESCRIPTION);
-        apiKeyInfo.setTenantId(TenantId.SYS_TENANT_ID);
-        apiKeyInfo.setInternal(true);
+        ApiKeyInfo apiKeyInfo = createInternalApiKeyInfo(TEST_API_KEY_DESCRIPTION);
         apiKeyInfo.setPermissions(authorityPermissionsInfo);
-        apiKeyInfo.setExpirationTime(0);
 
         ApiKey savedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
 
@@ -140,7 +137,7 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
     }
 
     @Test
-    public void testsaveApiKeyWithMultipleAuthorities() {
+    public void testSaveApiKeyWithMultipleAuthorities() {
         Map<Authority, Map<Resource, Set<Operation>>> operationsByResource = new HashMap<>();
 
         // SYS_ADMIN permissions
@@ -162,9 +159,7 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
         AuthorityPermissionsInfo authorityPermissionsInfo = new AuthorityPermissionsInfo();
         authorityPermissionsInfo.setOperationsByResource(operationsByResource);
 
-        ApiKeyInfo apiKeyInfo = createApiKeyInfo("Multi-authority internal key");
-        apiKeyInfo.setTenantId(TenantId.SYS_TENANT_ID);
-        apiKeyInfo.setInternal(true);
+        ApiKeyInfo apiKeyInfo = createInternalApiKeyInfo("Multi-authority internal key");
         apiKeyInfo.setPermissions(authorityPermissionsInfo);
 
         ApiKey savedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
@@ -229,7 +224,7 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
     }
 
     @Test
-    public void testUpdateDescriptionInternalApiKey() {
+    public void testUpdateDescriptionInternalApiKey_shouldFail() {
         Map<Resource, Set<Operation>> permissions = new HashMap<>();
         permissions.put(Resource.DEVICE, Set.of(Operation.READ));
         Map<Authority, Map<Resource, Set<Operation>>> operationsByResource = new HashMap<>();
@@ -238,23 +233,18 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
         AuthorityPermissionsInfo authorityPermissionsInfo = new AuthorityPermissionsInfo();
         authorityPermissionsInfo.setOperationsByResource(operationsByResource);
 
-        ApiKeyInfo apiKeyInfo = createApiKeyInfo(TEST_API_KEY_DESCRIPTION);
-        apiKeyInfo.setTenantId(TenantId.SYS_TENANT_ID);
-        apiKeyInfo.setInternal(true);
+        ApiKeyInfo apiKeyInfo = createInternalApiKeyInfo(TEST_API_KEY_DESCRIPTION);
         apiKeyInfo.setPermissions(authorityPermissionsInfo);
 
         ApiKey savedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
         Assert.assertTrue(savedApiKey.isInternal());
 
-        String description = "Updated internal key description";
-        savedApiKey.setDescription(description);
-        ApiKey updatedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, savedApiKey);
+        String newDescription = "Updated internal key description";
+        savedApiKey.setDescription(newDescription);
 
-        Assert.assertNotNull(updatedApiKey);
-        Assert.assertEquals(savedApiKey.getId(), updatedApiKey.getId());
-        Assert.assertEquals(description, updatedApiKey.getDescription());
-        Assert.assertTrue(updatedApiKey.isInternal());
-        Assert.assertEquals(savedApiKey.getValue(), updatedApiKey.getValue());
+        assertThatThrownBy(() -> apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, savedApiKey))
+                .isInstanceOf(DataValidationException.class)
+                .hasMessageContaining("Cannot update internal API key description!");
     }
 
     @Test
@@ -296,6 +286,42 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
         Assert.assertEquals(savedApiKey.getDescription(), foundApiKey.getDescription());
         Assert.assertEquals(savedApiKey.isEnabled(), foundApiKey.isEnabled());
         Assert.assertEquals(savedApiKey.getValue(), foundApiKey.getValue());
+    }
+
+    @Test
+    public void testFindInternalApiKeyByDescription() {
+        String uniqueDescription = "Unique API Key Description for Search";
+        ApiKeyInfo apiKeyInfo = createInternalApiKeyInfo(uniqueDescription);
+        ApiKey savedApiKey = apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
+
+        ApiKey foundApiKey = apiKeyService.findInternalApiKeyByDescription(TenantId.SYS_TENANT_ID, uniqueDescription);
+
+        Assert.assertNotNull(foundApiKey);
+        Assert.assertEquals(savedApiKey.getId(), foundApiKey.getId());
+        Assert.assertEquals(uniqueDescription, foundApiKey.getDescription());
+        Assert.assertEquals(savedApiKey.isEnabled(), foundApiKey.isEnabled());
+        Assert.assertEquals(savedApiKey.getValue(), foundApiKey.getValue());
+    }
+
+    @Test
+    public void testFindInternalApiKeyByDescription_whenTwoSameDescriptionExists_thenReturnFirst() {
+        String uniqueDescription = "Unique API Key Description for Search";
+
+        ApiKeyInfo apiKeyInfo = createInternalApiKeyInfo(uniqueDescription);
+        apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo);
+
+        ApiKeyInfo apiKeyInfo2 = createInternalApiKeyInfo(uniqueDescription);
+        apiKeyService.saveApiKey(TenantId.SYS_TENANT_ID, apiKeyInfo2);
+
+        ApiKey foundApiKey = apiKeyService.findInternalApiKeyByDescription(TenantId.SYS_TENANT_ID, uniqueDescription);
+
+        Assert.assertNotNull(foundApiKey);
+    }
+
+    @Test
+    public void testFindInternalApiKeyByDescription_notFound() {
+        ApiKey foundApiKey = apiKeyService.findInternalApiKeyByDescription(tenantId, "Non-existent description");
+        Assert.assertNull(foundApiKey);
     }
 
     @Test
@@ -412,6 +438,16 @@ public class ApiKeyServiceTest extends AbstractServiceTest {
         apiKeyService.deleteApiKey(TenantId.SYS_TENANT_ID, savedApiKey, true);
         foundKey = apiKeyService.findApiKeyById(TenantId.SYS_TENANT_ID, savedApiKey.getId());
         Assert.assertNull(foundKey);
+    }
+
+    private ApiKeyInfo createInternalApiKeyInfo(String description) {
+        ApiKeyInfo apiKeyInfo = new ApiKeyInfo();
+        apiKeyInfo.setTenantId(TenantId.SYS_TENANT_ID);
+        apiKeyInfo.setUserId(userId);
+        apiKeyInfo.setDescription(description);
+        apiKeyInfo.setEnabled(true);
+        apiKeyInfo.setInternal(true);
+        return apiKeyInfo;
     }
 
     private ApiKeyInfo createApiKeyInfo(String description) {

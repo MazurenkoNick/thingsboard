@@ -28,48 +28,37 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.sql.pat;
+package org.thingsboard.server.common.data.trendz;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.transaction.annotation.Transactional;
-import org.thingsboard.server.dao.model.sql.ApiKeyEntity;
+import lombok.Getter;
 
-import java.util.Set;
-import java.util.UUID;
+@Getter
+public enum TrendzSynchronizationResultType {
 
-public interface ApiKeyRepository extends JpaRepository<ApiKeyEntity, UUID> {
+    SYNC_NOT_INITIALIZED("Trendz synchronization is not initialized."),
 
-    ApiKeyEntity findByValue(String value);
+    SYNC_COMPLETED("Synchronization completed successfully."),
 
-    ApiKeyEntity findFirstByTenantIdAndDescriptionAndInternal(UUID tenantId, String description, boolean internal);
+    SYNC_DISABLED("Synchronization is disabled by Trendz configuration."),
 
-    @Transactional
-    @Modifying
-    @Query(value = """
-                DELETE FROM api_key
-                WHERE tenant_id = :tenantId
-                RETURNING value
-            """, nativeQuery = true
-    )
-    Set<String> deleteByTenantId(@Param("tenantId") UUID tenantId);
+    TRENDZ_UNSUPPORTED_VERSION("Trendz version is not supported."),
 
-    @Transactional
-    @Modifying
-    @Query(value = """
-                DELETE FROM api_key
-                WHERE tenant_id = :tenantId AND user_id = :userId
-                RETURNING value
-            """, nativeQuery = true
-    )
-    Set<String> deleteByUserId(@Param("tenantId") UUID tenantId,
-                               @Param("userId") UUID userId);
+    TRENDZ_AUTH_INVALID("Trendz authentication failed. Invalid or missing Trendz API key."),
 
-    @Transactional
-    @Modifying
-    @Query("DELETE FROM ApiKeyEntity ak WHERE ak.expirationTime > 0 AND ak.expirationTime < :ts")
-    int deleteAllByExpirationTimeBefore(@Param("ts") long ts);
+    TRENDZ_URL_UNREACHABLE("Provided Trendz URL is not reachable."),
+
+    TB_URL_MISMATCH("Provided ThingsBoard URL does not match the one stored in ThingsBoard."),
+
+    TB_URL_UNREACHABLE("ThingsBoard URL is not reachable."),
+
+    TB_AUTH_INVALID("ThingsBoard authentication failed. Invalid API key."),
+
+    SYNC_INTERNAL_ERROR("Unexpected internal synchronization error.");
+
+    private final String message;
+
+    TrendzSynchronizationResultType(String message) {
+        this.message = message;
+    }
 
 }
