@@ -35,9 +35,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.EntityView;
-import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.edge.Edge;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityViewId;
@@ -70,24 +69,18 @@ public abstract class BaseEntityViewProcessor extends BaseEdgeProcessor {
             entityView.setId(entityViewId);
             changeOwnerIfRequired(tenantId, entityViewById.getCustomerId(), entityViewId);
         }
-        String entityViewName = entityView.getName();
-        EntityView entityViewByName = edgeCtx.getEntityViewService().findEntityViewByTenantIdAndName(tenantId, entityViewName);
-        if (entityViewByName != null && !entityViewByName.getId().equals(entityViewId)) {
-            entityViewName = entityViewName + "_" + StringUtils.randomAlphanumeric(15);
-            log.warn("[{}] Entity view with name {} already exists. Renaming entity view name to {}",
-                    tenantId, entityView.getName(), entityViewName);
-            entityViewNameUpdated = true;
-        }
-        entityView.setName(entityViewName);
-        setCustomerId(tenantId, created ? null : entityViewById.getCustomerId(), entityView, entityViewUpdateMsg);
+        if (isSaveRequired(entityViewById, entityView)) {
+            entityViewNameUpdated = updateEntityViewNameIfDuplicateExists(tenantId, entityViewId, entityView);
+            setCustomerId(tenantId, created ? null : entityViewById.getCustomerId(), entityView, entityViewUpdateMsg);
 
-        entityViewValidator.validate(entityView, EntityView::getTenantId);
-        if (created) {
-            entityView.setId(entityViewId);
-        }
-        EntityView savedEntityView = edgeCtx.getEntityViewService().saveEntityView(entityView, false);
-        if (created) {
-            edgeCtx.getEntityGroupService().addEntityToEntityGroupAll(savedEntityView.getTenantId(), savedEntityView.getOwnerId(), savedEntityView.getId());
+            entityViewValidator.validate(entityView, EntityView::getTenantId);
+            if (created) {
+                entityView.setId(entityViewId);
+            }
+            EntityView savedEntityView = edgeCtx.getEntityViewService().saveEntityView(entityView, false);
+            if (created) {
+                edgeCtx.getEntityGroupService().addEntityToEntityGroupAll(savedEntityView.getTenantId(), savedEntityView.getOwnerId(), savedEntityView.getId());
+            }
         }
         safeAddToEntityGroup(tenantId, entityViewUpdateMsg, entityViewId);
         return Pair.of(created, entityViewNameUpdated);
@@ -99,6 +92,15 @@ public abstract class BaseEntityViewProcessor extends BaseEdgeProcessor {
                     entityViewUpdateMsg.getEntityGroupIdLSB());
             safeAddEntityToGroup(tenantId, new EntityGroupId(entityGroupUUID), entityViewId);
         }
+    }
+
+    private boolean updateEntityViewNameIfDuplicateExists(TenantId tenantId, EntityViewId entityViewId, EntityView entityView) {
+        EntityView entityViewByName = edgeCtx.getEntityViewService().findEntityViewByTenantIdAndName(tenantId, entityView.getName());
+
+        return generateUniqueNameIfDuplicateExists(tenantId, entityViewId, entityView, entityViewByName).map(uniqueName -> {
+            entityView.setName(uniqueName);
+            return true;
+        }).orElse(false);
     }
 
     protected abstract void setCustomerId(TenantId tenantId, CustomerId customerId, EntityView entityView, EntityViewUpdateMsg entityViewUpdateMsg);

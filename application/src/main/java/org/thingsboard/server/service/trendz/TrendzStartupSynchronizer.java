@@ -101,7 +101,8 @@ public class TrendzStartupSynchronizer {
     }
 
     private boolean isSyncedUp(TrendzSettings settings) {
-        return settings.synchronizationResult() != null
+        return settings != null
+                && settings.synchronizationResult() != null
                 && settings.synchronizationResult().status() != null
                 && settings.synchronizationResult().status() != TrendzSynchronizationStatus.NOT_AVAILABLE;
     }
