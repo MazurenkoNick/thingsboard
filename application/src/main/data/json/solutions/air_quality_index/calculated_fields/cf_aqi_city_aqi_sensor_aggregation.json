@@ -40,7 +40,7 @@
         "defaultValue": "0"
       }
     },
-    "deduplicationIntervalInSec": 60,
+    "deduplicationIntervalInSec": 10,
     "metrics": {
       "aqi": {
         "function": "AVG",
