@@ -11397,24 +11397,21 @@
                                     "type": "timeseries",
                                     "label": "reportApiState",
                                     "color": "#2196f3",
-                                    "settings": {},
-                                    "_hash": 0.9377762728656746
+                                    "settings": {}
                                 },
                                 "maxLimit": {
                                     "name": "generatedReportsLimit",
                                     "type": "timeseries",
                                     "label": "generatedReportsLimit",
                                     "color": "#2196f3",
-                                    "settings": {},
-                                    "_hash": 0.3122928805211692
+                                    "settings": {}
                                 },
                                 "current": {
                                     "name": "generatedReportsCount",
                                     "type": "timeseries",
                                     "label": "generatedReportsCount",
                                     "color": "#2196f3",
-                                    "settings": {},
-                                    "_hash": 0.7228025230174345
+                                    "settings": {}
                                 }
                             },
                             {
@@ -11573,7 +11570,6 @@
                                         "type": "bar",
                                         "yAxisId": "default"
                                     },
-                                    "_hash": 0.0661644137210089,
                                     "units": null,
                                     "decimals": null,
                                     "funcBody": null,
@@ -11947,7 +11943,6 @@
                                         "type": "bar",
                                         "yAxisId": "default"
                                     },
-                                    "_hash": 0.0661644137210089,
                                     "units": null,
                                     "decimals": null,
                                     "funcBody": null,
@@ -12311,7 +12306,6 @@
                                         "type": "bar",
                                         "yAxisId": "default"
                                     },
-                                    "_hash": 0.0661644137210089,
                                     "units": null,
                                     "decimals": null,
                                     "funcBody": null,

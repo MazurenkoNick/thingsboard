@@ -322,7 +322,6 @@ export class UtilsService {
         .reduce((previousValue, currentValue) => previousValue + currentValue, 0);
       additionalDataKey.color = this.getMaterialColor(index + additionalKeysNumber);
     }
-    additionalDataKey._hash = Math.random();
     return additionalDataKey;
   }*/
 
