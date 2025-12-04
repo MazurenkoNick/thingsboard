@@ -493,7 +493,7 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
     if (this.subscription.alarmSource) {
       this.subscription.alarmSource.dataKeys.forEach((alarmDataKey) => {
         const dataKey: EntityColumn = deepClone(alarmDataKey) as EntityColumn;
-        const keySettings: TableWidgetDataKeySettings = dataKey.settings;
+        const keySettings: TableWidgetDataKeySettings = dataKey.settings ?? {};
         dataKey.entityKey = dataKeyToEntityKey(alarmDataKey);
         dataKey.label = this.utils.customTranslation(dataKey.label, dataKey.label);
         dataKey.title = getHeaderTitle(dataKey, keySettings, this.utils);
