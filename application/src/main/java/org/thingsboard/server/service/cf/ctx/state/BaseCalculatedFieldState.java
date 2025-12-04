@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
 @Getter
 public abstract class BaseCalculatedFieldState implements CalculatedFieldState, Closeable {
 
-    static final long DEFAULT_LAST_UPDATE_TS = -1L;
+    protected static final long DEFAULT_LAST_UPDATE_TS = -1L;
 
     protected final EntityId entityId;
     protected CalculatedFieldCtx ctx;
@@ -136,7 +136,7 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState, 
         requiredArguments = null;
         arguments.clear();
         sizeExceedsLimit = false;
-        latestTimestamp = -1;
+        latestTimestamp = DEFAULT_LAST_UPDATE_TS;
     }
 
     @Override

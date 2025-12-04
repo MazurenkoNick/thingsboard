@@ -66,6 +66,7 @@ public abstract class BaseDashboardProcessor extends BaseEdgeProcessor {
             dashboard.setId(dashboardId);
             changeOwnerIfRequired(tenantId, null, dashboardId);
         }
+
         if (isSaveRequired(dashboardById, dashboard)) {
             dashboardValidator.validate(dashboard, Dashboard::getTenantId);
             if (created) {
@@ -99,4 +100,5 @@ public abstract class BaseDashboardProcessor extends BaseEdgeProcessor {
             pushEntityEventToRuleEngine(tenantId, edge, dashboardById, TbMsgType.ENTITY_DELETED);
         }
     }
+
 }
