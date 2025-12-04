@@ -99,7 +99,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
             return trendzSettings;
         }
 
-        if (!isValidTrendzSettings(trendzSettings)) {
+        if (!isValidTrendzConfiguration(trendzSettings)) {
             trendzSettings = createDefaultTrendzSettings();
         }
 
@@ -407,7 +407,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         return settings;
     }
 
-    private boolean isValidTrendzSettings(TrendzSettings settings) {
+    private boolean isValidTrendzConfiguration(TrendzSettings settings) {
         return settings != null
                 && settings.configuration() != null
                 && settings.configuration().tbUrl() != null
@@ -415,7 +415,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
     }
 
     private boolean isSyncedUp(TrendzSettings settings) {
-        return isValidTrendzSettings(settings) && settings.synchronizationResult() != null
+        return isValidTrendzConfiguration(settings) && settings.synchronizationResult() != null
                 && settings.synchronizationResult().status() != null
                 && settings.synchronizationResult().status() != TrendzSynchronizationStatus.NOT_AVAILABLE;
     }
