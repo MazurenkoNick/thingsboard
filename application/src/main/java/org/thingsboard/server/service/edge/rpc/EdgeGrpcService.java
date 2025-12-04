@@ -721,7 +721,6 @@ public class EdgeGrpcService extends EdgeRpcServiceGrpc.EdgeRpcServiceImplBase i
                    !kafkaSession.getConsumer().getConsumer().isStopped();
         }
         return false;
-
     }
 
 }
