@@ -51,9 +51,7 @@ import org.thingsboard.server.common.data.id.CalculatedFieldId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.kv.Aggregation;
-import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
 import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
-import org.thingsboard.server.common.data.kv.BasicTsKvEntry;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.msg.TbMsgType;
@@ -87,13 +85,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.DataConstants.SCOPE;
-import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.createDefaultKvEntry;
+import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.createDefaultAttributeEntry;
+import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.createDefaultTsKvEntry;
 import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.createStateByType;
 import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.transformSingleValueArgument;
 import static org.thingsboard.server.utils.CalculatedFieldUtils.toProto;
@@ -268,18 +266,14 @@ public class DefaultCalculatedFieldProcessingService implements CalculatedFieldP
     private ListenableFuture<ArgumentEntry> fetchKvEntry(TenantId tenantId, EntityId entityId, Argument argument) {
         return switch (argument.getRefEntityKey().getType()) {
             case TS_ROLLING -> fetchTsRolling(tenantId, entityId, argument);
-            case ATTRIBUTE -> transformSingleValueArgument(
-                    Futures.transform(
-                            attributesService.find(tenantId, entityId, argument.getRefEntityKey().getScope(), argument.getRefEntityKey().getKey()),
-                            result -> result.or(() -> Optional.of(new BaseAttributeKvEntry(createDefaultKvEntry(argument), System.currentTimeMillis(), 0L))),
-                            calculatedFieldCallbackExecutor)
-                    , calculatedFieldCallbackExecutor);
-            case TS_LATEST -> transformSingleValueArgument(
-                    Futures.transform(
-                            timeseriesService.findLatest(tenantId, entityId, argument.getRefEntityKey().getKey()),
-                            result -> result.or(() -> Optional.of(new BasicTsKvEntry(System.currentTimeMillis(), createDefaultKvEntry(argument), 0L))),
-                            calculatedFieldCallbackExecutor)
-                    , calculatedFieldCallbackExecutor);
+            case ATTRIBUTE -> Futures.transform(
+                    attributesService.find(tenantId, entityId, argument.getRefEntityKey().getScope(), argument.getRefEntityKey().getKey()),
+                    result -> transformSingleValueArgument(result.orElseGet(() -> createDefaultAttributeEntry(argument, System.currentTimeMillis()))),
+                    calculatedFieldCallbackExecutor);
+            case TS_LATEST -> Futures.transform(
+                    timeseriesService.findLatest(tenantId, entityId, argument.getRefEntityKey().getKey()),
+                    result -> transformSingleValueArgument(result.orElseGet(() -> createDefaultTsKvEntry(argument, System.currentTimeMillis()))),
+                    calculatedFieldCallbackExecutor);
         };
     }
 
