@@ -49,6 +49,7 @@ import {
   alarmRuleNumericOperationTranslationMap,
   AlarmRuleStringOperation,
   alarmRuleStringOperationTranslationMap,
+  checkPredicates,
   ComplexAlarmRuleFilterPredicate
 } from "@shared/models/alarm-rule.models";
 import { MatDialog } from "@angular/material/dialog";
@@ -126,6 +127,18 @@ export class AlarmRuleFilterPredicateComponent implements ControlValueAccessor, 
       this.updateModel();
     });
 
+    this.filterPredicateFormGroup.get('operation').valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(value => {
+      if (value === 'NO_DATA') {
+        this.filterPredicateFormGroup.get('duration').enable({emitEvent: false});
+        this.filterPredicateFormGroup.get('value').disable({emitEvent: false});
+      } else {
+        this.filterPredicateFormGroup.get('duration').disable({emitEvent: false});
+        this.filterPredicateFormGroup.get('value').enable({emitEvent: false});
+      }
+    })
+
     this.filterPredicateFormGroup.get('predicates').valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(predicates => {
@@ -155,25 +168,10 @@ export class AlarmRuleFilterPredicateComponent implements ControlValueAccessor, 
     }
   }
 
-  private isPredicateArgumentsValid(predicates: any): boolean {
+  private isPredicateArgumentsValid(predicates: AlarmRuleFilterPredicate[]): boolean {
     const validSet = new Set(Object.keys(this.arguments));
-    function checkPredicates(predicates: any[]): boolean {
-      for (const p of predicates) {
-        if (p.value?.dynamicValueArgument) {
-          if (!validSet.has(p.value.dynamicValueArgument)) {
-            return false;
-          }
-        }
-        if (p.type === 'COMPLEX' && Array.isArray(p.predicates)) {
-          if (!checkPredicates(p.predicates)) {
-            return false;
-          }
-        }
-      }
-      return true;
-    }
     if (Array.isArray(predicates)) {
-      if (!checkPredicates(predicates)) {
+      if (!checkPredicates(predicates, validSet)) {
         return false;
       }
     }
@@ -187,8 +185,12 @@ export class AlarmRuleFilterPredicateComponent implements ControlValueAccessor, 
     }
     if (predicate.type === AlarmRuleFilterPredicateType.NO_DATA) {
       this.type = AlarmRuleFilterPredicateType[this.valueType];
+      this.filterPredicateFormGroup.get('duration').enable({emitEvent: false});
+      this.filterPredicateFormGroup.get('value').disable({emitEvent: false});
       this.filterPredicateFormGroup.patchValue({operation: 'NO_DATA', duration: predicate}, {emitEvent: false});
     } else {
+      this.filterPredicateFormGroup.get('duration').disable({emitEvent: false});
+      this.filterPredicateFormGroup.get('value').enable({emitEvent: false});
       this.filterPredicateFormGroup.patchValue(predicate, {emitEvent: false});
     }
   }
@@ -198,30 +200,6 @@ export class AlarmRuleFilterPredicateComponent implements ControlValueAccessor, 
     if (predicate.operation === 'NO_DATA') {
       this.propagateChange(predicate.duration);
     } else {
-      if (!predicate.value) {
-        switch (this.valueType) {
-          case EntityKeyValueType.STRING:
-            predicate.value = {
-              staticValue: ''
-            };
-            break;
-          case EntityKeyValueType.NUMERIC:
-            predicate.value = {
-              staticValue: 0
-            };
-            break;
-          case EntityKeyValueType.DATE_TIME:
-            predicate.value = {
-              staticValue: Date.now()
-            };
-            break;
-          case EntityKeyValueType.BOOLEAN:
-            predicate.value = {
-              staticValue: false
-            };
-            break;
-        }
-      }
       this.propagateChange({type: this.type, ...predicate});
     }
   }
