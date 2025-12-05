@@ -119,19 +119,23 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
     public static final int TIMEOUT = 60;
     public static final int POLL_INTERVAL = 1;
 
-    private final String exampleScript =
-            "var avgTemperature = temperature.mean(); // Get average temperature\n" +
-            "  var temperatureK = (avgTemperature - 32) * (5 / 9) + 273.15; // Convert Fahrenheit to Kelvin\n" +
-            "\n" +
-            "  // Estimate air pressure based on altitude\n" +
-            "  var pressure = 101325 * Math.pow((1 - 2.25577e-5 * altitude), 5.25588);\n" +
-            "\n" +
-            "  // Air density formula\n" +
-            "  var airDensity = pressure / (287.05 * temperatureK);\n" +
-            "\n" +
-            "  return {\n" +
-            "    \"airDensity\": toFixed(airDensity, 2)\n" +
-            "  };";
+    private final String exampleScript = """
+        var avgTemperature = temperature.mean(); // Get average temperature
+        var temperatureK = (avgTemperature - 32) * (5 / 9) + 273.15; // Convert Fahrenheit to Kelvin
+        
+        // Estimate air pressure based on altitude
+        var pressure = 101325 * Math.pow((1 - 2.25577e-5 * altitude), 5.25588);
+        
+        // Air density formula
+        var airDensity = pressure / (287.05 * temperatureK);
+        
+        return {
+          ts: ctx.latestTs,
+          values: {
+              "airDensity": toFixed(airDensity, 2)
+          }
+        };
+        """;
 
     @SpyBean
     private TimeseriesService timeseriesService;
