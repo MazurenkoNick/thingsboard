@@ -190,6 +190,20 @@ $enabled-color: #198038;
             padding-right: 0;
           }
         }
+        &.critical {
+          .label {
+            color: #D12730;
+          }
+          .usage-row {
+            .mat-mdc-progress-bar {
+              --mdc-linear-progress-track-color: rgba(209, 39, 48, 0.06);
+              --mdc-linear-progress-active-indicator-color: #D12730;
+            }
+            .value {
+              color: #D12730;
+            }
+          }
+        }
       }
     }
     .label {

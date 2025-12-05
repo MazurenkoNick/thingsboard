@@ -115,6 +115,14 @@ export class LicenseManagementComponent extends PageComponent implements OnInit 
     this.addLicenseItem(this.translate.instant('subscription.trendz'), false, { trendzEnabled: true });
   }
 
+  isItemCritical(value: number, max: number): boolean {
+    if (max && value) {
+      return (value / max) >= 0.85;
+    } else {
+      return false;
+    }
+  }
+
   private addLicenseItem(itemName: string, add: boolean, items: any) {
     this.dialog.open<AddLicenseItemDialogComponent, AddLicenseItemDialogData, boolean>(AddLicenseItemDialogComponent,
       {

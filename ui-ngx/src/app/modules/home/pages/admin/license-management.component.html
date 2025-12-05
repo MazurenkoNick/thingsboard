@@ -107,7 +107,7 @@
         {{ 'subscription.license-details' | translate }}
       </div>
       <div class="subscription items">
-        <div class="item-row column-xs">
+        <div class="item-row column-xs" [class.critical]="isItemCritical(subscriptionInfo.devicesCount, subscriptionInfo.maxDevices)">
           <div class="label" translate>subscription.devices</div>
           <div class="usage-row">
             <mat-progress-bar [value]="(subscriptionInfo.devicesCount / subscriptionInfo.maxDevices) * 100"></mat-progress-bar>
@@ -151,7 +151,7 @@
             }
           </div>
           @if (subscriptionInfo.edgeEnabled) {
-            <div class="item-row">
+            <div class="item-row column-xs" [class.critical]="isItemCritical(subscriptionInfo.edgesCount, subscriptionInfo.maxEdges)">
               <div class="label" translate>subscription.edges</div>
               <div class="usage-row">
                 <mat-progress-bar [value]="(subscriptionInfo.edgesCount / subscriptionInfo.maxEdges) * 100"></mat-progress-bar>
