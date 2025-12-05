@@ -39,6 +39,7 @@ public class LicenseUsageInfo extends LicenseInfo {
 
     private long devicesCount;
     private long assetsCount;
+    private long edgesCount;
     private long dashboardsCount;
     private long integrationsCount;
 

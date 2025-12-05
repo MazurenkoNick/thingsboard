@@ -36,6 +36,7 @@ import lombok.Data;
 public class LicenseInfo {
     private long maxDevices;
     private long maxAssets;
+    private long maxEdges;
     private boolean whiteLabelingEnabled;
     private boolean development;
     private String plan;
@@ -45,6 +46,7 @@ public class LicenseInfo {
     public LicenseInfo(LicenseInfo licenseInfo) {
         this.maxDevices = licenseInfo.getMaxDevices();
         this.maxAssets = licenseInfo.getMaxAssets();
+        this.maxEdges = licenseInfo.getMaxEdges();
         this.whiteLabelingEnabled = licenseInfo.isWhiteLabelingEnabled();
         this.development = licenseInfo.isDevelopment();
         this.plan = licenseInfo.getPlan();

@@ -185,21 +185,21 @@
         [required]="true"
         [entityType]="entityType.EDGE">
       </tb-entity-subtype-autocomplete>
-      <div *ngIf="(resource.EDGE | hasGenericPermission: operation.CREATE) || (resource.EDGE | hasGenericPermission: operation.WRITE)">
-        <div class="tb-hint" [innerHTML]="'edge.edge-license-key-hint' | translate"></div>
-        <mat-form-field class="mat-block">
-          <mat-label translate>edge.edge-license-key</mat-label>
-          <input matInput type="password" formControlName="edgeLicenseKey" required autocomplete="new-password">
-          <tb-toggle-password matSuffix [class.!hidden]="entityForm.get('edgeLicenseKey').disabled"></tb-toggle-password>
-          <mat-error *ngIf="entityForm.get('edgeLicenseKey').hasError('required')">
-            {{ 'edge.edge-license-key-required' | translate }}
-          </mat-error>
-          <mat-error *ngIf="entityForm.get('edgeLicenseKey').hasError('maxlength')">
-            {{ 'edge.edge-license-key-max-length' | translate }}
-          </mat-error>
-        </mat-form-field>
-      </div>
-      <div>
+      @if (licenseVersion < 2) {
+        @if ((resource.EDGE | hasGenericPermission: operation.CREATE) || (resource.EDGE | hasGenericPermission: operation.WRITE)) {
+          <div class="tb-hint" [innerHTML]="'edge.edge-license-key-hint' | translate"></div>
+          <mat-form-field class="mat-block">
+            <mat-label translate>edge.edge-license-key</mat-label>
+            <input matInput type="password" formControlName="edgeLicenseKey" required autocomplete="new-password">
+            <tb-toggle-password matSuffix [class.!hidden]="entityForm.get('edgeLicenseKey').disabled"></tb-toggle-password>
+            <mat-error *ngIf="entityForm.get('edgeLicenseKey').hasError('required')">
+              {{ 'edge.edge-license-key-required' | translate }}
+            </mat-error>
+            <mat-error *ngIf="entityForm.get('edgeLicenseKey').hasError('maxlength')">
+              {{ 'edge.edge-license-key-max-length' | translate }}
+            </mat-error>
+          </mat-form-field>
+        }
         <div translate class="tb-hint">edge.cloud-endpoint-hint</div>
         <mat-form-field class="mat-block">
           <mat-label translate>edge.cloud-endpoint</mat-label>
@@ -211,7 +211,7 @@
             {{ 'edge.cloud-endpoint-max-length' | translate }}
           </mat-error>
         </mat-form-field>
-      </div>
+      }
     </fieldset>
     <div class="flex flex-row">
         <mat-form-field class="mat-block flex-1">

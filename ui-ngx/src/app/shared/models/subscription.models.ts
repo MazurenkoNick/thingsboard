@@ -38,6 +38,7 @@ export enum SubscriptionErrorCode {
 export enum SubscriptionEntry {
   DEVICE_COUNT = 'DEVICE_COUNT',
   ASSET_COUNT = 'ASSET_COUNT',
+  EDGE_COUNT = 'EDGE_COUNT',
   WHITE_LABELING = 'WHITE_LABELING'
 }
 
@@ -53,7 +54,8 @@ export const subscriptionErrorsMap = new Map<SubscriptionErrorCode, Map<Subscrip
     [SubscriptionErrorCode.LIMIT_REACHED, new Map<SubscriptionEntry, string>(
       [
         [SubscriptionEntry.DEVICE_COUNT, 'subscription-error.limit-reached.device-count'],
-        [SubscriptionEntry.ASSET_COUNT, 'subscription-error.limit-reached.asset-count']
+        [SubscriptionEntry.ASSET_COUNT, 'subscription-error.limit-reached.asset-count'],
+        [SubscriptionEntry.EDGE_COUNT, 'subscription-error.limit-reached.edge-count']
       ]
     )],
     [SubscriptionErrorCode.FEATURE_DISABLED, new Map<SubscriptionEntry, string>(
@@ -86,6 +88,7 @@ export interface SubscriptionInfo {
   upcomingInvoiceAmountDue: number;
   planExtraDeviceEnabled: boolean;
   planEdgeEnabled: boolean;
+  planExtraEdgeEnabled: boolean;
   planTrendzEnabled: boolean;
 
   dataTs: number;
@@ -93,6 +96,7 @@ export interface SubscriptionInfo {
 
   maxDevices: number;
   maxAssets: number;
+  maxEdges: number;
   whiteLabelingEnabled: boolean;
   edgeEnabled: boolean;
   trendzEnabled: boolean;
@@ -100,4 +104,5 @@ export interface SubscriptionInfo {
 
   devicesCount: number;
   assetsCount: number;
+  edgesCount: number;
 }

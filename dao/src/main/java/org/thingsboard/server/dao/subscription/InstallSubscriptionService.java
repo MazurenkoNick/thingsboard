@@ -55,6 +55,11 @@ public class InstallSubscriptionService implements SubscriptionService {
     }
 
     @Override
+    public void createEdgeAllowed(TenantId tenantId) throws SubscriptionException {
+
+    }
+
+    @Override
     public void whiteLabelingAllowed(TenantId tenantId) throws SubscriptionException {
 
     }

@@ -12278,6 +12278,7 @@
             "license-portal": "License portal",
             "devices-info": "{count} / { max, plural, =0 {∞} other {#} } Devices",
             "assets-info": "{count} / { max, plural, =0 {∞} other {#} } Assets",
+            "edges-info": "{count} / { max, plural, =0 {∞} other {#} } Edges",
             "dashboards-info": "{count} / { max, plural, =0 {∞} other {#} } Dashboards",
             "integrations-info": "{count} / { max, plural, =0 {∞} other {#} } Integrations",
             "community-support": "Community support",
@@ -12468,6 +12469,7 @@
         "devices": "Devices",
         "white-labeling": "White-labeling",
         "edge": "Edge Computing",
+        "edges": "Edges",
         "trendz": "Trendz analytics",
         "choose-prototype-plan": "Choose Prototype plan",
         "add-to-plan": "Add to plan",
@@ -12509,7 +12511,8 @@
       "upgrade-subscription-plan-to-install-solution-template": "In order to install <b>{{solutionTemplateName}}</b> solution you must upgrade your subscription at least to the <b>{{planName}}</b> plan!",
       "limit-reached": {
         "device-count": "You have reached maximum devices ({{value}}) allowed by your subscription plan!",
-        "asset-count": "You have reached maximum assets ({{value}}) allowed by your subscription plan!"
+        "asset-count": "You have reached maximum assets ({{value}}) allowed by your subscription plan!",
+        "edge-count": "You have reached maximum edge instances ({{value}}) allowed by your subscription plan!"
       },
       "feature-disabled": {
         "white-labeling": "White Labeling feature is not allowed by your subscription plan!"

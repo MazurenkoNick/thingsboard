@@ -47,6 +47,7 @@ public class SubscriptionInfo {
     private Long upcomingInvoiceAmountDue;
     private boolean planExtraDeviceEnabled;
     private boolean planEdgeEnabled;
+    private boolean planExtraEdgeEnabled;
     private boolean planTrendzEnabled;
 
     private long dataTs;
@@ -54,6 +55,7 @@ public class SubscriptionInfo {
 
     private long maxDevices;
     private long maxAssets;
+    private long maxEdges;
     private boolean whiteLabelingEnabled;
     private boolean edgeEnabled;
     private boolean trendzEnabled;
@@ -61,5 +63,6 @@ public class SubscriptionInfo {
 
     private long devicesCount;
     private long assetsCount;
+    private long edgesCount;
 
 }

@@ -34,6 +34,7 @@ public enum SubscriptionEntry {
 
     DEVICE_COUNT(1),
     ASSET_COUNT(2),
+    EDGE_COUNT(3),
     WHITE_LABELING(9);
 
     private int entryCode;

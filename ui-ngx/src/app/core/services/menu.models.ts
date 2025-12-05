@@ -2286,7 +2286,7 @@ const filterMenuReference = (authState: AuthState, userPermissionsService: UserP
   if (allowedMenuIds?.length && !allowedMenuIds.includes(reference.id)) {
     return false;
   }
-  if (authState.authUser.authority === Authority.SYS_ADMIN) {
+  if (authState.authUser.authority === Authority.SYS_ADMIN && reference.id !== MenuId.license_management) {
     return true;
   }
   const filter = menuFilters.get(MenuId[reference.id]);

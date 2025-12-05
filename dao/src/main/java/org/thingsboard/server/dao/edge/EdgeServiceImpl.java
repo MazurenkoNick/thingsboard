@@ -304,6 +304,12 @@ public class EdgeServiceImpl extends AbstractCachedEntityService<EdgeCacheKey, E
     }
 
     @Override
+    public Long countEdges() {
+        log.trace("Executing countEdges");
+        return edgeDao.countEdges();
+    }
+
+    @Override
     public PageData<Edge> findEdgesByTenantIdAndType(TenantId tenantId, String type, PageLink pageLink) {
         log.trace("Executing findEdgesByTenantIdAndType, tenantId [{}], type [{}], pageLink [{}]", tenantId, type, pageLink);
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);

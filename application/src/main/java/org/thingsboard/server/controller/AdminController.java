@@ -443,6 +443,7 @@ public class AdminController extends BaseController {
         LicenseUsageInfo licenseUsageInfo = new LicenseUsageInfo(licenseInfo);
         licenseUsageInfo.setDevicesCount(deviceService.countDevices());
         licenseUsageInfo.setAssetsCount(assetService.countAssets());
+        licenseUsageInfo.setEdgesCount(edgeService.countEdges());
         licenseUsageInfo.setDashboardsCount(dashboardService.countDashboards());
         licenseUsageInfo.setIntegrationsCount(integrationService.countCoreIntegrations());
         return licenseUsageInfo;

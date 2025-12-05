@@ -43,6 +43,8 @@ public interface SubscriptionService {
 
     void createAssetAllowed(TenantId tenantId) throws SubscriptionException;
 
+    void createEdgeAllowed(TenantId tenantId) throws SubscriptionException;
+
     void whiteLabelingAllowed(TenantId tenantId) throws SubscriptionException;
 
     boolean whiteLabelingEnabled(TenantId tenantId) throws SubscriptionException;

@@ -54,6 +54,13 @@
           {{ statusIcon(licenseUsageInfo?.assetsCount, licenseUsageInfo?.maxAssets) }}
           </span>{{ 'widgets.license-info.assets-info' | translate: { count: licenseUsageInfo?.assetsCount, max: licenseUsageInfo?.maxAssets} }}
         </div>
+        @if (showEdges) {
+          <div class="tb-feature-text" [class]="statusClass(licenseUsageInfo?.edgesCount, licenseUsageInfo?.maxEdges)">
+          <span class="tb-feature-status">
+          {{ statusIcon(licenseUsageInfo?.edgesCount, licenseUsageInfo?.maxEdges) }}
+          </span>{{ 'widgets.license-info.edges-info' | translate: { count: licenseUsageInfo?.edgesCount, max: licenseUsageInfo?.maxEdges} }}
+          </div>
+        }
         <div *ngIf="!isMdLg" class="tb-feature-text ok">
           <span class="tb-feature-status">
             check

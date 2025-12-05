@@ -86,6 +86,13 @@ export class LicenseManagementComponent extends PageComponent implements OnInit 
     this.addLicenseItem(this.translate.instant('subscription.devices'), true, { extraDeviceCount: 100 });
   }
 
+  addEdges($event: Event) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    this.addLicenseItem(this.translate.instant('subscription.edges'), true, { extraEdgeCount: 1 });
+  }
+
   choosePrototypePlan($event: Event) {
     if ($event) {
       $event.stopPropagation();
@@ -127,10 +134,6 @@ export class LicenseManagementComponent extends PageComponent implements OnInit 
           }
         }
       );
-  }
-
-  private openManageSubscription(items?: any) {
-    window.open(this.createManageSubscriptionUrl(items), '_blank');
   }
 
   private createManageSubscriptionUrl(items?: any) {

@@ -150,6 +150,22 @@
               </button>
             }
           </div>
+          @if (subscriptionInfo.edgeEnabled) {
+            <div class="item-row">
+              <div class="label" translate>subscription.edges</div>
+              <div class="usage-row">
+                <mat-progress-bar [value]="(subscriptionInfo.edgesCount / subscriptionInfo.maxEdges) * 100"></mat-progress-bar>
+                <div class="usage-count value">
+                  {{ subscriptionInfo.edgesCount + ' / ' + subscriptionInfo.maxEdges }}
+                </div>
+                @if (!subscriptionInfo.offline && subscriptionInfo.planExtraEdgeEnabled) {
+                  <button class="tb-mat-40" mat-icon-button color="primary" (click)="addEdges($event)">
+                    <tb-icon>add</tb-icon>
+                  </button>
+                }
+              </div>
+            </div>
+          }
         }
         @if (subscriptionInfo.planTrendzEnabled && (!subscriptionInfo.offline || subscriptionInfo.offline && subscriptionInfo.trendzEnabled)) {
           <div class="item-row">

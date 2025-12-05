@@ -57,6 +57,7 @@ import org.thingsboard.server.common.data.subscription.SubscriptionException;
 import org.thingsboard.server.common.data.subscription.SubscriptionInfo;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.device.DeviceService;
+import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.tenant.TenantService;
 
 import javax.annotation.PostConstruct;
@@ -85,6 +86,9 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
 
     @Autowired
     protected AssetService assetService;
+
+    @Autowired
+    protected EdgeService edgeService;
 
     @Autowired
     private ConfigurableApplicationContext context;
@@ -163,6 +167,8 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
         licenseInfo.setMaxDevices(maxDevices);
         long maxAssets = this.isUnlimited(PlanDataConstants.MAX_ASSETS_KEY) ? 0 : tbLicenseClient.getPlanLongValue(PlanDataConstants.MAX_ASSETS_KEY);
         licenseInfo.setMaxAssets(maxAssets);
+        long maxEdges = this.isUnlimited(PlanDataConstants.MAX_EDGES_KEY) ? 0 : tbLicenseClient.getPlanLongValue(PlanDataConstants.MAX_EDGES_KEY);
+        licenseInfo.setMaxEdges(maxEdges);
         licenseInfo.setWhiteLabelingEnabled(tbLicenseClient.getPlanBooleanValue(PlanDataConstants.WHITELABELING_KEY));
         try {
             licenseInfo.setDevelopment(tbLicenseClient.getPlanBooleanValue(PlanDataConstants.DEVELOPMENT_KEY));
@@ -198,17 +204,20 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
         subscriptionInfo.setUpcomingInvoiceAmountDue(subscriptionData.getUpcomingInvoiceAmountDue());
         subscriptionInfo.setPlanExtraDeviceEnabled(subscriptionData.isPlanExtraDeviceEnabled());
         subscriptionInfo.setPlanEdgeEnabled(subscriptionData.isPlanEdgeEnabled());
+        subscriptionInfo.setPlanExtraEdgeEnabled(subscriptionData.isPlanExtraEdgeEnabled());
         subscriptionInfo.setPlanTrendzEnabled(subscriptionData.isPlanTrendzEnabled());
         subscriptionInfo.setDataTs(this.tbLicenseClient.getDataTs());
         subscriptionInfo.setLicenseServerEndpoint(this.tbLicenseClient.getLicenseServerEndpoint());
         subscriptionInfo.setMaxDevices(tbLicenseClient.getPlanLongValue(PlanDataConstants.MAX_DEVICES_KEY));
         subscriptionInfo.setMaxAssets(tbLicenseClient.getPlanLongValue(PlanDataConstants.MAX_ASSETS_KEY));
+        subscriptionInfo.setMaxEdges(tbLicenseClient.getPlanLongValue(PlanDataConstants.MAX_EDGES_KEY));
         subscriptionInfo.setWhiteLabelingEnabled(tbLicenseClient.getPlanBooleanValue(PlanDataConstants.WHITELABELING_KEY));
         subscriptionInfo.setEdgeEnabled(tbLicenseClient.getPlanBooleanValue(PlanDataConstants.EDGE_KEY));
         subscriptionInfo.setTrendzEnabled(tbLicenseClient.getPlanBooleanValue(PlanDataConstants.TRENDZ_KEY));
         subscriptionInfo.setDevelopment(tbLicenseClient.getPlanBooleanValue(PlanDataConstants.DEVELOPMENT_KEY));
         subscriptionInfo.setDevicesCount(countDevices());
         subscriptionInfo.setAssetsCount(countAssets());
+        subscriptionInfo.setEdgesCount(countEdges());
         return subscriptionInfo;
     }
 
@@ -273,6 +282,18 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     }
 
     @Override
+    public void createEdgeAllowed(TenantId tenantId) throws SubscriptionException {
+        if (this.licenseVersion > 1) {
+            long actualCount = countEdges();
+            if (limitReached(actualCount, PlanDataConstants.MAX_EDGES_KEY)) {
+                log.error("Maximum allowed edges limit reached!");
+                throw new SubscriptionException("Maximum allowed edges limit reached!",
+                        SubscriptionErrorCode.LIMIT_REACHED, SubscriptionEntry.EDGE_COUNT, this.tbLicenseClient.getPlanLongValue(PlanDataConstants.MAX_EDGES_KEY));
+            }
+        }
+    }
+
+    @Override
     public void whiteLabelingAllowed(TenantId tenantId) throws SubscriptionException {
         if (!this.tbLicenseClient.getPlanBooleanValue(PlanDataConstants.WHITELABELING_KEY)) {
             throw new SubscriptionException("White Labeling feature is disabled!",
@@ -310,6 +331,10 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
 
     private long countAssets() {
         return assetService.countAssets();
+    }
+
+    private long countEdges() {
+        return edgeService.countEdges();
     }
 
 }

@@ -35,7 +35,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { AdminService } from '@core/http/admin.service';
 import { LicenseUsageInfo } from '@shared/models/settings.models';
-import { getCurrentAuthUser } from '@core/auth/auth.selectors';
+import { getCurrentAuthState, getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Authority } from '@shared/models/authority.enum';
 import { of, Subscription } from 'rxjs';
 import { BreakpointObserver, BreakpointState } from '@angular/cdk/layout';
@@ -53,6 +53,8 @@ export class LicenseUsageInfoComponent extends PageComponent implements OnInit, 
   authUser = getCurrentAuthUser(this.store);
   licenseUsageInfo: LicenseUsageInfo;
   isMdLg = false;
+  authState = getCurrentAuthState(this.store);
+  showEdges = this.authState.licenseVersion > 1 && this.authState.edgesSupportEnabled && this.authState.edgeEnabled;
 
   private observeBreakpointSubscription: Subscription;
 
