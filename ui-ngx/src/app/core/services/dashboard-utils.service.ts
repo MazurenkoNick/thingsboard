@@ -50,7 +50,15 @@ import {
   LayoutType,
   WidgetLayout
 } from '@shared/models/dashboard.models';
-import { deepClone, isDefined, isDefinedAndNotNull, isNotEmptyStr, isString, isUndefined } from '@core/utils';
+import {
+  deepClean,
+  deepClone,
+  isDefined,
+  isDefinedAndNotNull,
+  isNotEmptyStr,
+  isString,
+  isUndefined
+} from '@core/utils';
 import {
   Datasource,
   datasourcesHasAggregation,
@@ -99,7 +107,10 @@ export class DashboardUtilsService {
 
   public validateAndUpdateDashboard(dashboard: Dashboard): Dashboard {
     if (!dashboard.configuration) {
-      dashboard.configuration = {};
+      dashboard.configuration = {
+        entityAliases: {},
+        filters: {},
+      };
     }
     if (isUndefined(dashboard.configuration.widgets)) {
       dashboard.configuration.widgets = {};
@@ -369,7 +380,7 @@ export class DashboardUtilsService {
         }
       }
     }
-    return widgetConfig;
+    return deepClean(widgetConfig, {cleanKeys: ['_hash'], cleanOnlyKey: true});
   }
 
   private removeTimewindowConfigIfUnused(widget: Widget) {
@@ -396,6 +407,7 @@ export class DashboardUtilsService {
 
   public prepareWidgetForSaving(widget: Widget): Widget {
     this.removeTimewindowConfigIfUnused(widget);
+    widget = deepClean(widget, {cleanKeys: ['_hash'], cleanOnlyKey: true});
     return widget;
   }
 
