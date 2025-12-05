@@ -84,6 +84,9 @@ import { EntityType } from '@shared/models/entity-type.models';
 import { IntegrationService } from '@core/http/integration.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StringItemsOption } from '@shared/components/string-items-list.component';
+import { AdditionalDebugActionConfig } from '@home/components/entity/debug/entity-debug-settings.model';
+import { EventsDialogComponent } from '@home/components/event/events-dialog.component';
+import { DebugEventType } from '@shared/models/event.models';
 
 @Component({
   selector: 'tb-converter',
@@ -362,6 +365,28 @@ export class ConverterComponent extends EntityComponent<Converter> implements On
     this.updatedConverterVersionDisableState();
     this.updatedConverterScriptLangDisableState(this.entity);
     this.updatedConverterLibraryDisableState(this.converterTypeValue);
+  }
+
+  get additionalActionConfig (): AdditionalDebugActionConfig {
+    return {
+      title: this.translate.instant('integration.see-debug-events'),
+      action: this.openDebugEventsDialog.bind(this)
+    }
+  }
+
+  private openDebugEventsDialog(): void {
+    this.dialog.open<EventsDialogComponent>(EventsDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        title: 'integration.events',
+        debugEventType: DebugEventType.DEBUG_CONVERTER,
+        tenantId: this.entity.tenantId,
+        entityId: this.entity.id
+      }
+    })
+      .afterClosed()
+      .subscribe();
   }
 
   private checkIsNewConverter(entity: Converter, form: FormGroup, emitEvent = true) {

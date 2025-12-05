@@ -48,6 +48,10 @@ import { ConverterType } from '@shared/models/converter.models';
 import { IntegrationService } from '@core/http/integration.service';
 import { PageLink } from '@shared/models/page/page-link';
 import { EntityType } from '@shared/models/entity-type.models';
+import { AdditionalDebugActionConfig } from '@home/components/entity/debug/entity-debug-settings.model';
+import { EventsDialogComponent } from '@home/components/event/events-dialog.component';
+import { DebugEventType } from '@shared/models/event.models';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'tb-integration',
@@ -70,7 +74,8 @@ export class IntegrationComponent extends EntityComponent<Integration, PageLink,
               @Inject('entitiesTableConfig') protected entitiesTableConfigValue: EntityTableConfig<Integration, PageLink, IntegrationInfo>,
               protected fb: UntypedFormBuilder,
               protected integrationService: IntegrationService,
-              protected cd: ChangeDetectorRef) {
+              protected cd: ChangeDetectorRef,
+              private dialog: MatDialog) {
     super(store, fb, entityValue, entitiesTableConfigValue, cd);
   }
 
@@ -157,6 +162,28 @@ export class IntegrationComponent extends EntityComponent<Integration, PageLink,
 
   get isEdgeTemplate(): boolean {
     return this.integrationScope === 'edge' || this.integrationScope === 'edges';
+  }
+
+  get additionalActionConfig (): AdditionalDebugActionConfig {
+    return {
+      title: this.translate.instant('integration.see-debug-events'),
+      action: this.openDebugEventsDialog.bind(this)
+    }
+  }
+
+  private openDebugEventsDialog(): void {
+    this.dialog.open<EventsDialogComponent>(EventsDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        title: 'integration.events',
+        debugEventType: DebugEventType.DEBUG_INTEGRATION,
+        tenantId: this.entity.tenantId,
+        entityId: this.entity.id
+      }
+    })
+      .afterClosed()
+      .subscribe();
   }
 
   updateForm(entity: Integration) {
