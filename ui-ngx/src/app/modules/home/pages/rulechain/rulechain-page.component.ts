@@ -116,6 +116,8 @@ import Timeout = NodeJS.Timeout;
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { Operation, Resource } from '@shared/models/security.models';
 import { DomSanitizer } from '@angular/platform-browser';
+import { AdditionalDebugActionConfig } from '@home/components/entity/debug/entity-debug-settings.model';
+import { RuleNodeDebugDialogComponent } from '@home/pages/rulechain/rule-node-debug-dialog.component';
 
 @Component({
   selector: 'tb-rulechain-page',
@@ -1688,6 +1690,37 @@ export class RuleChainPageComponent extends PageComponent
         this.reloadRuleChain();
       });
     }
+  }
+
+  get additionalActionConfig (): AdditionalDebugActionConfig {
+    return {
+      title: this.translate.instant('rulenode.rule-node-events'),
+      action: this.switchToEventsTab.bind(this)
+    }
+  }
+
+  private switchToEventsTab() {
+    if(!this.ruleNodeComponent.ruleNodeFormGroup.dirty) {
+      this.selectedRuleNodeTabIndex = 1;
+    } else {
+      this.openDebugEventsDialog();
+    }
+  }
+
+  private openDebugEventsDialog(): void {
+    this.dialog.open<RuleNodeDebugDialogComponent>(RuleNodeDebugDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        active: true,
+        tenantId: this.ruleChain.tenantId,
+        ruleNodeId: this.editingRuleNode.ruleNodeId,
+        functionTestButtonLabel: this.ruleNodeTestButtonLabel,
+        debugEventSelected: this.onDebugEventSelected.bind(this)
+      }
+    })
+      .afterClosed()
+      .subscribe();
   }
 
   private updateNodeErrorTooltip(node: FcRuleNode) {
