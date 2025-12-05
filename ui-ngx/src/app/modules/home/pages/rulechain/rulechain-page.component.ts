@@ -117,7 +117,7 @@ import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { Operation, Resource } from '@shared/models/security.models';
 import { DomSanitizer } from '@angular/platform-browser';
 import { AdditionalDebugActionConfig } from '@home/components/entity/debug/entity-debug-settings.model';
-import { RuleNodeDebugDialogComponent } from '@home/pages/rulechain/rule-node-debug-dialog.component';
+import { EventsDialogComponent } from '@home/components/event/events-dialog.component';
 
 @Component({
   selector: 'tb-rulechain-page',
@@ -1708,13 +1708,13 @@ export class RuleChainPageComponent extends PageComponent
   }
 
   private openDebugEventsDialog(): void {
-    this.dialog.open<RuleNodeDebugDialogComponent>(RuleNodeDebugDialogComponent, {
+    this.dialog.open<EventsDialogComponent>(EventsDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
-        active: true,
+        title: 'rulenode.events',
         tenantId: this.ruleChain.tenantId,
-        ruleNodeId: this.editingRuleNode.ruleNodeId,
+        entityId: this.editingRuleNode.ruleNodeId,
         functionTestButtonLabel: this.ruleNodeTestButtonLabel,
         debugEventSelected: this.onDebugEventSelected.bind(this)
       }
