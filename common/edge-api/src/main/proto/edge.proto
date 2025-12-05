@@ -133,6 +133,7 @@ message EdgeConfiguration {
   string cloudEndpoint = 12;
   string additionalInfo = 13;
   string cloudType = 14;
+  int32 licenseVersion = 15;
 }
 
 enum UpdateMsgType {

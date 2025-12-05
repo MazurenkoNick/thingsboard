@@ -265,7 +265,7 @@ public abstract class EdgeGrpcSession implements Closeable {
         this.tenantId = edge.getTenantId();
         this.edge = edge;
         EdgeUpdateMsg edgeConfig = EdgeUpdateMsg.newBuilder()
-                .setConfiguration(EdgeMsgConstructorUtils.constructEdgeConfiguration(edge)).build();
+                .setConfiguration(createEdgeConfiguration(edge)).build();
         ResponseMsg edgeConfigMsg = ResponseMsg.newBuilder()
                 .setEdgeUpdateMsg(edgeConfig)
                 .build();
@@ -408,7 +408,7 @@ public abstract class EdgeGrpcSession implements Closeable {
                     return ConnectResponseMsg.newBuilder()
                             .setResponseCode(ConnectResponseCode.ACCEPTED)
                             .setErrorMsg("")
-                            .setConfiguration(EdgeMsgConstructorUtils.constructEdgeConfiguration(edge))
+                            .setConfiguration(createEdgeConfiguration(edge))
                             .setMaxInboundMessageSize(maxInboundMessageSize)
                             .build();
                 }
@@ -435,6 +435,10 @@ public abstract class EdgeGrpcSession implements Closeable {
                 .setResponseCode(ConnectResponseCode.BAD_CREDENTIALS)
                 .setErrorMsg("Failed to find the edge! Routing key: " + request.getEdgeRoutingKey())
                 .setConfiguration(EdgeConfiguration.getDefaultInstance()).build();
+    }
+
+    private EdgeConfiguration createEdgeConfiguration(Edge edge) {
+        return EdgeMsgConstructorUtils.constructEdgeConfiguration(edge, ctx.getSubscriptionService().getLicenseVersion());
     }
 
     private void processSaveEdgeVersionAsAttribute(String edgeVersion) {
