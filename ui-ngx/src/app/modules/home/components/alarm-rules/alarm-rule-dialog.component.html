@@ -203,7 +203,7 @@
     @if (!data.readonly) {
       <button mat-raised-button color="primary"
               (click)="add()"
-              [disabled]="fieldFormGroup.invalid">
+              [disabled]="isLoading$ | async">
         {{ data.buttonTitle | translate }}
       </button>
     }

@@ -89,7 +89,7 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
     type: [CalculatedFieldType.ALARM],
     debugSettings: [],
     entityId: this.fb.group({
-      entityType: this.fb.control<EntityType | AliasEntityType | null>(EntityType.DEVICE_PROFILE, Validators.required),
+      entityType: this.fb.control<EntityType | AliasEntityType | null>(null, Validators.required),
       id: [null as null | string, Validators.required],
     }),
     configuration: this.fb.group({
@@ -144,6 +144,9 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
     if (this.userPermissionsService.hasGenericPermission(Resource.ASSET_PROFILE, Operation.WRITE)) {
       this.alarmRuleEntityTypeList.push(EntityType.ASSET_PROFILE);
     }
+    if (this.alarmRuleEntityTypeList.includes(EntityType.DEVICE_PROFILE)) {
+      this.fieldFormGroup.get('entityId.entityType').patchValue(EntityType.DEVICE_PROFILE, {emitEvent: false});
+    }
     this.applyDialogData();
     this.updateRulesValidators();
 
@@ -163,15 +166,18 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
     ).subscribe((entityId) => {
       if (entityId) {
         this.getOwnerByEntityTypeAndId(this.fieldFormGroup.get('entityId.entityType').value as EntityType, entityId);
-      }
-      if (!this.entityName) {
-        if (entityId && (this.fieldFormGroup.get('entityId.entityType').value === EntityType.DEVICE_PROFILE ||
-          this.fieldFormGroup.get('entityId.entityType').value === EntityType.ASSET_PROFILE)) {
-          this.entityService.getEntity(this.fieldFormGroup.get('entityId.entityType').value as EntityType, entityId, {ignoreLoading: true, ignoreErrors: true}).subscribe(
-            value => {
-              this.entityName = value.name;
-            }
-          )
+        if (!this.entityName) {
+          if ((this.fieldFormGroup.get('entityId.entityType').value === EntityType.DEVICE_PROFILE ||
+            this.fieldFormGroup.get('entityId.entityType').value === EntityType.ASSET_PROFILE)) {
+            this.entityService.getEntity(this.fieldFormGroup.get('entityId.entityType').value as EntityType, entityId, {
+              ignoreLoading: true,
+              ignoreErrors: true
+            }).subscribe(
+              value => {
+                this.entityName = value.name;
+              }
+            )
+          }
         }
       }
     });
