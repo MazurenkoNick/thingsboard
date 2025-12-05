@@ -184,6 +184,7 @@ export interface CalculatedFieldEntityAggregationConfiguration {
   metrics: Record<string, CalculatedFieldAggMetric>;
   interval: AggInterval;
   watermark?: WatermarkConfig;
+  produceIntermediateResult?: boolean;
   output: CalculatedFieldOutput & { decimalsByDefault?: number; };
 }
 
