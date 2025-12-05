@@ -45,6 +45,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.trendz.TrendzConfiguration;
 import org.thingsboard.server.common.data.trendz.TrendzSettings;
 import org.thingsboard.server.controller.AbstractControllerTest;
+import org.thingsboard.server.dao.service.DaoSqlTest;
 import org.thingsboard.server.dao.trendz.TrendzSettingsService;
 
 import java.util.List;
@@ -57,6 +58,7 @@ import static org.mockito.Mockito.when;
 @TestPropertySource(properties = {
         "trendz.enabled=true"
 })
+@DaoSqlTest
 public class TrendzProxyServiceTest extends AbstractControllerTest {
     @MockitoBean
     private TrendzSettingsService trendzSettingsService;
@@ -68,37 +70,26 @@ public class TrendzProxyServiceTest extends AbstractControllerTest {
 
     @Test
     public void proxyTest_missingTrendzUrl() {
-        String expectedBody = "trendz_response_body";
-        String expectedHeaderName = "trendz_header";
-        String expectedHeaderValue = "trendz_header_value";
-
         when(trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID))
                 .thenReturn(new TrendzSettings(new TrendzConfiguration(null, null), null));
 
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("POST", "/apiTrendz/test");
-        httpServletRequest.addHeader(expectedHeaderName, expectedHeaderValue);
-
+        httpServletRequest.addHeader("trendz_header", "trendz_header_value");
         assertThrows(
                 ThingsboardException.class,
-                () -> trendzProxyService.proxy(httpServletRequest, expectedBody.getBytes())
+                () -> trendzProxyService.proxy(httpServletRequest, "trendz_response_body".getBytes())
         );
     }
 
     @Test
-    public void proxyTest_presentTrendzUri() throws ThingsboardException {
+    public void proxyTest_withValidTrendzUrl() throws ThingsboardException {
         String trendzUrl = "trendz_url:8888";
         String trendzUri = "/apiTrendz/test";
 
-        String expectedBody = "trendz_response_body";
-
-        String expectedHeaderName = "trendz_header";
-        List<String> expectedHeaderValue = List.of("trendz_header_value");
-        int expectedStatusCode = 201;
-
         ResponseEntity<byte[]> expected = new ResponseEntity<>(
-                expectedBody.getBytes(),
-                MultiValueMap.fromMultiValue(Map.of(expectedHeaderName, expectedHeaderValue)),
-                HttpStatusCode.valueOf(expectedStatusCode)
+                "trendz_response_body".getBytes(),
+                MultiValueMap.fromMultiValue(Map.of("trendz_header", List.of("trendz_header_value"))),
+                HttpStatusCode.valueOf(201)
         );
 
         HttpHeaders requestHeaders = new HttpHeaders();
@@ -114,6 +105,32 @@ public class TrendzProxyServiceTest extends AbstractControllerTest {
         httpServletRequest.addHeader("trendz_request_header", "trendz_request_header_value");
 
         ResponseEntity<byte[]> actual = trendzProxyService.proxy(httpServletRequest, requestBody);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void proxyTest_withValidTrendzUrlAndQueryParams() throws ThingsboardException {
+        String trendzUrl = "trendz_url:8888";
+
+        ResponseEntity<byte[]> expected = new ResponseEntity<>(
+                null,
+                MultiValueMap.fromMultiValue(Map.of("trendz_header", List.of("trendz_header_value"))),
+                HttpStatusCode.valueOf(200)
+        );
+
+        HttpHeaders requestHeaders = new HttpHeaders();
+        requestHeaders.add("trendz_request_header", "trendz_request_header_value");
+
+        when(trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID))
+                .thenReturn(new TrendzSettings(new TrendzConfiguration(trendzUrl, null), null));
+        when(trendzClient.sendTrendzProxyRequest(trendzUrl, "/apiTrendz/test?param1=value1&param2=value2", HttpMethod.GET, null, requestHeaders))
+                .thenReturn(expected);
+
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "/apiTrendz/test");
+        httpServletRequest.addHeader("trendz_request_header", "trendz_request_header_value");
+        httpServletRequest.setQueryString("param1=value1&param2=value2");
+
+        ResponseEntity<byte[]> actual = trendzProxyService.proxy(httpServletRequest, null);
         assertEquals(expected, actual);
     }
 }

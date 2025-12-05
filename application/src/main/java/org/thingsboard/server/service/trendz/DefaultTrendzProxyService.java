@@ -85,6 +85,8 @@ public class DefaultTrendzProxyService implements TrendzProxyService {
         return Optional.ofNullable(trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID))
                 .map(TrendzSettings::configuration)
                 .map(TrendzConfiguration::trendzUrl)
-                .orElseThrow(() -> new ThingsboardException("Trendz url is not present in config.", ThingsboardErrorCode.GENERAL));
+                .orElseThrow(() -> new ThingsboardException(
+                        "Trendz URL is not configured. Please configure the Trendz URL in system settings.", ThingsboardErrorCode.GENERAL
+                ));
     }
 }

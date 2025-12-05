@@ -149,7 +149,7 @@ public class TrendzClient {
                     .body(e.getResponseBodyAsByteArray());
         } catch (Exception e) {
             log.error("Trendz proxy request failed at {} [{}]: {}", trendzUrl, uriPath, e.getMessage(), e);
-            throw new ThingsboardException("Trendz proxy request unexpected error", e, ThingsboardErrorCode.GENERAL);
+            throw new ThingsboardException("Unexpected error during Trendz proxy request", e, ThingsboardErrorCode.GENERAL);
         }
     }
 
