@@ -80,6 +80,8 @@ import { UtilsService } from "@core/services/utils.service";
 import { CalculatedFieldEventBody, DebugEventType, Event as DebugEvent, EventType } from '@shared/models/event.models';
 import { EventsDialogComponent, EventsDialogData } from '@home/dialogs/events-dialog.component';
 import { ActionNotificationShow } from "@core/notification/notification.actions";
+import { CalculatedFieldEventBody, DebugEventType, Event as DebugEvent, EventType } from '@shared/models/event.models';
+import { EventsDialogComponent, EventsDialogData } from '@home/dialogs/events-dialog.component';
 
 export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedField> {
 
@@ -290,7 +292,7 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
-        title: 'alarm-rule.debugging',
+        title: 'calculated-fields.debugging',
         tenantId: this.tenantId,
         value: calculatedField.id,
         debugEventTypes:[DebugEventType.DEBUG_CALCULATED_FIELD],
