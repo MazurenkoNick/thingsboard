@@ -308,7 +308,8 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
         disabledEventTypes:[EventType.LC_EVENT, EventType.ERROR, EventType.STATS],
         defaultEventType: DebugEventType.DEBUG_CALCULATED_FIELD,
         onDebugEventSelected: null,
-        customCellActionEnabledFn: customCellActionEnabledFn
+        customCellActionEnabledFn: customCellActionEnabledFn,
+        hideClearEventAction: this.hideClearEventAction
       }
     })
       .afterClosed()

@@ -35,6 +35,7 @@ export interface EventsDialogData {
   functionTestButtonLabel?: string;
   onDebugEventSelected?: (event: any, dialogRef: MatDialogRef<EventsDialogComponent, string>) => void;
   customCellActionEnabledFn?: (event: BaseData<HasId>) => boolean;
+  hideClearEventAction?: boolean;
 }
 
 @Component({

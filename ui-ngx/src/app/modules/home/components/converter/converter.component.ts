@@ -85,8 +85,8 @@ import { IntegrationService } from '@core/http/integration.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StringItemsOption } from '@shared/components/string-items-list.component';
 import { AdditionalDebugActionConfig } from '@home/components/entity/debug/entity-debug-settings.model';
-import { EventsDialogComponent } from '@home/components/event/events-dialog.component';
 import { DebugEventType } from '@shared/models/event.models';
+import { EventsDialogComponent, EventsDialogData } from '@home/dialogs/events-dialog.component';
 
 @Component({
   selector: 'tb-converter',
@@ -375,14 +375,15 @@ export class ConverterComponent extends EntityComponent<Converter> implements On
   }
 
   private openDebugEventsDialog(): void {
-    this.dialog.open<EventsDialogComponent>(EventsDialogComponent, {
+    this.dialog.open<EventsDialogComponent, EventsDialogData, null>(EventsDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
         title: 'integration.events',
-        debugEventType: DebugEventType.DEBUG_CONVERTER,
-        tenantId: this.entity.tenantId,
-        entityId: this.entity.id
+        debugEventTypes: [DebugEventType.DEBUG_CONVERTER],
+        defaultEventType: DebugEventType.DEBUG_CONVERTER,
+        tenantId: this.entity.tenantId.id,
+        value: this.entity.id
       }
     })
       .afterClosed()

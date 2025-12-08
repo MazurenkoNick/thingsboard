@@ -49,9 +49,9 @@ import { IntegrationService } from '@core/http/integration.service';
 import { PageLink } from '@shared/models/page/page-link';
 import { EntityType } from '@shared/models/entity-type.models';
 import { AdditionalDebugActionConfig } from '@home/components/entity/debug/entity-debug-settings.model';
-import { EventsDialogComponent } from '@home/components/event/events-dialog.component';
 import { DebugEventType } from '@shared/models/event.models';
 import { MatDialog } from '@angular/material/dialog';
+import { EventsDialogComponent, EventsDialogData } from '@home/dialogs/events-dialog.component';
 
 @Component({
   selector: 'tb-integration',
@@ -172,14 +172,15 @@ export class IntegrationComponent extends EntityComponent<Integration, PageLink,
   }
 
   private openDebugEventsDialog(): void {
-    this.dialog.open<EventsDialogComponent>(EventsDialogComponent, {
+    this.dialog.open<EventsDialogComponent, EventsDialogData, null>(EventsDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
         title: 'integration.events',
-        debugEventType: DebugEventType.DEBUG_INTEGRATION,
-        tenantId: this.entity.tenantId,
-        entityId: this.entity.id
+        debugEventTypes: [DebugEventType.DEBUG_INTEGRATION],
+        defaultEventType: DebugEventType.DEBUG_INTEGRATION,
+        tenantId: this.entity.tenantId.id,
+        value: this.entity.id
       }
     })
       .afterClosed()
