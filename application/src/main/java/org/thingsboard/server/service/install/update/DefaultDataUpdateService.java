@@ -407,7 +407,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 List<UserId> userIds = entityIds.stream().map(entityId -> new UserId(entityId.getId())).collect(Collectors.toList());
                 List<User> users;
                 if (!userIds.isEmpty()) {
-                    users = userService.findUsersByTenantIdAndIdsAsync(id, userIds).get();
+                    users = userService.findUsersByTenantIdAndIds(id, userIds);
                 } else {
                     users = Collections.emptyList();
                 }
@@ -539,7 +539,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
                     List<DashboardId> dashboardIds = entityIds.stream().map(entityId -> new DashboardId(entityId.getId())).collect(Collectors.toList());
                     List<DashboardInfo> dashboards;
                     if (!dashboardIds.isEmpty()) {
-                        dashboards = dashboardService.findDashboardInfoByIdsAsync(TenantId.SYS_TENANT_ID, dashboardIds).get();
+                        dashboards = dashboardService.findDashboardInfoByIds(TenantId.SYS_TENANT_ID, dashboardIds);
                     } else {
                         dashboards = Collections.emptyList();
                     }

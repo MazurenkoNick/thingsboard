@@ -31,7 +31,6 @@
 package org.thingsboard.server.dao.asset;
 
 import com.google.common.util.concurrent.FluentFuture;
-import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +69,6 @@ import java.util.stream.Collectors;
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.validateId;
-import static org.thingsboard.server.dao.service.Validator.validateIds;
 
 @Service("AssetProfileDaoService")
 @Slf4j
@@ -252,11 +250,9 @@ public class AssetProfileServiceImpl extends CachedVersionedEntityService<AssetP
     }
 
     @Override
-    public ListenableFuture<List<AssetProfileInfo>> findAssetProfilesByIdsAsync(TenantId tenantId, List<AssetProfileId> assetProfileIds) {
-        log.trace("Executing findAssetProfilesByIdsAsync, tenantId [{}], assetProfileIds [{}]", tenantId, assetProfileIds);
-        validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
-        validateIds(assetProfileIds, ids -> "Incorrect assetProfileIds " + ids);
-        return assetProfileDao.findAssetProfilesByTenantIdAndIdsAsync(tenantId.getId(), toUUIDs(assetProfileIds));
+    public List<AssetProfileInfo> findAssetProfilesByIds(TenantId tenantId, List<AssetProfileId> assetProfileIds) {
+        log.trace("Executing findAssetProfilesByIds, tenantId [{}], assetProfileIds [{}]", tenantId, assetProfileIds);
+        return assetProfileDao.findAssetProfilesByTenantIdAndIds(tenantId.getId(), toUUIDs(assetProfileIds));
     }
 
     @Override

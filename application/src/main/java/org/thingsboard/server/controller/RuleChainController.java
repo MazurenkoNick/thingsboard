@@ -97,6 +97,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -608,18 +609,17 @@ public class RuleChainController extends BaseController {
     @GetMapping(value = "/ruleChains", params = {"ruleChainIds"})
     public List<RuleChain> getRuleChainsByIds(
             @Parameter(description = "A list of rule chain ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
-            @RequestParam("ruleChainIds") String[] strRuleChainIds) throws Exception {
-        checkArrayParameter("ruleChainIds", strRuleChainIds);
+            @RequestParam("ruleChainIds") Set<UUID> ruleChainUUIDs) throws Exception {
         if (!accessControlService.hasPermission(getCurrentUser(), Resource.RULE_CHAIN, Operation.READ)) {
             return Collections.emptyList();
         }
         SecurityUser user = getCurrentUser();
         TenantId tenantId = user.getTenantId();
         List<RuleChainId> ruleChainIds = new ArrayList<>();
-        for (String strRuleChainId : strRuleChainIds) {
-            ruleChainIds.add(new RuleChainId(toUUID(strRuleChainId)));
+        for (UUID ruleChainUUID : ruleChainUUIDs) {
+            ruleChainIds.add(new RuleChainId(ruleChainUUID));
         }
-        List<RuleChain> ruleChains = checkNotNull(ruleChainService.findRuleChainsByIdsAsync(tenantId, ruleChainIds).get());
+        List<RuleChain> ruleChains = ruleChainService.findRuleChainsByIds(tenantId, ruleChainIds);
         return filterRuleChainsByReadPermission(ruleChains);
     }
 

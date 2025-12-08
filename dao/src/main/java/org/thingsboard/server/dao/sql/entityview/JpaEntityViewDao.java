@@ -141,10 +141,14 @@ public class JpaEntityViewDao extends JpaAbstractDao<EntityViewEntity, EntityVie
         return entityViewRepository.existsByTenantIdAndEntityId(tenantId, entityId);
     }
 
-    @Override
     public ListenableFuture<List<EntityView>> findEntityViewsByTenantIdAndIdsAsync(UUID tenantId, List<UUID> entityViewIds) {
         return DaoUtil.getEntitiesByTenantIdAndIdIn(entityViewIds, ids ->
                 entityViewRepository.findEntityViewsByTenantIdAndIdIn(tenantId, ids), service);
+    }
+
+    @Override
+    public List<EntityView> findEntityViewsByTenantIdAndIds(UUID tenantId, List<UUID> entityViewIds) {
+        return DaoUtil.convertDataList(entityViewRepository.findEntityViewsByTenantIdAndIdIn(tenantId, entityViewIds));
     }
 
     @Override

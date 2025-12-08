@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.dao.widget;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.WidgetsBundleId;
 import org.thingsboard.server.common.data.page.PageData;
@@ -93,9 +92,7 @@ public interface WidgetsBundleDao extends Dao<WidgetsBundle>, ExportableEntityDa
      */
     PageData<WidgetsBundle> findAllTenantWidgetsBundlesByTenantId(WidgetsBundleFilter widgetsBundleFilter, PageLink pageLink);
 
-    ListenableFuture<List<WidgetsBundle>> findSystemWidgetBundlesByIdsAsync(UUID tenantId, List<UUID> widgetsBundleIds);
-
-    ListenableFuture<List<WidgetsBundle>> findAllTenantWidgetBundlesByTenantIdAndIdsAsync(UUID tenantId, List<UUID> widgetsBundleIds);
+    List<WidgetsBundle> findSystemOrTenantWidgetBundlesByIds(UUID tenantId, List<UUID> widgetsBundleIds);
 
     /**
      * Find all tenant widgets bundles (does not include system) by tenantId and page link.

@@ -220,7 +220,12 @@ public class EntityViewServiceImpl extends CachedVersionedEntityService<EntityVi
         log.trace("Executing findEntityViewsByTenantIdAndIdsAsync, tenantId [{}], entityViewIds [{}]", tenantId, entityViewIds);
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validateIds(entityViewIds, ids -> "Incorrect entityViewIds " + ids);
-        return entityViewDao.findEntityViewsByTenantIdAndIdsAsync(tenantId.getId(), toUUIDs(entityViewIds));
+        return entityViewDao.findEntityViewsByTenantIdAndIdsAsync(tenantId.getId(), toUUIDs(entityViewIds));    }
+
+    @Override
+    public List<EntityView> findEntityViewsByTenantIdAndIds(TenantId tenantId, List<EntityViewId> entityViewIds) {
+        log.trace("Executing findEntityViewsByTenantIdAndIds, tenantId [{}], entityViewIds [{}]", tenantId, entityViewIds);
+        return entityViewDao.findEntityViewsByTenantIdAndIds(tenantId.getId(), toUUIDs(entityViewIds));
     }
 
     @Override

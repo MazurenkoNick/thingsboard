@@ -107,7 +107,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.query.EntityKeyType.ENTITY_FIELD;
@@ -117,8 +118,6 @@ import static org.thingsboard.server.controller.ControllerConstants.CUSTOMER_ID_
 import static org.thingsboard.server.controller.ControllerConstants.DASHBOARD_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID;
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID_PARAM_DESCRIPTION;
-import static org.thingsboard.server.controller.ControllerConstants.HOME_DASHBOARD_HIDE_TOOLBAR;
-import static org.thingsboard.server.controller.ControllerConstants.HOME_DASHBOARD_ID;
 import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_DATA_PARAMETERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
@@ -602,15 +601,14 @@ public class UserController extends BaseController {
     @ResponseBody
     public List<User> getUsersByIds(
             @Parameter(description = "A list of user ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
-            @RequestParam("userIds") String[] strUserIds) throws ThingsboardException, ExecutionException, InterruptedException {
-        checkArrayParameter("userIds", strUserIds);
+            @RequestParam("userIds") Set<UUID> userUUIDs) throws ThingsboardException {
         SecurityUser user = getCurrentUser();
         TenantId tenantId = user.getTenantId();
         List<UserId> userIds = new ArrayList<>();
-        for (String strUserId : strUserIds) {
-            userIds.add(new UserId(toUUID(strUserId)));
+        for (UUID userUUID : userUUIDs) {
+            userIds.add(new UserId(userUUID));
         }
-        List<User> users = checkNotNull(userService.findUsersByTenantIdAndIdsAsync(tenantId, userIds).get());
+        List<User> users = userService.findUsersByTenantIdAndIds(tenantId, userIds);
         return filterUsersByReadPermission(users);
     }
 

@@ -68,6 +68,8 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -373,15 +375,14 @@ public class CustomerController extends BaseController {
     @ResponseBody
     public List<Customer> getCustomersByIds(
             @Parameter(description = "A list of customer ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
-            @RequestParam("customerIds") String[] strCustomerIds) throws ThingsboardException, ExecutionException, InterruptedException {
-        checkArrayParameter("customerIds", strCustomerIds);
+            @RequestParam("customerIds") Set<UUID> customerUUIDs) throws ThingsboardException {
         SecurityUser user = getCurrentUser();
         TenantId tenantId = user.getTenantId();
         List<CustomerId> customerIds = new ArrayList<>();
-        for (String strCustomerId : strCustomerIds) {
-            customerIds.add(new CustomerId(toUUID(strCustomerId)));
+        for (UUID customerUUID : customerUUIDs) {
+            customerIds.add(new CustomerId(customerUUID));
         }
-        List<Customer> customers = checkNotNull(customerService.findCustomersByTenantIdAndIdsAsync(tenantId, customerIds).get());
+        List<Customer> customers = customerService.findCustomersByTenantIdAndIds(tenantId, customerIds);
         return filterCustomersByReadPermission(customers);
     }
 

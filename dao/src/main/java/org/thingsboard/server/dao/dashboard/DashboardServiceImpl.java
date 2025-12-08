@@ -177,10 +177,9 @@ public class DashboardServiceImpl extends AbstractEntityService implements Dashb
     }
 
     @Override
-    public ListenableFuture<List<DashboardInfo>> findDashboardInfoByIdsAsync(TenantId tenantId, List<DashboardId> dashboardIds) {
-        log.trace("Executing findDashboardInfoByIdsAsync, dashboardIds [{}]", dashboardIds);
-        validateIds(dashboardIds, ids -> "Incorrect dashboardIds " + ids);
-        return dashboardInfoDao.findDashboardsByIdsAsync(tenantId.getId(), toUUIDs(dashboardIds));
+    public List<DashboardInfo> findDashboardInfoByIds(TenantId tenantId, List<DashboardId> dashboardIds) {
+        log.trace("Executing findDashboardInfoByIds, dashboardIds [{}]", dashboardIds);
+        return dashboardInfoDao.findDashboardsByIds(tenantId.getId(), toUUIDs(dashboardIds));
     }
 
     @Override

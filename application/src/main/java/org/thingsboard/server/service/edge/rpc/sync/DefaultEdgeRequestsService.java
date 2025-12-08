@@ -678,16 +678,14 @@ public class DefaultEdgeRequestsService implements EdgeRequestsService {
         try {
             if (entityIds != null && !entityIds.isEmpty()) {
                 List<DashboardId> dashboardIds = entityIds.stream().map(e -> new DashboardId(e.getId())).collect(Collectors.toList());
-                ListenableFuture<List<DashboardInfo>> dashboardInfosFuture = dashboardService.findDashboardInfoByIdsAsync(edge.getTenantId(), dashboardIds);
-                return Futures.transform(dashboardInfosFuture, dashboardInfos -> {
-                    if (dashboardInfos != null && !dashboardInfos.isEmpty()) {
-                        log.trace("[{}] [{}] dashboard(s) are going to be pushed to edge.", edge.getId(), dashboardInfos.size());
-                        for (DashboardInfo dashboardInfo : dashboardInfos) {
-                            saveEdgeEvent(edge.getTenantId(), edge.getId(), EdgeEventType.DASHBOARD, EdgeEventActionType.ADDED, dashboardInfo.getId(), null, entityGroupId);
-                        }
+                List<DashboardInfo> dashboardInfos = dashboardService.findDashboardInfoByIds(edge.getTenantId(), dashboardIds);
+                if (dashboardInfos != null && !dashboardInfos.isEmpty()) {
+                    log.trace("[{}] [{}] dashboard(s) are going to be pushed to edge.", edge.getId(), dashboardInfos.size());
+                    for (DashboardInfo dashboardInfo : dashboardInfos) {
+                        saveEdgeEvent(edge.getTenantId(), edge.getId(), EdgeEventType.DASHBOARD, EdgeEventActionType.ADDED, dashboardInfo.getId(), null, entityGroupId);
                     }
-                    return null;
-                }, dbCallbackExecutorService);
+                }
+                return null;
             }
         } catch (Exception e) {
             log.error("Exception during loading edge dashboard(s) on sync!", e);
@@ -700,16 +698,14 @@ public class DefaultEdgeRequestsService implements EdgeRequestsService {
         try {
             if (entityIds != null && !entityIds.isEmpty()) {
                 List<UserId> userIds = entityIds.stream().map(e -> new UserId(e.getId())).collect(Collectors.toList());
-                ListenableFuture<List<User>> usersFuture = userService.findUsersByTenantIdAndIdsAsync(edge.getTenantId(), userIds);
-                return Futures.transform(usersFuture, users -> {
-                    if (users != null && !users.isEmpty()) {
-                        log.trace("[{}] [{}] user(s) are going to be pushed to edge.", edge.getId(), users.size());
-                        for (User user : users) {
-                            saveEdgeEvent(edge.getTenantId(), edge.getId(), EdgeEventType.USER, EdgeEventActionType.ADDED, user.getId(), null, entityGroupId);
-                        }
+                List<User> users = userService.findUsersByTenantIdAndIds(edge.getTenantId(), userIds);
+                if (users != null && !users.isEmpty()) {
+                    log.trace("[{}] [{}] user(s) are going to be pushed to edge.", edge.getId(), users.size());
+                    for (User user : users) {
+                        saveEdgeEvent(edge.getTenantId(), edge.getId(), EdgeEventType.USER, EdgeEventActionType.ADDED, user.getId(), null, entityGroupId);
                     }
-                    return null;
-                }, dbCallbackExecutorService);
+                }
+                return null;
             }
         } catch (Exception e) {
             log.error("Exception during loading edge user(s) on sync!", e);

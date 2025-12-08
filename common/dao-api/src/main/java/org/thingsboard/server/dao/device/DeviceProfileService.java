@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.dao.device;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import org.thingsboard.server.common.data.DeviceProfile;
 import org.thingsboard.server.common.data.DeviceProfileInfo;
 import org.thingsboard.server.common.data.EntityInfo;
@@ -64,7 +63,7 @@ public interface DeviceProfileService extends EntityDaoService {
 
     PageData<DeviceProfileInfo> findDeviceProfileInfos(TenantId tenantId, PageLink pageLink, String transportType);
 
-    ListenableFuture<List<DeviceProfileInfo>> findDeviceProfilesByIdsAsync(TenantId tenantId, List<DeviceProfileId> deviceProfileIds);
+    List<DeviceProfileInfo> findDeviceProfilesByIds(TenantId tenantId, List<DeviceProfileId> deviceProfileIds);
 
     DeviceProfile findDeviceProfileByProvisionDeviceKey(String provisionDeviceKey);
 
