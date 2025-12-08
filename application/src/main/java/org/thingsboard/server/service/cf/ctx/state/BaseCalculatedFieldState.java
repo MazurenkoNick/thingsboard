@@ -90,7 +90,6 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState {
 
             if (entryUpdated) {
                 stateUpdated = true;
-                updateLastUpdateTimestamp(newEntry);
             }
 
         }
@@ -126,15 +125,13 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState {
 
     protected abstract void validateNewEntry(ArgumentEntry newEntry);
 
-    private void updateLastUpdateTimestamp(ArgumentEntry entry) {
-        long newTs = this.latestTimestamp;
-        if (entry instanceof SingleValueArgumentEntry singleValueArgumentEntry) {
-            newTs = singleValueArgumentEntry.getTs();
-        } else if (entry instanceof TsRollingArgumentEntry tsRollingArgumentEntry) {
-            Map.Entry<Long, Double> lastEntry = tsRollingArgumentEntry.getTsRecords().lastEntry();
-            newTs = (lastEntry != null) ? lastEntry.getKey() : DEFAULT_LAST_UPDATE_TS;
-        }
-        this.latestTimestamp = Math.max(this.latestTimestamp, newTs);
+    public long getLatestTimestamp() {
+        long currentLatestTs = arguments.values().stream()
+                .mapToLong(ArgumentEntry::getLatestTs)
+                .max()
+                .orElse(DEFAULT_LAST_UPDATE_TS);
+        latestTimestamp = Math.max(currentLatestTs, latestTimestamp);
+        return latestTimestamp;
     }
 
 }

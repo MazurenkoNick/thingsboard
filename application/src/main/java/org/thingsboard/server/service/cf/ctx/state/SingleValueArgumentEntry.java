@@ -114,6 +114,11 @@ public class SingleValueArgumentEntry implements ArgumentEntry {
     }
 
     @Override
+    public long getLatestTs() {
+        return !isDefaultValue() ? ts : DEFAULT_LAST_UPDATE_TS;
+    }
+
+    @Override
     public TbelCfArg toTbelCfArg() {
         Object value = kvEntryValue.getValue();
         if (kvEntryValue instanceof JsonDataEntry) {
@@ -134,7 +139,7 @@ public class SingleValueArgumentEntry implements ArgumentEntry {
     @Override
     public boolean updateEntry(ArgumentEntry entry) {
         if (entry instanceof SingleValueArgumentEntry singleValueEntry) {
-            if (singleValueEntry.getTs() <= this.ts) {
+            if (singleValueEntry.getTs() < this.ts) {
                 return false;
             }
 
@@ -150,4 +155,9 @@ public class SingleValueArgumentEntry implements ArgumentEntry {
         }
         return false;
     }
+
+    public boolean isDefaultValue() {
+        return DEFAULT_VERSION.equals(this.version);
+    }
+
 }

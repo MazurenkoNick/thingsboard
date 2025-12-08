@@ -47,6 +47,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 
+import static org.thingsboard.server.service.cf.ctx.state.BaseCalculatedFieldState.DEFAULT_LAST_UPDATE_TS;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -97,6 +99,12 @@ public class TsRollingArgumentEntry implements ArgumentEntry {
     @Override
     public Object getValue() {
         return tsRecords;
+    }
+
+    @Override
+    public long getLatestTs() {
+        var lastEntry = tsRecords.lastEntry();
+        return (lastEntry != null) ? lastEntry.getKey() : DEFAULT_LAST_UPDATE_TS;
     }
 
     @Override
