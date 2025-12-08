@@ -103,8 +103,8 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
   @Input() entityName: string;
   @Input() ownerId: EntityId;
   @Input() isScript: boolean;
+  @Input({transform: booleanAttribute}) disable = false;
   @Input({transform: booleanAttribute}) readonly: boolean;
-  @Input() disabledAddButton = false;
   @Input() watchKeyChange = false;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
@@ -237,8 +237,6 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
       this.errorText = 'calculated-fields.hint.arguments-simple-with-rolling';
     } else if (this.argumentsFormArray.controls.some(control => control.value.refEntityId?.id === NULL_UUID)) {
       this.errorText = 'calculated-fields.hint.arguments-entity-not-found';
-    } else if (!this.argumentsFormArray.controls.length) {
-      this.errorText = 'calculated-fields.hint.arguments-empty';
     } else {
       this.errorText = '';
     }
