@@ -228,15 +228,15 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
         Map<String, String> mdMap = new HashMap<>(metadataTemplate.getKvMap());
         List<DownlinkData> result = downlinkConverter.convertDownLink(context.getDownlinkConverterContext(), Collections.singletonList(msg), new IntegrationMetaData(mdMap));
         List<WriteValue> writeValues = prepareWriteValues(result);
-        List<CallMethodRequest> callMethods =  prepareCallMethods(result);
+        List<CallMethodRequest> callMethods = prepareCallMethods(result);
 
         if (writeValues.isEmpty() && callMethods.isEmpty()) {
             return;
         }
 
         DonAsynchron.withCallback(doProcessDownLinkMsg(writeValues, callMethods), processResult -> {
-                integrationStatistics.incMessagesProcessed();
-                logOpcUaDownlink(context, writeValues, callMethods);
+            integrationStatistics.incMessagesProcessed();
+            logOpcUaDownlink(context, writeValues, callMethods);
         }, ex -> reportDownlinkError(context, msg, "ERROR", ex), MoreExecutors.directExecutor());
     }
 
@@ -422,7 +422,11 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
     }
 
     private String buildEffectiveEndpoint(OpcUaServerConfiguration cfg) {
-        return StringUtils.isNotBlank(cfg.getEndpointUrl()) ? cfg.getEndpointUrl() : OPC_TCP_SCHEME + cfg.getHost() + ":" + cfg.getPort();
+        String url = OPC_TCP_SCHEME + cfg.getHost() + ":" + cfg.getPort();
+        if (StringUtils.isNotBlank(cfg.getEndpoint())) {
+            url += "/" + StringUtils.removeStart(cfg.getEndpoint().trim(), "/");
+        }
+        return url;
     }
 
     private void sendConnectionSucceededMessageToRuleEngine() {
@@ -562,7 +566,7 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
     private boolean scanById(OpcUaNode node, Map.Entry<Pattern, DeviceMapping> mappingEntry) {
         if (mappingEntry.getValue().getNamespace() != null) {
             return node.getNodeId().getNamespaceIndex().intValue() == mappingEntry.getValue().getNamespace().intValue()
-                    && mappingEntry.getKey().matcher(node.getNodeId().getIdentifier().toString()).matches();
+                   && mappingEntry.getKey().matcher(node.getNodeId().getIdentifier().toString()).matches();
         } else {
             return mappingEntry.getKey().matcher(node.getNodeId().getIdentifier().toString()).matches();
         }

@@ -73,6 +73,7 @@ import org.thingsboard.server.common.data.tenant.profile.DefaultTenantProfileCon
 import org.thingsboard.server.common.data.util.CollectionsUtil;
 import org.thingsboard.server.common.util.ProtoUtils;
 import org.thingsboard.server.dao.relation.RelationService;
+import org.thingsboard.server.dao.usagerecord.ApiLimitService;
 import org.thingsboard.server.dao.util.TimeUtils;
 import org.thingsboard.server.gen.transport.TransportProtos.CalculatedFieldTelemetryMsgProto;
 import org.thingsboard.server.service.cf.CalculatedFieldProcessingService;
@@ -94,9 +95,13 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static org.thingsboard.server.service.cf.ctx.state.BaseCalculatedFieldState.DEFAULT_LAST_UPDATE_TS;
+
 @Data
 @Slf4j
 public class CalculatedFieldCtx implements Closeable {
+
+    public static final long DISABLED_INTERVAL_VALUE = -1L;
 
     private CalculatedField calculatedField;
 
@@ -130,6 +135,7 @@ public class CalculatedFieldCtx implements Closeable {
 
     private long maxStateSize;
     private long maxSingleValueArgumentSize;
+    private long intermediateAggregationIntervalMillis;
 
     private boolean relationQueryDynamicArguments;
     private List<String> mainEntityGeofencingArgumentNames;
@@ -137,6 +143,8 @@ public class CalculatedFieldCtx implements Closeable {
     private List<String> relatedEntityArgumentNames;
 
     private long scheduledUpdateIntervalMillis;
+    private long cfCheckReevaluationInterval;
+    private long alarmReevaluationInterval;
 
     private Argument propagationArgument;
     private boolean applyExpressionForResolvedArguments;
@@ -212,7 +220,7 @@ public class CalculatedFieldCtx implements Closeable {
             }
         }
         if (calculatedField.getConfiguration() instanceof ScheduledUpdateSupportedCalculatedFieldConfiguration scheduledConfig) {
-            this.scheduledUpdateIntervalMillis = scheduledConfig.isScheduledUpdateEnabled() ? TimeUnit.SECONDS.toMillis(scheduledConfig.getScheduledUpdateInterval()) : -1L;
+            this.scheduledUpdateIntervalMillis = scheduledConfig.isScheduledUpdateEnabled() ? TimeUnit.SECONDS.toMillis(scheduledConfig.getScheduledUpdateInterval()) : DISABLED_INTERVAL_VALUE;
         }
         if (calculatedField.getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration aggConfig) {
             this.useLatestTs = aggConfig.isUseLatestTs();
@@ -223,8 +231,7 @@ public class CalculatedFieldCtx implements Closeable {
         this.alarmService = systemContext.getAlarmService();
         this.cfProcessingService = systemContext.getCalculatedFieldProcessingService();
 
-        this.maxStateSize = systemContext.getApiLimitService().getLimit(tenantId, DefaultTenantProfileConfiguration::getMaxStateSizeInKBytes) * 1024;
-        this.maxSingleValueArgumentSize = systemContext.getApiLimitService().getLimit(tenantId, DefaultTenantProfileConfiguration::getMaxSingleValueArgumentSizeInKBytes) * 1024;
+        setTenantProfileProperties();
     }
 
     public boolean requiresScheduledReevaluation() {
@@ -238,6 +245,12 @@ public class CalculatedFieldCtx implements Closeable {
                 lastReevaluationTs = now;
                 return true;
             }
+            if (entityAggregationConfig.isProduceIntermediateResult()) {
+                if (now - lastReevaluationTs >= intermediateAggregationIntervalMillis) {
+                    lastReevaluationTs = now;
+                    return true;
+                }
+            }
             ZonedDateTime lastReevaluationTime = TimeUtils.toZonedDateTime(lastReevaluationTs, entityAggregationConfig.getInterval().getZoneId());
             long previousIntervalEndTs = entityAggregationConfig.getInterval().getDateTimeIntervalEndTs(lastReevaluationTime);
             if (now >= previousIntervalEndTs) {
@@ -248,7 +261,7 @@ public class CalculatedFieldCtx implements Closeable {
         boolean requiresScheduledReevaluation = calculatedField.getConfiguration().requiresScheduledReevaluation();
         if (calculatedField.getConfiguration() instanceof AlarmCalculatedFieldConfiguration) {
             if (requiresScheduledReevaluation) {
-                long reevaluationIntervalMillis = TimeUnit.SECONDS.toMillis(systemContext.getAlarmRulesReevaluationInterval());
+                long reevaluationIntervalMillis = TimeUnit.SECONDS.toMillis(alarmReevaluationInterval);
                 if (now - lastReevaluationTs >= reevaluationIntervalMillis) {
                     lastReevaluationTs = now;
                     return true;
@@ -303,9 +316,13 @@ public class CalculatedFieldCtx implements Closeable {
         }
     }
 
-    public void updateTenantProfileProperties() {
-        this.maxStateSize = systemContext.getApiLimitService().getLimit(tenantId, DefaultTenantProfileConfiguration::getMaxStateSizeInKBytes) * 1024;
-        this.maxSingleValueArgumentSize = systemContext.getApiLimitService().getLimit(tenantId, DefaultTenantProfileConfiguration::getMaxSingleValueArgumentSizeInKBytes) * 1024;
+    public void setTenantProfileProperties() {
+        ApiLimitService apiLimitService = systemContext.getApiLimitService();
+        this.maxStateSize = apiLimitService.getLimit(tenantId, DefaultTenantProfileConfiguration::getMaxStateSizeInKBytes) * 1024;
+        this.maxSingleValueArgumentSize = apiLimitService.getLimit(tenantId, DefaultTenantProfileConfiguration::getMaxSingleValueArgumentSizeInKBytes) * 1024;
+        this.intermediateAggregationIntervalMillis = TimeUnit.SECONDS.toMillis(apiLimitService.getLimit(tenantId, DefaultTenantProfileConfiguration::getIntermediateAggregationIntervalInSecForCF));
+        this.cfCheckReevaluationInterval = apiLimitService.getLimit(tenantId, DefaultTenantProfileConfiguration::getCfReevaluationCheckInterval);
+        this.alarmReevaluationInterval = apiLimitService.getLimit(tenantId, DefaultTenantProfileConfiguration::getAlarmsReevaluationInterval);
     }
 
     public double evaluateSimpleExpression(Expression expression, CalculatedFieldState state) {
@@ -675,7 +692,8 @@ public class CalculatedFieldCtx implements Closeable {
             && other.getCalculatedField().getConfiguration() instanceof EntityAggregationCalculatedFieldConfiguration otherConfig) {
             boolean metricsChanged = !Objects.equals(thisConfig.getMetrics(), otherConfig.getMetrics());
             boolean watermarkChanged = !Objects.equals(thisConfig.getWatermark(), otherConfig.getWatermark());
-            return metricsChanged || watermarkChanged;
+            boolean produceIntermediateResultChanged = thisConfig.isProduceIntermediateResult() != otherConfig.isProduceIntermediateResult();
+            return metricsChanged || watermarkChanged || produceIntermediateResultChanged;
         }
         return false;
     }
@@ -730,8 +748,8 @@ public class CalculatedFieldCtx implements Closeable {
         return false;
     }
 
-    private boolean isScheduledUpdateEnabled() {
-        return scheduledUpdateIntervalMillis != -1;
+    private boolean isScheduledUpdateDisabled() {
+        return scheduledUpdateIntervalMillis == DISABLED_INTERVAL_VALUE;
     }
 
     public boolean shouldFetchRelationQueryDynamicArgumentsFromDb(CalculatedFieldState state) {
@@ -741,11 +759,11 @@ public class CalculatedFieldCtx implements Closeable {
         return switch (cfType) {
             case PROPAGATION -> true;
             case GEOFENCING -> {
-                if (!isScheduledUpdateEnabled()) {
+                if (isScheduledUpdateDisabled()) {
                     yield false;
                 }
                 var geofencingState = (GeofencingCalculatedFieldState) state;
-                if (geofencingState.getLastDynamicArgumentsRefreshTs() == -1L) {
+                if (geofencingState.getLastDynamicArgumentsRefreshTs() == DEFAULT_LAST_UPDATE_TS) {
                     yield true;
                 }
                 yield geofencingState.getLastDynamicArgumentsRefreshTs() <
@@ -759,10 +777,10 @@ public class CalculatedFieldCtx implements Closeable {
         if (!(state instanceof RelatedEntitiesAggregationCalculatedFieldState relatedEntitiesAggState)) {
             return false;
         }
-        if (!isScheduledUpdateEnabled()) {
+        if (isScheduledUpdateDisabled()) {
             return false;
         }
-        if (relatedEntitiesAggState.getLastRelatedEntitiesRefreshTs() == -1L) {
+        if (relatedEntitiesAggState.getLastRelatedEntitiesRefreshTs() == DEFAULT_LAST_UPDATE_TS) {
             return true;
         }
         return relatedEntitiesAggState.getLastRelatedEntitiesRefreshTs() < System.currentTimeMillis() - scheduledUpdateIntervalMillis;

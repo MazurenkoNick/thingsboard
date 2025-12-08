@@ -45,6 +45,10 @@ import org.thingsboard.server.common.data.EdgeUtils;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EntityView;
 import org.thingsboard.server.common.data.HasCustomerId;
+import org.thingsboard.server.common.data.HasName;
+import org.thingsboard.server.common.data.HasVersion;
+import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.HasOwnerId;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.edge.Edge;
@@ -94,6 +98,7 @@ import org.thingsboard.server.service.executors.DbCallbackExecutorService;
 import org.thingsboard.server.service.security.permission.OwnersCacheService;
 import org.thingsboard.server.service.state.DefaultDeviceStateService;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -553,6 +558,64 @@ public abstract class BaseEdgeProcessor implements EdgeProcessor {
             if (entityGroup != null) {
                 edgeCtx.getEntityGroupService().addEntityToEntityGroup(tenantId, entityGroupId, entityId);
             }
+        }
+    }
+
+    protected boolean isSaveRequired(HasVersion current, HasVersion updated) {
+        updated.setVersion(null);
+        return !updated.equals(current);
+    }
+
+    protected <I extends EntityId, E extends HasName & HasId<I>> Optional<String> generateUniqueNameIfDuplicateExists(
+            TenantId tenantId, I entityId, E entity, @Nullable E entityWithSameName) {
+
+        if (entityWithSameName == null || entityWithSameName.getId().equals(entityId)) {
+            return Optional.empty();
+        }
+        String currentName = entity.getName();
+        String newEntityName = generateRandomAlphabeticString(currentName);
+
+        log.warn("[{}] Entity with name '{}' already exists (id={}). Renaming to '{}'", tenantId, currentName, entityWithSameName.getId(), newEntityName);
+        return Optional.of(newEntityName);
+    }
+
+    protected static String generateRandomAlphabeticString(String prefix) {
+        return prefix + "_" + StringUtils.randomAlphabetic(15);
+    }
+
+    protected <T extends HasOwnerId & HasId<? extends EntityId>> void addEntityToEdgeAllGroup(TenantId tenantId, Edge edge, T entity) {
+        if (entity == null) {
+            return;
+        }
+        EntityId entityId = entity.getId();
+        EntityType entityType = entityId.getEntityType();
+        try {
+            EntityType ownerType = entity.getOwnerId().getEntityType();
+            EntityGroup edgeEntityGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), ownerType, entityType).get();
+            if (edgeEntityGroup != null) {
+                edgeCtx.getEntityGroupService().addEntityToEntityGroup(tenantId, edgeEntityGroup.getId(), entityId);
+            }
+        } catch (Exception e) {
+            log.warn("[{}] Can't add entity to edge {} 'All' group, entity id [{}]", tenantId, entityType, entityId, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected <T extends HasOwnerId & HasId<? extends EntityId>> void removeEntityFromEdgeAllGroup(TenantId tenantId, Edge edge, T entity) {
+        if (entity == null) {
+            return;
+        }
+        EntityId entityId = entity.getId();
+        EntityType entityType = entityId.getEntityType();
+        try {
+            EntityType ownerType = entity.getOwnerId().getEntityType();
+            EntityGroup edgeEntityGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), ownerType, entityType).get();
+            if (edgeEntityGroup != null) {
+                edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, edgeEntityGroup.getId(), entityId);
+            }
+        } catch (Exception e) {
+            log.warn("[{}] Can't delete entity from edge {} 'All' group, entity id [{}]", tenantId, entityType, entityId, e);
+            throw new RuntimeException(e);
         }
     }
 

@@ -60,6 +60,7 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.ThingsBoardExecutors;
 import org.thingsboard.rest.client.utils.RestJsonConverter;
 import org.thingsboard.server.common.data.AdminSettings;
+import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.ClaimRequest;
 import org.thingsboard.server.common.data.ContactBased;
 import org.thingsboard.server.common.data.Customer;
@@ -182,6 +183,8 @@ import org.thingsboard.server.common.data.notification.NotificationRequestInfo;
 import org.thingsboard.server.common.data.notification.NotificationRequestPreview;
 import org.thingsboard.server.common.data.notification.settings.NotificationSettings;
 import org.thingsboard.server.common.data.notification.settings.UserNotificationSettings;
+import org.thingsboard.server.common.data.notification.targets.NotificationTarget;
+import org.thingsboard.server.common.data.notification.template.NotificationTemplate;
 import org.thingsboard.server.common.data.oauth2.OAuth2Client;
 import org.thingsboard.server.common.data.oauth2.OAuth2ClientInfo;
 import org.thingsboard.server.common.data.oauth2.OAuth2ClientLoginInfo;
@@ -203,6 +206,7 @@ import org.thingsboard.server.common.data.plugin.ComponentType;
 import org.thingsboard.server.common.data.query.AlarmCountQuery;
 import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.AlarmDataQuery;
+import org.thingsboard.server.common.data.query.AvailableEntityKeys;
 import org.thingsboard.server.common.data.query.EntityCountQuery;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
@@ -652,7 +656,7 @@ public class RestClient implements Closeable {
     }
 
     public PageData<AlarmInfo> getAllAlarmsV2(List<AlarmSearchStatus> statusList, List<AlarmSeverity> severityList,
-                                           List<String> typeList, String assignedId, TimePageLink pageLink) {
+                                              List<String> typeList, String assignedId, TimePageLink pageLink) {
         String urlSecondPart = "/api/v2/alarms?";
         Map<String, String> params = new HashMap<>();
         if (!CollectionUtils.isEmpty(statusList)) {
@@ -1609,12 +1613,15 @@ public class RestClient implements Closeable {
                 }).getBody();
     }
 
-    public JsonNode findEntityTimeseriesAndAttributesKeysByQuery(EntityDataQuery query) {
-        return restTemplate.exchange(
-                baseURL + "/api/entitiesQuery/find/keys",
-                HttpMethod.POST, new HttpEntity<>(query),
-                new ParameterizedTypeReference<JsonNode>() {
-                }).getBody();
+    public AvailableEntityKeys findAvailableEntityKeysByQuery(EntityDataQuery query, boolean includeTimeseries, boolean includeAttributes, AttributeScope scope) {
+        var uri = UriComponentsBuilder.fromUriString(baseURL)
+                .path("/api/entitiesQuery/find/keys")
+                .queryParam("timeseries", includeTimeseries)
+                .queryParam("attributes", includeAttributes)
+                .queryParamIfPresent("scope", Optional.ofNullable(scope))
+                .build()
+                .toUri();
+        return restTemplate.exchange(uri, HttpMethod.POST, new HttpEntity<>(query), new ParameterizedTypeReference<AvailableEntityKeys>() {}).getBody();
     }
 
     public PageData<AlarmData> findAlarmDataByQuery(AlarmDataQuery query) {
@@ -2005,7 +2012,8 @@ public class RestClient implements Closeable {
                 HttpMethod.GET,
                 HttpEntity.EMPTY,
                 new ParameterizedTypeReference<PageData<DomainInfo>>() {
-                }).getBody();
+                },
+                params).getBody();
     }
 
     public Optional<DomainInfo> getDomainInfoById(DomainId domainId) {
@@ -2041,7 +2049,8 @@ public class RestClient implements Closeable {
                 HttpMethod.GET,
                 HttpEntity.EMPTY,
                 new ParameterizedTypeReference<PageData<MobileApp>>() {
-                }).getBody();
+                },
+                params).getBody();
     }
 
     public Optional<MobileApp> getMobileAppById(MobileAppId mobileAppId) {
@@ -2073,7 +2082,8 @@ public class RestClient implements Closeable {
                 HttpMethod.GET,
                 HttpEntity.EMPTY,
                 new ParameterizedTypeReference<PageData<MobileAppBundleInfo>>() {
-                }).getBody();
+                },
+                params).getBody();
     }
 
     public Optional<MobileAppBundle> getMobileBundleById(MobileAppBundleId mobileAppBundleId) {
@@ -3883,11 +3893,23 @@ public class RestClient implements Closeable {
         }
     }
 
-    public PageData<Notification> getNotifications(PageLink pageLink) {
+    public PageData<Notification> getNotifications(Boolean unreadOnly, NotificationDeliveryMethod deliveryMethod, PageLink pageLink) {
         Map<String, String> params = new HashMap<>();
+
+        StringBuilder urlBuilder = new StringBuilder();
+        urlBuilder.append(baseURL).append("/api/notifications?").append(getUrlParams(pageLink));
         addPageLinkToParam(params, pageLink);
-        return restTemplate.exchange(
-                baseURL + "/api/notifications?" + getUrlParams(pageLink),
+
+        if (unreadOnly != null) {
+            urlBuilder.append("&unreadOnly={unreadOnly}");
+            params.put("unreadOnly", unreadOnly.toString());
+        }
+        if (deliveryMethod != null) {
+            urlBuilder.append("&deliveryMethod={deliveryMethod}");
+            params.put("deliveryMethod", deliveryMethod.name());
+        }
+
+        return restTemplate.exchange(urlBuilder.toString(),
                 HttpMethod.GET,
                 HttpEntity.EMPTY,
                 new ParameterizedTypeReference<PageData<Notification>>() {
@@ -3928,7 +3950,8 @@ public class RestClient implements Closeable {
                 baseURL + uri,
                 HttpMethod.PUT,
                 HttpEntity.EMPTY,
-                Void.class);
+                Void.class,
+                params);
     }
 
 
@@ -3936,7 +3959,7 @@ public class RestClient implements Closeable {
         restTemplate.delete(baseURL + "/api/notification/{id}", notificationId.getId());
     }
 
-    public NotificationRequest createNotificationRequest(NotificationRequest notificationRequest) {
+    public NotificationRequest saveNotificationRequest(NotificationRequest notificationRequest) {
         return restTemplate.postForEntity(baseURL + "/api/notification/request", notificationRequest, NotificationRequest.class).getBody();
     }
 
@@ -4013,6 +4036,14 @@ public class RestClient implements Closeable {
                 throw exception;
             }
         }
+    }
+
+    public NotificationTarget saveNotificationTarget(NotificationTarget notificationTarget) {
+        return restTemplate.postForEntity(baseURL + "/api/notification/target", notificationTarget, NotificationTarget.class).getBody();
+    }
+
+    public NotificationTemplate saveNotificationTemplate(NotificationTemplate notificationTemplate) {
+        return restTemplate.postForEntity(baseURL + "/api/notification/template", notificationTemplate, NotificationTemplate.class).getBody();
     }
 
     public AiModel saveAiModel(AiModel aiModel) {

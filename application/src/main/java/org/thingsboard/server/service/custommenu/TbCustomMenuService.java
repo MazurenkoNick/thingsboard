@@ -46,7 +46,7 @@ public interface TbCustomMenuService extends EtagCacheService<CustomMenuCacheKey
 
     CustomMenu updateCustomMenu(CustomMenu customMenu, boolean force) throws ThingsboardException;
 
-    void updateAssigneeList(CustomMenu oldCustomMenu, CMAssigneeType newAssigneeType, List<EntityId> newAssignToList, boolean force) throws ThingsboardException;
+    void updateAssigneeList(CustomMenu oldCustomMenu, CMAssigneeType newAssigneeType, List<EntityId> newAssignToList, String[] userGroupNames, boolean force) throws ThingsboardException;
 
     CustomMenuDeleteResult deleteCustomMenu(CustomMenu customMenu, boolean force);
 }

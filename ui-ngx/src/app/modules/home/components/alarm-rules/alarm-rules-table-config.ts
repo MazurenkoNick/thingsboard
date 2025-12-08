@@ -324,7 +324,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
   }
 
   private importCalculatedField(): void {
-    this.importExportService.openCalculatedFieldImportDialog()
+    this.importExportService.openCalculatedFieldImportDialog('alarm-rule.import', 'alarm-rule.file')
       .pipe(
         filter(Boolean),
         switchMap(calculatedField => {
