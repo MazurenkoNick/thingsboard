@@ -111,7 +111,6 @@ export class ImageMap extends LeafletMap {
               name: imageUrlAttribute,
               label: imageUrlAttribute,
               settings: {},
-              _hash: Math.random()
             }
           ]
         }
