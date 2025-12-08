@@ -219,9 +219,9 @@ export interface EdgeInstructions {
 }
 
 export enum EdgeInstructionsMethod {
+  docker,
   ubuntu,
-  centos,
-  docker
+  centos
 }
 
 export const edgeEntityGroupTypes: EntityType[] = [
