@@ -28,39 +28,38 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.notification;
+package org.thingsboard.server.common.data.notification.info;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.EntityType;
 
-@AllArgsConstructor
+import java.util.Map;
+
+import static org.thingsboard.server.common.data.util.CollectionsUtil.mapOf;
+
+@Data
 @NoArgsConstructor
-public enum NotificationType {
+@AllArgsConstructor
+@Builder
+public class EntitiesLimitIncreaseRequestNotificationInfo implements NotificationInfo {
 
-    GENERAL,
-    ALARM,
-    DEVICE_ACTIVITY,
-    ENTITY_ACTION,
-    ALARM_COMMENT,
-    RULE_ENGINE_COMPONENT_LIFECYCLE_EVENT,
-    ALARM_ASSIGNMENT,
-    NEW_PLATFORM_VERSION,
-    ENTITIES_LIMIT,
-    ENTITIES_LIMIT_INCREASE_REQUEST,
-    API_USAGE_LIMIT,
-    RULE_NODE,
-    INTEGRATION_LIFECYCLE_EVENT,
-    RATE_LIMITS,
-    EDGE_CONNECTION,
-    EDGE_COMMUNICATION_FAILURE,
-    TASK_PROCESSING_FAILURE,
-    RESOURCES_SHORTAGE,
-    USER_ACTIVATED(true),
-    USER_REGISTERED(true),
-    REPORT_GENERATED;
+    private EntityType entityType;
+    private String userEmail;
+    private String increaseLimitActionLabel;
+    private String increaseLimitLink;
+    private String baseUrl;
 
-    @Getter
-    private boolean system;
-
+    @Override
+    public Map<String, String> getTemplateData() {
+        return mapOf(
+                "entityType", entityType.getNormalName(),
+                "userEmail", userEmail,
+                "increaseLimitActionLabel", increaseLimitActionLabel,
+                "increaseLimitLink", increaseLimitLink,
+                "baseUrl", baseUrl
+        );
+    }
 }

@@ -45,6 +45,7 @@ export const Constants = {
     itemNotFound: 32,
     tooManyRequests: 33,
     tooManyUpdates: 34,
+    entitiesLimitExceeded: 41,
     passwordViolation: 45
   },
   entryPoints: {
