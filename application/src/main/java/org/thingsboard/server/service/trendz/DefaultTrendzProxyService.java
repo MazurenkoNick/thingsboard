@@ -87,7 +87,7 @@ public class DefaultTrendzProxyService implements TrendzProxyService {
         Optional<TrendzSettings> trendzSettings = Optional.ofNullable(trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID));
         trendzSettings.map(TrendzSettings::synchronizationResult)
                 .map(TrendzSynchronizationResult::status)
-                .filter(status -> status == TrendzSynchronizationStatus.SYNCED)
+                .filter(status -> status != TrendzSynchronizationStatus.NOT_AVAILABLE)
                 .orElseThrow(() -> new ThingsboardException(
                         "Trendz is not synced. Please sync before using it.", ThingsboardErrorCode.GENERAL
                 ));
