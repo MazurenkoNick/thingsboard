@@ -99,8 +99,8 @@ public class ThingsboardSecurityConfiguration {
     public static final String PUBLIC_LOGIN_ENTRY_POINT = "/api/auth/login/public";
     public static final String TOKEN_REFRESH_ENTRY_POINT = "/api/auth/token";
     protected static final String[] NON_TOKEN_BASED_AUTH_ENTRY_POINTS = new String[]{"/index.html", "/assets/**", "/static/**", "/api/noauth/**", "/webjars/**", "/api/license/**", "/api/images/public/**", "/.well-known/**"};
-    public static final String TOKEN_BASED_AUTH_ENTRY_POINT = "/api/**";
-    protected static final String[] TRENDZ_NON_TOKEN_BASED_AUTH_ENTRY_POINTS = new String[]{"/apiTrendz/**", "/trendz/**"};
+    public static final String[] TOKEN_BASED_AUTH_ENTRY_POINTS = new String[]{"/api/**", "/apiTrendz/**"};
+    protected static final String[] TRENDZ_NON_TOKEN_BASED_AUTH_ENTRY_POINTS = new String[]{"/apiTrendz/publicApi/**", "/trendz/**"};
     public static final String WS_ENTRY_POINT = "/api/ws/**";
     public static final String MAIL_OAUTH2_PROCESSING_ENTRY_POINT = "/api/admin/mail/oauth2/code";
     public static final String DEVICE_CONNECTIVITY_CERTIFICATE_DOWNLOAD_ENTRY_POINT = "/api/device-connectivity/*/certificate/download";
@@ -222,7 +222,8 @@ public class ThingsboardSecurityConfiguration {
                         MAIL_OAUTH2_PROCESSING_ENTRY_POINT,
                         DEVICE_CONNECTIVITY_CERTIFICATE_DOWNLOAD_ENTRY_POINT)
         ).toList();
-        return new SkipPathRequestMatcher(pathsToSkip, TOKEN_BASED_AUTH_ENTRY_POINT);
+        List<String> pathToProcess = Arrays.stream(TOKEN_BASED_AUTH_ENTRY_POINTS).toList();
+        return new SkipPathRequestMatcher(pathsToSkip, pathToProcess);
     }
 
     @Bean
@@ -279,7 +280,7 @@ public class ThingsboardSecurityConfiguration {
                                 MAIL_OAUTH2_PROCESSING_ENTRY_POINT, // Mail oauth2 code processing url
                                 DEVICE_CONNECTIVITY_CERTIFICATE_DOWNLOAD_ENTRY_POINT, // Device connectivity certificate (public)
                                 WS_ENTRY_POINT).permitAll() // Protected WebSocket API End-points
-                        .requestMatchers(TOKEN_BASED_AUTH_ENTRY_POINT).authenticated() // Protected API End-points
+                        .requestMatchers(TOKEN_BASED_AUTH_ENTRY_POINTS).authenticated() // Protected API End-points
                         .anyRequest().permitAll())
                 .exceptionHandling(config -> config.accessDeniedHandler(restAccessDeniedHandler))
                 .addFilterBefore(buildRestLoginProcessingFilter(), UsernamePasswordAuthenticationFilter.class)
