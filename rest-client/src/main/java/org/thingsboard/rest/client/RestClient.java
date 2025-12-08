@@ -3959,7 +3959,7 @@ public class RestClient implements Closeable {
         restTemplate.delete(baseURL + "/api/notification/{id}", notificationId.getId());
     }
 
-    public NotificationRequest createNotificationRequest(NotificationRequest notificationRequest) {
+    public NotificationRequest saveNotificationRequest(NotificationRequest notificationRequest) {
         return restTemplate.postForEntity(baseURL + "/api/notification/request", notificationRequest, NotificationRequest.class).getBody();
     }
 
@@ -4038,11 +4038,11 @@ public class RestClient implements Closeable {
         }
     }
 
-    public NotificationTarget createNotificationTarget(NotificationTarget notificationTarget) {
+    public NotificationTarget saveNotificationTarget(NotificationTarget notificationTarget) {
         return restTemplate.postForEntity(baseURL + "/api/notification/target", notificationTarget, NotificationTarget.class).getBody();
     }
 
-    public NotificationTemplate createNotificationTemplate(NotificationTemplate notificationTemplate) {
+    public NotificationTemplate saveNotificationTemplate(NotificationTemplate notificationTemplate) {
         return restTemplate.postForEntity(baseURL + "/api/notification/template", notificationTemplate, NotificationTemplate.class).getBody();
     }
 
