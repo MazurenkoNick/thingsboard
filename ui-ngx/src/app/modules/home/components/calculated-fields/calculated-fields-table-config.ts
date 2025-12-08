@@ -274,7 +274,7 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
   }
 
   private openDebugEventsDialog(calculatedField: CalculatedField): void {
-    const customCellActionEnabledFn = (event: DebugEvent) => {
+    const debugActionEnabledFn = (event: DebugEvent) => {
       return (calculatedField.type === CalculatedFieldType.SCRIPT ||
         (calculatedField.type === CalculatedFieldType.PROPAGATION &&
           calculatedField.configuration.applyExpressionToResolvedArguments)
@@ -292,12 +292,12 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
       data: {
         title: 'calculated-fields.debugging',
         tenantId: this.tenantId,
-        value: calculatedField.id,
+        entityId: calculatedField.id,
         debugEventTypes:[DebugEventType.DEBUG_CALCULATED_FIELD],
         disabledEventTypes:[EventType.LC_EVENT, EventType.ERROR, EventType.STATS],
         defaultEventType: DebugEventType.DEBUG_CALCULATED_FIELD,
-        onDebugEventSelected: onDebugEventSelected,
-        customCellActionEnabledFn: customCellActionEnabledFn,
+        onDebugEventSelected,
+        debugActionEnabledFn,
         hideClearEventAction: this.hideClearEventAction
       }
     })

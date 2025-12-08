@@ -80,7 +80,7 @@ import {
   CalculatedFieldTestScriptDialogData
 } from "@home/components/calculated-fields/components/test-dialog/calculated-field-script-test-dialog.component";
 import { EventsDialogComponent, EventsDialogData } from '@home/dialogs/events-dialog.component';
-import { DebugEventType, Event as DebugEvent, EventType } from '@shared/models/event.models';
+import { DebugEventType, EventType } from '@shared/models/event.models';
 
 export class AlarmRulesTableConfig extends EntityTableConfig<any> {
 
@@ -290,25 +290,17 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
   }
 
   private openDebugEventsDialog(calculatedField: CalculatedField): void {
-    const customCellActionEnabledFn = (event: DebugEvent) => {
-      return (calculatedField.type === CalculatedFieldType.SCRIPT ||
-        (calculatedField.type === CalculatedFieldType.PROPAGATION &&
-          calculatedField.configuration.applyExpressionToResolvedArguments)
-      ) && !!(event as DebugEvent).body.arguments;
-    };
-
     this.dialog.open<EventsDialogComponent, EventsDialogData, null>(EventsDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
         title: 'alarm-rule.debugging',
         tenantId: this.tenantId,
-        value: calculatedField.id,
+        entityId: calculatedField.id,
         debugEventTypes:[DebugEventType.DEBUG_CALCULATED_FIELD],
         disabledEventTypes:[EventType.LC_EVENT, EventType.ERROR, EventType.STATS],
         defaultEventType: DebugEventType.DEBUG_CALCULATED_FIELD,
-        onDebugEventSelected: null,
-        customCellActionEnabledFn: customCellActionEnabledFn,
+        debugActionEnabledFn: () => false,
         hideClearEventAction: this.hideClearEventAction
       }
     })
