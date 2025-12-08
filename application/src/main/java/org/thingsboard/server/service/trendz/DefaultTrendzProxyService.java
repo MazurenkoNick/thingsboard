@@ -43,6 +43,8 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.trendz.TrendzConfiguration;
 import org.thingsboard.server.common.data.trendz.TrendzSettings;
+import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResult;
+import org.thingsboard.server.common.data.trendz.TrendzSynchronizationStatus;
 import org.thingsboard.server.dao.trendz.TrendzSettingsService;
 
 import java.util.Optional;
@@ -82,8 +84,14 @@ public class DefaultTrendzProxyService implements TrendzProxyService {
     }
 
     private String getBaseTrendzUrl() throws ThingsboardException {
-        return Optional.ofNullable(trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID))
-                .map(TrendzSettings::configuration)
+        Optional<TrendzSettings> trendzSettings = Optional.ofNullable(trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID));
+        trendzSettings.map(TrendzSettings::synchronizationResult)
+                .map(TrendzSynchronizationResult::status)
+                .filter(status -> status == TrendzSynchronizationStatus.SYNCED)
+                .orElseThrow(() -> new ThingsboardException(
+                        "Trendz is not synced. Please sync before using it.", ThingsboardErrorCode.GENERAL
+                ));
+        return trendzSettings.map(TrendzSettings::configuration)
                 .map(TrendzConfiguration::trendzUrl)
                 .orElseThrow(() -> new ThingsboardException(
                         "Trendz URL is not configured. Please configure the Trendz URL in system settings.", ThingsboardErrorCode.GENERAL

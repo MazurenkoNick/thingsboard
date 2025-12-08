@@ -44,6 +44,8 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.trendz.TrendzConfiguration;
 import org.thingsboard.server.common.data.trendz.TrendzSettings;
+import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResult;
+import org.thingsboard.server.common.data.trendz.TrendzSynchronizationStatus;
 import org.thingsboard.server.controller.AbstractControllerTest;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 import org.thingsboard.server.dao.trendz.TrendzSettingsService;
@@ -69,9 +71,12 @@ public class TrendzProxyServiceTest extends AbstractControllerTest {
     private TrendzProxyService trendzProxyService;
 
     @Test
-    public void proxyTest_missingTrendzUrl() {
+    public void proxyTest_unsyncedTrendz() {
         when(trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID))
-                .thenReturn(new TrendzSettings(new TrendzConfiguration(null, null), null));
+                .thenReturn(new TrendzSettings(
+                        new TrendzConfiguration(null, null),
+                        new TrendzSynchronizationResult(null, null, null, TrendzSynchronizationStatus.NOT_AVAILABLE)
+                ));
 
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("POST", "/apiTrendz/test");
         httpServletRequest.addHeader("trendz_header", "trendz_header_value");
@@ -97,7 +102,10 @@ public class TrendzProxyServiceTest extends AbstractControllerTest {
         byte[] requestBody = "trendz_request_body".getBytes();
 
         when(trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID))
-                .thenReturn(new TrendzSettings(new TrendzConfiguration(trendzUrl, null), null));
+                .thenReturn(new TrendzSettings(
+                        new TrendzConfiguration(trendzUrl, null),
+                        new TrendzSynchronizationResult(null, null, null, TrendzSynchronizationStatus.SYNCED)
+                ));
         when(trendzClient.sendTrendzProxyRequest(trendzUrl, trendzUri, HttpMethod.POST, requestBody, requestHeaders))
                 .thenReturn(expected);
 
@@ -122,7 +130,10 @@ public class TrendzProxyServiceTest extends AbstractControllerTest {
         requestHeaders.add("trendz_request_header", "trendz_request_header_value");
 
         when(trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID))
-                .thenReturn(new TrendzSettings(new TrendzConfiguration(trendzUrl, null), null));
+                .thenReturn(new TrendzSettings(
+                        new TrendzConfiguration(trendzUrl, null),
+                        new TrendzSynchronizationResult(null, null, null, TrendzSynchronizationStatus.SYNCED)
+                ));
         when(trendzClient.sendTrendzProxyRequest(trendzUrl, "/apiTrendz/test?param1=value1&param2=value2", HttpMethod.GET, null, requestHeaders))
                 .thenReturn(expected);
 
