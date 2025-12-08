@@ -51,6 +51,7 @@
       [entityId]="data.value"
       [functionTestButtonLabel]="data.functionTestButtonLabel ?? ''"
       (debugEventSelected)="this.onDebugEventSelected($event)"
+      [isReadOnly]="data.isReadOnly"
     />
   </div>
   <div mat-dialog-actions class="justify-end">

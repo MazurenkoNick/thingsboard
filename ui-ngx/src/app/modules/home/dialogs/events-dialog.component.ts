@@ -36,6 +36,7 @@ export interface EventsDialogData {
   onDebugEventSelected?: (event: any, dialogRef: MatDialogRef<EventsDialogComponent, string>) => void;
   customCellActionEnabledFn?: (event: BaseData<HasId>) => boolean;
   hideClearEventAction?: boolean;
+  isReadOnly?: boolean;
 }
 
 @Component({
