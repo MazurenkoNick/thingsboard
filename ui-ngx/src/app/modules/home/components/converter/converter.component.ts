@@ -386,50 +386,15 @@ export class ConverterComponent extends EntityComponent<Converter> implements On
         debugEventTypes: [DebugEventType.DEBUG_CONVERTER],
         defaultEventType: DebugEventType.DEBUG_CONVERTER,
         tenantId: this.entity.tenantId.id,
-        value: this.entity.id,
+        entityId: this.entity.id,
         isReadOnly: !this.userPermissionsService.hasGenericPermission(Resource.CONVERTER, Operation.WRITE),
-        onDebugEventSelected: this.onDebugEventSelected.bind(this),
+        onDebugEventSelected: this.showConverterTestDialog.bind(this),
         functionTestButtonLabel: this.translate.instant(this.entity.type === ConverterType.UPLINK ?
           'converter.test-decoder-fuction' : 'converter.test-encoder-fuction')
       }
     })
       .afterClosed()
       .subscribe();
-  }
-
-  private onDebugEventSelected(event: DebugConverterEventBody) {
-    let metadata = '';
-    let msgContent = '';
-    let msgType = '';
-    let inIntegrationMetadata = '';
-    if (this.entity.type === ConverterType.DOWNLINK) {
-      const msg = JSON.parse(event.in)[0];
-      if (msg?.metadata) {
-        metadata = JSON.stringify(msg.metadata);
-      }
-      if (msg?.msg) {
-        msgContent = JSON.stringify(msg.msg);
-      }
-      if (msg?.msgType) {
-        msgType = msg.msgType;
-      }
-      inIntegrationMetadata = event.metadata;
-    } else {
-      msgContent = event.in;
-      metadata = event.metadata;
-      msgType = event.inMessageType;
-    }
-    const debugIn: ConverterDebugInput = {
-      inContentType: event.inMessageType,
-      inContent: msgContent,
-      inMetadata: metadata,
-      inMsgType: msgType,
-      inIntegrationMetadata: inIntegrationMetadata
-    };
-    const convertersTable = this.entitiesTableConfig.getTable();
-    const converterComponent = convertersTable ? convertersTable.entityDetailsPanel.entityComponent :
-      this.entitiesTableConfig.getEntityDetailsPage().entityComponent;
-    (converterComponent as ConverterComponent).showConverterTestDialog(debugIn, true);
   }
 
   private checkIsNewConverter(entity: Converter, form: FormGroup, emitEvent = true) {

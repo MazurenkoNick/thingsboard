@@ -180,7 +180,7 @@ export class IntegrationComponent extends EntityComponent<Integration, PageLink,
         debugEventTypes: [DebugEventType.DEBUG_INTEGRATION],
         defaultEventType: DebugEventType.DEBUG_INTEGRATION,
         tenantId: this.entity.tenantId.id,
-        value: this.entity.id
+        entityId: this.entity.id
       }
     })
       .afterClosed()
