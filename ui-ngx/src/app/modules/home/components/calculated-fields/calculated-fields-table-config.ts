@@ -80,8 +80,6 @@ import { UtilsService } from "@core/services/utils.service";
 import { CalculatedFieldEventBody, DebugEventType, Event as DebugEvent, EventType } from '@shared/models/event.models';
 import { EventsDialogComponent, EventsDialogData } from '@home/dialogs/events-dialog.component';
 import { ActionNotificationShow } from "@core/notification/notification.actions";
-import { CalculatedFieldEventBody, DebugEventType, Event as DebugEvent, EventType } from '@shared/models/event.models';
-import { EventsDialogComponent, EventsDialogData } from '@home/dialogs/events-dialog.component';
 
 export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedField> {
 
