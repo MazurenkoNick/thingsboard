@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.sql.customer;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
@@ -88,6 +89,12 @@ public class JpaCustomerDao extends JpaAbstractDao<CustomerEntity, Customer> imp
     @Override
     public Optional<Customer> findCustomerByTenantIdAndTitle(UUID tenantId, String title) {
         return Optional.ofNullable(DaoUtil.getData(customerRepository.findByTenantIdAndTitle(tenantId, title)));
+    }
+
+    @Override
+    public ListenableFuture<List<Customer>> findCustomersByTenantIdAndIdsAsync(UUID tenantId, List<UUID> customerIds) {
+        return DaoUtil.getEntitiesByTenantIdAndIdIn(customerIds, ids ->
+                customerRepository.findCustomersByTenantIdAndIdIn(tenantId, ids), service);
     }
 
     @Override

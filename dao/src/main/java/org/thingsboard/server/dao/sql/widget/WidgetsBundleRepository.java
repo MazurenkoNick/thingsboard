@@ -151,6 +151,17 @@ public interface WidgetsBundleRepository extends JpaRepository<WidgetsBundleEnti
     @Query("SELECT externalId FROM WidgetsBundleEntity WHERE id = :id")
     UUID getExternalIdById(@Param("id") UUID id);
 
+    @Query("SELECT wb FROM WidgetsBundleEntity wb WHERE wb.tenantId = :systemTenantId " +
+            "AND wb.id IN :widgetsBundleIds")
+    List<WidgetsBundleEntity> findSystemWidgetsBundlesByIdIn(@Param("systemTenantId") UUID systemTenantId,
+                                                             @Param("widgetsBundleIds") List<UUID> widgetsBundleIds);
+
+    @Query("SELECT wb FROM WidgetsBundleEntity wb WHERE wb.tenantId IN (:tenantId, :nullTenantId) " +
+            "AND wb.id IN :widgetsBundleIds")
+    List<WidgetsBundleEntity> findAllTenantWidgetsBundlesByTenantIdAndIdIn(@Param("tenantId") UUID tenantId,
+                                                                           @Param("nullTenantId") UUID nullTenantId,
+                                                                           @Param("widgetsBundleIds") List<UUID> widgetsBundleIds);
+
     @Query("SELECT wb FROM WidgetsBundleEntity wb WHERE " +
             "wb.id IN (:widgetsBundleIds) AND (wb.tenantId = :tenantId OR wb.tenantId = :systemTenantId)")
     List<WidgetsBundleEntity> findSystemOrTenantWidgetsBundlesByIdIn(@Param("tenantId") UUID tenantId,

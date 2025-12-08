@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.sql.tenant;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -81,6 +82,11 @@ public class JpaTenantDao extends JpaAbstractDao<TenantEntity, Tenant> implement
                 .findTenantsNextPage(
                         pageLink.getTextSearch(),
                         DaoUtil.toPageable(pageLink)));
+    }
+
+    @Override
+    public ListenableFuture<List<Tenant>> findTenantsByIdsAsync(UUID tenantId, List<UUID> tenantIds) {
+        return service.submit(() -> DaoUtil.convertDataList(tenantRepository.findTenantsByIdIn(tenantIds)));
     }
 
     @Override

@@ -217,6 +217,14 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
     }
 
     @Override
+    public ListenableFuture<List<Customer>> findCustomersByTenantIdAndIdsAsync(TenantId tenantId, List<CustomerId> customerIds) {
+        log.trace("Executing findCustomersByTenantIdAndIdsAsync, tenantId [{}], customerIds [{}]", tenantId, customerIds);
+        validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
+        validateIds(customerIds, ids -> "Incorrect customerIds " + ids);
+        return customerDao.findCustomersByTenantIdAndIdsAsync(tenantId.getId(), customerIds.stream().map(CustomerId::getId).collect(Collectors.toList()));
+    }
+
+    @Override
     public List<Customer> findCustomersByTenantIdAndIds(TenantId tenantId, List<CustomerId> customerIds) {
         log.trace("Executing findCustomersByTenantIdAndIds, tenantId [{}], customerIds [{}]", tenantId, customerIds);
         return customerDao.findCustomersByTenantIdAndIds(tenantId.getId(), customerIds.stream().map(CustomerId::getId).collect(Collectors.toList()));

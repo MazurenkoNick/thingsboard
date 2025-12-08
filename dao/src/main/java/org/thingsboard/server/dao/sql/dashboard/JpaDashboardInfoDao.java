@@ -148,6 +148,11 @@ public class JpaDashboardInfoDao extends JpaAbstractDao<DashboardInfoEntity, Das
     }
 
     @Override
+    public ListenableFuture<List<DashboardInfo>> findDashboardsByIdsAsync(UUID tenantId, List<UUID> dashboardIds) {
+        return service.submit(() -> DaoUtil.convertDataList(dashboardInfoRepository.findByIdIn(dashboardIds)));
+    }
+
+    @Override
     public List<DashboardInfo> findDashboardsByIds(UUID tenantId, List<UUID> dashboardIds) {
         return DaoUtil.convertDataList(dashboardInfoRepository.findByIdIn(dashboardIds));
     }

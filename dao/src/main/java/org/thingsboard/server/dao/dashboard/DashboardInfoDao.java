@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.dashboard;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -94,6 +95,8 @@ public interface DashboardInfoDao extends Dao<DashboardInfo>, ImageContainerDao<
      * @param dashboardIds the dashboard Ids
      * @return the list of dashboard objects
      */
+    ListenableFuture<List<DashboardInfo>> findDashboardsByIdsAsync(UUID tenantId, List<UUID> dashboardIds);
+
     List<DashboardInfo> findDashboardsByIds(UUID tenantId, List<UUID> dashboardIds);
 
     PageData<DashboardInfo> findDashboardsByEntityGroupId(UUID groupId, PageLink pageLink);

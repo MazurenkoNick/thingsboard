@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.rule;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
@@ -105,6 +106,8 @@ public interface RuleChainDao extends Dao<RuleChain>, TenantEntityDao<RuleChain>
      * @param ruleChainIds the rule chain Ids
      * @return the list of rule chain objects
      */
+    ListenableFuture<List<RuleChain>> findRuleChainsByTenantIdAndIdsAsync(UUID tenantId, List<UUID> ruleChainIds);
+
     List<RuleChain> findRuleChainsByTenantIdAndIds(UUID tenantId, List<UUID> ruleChainIds);
 
 }

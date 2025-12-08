@@ -208,6 +208,14 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
     }
 
     @Override
+    public ListenableFuture<List<User>> findUsersByTenantIdAndIdsAsync(TenantId tenantId, List<UserId> userIds) {
+        log.trace("Executing findUsersByTenantIdAndIdsAsync, tenantId [{}], userIds [{}]", tenantId, userIds);
+        validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
+        validateIds(userIds, ids -> "Incorrect userIds " + ids);
+        return userDao.findUsersByTenantIdAndIdsAsync(tenantId.getId(), toUUIDs(userIds));
+    }
+
+    @Override
     public List<User> findUsersByTenantIdAndIds(TenantId tenantId, List<UserId> userIds) {
         log.trace("Executing findUsersByTenantIdAndIds, tenantId [{}], userIds [{}]", tenantId, userIds);
         return userDao.findUsersByTenantIdAndIds(tenantId.getId(), toUUIDs(userIds));

@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.customer;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.id.CustomMenuId;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -91,6 +92,8 @@ public interface CustomerDao extends Dao<Customer>, TenantEntityDao<Customer>, E
      * @param customerIds the customer Ids
      * @return the list of customer objects
      */
+    ListenableFuture<List<Customer>> findCustomersByTenantIdAndIdsAsync(UUID tenantId, List<UUID> customerIds);
+
     List<Customer> findCustomersByTenantIdAndIds(UUID tenantId, List<UUID> customerIds);
 
     PageData<Customer> findCustomersByEntityGroupId(UUID groupId, PageLink pageLink);

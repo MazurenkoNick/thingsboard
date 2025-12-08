@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.tenant;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.TenantInfo;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -48,6 +49,8 @@ public interface TenantDao extends Dao<Tenant> {
     Tenant save(TenantId tenantId, Tenant tenant);
 
     PageData<Tenant> findTenants(TenantId tenantId, PageLink pageLink);
+
+    ListenableFuture<List<Tenant>> findTenantsByIdsAsync(UUID tenantId, List<UUID> tenantIds);
 
     List<Tenant> findTenantsByIds(UUID tenantId, List<UUID> tenantIds);
 

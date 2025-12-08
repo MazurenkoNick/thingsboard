@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.user;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.UserAuthDetails;
 import org.thingsboard.server.common.data.id.CustomMenuId;
@@ -129,6 +130,8 @@ public interface UserDao extends Dao<User>, TenantEntityDao<User> {
      * @param userIds the user Ids
      * @return the list of user objects
      */
+    ListenableFuture<List<User>> findUsersByTenantIdAndIdsAsync(UUID tenantId, List<UUID> userIds);
+
     List<User> findUsersByTenantIdAndIds(UUID tenantId, List<UUID> userIds);
 
     PageData<User> findUsersByEntityGroupId(UUID groupId, PageLink pageLink);

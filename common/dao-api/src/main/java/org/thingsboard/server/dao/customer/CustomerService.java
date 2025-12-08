@@ -61,6 +61,8 @@ public interface CustomerService extends EntityDaoService {
 
     ListenableFuture<Customer> findCustomerByIdAsync(TenantId tenantId, CustomerId customerId);
 
+    ListenableFuture<List<Customer>> findCustomersByTenantIdAndIdsAsync(TenantId tenantId, List<CustomerId> customerIds);
+
     List<Customer> findCustomersByTenantIdAndIds(TenantId tenantId, List<CustomerId> customerIds);
 
     Customer saveCustomer(Customer customer);
