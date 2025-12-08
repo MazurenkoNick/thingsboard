@@ -262,7 +262,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         TrendzHealthcheckResult result = trendzSyncService.performHealthcheck();
 
         assertNotNull(result);
-        assertEquals(TrendzSynchronizationResultType.TRENDZ_URL_UNREACHABLE, result.type());
+        assertEquals(TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, result.type());
     }
 
     @Test
