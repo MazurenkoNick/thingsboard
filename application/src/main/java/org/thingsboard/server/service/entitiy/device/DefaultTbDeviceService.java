@@ -40,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.NameConflictStrategy;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.audit.ActionType;
@@ -57,6 +58,7 @@ import org.thingsboard.server.dao.device.claim.ClaimResult;
 import org.thingsboard.server.dao.device.claim.ReclaimResult;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
+import org.thingsboard.server.service.security.permission.OwnersCacheService;
 
 import java.util.Collections;
 import java.util.List;
@@ -70,6 +72,7 @@ public class DefaultTbDeviceService extends AbstractTbEntityService implements T
     private final DeviceService deviceService;
     private final DeviceCredentialsService deviceCredentialsService;
     private final ClaimDevicesService claimDevicesService;
+    private final OwnersCacheService ownersCacheService;
 
     @Override
     public Device save(Device device, EntityGroup entityGroup) throws Exception {
@@ -83,9 +86,14 @@ public class DefaultTbDeviceService extends AbstractTbEntityService implements T
 
     @Override
     public Device save(Device device, String accessToken, List<EntityGroup> entityGroups, User user) throws Exception {
+        return save(device, accessToken, entityGroups, NameConflictStrategy.DEFAULT, user);
+    }
+
+    @Override
+    public Device save(Device device, String accessToken, List<EntityGroup> entityGroups, NameConflictStrategy nameConflictStrategy, User user) throws Exception {
         ActionType actionType = device.getId() == null ? ActionType.ADDED : ActionType.UPDATED;
         TenantId tenantId = device.getTenantId();
-        Device savedDevice = checkNotNull(deviceService.saveDeviceWithAccessToken(device, accessToken));
+        Device savedDevice = checkNotNull(deviceService.saveDeviceWithAccessToken(device, accessToken, nameConflictStrategy));
         autoCommit(user, savedDevice.getId());
         createOrUpdateGroupEntity(tenantId, savedDevice, entityGroups, actionType, user);
         return savedDevice;
@@ -98,11 +106,16 @@ public class DefaultTbDeviceService extends AbstractTbEntityService implements T
 
     @Override
     public Device saveDeviceWithCredentials(Device device, DeviceCredentials credentials, List<EntityGroup> entityGroups, User user) throws ThingsboardException {
+        return saveDeviceWithCredentials(device, credentials, entityGroups, NameConflictStrategy.DEFAULT, user);
+    }
+
+    @Override
+    public Device saveDeviceWithCredentials(Device device, DeviceCredentials credentials, List<EntityGroup> entityGroups, NameConflictStrategy nameConflictStrategy, User user) throws ThingsboardException {
         boolean isCreate = device.getId() == null;
         ActionType actionType = isCreate ? ActionType.ADDED : ActionType.UPDATED;
         TenantId tenantId = device.getTenantId();
         try {
-            Device savedDevice = checkNotNull(deviceService.saveDeviceWithCredentials(device, credentials));
+            Device savedDevice = checkNotNull(deviceService.saveDeviceWithCredentials(device, credentials, nameConflictStrategy));
             createOrUpdateGroupEntity(tenantId, savedDevice, entityGroups, actionType, user);
             return savedDevice;
         } catch (Exception e) {
@@ -205,6 +218,7 @@ public class DefaultTbDeviceService extends AbstractTbEntityService implements T
         DeviceId deviceId = device.getId();
         try {
             Device assignedDevice = deviceService.assignDeviceToTenant(newTenantId, device);
+            ownersCacheService.clearOwners(deviceId);
 
             logEntityActionService.logEntityAction(tenantId, deviceId, assignedDevice, assignedDevice.getCustomerId(),
                     actionType, user, newTenantId.toString(), newTenant.getName());

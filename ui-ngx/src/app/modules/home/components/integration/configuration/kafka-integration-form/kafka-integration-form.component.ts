@@ -73,7 +73,7 @@ export class KafkaIntegrationFormComponent extends IntegrationForm implements Co
       groupId: ['', [Validators.required]],
       clientId: ['', [Validators.required]],
       topics: ['my-topic-output', [Validators.required]],
-      bootstrapServers: ['localhost:9092', [Validators.required]],
+      bootstrapServers: ['YOUR_KAFKA_DOMAIN:9092', [Validators.required]],
       pollInterval: [5000, [Validators.required]],
       autoCreateTopics: [false],
       otherProperties: [null]

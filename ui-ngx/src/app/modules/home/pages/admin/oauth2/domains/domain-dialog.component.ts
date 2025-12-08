@@ -29,13 +29,13 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { AfterViewInit, Component, OnDestroy, SkipSelf, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, Inject, OnDestroy, SkipSelf, ViewChild } from '@angular/core';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { DialogComponent } from '@shared/components/dialog.component';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { Router } from '@angular/router';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FormGroupDirective, NgForm, UntypedFormControl } from '@angular/forms';
 import { Domain } from '@shared/models/oauth2.models';
 import { DomainService } from '@core/http/domain.service';
@@ -60,6 +60,7 @@ export class DomainDialogComponent extends DialogComponent<DomainDialogComponent
   constructor(protected store: Store<AppState>,
               protected router: Router,
               protected dialogRef: MatDialogRef<DomainDialogComponent, Domain>,
+              @Inject(MAT_DIALOG_DATA) public data: {name?: string},
               private domainService: DomainService,
               @SkipSelf() private errorStateMatcher: ErrorStateMatcher) {
     super(store, router, dialogRef);
@@ -68,6 +69,9 @@ export class DomainDialogComponent extends DialogComponent<DomainDialogComponent
   ngAfterViewInit() {
     setTimeout(() => {
       this.domainComponent.isEdit = true;
+      if (this.data.name) {
+        this.domainComponent.entityForm.get('name').patchValue(this.data.name, {emitEvent: false});
+      }
     }, 0);
   }
 

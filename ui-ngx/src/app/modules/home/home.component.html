@@ -39,9 +39,9 @@
     <header class="tb-nav-header">
       <mat-toolbar color="primary" class="tb-nav-header-toolbar">
         <div class="flex flex-auto flex-row">
-          <img [src]="wl.logoImageUrl$() | async | image | async"
-               [style.height.px]="wl.logoImageHeight$() | async"
-               aria-label="logo" class="tb-logo-title"/>
+          <tb-logo [src]="wl.logoImageUrl$() | async | image | async"
+                   [style.height.px]="wl.logoImageHeight$() | async" class="tb-logo-title">
+          </tb-logo>
         </div>
       </mat-toolbar>
     </header>

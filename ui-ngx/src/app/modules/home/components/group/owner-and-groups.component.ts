@@ -51,6 +51,7 @@ import { HomeDialogsService } from '@home/dialogs/home-dialogs.service';
 import { CreateEntityGroupFunction } from '@shared/components/group/entity-group-list.component';
 import { map } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatFormFieldAppearance } from '@angular/material/form-field';
 
 export interface OwnerAndGroupsData {
   owner?: EntityId | EntityInfoData;
@@ -82,6 +83,9 @@ export class OwnerAndGroupsComponent extends PageComponent implements OnInit, Co
 
   @Input()
   skipDefaultPermissionCheck = false;
+
+  @Input()
+  appearance: MatFormFieldAppearance = 'fill';
 
   ownerAndGroupsFormGroup: UntypedFormGroup;
 

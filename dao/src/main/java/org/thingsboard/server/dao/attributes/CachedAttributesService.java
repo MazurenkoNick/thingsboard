@@ -227,11 +227,11 @@ public class CachedAttributesService implements AttributesService {
     }
 
     @Override
-    public List<String> findAllKeysByEntityIds(TenantId tenantId, List<EntityId> entityIds, String scope) {
-        if (StringUtils.isEmpty(scope)) {
+    public List<String> findAllKeysByEntityIds(TenantId tenantId, List<EntityId> entityIds, AttributeScope scope) {
+        if (scope == null) {
             return attributesDao.findAllKeysByEntityIds(tenantId, entityIds);
         } else {
-            return attributesDao.findAllKeysByEntityIdsAndAttributeType(tenantId, entityIds, scope);
+            return attributesDao.findAllKeysByEntityIdsAndScope(tenantId, entityIds, scope);
         }
     }
 

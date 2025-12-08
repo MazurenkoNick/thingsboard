@@ -34,6 +34,7 @@ import {
   DataSet,
   Datasource,
   DatasourceData,
+  ExportRow,
   FormattedData,
   fullWidgetTypeFqn,
   Widget,
@@ -166,6 +167,7 @@ export interface WidgetAction extends IWidgetAction {
 
 export interface IDashboardWidget {
   updateWidgetParams(): void;
+  updateParamsFromData(detectChanges?: boolean): void;
 }
 
 export class WidgetContext {
@@ -333,7 +335,7 @@ export class WidgetContext {
   activeEntityInfo?: SubscriptionEntityInfo;
 
   exportWidgetData: (widgetExportType: WidgetExportType) => void;
-  customDataExport?: () => {[key: string]: any}[] | RxJS.Observable<{[key: string]: any}[]>;
+  customDataExport?: () => ExportRow[] | RxJS.Observable<ExportRow[]>;
   exportDateFormat?: string;
 
   datasources?: Array<Datasource>;
@@ -504,6 +506,10 @@ export class WidgetContext {
     }
   }
 
+  updateParamsFromData(detectChanges = false) {
+    this.dashboardWidget.updateParamsFromData(detectChanges);
+  }
+
   updateAliases(aliasIds?: Array<string>) {
     this.aliasController.updateAliases(aliasIds);
   }
@@ -574,7 +580,7 @@ export class LabelVariablePattern {
         const entityInfo = this.ctx.defaultSubscription.getFirstEntityInfo();
         label = createLabelFromSubscriptionEntityInfo(entityInfo, label);
       } else {
-        const datasource = this.ctx.defaultSubscription?.firstDatasource;
+        const datasource = this.ctx.defaultSubscription?.firstDatasource ?? (this.ctx as any).mapInstance?.getData()[0];
         label = createLabelFromDatasource(datasource, label);
       }
     }

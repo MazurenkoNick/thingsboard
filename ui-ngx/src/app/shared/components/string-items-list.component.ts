@@ -225,7 +225,7 @@ export class StringItemsListComponent implements ControlValueAccessor, OnInit {
 
   addOnBlur(event: FocusEvent) {
     const target: HTMLElement = event.relatedTarget as HTMLElement;
-    if (target && target.tagName !== 'MAT-OPTION') {
+    if (target?.tagName !== 'MAT-OPTION') {
       this.addItem(this.stringItemInput.nativeElement.value ?? '')
     }
     this.onTouched();

@@ -43,6 +43,7 @@ public class OpcUaServerConfiguration {
     private String applicationUri;
     private String host;
     private int port;
+    private String endpoint;
     private int scanPeriodInSeconds;
     private int timeoutInMillis;
     private String security;

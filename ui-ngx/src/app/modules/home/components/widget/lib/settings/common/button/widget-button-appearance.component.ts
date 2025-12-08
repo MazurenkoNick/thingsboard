@@ -41,6 +41,7 @@ import {
 import { merge } from 'rxjs';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { widgetTitleAutocompleteValues } from '@shared/models/widget.models';
 
 @Component({
   selector: 'tb-widget-button-appearance',
@@ -86,6 +87,8 @@ export class WidgetButtonAppearanceComponent implements OnInit, ControlValueAcce
 
   appearanceFormGroup: UntypedFormGroup;
 
+  predefinedValues = widgetTitleAutocompleteValues;
+  
   private propagateChange = (_val: any) => {};
 
   constructor(private fb: UntypedFormBuilder,

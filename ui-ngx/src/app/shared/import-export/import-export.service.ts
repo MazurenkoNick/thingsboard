@@ -39,15 +39,15 @@ import { BreakpointId, Dashboard, DashboardLayoutId } from '@shared/models/dashb
 import {
   deepClone,
   guid,
+  isDate,
   isDefined,
   isNotEmptyStr,
-  isNumber,
   isObject,
   isString,
   isUndefined,
   unwrapModule
 } from '@core/utils';
-import { DOCUMENT } from '@angular/common';
+import { DatePipe, DOCUMENT } from '@angular/common';
 import {
   AliasesInfo,
   AliasFilterType,
@@ -62,7 +62,7 @@ import { forkJoin, Observable, of, Subject } from 'rxjs';
 import { catchError, map, mergeMap, switchMap, take, tap } from 'rxjs/operators';
 import { DashboardUtilsService } from '@core/services/dashboard-utils.service';
 import { EntityService } from '@core/http/entity.service';
-import { Widget, WidgetSize, WidgetTypeDetails } from '@shared/models/widget.models';
+import { ExportRow, Widget, WidgetSize, WidgetTypeDetails } from '@shared/models/widget.models';
 import { ItemBufferService, WidgetItem } from '@core/services/item-buffer.service';
 import {
   BulkImportRequest,
@@ -112,7 +112,6 @@ import { ActionPreferencesPutUserSettings } from '@core/auth/auth.actions';
 import { ExportableEntity } from '@shared/models/base-data';
 import { EntityId } from '@shared/models/id/entity-id';
 import { Borders, Column, Workbook } from 'exceljs';
-import moment_ from 'moment';
 import { Customer } from '@shared/models/customer.model';
 import {
   ExportResourceDialogComponent,
@@ -124,13 +123,13 @@ import { CalculatedFieldsService } from '@core/http/calculated-fields.service';
 import { CalculatedField } from '@shared/models/calculated-field.models';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { ReportTemplate, ReportTemplateType, TbReportFormat } from '@shared/models/report.models';
+import { toUtcDate } from '@shared/models/time/time.models';
 
 export type editMissingAliasesFunction = (widgets: Array<Widget>, isSingleWidget: boolean,
                                           customTitle: string, missingEntityAliases: EntityAliases) => Observable<EntityAliases>;
 
 type SupportEntityResources = 'includeResourcesInExportWidgetTypes' | 'includeResourcesInExportDashboard' | 'includeBundleWidgetsInExport';
 
-const moment = moment_;
 
 // @dynamic
 @Injectable()
@@ -156,6 +155,7 @@ export class ImportExportService {
               private itembuffer: ItemBufferService,
               private calculatedFieldsService: CalculatedFieldsService,
               private reportTemplateService: ReportTemplateService,
+              private datePipe: DatePipe,
               private dialog: MatDialog) {
 
   }
@@ -249,8 +249,8 @@ export class ImportExportService {
     });
   }
 
-  public openCalculatedFieldImportDialog(): Observable<CalculatedField> {
-    return this.openImportDialog('calculated-fields.import', 'calculated-fields.file').pipe(
+  public openCalculatedFieldImportDialog(importTitle = 'calculated-fields.import', importFileLabel = 'calculated-fields.file'): Observable<CalculatedField> {
+    return this.openImportDialog(importTitle, importFileLabel).pipe(
       catchError(() => of(null)),
     );
   }
@@ -921,16 +921,21 @@ export class ImportExportService {
     return cellData;
   }
 
-  public exportCsv(data: {[key: string]: any}[], filename: string, normalizeFileName = false) {
+  public exportCsv(data: ExportRow[], filename: string, normalizeFileName = false, dateFormat: string = 'yyyy-MM-dd HH:mm:ss') {
     let colsHead: string;
     let colsData: string;
     if (data && data.length) {
-      this.formatDataAccordingToLocale(data);
-      colsHead = Object.keys(data[0]).map(key => [this.processCSVCell(key)]).join(';');
+      this.formatTimestampColumn(data, dateFormat);
+      const isMap = data[0] instanceof Map;
+      const headers: string[] = isMap ? Array.from(data[0].keys()) : Object.keys(data[0]);
+      colsHead = headers.map(key => [this.processCSVCell(key)]).join(';');
       colsData = data.map(obj => [ // obj === row
-        Object.keys(obj).map(col => [
-          this.processCSVCell(obj[col])
-        ]).join(';')
+        headers.map(col => {
+          const value = isMap
+            ? (obj.has(col) ? obj.get(col) : '')
+            : obj[col]
+          return this.processCSVCell(value);
+        }).join(';')
       ]).join('\n');
     } else {
       colsHead = '';
@@ -940,16 +945,23 @@ export class ImportExportService {
     this.downloadFile(csvData, filename, CSV_TYPE, normalizeFileName);
   }
 
-  public exportXls(data: {[key: string]: any}[], filename: string, normalizeFileName = false) {
+  public exportXls(data: ExportRow[], filename: string, normalizeFileName = false, dateFormat: string = 'yyyy-MM-dd HH:mm:ss') {
     let colsHead: string;
     let colsData: string;
     if (data && data.length) {
-      this.formatDataAccordingToLocale(data);
-      colsHead = `<tr>${Object.keys(data[0]).map(key => `<td><b>${key}</b></td>`).join('')}</tr>`;
-      colsData = data.map(obj => [`<tr>
-                ${Object.keys(obj).map(col => `<td>${obj[col] ? obj[col] : ''}</td>`).join('')}
-            </tr>`])
-        .join('');
+      this.formatTimestampColumn(data, dateFormat);
+      const isMap = data[0] instanceof Map;
+      const headers: string[] = isMap ? Array.from(data[0].keys()) : Object.keys(data[0]);
+      colsHead = `<tr>${headers.map(key => `<td><b>${key}</b></td>`).join('')}</tr>`;
+      colsData = data.map(row => {
+        const rowHtml = headers.map(header => {
+          const value = isMap
+            ? (row.has(header) ? row.get(header) : '')
+            : row[header];
+          return `<td>${value ?? ''}</td>`;
+        }).join('');
+        return `<tr>${rowHtml}</tr>`;
+      }).join('');
     } else {
       colsHead = '';
       colsData = '';
@@ -960,7 +972,7 @@ export class ImportExportService {
     this.downloadFile(xlsData, filename, XLS_TYPE, normalizeFileName);
   }
 
-  public exportXlsx(data: { [key: string]: any }[], filename: string, dateFormat: string = 'yyyy-MM-dd HH:mm:ss', normalizeFileName = false) {
+  public exportXlsx(data: ExportRow[], filename: string, dateFormat: string = 'yyyy-MM-dd HH:mm:ss', normalizeFileName = false) {
     import('exceljs').then((exceljs) => {
       const Excel = unwrapModule(exceljs);
       const workbook: Workbook = new Excel.Workbook();
@@ -977,16 +989,19 @@ export class ImportExportService {
         right: {style: 'thin'}
       };
 
+      const timestampColumnTitle = this.translate.instant('widgets.table.timestamp-column-name');
+      dateFormat = dateFormat.replace(/S/g, '0'); // .000 - milliseconds format in Excel
+
       if (data && data.length) {
-        const titles = Object.keys(data[0]);
+        const isMap = data[0] instanceof Map;
+        const titles: string[] = isMap ? Array.from(data[0].keys()) : Object.keys(data[0]);
         const columnsTable: Array<Partial<Column>> = [];
         titles.forEach((title) => {
           columnsTable.push({
             header: title,
             key: title,
-            width: (title === 'Timestamp' ? dateFormat.length : title.length) * 1.2,
             style: {
-              numFmt: title === 'Timestamp' ? dateFormat : null
+              numFmt: title === timestampColumnTitle ? dateFormat : null
             }
           });
         });
@@ -997,14 +1012,31 @@ export class ImportExportService {
         sheet.getRow(1).eachCell(cell => cell.border = cellBorderStyle);
 
         data.forEach((item) => {
-          if (item.Timestamp) {
-            item.Timestamp = moment(new Date(Date.parse(item.Timestamp))).utcOffset(0, true).toDate();
+          const isItemMap = item instanceof Map;
+
+          const rowToAdd = isItemMap ? Object.fromEntries(item) : item;
+          const timestamp = isItemMap
+            ? (item.has(timestampColumnTitle) ? item.get(timestampColumnTitle) : '')
+            : item[timestampColumnTitle];
+          if (timestamp && !isDate(timestamp)) {
+            rowToAdd[timestampColumnTitle] = toUtcDate(timestamp);
           }
-          sheet.addRow(item).eachCell({ includeEmpty: true }, cell => {
+          sheet.addRow(rowToAdd).eachCell({ includeEmpty: true }, cell => {
             cell.border = cellBorderStyle;
           });
         });
       }
+
+      sheet.columns.forEach((column, _i) => {
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, (cell) => {
+          const cellValueLength = isDate(cell.value) ? dateFormat.length : (String(cell.value)).length;
+          if (cellValueLength > maxLength) {
+            maxLength = cellValueLength;
+          }
+        });
+        column.width = Math.ceil(maxLength * 1.3);
+      });
 
       workbook.xlsx.writeBuffer().then((xlsxData: any) => {
         this.downloadFile(xlsxData, filename, XLSX_TYPE, normalizeFileName);
@@ -1012,11 +1044,20 @@ export class ImportExportService {
     });
   }
 
-  private formatDataAccordingToLocale(data: {[key: string]: any}[]) {
-    for (const row of data) {
-      for (const key in Object.keys(row)) {
-        if (isNumber(row[key])) {
-          row[key] = (row[key] as number).toLocaleString(undefined, {maximumFractionDigits: 14});
+  private formatTimestampColumn(data: ExportRow[], dateFormat: string = 'yyyy-MM-dd HH:mm:ss') {
+    const timestampColumnTitle = this.translate.instant('widgets.table.timestamp-column-name');
+    const isMap = data[0] instanceof Map;
+
+    if (isMap) {
+      for (const row of data as Map<string, any>[]) {
+        if (row.has(timestampColumnTitle) && isDate(row.get(timestampColumnTitle))) {
+          row.set(timestampColumnTitle, this.datePipe.transform(row.get(timestampColumnTitle), dateFormat, 'UTC'));
+        }
+      }
+    } else {
+      for (const row of data) {
+        if (row[timestampColumnTitle] && isDate(row[timestampColumnTitle])) {
+          row[timestampColumnTitle] = this.datePipe.transform((row[timestampColumnTitle] as Date), dateFormat, 'UTC');
         }
       }
     }

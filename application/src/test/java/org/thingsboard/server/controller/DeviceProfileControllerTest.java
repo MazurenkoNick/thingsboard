@@ -128,6 +128,7 @@ public class DeviceProfileControllerTest extends AbstractControllerTest {
         public DeviceProfileDao deviceProfileDao(DeviceProfileDao deviceProfileDao) {
             return Mockito.mock(DeviceProfileDao.class, AdditionalAnswers.delegatesTo(deviceProfileDao));
         }
+
     }
 
     @Before

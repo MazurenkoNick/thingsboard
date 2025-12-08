@@ -32,6 +32,7 @@ package org.thingsboard.server.service.sync.ie.importing.csv;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.FutureCallback;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import jakarta.annotation.Nullable;
@@ -78,12 +79,12 @@ import org.thingsboard.server.common.data.tenant.profile.DefaultTenantProfileCon
 import org.thingsboard.server.common.data.util.TypeCastUtil;
 import org.thingsboard.server.controller.BaseController;
 import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
+import org.thingsboard.server.report.util.CsvUtils;
 import org.thingsboard.server.service.action.EntityActionService;
 import org.thingsboard.server.service.security.AccessValidator;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.permission.AccessControlService;
 import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
-import org.thingsboard.server.report.util.CsvUtils;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -203,7 +204,13 @@ public abstract class AbstractBulkImportService<E extends HasId<? extends Entity
                     data.entrySet().stream()
                             .filter(dataEntry -> dataEntry.getKey().getType() == kvType &&
                                     StringUtils.isNotEmpty(dataEntry.getKey().getKey()))
-                            .forEach(dataEntry -> kvs.add(dataEntry.getKey().getKey(), dataEntry.getValue().toJsonPrimitive()));
+                            .forEach(dataEntry -> {
+                                ParsedValue value = dataEntry.getValue();
+                                JsonElement kvValue = (value.getDataType() == DataType.JSON)
+                                        ? (JsonElement) value.getValue()
+                                        : value.toJsonPrimitive();
+                                kvs.add(dataEntry.getKey().getKey(), kvValue);
+                            });
                     return Map.entry(kvType, kvs);
                 })
                 .filter(kvsEntry -> !kvsEntry.getValue().entrySet().isEmpty())

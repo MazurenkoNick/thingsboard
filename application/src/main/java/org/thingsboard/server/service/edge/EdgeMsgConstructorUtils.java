@@ -61,6 +61,7 @@ import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.ai.AiModel;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmComment;
 import org.thingsboard.server.common.data.asset.Asset;
@@ -72,6 +73,7 @@ import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.edge.EdgeEventActionType;
 import org.thingsboard.server.common.data.encryptionkey.EncryptionKey;
 import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.id.AiModelId;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.AssetProfileId;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
@@ -91,6 +93,7 @@ import org.thingsboard.server.common.data.id.NotificationTemplateId;
 import org.thingsboard.server.common.data.id.OAuth2ClientId;
 import org.thingsboard.server.common.data.id.OtaPackageId;
 import org.thingsboard.server.common.data.id.QueueId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
@@ -110,6 +113,7 @@ import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
 import org.thingsboard.server.common.data.permission.GroupPermission;
 import org.thingsboard.server.common.data.queue.Queue;
 import org.thingsboard.server.common.data.relation.EntityRelation;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
@@ -121,6 +125,7 @@ import org.thingsboard.server.common.data.translation.CustomTranslation;
 import org.thingsboard.server.common.data.widget.WidgetTypeDetails;
 import org.thingsboard.server.common.data.widget.WidgetsBundle;
 import org.thingsboard.server.common.data.wl.WhiteLabeling;
+import org.thingsboard.server.gen.edge.v1.AiModelUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.AlarmCommentUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.AlarmUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.AssetProfileUpdateMsg;
@@ -153,6 +158,7 @@ import org.thingsboard.server.gen.edge.v1.OAuth2DomainUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.OtaPackageUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.QueueUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.RelationUpdateMsg;
+import org.thingsboard.server.gen.edge.v1.ReportTemplateUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.ResourceUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.RoleProto;
 import org.thingsboard.server.gen.edge.v1.RpcRequestMsg;
@@ -760,6 +766,19 @@ public class EdgeMsgConstructorUtils {
                 .setIdLSB(calculatedFieldId.getId().getLeastSignificantBits()).build();
     }
 
+    public static AiModelUpdateMsg constructAiModelUpdatedMsg(UpdateMsgType msgType, AiModel aiModel) {
+        return AiModelUpdateMsg.newBuilder().setMsgType(msgType).setEntity(JacksonUtil.toString(aiModel))
+                .setIdMSB(aiModel.getId().getId().getMostSignificantBits())
+                .setIdLSB(aiModel.getId().getId().getLeastSignificantBits()).build();
+    }
+
+    public static AiModelUpdateMsg constructAiModelDeleteMsg(AiModelId aiModelId) {
+        return AiModelUpdateMsg.newBuilder()
+                .setMsgType(UpdateMsgType.ENTITY_DELETED_RPC_MESSAGE)
+                .setIdMSB(aiModelId.getId().getMostSignificantBits())
+                .setIdLSB(aiModelId.getId().getLeastSignificantBits()).build();
+    }
+
     public static EncryptionKeyUpdateMsg constructEncryptionKeyUpdatedMsg(UpdateMsgType msgType, EncryptionKey encryptionKey) {
         return EncryptionKeyUpdateMsg.newBuilder().setMsgType(msgType).setEntity(JacksonUtil.toString(encryptionKey))
                 .setIdMSB(encryptionKey.getId().getId().getMostSignificantBits())
@@ -865,7 +884,7 @@ public class EdgeMsgConstructorUtils {
                 .setIdLSB(schedulerEvent.getId().getId().getLeastSignificantBits()).build();
     }
 
-    public static SchedulerEventUpdateMsg constructEventDeleteMsg(SchedulerEventId schedulerEventId) {
+    public static SchedulerEventUpdateMsg constructSchedulerEventDeleteMsg(SchedulerEventId schedulerEventId) {
         return SchedulerEventUpdateMsg.newBuilder()
                 .setMsgType(UpdateMsgType.ENTITY_DELETED_RPC_MESSAGE)
                 .setIdMSB(schedulerEventId.getId().getMostSignificantBits())
@@ -874,6 +893,19 @@ public class EdgeMsgConstructorUtils {
 
     public static WhiteLabelingProto constructWhiteLabeling(UpdateMsgType msgType, WhiteLabeling whiteLabeling) {
         return WhiteLabelingProto.newBuilder().setMsgType(msgType).setEntity(JacksonUtil.toString(whiteLabeling)).build();
+    }
+
+    public static ReportTemplateUpdateMsg constructReportTemplateUpdatedMsg(UpdateMsgType msgType, ReportTemplate reportTemplate) {
+        return ReportTemplateUpdateMsg.newBuilder().setMsgType(msgType).setEntity(JacksonUtil.toString(reportTemplate))
+                .setIdMSB(reportTemplate.getId().getId().getMostSignificantBits())
+                .setIdLSB(reportTemplate.getId().getId().getLeastSignificantBits()).build();
+    }
+
+    public static ReportTemplateUpdateMsg constructReportTemplateDeleteMsg(ReportTemplateId reportTemplateId) {
+        return ReportTemplateUpdateMsg.newBuilder()
+                .setMsgType(UpdateMsgType.ENTITY_DELETED_RPC_MESSAGE)
+                .setIdMSB(reportTemplateId.getId().getMostSignificantBits())
+                .setIdLSB(reportTemplateId.getId().getLeastSignificantBits()).build();
     }
 
 }

@@ -50,6 +50,9 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.CustomerInfo;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.NameConflictPolicy;
+import org.thingsboard.server.common.data.NameConflictStrategy;
+import org.thingsboard.server.common.data.UniquifyStrategy;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -71,7 +74,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import static org.thingsboard.server.controller.ControllerConstants.CUSTOMER_ID;
 import static org.thingsboard.server.controller.ControllerConstants.CUSTOMER_ID_PARAM_DESCRIPTION;
@@ -81,9 +83,8 @@ import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID_CREATE_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.HOME_DASHBOARD;
-import static org.thingsboard.server.controller.ControllerConstants.HOME_DASHBOARD_HIDE_TOOLBAR;
-import static org.thingsboard.server.controller.ControllerConstants.HOME_DASHBOARD_ID;
 import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
+import static org.thingsboard.server.controller.ControllerConstants.NAME_CONFLICT_POLICY_DESC;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_DATA_PARAMETERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DESCRIPTION;
@@ -95,6 +96,8 @@ import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_D
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
+import static org.thingsboard.server.controller.ControllerConstants.UNIQUIFY_SEPARATOR_DESC;
+import static org.thingsboard.server.controller.ControllerConstants.UNIQUIFY_STRATEGY_DESC;
 import static org.thingsboard.server.controller.ControllerConstants.UUID_WIKI_LINK;
 
 @RestController
@@ -188,7 +191,13 @@ public class CustomerController extends BaseController {
                                  @Parameter(description = ENTITY_GROUP_ID_CREATE_PARAM_DESCRIPTION)
                                  @RequestParam(name = "entityGroupId", required = false) String strEntityGroupId,
                                  @Parameter(description = ENTITY_GROUP_IDS_CREATE_PARAM_DESCRIPTION, array = @ArraySchema(schema = @Schema(type = "string")))
-                                 @RequestParam(name = "entityGroupIds", required = false) String[] strEntityGroupIds) throws ThingsboardException {
+                                 @RequestParam(name = "entityGroupIds", required = false) String[] strEntityGroupIds,
+                                 @Parameter(description = NAME_CONFLICT_POLICY_DESC)
+                                 @RequestParam(name = "nameConflictPolicy", defaultValue = "FAIL") NameConflictPolicy nameConflictPolicy,
+                                 @Parameter(description = UNIQUIFY_SEPARATOR_DESC)
+                                 @RequestParam(name = "uniquifySeparator", defaultValue = "_") String uniquifySeparator,
+                                 @Parameter(description = UNIQUIFY_STRATEGY_DESC)
+                                 @RequestParam(name = "uniquifyStrategy", defaultValue = "RANDOM") UniquifyStrategy uniquifyStrategy) throws ThingsboardException {
         if (!accessControlService.hasPermission(getCurrentUser(), Resource.WHITE_LABELING, Operation.WRITE)) {
             String prevHomeDashboardId = null;
             boolean prevHideDashboardToolbar = true;
@@ -213,7 +222,7 @@ public class CustomerController extends BaseController {
         SecurityUser user = getCurrentUser();
         return saveGroupEntity(customer, strEntityGroupId, strEntityGroupIds, (customer1, entityGroups) -> {
             try {
-                return tbCustomerService.save(customer, entityGroups, user);
+                return tbCustomerService.save(customer, entityGroups, new NameConflictStrategy(nameConflictPolicy, uniquifySeparator, uniquifyStrategy), user);
             } catch (Exception e) {
                 throw handleException(e);
             }
@@ -421,7 +430,7 @@ public class CustomerController extends BaseController {
             } catch (ThingsboardException e) {
                 return false;
             }
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
 }

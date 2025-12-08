@@ -35,7 +35,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.thingsboard</groupId>
-        <version>4.2.1PE-RC</version>
+        <version>4.3.0PE-SNAPSHOT</version>
         <artifactId>thingsboard</artifactId>
     </parent>
     <artifactId>application</artifactId>
@@ -470,35 +470,35 @@
             <artifactId>rocksdbjni</artifactId>
         </dependency>
         <dependency>
-            <groupId>dev.langchain4j</groupId>
+            <groupId>org.thingsboard.langchain4j</groupId>
             <artifactId>langchain4j-open-ai</artifactId>
         </dependency>
         <dependency>
-            <groupId>dev.langchain4j</groupId>
+            <groupId>org.thingsboard.langchain4j</groupId>
             <artifactId>langchain4j-azure-open-ai</artifactId>
         </dependency>
         <dependency>
-            <groupId>dev.langchain4j</groupId>
+            <groupId>org.thingsboard.langchain4j</groupId>
             <artifactId>langchain4j-google-ai-gemini</artifactId>
         </dependency>
         <dependency>
-            <groupId>dev.langchain4j</groupId>
+            <groupId>org.thingsboard.langchain4j</groupId>
             <artifactId>langchain4j-vertex-ai-gemini</artifactId>
         </dependency>
         <dependency>
-            <groupId>dev.langchain4j</groupId>
+            <groupId>org.thingsboard.langchain4j</groupId>
             <artifactId>langchain4j-mistral-ai</artifactId>
         </dependency>
         <dependency>
-            <groupId>dev.langchain4j</groupId>
+            <groupId>org.thingsboard.langchain4j</groupId>
             <artifactId>langchain4j-anthropic</artifactId>
         </dependency>
         <dependency>
-            <groupId>dev.langchain4j</groupId>
+            <groupId>org.thingsboard.langchain4j</groupId>
             <artifactId>langchain4j-bedrock</artifactId>
         </dependency>
         <dependency>
-            <groupId>dev.langchain4j</groupId>
+            <groupId>org.thingsboard.langchain4j</groupId>
             <artifactId>langchain4j-github-models</artifactId>
             <exclusions>
                 <exclusion>
@@ -508,7 +508,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>dev.langchain4j</groupId>
+            <groupId>org.thingsboard.langchain4j</groupId>
             <artifactId>langchain4j-ollama</artifactId>
         </dependency>
         <dependency>

@@ -53,6 +53,7 @@ import {
 } from '@angular/core';
 import { DashboardWidget } from '@home/models/dashboard-component.models';
 import {
+  ExportRow,
   Widget,
   WidgetAction,
   WidgetActionDescriptor,
@@ -1246,11 +1247,15 @@ export class WidgetComponent extends PageComponent implements OnInit, OnChanges,
     switch (type) {
       case WidgetMobileActionType.takePictureFromGallery:
       case WidgetMobileActionType.takePhoto:
+      case WidgetMobileActionType.takeScreenshot:
+        argsObservable = of([mobileAction.saveToGallery]);
+        break;
       case WidgetMobileActionType.scanQrCode:
       case WidgetMobileActionType.getLocation:
-      case WidgetMobileActionType.takeScreenshot:
-      case WidgetMobileActionType.deviceProvision:
         argsObservable = of([]);
+        break;
+      case WidgetMobileActionType.deviceProvision:
+        argsObservable = of([mobileAction.provisionType]);
         break;
       case WidgetMobileActionType.mapDirection:
       case WidgetMobileActionType.mapLocation:
@@ -1321,6 +1326,10 @@ export class WidgetComponent extends PageComponent implements OnInit, OnChanges,
                     case WidgetMobileActionType.takePhoto:
                     case WidgetMobileActionType.takeScreenshot:
                       const imageUrl = actionResult.imageUrl;
+                      if (!additionalParams) {
+                        additionalParams = {};
+                      }
+                      additionalParams.imageInfo = actionResult.imageInfo;
                       if (isNotEmptyTbFunction(mobileAction.processImageFunction)) {
                         compileTbFunction(this.http, mobileAction.processImageFunction, 'imageUrl', '$event', 'widgetContext', 'entityId',
                           'entityName', 'additionalParams', 'entityLabel').subscribe(
@@ -1444,6 +1453,23 @@ export class WidgetComponent extends PageComponent implements OnInit, OnChanges,
                       }
                     );
                   }
+                }
+              } else if (!this.mobileService.isMobileApp()) {
+                if (isNotEmptyTbFunction(mobileAction.handleNonMobileFallbackFunction)) {
+                  compileTbFunction(this.http, mobileAction.handleNonMobileFallbackFunction, '$event', 'widgetContext',).subscribe(
+                    {
+                      next: (compiled) => {
+                        try {
+                          compiled.execute($event, this.widgetContext);
+                        } catch (e) {
+                          console.error(e);
+                        }
+                      },
+                      error: (err) => {
+                        console.error(err);
+                      }
+                    }
+                  );
                 }
               }
             }
@@ -1755,18 +1781,18 @@ export class WidgetComponent extends PageComponent implements OnInit, OnChanges,
     });
   }
 
-  private doExportWidgetData(filename: string, data: {[key: string]: any}[],
+  private doExportWidgetData(filename: string, data: ExportRow[],
                              widgetExportType: WidgetExportType, dateFormat: string) {
     if (widgetExportType === WidgetExportType.csv) {
-      this.importExport.exportCsv(data, filename, true);
+      this.importExport.exportCsv(data, filename, true, dateFormat);
     } else if (widgetExportType === WidgetExportType.xls) {
-      this.importExport.exportXls(data, filename, true);
+      this.importExport.exportXls(data, filename, true, dateFormat);
     } else if (widgetExportType === WidgetExportType.xlsx) {
       this.importExport.exportXlsx(data, filename, dateFormat, true);
     }
   }
 
-  private prepareWidgetExportData(): {[key: string]: any}[] | Observable<{[key: string]: any}[]> {
+  private prepareWidgetExportData(): ExportRow[] | Observable<ExportRow[]> {
     if (isFunction(this.widgetContext.customDataExport)) {
       return this.widgetContext.customDataExport();
     } else if (this.widgetContext.defaultSubscription){

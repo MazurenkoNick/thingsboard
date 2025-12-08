@@ -146,6 +146,7 @@ public class DeviceProfileController extends BaseController {
     @RequestMapping(value = "/deviceProfileInfo/default", method = RequestMethod.GET)
     @ResponseBody
     public DeviceProfileInfo getDefaultDeviceProfileInfo() throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.DEVICE_PROFILE, Operation.READ);
         return checkNotNull(deviceProfileService.findDefaultDeviceProfileInfo(getTenantId()));
     }
 
@@ -214,7 +215,7 @@ public class DeviceProfileController extends BaseController {
             @Parameter(description = "A JSON value representing the device profile.")
             @RequestBody DeviceProfile deviceProfile) throws Exception {
         deviceProfile.setTenantId(getTenantId());
-        checkEntity(deviceProfile.getId(), deviceProfile, Resource.DEVICE_PROFILE, null);
+        checkEntity(deviceProfile.getId(), deviceProfile, Resource.DEVICE_PROFILE);
         return tbDeviceProfileService.save(deviceProfile, getCurrentUser());
     }
 
@@ -325,6 +326,7 @@ public class DeviceProfileController extends BaseController {
             @Parameter(description = "Flag indicating whether to retrieve exclusively the names of device profiles that are referenced by tenant's devices.")
             @RequestParam(value = "activeOnly", required = false, defaultValue = "false") boolean activeOnly) throws ThingsboardException {
         SecurityUser user = getCurrentUser();
+        accessControlService.checkPermission(user, Resource.DEVICE_PROFILE, Operation.READ);
         TenantId tenantId = user.getTenantId();
         return checkNotNull(deviceProfileService.findDeviceProfileNamesByTenantId(tenantId, activeOnly));
     }

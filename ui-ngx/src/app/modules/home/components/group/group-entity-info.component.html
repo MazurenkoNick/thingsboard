@@ -31,11 +31,11 @@
 
 -->
 <div class="flex flex-1 flex-col">
-  <mat-form-field *ngIf="displayOwner">
+  <mat-form-field *ngIf="displayOwner" [appearance]="appearance">
     <mat-label>{{ ownerLabel | translate }}</mat-label>
     <input matInput disabled [ngModel]="groupEntity?.ownerName">
   </mat-form-field>
-  <mat-form-field *ngIf="groupEntity?.groups?.length">
+  <mat-form-field *ngIf="groupEntity?.groups?.length" [appearance]="appearance">
     <mat-label translate>entity.groups</mat-label>
     <mat-chip-grid #chipGrid [ngModel]="groupEntity?.groups" disabled>
       <mat-chip-row class="tb-group-chip" *ngFor="let group of groupEntity?.groups">

@@ -43,6 +43,7 @@ import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityIdFactory;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.DaoUtil;
@@ -53,6 +54,7 @@ import org.thingsboard.server.dao.util.SqlDao;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -158,6 +160,11 @@ public class JpaEntityGroupDao extends JpaAbstractDao<EntityGroupEntity, EntityG
                 ownerId,
                 relationType,
                 DaoUtil.toPageable(pageLink)));
+    }
+
+    @Override
+    public Set<String> findUserGroupNamesByUserId(TenantId tenantId, UserId userId) {
+        return entityGroupRepository.findUserGroupNamesByUserId(userId.getId());
     }
 
     @Override

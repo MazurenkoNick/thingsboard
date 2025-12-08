@@ -73,7 +73,7 @@ export class ApachePulsarIntegrationFormComponent extends IntegrationForm implem
   constructor(private fb: UntypedFormBuilder) {
     super();
     this.apachePulsarIntegrationConfigForm = this.fb.group({
-      serviceUrl: ['pulsar://localhost:6650', Validators.required],
+      serviceUrl: ['pulsar://YOUR_PULSAR_DOMAIN:6650', Validators.required],
       topics: ['my-topic', Validators.required],
       subscriptionName: ['my-subscription', Validators.required],
       maxNumMessages: [1000, Validators.required],

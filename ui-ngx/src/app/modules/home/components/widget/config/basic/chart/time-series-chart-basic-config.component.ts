@@ -42,6 +42,7 @@ import {
   legendPositions,
   legendPositionTranslationMap,
   WidgetConfig,
+  widgetTitleAutocompleteValues,
 } from '@shared/models/widget.models';
 import { WidgetConfigComponent } from '@home/components/widget/widget-config.component';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
@@ -108,6 +109,8 @@ export class TimeSeriesChartBasicConfigComponent extends BasicWidgetConfigCompon
 
   seriesMode = 'series';
 
+  predefinedValues = widgetTitleAutocompleteValues;
+  
   constructor(protected store: Store<AppState>,
               protected widgetConfigComponent: WidgetConfigComponent,
               private $injector: Injector,

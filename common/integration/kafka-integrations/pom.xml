@@ -35,7 +35,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.thingsboard.common</groupId>
-        <version>4.2.1PE-RC</version>
+        <version>4.3.0PE-SNAPSHOT</version>
         <artifactId>integration</artifactId>
     </parent>
     <groupId>org.thingsboard.common.integration</groupId>
@@ -81,6 +81,10 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>at.yawk.lz4</groupId>
+            <artifactId>lz4-java</artifactId>
         </dependency>
     </dependencies>
 

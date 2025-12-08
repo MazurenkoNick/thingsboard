@@ -113,4 +113,6 @@ public interface CustomerDao extends Dao<Customer>, TenantEntityDao<Customer>, E
 
     void updateCustomersCustomMenuId(List<CustomerId> customerIds, CustomMenuId customMenuId);
 
+    PageData<Customer> findByTenantIdAndParentCustomerId(TenantId tenantId, CustomerId parentCustomerId, PageLink pageLink);
+
 }

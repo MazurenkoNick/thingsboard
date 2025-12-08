@@ -79,6 +79,7 @@ export enum EntityType {
   ADMIN_SETTINGS = 'ADMIN_SETTINGS',
   SECRET = 'SECRET',
   AI_MODEL = 'AI_MODEL',
+  API_KEY = 'API_KEY',
 }
 
 export enum AliasEntityType {
@@ -714,7 +715,19 @@ export const entityTypeTranslations = new Map<EntityType | AliasEntityType, Enti
         search: 'secret-storage.search',
         selectedEntities: 'secret-storage.selected-fields'
       }
-    ]
+    ],
+    [
+      EntityType.API_KEY,
+      {
+        type: 'entity.type-api-key',
+        typePlural: 'entity.type-api-keys',
+        list: 'api-key.list',
+        add: 'api-key.generate',
+        noEntities: 'api-key.no-found',
+        search: 'api-key.search',
+        selectedEntities: 'api-key.selected-api-keys'
+      }
+    ],
   ]
 );
 
@@ -888,7 +901,13 @@ export const entityTypeResources = new Map<EntityType, EntityTypeResource<BaseDa
       {
         helpLinkId: 'reports'
       }
-    ]
+    ],
+    [
+      EntityType.API_KEY,
+      {
+        helpLinkId: 'apiKeys'
+      }
+    ],
   ]
 );
 

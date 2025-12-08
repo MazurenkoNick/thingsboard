@@ -50,6 +50,7 @@ import org.thingsboard.server.cache.user.UserCacheKey;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.UserAuthDetails;
 import org.thingsboard.server.common.data.UserInfo;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.id.CustomMenuId;
@@ -64,13 +65,22 @@ import org.thingsboard.server.common.data.id.UserCredentialsId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.mobile.MobileSessionInfo;
 import org.thingsboard.server.common.data.mobile.UserMobileSessionInfo;
+import org.thingsboard.server.common.data.notification.targets.platform.CustomerUsersFilter;
+import org.thingsboard.server.common.data.notification.targets.platform.SystemLevelUsersFilter;
+import org.thingsboard.server.common.data.notification.targets.platform.TenantAdministratorsFilter;
+import org.thingsboard.server.common.data.notification.targets.platform.UserGroupListFilter;
+import org.thingsboard.server.common.data.notification.targets.platform.UserListFilter;
+import org.thingsboard.server.common.data.notification.targets.platform.UserRoleFilter;
+import org.thingsboard.server.common.data.notification.targets.platform.UsersFilter;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.security.UserCredentials;
 import org.thingsboard.server.common.data.security.event.UserCredentialsInvalidationEvent;
 import org.thingsboard.server.common.data.settings.UserSettings;
 import org.thingsboard.server.common.data.settings.UserSettingsType;
+import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.entity.AbstractCachedEntityService;
 import org.thingsboard.server.dao.entity.EntityCountService;
 import org.thingsboard.server.dao.eventsourcing.ActionCause;
@@ -78,6 +88,8 @@ import org.thingsboard.server.dao.eventsourcing.ActionEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
+import org.thingsboard.server.dao.pat.ApiKeyService;
+import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.service.PaginatedRemover;
 import org.thingsboard.server.dao.settings.SecuritySettingsService;
@@ -92,8 +104,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.thingsboard.server.common.data.StringUtils.generateSafeToken;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.validateId;
@@ -108,8 +122,9 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
 
     public static final String USER_PASSWORD_HISTORY = "userPasswordHistory";
 
-    private static final int DEFAULT_TOKEN_LENGTH = 30;
+    public static final int DEFAULT_TOKEN_LENGTH = 30;
     public static final String INCORRECT_USER_ID = "Incorrect userId ";
+    public static final String INCORRECT_USER_CREDENTIALS_ID = "Incorrect userCredentialsId ";
     public static final String INCORRECT_TENANT_ID = "Incorrect tenantId ";
     public static final String INCORRECT_CUSTOMER_ID = "Incorrect customerId ";
 
@@ -123,7 +138,9 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
     private final UserAuthSettingsDao userAuthSettingsDao;
     private final UserSettingsService userSettingsService;
     private final UserSettingsDao userSettingsDao;
+    private final ApiKeyService apiKeyService;
     private final SecuritySettingsService securitySettingsService;
+    private final RoleService roleService;
     private final DataValidator<User> userValidator;
     private final DataValidator<UserCredentials> userCredentialsValidator;
     private final ApplicationEventPublisher eventPublisher;
@@ -214,12 +231,18 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
         return saveUser(tenantId, user, true);
     }
 
-    private User saveUser(TenantId tenantId, User user, boolean validate) {
+    @Override
+    @Transactional
+    public User saveUser(TenantId tenantId, User user, boolean doValidate) {
+        return saveEntity(user, () -> doSaveUser(tenantId, user, doValidate));
+    }
+
+    private User doSaveUser(TenantId tenantId, User user, boolean doValidate) {
         log.trace("Executing saveUser [{}]", user);
-        User oldUser;
-        if (validate) {
+        User oldUser = null;
+        if (doValidate) {
             oldUser = userValidator.validate(user, User::getTenantId);
-        } else {
+        } else if (user.getId() != null) {
             oldUser = findUserById(tenantId, user.getId());
         }
         if (!userLoginCaseSensitive) {
@@ -279,8 +302,15 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
 
     @Override
     public UserCredentials saveUserCredentials(TenantId tenantId, UserCredentials userCredentials) {
+        return saveUserCredentials(tenantId, userCredentials, true);
+    }
+
+    @Override
+    public UserCredentials saveUserCredentials(TenantId tenantId, UserCredentials userCredentials, boolean doValidate) {
         log.trace("Executing saveUserCredentials [{}]", userCredentials);
-        userCredentialsValidator.validate(userCredentials, data -> tenantId);
+        if (doValidate) {
+            userCredentialsValidator.validate(userCredentials, data -> tenantId);
+        }
         UserCredentials result = userCredentialsDao.save(tenantId, userCredentials);
         eventPublisher.publishEvent(ActionEntityEvent.builder()
                 .tenantId(tenantId)
@@ -358,7 +388,7 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
 
     @Override
     public UserCredentials checkUserActivationToken(TenantId tenantId, UserCredentials userCredentials) {
-        if (userCredentials.getActivationTokenTtl() < TimeUnit.MINUTES.toMillis(15)) { // renew link if less than 15 minutes before expiration
+        if (userCredentials.getActivationTokenTtl() < TimeUnit.MINUTES.toMillis(15)) { // renew a link if less than 15 minutes before expiration
             userCredentials = generateUserActivationToken(userCredentials);
             userCredentials = saveUserCredentials(tenantId, userCredentials);
             log.debug("[{}][{}] Regenerated expired user activation token", tenantId, userCredentials.getUserId());
@@ -384,6 +414,15 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
     }
 
     @Override
+    public void deleteUserCredentials(TenantId tenantId, UserCredentials userCredentials) {
+        Objects.requireNonNull(userCredentials, "UserCredentials is null");
+        UserCredentialsId userCredentialsId = userCredentials.getId();
+        log.trace("[{}] Executing deleteUserCredentials [{}]", tenantId, userCredentialsId);
+        validateId(userCredentialsId, id -> INCORRECT_USER_CREDENTIALS_ID + id);
+        userCredentialsDao.removeById(tenantId, userCredentialsId.getId());
+    }
+
+    @Override
     @Transactional
     public void deleteUser(TenantId tenantId, UserId userId) {
         User user = findUserById(tenantId, userId);
@@ -403,6 +442,7 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
         validateId(userId, id -> INCORRECT_USER_ID + id);
         userCredentialsDao.removeByUserId(tenantId, userId);
         userAuthSettingsDao.removeByUserId(userId);
+        apiKeyService.deleteByUserId(tenantId, userId);
         publishEvictEvent(new UserCacheEvictEvent(user.getTenantId(), user.getEmail(), null));
         userSettingsDao.removeByUserId(tenantId, userId);
         userDao.removeById(tenantId, userId.getId());
@@ -650,6 +690,18 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
         userDao.updateUsersCustomMenuId(userIds, customMenuId);
     }
 
+    @Override
+    public boolean existsInEntityGroup(UserId id, EntityGroupId entityGroupId) {
+        return userDao.existsInEntityGroup(id, entityGroupId);
+    }
+
+    @Override
+    public UserAuthDetails findUserAuthDetailsByUserId(TenantId tenantId, UserId userId) {
+        log.trace("Executing findUserAuthDetailsByUserId [{}]", userId);
+        validateId(userId, id -> INCORRECT_USER_ID + id);
+        return userDao.findUserAuthDetailsByUserId(tenantId.getId(), userId.getId());
+    }
+
     private Optional<UserMobileSessionInfo> findMobileSessionInfo(TenantId tenantId, UserId userId) {
         return Optional.ofNullable(userSettingsService.findUserSettings(tenantId, userId, UserSettingsType.MOBILE))
                 .map(UserSettings::getSettings).map(settings -> JacksonUtil.treeToValue(settings, UserMobileSessionInfo.class));
@@ -659,6 +711,94 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
     public int increaseFailedLoginAttempts(TenantId tenantId, UserId userId) {
         log.trace("Executing increaseFailedLoginAttempts [{}]", userId);
         return userCredentialsDao.incrementFailedLoginAttempts(tenantId, userId);
+    }
+
+    @Override
+    public PageData<User> findUsersByFilter(TenantId tenantId, UsersFilter filter, PageLink pageLink) {
+        switch (filter.getType()) {
+            case USER_LIST -> {
+                List<User> users = ((UserListFilter) filter).getUsersIds().stream()
+                        .limit(pageLink.getPageSize())
+                        .map(UserId::new).map(userId -> findUserById(tenantId, userId))
+                        .filter(Objects::nonNull).collect(Collectors.toList());
+                return new PageData<>(users, 1, users.size(), false);
+            }
+            case USER_GROUP_LIST -> {
+                List<EntityGroupId> groups = DaoUtil.fromUUIDs(((UserGroupListFilter) filter).getGroupsIds(), EntityGroupId::new);
+                return findUsersByEntityGroupIds(groups, pageLink);
+            }
+            case USER_ROLE -> {
+                List<RoleId> roles = DaoUtil.fromUUIDs(((UserRoleFilter) filter).getRolesIds(), RoleId::new);
+                return findUsersByTenantIdAndRoles(tenantId, roles, pageLink);
+            }
+            case CUSTOMER_USERS -> {
+                if (tenantId.equals(TenantId.SYS_TENANT_ID)) {
+                    throw new IllegalArgumentException("Customer users target is not supported for system administrator");
+                }
+                CustomerUsersFilter customerUsersFilter = (CustomerUsersFilter) filter;
+                return findCustomerUsers(tenantId, new CustomerId(customerUsersFilter.getCustomerId()), pageLink);
+            }
+            case TENANT_ADMINISTRATORS -> {
+                TenantAdministratorsFilter tenantAdministratorsFilter = (TenantAdministratorsFilter) filter;
+                Role tenantAdminsRole = roleService.findOrCreateTenantAdminRole();
+                if (!tenantId.equals(TenantId.SYS_TENANT_ID)) {
+                    return findUsersByTenantsIdsAndRoleId(List.of(tenantId), tenantAdminsRole.getId(), pageLink);
+                } else {
+                    if (isNotEmpty(tenantAdministratorsFilter.getTenantsIds())) {
+                        return findUsersByTenantsIdsAndRoleId(tenantAdministratorsFilter.getTenantsIds().stream()
+                                        .map(TenantId::fromUUID).collect(Collectors.toList()),
+                                tenantAdminsRole.getId(), pageLink);
+                    } else if (isNotEmpty(tenantAdministratorsFilter.getTenantProfilesIds())) {
+                        return findUsersByTenantProfilesIdsAndRoleId(tenantAdministratorsFilter.getTenantProfilesIds().stream()
+                                        .map(TenantProfileId::new).collect(Collectors.toList()),
+                                tenantAdminsRole.getId(), pageLink);
+                    } else {
+                        return findAllUsersByRoleId(tenantAdminsRole.getId(), pageLink);
+                    }
+                }
+            }
+            case SYSTEM_ADMINISTRATORS -> {
+                return findSysAdmins(pageLink);
+            }
+            case ALL_USERS -> {
+                if (!tenantId.equals(TenantId.SYS_TENANT_ID)) {
+                    return findUsersByTenantId(tenantId, pageLink);
+                } else {
+                    return findAllUsers(pageLink);
+                }
+            }
+            default -> throw new IllegalArgumentException("Recipient type not supported");
+        }
+    }
+
+    @Override
+    public boolean matchesFilter(TenantId tenantId, SystemLevelUsersFilter filter, User user) {
+        switch (filter.getType()) {
+            case TENANT_ADMINISTRATORS -> {
+                if (user.isSystemAdmin() || user.isCustomerUser()) {
+                    return false;
+                }
+                TenantAdministratorsFilter tenantAdministratorsFilter = (TenantAdministratorsFilter) filter;
+                Role tenantAdminsRole = roleService.findOrCreateTenantAdminRole();
+                if (isNotEmpty(tenantAdministratorsFilter.getTenantsIds())) {
+                    return userDao.existsByTenantsIdsAndRoleIdAndUserId(tenantAdministratorsFilter.getTenantsIds().stream()
+                            .map(TenantId::fromUUID).toList(), tenantAdminsRole.getId(), user.getId());
+                } else if (isNotEmpty(tenantAdministratorsFilter.getTenantProfilesIds())) {
+                    return userDao.existsByTenantProfilesIdsAndRoleIdAndUserId(tenantAdministratorsFilter.getTenantProfilesIds().stream()
+                                    .map(TenantProfileId::new).collect(Collectors.toList()),
+                            tenantAdminsRole.getId(), user.getId());
+                } else {
+                    return userDao.existsByRoleIdAndUserId(tenantAdminsRole.getId(), user.getId());
+                }
+            }
+            case SYSTEM_ADMINISTRATORS -> {
+                return user.getAuthority() == Authority.SYS_ADMIN;
+            }
+            case ALL_USERS -> {
+                return true;
+            }
+            default -> throw new IllegalArgumentException("Recipient type not supported");
+        }
     }
 
     private void updatePasswordHistory(UserCredentials userCredentials) {

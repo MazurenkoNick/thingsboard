@@ -35,6 +35,7 @@ import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.CustomerInfo;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.CustomMenuId;
+import org.thingsboard.server.common.data.NameConflictStrategy;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -64,6 +65,8 @@ public interface CustomerService extends EntityDaoService {
 
     Customer saveCustomer(Customer customer);
 
+    Customer saveCustomer(Customer customer, NameConflictStrategy nameConflictStrategy);
+
     void deleteCustomer(TenantId tenantId, CustomerId customerId);
 
     Customer findOrCreatePublicCustomer(TenantId tenantId, EntityId ownerId);
@@ -87,6 +90,8 @@ public interface CustomerService extends EntityDaoService {
     PageData<CustomerInfo> findTenantCustomerInfosByTenantId(TenantId tenantId, PageLink pageLink);
 
     PageData<CustomerInfo> findCustomerInfosByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId, PageLink pageLink);
+
+    PageData<Customer> findCustomersByTenantIdAndParentCustomerId(TenantId tenantId, CustomerId parentCustomerId, PageLink pageLink);
 
     PageData<CustomerInfo> findCustomerInfosByTenantIdAndCustomerIdIncludingSubCustomers(TenantId tenantId, CustomerId customerId, PageLink pageLink);
 

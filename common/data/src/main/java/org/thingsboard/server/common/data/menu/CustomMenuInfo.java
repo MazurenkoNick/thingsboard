@@ -42,6 +42,8 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.validation.Length;
 import org.thingsboard.server.common.data.validation.NoXss;
 
+import java.util.Set;
+
 @Schema
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -64,9 +66,12 @@ public class CustomMenuInfo extends BaseData<CustomMenuId> implements HasTenantI
 
     @NotNull
     @Schema(description = "Custom menu assignee type. Possible values are: All (all users of specified scope), " +
-            "CUSTOMERS (specified customers), USERS (specified list of users), NO_ASSIGN (no assignees)", example = "ALL",
+            "CUSTOMERS (specified customers), USERS (specified list of users), NO_ASSIGN (no assignees), USER_GROUPS (user groups)", example = "ALL",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private CMAssigneeType assigneeType;
+
+    @Schema(description = "User group names menu is applied to", example = "[Customer Administrators, Customer Users]]")
+    private String[] userGroupNames;
 
     public CustomMenuInfo() {
         super();
@@ -83,6 +88,7 @@ public class CustomMenuInfo extends BaseData<CustomMenuId> implements HasTenantI
         this.name = customMenuInfo.getName();
         this.scope = customMenuInfo.getScope();
         this.assigneeType = customMenuInfo.getAssigneeType();
+        this.userGroupNames = customMenuInfo.getUserGroupNames();
     }
 
 }

@@ -89,6 +89,10 @@ public class BaseConverterService extends AbstractEntityService implements Conve
 
     @Override
     public Converter saveConverter(Converter converter) {
+        return saveEntity(converter, () -> doSaveConverter(converter));
+    }
+
+    private Converter doSaveConverter(Converter converter) {
         log.trace("Executing saveConverter [{}]", converter);
         if (converter.getConverterVersion() == null) {
             converter.setConverterVersion(1);
