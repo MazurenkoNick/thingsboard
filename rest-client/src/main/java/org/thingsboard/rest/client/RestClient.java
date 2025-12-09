@@ -60,6 +60,7 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.ThingsBoardExecutors;
 import org.thingsboard.rest.client.utils.RestJsonConverter;
 import org.thingsboard.server.common.data.AdminSettings;
+import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.ClaimRequest;
 import org.thingsboard.server.common.data.ContactBased;
 import org.thingsboard.server.common.data.Customer;
@@ -166,9 +167,8 @@ import org.thingsboard.server.common.data.integration.IntegrationInfo;
 import org.thingsboard.server.common.data.integration.IntegrationType;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
-import org.thingsboard.server.common.data.kv.IntervalType;
-import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.IntervalType;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.menu.CustomMenu;
@@ -204,6 +204,7 @@ import org.thingsboard.server.common.data.plugin.ComponentType;
 import org.thingsboard.server.common.data.query.AlarmCountQuery;
 import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.AlarmDataQuery;
+import org.thingsboard.server.common.data.query.AvailableEntityKeys;
 import org.thingsboard.server.common.data.query.EntityCountQuery;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
@@ -653,7 +654,7 @@ public class RestClient implements Closeable {
     }
 
     public PageData<AlarmInfo> getAllAlarmsV2(List<AlarmSearchStatus> statusList, List<AlarmSeverity> severityList,
-                                           List<String> typeList, String assignedId, TimePageLink pageLink) {
+                                              List<String> typeList, String assignedId, TimePageLink pageLink) {
         String urlSecondPart = "/api/v2/alarms?";
         Map<String, String> params = new HashMap<>();
         if (!CollectionUtils.isEmpty(statusList)) {
@@ -1610,12 +1611,15 @@ public class RestClient implements Closeable {
                 }).getBody();
     }
 
-    public JsonNode findEntityTimeseriesAndAttributesKeysByQuery(EntityDataQuery query) {
-        return restTemplate.exchange(
-                baseURL + "/api/entitiesQuery/find/keys",
-                HttpMethod.POST, new HttpEntity<>(query),
-                new ParameterizedTypeReference<JsonNode>() {
-                }).getBody();
+    public AvailableEntityKeys findAvailableEntityKeysByQuery(EntityDataQuery query, boolean includeTimeseries, boolean includeAttributes, AttributeScope scope) {
+        var uri = UriComponentsBuilder.fromUriString(baseURL)
+                .path("/api/entitiesQuery/find/keys")
+                .queryParam("timeseries", includeTimeseries)
+                .queryParam("attributes", includeAttributes)
+                .queryParamIfPresent("scope", Optional.ofNullable(scope))
+                .build()
+                .toUri();
+        return restTemplate.exchange(uri, HttpMethod.POST, new HttpEntity<>(query), new ParameterizedTypeReference<AvailableEntityKeys>() {}).getBody();
     }
 
     public PageData<AlarmData> findAlarmDataByQuery(AlarmDataQuery query) {
@@ -3127,6 +3131,45 @@ public class RestClient implements Closeable {
             ResponseEntity<EntityGroup> entityGroup = restTemplate.exchange(baseURL + "/api/edge/{edgeId}/entityGroup/{entityGroupId}/{groupType}",
                     HttpMethod.DELETE, HttpEntity.EMPTY, EntityGroup.class, edgeId.getId(), entityGroupId.getId(), groupType.name());
             return Optional.ofNullable(entityGroup.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public PageData<SchedulerEvent> getEdgeSchedulerEvents(EdgeId edgeId, PageLink pageLink) {
+        Map<String, String> params = new HashMap<>();
+        params.put("edgeId", edgeId.getId().toString());
+        addPageLinkToParam(params, pageLink);
+        return restTemplate.exchange(
+                baseURL + "/api/edge/{edgeId}/schedulerEvents?" + getUrlParams(pageLink),
+                HttpMethod.GET, HttpEntity.EMPTY,
+                new ParameterizedTypeReference<PageData<SchedulerEvent>>() {
+                }, params).getBody();
+    }
+
+    public Optional<SchedulerEvent> assignSchedulerEventToEdge(EdgeId edgeId, SchedulerEventId schedulerEventId) {
+        try {
+            ResponseEntity<SchedulerEvent> schedulerEvent = restTemplate.postForEntity(baseURL + "/api/edge/{edgeId}/schedulerEvent/{schedulerEventId}",
+                    null, SchedulerEvent.class, edgeId.getId(), schedulerEventId.getId());
+            return Optional.ofNullable(schedulerEvent.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public Optional<SchedulerEvent> unassignSchedulerEventFromEdge(EdgeId edgeId, SchedulerEventId schedulerEventId) {
+        try {
+            ResponseEntity<SchedulerEvent> schedulerEvent = restTemplate.exchange(baseURL + "/api/edge/{edgeId}/schedulerEvent/{schedulerEventId}",
+                    HttpMethod.DELETE, HttpEntity.EMPTY, SchedulerEvent.class, edgeId.getId(), schedulerEventId.getId());
+            return Optional.ofNullable(schedulerEvent.getBody());
         } catch (HttpClientErrorException exception) {
             if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
                 return Optional.empty();
@@ -5435,6 +5478,14 @@ public class RestClient implements Closeable {
                 throw exception;
             }
         }
+    }
+
+    public ReportTemplate saveReportTemplate(ReportTemplate reportTemplate) {
+        return restTemplate.postForEntity(baseURL + "/api/reportTemplate", reportTemplate, ReportTemplate.class).getBody();
+    }
+
+    public void deleteReportTemplate(ReportTemplateId reportTemplateId) {
+        restTemplate.delete(baseURL + "/api/reportTemplate/{reportTemplateId}", reportTemplateId.getId());
     }
 
     public Report createReport(Report report, byte[] data) {

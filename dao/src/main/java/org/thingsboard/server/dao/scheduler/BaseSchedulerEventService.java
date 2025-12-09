@@ -161,19 +161,29 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
 
     @Override
     public SchedulerEvent saveSchedulerEvent(SchedulerEvent schedulerEvent) {
-        return saveEntity(schedulerEvent, () -> doSaveSchedulerEvent(schedulerEvent));
+        return saveSchedulerEvent(schedulerEvent, true);
     }
 
-    private SchedulerEvent doSaveSchedulerEvent(SchedulerEvent schedulerEvent) {
+    @Override
+    public SchedulerEvent saveSchedulerEvent(SchedulerEvent schedulerEvent, boolean doValidate) {
+        return saveEntity(schedulerEvent, () -> doSaveSchedulerEvent(schedulerEvent, doValidate));
+    }
+
+    private SchedulerEvent doSaveSchedulerEvent(SchedulerEvent schedulerEvent, boolean doValidate) {
         log.trace("Executing saveSchedulerEvent [{}]", schedulerEvent);
-        schedulerEventValidator.validate(schedulerEvent, SchedulerEventInfo::getTenantId);
+        SchedulerEvent oldSchedulerEvent = null;
+        if (doValidate) {
+            oldSchedulerEvent = schedulerEventValidator.validate(schedulerEvent, SchedulerEventInfo::getTenantId);
+        } else if (schedulerEvent.getId() != null) {
+            oldSchedulerEvent = findSchedulerEventById(schedulerEvent.getTenantId(), schedulerEvent.getId());
+        }
         try {
             SchedulerEvent savedSchedulerEvent = schedulerEventDao.save(schedulerEvent.getTenantId(), schedulerEvent);
             if (schedulerEvent.getId() == null) {
                 entityCountService.publishCountEntityEvictEvent(schedulerEvent.getTenantId(), EntityType.SCHEDULER_EVENT);
             }
             eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(schedulerEvent.getTenantId())
-                    .entityId(savedSchedulerEvent.getId()).entity(savedSchedulerEvent).created(schedulerEvent.getId() == null).build());
+                    .entityId(savedSchedulerEvent.getId()).entity(savedSchedulerEvent).created(oldSchedulerEvent == null).build());
             return savedSchedulerEvent;
         } catch (Exception e) {
             checkConstraintViolation(e,

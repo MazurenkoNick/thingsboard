@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.service.cf.ctx.state.aggregation;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -38,6 +39,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.actors.TbActorRef;
+import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.cf.configuration.Output;
 import org.thingsboard.server.common.data.cf.configuration.aggregation.AggFunctionInput;
@@ -46,9 +48,12 @@ import org.thingsboard.server.common.data.cf.configuration.aggregation.AggKeyInp
 import org.thingsboard.server.common.data.cf.configuration.aggregation.AggMetric;
 import org.thingsboard.server.common.data.cf.configuration.aggregation.RelatedEntitiesAggregationCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.permission.MergedUserPermissions;
+import org.thingsboard.server.dao.entity.EntityService;
 import org.thingsboard.server.service.cf.CalculatedFieldResult;
 import org.thingsboard.server.service.cf.TelemetryCalculatedFieldResult;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
+import org.thingsboard.server.service.cf.ctx.state.ArgumentEntryType;
 import org.thingsboard.server.service.cf.ctx.state.BaseCalculatedFieldState;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
 import org.thingsboard.server.service.cf.ctx.state.aggregation.function.AggEntry;
@@ -59,23 +64,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
+import java.util.stream.Collectors;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx.DISABLED_INTERVAL_VALUE;
 
 @Slf4j
 @Getter
 public class RelatedEntitiesAggregationCalculatedFieldState extends BaseCalculatedFieldState {
 
     @Setter
-    private long lastArgsRefreshTs = -1;
+    private long lastArgsRefreshTs = DEFAULT_LAST_UPDATE_TS;
     @Setter
-    private long lastMetricsEvalTs = -1;
+    private long lastMetricsEvalTs = DEFAULT_LAST_UPDATE_TS;
     @Setter
-    private long lastRelatedEntitiesRefreshTs = -1;
-    private long deduplicationIntervalMs = -1;
+    private long lastRelatedEntitiesRefreshTs = DEFAULT_LAST_UPDATE_TS;
+    private long deduplicationIntervalMs = DISABLED_INTERVAL_VALUE;
     private Map<String, AggMetric> metrics;
 
     private ScheduledFuture<?> reevaluationFuture;
+
+    private EntityService entityService;
 
     public RelatedEntitiesAggregationCalculatedFieldState(EntityId entityId) {
         super(entityId);
@@ -87,6 +96,7 @@ public class RelatedEntitiesAggregationCalculatedFieldState extends BaseCalculat
         var configuration = (RelatedEntitiesAggregationCalculatedFieldConfiguration) ctx.getCalculatedField().getConfiguration();
         metrics = configuration.getMetrics();
         deduplicationIntervalMs = SECONDS.toMillis(configuration.getDeduplicationIntervalInSec());
+        entityService = ctx.getSystemContext().getEntityService();
     }
 
     @Override
@@ -109,9 +119,9 @@ public class RelatedEntitiesAggregationCalculatedFieldState extends BaseCalculat
     @Override
     public void reset() { // must reset everything dependent on arguments
         super.reset();
-        lastArgsRefreshTs = -1;
-        lastMetricsEvalTs = -1;
-        lastRelatedEntitiesRefreshTs = -1;
+        lastArgsRefreshTs = DEFAULT_LAST_UPDATE_TS;
+        lastMetricsEvalTs = DEFAULT_LAST_UPDATE_TS;
+        lastRelatedEntitiesRefreshTs = DEFAULT_LAST_UPDATE_TS;
         metrics = null;
     }
 
@@ -160,7 +170,7 @@ public class RelatedEntitiesAggregationCalculatedFieldState extends BaseCalculat
     }
 
     public Map<String, ArgumentEntry> updateEntityData(Map<String, ArgumentEntry> fetchedArgs) {
-        lastMetricsEvalTs = -1;
+        lastMetricsEvalTs = DEFAULT_LAST_UPDATE_TS;
         return update(fetchedArgs, ctx);
     }
 
@@ -169,7 +179,7 @@ public class RelatedEntitiesAggregationCalculatedFieldState extends BaseCalculat
             RelatedEntitiesArgumentEntry aggEntry = (RelatedEntitiesArgumentEntry) argEntry;
             aggEntry.getEntityInputs().remove(relatedEntityId);
         });
-        lastMetricsEvalTs = -1;
+        lastMetricsEvalTs = DEFAULT_LAST_UPDATE_TS;
         lastArgsRefreshTs = System.currentTimeMillis();
     }
 
@@ -261,5 +271,25 @@ public class RelatedEntitiesAggregationCalculatedFieldState extends BaseCalculat
             return entityInputs.get(inputKey).getValue();
         }
     }
+
+    @Override
+    public JsonNode getArgumentsJson() {
+        Map<EntityId, Map<String, ArgumentEntry>> inputs = prepareInputs();
+        Map<EntityId, EntityInfo> entityIdEntityInfos = entityService.fetchEntityInfos(ctx.getTenantId(), null, inputs.keySet(), MergedUserPermissions.ALL);
+        List<EntityArgument> entitiesArguments = new ArrayList<>();
+        inputs.forEach((entityId, entityArguments) -> {
+            EntityInfo entityInfo = entityIdEntityInfos.get(entityId);
+            if (entityInfo != null) {
+                JsonNode entityArgumentsJson = JacksonUtil.valueToTree(entityArguments.entrySet().stream()
+                        .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().jsonValue())));
+                entitiesArguments.add(new EntityArgument(entityInfo, entityArgumentsJson));
+            }
+        });
+        return JacksonUtil.valueToTree(new RelatedEntitiesArgument(ArgumentEntryType.RELATED_ENTITIES, entitiesArguments));
+    }
+
+    record RelatedEntitiesArgument(ArgumentEntryType type, List<EntityArgument> entitiesArguments) {}
+
+    record EntityArgument(EntityInfo entity, JsonNode entityArguments) {}
 
 }

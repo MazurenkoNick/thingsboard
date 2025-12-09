@@ -47,7 +47,6 @@ import static org.thingsboard.server.dao.model.ModelConstants.MOBILE_APP_BUNDLE_
 import static org.thingsboard.server.dao.model.ModelConstants.MOBILE_APP_BUNDLE_OAUTH2_CLIENT_MOBILE_APP_BUNDLE_ID_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.MOBILE_APP_BUNDLE_OAUTH2_CLIENT_TABLE_NAME;
 
-
 @Data
 @Entity
 @Table(name = MOBILE_APP_BUNDLE_OAUTH2_CLIENT_TABLE_NAME)
@@ -78,4 +77,5 @@ public final class MobileAppBundleOauth2ClientEntity implements ToData<MobileApp
         result.setOAuth2ClientId(new OAuth2ClientId(oauth2ClientId));
         return result;
     }
+
 }

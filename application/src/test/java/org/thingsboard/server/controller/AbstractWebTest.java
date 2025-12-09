@@ -109,6 +109,7 @@ import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.asset.AssetProfile;
 import org.thingsboard.server.common.data.cf.CalculatedField;
+import org.thingsboard.server.common.data.cf.CalculatedFieldInfo;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.device.data.DefaultDeviceConfiguration;
 import org.thingsboard.server.common.data.device.data.DefaultDeviceTransportConfiguration;
@@ -782,9 +783,12 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
         this.apiKey = apiKey;
     }
 
-    protected void setApiKey(MockHttpServletRequestBuilder request) {
+    protected void setApiKey(MockHttpServletRequestBuilder request, UserId userId) {
         if (this.apiKey != null) {
             request.header(ThingsboardSecurityConfiguration.AUTHORIZATION_HEADER, API_KEY_HEADER_PREFIX + this.apiKey);
+        }
+        if (userId != null) {
+            request.header("X-User-Id", userId.toString());
         }
     }
 
@@ -902,7 +906,13 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
 
     protected ResultActions doGetWithApiKey(String urlTemplate, Object... urlVariables) throws Exception {
         MockHttpServletRequestBuilder getRequest = get(urlTemplate, urlVariables);
-        setApiKey(getRequest);
+        setApiKey(getRequest, null);
+        return mockMvc.perform(getRequest);
+    }
+
+    protected ResultActions doGetWithInternalApiKey(String urlTemplate, UserId userId, Object... urlVariables) throws Exception {
+        MockHttpServletRequestBuilder getRequest = get(urlTemplate, urlVariables);
+        setApiKey(getRequest, userId);
         return mockMvc.perform(getRequest);
     }
 
@@ -961,6 +971,30 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
         return readResponse(doGet(urlTemplate, vars).andExpect(status().isOk()), responseType);
     }
 
+    protected <T> T doGetTypedWithPageLinkAndInternalApiKey(String urlTemplate, TypeReference<T> responseType,
+                                                            PageLink pageLink, UserId userId,
+                                                            Object... urlVariables) throws Exception {
+        List<Object> pageLinkVariables = new ArrayList<>();
+        urlTemplate += "pageSize={pageSize}&page={page}";
+        pageLinkVariables.add(pageLink.getPageSize());
+        pageLinkVariables.add(pageLink.getPage());
+        if (StringUtils.isNotEmpty(pageLink.getTextSearch())) {
+            urlTemplate += "&textSearch={textSearch}";
+            pageLinkVariables.add(pageLink.getTextSearch());
+        }
+        if (pageLink.getSortOrder() != null) {
+            urlTemplate += "&sortProperty={sortProperty}&sortOrder={sortOrder}";
+            pageLinkVariables.add(pageLink.getSortOrder().getProperty());
+            pageLinkVariables.add(pageLink.getSortOrder().getDirection().name());
+        }
+
+        Object[] vars = new Object[urlVariables.length + pageLinkVariables.size()];
+        System.arraycopy(urlVariables, 0, vars, 0, urlVariables.length);
+        System.arraycopy(pageLinkVariables.toArray(), 0, vars, urlVariables.length, pageLinkVariables.size());
+
+        return readResponse(doGetWithInternalApiKey(urlTemplate, userId, vars).andExpect(status().isOk()), responseType);
+    }
+
     protected <T> T doGetTypedWithTimePageLink(String urlTemplate, TypeReference<T> responseType,
                                                TimePageLink pageLink,
                                                Object... urlVariables) throws Exception {
@@ -1012,10 +1046,9 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
         }
     }
 
-    protected <T, R> R doPostWithApiKey(String urlTemplate, T content, Class<R> responseClass, String... params) {
+    protected <T, R> R doPostWithApiKey(String urlTemplate, T content, Class<R> responseClass, UserId userId, String... params) {
         try {
-            return readResponse(doPostWithApiKey(urlTemplate, content, params).andExpect(status().isOk()), responseClass);
-
+            return readResponse(doPostWithApiKey(urlTemplate, content, userId, params).andExpect(status().isOk()), responseClass);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -1096,9 +1129,9 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
         return mockMvc.perform(postRequest);
     }
 
-    protected <T> ResultActions doPostWithApiKey(String urlTemplate, T content, String... params) throws Exception {
+    protected <T> ResultActions doPostWithApiKey(String urlTemplate, T content, UserId userId, String... params) throws Exception {
         MockHttpServletRequestBuilder postRequest = post(urlTemplate, params);
-        setApiKey(postRequest);
+        setApiKey(postRequest, userId);
         String json = json(content);
         postRequest.contentType(contentType).content(json);
         return mockMvc.perform(postRequest);
@@ -1138,9 +1171,16 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
         return mockMvc.perform(asyncDispatch(result));
     }
 
+    protected ResultActions doDeleteWithInternalApiKey(String urlTemplate, UserId userId, String... params) throws Exception {
+        MockHttpServletRequestBuilder deleteRequest = delete(urlTemplate);
+        setApiKey(deleteRequest, userId);
+        populateParams(deleteRequest, params);
+        return mockMvc.perform(deleteRequest);
+    }
+
     protected ResultActions doDeleteWithApiKey(String urlTemplate, String... params) throws Exception {
         MockHttpServletRequestBuilder deleteRequest = delete(urlTemplate);
-        setApiKey(deleteRequest);
+        setApiKey(deleteRequest, null);
         populateParams(deleteRequest, params);
         return mockMvc.perform(deleteRequest);
     }
@@ -1340,8 +1380,8 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
         Map<CalculatedFieldId, CalculatedFieldState> statesMap = (Map<CalculatedFieldId, CalculatedFieldState>) ReflectionTestUtils.getField(processor, "states");
         Awaitility.await("CF state for entity actor ready to refresh dynamic arguments").atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> {
             CalculatedFieldState calculatedFieldState = statesMap.get(cfId);
-            boolean isReady = calculatedFieldState != null && ((GeofencingCalculatedFieldState) calculatedFieldState).getLastDynamicArgumentsRefreshTs()
-                    < System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(scheduledUpdateInterval);
+            boolean isReady = calculatedFieldState != null && ((GeofencingCalculatedFieldState) calculatedFieldState).getLastDynamicArgumentsRefreshTs() <
+                                                              System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(scheduledUpdateInterval);
             log.warn("entityId {}, cfId {}, state ready to refresh == {}", entityId, cfId, isReady);
             return isReady;
         });
@@ -1532,7 +1572,7 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
 
     protected List<Job> findJobs(List<JobType> types, List<UUID> entities) throws Exception {
         return doGetTypedWithPageLink("/api/jobs?types=" + types.stream().map(Enum::name).collect(Collectors.joining(",")) +
-                        "&entities=" + entities.stream().map(UUID::toString).collect(Collectors.joining(",")) + "&",
+                                      "&entities=" + entities.stream().map(UUID::toString).collect(Collectors.joining(",")) + "&",
                 new TypeReference<PageData<Job>>() {}, new PageLink(100, 0, null, new SortOrder("createdTime", SortOrder.Direction.DESC))).getData();
     }
 
@@ -1546,12 +1586,12 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
 
     protected void postTelemetry(EntityId entityId, String payload) throws Exception {
         doPostAsync("/api/plugins/telemetry/" + entityId.getEntityType() + "/" + entityId.getId() +
-                "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(payload), 30_000L).andExpect(status().isOk());
+                    "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(payload), 30_000L).andExpect(status().isOk());
     }
 
     protected void postAttributes(EntityId entityId, AttributeScope scope, String payload) throws Exception {
         doPostAsync("/api/plugins/telemetry/" + entityId.getEntityType() + "/" + entityId.getId() +
-                "/attributes/" + scope, JacksonUtil.toJsonNode(payload), 30_000L).andExpect(status().isOk());
+                    "/attributes/" + scope, JacksonUtil.toJsonNode(payload), 30_000L).andExpect(status().isOk());
     }
 
     protected CalculatedField saveCalculatedField(CalculatedField calculatedField) {
@@ -1560,7 +1600,24 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
 
     protected PageData<CalculatedField> getEntityCalculatedFields(EntityId entityId, CalculatedFieldType type, PageLink pageLink) throws Exception {
         return doGetTypedWithPageLink("/api/" + entityId.getEntityType() + "/" + entityId.getId() + "/calculatedFields" +
-                (type != null ? "?type=" + type.name() + "&" : "?"), new TypeReference<>() {}, pageLink);
+                                      (type != null ? "?type=" + type.name() + "&" : "?"), new TypeReference<>() {}, pageLink);
+    }
+
+    protected PageData<String> getCalculatedFieldNames(CalculatedFieldType type, PageLink pageLink) throws Exception {
+        return doGetTypedWithPageLink("/api/calculatedFields/names?type=" + type + "&",
+                new TypeReference<PageData<String>>() {}, pageLink);
+    }
+
+    protected List<CalculatedFieldInfo> getCalculatedFields(CalculatedFieldType type,
+                                                            EntityType entityType,
+                                                            List<UUID> entities,
+                                                            List<String> names) throws Exception {
+        return doGetTypedWithPageLink("/api/calculatedFields?type=" + type + "&" +
+                                      (entityType != null ? "entityType=" + entityType + "&" : "") +
+                                      (entities != null ? "entities=" + String.join(",",
+                                              entities.stream().map(UUID::toString).toList()) + "&" : "") +
+                                      (names != null ? names.stream().map(name -> "name=" + name + "&").collect(Collectors.joining("")) : ""),
+                new TypeReference<PageData<CalculatedFieldInfo>>() {}, new PageLink(10)).getData();
     }
 
     protected PageData<EventInfo> getDebugEvents(TenantId tenantId, EntityId entityId, int limit) throws Exception {

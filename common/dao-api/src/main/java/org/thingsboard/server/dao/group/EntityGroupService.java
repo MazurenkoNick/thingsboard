@@ -51,6 +51,7 @@ import org.thingsboard.server.dao.entity.EntityDaoService;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface EntityGroupService extends EntityDaoService {
 
@@ -172,5 +173,7 @@ public interface EntityGroupService extends EntityDaoService {
     boolean isTenantAdminUserGroup(EntityGroup entityGroup);
 
     boolean containsLastTenantAdmin(TenantId tenantId, List<UserId> usersToRemove);
+
+    Set<String> findUserGroupNamesByUserId(TenantId tenantId, UserId userId);
 
 }

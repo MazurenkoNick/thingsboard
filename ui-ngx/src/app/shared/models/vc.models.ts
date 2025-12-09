@@ -322,4 +322,4 @@ export const overrideEntityTypeTranslations = new Map<EntityType | AliasEntityTy
   ]
 );
 
-export const typesWithCalculatedFields = new Set<EntityType | AliasEntityType>([EntityType.DEVICE, EntityType.ASSET, EntityType.ASSET_PROFILE, EntityType.DEVICE_PROFILE]);
+export const typesWithCalculatedFields = new Set<EntityType | AliasEntityType>([EntityType.DEVICE, EntityType.ASSET, EntityType.ASSET_PROFILE, EntityType.DEVICE_PROFILE, EntityType.CUSTOMER]);

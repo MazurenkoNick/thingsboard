@@ -138,6 +138,7 @@ public class AssetProfileController extends BaseController {
     @RequestMapping(value = "/assetProfileInfo/default", method = RequestMethod.GET)
     @ResponseBody
     public AssetProfileInfo getDefaultAssetProfileInfo() throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.ASSET_PROFILE, Operation.READ);
         return checkNotNull(assetProfileService.findDefaultAssetProfileInfo(getTenantId()));
     }
 
@@ -156,7 +157,7 @@ public class AssetProfileController extends BaseController {
             @Parameter(description = "A JSON value representing the asset profile.")
             @RequestBody AssetProfile assetProfile) throws Exception {
         assetProfile.setTenantId(getTenantId());
-        checkEntity(assetProfile.getId(), assetProfile, Resource.ASSET_PROFILE, null);
+        checkEntity(assetProfile.getId(), assetProfile, Resource.ASSET_PROFILE);
         return tbAssetProfileService.save(assetProfile, getCurrentUser());
     }
 
@@ -267,6 +268,7 @@ public class AssetProfileController extends BaseController {
             @RequestParam(value = "activeOnly", required = false, defaultValue = "false") boolean activeOnly) throws ThingsboardException {
         SecurityUser user = getCurrentUser();
         TenantId tenantId = user.getTenantId();
+        accessControlService.checkPermission(user, Resource.ASSET_PROFILE, Operation.READ);
         return checkNotNull(assetProfileService.findAssetProfileNamesByTenantId(tenantId, activeOnly));
     }
 

@@ -163,7 +163,7 @@ public class SchedulerEventController extends BaseController {
         if (Authority.CUSTOMER_USER.equals(currentUser.getAuthority())) {
             schedulerEvent.setCustomerId(currentUser.getCustomerId());
         }
-        checkEntity(schedulerEvent.getId(), schedulerEvent, Resource.SCHEDULER_EVENT, null);
+        checkEntity(schedulerEvent.getId(), schedulerEvent, Resource.SCHEDULER_EVENT);
         return tbSchedulerService.save(schedulerEvent, currentUser);
     }
 

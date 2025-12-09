@@ -460,6 +460,13 @@ message EntityGroupUpdateMsg {
   string entity = 11;
 }
 
+message ReportTemplateUpdateMsg {
+  UpdateMsgType msgType = 1;
+  int64 idMSB = 2;
+  int64 idLSB = 3;
+  string entity = 4;
+}
+
 enum EdgeEntityType {
   DEVICE = 0;
   ASSET = 1;
@@ -571,6 +578,10 @@ message UplinkMsg {
   repeated CalculatedFieldUpdateMsg calculatedFieldUpdateMsg = 27;
   repeated CalculatedFieldRequestMsg calculatedFieldRequestMsg = 28;
   repeated AiModelUpdateMsg aiModelUpdateMsg = 29;
+  repeated UserUpdateMsg userUpdateMsg = 30;
+  repeated UserCredentialsUpdateMsg userCredentialsUpdateMsg = 31;
+  repeated ReportTemplateUpdateMsg reportTemplateUpdateMsg = 32;
+  repeated SchedulerEventUpdateMsg schedulerEventUpdateMsg = 33;
 }
 
 message UplinkResponseMsg {
@@ -634,4 +645,5 @@ message DownlinkMsg {
   repeated EncryptionKeyUpdateMsg encryptionKeyUpdateMsg = 54;
   repeated SecretUpdateMsg secretUpdateMsg = 55;
   repeated AiModelUpdateMsg aiModelUpdateMsg = 56;
+  repeated ReportTemplateUpdateMsg reportTemplateUpdateMsg = 57;
 }

@@ -146,7 +146,7 @@ public class QueueController extends BaseController {
         checkParameter("serviceType", serviceType);
         queue.setTenantId(getCurrentUser().getTenantId());
 
-        checkEntity(queue.getId(), queue, Resource.QUEUE, null);
+        checkEntity(queue.getId(), queue, Resource.QUEUE);
 
         ServiceType type = ServiceType.of(serviceType);
         switch (type) {
@@ -171,4 +171,5 @@ public class QueueController extends BaseController {
         checkQueueId(queueId, Operation.DELETE);
         tbQueueService.deleteQueue(getTenantId(), queueId);
     }
+
 }

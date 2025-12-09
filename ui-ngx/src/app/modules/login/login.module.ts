@@ -50,7 +50,7 @@ import { ForceTwoFactorAuthLoginComponent } from '@modules/login/pages/login/for
     CreatePasswordComponent,
     TwoFactorAuthLoginComponent,
     LinkExpiredComponent,
-    ForceTwoFactorAuthLoginComponent,
+    ForceTwoFactorAuthLoginComponent
   ],
   imports: [
     CommonModule,

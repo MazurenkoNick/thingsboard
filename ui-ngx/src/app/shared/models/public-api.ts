@@ -98,3 +98,4 @@ export * from './report.models';
 export * from './trendz-settings.models';
 export * from './secret-storage.models';
 export * from './ai-model.models';
+export * from './password.models';

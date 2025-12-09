@@ -125,13 +125,8 @@ import { ComponentPortal } from '@angular/cdk/portal';
 import { FormBuilder } from '@angular/forms';
 import { DEFAULT_OVERLAY_POSITIONS } from '@shared/models/overlay.models';
 import { DateFormatSettings, ValueFormatProcessor } from '@shared/models/widget-settings.models';
+import { entityFields } from '@shared/models/entity.models';
 import { toUtcDate } from '@shared/models/time/time.models';
-
-export enum TabSortKey {
-  NAME_ASC = 'NAME_ASC',
-  NAME_DESC = 'NAME_DESC',
-  TIMESTAMP = 'timestamp'
-}
 
 export interface TimeseriesTableWidgetSettings extends TableWidgetSettings {
   showTimestamp: boolean;
@@ -139,7 +134,7 @@ export interface TimeseriesTableWidgetSettings extends TableWidgetSettings {
   hideEmptyLines: boolean;
   dateFormat: DateFormatSettings;
   timestampExportOption: columnExportOptions;
-  tabSortKey: TabSortKey;
+  sortOrder: SortOrder;
 }
 
 interface TimeseriesWidgetLatestDataKeySettings extends TableWidgetDataKeySettings {
@@ -428,33 +423,39 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
     this.updateDatasources();
   }
 
-  private getTabLabel(source: Datasource, entityLabelCache:Map<string,string>):string {
-    if (entityLabelCache.has(source.entityId)) {
-      return entityLabelCache.get(source.entityId);
-    }
-
+  private getTabLabel(source: Datasource):string {
     const value = this.useEntityLabel
       ? (source.entityLabel || source.entityName)
       : source.entityName;
 
-    const translated = this.utils.customTranslation(value);
-    entityLabelCache.set(source.entityId, translated);
-    return translated;
+    return this.utils.customTranslation(value);
   }
 
-  private sortDatasources(source: Datasource[], entityLabelCache:Map<string,string>): Datasource[] {
-    source.forEach(ds => this.getTabLabel(ds, entityLabelCache));
+  private sortDatasources(source: TimeseriesTableSource[]) {
+    const property = this.settings?.sortOrder?.property;
+    const direction = this.settings?.sortOrder?.direction;
+    const isAsc = direction === Direction.ASC;
 
-    if (this.settings.tabSortKey === TabSortKey.TIMESTAMP) {
-      return source;
+    if (property === entityFields.name.keyName) {
+      const collator = new Intl.Collator(undefined, {
+        sensitivity: "variant",
+        numeric: true,
+        ignorePunctuation: false
+      });
+
+      source.sort((a, b) => {
+        const valueA = a.displayName || '';
+        const valueB = b.displayName || '';
+
+        return isAsc
+          ? collator.compare(valueA, valueB)
+          : collator.compare(valueB, valueA);
+      });
+    } else if (property === entityFields.createdTime.keyName) {
+      if (isAsc) {
+        source.reverse();
+      }
     }
-    return source.sort((a, b) => {
-      const valueA = entityLabelCache.get(a.entityId);
-      const valueB = entityLabelCache.get(b.entityId);
-      return this.settings.tabSortKey === TabSortKey.NAME_ASC
-        ? valueA.localeCompare(valueB)
-        : valueB.localeCompare(valueA);
-    });
   }
 
   private updateDatasources() {
@@ -462,11 +463,9 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
     this.sourceIndex = 0;
     let keyOffset = 0;
     let latestKeyOffset = 0;
-    const entityLabelCache = new Map<string,string>();
     const pageSize = this.displayPagination ? this.defaultPageSize : Number.POSITIVE_INFINITY;
     if (this.datasources) {
-      const sortedDatasources = this.sortDatasources(this.datasources, entityLabelCache);
-      for (const datasource of sortedDatasources) {
+      for (const datasource of this.datasources) {
         const sortOrder: SortOrder = sortOrderFromString(this.defaultSortOrder);
         const source = {} as TimeseriesTableSource;
         source.header = this.prepareHeader(datasource);
@@ -483,7 +482,7 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
         source.pageLink = new PageLink(pageSize, 0, null, sortOrder);
         source.rowDataTemplate = {};
         source.rowDataTemplate.Timestamp = null;
-        source.displayName = entityLabelCache.get(datasource.entityId);
+        source.displayName = this.getTabLabel(datasource);
         if (this.showTimestamp) {
           source.displayedColumns.push('0');
         }
@@ -503,6 +502,7 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
       }
     }
     if (this.sources.length) {
+      this.sortDatasources(this.sources);
       this.sources.forEach((source, index) => {
         this.prepareDisplayedColumn(index);
         source.displayedColumns = this.displayedColumns[index].filter(value => value.display).map(value => value.def);

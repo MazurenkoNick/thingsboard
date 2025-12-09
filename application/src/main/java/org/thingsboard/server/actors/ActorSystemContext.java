@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.actors;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -78,7 +79,6 @@ import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
 import org.thingsboard.server.common.data.kv.JsonDataEntry;
 import org.thingsboard.server.common.data.limit.LimitedApi;
-import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
 import org.thingsboard.server.common.data.plugin.ComponentLifecycleEvent;
 import org.thingsboard.server.common.data.rule.RuleNode;
@@ -157,7 +157,6 @@ import org.thingsboard.server.service.apiusage.TbApiUsageStateService;
 import org.thingsboard.server.service.cf.CalculatedFieldProcessingService;
 import org.thingsboard.server.service.cf.CalculatedFieldQueueService;
 import org.thingsboard.server.service.cf.CalculatedFieldStateService;
-import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.component.ComponentDiscoveryService;
 import org.thingsboard.server.service.converter.DataConverterService;
 import org.thingsboard.server.service.edge.rpc.EdgeRpcService;
@@ -186,7 +185,6 @@ import org.thingsboard.server.service.transport.TbCoreToTransportService;
 import org.thingsboard.server.utils.DebugModeRateLimitsConfig;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -194,7 +192,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -788,14 +785,6 @@ public class ActorSystemContext {
     @Getter
     private long cfCalculationResultTimeout;
 
-    @Value("${actors.calculated_fields.check_interval:60}")
-    @Getter
-    private long cfCheckInterval;
-
-    @Value("${actors.alarms.reevaluation_interval:120}")
-    @Getter
-    private long alarmRulesReevaluationInterval;
-
     @Autowired
     @Getter
     private MqttClientSettings mqttClientSettings;
@@ -986,7 +975,7 @@ public class ActorSystemContext {
         Futures.addCallback(future, RULE_CHAIN_DEBUG_EVENT_ERROR_CALLBACK, MoreExecutors.directExecutor());
     }
 
-    public void persistCalculatedFieldDebugEvent(TenantId tenantId, CalculatedFieldId calculatedFieldId, EntityId entityId, Map<String, ArgumentEntry> arguments, UUID tbMsgId, TbMsgType tbMsgType, String result, String errorMessage) {
+    public void persistCalculatedFieldDebugEvent(TenantId tenantId, CalculatedFieldId calculatedFieldId, EntityId entityId, JsonNode arguments, UUID tbMsgId, String tbMsgType, String result, String errorMessage) {
         if (checkLimits(tenantId)) {
             try {
                 CalculatedFieldDebugEvent.CalculatedFieldDebugEventBuilder eventBuilder = CalculatedFieldDebugEvent.builder()
@@ -999,13 +988,10 @@ public class ActorSystemContext {
                     eventBuilder.msgId(tbMsgId);
                 }
                 if (tbMsgType != null) {
-                    eventBuilder.msgType(tbMsgType.name());
+                    eventBuilder.msgType(tbMsgType);
                 }
                 if (arguments != null) {
-                    eventBuilder.arguments(JacksonUtil.toString(
-                            arguments.entrySet().stream()
-                                    .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().jsonValue()))
-                    ));
+                    eventBuilder.arguments(JacksonUtil.toString(arguments));
                 }
                 if (result != null) {
                     eventBuilder.result(result);

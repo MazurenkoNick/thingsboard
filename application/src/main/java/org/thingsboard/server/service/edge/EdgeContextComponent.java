@@ -71,6 +71,7 @@ import org.thingsboard.server.dao.ota.DeviceGroupOtaPackageService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.relation.RelationService;
+import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rule.RuleChainService;
@@ -106,6 +107,7 @@ import org.thingsboard.server.service.edge.rpc.processor.group.GroupPermissionsE
 import org.thingsboard.server.service.edge.rpc.processor.integration.IntegrationEdgeProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.menu.CustomMenuEdgeProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.relation.RelationEdgeProcessor;
+import org.thingsboard.server.service.edge.rpc.processor.report.ReportTemplateProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.resource.ResourceEdgeProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.role.RoleEdgeProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.rule.RuleChainEdgeProcessor;
@@ -115,7 +117,7 @@ import org.thingsboard.server.service.edge.rpc.processor.telemetry.TelemetryEdge
 import org.thingsboard.server.service.edge.rpc.processor.tenant.TenantEdgeProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.tenant.TenantProfileEdgeProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.translation.CustomTranslationEdgeProcessor;
-import org.thingsboard.server.service.edge.rpc.processor.user.UserEdgeProcessor;
+import org.thingsboard.server.service.edge.rpc.processor.user.UserProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.widget.WidgetBundleEdgeProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.widget.WidgetTypeEdgeProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.wl.WhiteLabelingEdgeProcessor;
@@ -287,6 +289,8 @@ public class EdgeContextComponent {
     @Autowired
     private SchedulerEventService schedulerEventService;
 
+    @Autowired
+    private ReportTemplateService reportTemplateService;
 
     // processors
     @Autowired
@@ -344,9 +348,6 @@ public class EdgeContextComponent {
     private TenantProfileEdgeProcessor tenantProfileProcessor;
 
     @Autowired
-    private UserEdgeProcessor userProcessor;
-
-    @Autowired
     private WidgetBundleEdgeProcessor widgetBundleProcessor;
 
     @Autowired
@@ -380,6 +381,12 @@ public class EdgeContextComponent {
     @Autowired
     private WhiteLabelingEdgeProcessor whiteLabelingProcessor;
 
+    @Autowired
+    private ReportTemplateProcessor reportTemplateProcessor;
+
+    @Autowired
+    private SchedulerEventEdgeProcessor schedulerEventProcessor;
+
     // config
     @Autowired
     private EdgeEventStorageSettings edgeEventStorageSettings;
@@ -402,8 +409,12 @@ public class EdgeContextComponent {
 
     @Autowired
     private AiModelService aiModelService;
+
     @Autowired
     private AiModelProcessor aiModelProcessor;
+
+    @Autowired
+    private UserProcessor userProcessor;
 
     public EdgeProcessor getProcessor(EdgeEventType edgeEventType) {
         EdgeProcessor processor = processorMap.get(edgeEventType);

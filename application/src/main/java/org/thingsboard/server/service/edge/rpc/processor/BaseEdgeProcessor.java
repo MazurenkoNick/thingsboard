@@ -44,6 +44,11 @@ import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EdgeUtils;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EntityView;
+import org.thingsboard.server.common.data.HasCustomerId;
+import org.thingsboard.server.common.data.HasName;
+import org.thingsboard.server.common.data.HasVersion;
+import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.HasOwnerId;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.edge.Edge;
@@ -63,6 +68,7 @@ import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityIdFactory;
 import org.thingsboard.server.common.data.id.EntityViewId;
+import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.IntegrationId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RuleChainId;
@@ -92,6 +98,7 @@ import org.thingsboard.server.service.executors.DbCallbackExecutorService;
 import org.thingsboard.server.service.security.permission.OwnersCacheService;
 import org.thingsboard.server.service.state.DefaultDeviceStateService;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -429,6 +436,29 @@ public abstract class BaseEdgeProcessor implements EdgeProcessor {
         edgeCtx.getRelationService().saveRelation(tenantId, relation);
     }
 
+    protected <T extends HasId<? extends EntityId>> void pushEntityEventToRuleEngine(TenantId tenantId, T entity, TbMsgType msgType) {
+        pushEntityEventToRuleEngine(tenantId, null, entity, msgType);
+    }
+
+    protected <T extends HasId<? extends EntityId>> void pushEntityEventToRuleEngine(TenantId tenantId, Edge edge, T entity, TbMsgType msgType) {
+        try {
+            String entityAsString = JacksonUtil.toString(entity);
+            CustomerId customerId = getCustomerId(entity);
+            TbMsgMetaData tbMsgMetaData = edge == null ? TbMsgMetaData.EMPTY : getEdgeActionTbMsgMetaData(edge, customerId);
+
+            pushEntityEventToRuleEngine(tenantId, entity.getId(), customerId, msgType, entityAsString, tbMsgMetaData);
+        } catch (Exception e) {
+            log.warn("[{}][{}] Failed to push entity action for {} to rule engine: {}", tenantId, entity.getId(), entity.getId().getEntityType(), msgType.name(), e);
+        }
+    }
+
+    private <T extends HasId<? extends EntityId>> CustomerId getCustomerId(T entity) {
+        if (entity instanceof HasCustomerId hasCustomer) {
+            return hasCustomer.getCustomerId();
+        }
+        return null;
+    }
+
     protected TbMsgMetaData getEdgeActionTbMsgMetaData(Edge edge, CustomerId customerId) {
         TbMsgMetaData metaData = new TbMsgMetaData();
         metaData.putValue("edgeId", edge.getId().toString());
@@ -528,6 +558,64 @@ public abstract class BaseEdgeProcessor implements EdgeProcessor {
             if (entityGroup != null) {
                 edgeCtx.getEntityGroupService().addEntityToEntityGroup(tenantId, entityGroupId, entityId);
             }
+        }
+    }
+
+    protected boolean isSaveRequired(HasVersion current, HasVersion updated) {
+        updated.setVersion(null);
+        return !updated.equals(current);
+    }
+
+    protected <I extends EntityId, E extends HasName & HasId<I>> Optional<String> generateUniqueNameIfDuplicateExists(
+            TenantId tenantId, I entityId, E entity, @Nullable E entityWithSameName) {
+
+        if (entityWithSameName == null || entityWithSameName.getId().equals(entityId)) {
+            return Optional.empty();
+        }
+        String currentName = entity.getName();
+        String newEntityName = generateRandomAlphabeticString(currentName);
+
+        log.warn("[{}] Entity with name '{}' already exists (id={}). Renaming to '{}'", tenantId, currentName, entityWithSameName.getId(), newEntityName);
+        return Optional.of(newEntityName);
+    }
+
+    protected static String generateRandomAlphabeticString(String prefix) {
+        return prefix + "_" + StringUtils.randomAlphabetic(15);
+    }
+
+    protected <T extends HasOwnerId & HasId<? extends EntityId>> void addEntityToEdgeAllGroup(TenantId tenantId, Edge edge, T entity) {
+        if (entity == null) {
+            return;
+        }
+        EntityId entityId = entity.getId();
+        EntityType entityType = entityId.getEntityType();
+        try {
+            EntityType ownerType = entity.getOwnerId().getEntityType();
+            EntityGroup edgeEntityGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), ownerType, entityType).get();
+            if (edgeEntityGroup != null) {
+                edgeCtx.getEntityGroupService().addEntityToEntityGroup(tenantId, edgeEntityGroup.getId(), entityId);
+            }
+        } catch (Exception e) {
+            log.warn("[{}] Can't add entity to edge {} 'All' group, entity id [{}]", tenantId, entityType, entityId, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected <T extends HasOwnerId & HasId<? extends EntityId>> void removeEntityFromEdgeAllGroup(TenantId tenantId, Edge edge, T entity) {
+        if (entity == null) {
+            return;
+        }
+        EntityId entityId = entity.getId();
+        EntityType entityType = entityId.getEntityType();
+        try {
+            EntityType ownerType = entity.getOwnerId().getEntityType();
+            EntityGroup edgeEntityGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), ownerType, entityType).get();
+            if (edgeEntityGroup != null) {
+                edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, edgeEntityGroup.getId(), entityId);
+            }
+        } catch (Exception e) {
+            log.warn("[{}] Can't delete entity from edge {} 'All' group, entity id [{}]", tenantId, entityType, entityId, e);
+            throw new RuntimeException(e);
         }
     }
 

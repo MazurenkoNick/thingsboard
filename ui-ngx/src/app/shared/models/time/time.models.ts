@@ -184,6 +184,7 @@ export interface Timewindow {
   history?: HistoryWindow;
   aggregation?: Aggregation;
   timezone?: string;
+  hideSaveAsDefault?: boolean;
 }
 
 export interface SubscriptionAggregation extends Aggregation {
@@ -309,14 +310,14 @@ export const defaultTimewindow = (timeService: TimeService, isDashboard = false)
     selectedTab: TimewindowType.REALTIME,
     realtime: {
       realtimeType: RealtimeWindowType.LAST_INTERVAL,
-      interval: SECOND,
-      timewindowMs: isDashboard ? HOUR : MINUTE,
+      interval: MINUTE,
+      timewindowMs: HOUR,
       quickInterval: QuickTimeInterval.CURRENT_DAY,
     },
     history: {
       historyType: HistoryWindowType.LAST_INTERVAL,
-      interval: SECOND,
-      timewindowMs: MINUTE,
+      interval: MINUTE,
+      timewindowMs: HOUR,
       fixedTimewindow: {
         startTimeMs: currentTime - DAY,
         endTimeMs: currentTime
@@ -339,8 +340,9 @@ const getTimewindowType = (timewindow: Timewindow): TimewindowType => {
 };
 
 export const initModelFromDefaultTimewindow = (value: Timewindow, quickIntervalOnly: boolean,
-                                               historyOnly: boolean, timeService: TimeService, hasAggregation: boolean): Timewindow => {
-  const model = defaultTimewindow(timeService);
+                                               historyOnly: boolean, timeService: TimeService, hasAggregation: boolean,
+                                               isDashboard = false): Timewindow => {
+  const model = defaultTimewindow(timeService, isDashboard);
   if (value) {
     if (value.allowedAggTypes?.length) {
       model.allowedAggTypes = value.allowedAggTypes;
@@ -353,6 +355,9 @@ export const initModelFromDefaultTimewindow = (value: Timewindow, quickIntervalO
     }
     if (value.hideTimezone) {
       model.hideTimezone = value.hideTimezone;
+    }
+    if (value.hideSaveAsDefault) {
+      model.hideSaveAsDefault = value.hideSaveAsDefault;
     }
 
     model.selectedTab = getTimewindowType(value);
@@ -1140,6 +1145,9 @@ export const cloneSelectedTimewindow = (timewindow: Timewindow): Timewindow => {
   }
   if (timewindow.hideTimezone) {
     cloned.hideTimezone = timewindow.hideTimezone;
+  }
+  if (timewindow.hideSaveAsDefault) {
+    cloned.hideSaveAsDefault = timewindow.hideSaveAsDefault;
   }
   if (isDefined(timewindow.selectedTab)) {
     cloned.selectedTab = timewindow.selectedTab;

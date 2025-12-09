@@ -316,29 +316,28 @@ public class CustomerUserPermissions extends AbstractPermissions {
         }
     };
 
-    private static final PermissionChecker customerResourcePermissionChecker =
-            new PermissionChecker<TbResourceId, TbResourceInfo>() {
+    private static final PermissionChecker customerResourcePermissionChecker = new PermissionChecker<TbResourceId, TbResourceInfo>() {
 
-                @Override
-                public boolean hasPermission(SecurityUser user, Operation operation, TbResourceId resourceId, TbResourceInfo resource) {
-                    if (resource.getResourceType() == null || !resource.getResourceType().isCustomerAccess()) {
-                        return false;
-                    }
-                    if (operation == Operation.READ) {
-                        if (resource.getTenantId() == null || resource.getTenantId().isNullUid()) {
-                            return true;
-                        }
-                        return user.getTenantId().equals(resource.getTenantId());
-                    } else {
-                        if (resource.getResourceType() == ResourceType.IMAGE) {
-                            return user.getCustomerId().equals(resource.getCustomerId());
-                        } else {
-                            return false;
-                        }
-                    }
+        @Override
+        public boolean hasPermission(SecurityUser user, Operation operation, TbResourceId resourceId, TbResourceInfo resource) {
+            if (resource.getResourceType() == null || !resource.getResourceType().isCustomerAccess()) {
+                return false;
+            }
+            if (operation == Operation.READ) {
+                if (resource.getTenantId() == null || resource.getTenantId().isNullUid()) {
+                    return true;
                 }
+                return user.getTenantId().equals(resource.getTenantId());
+            } else {
+                if (resource.getResourceType() == ResourceType.IMAGE) {
+                    return user.getCustomerId().equals(resource.getCustomerId());
+                } else {
+                    return false;
+                }
+            }
+        }
 
-            };
+    };
 
     private final PermissionChecker customerEntityGroupPermissionChecker = new PermissionChecker() {
 

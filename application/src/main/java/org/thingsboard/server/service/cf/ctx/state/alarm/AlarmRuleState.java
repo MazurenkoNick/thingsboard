@@ -58,6 +58,8 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.concurrent.ScheduledFuture;
 
+import static org.thingsboard.server.service.cf.ctx.state.alarm.AlarmEvalResult.Status.TRUE;
+
 @Data
 @Slf4j
 public class AlarmRuleState {
@@ -96,16 +98,20 @@ public class AlarmRuleState {
         boolean active = isActive(ts);
         switch (condition.getType()) {
             case SIMPLE, REPEATING -> {
-                if (this.active == null || active != this.active) {
-                    this.active = active;
-                    if (active) {
-                        return doEval(false, ctx);
-                    }
+                boolean activeChanged = this.active == null || active != this.active;
+                this.active = active;
+                if (!active) {
+                    return AlarmEvalResult.EMPTY;
                 }
-                if (active) {
-                    return AlarmEvalResult.NOT_YET_TRUE;
-                } else {
-                    return AlarmEvalResult.FALSE;
+
+                if ((condition.hasSchedule() && activeChanged) ||
+                    condition.getExpression().requiresScheduledReevaluation()) {
+                    AlarmEvalResult result = doEval(false, ctx);
+                    if (result.getStatus() == TRUE) {
+                        return result;
+                    } else {
+                        return AlarmEvalResult.EMPTY;
+                    }
                 }
             }
             case DURATION -> {
@@ -131,7 +137,7 @@ public class AlarmRuleState {
                 }
             }
         }
-        return AlarmEvalResult.FALSE;
+        return AlarmEvalResult.EMPTY;
     }
 
     public AlarmEvalResult doEval(boolean newEvent, CalculatedFieldCtx ctx) {
@@ -166,7 +172,7 @@ public class AlarmRuleState {
     private AlarmEvalResult evalDuration(CalculatedFieldCtx ctx) {
         if (eval(condition.getExpression(), ctx)) {
             long ts = System.currentTimeMillis();
-            if (firstEventTs == 0) {
+            if (firstEventTs <= 0) {
                 firstEventTs = state.getLatestTimestamp();
             }
             lastCheckTs = ts;
@@ -353,6 +359,7 @@ public class AlarmRuleState {
     }
 
     public record StateInfo(Long eventCount, Long duration) {
+
         static final StateInfo EMPTY = new StateInfo(null, null);
 
     }

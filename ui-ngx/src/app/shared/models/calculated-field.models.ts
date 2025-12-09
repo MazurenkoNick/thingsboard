@@ -81,11 +81,18 @@ export interface CalculatedFieldAlarmRule extends BaseCalculatedField {
   configuration: CalculatedFieldAlarmRuleConfiguration;
 }
 
+export interface CalculatedFieldRelatedEntityAggregation extends BaseCalculatedField {
+  type: CalculatedFieldType.RELATED_ENTITIES_AGGREGATION;
+  configuration: CalculatedFieldRelatedAggregationConfiguration;
+}
+
+
 export type CalculatedField =
   | CalculatedFieldSimple
   | CalculatedFieldScript
   | CalculatedFieldGeofencing
   | CalculatedFieldPropagation
+  | CalculatedFieldRelatedEntityAggregation
   | CalculatedFieldAlarmRule;
 
 export enum CalculatedFieldType {
@@ -177,6 +184,7 @@ export interface CalculatedFieldEntityAggregationConfiguration {
   metrics: Record<string, CalculatedFieldAggMetric>;
   interval: AggInterval;
   watermark?: WatermarkConfig;
+  produceIntermediateResult?: boolean;
   output: CalculatedFieldOutput & { decimalsByDefault?: number; };
 }
 
@@ -243,6 +251,7 @@ export type AttributeOutputStrategy =
 export interface AttributeImmediateOutputStrategy {
   type: OutputStrategyType.IMMEDIATE;
   updateAttributesOnlyOnValueChange: boolean;
+  sendAttributesUpdatedNotification: boolean;
   saveAttribute: boolean;
   sendWsUpdate: boolean;
   processCfs: boolean;
@@ -506,7 +515,7 @@ export interface CalculatedFieldArgumentValue extends CalculatedFieldArgument {
   entityName?: string;
 }
 
-export type CalculatedFieldTestScriptFn = (calculatedField: CalculatedField, argumentsObj?: Record<string, unknown>, closeAllOnSave?: boolean) => Observable<string>;
+export type CalculatedFieldTestScriptFn = (calculatedField: CalculatedField, argumentsObj?: Record<string, unknown>, closeAllOnSave?: boolean, expression?: string) => Observable<string>;
 
 export interface CalculatedFieldTestScriptInputParams {
   arguments: CalculatedFieldEventArguments;

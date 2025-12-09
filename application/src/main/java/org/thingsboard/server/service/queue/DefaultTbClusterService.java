@@ -510,7 +510,7 @@ public class DefaultTbClusterService implements TbClusterService {
 
     @Override
     public void onUserUpdated(User user, User oldUser) {
-        if (!Objects.equals(user.getCustomMenuId(), oldUser.getCustomMenuId())) {
+        if (oldUser != null && !Objects.equals(user.getCustomMenuId(), oldUser.getCustomMenuId())) {
             UserId userId = user.getId();
             broadcastToCore(TransportProtos.ToCoreNotificationMsg.newBuilder()
                     .setCustomMenuCacheInvalidateMsg(TransportProtos.CustomMenuCacheInvalidateMsg.newBuilder()
@@ -692,7 +692,7 @@ public class DefaultTbClusterService implements TbClusterService {
                 || (entityType == EntityType.ASSET && msg.getEvent() == ComponentLifecycleEvent.UPDATED)
                 || (entityType == EntityType.DEVICE && msg.getEvent() == ComponentLifecycleEvent.UPDATED);
 
-        boolean toRuleEngine = !toIntegrationExecutor && entityType != EntityType.USER;
+        boolean toRuleEngine = !toIntegrationExecutor;
 
         boolean toTbReport = entityType.isOneOf(EntityType.JOB, EntityType.TENANT);
         Set<String> tbReportServices = partitionService.getAllServiceIds(ServiceType.TB_REPORT);

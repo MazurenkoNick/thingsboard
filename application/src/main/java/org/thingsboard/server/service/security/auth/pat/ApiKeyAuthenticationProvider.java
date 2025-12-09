@@ -30,48 +30,44 @@
  */
 package org.thingsboard.server.service.security.auth.pat;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.common.data.User;
-import org.thingsboard.server.common.data.UserAuthDetails;
+import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.pat.ApiKey;
-import org.thingsboard.server.common.data.permission.MergedUserPermissions;
+import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.pat.ApiKeyService;
+import org.thingsboard.server.service.security.auth.AbstractAuthenticationProvider;
 import org.thingsboard.server.service.security.model.SecurityUser;
-import org.thingsboard.server.service.security.model.UserPrincipal;
-import org.thingsboard.server.service.security.model.token.RawApiKey;
+import org.thingsboard.server.service.security.model.token.ApiKeyAuthRequest;
 import org.thingsboard.server.service.security.permission.UserPermissionsService;
 import org.thingsboard.server.service.user.cache.UserAuthDetailsCache;
 
 @Component
-@RequiredArgsConstructor
-public class ApiKeyAuthenticationProvider implements org.springframework.security.authentication.AuthenticationProvider {
+public class ApiKeyAuthenticationProvider extends AbstractAuthenticationProvider {
 
     private final ApiKeyService apiKeyService;
-    private final UserAuthDetailsCache userAuthDetailsCache;
-    private final UserPermissionsService userPermissionsService;
+
+    public ApiKeyAuthenticationProvider(ApiKeyService apiKeyService, UserAuthDetailsCache userAuthDetailsCache,
+                                        UserPermissionsService userPermissionsService, CustomerService customerService) {
+        super(customerService, userAuthDetailsCache, userPermissionsService);
+        this.apiKeyService = apiKeyService;
+    }
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        RawApiKey rawApiKey = (RawApiKey) authentication.getCredentials();
-        SecurityUser securityUser = authenticate(rawApiKey.apiKey());
+        ApiKeyAuthRequest apiKeyAuthRequest = (ApiKeyAuthRequest) authentication.getCredentials();
+        SecurityUser securityUser = authenticate(apiKeyAuthRequest.apiKey(), apiKeyAuthRequest.userId(), apiKeyAuthRequest.customerId());
         return new ApiKeyAuthenticationToken(securityUser);
     }
 
-    @Override
-    public boolean supports(Class<?> authentication) {
-        return ApiKeyAuthenticationToken.class.isAssignableFrom(authentication);
-    }
-
-    private SecurityUser authenticate(String key) {
+    private SecurityUser authenticate(String key, UserId userIdInternal, CustomerId customerIdInternal) {
         if (StringUtils.isEmpty(key)) {
             throw new BadCredentialsException("Empty API key");
         }
@@ -85,28 +81,38 @@ public class ApiKeyAuthenticationProvider implements org.springframework.securit
         if (apiKey.getExpirationTime() != 0 && apiKey.getExpirationTime() < System.currentTimeMillis()) {
             throw new CredentialsExpiredException("API key is expired");
         }
-        UserAuthDetails userAuthDetails = userAuthDetailsCache.getUserAuthDetails(apiKey.getTenantId(), apiKey.getUserId());
-        if (userAuthDetails == null) {
-            throw new UsernameNotFoundException("User with credentials not found");
-        }
-        if (!userAuthDetails.credentialsEnabled()) {
-            throw new DisabledException("User is not active");
+
+        ResolvedUser resolvedUser = resolveUser(apiKey, userIdInternal, customerIdInternal);
+
+        SecurityUser securityUser;
+
+        if (resolvedUser.isPublicCustomer()) {
+            securityUser = super.authenticateByPublicId(resolvedUser.customerId().toString(), "Internal API key", null);
+        } else {
+            securityUser = authenticateByUserId(resolvedUser.tenantId(), resolvedUser.userId(), apiKey.isInternal() ? apiKey.getPermissions() : null);
         }
 
-        User user = userAuthDetails.user();
-        if (user.getAuthority() == null) {
-            throw new InsufficientAuthenticationException("User has no authority assigned");
-        }
-        UserPrincipal userPrincipal = new UserPrincipal(UserPrincipal.Type.USER_NAME, user.getEmail());
+        return securityUser;
+    }
 
-        MergedUserPermissions userPermissions;
-        try {
-            userPermissions = userPermissionsService.getMergedPermissions(user, false);
-        } catch (Exception e) {
-            throw new BadCredentialsException("Failed to get user permissions", e);
+    private ResolvedUser resolveUser(ApiKey apiKey, UserId userIdInternal, CustomerId customerIdInternal) {
+        if (apiKey.isInternal()) {
+            if (userIdInternal != null && !userIdInternal.isNullUid()) {
+                return new ResolvedUser(TenantId.SYS_TENANT_ID, userIdInternal, null, false);
+            } else if (customerIdInternal != null && !customerIdInternal.isNullUid()) {
+                return new ResolvedUser(TenantId.SYS_TENANT_ID, null, customerIdInternal, true);
+            }
         }
 
-        return new SecurityUser(user, true, userPrincipal, userPermissions);
+        // Use API key's user (for regular keys or internal without additional headers)
+        return new ResolvedUser(apiKey.getTenantId(), apiKey.getUserId(), null, false);
+    }
+
+    private record ResolvedUser(TenantId tenantId, UserId userId, CustomerId customerId, boolean isPublicCustomer) {}
+
+    @Override
+    public boolean supports(Class<?> authentication) {
+        return ApiKeyAuthenticationToken.class.isAssignableFrom(authentication);
     }
 
 }

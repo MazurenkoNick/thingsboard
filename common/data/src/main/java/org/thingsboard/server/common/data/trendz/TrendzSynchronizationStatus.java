@@ -28,6 +28,10 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.security.model.token;
+package org.thingsboard.server.common.data.trendz;
 
-public record RawApiKey(String apiKey) {}
+public enum TrendzSynchronizationStatus {
+
+    NOT_AVAILABLE, AVAILABLE, SYNCED
+
+}

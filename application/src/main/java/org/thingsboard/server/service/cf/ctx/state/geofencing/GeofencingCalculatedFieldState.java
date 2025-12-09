@@ -73,7 +73,7 @@ import static org.thingsboard.server.common.data.cf.configuration.geofencing.Geo
 @EqualsAndHashCode(callSuper = true)
 public class GeofencingCalculatedFieldState extends BaseCalculatedFieldState {
 
-    private long lastDynamicArgumentsRefreshTs = -1;
+    private long lastDynamicArgumentsRefreshTs = DEFAULT_LAST_UPDATE_TS;
 
     public GeofencingCalculatedFieldState(EntityId entityId) {
         super(entityId);
@@ -122,23 +122,26 @@ public class GeofencingCalculatedFieldState extends BaseCalculatedFieldState {
             boolean createRelationsWithMatchedZones = zoneGroupCfg.isCreateRelationsWithMatchedZones();
             List<GeofencingEvalResult> zoneResults = new ArrayList<>(argumentEntry.getZoneStates().size());
             argumentEntry.getZoneStates().forEach((zoneId, zoneState) -> {
+                boolean firstEval = zoneState.getLastPresence() == null;
                 GeofencingEvalResult eval = zoneState.evaluate(entityCoordinates);
                 zoneResults.add(eval);
-                if (createRelationsWithMatchedZones) {
-                    GeofencingTransitionEvent transitionEvent = eval.transition();
-                    if (transitionEvent == null) {
-                        return;
-                    }
-                    EntityRelation relation = switch (zoneGroupCfg.getDirection()) {
-                        case TO -> new EntityRelation(zoneId, entityId, zoneGroupCfg.getRelationType());
-                        case FROM -> new EntityRelation(entityId, zoneId, zoneGroupCfg.getRelationType());
-                    };
-                    ListenableFuture<Boolean> f = switch (transitionEvent) {
-                        case ENTERED -> ctx.getRelationService().saveRelationAsync(ctx.getTenantId(), relation);
-                        case LEFT -> ctx.getRelationService().deleteRelationAsync(ctx.getTenantId(), relation);
-                    };
-                    relationFutures.add(f);
+                if (!createRelationsWithMatchedZones) {
+                    return;
                 }
+                GeofencingTransitionEvent transitionEvent = eval.transition();
+                if (transitionEvent == null && !firstEval) {
+                    return;
+                }
+                transitionEvent = transitionEvent == null ? GeofencingTransitionEvent.LEFT : transitionEvent;
+                EntityRelation relation = switch (zoneGroupCfg.getDirection()) {
+                    case TO -> new EntityRelation(zoneId, entityId, zoneGroupCfg.getRelationType());
+                    case FROM -> new EntityRelation(entityId, zoneId, zoneGroupCfg.getRelationType());
+                };
+                ListenableFuture<Boolean> f = switch (transitionEvent) {
+                    case ENTERED -> ctx.getRelationService().saveRelationAsync(ctx.getTenantId(), relation);
+                    case LEFT -> ctx.getRelationService().deleteRelationAsync(ctx.getTenantId(), relation);
+                };
+                relationFutures.add(f);
             });
             updateValuesNode(argumentKey, zoneResults, zoneGroupCfg.getReportStrategy(), valuesNode);
         });
@@ -159,7 +162,7 @@ public class GeofencingCalculatedFieldState extends BaseCalculatedFieldState {
     @Override
     public void reset() {
         super.reset();
-        lastDynamicArgumentsRefreshTs = -1;
+        lastDynamicArgumentsRefreshTs = DEFAULT_LAST_UPDATE_TS;
     }
 
     public void updateLastDynamicArgumentsRefreshTs() {

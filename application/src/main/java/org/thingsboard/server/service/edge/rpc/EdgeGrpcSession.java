@@ -91,6 +91,7 @@ import org.thingsboard.server.gen.edge.v1.EntityViewUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.EntityViewsRequestMsg;
 import org.thingsboard.server.gen.edge.v1.RelationRequestMsg;
 import org.thingsboard.server.gen.edge.v1.RelationUpdateMsg;
+import org.thingsboard.server.gen.edge.v1.ReportTemplateUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.RequestMsg;
 import org.thingsboard.server.gen.edge.v1.RequestMsgType;
 import org.thingsboard.server.gen.edge.v1.ResourceUpdateMsg;
@@ -98,10 +99,13 @@ import org.thingsboard.server.gen.edge.v1.ResponseMsg;
 import org.thingsboard.server.gen.edge.v1.RuleChainMetadataRequestMsg;
 import org.thingsboard.server.gen.edge.v1.RuleChainMetadataUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.RuleChainUpdateMsg;
+import org.thingsboard.server.gen.edge.v1.SchedulerEventUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.SyncCompletedMsg;
 import org.thingsboard.server.gen.edge.v1.UplinkMsg;
 import org.thingsboard.server.gen.edge.v1.UplinkResponseMsg;
 import org.thingsboard.server.gen.edge.v1.UserCredentialsRequestMsg;
+import org.thingsboard.server.gen.edge.v1.UserCredentialsUpdateMsg;
+import org.thingsboard.server.gen.edge.v1.UserUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.WidgetBundleTypesRequestMsg;
 import org.thingsboard.server.service.edge.EdgeContextComponent;
 import org.thingsboard.server.service.edge.EdgeMsgConstructorUtils;
@@ -122,6 +126,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 
@@ -143,6 +148,7 @@ public abstract class EdgeGrpcSession implements Closeable {
 
     private final EdgeSessionState sessionState = new EdgeSessionState();
     private final ReentrantLock downlinkMsgLock = new ReentrantLock();
+    private final Lock sequenceDependencyLock = new ReentrantLock();
 
     protected EdgeContextComponent ctx;
     protected Edge edge;
@@ -877,7 +883,7 @@ public abstract class EdgeGrpcSession implements Closeable {
             }
             if (uplinkMsg.getDeviceUpdateMsgCount() > 0) {
                 for (DeviceUpdateMsg deviceUpdateMsg : uplinkMsg.getDeviceUpdateMsgList()) {
-                    result.add(ctx.getDeviceProcessor().processDeviceMsgFromEdge(edge.getTenantId(), edge, deviceUpdateMsg));
+                    result.add(ctx.getDeviceProcessor().processDeviceMsgFromEdge(edge.getTenantId(), edge, deviceUpdateMsg, edgeVersion));
                 }
             }
             if (uplinkMsg.getDeviceCredentialsUpdateMsgCount() > 0) {
@@ -892,7 +898,7 @@ public abstract class EdgeGrpcSession implements Closeable {
             }
             if (uplinkMsg.getAssetUpdateMsgCount() > 0) {
                 for (AssetUpdateMsg assetUpdateMsg : uplinkMsg.getAssetUpdateMsgList()) {
-                    result.add(ctx.getAssetProcessor().processAssetMsgFromEdge(edge.getTenantId(), edge, assetUpdateMsg));
+                    result.add(ctx.getAssetProcessor().processAssetMsgFromEdge(edge.getTenantId(), edge, assetUpdateMsg, edgeVersion));
                 }
             }
             if (uplinkMsg.getRuleChainUpdateMsgCount() > 0) {
@@ -907,7 +913,7 @@ public abstract class EdgeGrpcSession implements Closeable {
             }
             if (uplinkMsg.getEntityViewUpdateMsgCount() > 0) {
                 for (EntityViewUpdateMsg entityViewUpdateMsg : uplinkMsg.getEntityViewUpdateMsgList()) {
-                    result.add(ctx.getEntityViewProcessor().processEntityViewMsgFromEdge(edge.getTenantId(), edge, entityViewUpdateMsg));
+                    result.add(ctx.getEntityViewProcessor().processEntityViewMsgFromEdge(edge.getTenantId(), edge, entityViewUpdateMsg, edgeVersion));
                 }
             }
             if (uplinkMsg.getEntityDataCount() > 0) {
@@ -932,7 +938,7 @@ public abstract class EdgeGrpcSession implements Closeable {
             }
             if (uplinkMsg.getDashboardUpdateMsgCount() > 0) {
                 for (DashboardUpdateMsg dashboardUpdateMsg : uplinkMsg.getDashboardUpdateMsgList()) {
-                    result.add(ctx.getDashboardProcessor().processDashboardMsgFromEdge(edge.getTenantId(), edge, dashboardUpdateMsg));
+                    result.add(ctx.getDashboardProcessor().processDashboardMsgFromEdge(edge.getTenantId(), edge, dashboardUpdateMsg, edgeVersion));
                 }
             }
             if (uplinkMsg.getResourceUpdateMsgCount() > 0) {
@@ -1000,9 +1006,39 @@ public abstract class EdgeGrpcSession implements Closeable {
                     result.add(ctx.getCalculatedFieldProcessor().processCalculatedFieldMsgFromEdge(edge.getTenantId(), edge, calculatedFieldUpdateMsg));
                 }
             }
+            if (uplinkMsg.getReportTemplateUpdateMsgCount() > 0) {
+                for (ReportTemplateUpdateMsg reportTemplateUpdateMsg : uplinkMsg.getReportTemplateUpdateMsgList()) {
+                    result.add(ctx.getReportTemplateProcessor().processReportTemplateMsgFromEdge(edge.getTenantId(), edge, reportTemplateUpdateMsg));
+                }
+            }
+            if (uplinkMsg.getSchedulerEventUpdateMsgCount() > 0) {
+                for (SchedulerEventUpdateMsg schedulerEventUpdateMsg : uplinkMsg.getSchedulerEventUpdateMsgList()) {
+                    result.add(ctx.getSchedulerEventProcessor().processSchedulerEventMsgFromEdge(edge.getTenantId(), edge, schedulerEventUpdateMsg));
+                }
+            }
             if (uplinkMsg.getAiModelUpdateMsgCount() > 0) {
                 for (AiModelUpdateMsg aiModelUpdateMsg : uplinkMsg.getAiModelUpdateMsgList()) {
                     result.add(ctx.getAiModelProcessor().processAiModelMsgFromEdge(edge.getTenantId(), edge, aiModelUpdateMsg));
+                }
+            }
+            if (uplinkMsg.getUserUpdateMsgCount() > 0) {
+                for (UserUpdateMsg userUpdateMsg : uplinkMsg.getUserUpdateMsgList()) {
+                    sequenceDependencyLock.lock();
+                    try {
+                        result.add(ctx.getUserProcessor().processUserMsgFromEdge(edge.getTenantId(), edge, userUpdateMsg, edgeVersion));
+                    } finally {
+                        sequenceDependencyLock.unlock();
+                    }
+                }
+            }
+            if (uplinkMsg.getUserCredentialsUpdateMsgCount() > 0) {
+                for (UserCredentialsUpdateMsg userCredentialsUpdateMsg : uplinkMsg.getUserCredentialsUpdateMsgList()) {
+                    sequenceDependencyLock.lock();
+                    try {
+                        result.add(ctx.getUserProcessor().processUserCredentialsMsgFromEdge(edge.getTenantId(), edge, userCredentialsUpdateMsg));
+                    } finally {
+                        sequenceDependencyLock.unlock();
+                    }
                 }
             }
         } catch (Exception e) {

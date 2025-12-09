@@ -76,6 +76,7 @@ import org.thingsboard.server.gen.edge.v1.OAuth2DomainUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.OtaPackageUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.QueueUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.RelationUpdateMsg;
+import org.thingsboard.server.gen.edge.v1.ReportTemplateUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.ResourceUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.RoleProto;
 import org.thingsboard.server.gen.edge.v1.RuleChainMetadataUpdateMsg;
@@ -345,6 +346,11 @@ public class EdgeImitator {
         if (downlinkMsg.getSchedulerEventUpdateMsgCount() > 0) {
             for (SchedulerEventUpdateMsg schedulerEventUpdateMsg : downlinkMsg.getSchedulerEventUpdateMsgList()) {
                 result.add(saveDownlinkMsg(schedulerEventUpdateMsg));
+            }
+        }
+        if (downlinkMsg.getReportTemplateUpdateMsgCount() > 0 ) {
+            for (ReportTemplateUpdateMsg reportTemplateUpdateMsg : downlinkMsg.getReportTemplateUpdateMsgList()) {
+                result.add(saveDownlinkMsg(reportTemplateUpdateMsg));
             }
         }
         if (downlinkMsg.getRoleMsgCount() > 0) {

@@ -796,7 +796,6 @@ export class WidgetConfigComponent extends PageComponent implements OnInit, OnDe
   public generateDataKey(chip: any, type: DataKeyType, dataKeySettingsForm: FormProperty[],
                          isLatestDataKey: boolean, dataKeySettingsFunction: DataKeySettingsFunction): DataKey {
     if (isObject(chip)) {
-      (chip as DataKey)._hash = Math.random();
       return chip;
     } else {
       let label: string = chip;
@@ -814,7 +813,6 @@ export class WidgetConfigComponent extends PageComponent implements OnInit, OnDe
         label,
         color: this.genNextColor(),
         settings: {},
-        _hash: Math.random()
       };
       if (type === DataKeyType.function) {
         result.name = 'f(x)';
@@ -961,15 +959,15 @@ export class WidgetConfigComponent extends PageComponent implements OnInit, OnDe
           entityLabelColumnTitle
         } = this.modelValue.config.settings;
         const displayEntitiesArray = [];
-        if (isDefined(displayEntityName)) {
+        if (displayEntityName) {
           const displayName = entityNameColumnTitle ? entityNameColumnTitle : 'entityName';
           displayEntitiesArray.push({name: displayName, label: displayName});
         }
-        if (isDefined(displayEntityLabel)) {
+        if (displayEntityLabel) {
           const displayLabel = entityLabelColumnTitle ? entityLabelColumnTitle : 'entityLabel';
           displayEntitiesArray.push({name: displayLabel, label: displayLabel});
         }
-        if (isDefined(displayEntityType)) {
+        if (displayEntityType) {
           displayEntitiesArray.push({name: 'entityType', label: 'entityType'});
         }
         configuredColumns.push(...displayEntitiesArray, ...this.keysToCellClickColumns(this.modelValue.config.datasources[0].dataKeys));

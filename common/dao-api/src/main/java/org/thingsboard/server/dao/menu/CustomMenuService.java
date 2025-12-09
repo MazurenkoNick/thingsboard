@@ -48,6 +48,8 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 public interface CustomMenuService {
 
@@ -55,7 +57,7 @@ public interface CustomMenuService {
 
     CustomMenu updateCustomMenu(CustomMenu customMenu, boolean force) throws ThingsboardException;
 
-    void updateAssigneeList(CustomMenu oldCustomMenu, CMAssigneeType newAssigneeType, List<EntityId> newAssignToList, boolean force) throws ThingsboardException;
+    void updateAssigneeList(CustomMenu oldCustomMenu, CMAssigneeType newAssigneeType, List<EntityId> newAssignToList, String[] newUserGroupNames, boolean force) throws ThingsboardException;
 
     PageData<CustomMenu> findCustomMenusByTenantId(TenantId tenantId, PageLink pageLink);
 
@@ -74,6 +76,8 @@ public interface CustomMenuService {
     CustomMenu findDefaultCustomMenuByScope(TenantId tenantId, CustomerId customerId, CMScope scope);
 
     List<EntityInfo> findCustomMenuAssigneeList(CustomMenuInfo customMenuInfo);
+
+    Optional<CustomMenu> findFirstByScopeAndUserGroupNames(TenantId tenantId, CustomerId customerId, CMScope scope, Set<String> userGroupNames);
 
     CustomMenuDeleteResult deleteCustomMenu(CustomMenu customMenu, boolean force);
 

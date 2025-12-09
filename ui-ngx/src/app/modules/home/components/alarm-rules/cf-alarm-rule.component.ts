@@ -35,8 +35,9 @@ import {
   FormBuilder,
   NG_VALIDATORS,
   NG_VALUE_ACCESSOR,
-  UntypedFormControl,
-  Validator
+  ValidationErrors,
+  Validator,
+  Validators
 } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { isDefinedAndNotNull } from '@core/utils';
@@ -49,6 +50,7 @@ import {
   AlarmRuleDetailsDialogData
 } from "@home/components/alarm-rules/alarm-rule-details-dialog.component";
 import { coerceBoolean } from "@shared/decorators/coercion";
+import { Observable } from "rxjs";
 
 @Component({
   selector: 'tb-cf-alarm-rule',
@@ -80,10 +82,17 @@ export class CfAlarmRuleComponent implements ControlValueAccessor, OnInit, Valid
   @Input()
   arguments: Record<string, CalculatedFieldArgument>;
 
+  @Input()
+  @coerceBoolean()
+  isClearCondition = false;
+
+  @Input({required: true})
+  testScript: (expression: string) => Observable<string>;
+
   private modelValue: AlarmRule;
 
   alarmRuleFormGroup = this.fb.group({
-    condition: this.fb.control<AlarmRuleCondition | null>(null),
+    condition: this.fb.control<AlarmRuleCondition | null>(null, Validators.required),
     alarmDetails: [null],
     dashboardId: [null]
   });
@@ -120,14 +129,12 @@ export class CfAlarmRuleComponent implements ControlValueAccessor, OnInit, Valid
   }
 
   writeValue(value: AlarmRule): void {
-    if (value) {
-      this.modelValue = value;
-      const model = this.modelValue ? {
-        ...this.modelValue,
-        dashboardId: this.modelValue.dashboardId?.id
-      } : null;
-      this.alarmRuleFormGroup.patchValue(model, {emitEvent: false});
-    }
+    this.modelValue = value;
+    const model = this.modelValue ? {
+      ...this.modelValue,
+      dashboardId: this.modelValue.dashboardId?.id
+    } : null;
+    this.alarmRuleFormGroup.patchValue(model, {emitEvent: false});
   }
 
   public openEditDetailsDialog($event: Event) {
@@ -149,7 +156,7 @@ export class CfAlarmRuleComponent implements ControlValueAccessor, OnInit, Valid
     });
   }
 
-  public validate(c: UntypedFormControl) {
+  public validate(): ValidationErrors | null {
     return (!this.required && !this.modelValue || this.alarmRuleFormGroup.valid) ? null : {
       alarmRule: {
         valid: false,

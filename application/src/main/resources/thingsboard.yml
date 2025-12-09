@@ -570,11 +570,6 @@ actors:
       configuration: "${ACTORS_CALCULATED_FIELD_DEBUG_MODE_RATE_LIMITS_PER_TENANT_CONFIGURATION:50000:3600}"
     # Time in seconds to receive calculation result.
     calculation_timeout: "${ACTORS_CALCULATION_TIMEOUT_SEC:5}"
-    # Interval in seconds to check calculated fields for re-evaluation interval. 1 minute by default.
-    check_interval: "${ACTORS_CALCULATED_FIELDS_CHECK_INTERVAL_SEC:60}"
-  alarms:
-    # Interval in seconds to re-evaluate Alarm rules that have a time schedule. 2 minutes by default.
-    reevaluation_interval: "${ACTORS_ALARMS_REEVALUATION_INTERVAL_SEC:120}"
 
 debug:
   settings:
@@ -1697,6 +1692,17 @@ edges:
     ttl: "${EDGES_STATS_TTL:30}"
     # How often to report edge communication stats in milliseconds
     report-interval-millis: "${EDGES_STATS_REPORT_INTERVAL_MS:600000}"
+
+# Trendz parameters
+trendz:
+  # Enable/disable Trendz synchronization
+  enabled: "${TRENDZ_ENABLED:true}"
+  # Default ThingsBoard URL used for startup synchronization
+  default_tb_url: "${TRENDZ_DEFAULT_TB_URL:}"
+  # Default Trendz URL used for startup synchronization
+  default_trendz_url: "${TRENDZ_DEFAULT_URL:}"
+  # Request timeout in ms
+  request_timeout_ms: "${TRENDZ_REQUEST_TIMEOUT_MS:15000}"
 
 # Spring doc common parameters
 springdoc:

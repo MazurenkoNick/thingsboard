@@ -34,13 +34,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.thingsboard.common.util.JacksonUtil;
-import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.asset.Asset;
+import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.gen.edge.v1.AssetUpdateMsg;
 import org.thingsboard.server.service.edge.rpc.processor.BaseEdgeProcessor;
@@ -70,24 +71,17 @@ public abstract class BaseAssetProcessor extends BaseEdgeProcessor {
                 asset.setId(assetId);
                 changeOwnerIfRequired(tenantId, asset.getCustomerId(), assetId);
             }
-            String assetName = asset.getName();
-            Asset assetByName = edgeCtx.getAssetService().findAssetByTenantIdAndName(tenantId, assetName);
-            if (assetByName != null && !assetByName.getId().equals(assetId)) {
-                assetName = assetName + "_" + StringUtils.randomAlphanumeric(15);
-                log.warn("[{}] Asset with name {} already exists. Renaming asset name to {}",
-                        tenantId, asset.getName(), assetName);
-                assetNameUpdated = true;
-            }
-            asset.setName(assetName);
-            setCustomerId(tenantId, created ? null : assetById.getCustomerId(), asset, assetUpdateMsg);
-
-            assetValidator.validate(asset, Asset::getTenantId);
-            if (created) {
-                asset.setId(assetId);
-            }
-            Asset savedAsset = edgeCtx.getAssetService().saveAsset(asset, false);
-            if (created) {
-                edgeCtx.getEntityGroupService().addEntityToEntityGroupAll(savedAsset.getTenantId(), savedAsset.getOwnerId(), savedAsset.getId());
+            if (isSaveRequired(assetById, asset)) {
+                assetNameUpdated = updateAssetNameIfDuplicateExists(tenantId, assetId, asset);
+                setCustomerId(tenantId, created ? null : assetById.getCustomerId(), asset, assetUpdateMsg);
+                assetValidator.validate(asset, Asset::getTenantId);
+                if (created) {
+                    asset.setId(assetId);
+                }
+                Asset savedAsset = edgeCtx.getAssetService().saveAsset(asset, false);
+                if (created) {
+                    edgeCtx.getEntityGroupService().addEntityToEntityGroupAll(savedAsset.getTenantId(), savedAsset.getOwnerId(), savedAsset.getId());
+                }
             }
             safeAddToEntityGroup(tenantId, assetUpdateMsg, assetId);
         } catch (Exception e) {
@@ -107,6 +101,27 @@ public abstract class BaseAssetProcessor extends BaseEdgeProcessor {
         }
     }
 
+    private boolean updateAssetNameIfDuplicateExists(TenantId tenantId, AssetId assetId, Asset asset) {
+        Asset assetByName = edgeCtx.getAssetService().findAssetByTenantIdAndName(tenantId, asset.getName());
+
+        return generateUniqueNameIfDuplicateExists(tenantId, assetId, asset, assetByName).map(uniqueName -> {
+            asset.setName(uniqueName);
+            return true;
+        }).orElse(false);
+    }
+
     protected abstract void setCustomerId(TenantId tenantId, CustomerId customerId, Asset asset, AssetUpdateMsg assetUpdateMsg);
+
+    protected void deleteAsset(TenantId tenantId, AssetId assetId) {
+        deleteAsset(tenantId, null, assetId);
+    }
+
+    protected void deleteAsset(TenantId tenantId, Edge edge, AssetId assetId) {
+        Asset assetById = edgeCtx.getAssetService().findAssetById(tenantId, assetId);
+        if (assetById != null) {
+            edgeCtx.getAssetService().deleteAsset(tenantId, assetId);
+            pushEntityEventToRuleEngine(tenantId, edge, assetById, TbMsgType.ENTITY_DELETED);
+        }
+    }
 
 }
