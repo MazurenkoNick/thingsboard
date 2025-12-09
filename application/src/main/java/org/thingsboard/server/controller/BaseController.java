@@ -243,7 +243,7 @@ import org.thingsboard.server.dao.widget.WidgetTypeService;
 import org.thingsboard.server.dao.widget.WidgetsBundleService;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
 import org.thingsboard.server.exception.DataValidationException;
-import org.thingsboard.server.exception.EntitiesLimitException;
+import org.thingsboard.server.exception.EntitiesLimitExceededException;
 import org.thingsboard.server.exception.ThingsboardErrorResponseHandler;
 import org.thingsboard.server.queue.discovery.PartitionService;
 import org.thingsboard.server.queue.discovery.TbServiceInfoProvider;
@@ -589,7 +589,7 @@ public abstract class BaseController {
         }
         if (exception instanceof ThingsboardException) {
             return (ThingsboardException) exception;
-        } else if (exception instanceof EntitiesLimitException) {
+        } else if (exception instanceof EntitiesLimitExceededException) {
             return new ThingsboardException(exception, ThingsboardErrorCode.ENTITIES_LIMIT_EXCEEDED);
         } else if (exception instanceof IllegalArgumentException || exception instanceof IncorrectParameterException
                 || exception instanceof DataValidationException || cause instanceof IncorrectParameterException) {
