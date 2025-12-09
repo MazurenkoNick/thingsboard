@@ -54,6 +54,7 @@ export interface SysParamsState {
   maxRelationLevelPerCfArgument: number;
   ruleChainDebugPerTenantLimitsConfiguration?: string;
   calculatedFieldDebugPerTenantLimitsConfiguration?: string;
+  intermediateAggregationIntervalInSecForCF: number;
   integrationDebugPerTenantLimitsConfiguration?: string;
   converterDebugPerTenantLimitsConfiguration?: string;
   availableLocales: string[];

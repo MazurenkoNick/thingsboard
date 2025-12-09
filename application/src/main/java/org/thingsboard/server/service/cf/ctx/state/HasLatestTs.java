@@ -28,14 +28,10 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-:host {
-  .debug-dialog-container {
-    width: 1080px;
-    max-width: 100%;
+package org.thingsboard.server.service.cf.ctx.state;
 
-    .debug-dialog-content {
-      height: 65vh;
-      border-radius: 0;
-    }
-  }
+public interface HasLatestTs {
+
+    long getLatestTs();
+
 }

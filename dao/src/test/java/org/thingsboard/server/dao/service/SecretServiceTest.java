@@ -36,7 +36,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.SecretType;
@@ -53,7 +53,6 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.secret.Secret;
 import org.thingsboard.server.common.data.secret.SecretInfo;
 import org.thingsboard.server.dao.converter.ConverterService;
-import org.thingsboard.server.dao.event.EventService;
 import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.dao.secret.SecretService;
@@ -80,10 +79,7 @@ public class SecretServiceTest extends AbstractServiceTest {
     @Autowired
     TenantProfileService tenantProfileService;
 
-    @Autowired
-    EventService eventService;
-
-    @MockBean
+    @MockitoBean
     SecretConfigurationService secretConfigurationService;
 
     @After
