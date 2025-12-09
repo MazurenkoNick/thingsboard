@@ -122,6 +122,8 @@ public interface EntityViewDao extends Dao<EntityView>, ExportableCustomerEntity
      */
     ListenableFuture<List<EntityView>> findEntityViewsByTenantIdAndIdsAsync(UUID tenantId, List<UUID> entityViewIds);
 
+    List<EntityView> findEntityViewsByTenantIdAndIds(UUID tenantId, List<UUID> entityViewIds);
+
     PageData<EntityView> findEntityViewsByEntityGroupId(UUID groupId, PageLink pageLink);
 
     PageData<EntityView> findEntityViewsByEntityGroupIds(List<UUID> groupIds, PageLink pageLink);

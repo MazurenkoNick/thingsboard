@@ -293,6 +293,12 @@ public class DeviceProfileServiceImpl extends CachedVersionedEntityService<Devic
     }
 
     @Override
+    public List<DeviceProfileInfo> findDeviceProfilesByIds(TenantId tenantId, List<DeviceProfileId> deviceProfileIds) {
+        log.trace("Executing findDeviceProfilesByIds, tenantId [{}], deviceProfileIds [{}]", tenantId, deviceProfileIds);
+        return deviceProfileDao.findDeviceProfilesByTenantIdAndIds(tenantId.getId(), toUUIDs(deviceProfileIds));
+    }
+
+    @Override
     public DeviceProfile findOrCreateDeviceProfile(TenantId tenantId, String name) {
         log.trace("Executing findOrCreateDefaultDeviceProfile");
         DeviceProfile deviceProfile = findDeviceProfileByName(tenantId, name, false);

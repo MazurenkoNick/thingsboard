@@ -148,6 +148,11 @@ public class JpaUserDao extends JpaAbstractDao<UserEntity, User> implements User
     }
 
     @Override
+    public List<User> findUsersByTenantIdAndIds(UUID tenantId, List<UUID> userIds) {
+        return DaoUtil.convertDataList(userRepository.findUsersByTenantIdAndIdIn(tenantId, userIds));
+    }
+
+    @Override
     public PageData<User> findUsersByEntityGroupId(UUID groupId, PageLink pageLink) {
         return DaoUtil.toPageData(userRepository
                 .findByEntityGroupId(

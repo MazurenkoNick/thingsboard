@@ -225,6 +225,12 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
     }
 
     @Override
+    public List<Customer> findCustomersByTenantIdAndIds(TenantId tenantId, List<CustomerId> customerIds) {
+        log.trace("Executing findCustomersByTenantIdAndIds, tenantId [{}], customerIds [{}]", tenantId, customerIds);
+        return customerDao.findCustomersByTenantIdAndIds(tenantId.getId(), customerIds.stream().map(CustomerId::getId).collect(Collectors.toList()));
+    }
+
+    @Override
     @Transactional
     public Customer saveCustomer(Customer customer) {
         return saveCustomer(customer, NameConflictStrategy.DEFAULT);
