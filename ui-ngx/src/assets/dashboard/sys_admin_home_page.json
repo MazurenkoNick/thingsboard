@@ -12,30 +12,6 @@
         "sizeY": 3.5,
         "config": {
           "datasources": [],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "#fff",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -59,7 +35,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": "",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -88,7 +63,6 @@
                   "label": "clusterMode",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.7272123990942316,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -99,30 +73,6 @@
               ]
             }
           ],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "#ffffff",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -149,7 +99,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": "",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -166,30 +115,6 @@
         "sizeY": 3.5,
         "config": {
           "datasources": [],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "#fff",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -212,7 +137,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": "",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -229,30 +153,6 @@
         "sizeY": 3.5,
         "config": {
           "datasources": [],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "#fff",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -275,7 +175,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": "",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -292,11 +191,6 @@
         "sizeY": 3,
         "config": {
           "datasources": [],
-          "timewindow": {
-            "realtime": {
-              "timewindowMs": 60000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "rgb(255, 255, 255)",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -324,30 +218,6 @@
         "sizeY": 3.5,
         "config": {
           "datasources": [],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "#fff",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -370,7 +240,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": "",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -399,7 +268,6 @@
                   "label": "tenantsCount",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.8491768696709192,
                   "aggregationType": null,
                   "units": null,
                   "decimals": null,
@@ -410,30 +278,6 @@
               ]
             }
           ],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "#fff",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -457,7 +301,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": "",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -486,7 +329,6 @@
                   "label": "tenantProfilesCount",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.8491768696709192,
                   "aggregationType": null,
                   "units": null,
                   "decimals": null,
@@ -497,30 +339,6 @@
               ]
             }
           ],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "#fff",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -544,7 +362,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": "",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -573,7 +390,6 @@
                   "label": "devicesCount",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.8491768696709192,
                   "aggregationType": null,
                   "units": null,
                   "decimals": null,
@@ -584,30 +400,6 @@
               ]
             }
           ],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "#fff",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -631,7 +423,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": "",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -660,7 +451,6 @@
                   "label": "assetsCount",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.8491768696709192,
                   "aggregationType": null,
                   "units": null,
                   "decimals": null,
@@ -671,30 +461,6 @@
               ]
             }
           ],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "#fff",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -718,7 +484,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": "",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -747,7 +512,6 @@
                   "label": "usersCount",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.8491768696709192,
                   "aggregationType": null,
                   "units": null,
                   "decimals": null,
@@ -758,30 +522,6 @@
               ]
             }
           ],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "#fff",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -805,7 +545,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": "",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -834,7 +573,6 @@
                   "label": "customersCount",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.8491768696709192,
                   "aggregationType": null,
                   "units": null,
                   "decimals": null,
@@ -845,30 +583,6 @@
               ]
             }
           ],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "#fff",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -892,7 +606,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": "",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -921,7 +634,6 @@
                   "label": "tenantsCount",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.8491768696709192,
                   "aggregationType": null,
                   "units": null,
                   "decimals": null,
@@ -943,7 +655,6 @@
                   "label": "tenantProfilesCount",
                   "color": "#4caf50",
                   "settings": {},
-                  "_hash": 0.04291827117688696,
                   "aggregationType": null,
                   "units": null,
                   "decimals": null,
@@ -965,7 +676,6 @@
                   "label": "devicesCount",
                   "color": "#f44336",
                   "settings": {},
-                  "_hash": 0.45105711028955886,
                   "aggregationType": null,
                   "units": null,
                   "decimals": null,
@@ -987,7 +697,6 @@
                   "label": "assetsCount",
                   "color": "#ffc107",
                   "settings": {},
-                  "_hash": 0.17028494648519876,
                   "aggregationType": null,
                   "units": null,
                   "decimals": null,
@@ -1009,7 +718,6 @@
                   "label": "usersCount",
                   "color": "#607d8b",
                   "settings": {},
-                  "_hash": 0.0362458342595664,
                   "aggregationType": null,
                   "units": null,
                   "decimals": null,
@@ -1031,7 +739,6 @@
                   "label": "customersCount",
                   "color": "#9c27b0",
                   "settings": {},
-                  "_hash": 0.7596585662918276,
                   "aggregationType": null,
                   "units": null,
                   "decimals": null,
@@ -1042,30 +749,6 @@
               ]
             }
           ],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "#fff",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -1089,7 +772,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": "",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -1106,30 +788,6 @@
         "sizeY": 3.5,
         "config": {
           "datasources": [],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "rgba(0,0,0,0)",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -1156,7 +814,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": "",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -1184,16 +841,14 @@
                   "type": "timeseries",
                   "label": "cpuUsage",
                   "color": "#2196f3",
-                  "settings": {},
-                  "_hash": 0.659021918423117
+                  "settings": {}
                 },
                 {
                   "name": "cpuCount",
                   "type": "timeseries",
                   "label": "cpuCount",
                   "color": "#4caf50",
-                  "settings": {},
-                  "_hash": 0.5332753234169949
+                  "settings": {}
                 },
                 {
                   "name": "cpuUsage",
@@ -1201,7 +856,6 @@
                   "label": "status",
                   "color": "#f44336",
                   "settings": {},
-                  "_hash": 0.025084892962804473,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1215,7 +869,6 @@
                   "label": "statusTooltip",
                   "color": "#ffc107",
                   "settings": {},
-                  "_hash": 0.8542003006820891,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1226,30 +879,6 @@
               ]
             }
           ],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "#fff",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -1273,7 +902,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": ".tb-widget-container {\n    display: block;\n    height: 100%;\n}\n\n@media screen and (min-width: 960px) {\n    .tb-widget-container {\n        margin-right: 6px;\n    }\n}\n\n@media screen and (max-width: 959px) {\n    .tb-widget-container {\n        height: calc(100% - 12px);\n        margin-bottom: 12px;\n    }\n}",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -1302,7 +930,6 @@
                   "label": "memoryUsage",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.659021918423117,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1316,7 +943,6 @@
                   "label": "totalMemory",
                   "color": "#4caf50",
                   "settings": {},
-                  "_hash": 0.5332753234169949,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1330,7 +956,6 @@
                   "label": "status",
                   "color": "#f44336",
                   "settings": {},
-                  "_hash": 0.025084892962804473,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1344,7 +969,6 @@
                   "label": "statusTooltip",
                   "color": "#ffc107",
                   "settings": {},
-                  "_hash": 0.8542003006820891,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1355,30 +979,6 @@
               ]
             }
           ],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "#fff",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -1402,7 +1002,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": ".tb-widget-container {\n    display: block;\n    height: 100%;\n}\n\n@media screen and (min-width: 960px) {\n    .tb-widget-container {\n        margin-right: 6px;\n        margin-left: 6px;\n    }\n}\n\n@media screen and (max-width: 959px) {\n    .tb-widget-container {\n        height: calc(100% - 12px);\n        margin-bottom: 12px;\n    }\n}",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -1431,7 +1030,6 @@
                   "label": "discUsage",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.659021918423117,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1445,7 +1043,6 @@
                   "label": "totalDiscSpace",
                   "color": "#4caf50",
                   "settings": {},
-                  "_hash": 0.5332753234169949,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1459,7 +1056,6 @@
                   "label": "status",
                   "color": "#f44336",
                   "settings": {},
-                  "_hash": 0.025084892962804473,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1473,7 +1069,6 @@
                   "label": "statusTooltip",
                   "color": "#ffc107",
                   "settings": {},
-                  "_hash": 0.8542003006820891,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1484,30 +1079,6 @@
               ]
             }
           ],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "#fff",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -1531,7 +1102,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": ".tb-widget-container {\n    display: block;\n    height: 100%;\n}\n\n@media screen and (min-width: 960px) {\n    .tb-widget-container {\n        margin-left: 6px;\n    }\n}\n\n@media screen and (max-width: 959px) {\n    .tb-widget-container {\n        height: calc(100% - 12px);\n        margin-bottom: 12px;\n    }\n}",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -1559,16 +1129,14 @@
                   "type": "timeseries",
                   "label": "cpuUsage",
                   "color": "#2196f3",
-                  "settings": {},
-                  "_hash": 0.659021918423117
+                  "settings": {}
                 },
                 {
                   "name": "cpuCount",
                   "type": "timeseries",
                   "label": "cpuCount",
                   "color": "#4caf50",
-                  "settings": {},
-                  "_hash": 0.5332753234169949
+                  "settings": {}
                 },
                 {
                   "name": "cpuUsage",
@@ -1576,7 +1144,6 @@
                   "label": "cpuStatus",
                   "color": "#f44336",
                   "settings": {},
-                  "_hash": 0.025084892962804473,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1590,7 +1157,6 @@
                   "label": "cpuStatusTooltip",
                   "color": "#ffc107",
                   "settings": {},
-                  "_hash": 0.8542003006820891,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1603,8 +1169,7 @@
                   "type": "timeseries",
                   "label": "memoryUsage",
                   "color": "#607d8b",
-                  "settings": {},
-                  "_hash": 0.9761283269385537
+                  "settings": {}
                 },
                 {
                   "name": "totalMemory",
@@ -1612,7 +1177,6 @@
                   "label": "totalMemory",
                   "color": "#9c27b0",
                   "settings": {},
-                  "_hash": 0.6363130990513808,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1626,7 +1190,6 @@
                   "label": "memoryStatus",
                   "color": "#8bc34a",
                   "settings": {},
-                  "_hash": 0.15388812616419556,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1640,7 +1203,6 @@
                   "label": "memoryStatusTooltip",
                   "color": "#3f51b5",
                   "settings": {},
-                  "_hash": 0.8086245517967001,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1653,8 +1215,7 @@
                   "type": "timeseries",
                   "label": "discUsage",
                   "color": "#e91e63",
-                  "settings": {},
-                  "_hash": 0.4278686534236851
+                  "settings": {}
                 },
                 {
                   "name": "totalDiscSpace",
@@ -1662,7 +1223,6 @@
                   "label": "totalDiscSpace",
                   "color": "#ffeb3b",
                   "settings": {},
-                  "_hash": 0.543030429255416,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1676,7 +1236,6 @@
                   "label": "discStatus",
                   "color": "#03a9f4",
                   "settings": {},
-                  "_hash": 0.29138586081227835,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1690,7 +1249,6 @@
                   "label": "discStatusTooltip",
                   "color": "#ff9800",
                   "settings": {},
-                  "_hash": 0.08995267596665912,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -1701,30 +1259,6 @@
               ]
             }
           ],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "#fff",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -1748,7 +1282,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": "",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -1765,30 +1298,6 @@
         "sizeY": 3.5,
         "config": {
           "datasources": [],
-          "timewindow": {
-            "displayValue": "",
-            "selectedTab": 0,
-            "realtime": {
-              "realtimeType": 1,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "quickInterval": "CURRENT_DAY"
-            },
-            "history": {
-              "historyType": 0,
-              "interval": 1000,
-              "timewindowMs": 60000,
-              "fixedTimewindow": {
-                "startTimeMs": 1680168340431,
-                "endTimeMs": 1680254740431
-              },
-              "quickInterval": "CURRENT_DAY"
-            },
-            "aggregation": {
-              "type": "AVG",
-              "limit": 25000
-            }
-          },
           "showTitle": false,
           "backgroundColor": "rgba(0,0,0,0)",
           "color": "rgba(0, 0, 0, 0.87)",
@@ -1815,7 +1324,6 @@
             "fontWeight": 400
           },
           "showLegend": false,
-          "useDashboardTimewindow": true,
           "widgetCss": "",
           "pageSize": 1024,
           "noDataDisplayMessage": "",
@@ -1903,7 +1411,6 @@
                     },
                     "yAxisId": "default"
                   },
-                  "_hash": 0.39181957822569946,
                   "decimals": 0
                 }
               ],
@@ -2231,7 +1738,6 @@
                       }
                     }
                   },
-                  "_hash": 0.39181957822569946,
                   "decimals": null,
                   "aggregationType": null,
                   "units": null,
@@ -2304,7 +1810,6 @@
                       }
                     }
                   },
-                  "_hash": 0.9392996197028385,
                   "aggregationType": null,
                   "units": null,
                   "decimals": null,
@@ -2377,7 +1882,6 @@
                       }
                     }
                   },
-                  "_hash": 0.027335636460212864,
                   "aggregationType": null,
                   "units": null,
                   "decimals": null,
@@ -2647,7 +2151,8 @@
           "widgetStyle": {},
           "widgetCss": "",
           "noDataDisplayMessage": "",
-          "enableDataExport": false
+          "enableDataExport": false,
+          "datasources": []
         },
         "row": 0,
         "col": 0,
@@ -2691,7 +2196,8 @@
           "titleTooltip": "",
           "titleStyle": null,
           "borderRadius": "12px",
-          "enableDataExport": false
+          "enableDataExport": false,
+          "datasources": []
         },
         "row": 0,
         "col": 0,
@@ -2732,7 +2238,8 @@
           },
           "widgetCss": "",
           "noDataDisplayMessage": "",
-          "enableDataExport": false
+          "enableDataExport": false,
+          "datasources": []
         },
         "row": 0,
         "col": 0,
@@ -2818,7 +2325,8 @@
               "backgroundImageUrl": null,
               "mobileAutoFillHeight": false,
               "mobileRowHeight": 20,
-              "outerMargin": true
+              "outerMargin": true,
+              "layoutType": "default"
             }
           }
         }
@@ -2845,7 +2353,8 @@
               "backgroundImageUrl": null,
               "mobileAutoFillHeight": true,
               "mobileRowHeight": 70,
-              "outerMargin": true
+              "outerMargin": true,
+              "layoutType": "default"
             }
           }
         }
@@ -2880,7 +2389,8 @@
               "backgroundImageUrl": null,
               "mobileAutoFillHeight": true,
               "mobileRowHeight": 70,
-              "outerMargin": false
+              "outerMargin": false,
+              "layoutType": "default"
             }
           }
         }
@@ -2937,7 +2447,8 @@
               "autoFillHeight": true,
               "backgroundImageUrl": null,
               "mobileAutoFillHeight": false,
-              "mobileRowHeight": 70
+              "mobileRowHeight": 70,
+              "layoutType": "default"
             }
           }
         }
@@ -2964,7 +2475,8 @@
               "autoFillHeight": true,
               "backgroundImageUrl": null,
               "mobileAutoFillHeight": true,
-              "mobileRowHeight": 70
+              "mobileRowHeight": 70,
+              "layoutType": "default"
             }
           }
         }
@@ -3003,7 +2515,8 @@
               "autoFillHeight": true,
               "backgroundImageUrl": null,
               "mobileAutoFillHeight": true,
-              "mobileRowHeight": 70
+              "mobileRowHeight": 70,
+              "layoutType": "default"
             }
           }
         }
@@ -3030,7 +2543,8 @@
               "autoFillHeight": true,
               "backgroundImageUrl": null,
               "mobileAutoFillHeight": true,
-              "mobileRowHeight": 70
+              "mobileRowHeight": 70,
+              "layoutType": "default"
             }
           }
         }
@@ -3064,7 +2578,8 @@
               "autoFillHeight": true,
               "backgroundImageUrl": null,
               "mobileAutoFillHeight": false,
-              "mobileRowHeight": 20
+              "mobileRowHeight": 20,
+              "layoutType": "default"
             }
           }
         }
@@ -3136,33 +2651,14 @@
     },
     "filters": {},
     "timewindow": {
-      "displayValue": "",
-      "hideInterval": false,
-      "hideLastInterval": false,
-      "hideQuickInterval": false,
-      "hideAggregation": false,
-      "hideAggInterval": false,
-      "hideTimezone": false,
       "selectedTab": 0,
       "realtime": {
         "realtimeType": 0,
         "interval": 1000,
-        "timewindowMs": 60000,
-        "quickInterval": "CURRENT_DAY"
-      },
-      "history": {
-        "historyType": 0,
-        "interval": 1000,
-        "timewindowMs": 60000,
-        "fixedTimewindow": {
-          "startTimeMs": 1680168326072,
-          "endTimeMs": 1680254726072
-        },
-        "quickInterval": "CURRENT_DAY"
+        "timewindowMs": 60000
       },
       "aggregation": {
-        "type": "AVG",
-        "limit": 25000
+        "type": "AVG"
       }
     },
     "settings": {

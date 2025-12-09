@@ -285,7 +285,6 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
   private generateDataKey(chip: any, type: DataKeyType, dataKeySettingsForm: FormProperty[],
                           isLatestDataKey: boolean, dataKeySettingsFunction: DataKeySettingsFunction): DataKey {
     if (isObject(chip)) {
-      (chip as DataKey)._hash = Math.random();
       return chip;
     } else {
       let label: string = chip;
@@ -302,8 +301,7 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
         type,
         label,
         color: this.genNextColor(),
-        settings: {},
-        _hash: Math.random()
+        settings: {}
       };
       if (type === DataKeyType.count) {
         result.name = 'count';
