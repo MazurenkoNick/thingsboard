@@ -28,37 +28,12 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.cf;
+package org.thingsboard.server.common.data.cf.configuration;
 
-import lombok.Builder;
-import lombok.Data;
-import org.thingsboard.server.common.data.id.CalculatedFieldId;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.util.CollectionsUtil;
-import org.thingsboard.server.common.msg.TbMsg;
+import org.thingsboard.server.common.data.relation.RelationPathLevel;
 
-import java.util.List;
+public interface HasRelationPathLevel {
 
-@Data
-@Builder
-public final class PropagationCalculatedFieldResult implements CalculatedFieldResult {
-
-    private final List<EntityId> entityIds;
-    private final TelemetryCalculatedFieldResult result;
-
-    @Override
-    public TbMsg toTbMsg(EntityId entityId, String cfName, List<CalculatedFieldId> cfIds) {
-        return result.toTbMsg(entityId, cfName, cfIds);
-    }
-
-    @Override
-    public String stringValue() {
-        return result.stringValue();
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return CollectionsUtil.isEmpty(entityIds) || result.isEmpty();
-    }
+    RelationPathLevel getRelation();
 
 }
