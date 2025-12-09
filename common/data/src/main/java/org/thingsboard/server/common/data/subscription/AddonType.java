@@ -28,40 +28,19 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.notification;
+package org.thingsboard.server.common.data.subscription;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
-@AllArgsConstructor
-@NoArgsConstructor
-public enum NotificationType {
-
-    GENERAL,
-    ALARM,
-    DEVICE_ACTIVITY,
-    ENTITY_ACTION,
-    ALARM_COMMENT,
-    RULE_ENGINE_COMPONENT_LIFECYCLE_EVENT,
-    ALARM_ASSIGNMENT,
-    NEW_PLATFORM_VERSION,
-    ENTITIES_LIMIT,
-    ENTITIES_LIMIT_INCREASE_REQUEST(true),
-    ADDON_ACCESS_REQUEST(true),
-    API_USAGE_LIMIT,
-    RULE_NODE,
-    INTEGRATION_LIFECYCLE_EVENT,
-    RATE_LIMITS,
-    EDGE_CONNECTION,
-    EDGE_COMMUNICATION_FAILURE,
-    TASK_PROCESSING_FAILURE,
-    RESOURCES_SHORTAGE,
-    USER_ACTIVATED(true),
-    USER_REGISTERED(true),
-    REPORT_GENERATED;
+public enum AddonType {
+    EDGE("Edge Computing add-on"),
+    TRENDZ("Trendz Analytics add-on"),
+    WHITE_LABELING("White labeling");
 
     @Getter
-    private boolean system;
+    private final String addonName;
 
+    AddonType(String addonName) {
+        this.addonName = addonName;
+    }
 }

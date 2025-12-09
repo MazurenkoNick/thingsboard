@@ -12518,10 +12518,12 @@
         "last-update": "Last update",
         "license-details": "License details",
         "devices": "Devices",
-        "white-labeling": "White-labeling",
+        "white-labeling": "White labeling",
         "edge": "Edge Computing",
+        "edge-addon": "Edge Computing Add-on",
         "edges": "Edges",
-        "trendz": "Trendz analytics",
+        "trendz": "Trendz Analytics",
+        "trendz-addon": "Trendz Analytics Add-on",
         "choose-prototype-plan": "Choose Prototype plan",
         "add-to-plan": "Add to plan",
         "add-license-item-title": "To {{ action }} {{ item }}, you need to update your {{ package }} on the ThingsBoard License Portal.",
@@ -12552,8 +12554,8 @@
         "edge-card-security-text": "Provides a secure buffer between OT devices and the public cloud",
         "edge-card-efficiency-title": "Efficiency",
         "edge-card-efficiency-text": "Normalizes and aggregates data close to the source, easing cloud workload",
-        "edge-request-sent-title": "We have sent an automated request to your System Administrator to enable the Edge Add-on",
-        "edge-request-sent-text": "Please allow some time for them to review the request and update the settings. You may need to refresh this page to see the changes."
+        "feature-request-sent-title": "We have sent an automated request to your System Administrator to enable {{addonName}}",
+        "feature-request-sent-text": "Please allow some time for them to review the request and update the settings. You may need to refresh this page to see the changes."
     },
     "subscription-error": {
       "title": "Subscription violation",

@@ -47,6 +47,7 @@ import { Authority } from '@shared/models/authority.enum';
 export interface EntityLimitExceededDialogData {
   entityType: EntityType;
   limit: number;
+  subscriptionViolation: boolean;
 }
 
 // @dynamic
@@ -83,7 +84,9 @@ export class EntityLimitExceededDialogComponent extends DialogComponent<EntityLi
       });
     } else {
       let entitiesText: string;
-      if (data.limit > 1) {
+      if (this.data.subscriptionViolation) {
+        entitiesText = entitiesPlural;
+      } else if (data.limit > 1) {
         entitiesText = data.limit + ' ' + entitiesPlural;
       } else {
         entitiesText = '1 ' + entity;
@@ -103,7 +106,7 @@ export class EntityLimitExceededDialogComponent extends DialogComponent<EntityLi
     if ($event) {
       $event.stopPropagation();
     }
-    this.notificationService.sendEntitiesLimitIncreaseRequest(this.data.entityType).subscribe(
+    this.notificationService.sendEntitiesLimitIncreaseRequest(this.data.entityType, this.data.subscriptionViolation).subscribe(
       () => {
         this.dialogRef.close();
         this.dialogs.alert(

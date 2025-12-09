@@ -29,6 +29,8 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
+import { EntityType } from '@shared/models/entity-type.models';
+
 export enum SubscriptionErrorCode {
   LIMIT_REACHED = 'LIMIT_REACHED',
   FEATURE_DISABLED = 'FEATURE_DISABLED',
@@ -48,6 +50,14 @@ export interface SubscriptionErrorData {
   subscriptionValue: any;
   message?: string;
 }
+
+export const subscriptionEntryToEntityType = new Map<SubscriptionEntry, EntityType>(
+  [
+    [SubscriptionEntry.DEVICE_COUNT, EntityType.DEVICE],
+    [SubscriptionEntry.ASSET_COUNT, EntityType.ASSET],
+    [SubscriptionEntry.EDGE_COUNT, EntityType.EDGE]
+  ]
+);
 
 export const subscriptionErrorsMap = new Map<SubscriptionErrorCode, Map<SubscriptionEntry, string>>(
   [
@@ -106,3 +116,17 @@ export interface SubscriptionInfo {
   assetsCount: number;
   edgesCount: number;
 }
+
+export enum AddonType {
+  EDGE = 'EDGE',
+  TRENDZ = 'TRENDZ',
+  WHITE_LABELING = 'WHITE_LABELING'
+}
+
+export const addonTypeTranslationMap = new Map<AddonType, string>(
+  [
+    [AddonType.EDGE, 'subscription.edge-addon'],
+    [AddonType.TRENDZ, 'subscription.trendz-addon'],
+    [AddonType.WHITE_LABELING, 'subscription.white-labeling'],
+  ]
+);

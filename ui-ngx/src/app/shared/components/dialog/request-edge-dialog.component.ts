@@ -38,6 +38,8 @@ import { Store } from '@ngrx/store';
 import { AuthService } from '@core/auth/auth.service';
 import { DialogService } from '@core/services/dialog.service';
 import { TranslateService } from '@ngx-translate/core';
+import { NotificationService } from '@core/http/notification.service';
+import { AddonType, addonTypeTranslationMap } from '@shared/models/subscription.models';
 
 @Component({
   selector: 'tb-request-edge-dialog',
@@ -52,7 +54,8 @@ export class RequestEdgeDialogComponent extends DialogComponent<RequestEdgeDialo
               protected dialogRef: MatDialogRef<RequestEdgeDialogComponent>,
               private authService: AuthService,
               private dialogs: DialogService,
-              private translate: TranslateService) {
+              private translate: TranslateService,
+              private notificationService: NotificationService) {
     super(store,  router, dialogRef);
   }
 
@@ -60,10 +63,14 @@ export class RequestEdgeDialogComponent extends DialogComponent<RequestEdgeDialo
     if ($event) {
       $event.stopPropagation();
     }
-    this.dialogs.alert(
-      this.translate.instant('subscription.edge-request-sent-title'),
-      this.translate.instant('subscription.edge-request-sent-text'),
-      this.translate.instant('action.close')
+    this.notificationService.sendAddonAccessRequest(AddonType.EDGE).subscribe(
+      () => {
+        this.dialogs.alert(
+          this.translate.instant('subscription.feature-request-sent-title', {addonName: this.translate.instant(addonTypeTranslationMap.get(AddonType.EDGE))}),
+          this.translate.instant('subscription.feature-request-sent-text'),
+          this.translate.instant('action.close')
+        );
+      }
     );
   }
 

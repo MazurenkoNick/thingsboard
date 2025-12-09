@@ -130,7 +130,7 @@ export class GlobalHttpInterceptor implements HttpInterceptor {
       }
     } else if (errorCode === Constants.serverErrorCode.entitiesLimitExceeded) {
       if (!ignoreErrors) {
-        this.dialogService.entitiesLimitExceeded(errorResponse.error);
+        this.dialogService.entitiesLimitExceeded({...errorResponse.error, subscriptionViolation: false});
       }
     } else if (errorResponse.status === 429) {
       if (resendRequest) {
