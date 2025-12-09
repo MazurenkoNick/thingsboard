@@ -32,37 +32,74 @@ package org.thingsboard.server.service.trendz;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.page.SortOrder;
+import org.thingsboard.server.common.data.pat.ApiKey;
+import org.thingsboard.server.common.data.trendz.TrendzConfiguration;
 import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
+import org.thingsboard.server.common.data.trendz.TrendzPaginationData;
+import org.thingsboard.server.common.data.trendz.TrendzSettings;
+import org.thingsboard.server.common.data.trendz.TrendzSummary;
+import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResult;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResultType;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationStatus;
+import org.thingsboard.server.common.data.trendz.TrendzViewConfig;
+import org.thingsboard.server.common.data.trendz.TrendzViewConfigLite;
+import org.thingsboard.server.dao.pat.ApiKeyService;
+import org.thingsboard.server.dao.trendz.TrendzSettingsService;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.thingsboard.server.dao.trendz.TrendzSyncService.TRENDZ_API_KEY_DESCRIPTION;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class TrendzClient {
+
+    public static final String TRENDZ_API_KEY_HEADER = "X-Trendz-Api-Key";
+    public static final String TRENDZ_TENANT_ID_HEADER = "X-Trendz-Tenant-Id";
+    public static final String TRENDZ_CUSTOMER_ID_HEADER = "X-Trendz-Customer-Id";
+    public static final String TRENDZ_USER_ID_HEADER = "X-Trendz-User-Id";
 
     public static final String TRENDZ_INFO_URI = "/apiTrendz/publicApi/info";
     public static final String TRENDZ_SYNC_INIT_URI = "/apiTrendz/publicApi/sync/init";
     public static final String TRENDZ_HEALTHCHECK_URI = "/apiTrendz/publicApi/sync/check";
 
+    public static final String TRENDZ_VIEW_CONFIGS_GET_ALL_URI = "/apiTrendz/view/config/all";
+    public static final String TRENDZ_VIEW_CONFIGS_GET_BY_ID_URI = "/apiTrendz/view/config/%s";
+
+    public static final String TRENDZ_SUMMARY_URI = "/apiTrendz/summary";
+
     @Value("${trendz.request_timeout_ms:15000}")
     private int requestTimeoutMs;
+
+    private final TrendzSettingsService trendzSettingsService;
+    private final ApiKeyService apiKeyService;
 
     private RestTemplate restTemplate;
 
@@ -107,33 +144,35 @@ public class TrendzClient {
         return result;
     }
 
-    public <T> T sendTrendzRequest(String trendzUrl, String uriPath, HttpMethod method,
-                                    Map<String, Object> requestBody, Class<T> responseType, String operationName) {
-        try {
-            String url = normalizeUrl(trendzUrl) + uriPath;
-            log.debug("{} at: {}", operationName, url);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
-
-            ResponseEntity<T> response = restTemplate.exchange(url, method, request, responseType);
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                log.debug("{} completed successfully", operationName);
-                return response.getBody();
-            }
-            log.warn("{} received non-successful response: {}", operationName, response.getStatusCode());
-            return null;
-        } catch (Exception e) {
-            log.error("{} failed at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
-            return null;
-        }
+    public TrendzViewConfig getTrendzViewById(UUID viewId, User user) throws ThingsboardException {
+        return sendTrendzRequest(HttpMethod.GET, TRENDZ_VIEW_CONFIGS_GET_BY_ID_URI.formatted(viewId), Collections.emptyMap(), null,
+                new ParameterizedTypeReference<>() {
+                }, user, "Get Trendz view config by id");
     }
 
-    public ResponseEntity<byte[]> sendTrendzProxyRequest(String trendzUrl, String uriPath, HttpMethod method,
-                                                         byte[] body, HttpHeaders headers) throws ThingsboardException {
+    public TrendzPaginationData<TrendzViewConfigLite> getAllTrendzViews(PageLink pageLink, User user) throws ThingsboardException {
+        Map<String, Object> params = Map.of(
+                "prefix", pageLink.getTextSearch(),
+                "page", pageLink.getPage(),
+                "pageSize", pageLink.getPageSize(),
+                "sort", toTrendzSortParameter(pageLink.getSortOrder())
+        );
+        return sendTrendzRequest(HttpMethod.GET, TRENDZ_VIEW_CONFIGS_GET_ALL_URI, params, null,
+                new ParameterizedTypeReference<>() {
+                }, user, "Get all Trendz view configs");
+    }
+
+    public TrendzSummary getTrendzSummary(User user) throws ThingsboardException {
+        return sendTrendzRequest(HttpMethod.GET, TRENDZ_SUMMARY_URI, Collections.emptyMap(), null,
+                new ParameterizedTypeReference<>() {
+                }, user, "Get Trendz summary");
+    }
+
+    public ResponseEntity<byte[]> sendTrendzProxyRequest(String uriPath, HttpMethod method, byte[] body, HttpHeaders headers) throws ThingsboardException {
+        String trendzUrl = getBaseTrendzUrl();
+
         try {
-            String url = normalizeUrl(trendzUrl) + uriPath;
+            String url = trendzUrl + uriPath;
             log.debug("Trendz proxy request at: {}", url);
 
             ResponseEntity<byte[]> response = restTemplate.exchange(
@@ -151,6 +190,101 @@ public class TrendzClient {
             log.error("Trendz proxy request failed at {} [{}]: {}", trendzUrl, uriPath, e.getMessage(), e);
             throw new ThingsboardException("Unexpected error during Trendz proxy request", e, ThingsboardErrorCode.GENERAL);
         }
+    }
+
+    private <T> T sendTrendzRequest(String trendzUrl, String uriPath, HttpMethod method,
+                                    Map<String, Object> requestBody, Class<T> responseType, String operationName) {
+        try {
+            String url = normalizeUrl(trendzUrl) + uriPath;
+            log.debug("{} at: {}", operationName, url);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+
+            ResponseEntity<T> response = restTemplate.exchange(url, method, request, responseType);
+            return fetchContent(response, operationName);
+        } catch (Exception e) {
+            log.error("{} failed at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    private <T> T sendTrendzRequest(HttpMethod method, String uriPath, Map<String, Object> params, Object requestBody,
+                                    ParameterizedTypeReference<T> typeReference, User user, String operationName
+    ) throws ThingsboardException {
+        String trendzUrl = getBaseTrendzUrl();
+
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(uriPath);
+        params.forEach(uriBuilder::queryParam);
+        String urlWithParams = uriBuilder.toUriString();
+
+        HttpHeaders headers = getTrendzAuthHeaders(user);
+        HttpEntity<?> entity = new HttpEntity<>(requestBody, headers);
+
+        try {
+            ResponseEntity<T> response = restTemplate.exchange(trendzUrl + urlWithParams, method, entity, typeReference);
+            return fetchContent(response, operationName);
+        } catch (HttpClientErrorException.NotFound e) {
+            log.warn("{} not found at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
+            throw new ThingsboardException("%s. Item wasn't found".formatted(operationName), ThingsboardErrorCode.ITEM_NOT_FOUND);
+        } catch (HttpClientErrorException.BadRequest e) {
+            log.warn("{} bad request at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
+            throw new ThingsboardException("%s. Bad request.".formatted(operationName), ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        } catch (Exception e) {
+            log.error("{} failed at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
+            throw new ThingsboardException("%s. Unexpected error during Trendz request.".formatted(operationName), ThingsboardErrorCode.GENERAL);
+        }
+    }
+
+    private <T> T fetchContent(ResponseEntity<T> response, String operationName) {
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            log.debug("{} completed successfully", operationName);
+            return response.getBody();
+        }
+        log.warn("{} received non-successful response: {}", operationName, response.getStatusCode());
+        return null;
+    }
+
+    private HttpHeaders getTrendzAuthHeaders(User user) throws ThingsboardException {
+        String trendzApiKey = Optional.ofNullable(apiKeyService.findInternalApiKeyByDescription(TenantId.SYS_TENANT_ID, TRENDZ_API_KEY_DESCRIPTION))
+                .map(ApiKey::getValue)
+                .orElseThrow(() -> new ThingsboardException(
+                        "Trendz API key is not configured. Please configure the Trendz API key in system settings.", ThingsboardErrorCode.GENERAL
+                ));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(TRENDZ_API_KEY_HEADER, trendzApiKey);
+        headers.add(TRENDZ_TENANT_ID_HEADER, user.getTenantId().getId().toString());
+        headers.add(TRENDZ_CUSTOMER_ID_HEADER, user.getCustomerId().getId().toString());
+        headers.add(TRENDZ_USER_ID_HEADER, user.getUuidId().toString());
+        return headers;
+    }
+
+    private String getBaseTrendzUrl() throws ThingsboardException {
+        Optional<TrendzSettings> trendzSettings = Optional.ofNullable(trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID));
+        trendzSettings.map(TrendzSettings::synchronizationResult)
+                .map(TrendzSynchronizationResult::status)
+                .filter(status -> status != TrendzSynchronizationStatus.NOT_AVAILABLE)
+                .orElseThrow(() -> new ThingsboardException(
+                        "Trendz is not synced. Please sync before using it.", ThingsboardErrorCode.GENERAL
+                ));
+        return trendzSettings.map(TrendzSettings::configuration)
+                .map(TrendzConfiguration::trendzUrl)
+                .map(this::normalizeUrl)
+                .orElseThrow(() -> new ThingsboardException(
+                        "Trendz URL is not configured. Please configure the Trendz URL in system settings.", ThingsboardErrorCode.GENERAL
+                ));
+    }
+
+    private String toTrendzSortParameter(SortOrder sortOrder) {
+        if (sortOrder == null || sortOrder.getProperty() == null || sortOrder.getDirection() == null) {
+            return null;
+        }
+        return "%s:%s".formatted(
+                sortOrder.getProperty(),
+                sortOrder.getDirection()
+        );
     }
 
     private String normalizeUrl(String url) {

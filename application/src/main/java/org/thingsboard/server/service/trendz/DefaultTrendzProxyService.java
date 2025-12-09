@@ -40,20 +40,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.trendz.TrendzConfiguration;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
-import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResult;
-import org.thingsboard.server.common.data.trendz.TrendzSynchronizationStatus;
-import org.thingsboard.server.dao.trendz.TrendzSettingsService;
-
-import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DefaultTrendzProxyService implements TrendzProxyService {
-    private final TrendzSettingsService trendzSettingsService;
     private final TrendzClient trendzClient;
 
     @Value("${trendz.enabled:true}")
@@ -67,7 +58,6 @@ public class DefaultTrendzProxyService implements TrendzProxyService {
         String path = request.getRequestURI();
         String query = request.getQueryString();
 
-        String trendzUrl = getBaseTrendzUrl();
         String trendzUri = path + (query != null ? "?" + query : "");
 
         HttpMethod httpMethod = HttpMethod.valueOf(request.getMethod());
@@ -80,21 +70,6 @@ public class DefaultTrendzProxyService implements TrendzProxyService {
                         .forEachRemaining(value -> headers.add(name, value))
                 );
 
-        return trendzClient.sendTrendzProxyRequest(trendzUrl, trendzUri, httpMethod, body, headers);
-    }
-
-    private String getBaseTrendzUrl() throws ThingsboardException {
-        Optional<TrendzSettings> trendzSettings = Optional.ofNullable(trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID));
-        trendzSettings.map(TrendzSettings::synchronizationResult)
-                .map(TrendzSynchronizationResult::status)
-                .filter(status -> status != TrendzSynchronizationStatus.NOT_AVAILABLE)
-                .orElseThrow(() -> new ThingsboardException(
-                        "Trendz is not synced. Please sync before using it.", ThingsboardErrorCode.GENERAL
-                ));
-        return trendzSettings.map(TrendzSettings::configuration)
-                .map(TrendzConfiguration::trendzUrl)
-                .orElseThrow(() -> new ThingsboardException(
-                        "Trendz URL is not configured. Please configure the Trendz URL in system settings.", ThingsboardErrorCode.GENERAL
-                ));
+        return trendzClient.sendTrendzProxyRequest(trendzUri, httpMethod, body, headers);
     }
 }
