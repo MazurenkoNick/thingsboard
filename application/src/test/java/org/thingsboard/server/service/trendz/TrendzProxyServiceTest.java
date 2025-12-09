@@ -37,7 +37,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.util.MultiValueMap;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -50,9 +49,6 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
-@TestPropertySource(properties = {
-        "trendz.enabled=true"
-})
 @DaoSqlTest
 public class TrendzProxyServiceTest extends AbstractControllerTest {
     @MockitoBean

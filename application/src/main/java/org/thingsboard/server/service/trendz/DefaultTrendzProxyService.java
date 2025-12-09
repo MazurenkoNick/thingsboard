@@ -47,14 +47,8 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 public class DefaultTrendzProxyService implements TrendzProxyService {
     private final TrendzClient trendzClient;
 
-    @Value("${trendz.enabled:true}")
-    private boolean trendzEnabled;
-
     @Override
     public ResponseEntity<byte[]> proxy(HttpServletRequest request, byte[] body) throws ThingsboardException {
-        if (!trendzEnabled) {
-            throw new ThingsboardException("Trendz is disabled.", ThingsboardErrorCode.GENERAL);
-        }
         String path = request.getRequestURI();
         String query = request.getQueryString();
 

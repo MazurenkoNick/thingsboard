@@ -31,16 +31,15 @@
 package org.thingsboard.server.common.data.trendz;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.Serializable;
 import java.util.List;
 
 public record TrendzSummary(
-        @JsonProperty("metricSummaryItems") List<JsonNode> metricSummaryItems,
-        @JsonProperty("anomalyModelSummaryItems") List<JsonNode> anomalyModelSummaryItems,
-        @JsonProperty("calculationFieldSummaryItems") List<JsonNode> calculationFieldSummaryItems,
-        @JsonProperty("predictionModelSummaryItems") List<JsonNode> predictionModelSummaryItems,
-        @JsonProperty("viewSummaryItems") List<JsonNode> viewSummaryItems,
-        @JsonProperty("aiSummaryItems") List<JsonNode> aiSummaryItems
+        @JsonProperty("metricSummaryItems") List<Object> metricSummaryItems,
+        @JsonProperty("anomalyModelSummaryItems") List<Object> anomalyModelSummaryItems,
+        @JsonProperty("calculationFieldSummaryItems") List<Object> calculationFieldSummaryItems,
+        @JsonProperty("predictionModelSummaryItems") List<Object> predictionModelSummaryItems,
+        @JsonProperty("viewSummaryItems") List<Object> viewSummaryItems,
+        @JsonProperty("aiSummaryItems") List<Object> aiSummaryItems
 ) implements Serializable { }

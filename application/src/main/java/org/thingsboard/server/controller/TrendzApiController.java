@@ -94,12 +94,12 @@ public class TrendzApiController extends BaseController {
         return trendzApiService.getAllViews(user, pageLink);
     }
 
-    @ApiOperation(value = "Get Trendz View by Id (getViewById)",
+    @ApiOperation(value = "Get Trendz View by Id (getTrendzViewById)",
             notes = "Fetch the Trendz View object based on the provided Trendz View Id. " +
                     TRENDZ_ENDPOINT_AVAILABILITY_DESCRIPTION + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @GetMapping(value = "/view/{viewId}")
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    public TrendzViewConfig getViewById(
+    public TrendzViewConfig getTrendzViewById(
             @Parameter(description = TRENDZ_VIEW_ID_PARAM_DESCRIPTION)
             @PathVariable(TRENDZ_VIEW_ID) String strViewId
     ) throws ThingsboardException {

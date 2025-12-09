@@ -97,6 +97,8 @@ public class TrendzClient {
 
     @Value("${trendz.request_timeout_ms:15000}")
     private int requestTimeoutMs;
+    @Value("${trendz.enabled:true}")
+    private boolean trendzEnabled;
 
     private final TrendzSettingsService trendzSettingsService;
     private final ApiKeyService apiKeyService;
@@ -151,12 +153,11 @@ public class TrendzClient {
     }
 
     public TrendzPaginationData<TrendzViewConfigLite> getAllTrendzViews(PageLink pageLink, User user) throws ThingsboardException {
-        Map<String, Object> params = Map.of(
-                "prefix", pageLink.getTextSearch(),
-                "page", pageLink.getPage(),
-                "pageSize", pageLink.getPageSize(),
-                "sort", toTrendzSortParameter(pageLink.getSortOrder())
-        );
+        Map<String, Object> params = new HashMap<>();
+        params.put("prefix", pageLink.getTextSearch());
+        params.put("page", pageLink.getPage());
+        params.put("pageSize", pageLink.getPageSize());
+        params.put("sort", toTrendzSortParameter(pageLink.getSortOrder()));
         return sendTrendzRequest(HttpMethod.GET, TRENDZ_VIEW_CONFIGS_GET_ALL_URI, params, null,
                 new ParameterizedTypeReference<>() {
                 }, user, "Get all Trendz view configs");
@@ -169,6 +170,7 @@ public class TrendzClient {
     }
 
     public ResponseEntity<byte[]> sendTrendzProxyRequest(String uriPath, HttpMethod method, byte[] body, HttpHeaders headers) throws ThingsboardException {
+
         String trendzUrl = getBaseTrendzUrl();
 
         try {
@@ -262,6 +264,9 @@ public class TrendzClient {
     }
 
     private String getBaseTrendzUrl() throws ThingsboardException {
+        if (!trendzEnabled) {
+            throw new ThingsboardException("Trendz is disabled.", ThingsboardErrorCode.GENERAL);
+        }
         Optional<TrendzSettings> trendzSettings = Optional.ofNullable(trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID));
         trendzSettings.map(TrendzSettings::synchronizationResult)
                 .map(TrendzSynchronizationResult::status)
