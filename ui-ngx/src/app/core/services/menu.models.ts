@@ -199,7 +199,8 @@ export enum MenuId {
   reporting = 'reporting',
   report_templates = 'report_templates',
   report_scheduling = 'report_scheduling',
-  reports = 'reports'
+  reports = 'reports',
+  trendz_analytics = 'trendz_analytics'
 }
 
 declare type MenuFilter = (_authState: AuthState, userPermissionsService: UserPermissionsService) => boolean;
@@ -1283,7 +1284,18 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       path: '/settings/trendz',
       icon: 'trendz-settings'
     }
-  ]
+  ],
+  [
+    MenuId.trendz_analytics,
+    {
+      id: MenuId.trendz_analytics,
+      name: 'trendz-analytics.trendz-analytics',
+      type: 'link',
+      path: '/trendzAnalytics',
+      icon: 'trendz',
+      isNew: true
+    }
+  ],
 ]);
 
 const menuFilters = new Map<MenuId, MenuFilter>([
@@ -1717,6 +1729,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
         ]
       },
       {id: MenuId.solution_templates},
+      {id: MenuId.trendz_analytics},
       {
         id: MenuId.entities,
         pages: [
@@ -1892,6 +1905,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.dashboard_shared}
         ]
       },
+      {id: MenuId.trendz_analytics},
       {
         id: MenuId.entities,
         pages: [
