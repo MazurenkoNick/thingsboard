@@ -47,9 +47,11 @@
       {{ 'action.cancel' | translate }}
     </button>
   </div>
-  <div class="request-entity-limit-increase-sysadmin-prompt">
-    {{ 'entity.request-sysadmin-text' | translate }}
-    <a href="" (click)="loginAsSysAdmin($event)"> {{ 'entity.login-here' | translate }} </a>
-    {{ 'entity.to-increase-limit' | translate }}
-  </div>
+  @if (!isCustomerUser) {
+    <div class="request-entity-limit-increase-sysadmin-prompt">
+      {{ 'entity.request-sysadmin-text' | translate }}
+      <a href="" (click)="loginAsSysAdmin($event)"> {{ 'entity.login-here' | translate }} </a>
+      {{ 'entity.to-increase-limit' | translate }}
+    </div>
+  }
 </div>

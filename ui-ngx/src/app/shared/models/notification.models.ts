@@ -395,6 +395,7 @@ interface NotificationButtonConfig {
   dashboardId?: string;
   dashboardState?: string;
   setEntityIdInState?: boolean;
+  entityType?: EntityType;
 }
 
 interface EmailDeliveryMethodNotificationTemplate {
@@ -806,5 +807,7 @@ export interface NotificationUserSetting {
 }
 
 export const singleNotificationTypeTemplate = (type: NotificationType) => {
-  return type === NotificationType.USER_ACTIVATED || type === NotificationType.USER_REGISTERED;
+  return type === NotificationType.USER_ACTIVATED ||
+         type === NotificationType.USER_REGISTERED ||
+         type === NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST;
 }

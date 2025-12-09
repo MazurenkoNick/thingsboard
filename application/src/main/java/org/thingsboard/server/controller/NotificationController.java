@@ -91,8 +91,8 @@ import org.thingsboard.server.dao.notification.NotificationTemplateService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.notification.NotificationProcessingContext;
 import org.thingsboard.server.service.security.model.SecurityUser;
-import org.thingsboard.server.service.translation.TranslationService;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
+import org.thingsboard.server.service.translation.TranslationService;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -116,7 +116,7 @@ import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DE
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH;
-import static org.thingsboard.server.controller.ControllerConstants.TENANT_AUTHORITY_PARAGRAPH;
+import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 
 @RestController
 @TbCoreComponent
@@ -310,31 +310,50 @@ public class NotificationController extends BaseController {
         return doSaveAndLog(EntityType.NOTIFICATION_REQUEST, notificationRequest, (tenantId, request) -> notificationCenter.processNotificationRequest(tenantId, request, null));
     }
 
-    @ApiOperation(value = "Send entity limit increase request notification to System administrators (sendEntitiesLimitIncreaseRequest)",
-                  notes = "Send entity limit increase request notification by Tenant Administrator to System administrators." +
-                  TENANT_AUTHORITY_PARAGRAPH)
+    @ApiOperation(value = "Send entity limit increase request notification to System/Tenant administrators (sendEntitiesLimitIncreaseRequest)",
+                  notes = "Send entity limit increase request notification by Tenant Administrator or Customer User to System/Tenant administrators." +
+                  TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PostMapping("/notification/entitiesLimitIncreaseRequest/{entityType}")
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
-    public void sendEntitiesLimitIncreaseRequest(@Parameter(description = "Entity type", required = true, schema = @Schema(allowableValues = {"DEVICE", "ASSET", "CUSTOMER", "USER", "DASHBOARD", "RULE_CHAIN", "EDGE"}))
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    public void sendEntitiesLimitIncreaseRequest(@Parameter(description = "Entity type", required = true, schema = @Schema(allowableValues = {"DEVICE", "ASSET", "CUSTOMER", "USER", "DASHBOARD", "RULE_CHAIN", "EDGE", "INTEGRATION", "CONVERTER", "SCHEDULER_EVENT"}))
                                                  @PathVariable("entityType") String strEntityType,
                                                  @AuthenticationPrincipal SecurityUser user,
                                                  HttpServletRequest request) throws Exception {
         EntityType entityType = checkEnumParameter("entityType", strEntityType, EntityType::valueOf);
-        Optional<NotificationTarget> sysAdmins = notificationTargetService.findNotificationTargetsByTenantIdAndUsersFilterType(TenantId.SYS_TENANT_ID, UsersFilterType.SYSTEM_ADMINISTRATORS)
-                .stream().findFirst();
-        if (sysAdmins.isPresent()) {
-            NotificationTargetId notificationTargetId = sysAdmins.get().getId();
-            String baseUrl = systemSecurityService.getBaseUrl(TenantId.SYS_TENANT_ID, new CustomerId(EntityId.NULL_UUID), request);
-            NotificationInfo info = EntitiesLimitIncreaseRequestNotificationInfo.builder()
-                    .entityType(entityType)
-                    .userEmail(user.getEmail())
-                    .increaseLimitActionLabel("Set new limit")
-                    .increaseLimitLink("/tenantProfiles/"+tenantService.findTenantById(user.getTenantId()).getTenantProfileId().toString())
-                    .baseUrl(baseUrl)
-                    .build();
-            notificationCenter.sendSystemNotification(TenantId.SYS_TENANT_ID, notificationTargetId, NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST, info);
+        if (user.isTenantAdmin()) {
+            Optional<NotificationTarget> sysAdmins = notificationTargetService.findNotificationTargetsByTenantIdAndUsersFilterType(TenantId.SYS_TENANT_ID, UsersFilterType.SYSTEM_ADMINISTRATORS)
+                    .stream().findFirst();
+            if (sysAdmins.isPresent()) {
+                NotificationTargetId notificationTargetId = sysAdmins.get().getId();
+                String baseUrl = systemSecurityService.getBaseUrl(TenantId.SYS_TENANT_ID, new CustomerId(EntityId.NULL_UUID), request);
+                NotificationInfo info = EntitiesLimitIncreaseRequestNotificationInfo.builder()
+                        .entityType(entityType)
+                        .userEmail(user.getEmail())
+                        .increaseLimitActionLabel("Set new limit")
+                        .increaseLimitLink("/tenantProfiles/" + tenantService.findTenantById(user.getTenantId()).getTenantProfileId().toString())
+                        .baseUrl(baseUrl)
+                        .build();
+                notificationCenter.sendSystemNotification(TenantId.SYS_TENANT_ID, notificationTargetId, NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST, info);
+            } else {
+                throw new IllegalArgumentException("Notification target for 'System administrators' not found");
+            }
         } else {
-            throw new IllegalArgumentException("Notification target for 'System administrators' not found");
+            Optional<NotificationTarget> tenantAdmins = notificationTargetService.findNotificationTargetsByTenantIdAndUsersFilterType(user.getTenantId(), UsersFilterType.TENANT_ADMINISTRATORS)
+                    .stream().findFirst();
+            if (tenantAdmins.isPresent()) {
+                NotificationTargetId notificationTargetId = tenantAdmins.get().getId();
+                String baseUrl = systemSecurityService.getBaseUrl(user.getTenantId(), new CustomerId(EntityId.NULL_UUID), request);
+                NotificationInfo info = EntitiesLimitIncreaseRequestNotificationInfo.builder()
+                        .entityType(entityType)
+                        .userEmail(user.getEmail())
+                        .increaseLimitActionLabel("Request limit increase")
+                        .increaseLimitLink("/action/entitiesLimitIncreaseRequest?entityType=" + entityType.name())
+                        .baseUrl(baseUrl)
+                        .build();
+                notificationCenter.sendSystemNotification(user.getTenantId(), notificationTargetId, NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST, info);
+            } else {
+                throw new IllegalArgumentException("Notification target for 'Tenant administrators' not found");
+            }
         }
     }
 

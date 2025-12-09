@@ -3713,7 +3713,17 @@
         "type-mobile-app-bundle": "Mobile bundle",
         "type-mobile-app-bundles": "Mobile bundles",
         "list-of-mobile-app-bundles": "{ count, plural, =1 {One mobile bundle} other {List of # mobile bundles} }",
-        "type-secret-storage": "Secret storage"
+        "type-secret-storage": "Secret storage",
+        "limit-reached": "Limit reached",
+        "limit-reached-text": "You have reached the limit of <b>{{ entities }}</b>. To add more, please ask your System Administrator to increase your {{ entity }} limit.",
+        "customer-limit-reached-text": "You have reached the limit of <b>{{ entities }}</b>. To add more, please ask your Tenant Administrator to increase your {{ entity }} limit.",
+        "request-limit-increase": "Request limit increase",
+        "request-sysadmin-text": "Are you the System Administrator?",
+        "login-here": "Login here",
+        "to-increase-limit": "to increase limit.",
+        "increase-limit-request-sent-title": "We have sent an automated request to your System Administrator to increase the limit",
+        "customer-increase-limit-request-sent-title": "We have sent an automated request to your Tenant Administrator to increase the limit",
+        "increase-limit-request-sent-text": "Please allow some time for them to review the request and update the settings. You may need to refresh this page to see the changes."
     },
     "entity-group": {
         "entity-group": "Entity group",
@@ -3878,15 +3888,7 @@
         "owner": "Owner",
         "owner-required": "Owner is required.",
         "manage-owner-and-groups": "Manage owner and groups",
-        "owner-and-groups": "Owner and groups",
-        "limit-reached": "Limit reached",
-        "limit-reached-text": "You have reached the limit of <b>{{ entities }}</b>. To add more, please ask your System Administrator to increase your {{ entity }} limit.",
-        "request-limit-increase": "Request limit increase",
-        "request-sysadmin-text": "Are you the System Administrator?",
-        "login-here": "Login here",
-        "to-increase-limit": "to increase limit.",
-        "increase-limit-request-sent-title": "We have sent an automated request to your System Administrator to increase the limit",
-        "increase-limit-request-sent-text": "Please allow some time for them to review the request and update the settings. You may need to refresh this page to see the changes."
+        "owner-and-groups": "Owner and groups"
     },
     "entity-field": {
         "additional-info": "Additional info",
