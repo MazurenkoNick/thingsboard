@@ -62,7 +62,7 @@ import java.util.UUID;
 public class DashboardEdgeProcessor extends BaseDashboardProcessor implements DashboardProcessor {
 
     @Override
-    public ListenableFuture<Void> processDashboardMsgFromEdge(TenantId tenantId, Edge edge, DashboardUpdateMsg dashboardUpdateMsg) {
+    public ListenableFuture<Void> processDashboardMsgFromEdge(TenantId tenantId, Edge edge, DashboardUpdateMsg dashboardUpdateMsg, EdgeVersion edgeVersion) {
         log.trace("[{}] executing processDashboardMsgFromEdge [{}] from edge [{}]", tenantId, dashboardUpdateMsg, edge.getId());
         DashboardId dashboardId = new DashboardId(new UUID(dashboardUpdateMsg.getIdMSB(), dashboardUpdateMsg.getIdLSB()));
         try {
@@ -78,8 +78,10 @@ public class DashboardEdgeProcessor extends BaseDashboardProcessor implements Da
                         EntityGroupId entityGroupId = new EntityGroupId(
                                 new UUID(dashboardUpdateMsg.getEntityGroupIdMSB(), dashboardUpdateMsg.getEntityGroupIdLSB()));
                         edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, entityGroupId, dashboardId);
-                    } else {
+                    } else if (edgeVersion.getNumber() >= EdgeVersion.V_4_3_0_VALUE) {
                         deleteDashboard(tenantId, edge, dashboardId);
+                    } else {
+                        removeDashboardFromEdgeAllDashboardGroup(tenantId, edge, dashboardId);
                     }
                     yield Futures.immediateFuture(null);
                 }
@@ -112,16 +114,13 @@ public class DashboardEdgeProcessor extends BaseDashboardProcessor implements Da
     }
 
     private void addDashboardToEdgeAllDashboardGroup(TenantId tenantId, Edge edge, DashboardId dashboardId) {
-        try {
-            Dashboard dashboard = edgeCtx.getDashboardService().findDashboardById(tenantId, dashboardId);
-            EntityGroup edgeDashboardGroup = edgeCtx.getEntityGroupService().findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), dashboard.getOwnerId().getEntityType(), EntityType.DASHBOARD).get();
-            if (edgeDashboardGroup != null) {
-                edgeCtx.getEntityGroupService().addEntityToEntityGroup(tenantId, edgeDashboardGroup.getId(), dashboardId);
-            }
-        } catch (Exception e) {
-            log.warn("[{}] Can't add dashboard to edge dashboard group, dashboard id [{}]", tenantId, dashboardId, e);
-            throw new RuntimeException(e);
-        }
+        Dashboard dashboard = edgeCtx.getDashboardService().findDashboardById(tenantId, dashboardId);
+        addEntityToEdgeAllGroup(tenantId, edge, dashboard);
+    }
+
+    private void removeDashboardFromEdgeAllDashboardGroup(TenantId tenantId, Edge edge, DashboardId dashboardId) {
+        Dashboard dashboardToDelete = edgeCtx.getDashboardService().findDashboardById(tenantId, dashboardId);
+        removeEntityFromEdgeAllGroup(tenantId, edge, dashboardToDelete);
     }
 
     @Override

@@ -94,6 +94,8 @@ public interface CustomerDao extends Dao<Customer>, TenantEntityDao<Customer>, E
      */
     ListenableFuture<List<Customer>> findCustomersByTenantIdAndIdsAsync(UUID tenantId, List<UUID> customerIds);
 
+    List<Customer> findCustomersByTenantIdAndIds(UUID tenantId, List<UUID> customerIds);
+
     PageData<Customer> findCustomersByEntityGroupId(UUID groupId, PageLink pageLink);
 
     PageData<Customer> findCustomersByEntityGroupIds(List<UUID> groupIds, List<UUID> additionalCustomerIds, PageLink pageLink);

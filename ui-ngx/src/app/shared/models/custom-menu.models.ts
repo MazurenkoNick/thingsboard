@@ -67,14 +67,16 @@ export enum CMAssigneeType {
   NO_ASSIGN = 'NO_ASSIGN',
   ALL = 'ALL',
   CUSTOMERS = 'CUSTOMERS',
-  USERS = 'USERS'
+  USERS = 'USERS',
+  USER_GROUPS = 'USER_GROUPS',
 }
 
 const cmAssigneeTypeTranslationsMap = new Map<CMAssigneeType, string>(
   [
     [CMAssigneeType.NO_ASSIGN, 'custom-menu.assignee-no-assign'],
     [CMAssigneeType.CUSTOMERS, 'custom-menu.assignee-customers'],
-    [CMAssigneeType.USERS, 'custom-menu.assignee-users']
+    [CMAssigneeType.USERS, 'custom-menu.assignee-users'],
+    [CMAssigneeType.USER_GROUPS, 'custom-menu.assignee-user-group-names'],
   ]
 );
 
@@ -96,6 +98,7 @@ export interface CustomMenuInfo extends BaseData<CustomMenuId>, HasTenantId {
   name: string;
   scope: CMScope;
   assigneeType: CMAssigneeType;
+  userGroupNames?: string[];
 }
 
 export enum MenuItemType {

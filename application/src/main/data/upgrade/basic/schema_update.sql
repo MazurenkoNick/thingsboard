@@ -39,8 +39,11 @@ SET profile_data = jsonb_set(
         'minAllowedScheduledUpdateIntervalInSecForCF', 60,
         'maxRelationLevelPerCfArgument', 10,
         'maxRelatedEntitiesToReturnPerCfArgument', 100,
-        'minAllowedDeduplicationIntervalInSecForCF', 60,
-        'minAllowedAggregationIntervalInSecForCF', 60
+        'minAllowedDeduplicationIntervalInSecForCF', 10,
+        'minAllowedAggregationIntervalInSecForCF', 60,
+        'intermediateAggregationIntervalInSecForCF', 300,
+        'cfReevaluationCheckInterval', 60,
+        'alarmsReevaluationInterval', 60
     )
     ||
     jsonb_strip_nulls(profile_data -> 'configuration')
@@ -51,7 +54,10 @@ WHERE NOT (
         'maxRelationLevelPerCfArgument',
         'maxRelatedEntitiesToReturnPerCfArgument',
         'minAllowedDeduplicationIntervalInSecForCF',
-        'minAllowedAggregationIntervalInSecForCF'
+        'minAllowedAggregationIntervalInSecForCF',
+        'intermediateAggregationIntervalInSecForCF',
+        'cfReevaluationCheckInterval',
+        'alarmsReevaluationInterval'
     ]
 );
 
@@ -118,3 +124,6 @@ DROP TABLE IF EXISTS calculated_field_link;
 ANALYZE calculated_field;
 
 -- REMOVAL OF CALCULATED FIELD LINKS PERSISTENCE END
+
+ALTER TABLE custom_menu ADD COLUMN IF NOT EXISTS user_group_names text[];
+

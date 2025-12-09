@@ -46,6 +46,7 @@ export const Constants = {
     tooManyRequests: 33,
     tooManyUpdates: 34,
     subscriptionViolation: 40,
+    entitiesLimitExceeded: 41,
     passwordViolation: 45
   },
   entryPoints: {
@@ -67,6 +68,7 @@ export const serverErrorCodesTranslations = new Map<number, string>([
   [Constants.serverErrorCode.itemNotFound, 'server-error.item-not-found'],
   [Constants.serverErrorCode.tooManyRequests, 'server-error.too-many-requests'],
   [Constants.serverErrorCode.tooManyUpdates, 'server-error.too-many-updates'],
+  [Constants.serverErrorCode.entitiesLimitExceeded, 'server-error.entities-limit-exceeded'],
 ]);
 
 export const MediaBreakpoints = {

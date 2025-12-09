@@ -59,6 +59,8 @@ public interface DeviceProfileDao extends Dao<DeviceProfile>, ExportableEntityDa
 
     ListenableFuture<List<DeviceProfileInfo>> findDeviceProfilesByTenantIdAndIdsAsync(UUID tenantId, List<UUID> deviceProfileIds);
 
+    List<DeviceProfileInfo> findDeviceProfilesByTenantIdAndIds(UUID tenantId, List<UUID> deviceProfileIds);
+
     DeviceProfile findDefaultDeviceProfile(TenantId tenantId);
 
     DeviceProfileInfo findDefaultDeviceProfileInfo(TenantId tenantId);

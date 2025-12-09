@@ -41,4 +41,15 @@ public class TimeSeriesRuleChainOutputStrategy implements TimeSeriesOutputStrate
     public OutputStrategyType getType() {
         return OutputStrategyType.RULE_CHAIN;
     }
+
+    @Override
+    public boolean hasContextOnlyChanges(OutputStrategy other) {
+        return !(other instanceof TimeSeriesRuleChainOutputStrategy);
+    }
+
+    @Override
+    public boolean hasRefreshContextOnlyChanges(OutputStrategy other) {
+        return false;
+    }
+
 }

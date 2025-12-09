@@ -55,6 +55,7 @@ import printTemplate from '@home/pages/security/authentication-dialog/backup-cod
 import { ImportExportService } from '@shared/import-export/import-export.service';
 import { mergeMap, tap } from 'rxjs/operators';
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
+import { ActionNotificationShow } from "@core/notification/notification.actions";
 
 enum ForceTwoFAState {
   SETUP = 'setup',
@@ -280,6 +281,13 @@ export class ForceTwoFactorAuthLoginComponent extends PageComponent implements O
             this.configForm.get('verificationCode').setErrors({incorrectCode: true});
           } else if (error.status === 429) {
             this.configForm.get('verificationCode').setErrors({tooManyRequest: true});
+          } else {
+            this.store.dispatch(new ActionNotificationShow({
+              message: error.error.message,
+              type: 'error',
+              verticalPosition: 'top',
+              horizontalPosition: 'left'
+            }));
           }
         }
       })

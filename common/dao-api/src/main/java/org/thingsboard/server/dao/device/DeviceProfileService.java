@@ -66,6 +66,8 @@ public interface DeviceProfileService extends EntityDaoService {
 
     ListenableFuture<List<DeviceProfileInfo>> findDeviceProfilesByIdsAsync(TenantId tenantId, List<DeviceProfileId> deviceProfileIds);
 
+    List<DeviceProfileInfo> findDeviceProfilesByIds(TenantId tenantId, List<DeviceProfileId> deviceProfileIds);
+
     DeviceProfile findDeviceProfileByProvisionDeviceKey(String provisionDeviceKey);
 
     DeviceProfile findOrCreateDeviceProfile(TenantId tenantId, String profileName);

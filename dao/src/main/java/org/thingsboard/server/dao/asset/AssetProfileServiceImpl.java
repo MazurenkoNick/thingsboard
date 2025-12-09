@@ -260,6 +260,12 @@ public class AssetProfileServiceImpl extends CachedVersionedEntityService<AssetP
     }
 
     @Override
+    public List<AssetProfileInfo> findAssetProfilesByIds(TenantId tenantId, List<AssetProfileId> assetProfileIds) {
+        log.trace("Executing findAssetProfilesByIds, tenantId [{}], assetProfileIds [{}]", tenantId, assetProfileIds);
+        return assetProfileDao.findAssetProfilesByTenantIdAndIds(tenantId.getId(), toUUIDs(assetProfileIds));
+    }
+
+    @Override
     public AssetProfile findOrCreateAssetProfile(TenantId tenantId, String name) {
         log.trace("Executing findOrCreateAssetProfile");
         AssetProfile assetProfile = findAssetProfileByName(tenantId, name, false);

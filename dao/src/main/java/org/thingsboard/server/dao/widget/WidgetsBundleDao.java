@@ -97,6 +97,8 @@ public interface WidgetsBundleDao extends Dao<WidgetsBundle>, ExportableEntityDa
 
     ListenableFuture<List<WidgetsBundle>> findAllTenantWidgetBundlesByTenantIdAndIdsAsync(UUID tenantId, List<UUID> widgetsBundleIds);
 
+    List<WidgetsBundle> findSystemOrTenantWidgetBundlesByIds(UUID tenantId, List<UUID> widgetsBundleIds);
+
     /**
      * Find all tenant widgets bundles (does not include system) by tenantId and page link.
      *

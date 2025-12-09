@@ -415,4 +415,12 @@ public class TimeIntervalCalculator {
         return new TimeRange(start.toInstant().toEpochMilli(), end.toInstant().toEpochMilli());
     }
 
+    public static IntervalType getIntervalType(Interval interval) {
+        return interval != null ? interval.getIntervalType() : null;
+    }
+
+    public static long getIntervalTs(Interval interval) {
+        return interval != null ? interval.getInterval() : 0;
+    }
+
 }

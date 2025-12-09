@@ -44,6 +44,7 @@ import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.edge.EdgeEventType;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.CustomMenuId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -64,14 +65,18 @@ import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.entity.AbstractCachedEntityService;
 import org.thingsboard.server.dao.eventsourcing.ActionEntityEvent;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
+import org.thingsboard.server.dao.group.EntityGroupService;
+import org.thingsboard.server.dao.owner.OwnerService;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.service.PaginatedRemover;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.exception.DataValidationException;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.dao.service.Validator.checkNotNull;
@@ -85,6 +90,8 @@ public class CustomMenuServiceImpl extends AbstractCachedEntityService<CustomMen
     private static final String INCORRECT_CUSTOM_MENU_ID = "Incorrect customMenuId ";
     private final CustomerService customerService;
     private final UserService userService;
+    private final EntityGroupService entityGroupService;
+    private final OwnerService ownerService;
     private final ApplicationEventPublisher eventPublisher;
     private final CustomMenuDao customMenuDao;
     private final DataValidator<CustomMenuInfo> customMenuInfoValidator;
@@ -102,7 +109,7 @@ public class CustomMenuServiceImpl extends AbstractCachedEntityService<CustomMen
     }
 
     @Override
-    public void updateAssigneeList(CustomMenu customMenu, CMAssigneeType newAssigneeType, List<EntityId> newAssignToList, boolean force) throws ThingsboardException {
+    public void updateAssigneeList(CustomMenu customMenu, CMAssigneeType newAssigneeType, List<EntityId> newAssignToList, String[] newUserGroupNames, boolean force) throws ThingsboardException {
         log.trace("Executing updateAssigneeList customMenuId [{}], newAssigneeType [{}], newAssignToList [{}], force [{}]", customMenu.getId(), newAssigneeType, newAssignToList, force);
         List<EntityId> existingEntityIds = findCustomMenuAssigneeList(customMenu)
                 .stream()
@@ -119,9 +126,10 @@ public class CustomMenuServiceImpl extends AbstractCachedEntityService<CustomMen
         CMAssigneeType oldAssigneeType = customMenu.getAssigneeType();
         assignCustomMenu(customMenu.getId(), newAssigneeType, toAddEntityIds);
         unassignCustomMenu(oldAssigneeType, toRemoveEntityIds);
-        if (oldAssigneeType != newAssigneeType) {
+        if (oldAssigneeType != newAssigneeType || !Arrays.equals(customMenu.getUserGroupNames(), newUserGroupNames)) {
             CustomMenu newCustomMenu = new CustomMenu(customMenu);
             newCustomMenu.setAssigneeType(newAssigneeType);
+            newCustomMenu.setUserGroupNames(newUserGroupNames);
             updateCustomMenu(newCustomMenu, force);
         } else {
             publishEvictEvent(new CustomMenuCacheEvictEvent(customMenu.getTenantId(), customMenu.getId()));
@@ -203,7 +211,7 @@ public class CustomMenuServiceImpl extends AbstractCachedEntityService<CustomMen
     public List<EntityInfo> findCustomMenuAssigneeList(CustomMenuInfo customMenuInfo) {
         log.trace("Executing findCustomMenuAssigneeList customMenuId [{}] ", customMenuInfo.getId());
         return switch (customMenuInfo.getAssigneeType()) {
-            case NO_ASSIGN, ALL -> Collections.emptyList();
+            case NO_ASSIGN, ALL, USER_GROUPS -> Collections.emptyList();
             case CUSTOMERS -> customerService.findCustomersByCustomMenuId(customMenuInfo.getId()).stream()
                     .map(customer -> new EntityInfo(customer.getId(), customer.getName())).toList();
             case USERS -> userService.findUsersByCustomMenuId(customMenuInfo.getId()).stream()
@@ -211,6 +219,11 @@ public class CustomMenuServiceImpl extends AbstractCachedEntityService<CustomMen
             default ->
                     throw new RuntimeException("Invalid custom menu assignee type '" + customMenuInfo.getAssigneeType() + "' specified for custom menu!");
         };
+    }
+
+    public Optional<CustomMenu> findFirstByScopeAndUserGroupNames(TenantId tenantId, CustomerId customerId, CMScope scope, Set<String> userGroupNames) {
+        log.trace("Executing findByUserGroupNames [{}] ", userGroupNames);
+        return customMenuDao.findFirstByScopeAndUserGroupNames(tenantId, customerId, scope, userGroupNames);
     }
 
     @Override
@@ -345,9 +358,38 @@ public class CustomMenuServiceImpl extends AbstractCachedEntityService<CustomMen
 
     private CustomMenu findCustomMenuByUserId(TenantId tenantId, UserId userId) {
         User user = userService.findUserById(tenantId, userId);
-        if (user != null && user.getCustomMenuId() != null) {
-            return findCustomMenuById(tenantId, user.getCustomMenuId());
+        if (user == null) {
+            return null;
         }
+        if (user.getCustomMenuId() != null) {
+            CustomMenu customMenu = findCustomMenuById(tenantId, user.getCustomMenuId());
+            if (customMenu != null) {
+                return customMenu;
+            }
+        }
+        Set<String> userGroupNames = entityGroupService.findUserGroupNamesByUserId(tenantId, userId);
+        CMScope scope = user.getCustomerId().isNullUid() ? CMScope.TENANT : CMScope.CUSTOMER;
+
+        Optional<CustomMenu> ownerCustomMenu;
+        if (scope == CMScope.TENANT) {
+            ownerCustomMenu = findFirstByScopeAndUserGroupNames(tenantId, new CustomerId(CustomerId.NULL_UUID), scope, userGroupNames);
+            if (ownerCustomMenu.isPresent()) {
+                return ownerCustomMenu.get();
+            }
+        } else {
+            for (EntityId owner : ownerService.fetchOwnersHierarchy(tenantId, user.getOwnerId())) {
+                ownerCustomMenu = findFirstByScopeAndUserGroupNames(
+                        tenantId,
+                        owner instanceof TenantId ? new CustomerId(CustomerId.NULL_UUID) : new CustomerId(owner.getId()),
+                        scope,
+                        userGroupNames
+                );
+                if (ownerCustomMenu.isPresent()) {
+                    return ownerCustomMenu.get();
+                }
+            }
+        }
+
         return null;
     }
 
