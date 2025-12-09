@@ -1,0 +1,272 @@
+[
+  {
+    "name": "loadingExcavator",
+    "publishPeriodInDays": 1,
+    "publishFrequencyInSeconds": 300,
+    "publishPauseInMillis": 1,
+    "telemetryProfiles": [
+      {
+        "key": "coordinates",
+        "valueStrategy": {
+          "type": "sequence",
+          "random": true,
+          "telemetry": {
+            "latitude": [
+              37.751250,
+              37.751280,
+              37.751210,
+              37.751190,
+              37.751230
+            ],
+            "longitude": [
+              -122.391700,
+              -122.391550,
+              -122.391450,
+              -122.391600,
+              -122.391520
+            ]
+          }
+        }
+      },
+      {
+        "key": "speed",
+        "valueStrategy": {
+          "type": "natural",
+          "precision": 1,
+          "minStartValue": 2,
+          "maxStartValue": 8,
+          "minLowValue": 0,
+          "maxLowValue": 5,
+          "minHighValue": 5,
+          "maxHighValue": 10,
+          "minIncrement": 0.5,
+          "maxIncrement": 1.0,
+          "minDecrement": 1.0,
+          "maxDecrement": 2.0,
+          "holidayMultiplier": 1.0,
+          "workHoursMultiplier": 1.0,
+          "nightHoursMultiplier": 0.5
+        }
+      },
+      {
+        "key": "fuelLevel",
+        "valueStrategy": {
+          "type": "natural",
+          "precision": 1,
+          "minStartValue": 80,
+          "maxStartValue": 80,
+          "minLowValue": 20,
+          "maxLowValue": 20,
+          "minHighValue": 80,
+          "maxHighValue": 80,
+          "minIncrement": 60.0,
+          "maxIncrement": 60.0,
+          "minDecrement": 0.1,
+          "maxDecrement": 0.8,
+          "holidayMultiplier": 2.0,
+          "workHoursMultiplier": 1.0,
+          "nightHoursMultiplier": 0.5
+        }
+      },
+      {
+        "key": "hydraulicPressure",
+        "valueStrategy": {
+          "type": "natural",
+          "precision": 1,
+          "minStartValue": 160,
+          "maxStartValue": 190,
+          "minLowValue": 150,
+          "maxLowValue": 185,
+          "minHighValue": 185,
+          "maxHighValue": 205,
+          "minIncrement": 2.0,
+          "maxIncrement": 5.0,
+          "minDecrement": 3.0,
+          "maxDecrement": 6.0,
+          "holidayMultiplier": 1.0,
+          "workHoursMultiplier": 1.2,
+          "nightHoursMultiplier": 0.8
+        }
+      }
+    ]
+  },
+  {
+    "name": "outsideMineSiteExcavator",
+    "publishPeriodInDays": 1,
+    "publishFrequencyInSeconds": 300,
+    "publishPauseInMillis": 1,
+    "telemetryProfiles": [
+      {
+        "key": "latitude",
+        "valueStrategy": {
+          "type": "constant",
+          "value": 37.747800
+        }
+      },
+      {
+        "key": "longitude",
+        "valueStrategy": {
+          "type": "constant",
+          "value": -122.388000
+        }
+      },
+      {
+        "key": "speed",
+        "valueStrategy": {
+          "type": "constant",
+          "value": 0
+        }
+      },
+      {
+        "key": "fuelLevel",
+        "valueStrategy": {
+          "type": "constant",
+          "value": 19
+        }
+      },
+      {
+        "key": "hydraulicPressure",
+        "valueStrategy": {
+          "type": "constant",
+          "value": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "loadingToUnloadingHaulTruck",
+    "publishPeriodInDays": 1,
+    "publishFrequencyInSeconds": 300,
+    "publishPauseInMillis": 1,
+    "telemetryProfiles": [
+      {
+        "key": "coordinates",
+        "valueStrategy": {
+          "type": "sequence",
+          "random": true,
+          "telemetry": {
+            "latitude": [
+              37.751200,
+              37.750800,
+              37.750300,
+              37.749900,
+              37.749700,
+              37.749650
+            ],
+            "longitude": [
+              -122.391500,
+              -122.391200,
+              -122.390900,
+              -122.390700,
+              -122.390500,
+              -122.390400
+            ]
+          }
+        }
+      },
+      {
+        "key": "speed",
+        "valueStrategy": {
+          "type": "natural",
+          "precision": 1,
+          "minStartValue": 10,
+          "maxStartValue": 25,
+          "minLowValue": 0,
+          "maxLowValue": 5,
+          "minHighValue": 20,
+          "maxHighValue": 30,
+          "minIncrement": 1.0,
+          "maxIncrement": 2.0,
+          "minDecrement": 2.0,
+          "maxDecrement": 4.0,
+          "holidayMultiplier": 1.0,
+          "workHoursMultiplier": 1.0,
+          "nightHoursMultiplier": 0.5
+        }
+      },
+      {
+        "key": "fuelLevel",
+        "valueStrategy": {
+          "type": "natural",
+          "precision": 1,
+          "minStartValue": 80,
+          "maxStartValue": 80,
+          "minLowValue": 20,
+          "maxLowValue": 20,
+          "minHighValue": 80,
+          "maxHighValue": 80,
+          "minIncrement": 60.0,
+          "maxIncrement": 60.0,
+          "minDecrement": 0.1,
+          "maxDecrement": 0.8,
+          "holidayMultiplier": 2.0,
+          "workHoursMultiplier": 1.0,
+          "nightHoursMultiplier": 0.5
+        }
+      },
+      {
+        "key": "loadWeight",
+        "valueStrategy": {
+          "type": "natural",
+          "precision": 1,
+          "minStartValue": 20,
+          "maxStartValue": 28,
+          "minLowValue": 18,
+          "maxLowValue": 24,
+          "minHighValue": 24,
+          "maxHighValue": 32,
+          "minIncrement": 1.0,
+          "maxIncrement": 2.5,
+          "minDecrement": 2.0,
+          "maxDecrement": 5.0,
+          "holidayMultiplier": 1.0,
+          "workHoursMultiplier": 1.2,
+          "nightHoursMultiplier": 0.8
+        }
+      }
+    ]
+  },
+  {
+    "name": "insideRestrictedZoneHaulTruck",
+    "publishPeriodInDays": 1,
+    "publishFrequencyInSeconds": 300,
+    "publishPauseInMillis": 1,
+    "telemetryProfiles": [
+      {
+        "key": "latitude",
+        "valueStrategy": {
+          "type": "constant",
+          "value": 37.749450
+        }
+      },
+      {
+        "key": "longitude",
+        "valueStrategy": {
+          "type": "constant",
+          "value": -122.391950
+        }
+      },
+      {
+        "key": "speed",
+        "valueStrategy": {
+          "type": "constant",
+          "value": 0
+        }
+      },
+      {
+        "key": "fuelLevel",
+        "valueStrategy": {
+          "type": "constant",
+          "value": 55
+        }
+      },
+      {
+        "key": "loadWeight",
+        "valueStrategy": {
+          "type": "constant",
+          "value": 24
+        }
+      }
+    ]
+  }
+]

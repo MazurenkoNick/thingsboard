@@ -1,0 +1,54 @@
+{
+  "entityId": {
+    "entityType": "DEVICE_PROFILE",
+    "id": "93855be4-461e-4a35-b925-50a70d30c738"
+  },
+  "type": "ENTITY_AGGREGATION",
+  "name": "Haul Truck Avg Hourly Fuel Consumption",
+  "debugSettings": {
+    "failuresEnabled": true,
+    "allEnabled": false,
+    "allEnabledUntil": 0
+  },
+  "configurationVersion": 0,
+  "configuration": {
+    "type": "ENTITY_AGGREGATION",
+    "arguments": {
+      "fuelRate": {
+        "refEntityKey": {
+          "key": "fuelRate",
+          "type": "TS_LATEST"
+        },
+        "defaultValue": ""
+      }
+    },
+    "metrics": {
+      "avgHourlyFuelConsumption": {
+        "function": "AVG",
+        "input": {
+          "type": "key",
+          "key": "fuelRate"
+        },
+        "defaultValue": 0
+      }
+    },
+    "interval": {
+      "type": "HOUR",
+      "tz": "Europe/Kiev"
+    },
+    "watermark": null,
+    "produceIntermediateResult": true,
+    "output": {
+      "type": "TIME_SERIES",
+      "decimalsByDefault": 2,
+      "strategy": {
+        "type": "IMMEDIATE",
+        "ttl": 0,
+        "saveTimeSeries": true,
+        "saveLatest": true,
+        "sendWsUpdate": true,
+        "processCfs": true
+      }
+    }
+  }
+}

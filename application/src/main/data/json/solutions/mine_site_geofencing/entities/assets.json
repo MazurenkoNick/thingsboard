@@ -1,0 +1,108 @@
+[
+  {
+    "name": "Clay Ridge Mine Site",
+    "type": "Mine Site",
+    "label": "Clay Ridge Mine Site",
+    "group": "MineSites",
+    "attributes": {
+      "address": "North Ridge Clay Deposit, Sample County",
+      "perimeter": [
+        [37.751800, -122.392500],
+        [37.752300, -122.389900],
+        [37.750000, -122.388600],
+        [37.748200, -122.389700],
+        [37.748400, -122.391900]
+      ]
+    },
+    "relations": [
+      {
+        "entityType": "ASSET",
+        "entityName": "Loading Zone A",
+        "direction": "TO",
+        "type": "MineSiteToLoadingZone"
+      },
+      {
+        "entityType": "ASSET",
+        "entityName": "Unloading Zone A",
+        "direction": "TO",
+        "type": "MineSiteToUnloadingZone"
+      },
+      {
+        "entityType": "ASSET",
+        "entityName": "Restricted Zone A",
+        "direction": "TO",
+        "type": "MineSiteToRestrictedZone"
+      },
+      {
+        "entityType": "DEVICE",
+        "entityName": "Excavator A",
+        "direction": "TO",
+        "type": "MineSiteToMachine"
+      },
+      {
+        "entityType": "DEVICE",
+        "entityName": "Excavator B",
+        "direction": "TO",
+        "type": "MineSiteToMachine"
+      },
+      {
+        "entityType": "DEVICE",
+        "entityName": "Haul Truck A",
+        "direction": "TO",
+        "type": "MineSiteToMachine"
+      },
+      {
+        "entityType": "DEVICE",
+        "entityName": "Haul Truck B",
+        "direction": "TO",
+        "type": "MineSiteToMachine"
+      }
+    ],
+    "jsonId": "d0e23905-8c79-4dd8-a765-289ba27bd4fa"
+  },
+  {
+    "name": "Loading Zone A",
+    "type": "Mine Site Zone",
+    "label": "Loading Zone A",
+    "group": "MineSiteZones",
+    "attributes": {
+      "perimeter": [
+        [37.751400, -122.392000],
+        [37.751500, -122.391200],
+        [37.750900, -122.391000],
+        [37.750700, -122.391800]
+      ]
+    },
+    "relations": []
+  },
+  {
+    "name": "Unloading Zone A",
+    "type": "Mine Site Zone",
+    "label": "Unloading Zone A",
+    "group": "MineSiteZones",
+    "attributes": {
+      "perimeter": [
+        [37.749900, -122.390900],
+        [37.750000, -122.390200],
+        [37.749400, -122.390000],
+        [37.749300, -122.390700]
+      ]
+    },
+    "relations": []
+  },
+  {
+    "name": "Restricted Zone A",
+    "type": "Mine Site Zone",
+    "label": "Restricted Zone A",
+    "group": "MineSiteZones",
+    "attributes": {
+      "perimeter": [
+        [37.749500, -122.392200],
+        [37.749900, -122.391900],
+        [37.749200, -122.391500],
+        [37.748900, -122.392000]
+      ]
+    },
+    "relations": []
+  }
+]

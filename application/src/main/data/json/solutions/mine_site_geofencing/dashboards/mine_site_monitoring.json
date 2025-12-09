@@ -1,0 +1,76 @@
+{
+  "title": "Mine Site Monitoring",
+  "image": null,
+  "mobileHide": false,
+  "mobileOrder": null,
+  "configuration": {
+    "description": "",
+    "widgets": {},
+    "states": {
+      "default": {
+        "name": "Mine Site Monitoring",
+        "root": true,
+        "layouts": {
+          "main": {
+            "widgets": {},
+            "gridSettings": {
+              "layoutType": "default",
+              "backgroundColor": "#eeeeee",
+              "columns": 24,
+              "margin": 10,
+              "outerMargin": true,
+              "backgroundSizeMode": "100%"
+            }
+          }
+        }
+      }
+    },
+    "entityAliases": {},
+    "filters": {},
+    "timewindow": {
+      "displayValue": "",
+      "hideAggregation": false,
+      "hideAggInterval": false,
+      "hideTimezone": false,
+      "selectedTab": 0,
+      "realtime": {
+        "realtimeType": 0,
+        "interval": 1000,
+        "timewindowMs": 60000,
+        "quickInterval": "CURRENT_DAY",
+        "hideInterval": false,
+        "hideLastInterval": false,
+        "hideQuickInterval": false
+      },
+      "history": {
+        "historyType": 0,
+        "interval": 1000,
+        "timewindowMs": 60000,
+        "fixedTimewindow": {
+          "startTimeMs": 1765192116838,
+          "endTimeMs": 1765278516838
+        },
+        "quickInterval": "CURRENT_DAY",
+        "hideInterval": false,
+        "hideLastInterval": false,
+        "hideFixedInterval": false,
+        "hideQuickInterval": false
+      },
+      "aggregation": {
+        "type": "AVG",
+        "limit": 25000
+      }
+    },
+    "settings": {
+      "stateControllerId": "entity",
+      "showTitle": false,
+      "showDashboardsSelect": true,
+      "showEntitiesSelect": true,
+      "showDashboardTimewindow": true,
+      "showDashboardExport": true,
+      "toolbarAlwaysOpen": true
+    }
+  },
+  "name": "Mine Site Monitoring",
+  "resources": []
+}

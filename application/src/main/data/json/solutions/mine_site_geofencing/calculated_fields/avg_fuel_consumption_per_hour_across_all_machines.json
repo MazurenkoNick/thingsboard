@@ -1,0 +1,55 @@
+{
+  "entityId": {
+    "entityType": "ASSET_PROFILE",
+    "id": "41d774a9-a4e5-4ea3-9824-530c25dbb422"
+  },
+  "type": "RELATED_ENTITIES_AGGREGATION",
+  "name": "Avg fuel consumption per hour across all machines",
+  "debugSettings": {
+    "failuresEnabled": true,
+    "allEnabled": false,
+    "allEnabledUntil": 0
+  },
+  "configurationVersion": 0,
+  "configuration": {
+    "type": "RELATED_ENTITIES_AGGREGATION",
+    "relation": {
+      "direction": "FROM",
+      "relationType": "MineSiteToMachine"
+    },
+    "arguments": {
+      "avgHourlyFuelConsumption": {
+        "refEntityKey": {
+          "key": "avgHourlyFuelConsumption",
+          "type": "TS_LATEST"
+        },
+        "defaultValue": "0"
+      }
+    },
+    "deduplicationIntervalInSec": 10,
+    "metrics": {
+      "totalAvgHourlyFuelConsumption": {
+        "function": "SUM",
+        "input": {
+          "type": "key",
+          "key": "avgHourlyFuelConsumption"
+        }
+      }
+    },
+    "output": {
+      "type": "TIME_SERIES",
+      "decimalsByDefault": 2,
+      "strategy": {
+        "type": "IMMEDIATE",
+        "ttl": 0,
+        "saveTimeSeries": true,
+        "saveLatest": true,
+        "sendWsUpdate": true,
+        "processCfs": true
+      }
+    },
+    "useLatestTs": true,
+    "scheduledUpdateInterval": 60,
+    "scheduledUpdateEnabled": true
+  }
+}
