@@ -44,6 +44,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.ThingsBoardExecutors;
+import org.thingsboard.rule.engine.api.JobManager;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.adaptor.JsonConverter;
 import org.thingsboard.server.common.data.AttributeScope;
@@ -85,6 +86,9 @@ import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.job.CfReprocessingJobConfiguration;
+import org.thingsboard.server.common.data.job.Job;
+import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
 import org.thingsboard.server.common.data.kv.BaseDeleteTsKvQuery;
@@ -146,6 +150,8 @@ import org.thingsboard.server.service.solutions.data.EdgeLinkInfo;
 import org.thingsboard.server.service.solutions.data.SolutionInstallContext;
 import org.thingsboard.server.service.solutions.data.UserCredentialsInfo;
 import org.thingsboard.server.service.solutions.data.definition.AssetDefinition;
+import org.thingsboard.server.service.solutions.data.definition.AssetProfileDefinition;
+import org.thingsboard.server.service.solutions.data.definition.CalculatedFieldDefinition;
 import org.thingsboard.server.service.solutions.data.definition.CustomerDefinition;
 import org.thingsboard.server.service.solutions.data.definition.CustomerEntityDefinition;
 import org.thingsboard.server.service.solutions.data.definition.DashboardDefinition;
@@ -197,6 +203,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -245,6 +252,7 @@ public class DefaultSolutionService implements SolutionService {
     private final CustomerService customerService;
     private final UserService userService;
     private final CalculatedFieldService calculatedFieldService;
+    private final JobManager jobManager;
     private final TbCalculatedFieldService tbCalculatedFieldService;
 
     private final TbEdgeService tbEdgeService;
@@ -453,9 +461,9 @@ public class DefaultSolutionService implements SolutionService {
             }
         }
 
-        List<AssetProfile> assetProfiles = loadListOfEntitiesIfFileExists(solutionId, "asset_profiles.json", new TypeReference<>() {
+        List<AssetProfileDefinition> assetProfiles = loadListOfEntitiesIfFileExists(solutionId, "asset_profiles.json", new TypeReference<>() {
         });
-        assetProfiles.addAll(loadListOfEntitiesFromDirectory(solutionId, "asset_profiles", AssetProfile.class));
+        assetProfiles.addAll(loadListOfEntitiesFromDirectory(solutionId, "asset_profiles", AssetProfileDefinition.class));
         // Validate that entities with such name does not exist entities
         if (!assetProfiles.isEmpty()) {
             for (AssetProfile assetProfile : assetProfiles) {
@@ -525,9 +533,11 @@ public class DefaultSolutionService implements SolutionService {
 
             provisionEdges(user, ctx, request);
 
+            launchEmulators(ctx, devices, assets);
+
             provisionCalculatedFields(ctx);
 
-            launchEmulators(ctx, devices, assets);
+
 
             ctx.getSolutionInstructions().setDetails(prepareInstructions(ctx, request));
 
@@ -813,9 +823,9 @@ public class DefaultSolutionService implements SolutionService {
     }
 
     private void provisionAssetProfiles(SolutionInstallContext ctx) {
-        List<AssetProfile> assetProfiles = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "asset_profiles.json", new TypeReference<>() {
+        List<AssetProfileDefinition> assetProfiles = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "asset_profiles.json", new TypeReference<>() {
         });
-        assetProfiles.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "asset_profiles", AssetProfile.class));
+        assetProfiles.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "asset_profiles", AssetProfileDefinition.class));
         assetProfiles.forEach(assetProfile -> {
             assetProfile.setId(null);
             assetProfile.setCreatedTime(0L);
@@ -840,8 +850,11 @@ public class DefaultSolutionService implements SolutionService {
             }
         });
 
-        assetProfiles = assetProfiles.stream().map(assetProfileService::saveAssetProfile).collect(Collectors.toList());
-        assetProfiles.forEach(ctx::register);
+        assetProfiles.forEach(assetProfileDefinition -> {
+            AssetProfile assetProfile = new AssetProfile(assetProfileDefinition);
+            assetProfile = assetProfileService.saveAssetProfile(assetProfile);
+            ctx.register(assetProfileDefinition, assetProfile);
+        });
     }
 
     private void provisionSchedulerEvents(SolutionInstallContext ctx) {
@@ -1403,9 +1416,9 @@ public class DefaultSolutionService implements SolutionService {
     }
 
     protected void provisionCalculatedFields(SolutionInstallContext ctx) {
-        List<CalculatedField> cfs = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "calculated_fields.json", new TypeReference<>() {
+        List<CalculatedFieldDefinition> cfs = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "calculated_fields.json", new TypeReference<>() {
         });
-        cfs.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "calculated_fields", CalculatedField.class));
+        cfs.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "calculated_fields", CalculatedFieldDefinition.class));
 
         cfs.forEach(cf -> {
             cf.setId(null);
@@ -1445,8 +1458,30 @@ public class DefaultSolutionService implements SolutionService {
             }
         });
 
-        cfs = cfs.stream().map(calculatedFieldService::save).collect(Collectors.toList());
-        cfs.forEach(ctx::register);
+        // TODO: refactor
+        Map<Integer, CalculatedField> orderedCfs = new TreeMap<>();
+        cfs.forEach(cf -> {
+            CalculatedField calculatedField = new  CalculatedField(cf);
+            calculatedField = calculatedFieldService.save(calculatedField);
+            ctx.register(calculatedField);
+            orderedCfs.put(cf.getReprocessingOrder(), calculatedField);
+        });
+
+        for (Map.Entry<Integer, CalculatedField> entry : orderedCfs.entrySet()) {
+            CalculatedField calculatedField = entry.getValue();
+            jobManager.submitJob(Job.builder()
+                    .tenantId(calculatedField.getTenantId())
+                    .type(JobType.CF_REPROCESSING)
+                    .key(calculatedField.getId().toString())
+                    .entityId(calculatedField.getEntityId())
+                    .configuration(CfReprocessingJobConfiguration.builder()
+                            .calculatedFieldId(calculatedField.getId())
+                            .calculatedFieldName(calculatedField.getName())
+                            .startTs(0)
+                            .endTs(System.currentTimeMillis())
+                            .build())
+                    .build());
+        }
     }
 
     private RandomNameData generateRandomName(SolutionInstallContext ctx) {
