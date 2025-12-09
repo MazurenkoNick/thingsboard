@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, DestroyRef, Inject, ViewEncapsulation } from '@angular/core';
+import { Component, DestroyRef, Inject, ViewChild, ViewEncapsulation } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
@@ -58,6 +58,10 @@ import { switchMap } from "rxjs/operators";
 import { EntityService } from "@core/http/entity.service";
 import { Operation, Resource } from "@shared/models/security.models";
 import { UserPermissionsService } from "@core/http/user-permissions.service";
+import { EntityTypeSelectComponent } from "@shared/components/entity/entity-type-select.component";
+import { EntityAutocompleteComponent } from "@shared/components/entity/entity-autocomplete.component";
+import { RelationTypes } from "@shared/models/relation.models";
+import { StringItemsOption } from "@shared/components/string-items-list.component";
 
 export interface AlarmRuleDialogData {
   value?: CalculatedField;
@@ -89,7 +93,7 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
       id: [null as null | string, Validators.required],
     }),
     configuration: this.fb.group({
-      arguments: this.fb.control({}),
+      arguments: this.fb.control({}, Validators.required),
       propagate: [false],
       propagateToOwner: [false],
       propagateToOwnerHierarchy: [false],
@@ -116,14 +120,21 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
 
   separatorKeysCodes = [ENTER, COMMA, SEMICOLON];
 
+  entityName = this.data.entityName;
+
+  disabledClearRuleButton = false;
+
+  @ViewChild('entityTypeSelect') entityTypeSelect: EntityTypeSelectComponent;
+  @ViewChild('entityAutocompleteComponent') entityAutocompleteComponent: EntityAutocompleteComponent;
+
   constructor(protected store: Store<AppState>,
               protected router: Router,
               @Inject(MAT_DIALOG_DATA) public data: AlarmRuleDialogData,
               protected dialogRef: MatDialogRef<AlarmRuleDialogComponent, CalculatedField>,
               private calculatedFieldsService: CalculatedFieldsService,
+              private entityService: EntityService,
               private destroyRef: DestroyRef,
               private fb: FormBuilder,
-              private entityService: EntityService,
               private userPermissionsService: UserPermissionsService) {
     super(store, router, dialogRef);
     this.alarmRuleEntityTypeList = this.entityService.prepareAllowedEntityTypesList(this.alarmRuleEntityTypeList, false, Operation.WRITE) as EntityType[];
@@ -133,16 +144,41 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
     if (this.userPermissionsService.hasGenericPermission(Resource.ASSET_PROFILE, Operation.WRITE)) {
       this.alarmRuleEntityTypeList.push(EntityType.ASSET_PROFILE);
     }
+    if (this.alarmRuleEntityTypeList.includes(EntityType.DEVICE_PROFILE)) {
+      this.fieldFormGroup.get('entityId.entityType').patchValue(EntityType.DEVICE_PROFILE, {emitEvent: false});
+    }
     this.applyDialogData();
+    this.updateRulesValidators();
 
     if (this.data.readonly) {
       this.fieldFormGroup.disable();
     }
+
+    this.fieldFormGroup.get('configuration.arguments').valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.updateRulesValidators();
+    });
+
+
     this.fieldFormGroup.get('entityId.id').valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe((value) => {
-      if (value) {
-        this.getOwnerByEntityTypeAndId(this.fieldFormGroup.get('entityId.entityType').value as EntityType, value);
+    ).subscribe((entityId) => {
+      if (entityId) {
+        this.getOwnerByEntityTypeAndId(this.fieldFormGroup.get('entityId.entityType').value as EntityType, entityId);
+        if (!this.entityName) {
+          if ((this.fieldFormGroup.get('entityId.entityType').value === EntityType.DEVICE_PROFILE ||
+            this.fieldFormGroup.get('entityId.entityType').value === EntityType.ASSET_PROFILE)) {
+            this.entityService.getEntity(this.fieldFormGroup.get('entityId.entityType').value as EntityType, entityId, {
+              ignoreLoading: true,
+              ignoreErrors: true
+            }).subscribe(
+              value => {
+                this.entityName = value.name;
+              }
+            )
+          }
+        }
       }
     });
   }
@@ -180,30 +216,6 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
     this.configFormGroup.patchValue({clearRule: clearAlarmRule});
   }
 
-  removeRelationType(key: string): void {
-    const keys: string[] = this.configFormGroup.get('propagateRelationTypes').value;
-    const index = keys.indexOf(key);
-    if (index >= 0) {
-      keys.splice(index, 1);
-      this.configFormGroup.get('propagateRelationTypes').setValue(keys);
-    }
-  }
-
-  addRelationType(event: MatChipInputEvent): void {
-    const input = event.chipInput.inputElement;
-    let value = (event.value ?? '').trim();
-    if (value) {
-      let keys: string[] = this.configFormGroup.get('propagateRelationTypes').value ?? [];
-      if (keys.indexOf(value) === -1) {
-        keys.push(value);
-        this.configFormGroup.get('propagateRelationTypes').setValue(keys);
-      }
-    }
-    if (input) {
-      input.value = '';
-    }
-  }
-
   get fromGroupValue(): CalculatedField {
     return deepTrim(this.fieldFormGroup.value as CalculatedField);
   }
@@ -213,13 +225,17 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
   }
 
   add(): void {
-    if (this.fieldFormGroup.valid) {
+    if (this.fieldFormGroup.valid && Object.keys(this.arguments ?? {}).length > 0) {
       const alarmRule = { entityId: this.data.entityId, ...(this.data.value ?? {}),  ...this.fromGroupValue};
       alarmRule.configuration.type = CalculatedFieldType.ALARM;
 
       this.calculatedFieldsService.saveCalculatedField(alarmRule)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(calculatedField => this.dialogRef.close(calculatedField));
+    } else {
+      this.fieldFormGroup.get('name').markAsTouched();
+      this.entityTypeSelect?.markAsTouched();
+      this.entityAutocompleteComponent?.markAsTouched();
     }
   }
 
@@ -245,4 +261,33 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
     }
     return this.data.getTestScriptDialogFn(this.fromGroupValue, expression, null, false);
   }
+
+  private updateRulesValidators(): void {
+    if (Object.keys(this.arguments ?? {}).length > 0) {
+      this.fieldFormGroup.get('configuration.createRules').enable({emitEvent: false});
+      this.fieldFormGroup.get('configuration.clearRule').enable({emitEvent: false});
+      this.fieldFormGroup.get('configuration.propagate').enable({emitEvent: false});
+      this.fieldFormGroup.get('configuration.propagateToOwner').enable({emitEvent: false});
+      this.fieldFormGroup.get('configuration.propagateToTenant').enable({emitEvent: false});
+      this.fieldFormGroup.get('configuration.propagateToOwnerHierarchy').enable({emitEvent: false});
+      this.fieldFormGroup.get('configuration.propagateRelationTypes').enable({emitEvent: false});
+      this.disabledClearRuleButton = true;
+    } else {
+      this.fieldFormGroup.get('configuration.createRules').disable({emitEvent: false});
+      this.fieldFormGroup.get('configuration.clearRule').disable({emitEvent: false});
+      this.fieldFormGroup.get('configuration.propagate').disable({emitEvent: false});
+      this.fieldFormGroup.get('configuration.propagateToOwner').disable({emitEvent: false});
+      this.fieldFormGroup.get('configuration.propagateToTenant').disable({emitEvent: false});
+      this.fieldFormGroup.get('configuration.propagateToOwnerHierarchy').disable({emitEvent: false});
+      this.fieldFormGroup.get('configuration.propagateRelationTypes').disable({emitEvent: false});
+      this.disabledClearRuleButton = false;
+    }
+  }
+  get predefinedTypeValues(): StringItemsOption[] {
+    return RelationTypes.map(type => ({
+      name: type,
+      value: type
+    }));
+  }
+
 }

@@ -97,6 +97,8 @@ public interface DashboardInfoDao extends Dao<DashboardInfo>, ImageContainerDao<
      */
     ListenableFuture<List<DashboardInfo>> findDashboardsByIdsAsync(UUID tenantId, List<UUID> dashboardIds);
 
+    List<DashboardInfo> findDashboardsByIds(UUID tenantId, List<UUID> dashboardIds);
+
     PageData<DashboardInfo> findDashboardsByEntityGroupId(UUID groupId, PageLink pageLink);
 
     PageData<DashboardInfo> findDashboardsByEntityGroupIds(List<UUID> groupIds, PageLink pageLink);

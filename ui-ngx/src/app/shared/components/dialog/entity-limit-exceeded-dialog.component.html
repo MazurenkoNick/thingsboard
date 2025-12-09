@@ -30,34 +30,28 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="debug-dialog-container flex flex-col xs:h-full">
-  <mat-toolbar color="primary">
-    <h2>{{ dialogTitle | translate}}</h2>
-    <span class="flex-1"></span>
-    <button mat-icon-button
-            (click)="cancel()"
-            type="button">
-      <mat-icon class="material-icons">close</mat-icon>
-    </button>
-  </mat-toolbar>
-  <div mat-dialog-content class="tb-form-panel stroked debug-dialog-content xs:flex-1">
-    <tb-event-table
-      [tenantId]="data.tenantId"
-      [debugEventTypes]="[debugEventTypes.DEBUG_CALCULATED_FIELD]"
-      [disabledEventTypes]="[EventType.LC_EVENT, EventType.ERROR, EventType.STATS]"
-      [defaultEventType]="DebugEventType.DEBUG_CALCULATED_FIELD"
-      [hideClearEventAction]="data.hideClearEventAction"
-      [active]="true"
-      [entityId]="data.value.id"
-      (debugEventSelected)="onDebugEventSelected($event)"
-    />
+<div class="entity-limit-exceeded-dialog">
+  <button mat-icon-button class="close-btn" (click)="cancel()">
+    <tb-icon>close</tb-icon>
+  </button>
+  <div class="entity-limit-exceeded-bg"></div>
+  <div class="entity-limit-exceeded-title">{{ 'entity.limit-reached' | translate }}</div>
+  <div class="entity-limit-exceeded-container">
+    <div class="entity-limit-exceeded-text" [innerHTML]="limitReachedText | safe: 'html'"></div>
   </div>
-  <div mat-dialog-actions class="justify-end">
-    <button mat-button color="primary"
-            type="button"
-            cdkFocusInitial
-            (click)="cancel()">
+  <div class="flex flex-row justify-center gap-2">
+    <button mat-flat-button color="primary" (click)="requestLimitIncrease($event)">
+      {{ 'entity.request-limit-increase' | translate }}
+    </button>
+    <button mat-button (click)="cancel()">
       {{ 'action.cancel' | translate }}
     </button>
   </div>
+  @if (!isCustomerUser) {
+    <div class="request-entity-limit-increase-sysadmin-prompt">
+      {{ 'entity.request-sysadmin-text' | translate }}
+      <a href="" (click)="loginAsSysAdmin($event)"> {{ 'entity.login-here' | translate }} </a>
+      {{ 'entity.to-increase-limit' | translate }}
+    </div>
+  }
 </div>

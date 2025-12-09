@@ -79,8 +79,8 @@ public class DefaultTbCustomMenuService extends AbstractEtagCacheService<CustomM
     }
 
     @Override
-    public void updateAssigneeList(CustomMenu oldCustomMenu, CMAssigneeType newAssigneeType, List<EntityId> newAssignToList, boolean force) throws ThingsboardException {
-        customMenuService.updateAssigneeList(oldCustomMenu, newAssigneeType, newAssignToList, force);
+    public void updateAssigneeList(CustomMenu oldCustomMenu, CMAssigneeType newAssigneeType, List<EntityId> newAssignToList, String[] userGroupNames, boolean force) throws ThingsboardException {
+        customMenuService.updateAssigneeList(oldCustomMenu, newAssigneeType, newAssignToList, userGroupNames, force);
     }
 
     @Override

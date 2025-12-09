@@ -62,6 +62,8 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import static org.thingsboard.server.controller.ControllerConstants.HOME_DASHBOARD;
@@ -133,7 +135,7 @@ public class TenantController extends BaseController {
     }
 
     @ApiOperation(value = "Delete Tenant (deleteTenant)",
-            notes = "Deletes the tenant, it's customers, rule chains, devices and all other related entities. Referencing non-existing tenant Id will cause an error." + SYSTEM_AUTHORITY_PARAGRAPH)
+            notes = "Deletes the tenant, it's customers, rule chains, devices and all other related entities. Referencing non-existing tenant Id will cause an error." + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @DeleteMapping(value = "/tenant/{tenantId}")
     @ResponseStatus(value = HttpStatus.OK)
@@ -168,15 +170,14 @@ public class TenantController extends BaseController {
     @GetMapping(value = "/tenants", params = {"tenantIds"})
     public List<Tenant> getTenantsByIds(
             @Parameter(description = "A list of tenant ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")))
-            @RequestParam("tenantIds") String[] strTenantIds) throws ThingsboardException, ExecutionException, InterruptedException {
-        checkArrayParameter("tenantIds", strTenantIds);
+            @RequestParam("tenantIds") Set<UUID> tenantUUIDs) throws ThingsboardException {
         SecurityUser user = getCurrentUser();
         TenantId tenantId = user.getTenantId();
         List<TenantId> tenantIds = new ArrayList<>();
-        for (String strTenantId : strTenantIds) {
-            tenantIds.add(TenantId.fromUUID(toUUID(strTenantId)));
+        for (UUID tenantUUID : tenantUUIDs) {
+            tenantIds.add(TenantId.fromUUID(tenantUUID));
         }
-        List<Tenant> tenants = checkNotNull(tenantService.findTenantsByIdsAsync(tenantId, tenantIds).get());
+        List<Tenant> tenants = tenantService.findTenantsByIds(tenantId, tenantIds);
         return filterTenantsByReadPermission(tenants);
     }
 

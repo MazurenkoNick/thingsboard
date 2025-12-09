@@ -63,6 +63,7 @@ public class SystemParams {
     int maxRelationLevelPerCfArgument;
     long minAllowedDeduplicationIntervalInSecForCF;
     long minAllowedAggregationIntervalInSecForCF;
+    long intermediateAggregationIntervalInSecForCF;
     TrendzSettings trendzSettings;
     int licenseVersion;
     boolean edgeEnabled;

@@ -35,6 +35,8 @@ import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.Dao;
@@ -42,6 +44,7 @@ import org.thingsboard.server.dao.ExportableEntityDao;
 import org.thingsboard.server.dao.TenantEntityDao;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public interface EntityGroupDao extends Dao<EntityGroup>, TenantEntityDao<EntityGroup>, ExportableEntityDao<EntityGroupId, EntityGroup> {
@@ -69,5 +72,7 @@ public interface EntityGroupDao extends Dao<EntityGroup>, TenantEntityDao<Entity
     PageData<EntityGroup> findEdgeEntityGroupsByType(UUID tenantId, UUID edgeId, String relationType, PageLink pageLink);
 
     PageData<EntityGroup> findEdgeEntityGroupsByOwnerIdAndType(UUID tenantId, UUID edgeId, UUID ownerId, String relationType, PageLink pageLink);
+
+    Set<String> findUserGroupNamesByUserId(TenantId tenantId, UserId userId);
 
 }

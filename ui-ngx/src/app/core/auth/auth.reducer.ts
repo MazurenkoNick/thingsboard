@@ -56,6 +56,7 @@ const emptyUserAuthState: AuthPayload = {
   maxRelationLevelPerCfArgument: 0,
   maxDataPointsPerRollingArg: 0,
   maxDebugModeDurationMinutes: 0,
+  intermediateAggregationIntervalInSecForCF: 0,
   userSettings: initialUserSettings,
   allowedDashboardIds: [],
   availableLocales: env.supportedLangs,

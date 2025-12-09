@@ -698,7 +698,7 @@ public class TbTimeSeriesChart implements XYSeriesLabelGenerator, TbSeriesLegend
             } else {
                 renderer.setSeriesLinesVisible(series.getSeriesIndex(), false);
             }
-            if (lineSettings.getShowPoints()) {
+            if (lineSettings.getShowPoints() || series.getData().size() == 1) {
                 Shape seriesShape = createSeriesShape(lineSettings.getPointShape(), lineSettings.getPointSize());
                 if (seriesShape != null) {
                     renderer.setSeriesShapesVisible(series.getSeriesIndex(), true);

@@ -67,13 +67,15 @@ public abstract class BaseDashboardProcessor extends BaseEdgeProcessor {
             changeOwnerIfRequired(tenantId, null, dashboardId);
         }
 
-        dashboardValidator.validate(dashboard, Dashboard::getTenantId);
-        if (created) {
-            dashboard.setId(dashboardId);
-        }
-        Dashboard savedDashboard = edgeCtx.getDashboardService().saveDashboard(dashboard, false);
-        if (created) {
-            edgeCtx.getEntityGroupService().addEntityToEntityGroupAll(savedDashboard.getTenantId(), savedDashboard.getOwnerId(), savedDashboard.getId());
+        if (isSaveRequired(dashboardById, dashboard)) {
+            dashboardValidator.validate(dashboard, Dashboard::getTenantId);
+            if (created) {
+                dashboard.setId(dashboardId);
+            }
+            Dashboard savedDashboard = edgeCtx.getDashboardService().saveDashboard(dashboard, false);
+            if (created) {
+                edgeCtx.getEntityGroupService().addEntityToEntityGroupAll(savedDashboard.getTenantId(), savedDashboard.getOwnerId(), savedDashboard.getId());
+            }
         }
         safeAddToEntityGroup(tenantId, dashboardUpdateMsg, dashboardId);
         return created;
@@ -98,4 +100,5 @@ public abstract class BaseDashboardProcessor extends BaseEdgeProcessor {
             pushEntityEventToRuleEngine(tenantId, edge, dashboardById, TbMsgType.ENTITY_DELETED);
         }
     }
+
 }

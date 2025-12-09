@@ -48,7 +48,7 @@
           (click)="clear()">
     <mat-icon class="material-icons">close</mat-icon>
   </button>
-  <button *ngIf="selectConverterFormGroup.get('entity').value.id && !disabled && addNewConverter && (resource.CONVERTER | hasGenericPermission: operation.WRITE)"
+  <button *ngIf="selectConverterFormGroup.get('entity').value?.id && !disabled && addNewConverter && (resource.CONVERTER | hasGenericPermission: operation.WRITE)"
           type="button"
           matSuffix mat-icon-button aria-label="Edit"
           matTooltip="{{ 'converter.edit' | translate }}"

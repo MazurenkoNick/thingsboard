@@ -280,6 +280,7 @@ import { ReportTemplateAutocompleteComponent } from '@shared/components/report/r
 import { FormRowDirective } from '@shared/directives/form-row.directive';
 import { TimeUnitInputComponent } from '@shared/components/time-unit-input.component';
 import { DateExpirationPipe } from '@shared/pipe/date-expiration.pipe';
+import { EntityLimitExceededDialogComponent } from '@shared/components/dialog/entity-limit-exceeded-dialog.component';
 import { PasswordRequirementsTooltipComponent } from '@shared/components/password-requirements-tooltip.component';
 import { TbCurrencyPipe } from '@shared/pipe/currency.pipe';
 import { RequestEdgeDialogComponent } from '@shared/components/dialog/request-edge-dialog.component';
@@ -437,6 +438,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     MaterialIconsDialogComponent,
     WhiteLabelingFeatureDialogComponent,
     EntityLimitDialogComponent,
+    EntityLimitExceededDialogComponent,
     RequestEdgeDialogComponent,
     ColorInputComponent,
     MaterialIconSelectComponent,
@@ -739,6 +741,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     MaterialIconsDialogComponent,
     WhiteLabelingFeatureDialogComponent,
     EntityLimitDialogComponent,
+    EntityLimitExceededDialogComponent,
     RequestEdgeDialogComponent,
     ColorInputComponent,
     MaterialIconSelectComponent,

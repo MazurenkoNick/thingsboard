@@ -153,6 +153,11 @@ public class JpaDashboardInfoDao extends JpaAbstractDao<DashboardInfoEntity, Das
     }
 
     @Override
+    public List<DashboardInfo> findDashboardsByIds(UUID tenantId, List<UUID> dashboardIds) {
+        return DaoUtil.convertDataList(dashboardInfoRepository.findByIdIn(dashboardIds));
+    }
+
+    @Override
     public PageData<DashboardInfo> findDashboardsByEntityGroupId(UUID groupId, PageLink pageLink) {
         return DaoUtil.toPageData(dashboardInfoRepository
                 .findByEntityGroupId(

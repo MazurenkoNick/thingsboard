@@ -50,6 +50,8 @@ import org.thingsboard.server.dao.model.sql.CustomMenuEntity;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 
@@ -90,6 +92,12 @@ public class JpaCustomMenuDao extends JpaAbstractDao<CustomMenuEntity, CustomMen
     @Override
     public PageData<CustomMenu> findByTenantId(TenantId tenantId, PageLink pageLink) {
         return DaoUtil.toPageData(customMenuRepository.findByTenantId(tenantId.getId(), DaoUtil.toPageable(pageLink)));
+    }
+
+    @Override
+    public Optional<CustomMenu> findFirstByScopeAndUserGroupNames(TenantId tenantId, CustomerId customerId, CMScope scope, Set<String> userGroupNames) {
+        return customMenuRepository.findFirstByScopeAndUserGroupNames(tenantId.getId(),
+                customerId == null ? EntityId.NULL_UUID : customerId.getId(), scope.name(), userGroupNames.toArray(new String[0])).map(DaoUtil::getData);
     }
 
     @Override

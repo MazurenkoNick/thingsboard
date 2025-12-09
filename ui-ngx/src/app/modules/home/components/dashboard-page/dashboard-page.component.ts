@@ -1337,7 +1337,11 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
             widgetEditMode: this.widgetEditMode,
             singlePageMode: this.singlePageMode
           };
+          const needReInitState = !this.isEdit;
           this.init(dashboardPageInitData);
+          if (needReInitState) {
+            this.dashboardCtx.stateController.reInit();
+          }
         } else {
           this.dashboard.version = dashboard.version;
           this.setEditMode(false, false);
