@@ -33,7 +33,7 @@
 <div class="tb-alarm-rule-condition flex flex-col gap-4 min-w-0" [formGroup]="alarmRuleConditionFormGroup">
   <div class="tb-form-row column-xs">
     <div class="min-w-40 xs:min-w-fit">{{ 'alarm-rule.condition' | translate }}</div>
-    <button type="button"
+    <button type="button" [disabled]="disabled"
             class="tb-alarm-rule-condition-button"
             mat-stroked-button [color]="conditionSet() && this.filtersArgumentsValid ? 'primary' : 'warn'"
             (click)="openFilterDialog($event)">
