@@ -28,28 +28,10 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.cf.configuration;
+package org.thingsboard.server.service.cf.ctx.state;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+public interface HasLatestTs {
 
-@Data
-@NoArgsConstructor
-public class AttributesRuleChainOutputStrategy implements AttributesOutputStrategy {
-
-    @Override
-    public OutputStrategyType getType() {
-        return OutputStrategyType.RULE_CHAIN;
-    }
-
-    @Override
-    public boolean hasContextOnlyChanges(OutputStrategy other) {
-        return !(other instanceof AttributesRuleChainOutputStrategy);
-    }
-
-    @Override
-    public boolean hasRefreshContextOnlyChanges(OutputStrategy other) {
-        return false;
-    }
+    long getLatestTs();
 
 }
