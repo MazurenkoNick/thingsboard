@@ -158,6 +158,11 @@ public class JpaWidgetsBundleDao extends JpaAbstractDao<WidgetsBundleEntity, Wid
     }
 
     @Override
+    public List<WidgetsBundle> findSystemOrTenantWidgetBundlesByIds(UUID tenantId, List<UUID> widgetsBundleIds) {
+        return DaoUtil.convertDataList(widgetsBundleRepository.findSystemOrTenantWidgetsBundlesByIdIn(tenantId, TenantId.NULL_UUID, widgetsBundleIds));
+    }
+
+    @Override
     public WidgetsBundle findByTenantIdAndExternalId(UUID tenantId, UUID externalId) {
         return DaoUtil.getData(widgetsBundleRepository.findByTenantIdAndExternalId(tenantId, externalId));
     }

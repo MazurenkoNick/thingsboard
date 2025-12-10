@@ -66,7 +66,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
+import java.util.UUID;
 
 import static org.thingsboard.server.controller.ControllerConstants.AVAILABLE_FOR_ANY_AUTHORIZED_USER;
 import static org.thingsboard.server.controller.ControllerConstants.INLINE_IMAGES;
@@ -261,20 +261,15 @@ public class WidgetsBundleController extends BaseController {
     @GetMapping(value = "/widgetsBundles", params = {"widgetsBundleIds"})
     public List<WidgetsBundle> getWidgetsBundlesByIds(
             @Parameter(description = "A list of widgets bundle ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
-            @RequestParam("widgetsBundleIds") String[] strWidgetsBundleIds) throws ThingsboardException, ExecutionException, InterruptedException {
-        checkArrayParameter("widgetsBundleIds", strWidgetsBundleIds);
+            @RequestParam("widgetsBundleIds") Set<UUID> widgetsBundleUUIDs) throws ThingsboardException {
         if (!accessControlService.hasPermission(getCurrentUser(), Resource.WIDGETS_BUNDLE, Operation.READ)) {
             return Collections.emptyList();
         }
         List<WidgetsBundleId> widgetsBundleIds = new ArrayList<>();
-        for (String strWidgetsBundleId : strWidgetsBundleIds) {
-            widgetsBundleIds.add(new WidgetsBundleId(toUUID(strWidgetsBundleId)));
+        for (UUID widgetsBundleUUID : widgetsBundleUUIDs) {
+            widgetsBundleIds.add(new WidgetsBundleId(widgetsBundleUUID));
         }
-        if (Authority.SYS_ADMIN.equals(getCurrentUser().getAuthority())) {
-            return checkNotNull(widgetsBundleService.findSystemWidgetsBundlesByIdsAsync(getTenantId(), widgetsBundleIds).get());
-        } else {
-            return checkNotNull(widgetsBundleService.findAllTenantWidgetsBundlesByIdsAsync(getTenantId(), widgetsBundleIds).get());
-        }
+        return widgetsBundleService.findSystemOrTenantWidgetsBundlesByIds(getTenantId(), widgetsBundleIds);
     }
 
 }

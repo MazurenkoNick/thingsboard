@@ -162,6 +162,12 @@ public interface WidgetsBundleRepository extends JpaRepository<WidgetsBundleEnti
                                                                            @Param("nullTenantId") UUID nullTenantId,
                                                                            @Param("widgetsBundleIds") List<UUID> widgetsBundleIds);
 
+    @Query("SELECT wb FROM WidgetsBundleEntity wb WHERE " +
+            "wb.id IN (:widgetsBundleIds) AND (wb.tenantId = :tenantId OR wb.tenantId = :systemTenantId)")
+    List<WidgetsBundleEntity> findSystemOrTenantWidgetsBundlesByIdIn(@Param("tenantId") UUID tenantId,
+                                                                     @Param("systemTenantId") UUID systemTenantId,
+                                                                     @Param("widgetsBundleIds") List<UUID> widgetsBundleIds);
+
     @Query(nativeQuery = true, value = "SELECT * FROM widgets_bundle wb WHERE wb.tenant_id = :tenantId and wb.image = :imageLink limit :lmt")
     List<WidgetsBundleEntity> findByTenantAndImageUrl(@Param("tenantId") UUID tenantId, @Param("imageLink") String imageLink, @Param("lmt") int lmt);
 

@@ -37,7 +37,6 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainType;
-import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.dao.Dao;
 import org.thingsboard.server.dao.ExportableEntityDao;
 import org.thingsboard.server.dao.ResourceContainerDao;
@@ -108,5 +107,7 @@ public interface RuleChainDao extends Dao<RuleChain>, TenantEntityDao<RuleChain>
      * @return the list of rule chain objects
      */
     ListenableFuture<List<RuleChain>> findRuleChainsByTenantIdAndIdsAsync(UUID tenantId, List<UUID> ruleChainIds);
+
+    List<RuleChain> findRuleChainsByTenantIdAndIds(UUID tenantId, List<UUID> ruleChainIds);
 
 }

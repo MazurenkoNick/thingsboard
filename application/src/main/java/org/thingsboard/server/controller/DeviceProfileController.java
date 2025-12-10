@@ -67,8 +67,8 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 import static org.thingsboard.server.controller.ControllerConstants.DEVICE_PROFILE_DATA;
 import static org.thingsboard.server.controller.ControllerConstants.DEVICE_PROFILE_ID;
@@ -302,19 +302,18 @@ public class DeviceProfileController extends BaseController {
     @RequestMapping(value = "/deviceProfileInfos", params = {"deviceProfileIds"}, method = RequestMethod.GET)
     @ResponseBody
     public List<DeviceProfileInfo> getDeviceProfilesByIds(
-            @Parameter(description = "A list of device profile ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
-            @RequestParam("deviceProfileIds") String[] strDeviceProfileIds) throws ThingsboardException, ExecutionException, InterruptedException {
-        checkArrayParameter("deviceProfileIds", strDeviceProfileIds);
+            @Parameter(description = "A list of device profile ids, separated by comma ','",  array = @ArraySchema(schema = @Schema(type = "string")), required = true)
+            @RequestParam("deviceProfileIds") Set<UUID> deviceProfileUUIDs) throws ThingsboardException {
         if (!accessControlService.hasPermission(getCurrentUser(), Resource.DEVICE_PROFILE, Operation.READ)) {
             return Collections.emptyList();
         }
         SecurityUser user = getCurrentUser();
         TenantId tenantId = user.getTenantId();
         List<DeviceProfileId> deviceProfileIds = new ArrayList<>();
-        for (String strDeviceProfileId : strDeviceProfileIds) {
-            deviceProfileIds.add(new DeviceProfileId(toUUID(strDeviceProfileId)));
+        for (UUID deviceProfileUUID : deviceProfileUUIDs) {
+            deviceProfileIds.add(new DeviceProfileId(deviceProfileUUID));
         }
-        return checkNotNull(deviceProfileService.findDeviceProfilesByIdsAsync(tenantId, deviceProfileIds).get());
+        return deviceProfileService.findDeviceProfilesByIds(tenantId, deviceProfileIds);
     }
 
     @ApiOperation(value = "Get Device Profile names (getDeviceProfileNames)",
