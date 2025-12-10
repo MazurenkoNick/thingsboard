@@ -29,73 +29,28 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { BrowserModule } from '@angular/platform-browser';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { NgModule } from '@angular/core';
-
-import { AppRoutingModule } from './app-routing.module';
-import { CoreModule } from '@core/core.module';
-import { LoginModule } from '@modules/login/login.module';
-import { HomeModule } from '@home/home.module';
-
-import { AppComponent } from './app.component';
-import { DashboardRoutingModule } from '@modules/dashboard/dashboard-routing.module';
 import { RouterModule, Routes } from '@angular/router';
-import { SignupModule } from '@modules/signup/signup.module';
-import { EmptyPageModule } from '@modules/empty-page/empty-page.module';
-
-import { DefaultUrlSerializer, UrlSerializer, UrlTree } from '@angular/router';
-import { ActionModule } from '@modules/action/action.module';
-
-export default class TbUrlSerializer implements UrlSerializer {
-  private _defaultUrlSerializer: DefaultUrlSerializer = new DefaultUrlSerializer();
-
-  parse(url: string): UrlTree {
-    // Encode parentheses
-    url = url.replace(/\(/g, '%28').replace(/\)/g, '%29');
-    // Use the default serializer.
-    return this._defaultUrlSerializer.parse(url)
-  }
-
-  serialize(tree: UrlTree): string {
-    return this._defaultUrlSerializer.serialize(tree).replace(/%28/g, '(').replace(/%29/g, ')');
-  }
-}
+import { ActionGuard } from '@modules/action/action.guard';
+import { NgModule } from '@angular/core';
+import { StoreModule } from '@ngrx/store';
+import { of } from 'rxjs';
 
 const routes: Routes = [
-  { path: '**',
-    redirectTo: 'home'
+  {
+    path: 'action/entitiesLimitIncreaseRequest',
+    loadComponent: () => of(null),
+    data: {},
+    canActivate: [ActionGuard],
   }
 ];
 
 @NgModule({
   imports: [
+    StoreModule,
     RouterModule.forChild(routes)],
-  exports: [RouterModule]
-})
-export class PageNotFoundRoutingModule { }
-
-
-@NgModule({
-  declarations: [
-    AppComponent
-  ],
-  imports: [
-    BrowserModule,
-    BrowserAnimationsModule,
-    AppRoutingModule,
-    CoreModule,
-    LoginModule,
-    SignupModule,
-    HomeModule,
-    DashboardRoutingModule,
-    EmptyPageModule,
-    ActionModule,
-    PageNotFoundRoutingModule
-  ],
+  exports: [RouterModule],
   providers: [
-    { provide: UrlSerializer, useClass: TbUrlSerializer }
-  ],
-  bootstrap: [AppComponent]
+    ActionGuard
+  ]
 })
-export class AppModule { }
+export class ActionRoutingModule { }

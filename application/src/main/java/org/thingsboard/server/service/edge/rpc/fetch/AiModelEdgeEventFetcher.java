@@ -28,39 +28,36 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.notification;
+package org.thingsboard.server.service.edge.rpc.fetch;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.thingsboard.server.common.data.EdgeUtils;
+import org.thingsboard.server.common.data.ai.AiModel;
+import org.thingsboard.server.common.data.edge.Edge;
+import org.thingsboard.server.common.data.edge.EdgeEvent;
+import org.thingsboard.server.common.data.edge.EdgeEventActionType;
+import org.thingsboard.server.common.data.edge.EdgeEventType;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.dao.ai.AiModelService;
 
 @AllArgsConstructor
-@NoArgsConstructor
-public enum NotificationType {
+@Slf4j
+public class AiModelEdgeEventFetcher extends BasePageableEdgeEventFetcher<AiModel> {
 
-    GENERAL,
-    ALARM,
-    DEVICE_ACTIVITY,
-    ENTITY_ACTION,
-    ALARM_COMMENT,
-    RULE_ENGINE_COMPONENT_LIFECYCLE_EVENT,
-    ALARM_ASSIGNMENT,
-    NEW_PLATFORM_VERSION,
-    ENTITIES_LIMIT,
-    ENTITIES_LIMIT_INCREASE_REQUEST(true),
-    API_USAGE_LIMIT,
-    RULE_NODE,
-    INTEGRATION_LIFECYCLE_EVENT,
-    RATE_LIMITS,
-    EDGE_CONNECTION,
-    EDGE_COMMUNICATION_FAILURE,
-    TASK_PROCESSING_FAILURE,
-    RESOURCES_SHORTAGE,
-    USER_ACTIVATED(true),
-    USER_REGISTERED(true),
-    REPORT_GENERATED;
+    private final AiModelService aiModelService;
 
-    @Getter
-    private boolean system;
+    @Override
+    PageData<AiModel> fetchEntities(TenantId tenantId, Edge edge, PageLink pageLink) {
+        return aiModelService.findAiModelsByTenantId(tenantId, pageLink);
+    }
+
+    @Override
+    EdgeEvent constructEdgeEvent(TenantId tenantId, Edge edge, AiModel aiModel) {
+        return EdgeUtils.constructEdgeEvent(tenantId, edge.getId(), EdgeEventType.AI_MODEL,
+                EdgeEventActionType.ADDED, aiModel.getId(), null);
+    }
 
 }

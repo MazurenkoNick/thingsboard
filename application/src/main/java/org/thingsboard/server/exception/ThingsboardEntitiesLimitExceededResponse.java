@@ -28,39 +28,38 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.notification;
+package org.thingsboard.server.exception;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import io.swagger.v3.oas.annotations.media.Schema;
+import org.springframework.http.HttpStatus;
+import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 
-@AllArgsConstructor
-@NoArgsConstructor
-public enum NotificationType {
+@Schema
+public class ThingsboardEntitiesLimitExceededResponse extends ThingsboardErrorResponse {
 
-    GENERAL,
-    ALARM,
-    DEVICE_ACTIVITY,
-    ENTITY_ACTION,
-    ALARM_COMMENT,
-    RULE_ENGINE_COMPONENT_LIFECYCLE_EVENT,
-    ALARM_ASSIGNMENT,
-    NEW_PLATFORM_VERSION,
-    ENTITIES_LIMIT,
-    ENTITIES_LIMIT_INCREASE_REQUEST(true),
-    API_USAGE_LIMIT,
-    RULE_NODE,
-    INTEGRATION_LIFECYCLE_EVENT,
-    RATE_LIMITS,
-    EDGE_CONNECTION,
-    EDGE_COMMUNICATION_FAILURE,
-    TASK_PROCESSING_FAILURE,
-    RESOURCES_SHORTAGE,
-    USER_ACTIVATED(true),
-    USER_REGISTERED(true),
-    REPORT_GENERATED;
+    private final EntityType entityType;
 
-    @Getter
-    private boolean system;
+    private final Long limit;
+
+    protected ThingsboardEntitiesLimitExceededResponse(String message, EntityType entityType, Long limit) {
+        super(message, ThingsboardErrorCode.ENTITIES_LIMIT_EXCEEDED, HttpStatus.FORBIDDEN);
+        this.entityType = entityType;
+        this.limit = limit;
+    }
+
+    public static ThingsboardEntitiesLimitExceededResponse of(final String message, final EntityType entityType, final Long limit) {
+        return new ThingsboardEntitiesLimitExceededResponse(message, entityType, limit);
+    }
+
+    @Schema(description = "Entity type", accessMode = Schema.AccessMode.READ_ONLY)
+    public EntityType getEntityType() {
+        return entityType;
+    }
+
+    @Schema(description = "Limit", accessMode = Schema.AccessMode.READ_ONLY)
+    public Long getLimit() {
+        return limit;
+    }
 
 }

@@ -28,23 +28,38 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.exception;
+package org.thingsboard.server.common.data.notification.info;
 
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.EntityType;
-import org.thingsboard.server.common.data.id.TenantId;
 
-public class EntitiesLimitException extends DataValidationException {
-    private static final long serialVersionUID = -9211462514373279196L;
+import java.util.Map;
 
-    @Getter
-    private final TenantId tenantId;
-    @Getter
-    private final EntityType entityType;
+import static org.thingsboard.server.common.data.util.CollectionsUtil.mapOf;
 
-    public EntitiesLimitException(TenantId tenantId, EntityType entityType) {
-        super(entityType.getNormalName() + "s limit reached");
-        this.tenantId = tenantId;
-        this.entityType = entityType;
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class EntitiesLimitIncreaseRequestNotificationInfo implements NotificationInfo {
+
+    private EntityType entityType;
+    private String userEmail;
+    private String increaseLimitActionLabel;
+    private String increaseLimitLink;
+    private String baseUrl;
+
+    @Override
+    public Map<String, String> getTemplateData() {
+        return mapOf(
+                "entityType", entityType.getNormalName(),
+                "userEmail", userEmail,
+                "increaseLimitActionLabel", increaseLimitActionLabel,
+                "increaseLimitLink", increaseLimitLink,
+                "baseUrl", baseUrl
+        );
     }
 }

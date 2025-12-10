@@ -52,6 +52,11 @@ import {
 } from '@shared/components/dialog/error-alert-dialog.component';
 import { TodoDialogComponent } from '@shared/components/dialog/todo-dialog.component';
 import { ProgressDialogComponent, ProgressDialogData } from '@shared/components/dialog/progress-dialog.component';
+import { EntityType } from '@shared/models/entity-type.models';
+import {
+  EntityLimitExceededDialogComponent,
+  EntityLimitExceededDialogData
+} from '@shared/components/dialog/entity-limit-exceeded-dialog.component';
 
 @Injectable({
   providedIn: 'root'
@@ -139,6 +144,16 @@ export class DialogService {
           icon,
           iconClearButton
         },
+        autoFocus: false
+      }).afterClosed();
+  }
+
+  entitiesLimitExceeded(entityLimitData: {entityType: EntityType, limit: number}): Observable<any> {
+    return this.dialog.open<EntityLimitExceededDialogComponent, EntityLimitExceededDialogData>(EntityLimitExceededDialogComponent,
+      {
+        disableClose: true,
+        panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+        data: entityLimitData,
         autoFocus: false
       }).afterClosed();
   }
