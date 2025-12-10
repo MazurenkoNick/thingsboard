@@ -136,11 +136,7 @@ export class LicenseManagementComponent extends PageComponent implements OnInit 
           licensePortalUrl: this.createManageSubscriptionUrl(items)
         }
       }).afterClosed().subscribe(
-        refresh => {
-          if (refresh) {
-            this.refreshLicenseInfo();
-          }
-        }
+        () => this.refreshLicenseInfo()
       );
   }
 

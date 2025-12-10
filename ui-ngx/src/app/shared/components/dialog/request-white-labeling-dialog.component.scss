@@ -28,8 +28,19 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
+@import '../../../../scss/constants';
+
 .request-feature-dialog {
   &.request-white-labeling-dialog {
+
+    @media #{$mat-gt-sm} {
+      max-width: 900px;
+    }
+
+    @media #{$mat-gt-xs} {
+      max-height: 80vh;
+    }
+
     position: relative;
     .close-btn {
       position: absolute;
@@ -51,6 +62,29 @@
     }
     .request-feature-text {
       text-align: center;
+    }
+    .request-feature-cards {
+      @media #{$mat-lt-md} {
+        flex-direction: column;
+        flex-wrap: nowrap;
+      }
+      .request-feature-card {
+        @media #{$mat-lt-md} {
+          flex: 0;
+          width: 100%;
+        }
+        .feature-title {
+          .feature-title-text {
+            white-space: nowrap;
+          }
+          .feature-title-hint {
+            display: none;
+          }
+        }
+        .feature-text {
+          display: block;
+        }
+      }
     }
   }
 }
