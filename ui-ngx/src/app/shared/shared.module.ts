@@ -285,6 +285,7 @@ import { PasswordRequirementsTooltipComponent } from '@shared/components/passwor
 import { TbCurrencyPipe } from '@shared/pipe/currency.pipe';
 import { RequestEdgeDialogComponent } from '@shared/components/dialog/request-edge-dialog.component';
 import { DynamicMatDialogModule } from '@shared/components/dialog/dynamic/dynamic-dialog.module';
+import { RequestWhiteLabelingDialogComponent } from '@shared/components/dialog/request-white-labeling-dialog.component';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -440,6 +441,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     EntityLimitDialogComponent,
     EntityLimitExceededDialogComponent,
     RequestEdgeDialogComponent,
+    RequestWhiteLabelingDialogComponent,
     ColorInputComponent,
     MaterialIconSelectComponent,
     NodeScriptTestDialogComponent,
@@ -743,6 +745,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     EntityLimitDialogComponent,
     EntityLimitExceededDialogComponent,
     RequestEdgeDialogComponent,
+    RequestWhiteLabelingDialogComponent,
     ColorInputComponent,
     MaterialIconSelectComponent,
     NodeScriptTestDialogComponent,

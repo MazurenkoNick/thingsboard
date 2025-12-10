@@ -75,6 +75,7 @@ import {
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { getCurrentAuthState } from '@core/auth/auth.selectors';
+import { RequestWhiteLabelingDialogComponent } from '@shared/components/dialog/request-white-labeling-dialog.component';
 
 @Injectable({
   providedIn: 'root'
@@ -215,11 +216,20 @@ export class DialogService {
   }
 
   whiteLabelingFeature(): Observable<any> {
-    return this.dialog.open<WhiteLabelingFeatureDialogComponent>(WhiteLabelingFeatureDialogComponent,
-      {
-        disableClose: true,
-        panelClass: ['tb-dialog', 'tb-fullscreen-dialog', 'tb-fullscreen-dialog-gt-sm'],
-      }).afterClosed();
+    if (getCurrentAuthState(this.store).licenseVersion > 1) {
+      return this.dialog.open<RequestWhiteLabelingDialogComponent>(RequestWhiteLabelingDialogComponent,
+        {
+          disableClose: true,
+          autoFocus: false,
+          panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+        }).afterClosed();
+    } else {
+      return this.dialog.open<WhiteLabelingFeatureDialogComponent>(WhiteLabelingFeatureDialogComponent,
+        {
+          disableClose: true,
+          panelClass: ['tb-dialog', 'tb-fullscreen-dialog', 'tb-fullscreen-dialog-gt-sm'],
+        }).afterClosed();
+    }
   }
 
   unsupportedSolutionTemplateLevel(error: SubscriptionErrorData): Observable<any> {
