@@ -1,0 +1,54 @@
+{
+  "reprocessingOrder": 0,
+  "type": "ENTITY_AGGREGATION",
+  "name": "Calculate Daily Consumption",
+  "entityId": {
+    "entityType": "DEVICE_PROFILE",
+    "id": "58183d7e-4b7a-4ad6-a476-5d6c6571174c"
+  },
+  "debugSettings": {
+    "failuresEnabled": true,
+    "allEnabled": false,
+    "allEnabledUntil": 0
+  },
+  "configurationVersion": 0,
+  "configuration": {
+    "type": "ENTITY_AGGREGATION",
+    "arguments": {
+      "meterReadingDelta": {
+        "refEntityKey": {
+          "key": "meterReadingDelta",
+          "type": "TS_LATEST"
+        },
+        "defaultValue": ""
+      }
+    },
+    "metrics": {
+      "dailyConsumption": {
+        "function": "SUM",
+        "input": {
+          "type": "key",
+          "key": "meterReadingDelta"
+        }
+      }
+    },
+    "interval": {
+      "type": "DAY",
+      "tz": "UTC"
+    },
+    "watermark": null,
+    "produceIntermediateResult": true,
+    "output": {
+      "type": "TIME_SERIES",
+      "strategy": {
+        "type": "IMMEDIATE",
+        "ttl": 0,
+        "saveTimeSeries": true,
+        "saveLatest": true,
+        "sendWsUpdate": true,
+        "processCfs": true
+      },
+      "decimalsByDefault": 2
+    }
+  }
+}

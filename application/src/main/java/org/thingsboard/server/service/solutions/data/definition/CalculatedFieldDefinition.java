@@ -36,12 +36,15 @@ import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 
+import java.util.Map;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class CalculatedFieldDefinition extends CalculatedField {
 
-    private int reprocessingOrder;
+    private Integer reprocessingOrder;
+    private Map<Integer, String> orderedReprocessingEntities;
 
     @Override
     public EntityType getEntityType() {

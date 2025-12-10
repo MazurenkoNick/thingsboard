@@ -1,0 +1,39 @@
+{
+  "type": "PROPAGATION",
+  "name": "Calculate water consumption and save on Field",
+  "entityId": {
+    "entityType": "DEVICE_PROFILE",
+    "id": "190454f3-0d03-4cc9-904a-7d18f5673504"
+  },
+  "debugSettings": {
+    "failuresEnabled": true,
+    "allEnabled": false,
+    "allEnabledUntil": 0
+  },
+  "configurationVersion": 0,
+  "configuration": {
+    "type": "PROPAGATION",
+    "arguments": {
+      "pulseCounter": {
+        "refEntityKey": {
+          "key": "pulseCounter",
+          "type": "TS_ROLLING"
+        },
+        "limit": 2,
+        "timeWindow": 3600
+      }
+    },
+    "expression": "var waterConsumption = 0;\n\nif (pulseCounter.values.size() == 1) {\n    waterConsumption = pulseCounter[0].value;\n} else if (pulseCounter.values.size() >= 2) {\n    waterConsumption = pulseCounter.values[1].value - pulseCounter.values[0].value;\n}\n\nreturn {\n    ts: ctx.latestTs,\n    values: {\n        \"waterConsumption\": waterConsumption\n    }\n}",
+    "output": {
+      "type": "TIME_SERIES",
+      "strategy": {
+        "type": "RULE_CHAIN"
+      }
+    },
+    "relation": {
+      "direction": "TO",
+      "relationType": "FieldToWaterMeter"
+    },
+    "applyExpressionToResolvedArguments": true
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "reprocessingOrder": 7,
+  "type": "RELATED_ENTITIES_AGGREGATION",
+  "name": "Calculate Weekly Consumption",
+  "entityId": {
+    "entityType": "ASSET",
+    "id": "90bd76d0-e2a3-4f5b-b85e-cd59386f2f44"
+  },
+  "debugSettings": {
+    "failuresEnabled": true,
+    "allEnabled": false,
+    "allEnabledUntil": 0
+  },
+  "configurationVersion": 0,
+  "configuration": {
+    "type": "RELATED_ENTITIES_AGGREGATION",
+    "relation": {
+      "direction": "FROM",
+      "relationType": "Contains"
+    },
+    "arguments": {
+      "weeklyConsumption": {
+        "refEntityKey": {
+          "key": "weeklyConsumption",
+          "type": "TS_LATEST"
+        },
+        "defaultValue": "0"
+      }
+    },
+    "deduplicationIntervalInSec": 10,
+    "metrics": {
+      "weeklyConsumption": {
+        "function": "SUM",
+        "input": {
+          "type": "key",
+          "key": "weeklyConsumption"
+        }
+      }
+    },
+    "output": {
+      "type": "TIME_SERIES",
+      "strategy": {
+        "type": "IMMEDIATE",
+        "ttl": 0,
+        "saveTimeSeries": false,
+        "saveLatest": false,
+        "sendWsUpdate": false,
+        "processCfs": true
+      },
+      "decimalsByDefault": 2
+    },
+    "useLatestTs": true,
+    "scheduledUpdateInterval": 60,
+    "scheduledUpdateEnabled": true
+  }
+}
