@@ -152,7 +152,10 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         }
 
         TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
-        if (trendzSettings == null || trendzSettings.synchronizationResult() == null) {
+        if (trendzSettings == null
+            || trendzSettings.synchronizationResult() == null
+            || trendzSettings.synchronizationResult().status() == TrendzSynchronizationStatus.NOT_AVAILABLE
+        ) {
             return new TrendzHealthcheckResult(
                     null,
                     TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED,
