@@ -42,6 +42,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.thingsboard.rule.engine.api.TimeseriesSaveRequest.Strategy;
 import org.thingsboard.server.actors.ActorSystemContext;
+import org.thingsboard.server.actors.calculatedField.MultipleTbCallback;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.EntityType;
@@ -288,8 +289,30 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
     private Future<Void> saveResult(CFReprocessingCtx ctx, CalculatedFieldResult calculatedFieldResult, long ts, Strategy strategy) {
         JsonElement result = JsonParser.parseString(Objects.requireNonNull(calculatedFieldResult.stringValue()));
         log.trace("[{}][{}] Saving CF result: {}", ctx.getTenantId(), ctx.getEntityId(), result);
+        if (calculatedFieldResult instanceof PropagationCalculatedFieldResult propagationResult) {
+            return handlePropagationResult(ctx, ts, strategy, propagationResult, result);
+        }
         SettableFuture<Void> future = SettableFuture.create();
         saveTimeSeries(ctx.getTenantId(), ctx.getEntityId(), result, ts, strategy, TbCallback.wrap(future));
+        return future;
+    }
+
+    private Future<Void> handlePropagationResult(CFReprocessingCtx ctx, long ts, Strategy strategy, PropagationCalculatedFieldResult propagationResult, JsonElement result) {
+        List<EntityId> propagationEntityIds = propagationResult.getEntityIds();
+        if (propagationEntityIds.isEmpty()) {
+            return Futures.immediateVoidFuture();
+        }
+        if (propagationEntityIds.size() == 1) {
+            EntityId propagationEntityId = propagationEntityIds.get(0);
+            SettableFuture<Void> future = SettableFuture.create();
+            saveTimeSeries(ctx.getTenantId(), propagationEntityId, result, ts, strategy, TbCallback.wrap(future));
+            return future;
+        }
+        SettableFuture<Void> future = SettableFuture.create();
+        MultipleTbCallback multipleTbCallback = new MultipleTbCallback(propagationEntityIds.size(), TbCallback.wrap(future));
+        for (var propagationEntityId : propagationEntityIds) {
+            saveTimeSeries(ctx.getTenantId(), propagationEntityId, result, ts, strategy, multipleTbCallback);
+        }
         return future;
     }
 
