@@ -127,6 +127,7 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
                             .licenseSecret(this.licenseSecret)
                             .licenseDataFilePath(this.instanceDataFilePath)
                             .releaseDate(releaseDate)
+                            .clusterId(licenseCtx.getClusterId())
                             .build();
                 }
                 tbLicenseClient.init();
