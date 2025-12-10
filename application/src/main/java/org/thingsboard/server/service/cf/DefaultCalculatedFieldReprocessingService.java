@@ -33,8 +33,6 @@ package org.thingsboard.server.service.cf;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +40,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.thingsboard.rule.engine.api.TimeseriesSaveRequest.Strategy;
 import org.thingsboard.server.actors.ActorSystemContext;
-import org.thingsboard.server.actors.calculatedField.MultipleTbCallback;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.EntityType;
@@ -90,7 +87,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.Set;
@@ -287,31 +283,14 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
     }
 
     private Future<Void> saveResult(CFReprocessingCtx ctx, CalculatedFieldResult calculatedFieldResult, long ts, Strategy strategy) {
-        JsonElement result = JsonParser.parseString(Objects.requireNonNull(calculatedFieldResult.stringValue()));
-        log.trace("[{}][{}] Saving CF result: {}", ctx.getTenantId(), ctx.getEntityId(), result);
+        SettableFuture<Void> future = SettableFuture.create();
         if (calculatedFieldResult instanceof PropagationCalculatedFieldResult propagationResult) {
-            return handlePropagationResult(ctx, ts, strategy, propagationResult, result);
-        }
-        SettableFuture<Void> future = SettableFuture.create();
-        saveTimeSeries(ctx.getTenantId(), ctx.getEntityId(), result, ts, strategy, TbCallback.wrap(future));
-        return future;
-    }
-
-    private Future<Void> handlePropagationResult(CFReprocessingCtx ctx, long ts, Strategy strategy, PropagationCalculatedFieldResult propagationResult, JsonElement result) {
-        List<EntityId> propagationEntityIds = propagationResult.getEntityIds();
-        if (propagationEntityIds.isEmpty()) {
-            return Futures.immediateVoidFuture();
-        }
-        if (propagationEntityIds.size() == 1) {
-            EntityId propagationEntityId = propagationEntityIds.get(0);
-            SettableFuture<Void> future = SettableFuture.create();
-            saveTimeSeries(ctx.getTenantId(), propagationEntityId, result, ts, strategy, TbCallback.wrap(future));
-            return future;
-        }
-        SettableFuture<Void> future = SettableFuture.create();
-        MultipleTbCallback multipleTbCallback = new MultipleTbCallback(propagationEntityIds.size(), TbCallback.wrap(future));
-        for (var propagationEntityId : propagationEntityIds) {
-            saveTimeSeries(ctx.getTenantId(), propagationEntityId, result, ts, strategy, multipleTbCallback);
+            TbCallback rootCallback = TbCallback.wrap(future);
+            handlePropagationResults(propagationResult, rootCallback,
+                    (entityId, res, cb) ->
+                            saveReprocessingTimeSeriesResult(ctx.getTenantId(), entityId, res.toJsonElement(), ts, strategy, cb));
+        } else {
+            saveReprocessingTimeSeriesResult(ctx.getTenantId(), ctx.getEntityId(), calculatedFieldResult.toJsonElement(), ts, strategy, TbCallback.wrap(future));
         }
         return future;
     }

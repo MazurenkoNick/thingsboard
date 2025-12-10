@@ -528,7 +528,8 @@ public abstract class AbstractCalculatedFieldProcessingService {
         }
     }
 
-    protected void saveTimeSeries(TenantId tenantId, EntityId entityId, JsonElement jsonResult, long ts, TimeseriesSaveRequest.Strategy strategy, TbCallback callback) {
+    protected void saveReprocessingTimeSeriesResult(TenantId tenantId, EntityId entityId, JsonElement jsonResult, long ts, TimeseriesSaveRequest.Strategy strategy, TbCallback callback) {
+        log.trace("[{}][{}] Saving CF reprocessing result: {}", tenantId, entityId, jsonResult);
         saveTimeSeriesInternal(tenantId, entityId, jsonResult, null, null, ts, strategy, callback);
     }
 
