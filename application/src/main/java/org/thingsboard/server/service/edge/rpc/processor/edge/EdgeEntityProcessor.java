@@ -82,7 +82,7 @@ public class EdgeEntityProcessor extends BaseEdgeProcessor {
         if (EdgeEventActionType.CHANGE_OWNER.equals(edgeEvent.getAction())) {
             Edge edge = edgeCtx.getEdgeService().findEdgeById(edgeEvent.getTenantId(), edgeId);
             if (edge != null) {
-                EdgeConfiguration edgeConfigMsg = EdgeMsgConstructorUtils.constructEdgeConfiguration(edge);
+                EdgeConfiguration edgeConfigMsg = EdgeMsgConstructorUtils.constructEdgeConfiguration(edge, edgeCtx.getSubscriptionService().getLicenseVersion());
                 return DownlinkMsg.newBuilder()
                         .setDownlinkMsgId(EdgeUtils.nextPositiveInt())
                         .setEdgeConfiguration(edgeConfigMsg)
