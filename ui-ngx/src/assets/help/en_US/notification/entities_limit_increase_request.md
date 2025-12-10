@@ -9,7 +9,7 @@ See the available types and parameters below:
 
 Available template parameters:
 
-* `entityType` - one of: 'Device', 'Asset', 'Customer', 'User', 'Dashboard', 'Rule chain', 'Edge';
+* `entityType` - one of: 'Device', 'Asset', 'Customer', 'User', 'Dashboard', 'Rule chain', 'Edge', 'Integration', 'Converter', 'Scheduler event';
 * `userEmail` - email of the user who sends the request;
 * `increaseLimitActionLabel` - label of the button used to open Limits Management page, for ex: 'Set new limit';
 * `increaseLimitLink` - link to the Limits Management page;
