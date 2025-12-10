@@ -3718,13 +3718,11 @@
         "type-secret-storage": "Secret storage",
         "limit-reached": "Limit reached",
         "limit-reached-text": "You have reached the limit of <b>{{ entities }}</b>. To add more, please ask your System Administrator to increase your {{ entity }} limit.",
-        "customer-limit-reached-text": "You have reached the limit of <b>{{ entities }}</b>. To add more, please ask your Tenant Administrator to increase your {{ entity }} limit.",
         "request-limit-increase": "Request limit increase",
         "request-sysadmin-text": "Are you the System Administrator?",
         "login-here": "Login here",
         "to-increase-limit": "to increase limit.",
         "increase-limit-request-sent-title": "We have sent an automated request to your System Administrator to increase the limit",
-        "customer-increase-limit-request-sent-title": "We have sent an automated request to your Tenant Administrator to increase the limit",
         "increase-limit-request-sent-text": "Please allow some time for them to review the request and update the settings. You may need to refresh this page to see the changes."
     },
     "entity-group": {
