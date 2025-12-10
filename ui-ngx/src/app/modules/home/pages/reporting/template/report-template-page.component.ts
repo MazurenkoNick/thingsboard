@@ -440,6 +440,8 @@ export class ReportTemplatePageComponent extends PageComponent
     }
     const reportDataFilters = deepClone(this.reportTemplate.configuration.filters);
     const filters = reportDataFilterListToFilters(reportDataFilters);
+    const headerComponents = this.pdfConfiguration?.header?.components ?? [];
+    const footerComponents = this.pdfConfiguration?.footer?.components ?? [];
     this.dialog.open<FiltersDialogComponent, FiltersDialogData,
       Filters>(FiltersDialogComponent, {
       disableClose: true,
@@ -448,7 +450,13 @@ export class ReportTemplatePageComponent extends PageComponent
         filters,
         disableUserEdit: true,
         widgets: [],
-        isSingleFilter: false
+        isSingleFilter: false,
+        reportMode: true,
+        reportComponents: [
+          ...headerComponents,
+          ...this.reportTemplate.configuration.components,
+          ...footerComponents
+        ]
       }
     }).afterClosed().subscribe((filters) => {
       if (filters) {
@@ -527,6 +535,8 @@ export class ReportTemplatePageComponent extends PageComponent
     }
     const entityAliasesList = deepClone(this.reportTemplate.configuration.entityAliases);
     const entityAliases = entityAliasesListToAliases(entityAliasesList);
+    const headerComponents = this.pdfConfiguration?.header?.components ?? [];
+    const footerComponents = this.pdfConfiguration?.footer?.components ?? [];
     this.dialog.open<EntityAliasesDialogComponent, EntityAliasesDialogData,
       EntityAliases>(EntityAliasesDialogComponent, {
       disableClose: true,
@@ -537,7 +547,12 @@ export class ReportTemplatePageComponent extends PageComponent
         disableResolveMultiple: true,
         isSingleEntityAlias: false,
         reportMode: true,
-        subReport: this.subReport
+        subReport: this.subReport,
+        reportComponents: [
+          ...headerComponents,
+          ...this.reportTemplate.configuration.components,
+          ...footerComponents
+        ]
       }
     }).afterClosed().subscribe((entityAliases) => {
       if (entityAliases) {
