@@ -277,6 +277,7 @@ import { ReportTemplateAutocompleteComponent } from '@shared/components/report/r
 import { FormRowDirective } from '@shared/directives/form-row.directive';
 import { TimeUnitInputComponent } from '@shared/components/time-unit-input.component';
 import { DateExpirationPipe } from '@shared/pipe/date-expiration.pipe';
+import { EntityLimitExceededDialogComponent } from '@shared/components/dialog/entity-limit-exceeded-dialog.component';
 import { PasswordRequirementsTooltipComponent } from '@shared/components/password-requirements-tooltip.component';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
@@ -428,6 +429,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     TodoDialogComponent,
     ColorPickerDialogComponent,
     MaterialIconsDialogComponent,
+    EntityLimitExceededDialogComponent,
     ColorInputComponent,
     MaterialIconSelectComponent,
     NodeScriptTestDialogComponent,
@@ -724,6 +726,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     TodoDialogComponent,
     ColorPickerDialogComponent,
     MaterialIconsDialogComponent,
+    EntityLimitExceededDialogComponent,
     ColorInputComponent,
     MaterialIconSelectComponent,
     NodeScriptTestDialogComponent,

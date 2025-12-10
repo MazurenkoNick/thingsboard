@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.service.secret;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -71,15 +70,18 @@ public class DefaultSecretConfigurationService implements SecretConfigurationSer
     @Override
     public String replaceSecretUsage(TenantId tenantId, String value) {
         Matcher matcher = SECRET_PATTERN.matcher(value);
-        if (matcher.find()) {
+        StringBuilder result = new StringBuilder();
+        while (matcher.find()) {
             String name = matcher.group(1);
             Secret secret = secretService.findSecretByName(tenantId, name);
-            if (secret == null) {
-                return "";
+            String replacement = "";
+            if (secret != null) {
+                replacement = encryptionService.decryptToString(tenantId, secret.getType(), secret.getEncryptedValue());
             }
-            return encryptionService.decryptToString(tenantId, secret.getType(), secret.getEncryptedValue());
+            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
         }
-        return value;
+        matcher.appendTail(result);
+        return result.toString();
     }
 
     private JsonNode replaceAllSecretUsages(TenantId tenantId, JsonNode config) {

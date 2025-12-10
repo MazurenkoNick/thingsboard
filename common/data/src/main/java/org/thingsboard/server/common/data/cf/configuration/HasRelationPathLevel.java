@@ -28,23 +28,12 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.exception;
+package org.thingsboard.server.common.data.cf.configuration;
 
-import lombok.Getter;
-import org.thingsboard.server.common.data.EntityType;
-import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.relation.RelationPathLevel;
 
-public class EntitiesLimitException extends DataValidationException {
-    private static final long serialVersionUID = -9211462514373279196L;
+public interface HasRelationPathLevel {
 
-    @Getter
-    private final TenantId tenantId;
-    @Getter
-    private final EntityType entityType;
+    RelationPathLevel getRelation();
 
-    public EntitiesLimitException(TenantId tenantId, EntityType entityType) {
-        super(entityType.getNormalName() + "s limit reached");
-        this.tenantId = tenantId;
-        this.entityType = entityType;
-    }
 }

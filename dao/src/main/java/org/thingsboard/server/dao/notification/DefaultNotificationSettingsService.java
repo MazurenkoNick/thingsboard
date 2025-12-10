@@ -181,6 +181,7 @@ public class DefaultNotificationSettingsService implements NotificationSettingsS
 
             defaultNotifications.create(tenantId, DefaultNotifications.entitiesLimitForSysadmin, sysAdmins.getId());
             defaultNotifications.create(tenantId, DefaultNotifications.entitiesLimitForTenant, affectedTenantAdmins.getId());
+            defaultNotifications.create(tenantId, DefaultNotifications.entitiesLimitIncreaseRequest, sysAdmins.getId());
             defaultNotifications.create(tenantId, DefaultNotifications.apiFeatureWarningForSysadmin, sysAdmins.getId());
             defaultNotifications.create(tenantId, DefaultNotifications.apiFeatureWarningForTenant, affectedTenantAdmins.getId());
             defaultNotifications.create(tenantId, DefaultNotifications.apiFeatureDisabledForSysadmin, sysAdmins.getId());
@@ -230,6 +231,9 @@ public class DefaultNotificationSettingsService implements NotificationSettingsS
             }
             if (!isNotificationConfigured(tenantId, NotificationType.RESOURCES_SHORTAGE)) {
                 defaultNotifications.create(tenantId, DefaultNotifications.resourcesShortage, sysAdmins.getId());
+            }
+            if (!isNotificationConfigured(tenantId, NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST)) {
+                defaultNotifications.create(tenantId, DefaultNotifications.entitiesLimitIncreaseRequest, sysAdmins.getId());
             }
         } else {
             NotificationTarget tenantAdmins = notificationTargetService.findNotificationTargetsByTenantIdAndUsersFilterType(tenantId, UsersFilterType.TENANT_ADMINISTRATORS)

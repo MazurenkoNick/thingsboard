@@ -132,6 +132,8 @@ public interface UserDao extends Dao<User>, TenantEntityDao<User> {
      */
     ListenableFuture<List<User>> findUsersByTenantIdAndIdsAsync(UUID tenantId, List<UUID> userIds);
 
+    List<User> findUsersByTenantIdAndIds(UUID tenantId, List<UUID> userIds);
+
     PageData<User> findUsersByEntityGroupId(UUID groupId, PageLink pageLink);
 
     PageData<User> findUsersByEntityGroupIds(List<UUID> groupIds, PageLink pageLink);

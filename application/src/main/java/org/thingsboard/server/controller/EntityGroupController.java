@@ -997,7 +997,7 @@ public class EntityGroupController extends AutoCommitController {
                     for (EntityId ownerId : ownerIds) {
                         customerIds.add(new CustomerId(ownerId.getId()));
                     }
-                    owners.addAll(customerService.findCustomersByTenantIdAndIdsAsync(getTenantId(), customerIds).get()
+                    owners.addAll(customerService.findCustomersByTenantIdAndIds(getTenantId(), customerIds)
                             .stream().filter(customer -> !customer.isPublic()).toList());
                 }
             }

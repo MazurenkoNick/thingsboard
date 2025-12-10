@@ -52,6 +52,8 @@ public interface TenantDao extends Dao<Tenant> {
 
     ListenableFuture<List<Tenant>> findTenantsByIdsAsync(UUID tenantId, List<UUID> tenantIds);
 
+    List<Tenant> findTenantsByIds(UUID tenantId, List<UUID> tenantIds);
+
     PageData<TenantInfo> findTenantInfos(TenantId tenantId, PageLink pageLink);
 
     PageData<TenantId> findTenantsIds(PageLink pageLink);

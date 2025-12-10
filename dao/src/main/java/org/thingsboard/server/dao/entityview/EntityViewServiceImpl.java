@@ -236,6 +236,12 @@ public class EntityViewServiceImpl extends CachedVersionedEntityService<EntityVi
     }
 
     @Override
+    public List<EntityView> findEntityViewsByTenantIdAndIds(TenantId tenantId, List<EntityViewId> entityViewIds) {
+        log.trace("Executing findEntityViewsByTenantIdAndIds, tenantId [{}], entityViewIds [{}]", tenantId, entityViewIds);
+        return entityViewDao.findEntityViewsByTenantIdAndIds(tenantId.getId(), toUUIDs(entityViewIds));
+    }
+
+    @Override
     public PageData<EntityView> findEntityViewsByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId,
                                                                        PageLink pageLink) {
         log.trace("Executing findEntityViewByTenantIdAndCustomerId, tenantId [{}], customerId [{}]," +

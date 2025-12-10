@@ -33,7 +33,7 @@
 <div class="tb-alarm-rule-condition flex flex-col gap-4 min-w-0" [formGroup]="alarmRuleConditionFormGroup">
   <div class="tb-form-row column-xs">
     <div class="min-w-40 xs:min-w-fit">{{ 'alarm-rule.condition' | translate }}</div>
-    <button type="button"
+    <button type="button" [disabled]="disabled"
             class="tb-alarm-rule-condition-button"
             mat-stroked-button [color]="conditionSet() && this.filtersArgumentsValid ? 'primary' : 'warn'"
             (click)="openFilterDialog($event)">
@@ -45,7 +45,7 @@
                                    [nowrap]="true"
                                    [specText]="specText"
                                    required
-                                   addFilterPrompt="{{ (isClearCondition ? 'alarm-rule.enter-alarm-rule-clear-condition-prompt' :'alarm-rule.enter-alarm-rule-condition-prompt') | translate }}">
+                                   addFilterPrompt="{{ 'alarm-rule.enter-alarm-rule-condition-prompt' | translate }}">
         </tb-alarm-rule-filter-text>
         <mat-icon [color]="disabled ? '' : (conditionSet() && this.filtersArgumentsValid ? 'primary' : 'warn')"
                   class="tb-mat-20 tb-alarm-rule-schedule-edit-icon">

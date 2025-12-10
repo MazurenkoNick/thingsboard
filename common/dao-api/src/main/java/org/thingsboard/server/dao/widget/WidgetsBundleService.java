@@ -68,6 +68,8 @@ public interface WidgetsBundleService extends EntityDaoService {
 
     ListenableFuture<List<WidgetsBundle>> findAllTenantWidgetsBundlesByIdsAsync(TenantId tenantId, List<WidgetsBundleId> widgetsBundleIds);
 
+    List<WidgetsBundle> findSystemOrTenantWidgetsBundlesByIds(TenantId tenantId, List<WidgetsBundleId> widgetsBundleIds);
+
     void deleteWidgetsBundlesByTenantId(TenantId tenantId);
 
     void updateSystemWidgets(Stream<String> bundles, Stream<String> widgets);

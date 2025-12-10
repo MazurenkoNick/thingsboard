@@ -422,6 +422,12 @@ public class BaseRuleChainService extends AbstractEntityService implements RuleC
     }
 
     @Override
+    public List<RuleChain> findRuleChainsByIds(TenantId tenantId, List<RuleChainId> ruleChainIds) {
+        log.trace("Executing findRuleChainsByIds, tenantId [{}], ruleChainIds [{}]", tenantId, ruleChainIds);
+        return ruleChainDao.findRuleChainsByTenantIdAndIds(tenantId.getId(), toUUIDs(ruleChainIds));
+    }
+
+    @Override
     public ListenableFuture<RuleNode> findRuleNodeByIdAsync(TenantId tenantId, RuleNodeId ruleNodeId) {
         Validator.validateId(ruleNodeId, "Incorrect rule node id for search request.");
         return ruleNodeDao.findByIdAsync(tenantId, ruleNodeId.getId());
@@ -897,7 +903,6 @@ public class BaseRuleChainService extends AbstractEntityService implements RuleC
             deleteRuleNode(tenantId, relation.getTo());
         }
     }
-
 
     @Override
     public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {
