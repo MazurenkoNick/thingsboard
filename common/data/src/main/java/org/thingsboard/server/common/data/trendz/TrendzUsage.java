@@ -28,47 +28,28 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.trendz;
+package org.thingsboard.server.common.data.trendz;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.thingsboard.server.common.data.User;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.trendz.TrendzSummary;
-import org.thingsboard.server.common.data.trendz.TrendzUsage;
-import org.thingsboard.server.common.data.trendz.TrendzViewConfig;
-import org.thingsboard.server.common.data.trendz.TrendzViewConfigLite;
-import org.thingsboard.server.dao.trendz.TrendzApiService;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.UUID;
+public record TrendzUsage(
+        @JsonProperty("used") boolean used,
 
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class DefaultTrendzApiService implements TrendzApiService {
-    private final TrendzClient trendzClient;
+        @JsonProperty("anomalyUsage") Entity anomalyUsage,
+        @JsonProperty("predictionUsage") Entity predictionUsage,
+        @JsonProperty("calculationUsage") Entity calculationUsage,
+        @JsonProperty("viewUsage") SimpleEntity viewUsage,
+        @JsonProperty("metricUsage") SimpleEntity metricUsage,
+        @JsonProperty("chatUsage") SimpleEntity chatUsage
+) {
+    public record Entity(
+            @JsonProperty("used") boolean used,
+            @JsonProperty("activeCount") long activeCount,
+            @JsonProperty("totalCount") long totalCount
+    ) { }
 
-    @Override
-    public TrendzViewConfig getViewById(User user, UUID viewId) throws ThingsboardException {
-        return trendzClient.getTrendzViewById(viewId, user);
-    }
-
-    @Override
-    public PageData<TrendzViewConfigLite> getAllViews(User user, PageLink pageLink) throws ThingsboardException {
-        return trendzClient.getAllTrendzViews(pageLink, user)
-                .toPageData();
-    }
-
-    @Override
-    public TrendzSummary getTrendzSummary(User user) throws ThingsboardException {
-        return trendzClient.getTrendzSummary(user);
-    }
-
-    @Override
-    public TrendzUsage getTrendzUsage(User user) throws ThingsboardException {
-        return trendzClient.getTrendzUsage(user);
-    }
+    public record SimpleEntity(
+            @JsonProperty("used") boolean used,
+            @JsonProperty("totalCount") long totalCount
+    ) { }
 }

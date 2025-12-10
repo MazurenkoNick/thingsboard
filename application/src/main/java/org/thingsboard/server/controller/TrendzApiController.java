@@ -44,6 +44,7 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.trendz.TrendzSummary;
+import org.thingsboard.server.common.data.trendz.TrendzUsage;
 import org.thingsboard.server.common.data.trendz.TrendzViewConfig;
 import org.thingsboard.server.common.data.trendz.TrendzViewConfigLite;
 import org.thingsboard.server.config.annotations.ApiOperation;
@@ -57,6 +58,7 @@ import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.TRENDZ_ENDPOINT_AVAILABILITY_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.TRENDZ_VIEW_ID_PARAM_DESCRIPTION;
@@ -97,7 +99,7 @@ public class TrendzApiController extends BaseController {
     @ApiOperation(value = "Get Trendz View by Id (getTrendzViewById)",
             notes = "Fetch the Trendz View object based on the provided Trendz View Id. " +
                     TRENDZ_ENDPOINT_AVAILABILITY_DESCRIPTION + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
-    @GetMapping(value = "/view/{viewId}")
+    @GetMapping("/view/{viewId}")
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     public TrendzViewConfig getTrendzViewById(
             @Parameter(description = TRENDZ_VIEW_ID_PARAM_DESCRIPTION)
@@ -112,10 +114,20 @@ public class TrendzApiController extends BaseController {
     @ApiOperation(value = "Get Trendz Summary (getTrendzSummary)",
             notes = "Fetch the Trendz summary object. " +
                     TRENDZ_ENDPOINT_AVAILABILITY_DESCRIPTION + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
-    @GetMapping(value = "/summary")
+    @GetMapping("/summary")
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     public TrendzSummary getTrendzSummary() throws ThingsboardException {
         User user = getCurrentUser();
         return trendzApiService.getTrendzSummary(user);
+    }
+
+    @ApiOperation(value = "Get Trendz Usage (getTrendzUsage)",
+            notes = "Fetch the Trendz usage object. " +
+                    TRENDZ_ENDPOINT_AVAILABILITY_DESCRIPTION + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
+    @GetMapping("/usage")
+    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    public TrendzUsage getTrendzUsage() throws ThingsboardException {
+        User user = getCurrentUser();
+        return trendzApiService.getTrendzUsage(user);
     }
 }

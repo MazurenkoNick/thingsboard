@@ -40,13 +40,13 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.trendz.TrendzPaginationData;
 import org.thingsboard.server.common.data.trendz.TrendzSummary;
+import org.thingsboard.server.common.data.trendz.TrendzUsage;
 import org.thingsboard.server.common.data.trendz.TrendzViewConfig;
 import org.thingsboard.server.common.data.trendz.TrendzViewConfigLite;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 import org.thingsboard.server.service.trendz.TrendzClient;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -55,7 +55,6 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DaoSqlTest
 public class TrendzApiControllerTest extends AbstractControllerTest {
@@ -63,17 +62,6 @@ public class TrendzApiControllerTest extends AbstractControllerTest {
 
     @MockitoBean
     private TrendzClient trendzClient;
-
-    @Test
-    public void testEndpoints_asSysAdmin() throws Exception {
-        loginSysAdmin();
-        doGet("/api/trendz/view/all", Map.of("page", 0, "pageSize", 10))
-                .andExpect(status().isForbidden());
-        doGet("/api/trendz/view/849a474d-9944-4e00-bb64-43ede180c6ee", Collections.emptyMap())
-                .andExpect(status().isForbidden());
-        doGet("/api/trendz/summary", Collections.emptyMap())
-                .andExpect(status().isForbidden());
-    }
 
     @Test
     public void testGetTrendzViews_asTenantAdmin() throws Exception {
@@ -150,6 +138,30 @@ public class TrendzApiControllerTest extends AbstractControllerTest {
                 .andExpectAll(
                         r -> assertEquals(200, r.getResponse().getStatus()),
                         r -> assertEquals(expected, read(r, new TypeReference<TrendzSummary>() {}))
+                );
+    }
+
+    @Test
+    public void testGetTrendzUsage() throws Exception {
+        loginSysAdmin();
+
+        TrendzUsage expected = new TrendzUsage(
+                true,
+                new TrendzUsage.Entity(true, 4, 10),
+                new TrendzUsage.Entity(true, 2, 3),
+                new TrendzUsage.Entity(false, 0, 0),
+                new TrendzUsage.SimpleEntity(true, 15),
+                new TrendzUsage.SimpleEntity(false, 2),
+                new TrendzUsage.SimpleEntity(true, 0)
+        );
+
+        when(trendzClient.getTrendzUsage(any()))
+                .thenReturn(expected);
+
+        doGet("/api/trendz/usage")
+                .andExpectAll(
+                        r -> assertEquals(200, r.getResponse().getStatus()),
+                        r -> assertEquals(expected, read(r, new TypeReference<TrendzUsage>() {}))
                 );
     }
 

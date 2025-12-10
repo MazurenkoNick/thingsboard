@@ -35,6 +35,7 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.trendz.TrendzSummary;
+import org.thingsboard.server.common.data.trendz.TrendzUsage;
 import org.thingsboard.server.common.data.trendz.TrendzViewConfig;
 import org.thingsboard.server.common.data.trendz.TrendzViewConfigLite;
 
@@ -46,4 +47,6 @@ public interface TrendzApiService {
     PageData<TrendzViewConfigLite> getAllViews(User user, PageLink pageLink) throws ThingsboardException;
 
     TrendzSummary getTrendzSummary(User user) throws ThingsboardException;
+
+    TrendzUsage getTrendzUsage(User user) throws ThingsboardException;
 }

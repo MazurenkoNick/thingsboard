@@ -62,6 +62,7 @@ import org.thingsboard.server.common.data.trendz.TrendzSummary;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResult;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResultType;
 import org.thingsboard.server.common.data.trendz.TrendzSynchronizationStatus;
+import org.thingsboard.server.common.data.trendz.TrendzUsage;
 import org.thingsboard.server.common.data.trendz.TrendzViewConfig;
 import org.thingsboard.server.common.data.trendz.TrendzViewConfigLite;
 import org.thingsboard.server.dao.pat.ApiKeyService;
@@ -94,6 +95,7 @@ public class TrendzClient {
     public static final String TRENDZ_VIEW_CONFIGS_GET_BY_ID_URI = "/apiTrendz/view/config/%s";
 
     public static final String TRENDZ_SUMMARY_URI = "/apiTrendz/summary";
+    public static final String TRENDZ_USAGE_URI = "/apiTrendz/summary/usage";
 
     @Value("${trendz.request_timeout_ms:15000}")
     private int requestTimeoutMs;
@@ -167,6 +169,12 @@ public class TrendzClient {
         return sendTrendzRequest(HttpMethod.GET, TRENDZ_SUMMARY_URI, Collections.emptyMap(), null,
                 new ParameterizedTypeReference<>() {
                 }, user, "Get Trendz summary");
+    }
+
+    public TrendzUsage getTrendzUsage(User user) throws ThingsboardException {
+        return sendTrendzRequest(HttpMethod.GET, TRENDZ_USAGE_URI, Collections.emptyMap(), null,
+                new ParameterizedTypeReference<>() {
+                }, user, "Get Trendz usage");
     }
 
     public ResponseEntity<byte[]> sendTrendzProxyRequest(String uriPath, HttpMethod method, byte[] body, HttpHeaders headers) throws ThingsboardException {
@@ -257,9 +265,11 @@ public class TrendzClient {
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(TRENDZ_API_KEY_HEADER, trendzApiKey);
-        headers.add(TRENDZ_TENANT_ID_HEADER, user.getTenantId().getId().toString());
-        headers.add(TRENDZ_CUSTOMER_ID_HEADER, user.getCustomerId().getId().toString());
-        headers.add(TRENDZ_USER_ID_HEADER, user.getUuidId().toString());
+        if (!user.isSystemAdmin()) {
+            headers.add(TRENDZ_TENANT_ID_HEADER, user.getTenantId().getId().toString());
+            headers.add(TRENDZ_CUSTOMER_ID_HEADER, user.getCustomerId().getId().toString());
+            headers.add(TRENDZ_USER_ID_HEADER, user.getUuidId().toString());
+        }
         return headers;
     }
 
