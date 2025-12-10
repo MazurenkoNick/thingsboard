@@ -55,7 +55,6 @@ export class RequestWhiteLabelingDialogComponent extends DialogComponent<Request
 
   isSysAdmin = this.authUser.authority === Authority.SYS_ADMIN;
   isTenantAdmin = this.authUser.authority === Authority.TENANT_ADMIN;
-  isCustomerUser = this.authUser.authority === Authority.CUSTOMER_USER;
 
   constructor(protected store: Store<AppState>,
               protected router: Router,

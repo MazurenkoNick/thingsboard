@@ -68,10 +68,8 @@
   <div class="request-feature-actions">
     @if (isSysAdmin) {
       <div class="request-feature-action-text">{{ 'subscription.white-labeling-action-prototype-plan-text' | translate }}</div>
-    } @else if (isTenantAdmin) {
+    } @else {
       <div class="request-feature-action-text">{{ 'subscription.tenant-request-white-labeling-action-text' | translate }}</div>
-    } @else if (isCustomerUser) {
-      <div class="request-feature-action-text">{{ 'subscription.customer-request-white-labeling-action-text' | translate }}</div>
     }
     <div class="flex flex-row gap-2">
       @if (isSysAdmin) {
