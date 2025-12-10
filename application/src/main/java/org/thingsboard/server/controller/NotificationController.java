@@ -330,7 +330,7 @@ public class NotificationController extends BaseController {
                 NotificationTargetId notificationTargetId = sysAdmins.get().getId();
                 String baseUrl = systemSecurityService.getBaseUrl(TenantId.SYS_TENANT_ID, new CustomerId(EntityId.NULL_UUID), request);
                 String actionLabel = subscriptionViolation ? "Manage license" : "Set new limit";
-                String actionLink = subscriptionViolation ? "/license" : "/tenantProfiles/" + tenantService.findTenantById(user.getTenantId()).getTenantProfileId().toString();
+                String actionLink = subscriptionViolation ? "/license" : "/tenants/"+user.getTenantId().toString();
                 NotificationInfo info = EntitiesLimitIncreaseRequestNotificationInfo.builder()
                         .entityType(entityType)
                         .userEmail(user.getEmail())

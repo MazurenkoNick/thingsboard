@@ -39,7 +39,6 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import { DialogService } from '@core/services/dialog.service';
 import { AuthService } from '@core/auth/auth.service';
-import { TenantService } from '@core/http/tenant.service';
 import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { NotificationService } from '@core/http/notification.service';
 import { Authority } from '@shared/models/authority.enum';
@@ -70,32 +69,25 @@ export class EntityLimitExceededDialogComponent extends DialogComponent<EntityLi
               private authService: AuthService,
               private dialogs: DialogService,
               private translate: TranslateService,
-              private tenantService: TenantService,
               private notificationService: NotificationService) {
     super(store, router, dialogRef);
 
     const entitiesPlural = (this.translate.instant(entityTypeTranslations.get(data.entityType).typePlural) as string).toLowerCase();
     const entity = (this.translate.instant(entityTypeTranslations.get(data.entityType).type) as string).toLowerCase();
-
-    if (this.isCustomerUser) {
-      this.limitReachedText = this.translate.instant('entity.customer-limit-reached-text', {
-        entities: entitiesPlural,
-        entity
-      });
+    let entitiesText: string;
+    if (this.isCustomerUser || this.data.subscriptionViolation) {
+      entitiesText = entitiesPlural;
     } else {
-      let entitiesText: string;
-      if (this.data.subscriptionViolation) {
-        entitiesText = entitiesPlural;
-      } else if (data.limit > 1) {
+      if (data.limit > 1) {
         entitiesText = data.limit + ' ' + entitiesPlural;
       } else {
         entitiesText = '1 ' + entity;
       }
-      this.limitReachedText = this.translate.instant('entity.limit-reached-text', {
-        entities: entitiesText,
-        entity
-      });
     }
+    this.limitReachedText = this.translate.instant('entity.limit-reached-text', {
+      entities: entitiesText,
+      entity
+    });
   }
 
   cancel(): void {
@@ -110,7 +102,7 @@ export class EntityLimitExceededDialogComponent extends DialogComponent<EntityLi
       () => {
         this.dialogRef.close();
         this.dialogs.alert(
-          this.translate.instant(this.isCustomerUser ? 'entity.customer-increase-limit-request-sent-title' : 'entity.increase-limit-request-sent-title'),
+          this.translate.instant('entity.increase-limit-request-sent-title'),
           this.translate.instant('entity.increase-limit-request-sent-text'),
           this.translate.instant('action.close')
         );
@@ -123,12 +115,8 @@ export class EntityLimitExceededDialogComponent extends DialogComponent<EntityLi
       $event.preventDefault();
       $event.stopPropagation();
     }
-    this.tenantService.getTenant(getCurrentAuthUser(this.store).tenantId).subscribe(
-      (tenant) => {
-        this.authService.redirectUrl = `/tenantProfiles/${tenant.tenantProfileId.id}`;
-        this.authService.logout();
-      }
-    );
+    this.authService.redirectUrl = `/tenants/${getCurrentAuthUser(this.store).tenantId}`;
+    this.authService.logout();
   }
 
 }
