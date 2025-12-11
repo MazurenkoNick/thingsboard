@@ -31,7 +31,6 @@
 
 import { Component, HostBinding } from '@angular/core';
 import { AuthService } from '@core/auth/auth.service';
-import { PageComponent } from '@shared/components/page.component';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { LoginResponse } from '@shared/models/login.models';
@@ -41,11 +40,12 @@ import { first } from 'rxjs/operators';
 @Component({
   selector: 'tb-email-verified',
   templateUrl: './email-verified.component.html',
-  styleUrls: ['./email-verified.component.scss']
+  styleUrls: ['./email-verification.component.scss']
 })
-export class EmailVerifiedComponent extends PageComponent {
+export class EmailVerifiedComponent {
 
   activated: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  isLoading = true;
 
   @HostBinding('class') class = 'tb-custom-css';
 
@@ -56,7 +56,6 @@ export class EmailVerifiedComponent extends PageComponent {
               private router: Router,
               public wl: WhiteLabelingService,
               private authService: AuthService) {
-    super();
     this.route.queryParams
       .pipe(
         first()
@@ -69,19 +68,24 @@ export class EmailVerifiedComponent extends PageComponent {
 
   login(): void {
     if (this.loginResponse) {
-      this.authService.setUserFromJwtToken(this.loginResponse.token, this.loginResponse.refreshToken, true);
+      this.isLoading = true;
+      this.authService.setUserFromJwtToken(this.loginResponse.token, this.loginResponse.refreshToken, true).subscribe(
+        (value) => {this.isLoading = value;}
+      );
     } else {
       this.router.navigateByUrl(`/login`).then(() => {});
     }
   }
 
   private activateAndGetCredentials(): void {
-    this.authService.activateByEmailCode(this.emailCode).subscribe(
-      (loginResponse) => {
+    this.authService.activateByEmailCode(this.emailCode).subscribe({
+      next: (loginResponse) => {
         this.loginResponse = loginResponse;
         this.activated.next(true);
-      }
-    );
+        this.isLoading = false;
+      },
+      error: () => {this.isLoading = false;}
+    });
   }
 
 }

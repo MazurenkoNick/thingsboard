@@ -117,6 +117,6 @@ export class AssetComponent extends GroupEntityComponent<AssetInfo> {
   }
 
   onAssetProfileUpdated() {
-    this.entitiesTableConfig.updateData(false);
+    this.entitiesTableConfig.updateData(false, false);
   }
 }

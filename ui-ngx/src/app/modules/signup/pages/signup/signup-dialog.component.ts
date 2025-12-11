@@ -36,7 +36,6 @@ import { AppState } from '@core/core.state';
 import { DialogComponent } from '@shared/components/dialog.component';
 import { Router } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { SelfRegistrationService } from '@core/http/self-register.service';
 import { Observable } from 'rxjs/internal/Observable';
 
 export interface SignupDialogData {
@@ -59,7 +58,6 @@ export class SignupDialogComponent extends DialogComponent<SignupDialogComponent
   constructor(protected store: Store<AppState>,
               protected router: Router,
               @Inject(MAT_DIALOG_DATA) public data: SignupDialogData,
-              private selfRegistrationService: SelfRegistrationService,
               private domSanitizer: DomSanitizer,
               public dialogRef: MatDialogRef<SignupDialogComponent, boolean>) {
     super(store, router, dialogRef);
