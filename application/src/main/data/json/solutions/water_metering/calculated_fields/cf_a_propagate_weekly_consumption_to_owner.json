@@ -1,0 +1,44 @@
+{
+  "reprocessingOrder": 9,
+  "type": "PROPAGATION",
+  "name": "Propagate weekly consumption to owner",
+  "entityId": {
+    "entityType": "ASSET",
+    "id": "90bd76d0-e2a3-4f5b-b85e-cd59386f2f44"
+  },
+  "debugSettings": {
+    "failuresEnabled": true,
+    "allEnabled": false,
+    "allEnabledUntil": 0
+  },
+  "configurationVersion": 0,
+  "configuration": {
+    "type": "PROPAGATION",
+    "arguments": {
+      "weeklyConsumption": {
+        "refEntityKey": {
+          "key": "weeklyConsumption",
+          "type": "TS_LATEST"
+        },
+        "defaultValue": ""
+      }
+    },
+    "expression": null,
+    "output": {
+      "type": "TIME_SERIES",
+      "strategy": {
+        "type": "IMMEDIATE",
+        "ttl": 0,
+        "saveTimeSeries": true,
+        "saveLatest": true,
+        "sendWsUpdate": true,
+        "processCfs": true
+      }
+    },
+    "relation": {
+      "direction": "TO",
+      "relationType": "Owns"
+    },
+    "applyExpressionToResolvedArguments": false
+  }
+}

@@ -70,10 +70,6 @@ import {
   AlarmRuleDialogComponent,
   AlarmRuleDialogData
 } from "@home/components/alarm-rules/alarm-rule-dialog.component";
-import {
-  CalculatedFieldDebugDialogComponent,
-  CalculatedFieldDebugDialogData
-} from "@home/components/calculated-fields/components/debug-dialog/calculated-field-debug-dialog.component";
 import { AlarmSeverity, alarmSeverityTranslations } from "@shared/models/alarm.models";
 import { UtilsService } from "@core/services/utils.service";
 import { deepClone, getEntityDetailsPageURL, isObject } from "@core/utils";
@@ -83,6 +79,8 @@ import {
   CalculatedFieldScriptTestDialogComponent,
   CalculatedFieldTestScriptDialogData
 } from "@home/components/calculated-fields/components/test-dialog/calculated-field-script-test-dialog.component";
+import { EventsDialogComponent, EventsDialogData } from '@home/dialogs/events-dialog.component';
+import { DebugEventType, EventType } from '@shared/models/event.models';
 
 export class AlarmRulesTableConfig extends EntityTableConfig<any> {
 
@@ -292,13 +290,17 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
   }
 
   private openDebugEventsDialog(calculatedField: CalculatedField): void {
-    this.dialog.open<CalculatedFieldDebugDialogComponent, CalculatedFieldDebugDialogData, null>(CalculatedFieldDebugDialogComponent, {
+    this.dialog.open<EventsDialogComponent, EventsDialogData, null>(EventsDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
+        title: 'alarm-rule.debugging',
         tenantId: this.tenantId,
-        value: calculatedField,
-        getTestScriptDialogFn: null,
+        entityId: calculatedField.id,
+        debugEventTypes:[DebugEventType.DEBUG_CALCULATED_FIELD],
+        disabledEventTypes:[EventType.LC_EVENT, EventType.ERROR, EventType.STATS],
+        defaultEventType: DebugEventType.DEBUG_CALCULATED_FIELD,
+        debugActionEnabledFn: () => false,
         hideClearEventAction: this.hideClearEventAction
       }
     })

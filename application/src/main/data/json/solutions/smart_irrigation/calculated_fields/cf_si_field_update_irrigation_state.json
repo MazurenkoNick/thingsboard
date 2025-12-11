@@ -1,0 +1,47 @@
+{
+  "type": "SCRIPT",
+  "name": "Update irrigation state",
+  "entityId": {
+    "entityType": "ASSET_PROFILE",
+    "id": "0d58a217-f0d9-4ab6-b8be-d7d41fb36437"
+  },
+  "debugSettings": {
+    "failuresEnabled": true,
+    "allEnabled": false,
+    "allEnabledUntil": 0
+  },
+  "configurationVersion": 0,
+  "configuration": {
+    "type": "SCRIPT",
+    "arguments": {
+      "currentIrrigationWaterConsumption": {
+        "refEntityKey": {
+          "key": "currentIrrigationWaterConsumption",
+          "type": "TS_LATEST"
+        },
+        "defaultValue": ""
+      },
+      "irrigationState": {
+        "refEntityKey": {
+          "key": "irrigationState",
+          "type": "TS_LATEST"
+        },
+        "defaultValue": ""
+      },
+      "irrigationTask": {
+        "refEntityKey": {
+          "key": "irrigationTask",
+          "type": "TS_LATEST"
+        },
+        "defaultValue": ""
+      }
+    },
+    "expression": "var irrigationTaskJson = JSON.parse(irrigationTask);\nvar irrTask = irrigationTaskJson.value;\n\nirrTask.consumption = currentIrrigationWaterConsumption;\nirrTask.duration = Date.now() - irrTask.startTs;\nvar values = {\n    \"irrigationTask\": irrTask\n};\n\nif (shouldTurnOff()) {\n    values.put(\"irrigationState\", \"DONE\");\n}\n\nreturn {\n    \"ts\": irrigationTaskJson.ts,\n    \"values\": values\n}\n\nfunction shouldTurnOff() {\n    var irrTask = JSON.parse(irrigationTask);\n    if (irrTask == null || irrTask.value == null) {\n        return true;\n    }\n    if(irrTask.value.durationThreshold > 0){\n        return (irrTask.value.startTs + irrTask.value.durationThreshold) < Date.now();\n    } else {\n        return currentIrrigationWaterConsumption >= irrTask.value.consumptionThreshold;\n    }\n}",
+    "output": {
+      "type": "TIME_SERIES",
+      "strategy": {
+        "type": "RULE_CHAIN"
+      }
+    }
+  }
+}

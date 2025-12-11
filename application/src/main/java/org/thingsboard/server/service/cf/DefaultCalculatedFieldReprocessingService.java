@@ -69,7 +69,6 @@ import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
 import org.thingsboard.server.dao.usagerecord.ApiLimitService;
-import org.thingsboard.server.queue.util.TbRuleEngineComponent;
 import org.thingsboard.server.service.cf.ctx.CalculatedFieldEntityCtxId;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
@@ -103,7 +102,6 @@ import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.createDe
 import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.createStateByType;
 import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.transformSingleValueArgument;
 
-@TbRuleEngineComponent
 @Service
 @Slf4j
 public class DefaultCalculatedFieldReprocessingService extends AbstractCalculatedFieldProcessingService implements CalculatedFieldReprocessingService {
