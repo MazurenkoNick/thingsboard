@@ -132,7 +132,7 @@ export class CalculatedFieldMetricsTableComponent implements OnInit, ControlValu
 
   ngOnInit() {
     if (this.simpleMode) {
-      this.displayColumns = ['name', 'function', 'actions'];
+      this.displayColumns = ['name', 'function', 'argumentName', 'actions'];
     }
   }
 
