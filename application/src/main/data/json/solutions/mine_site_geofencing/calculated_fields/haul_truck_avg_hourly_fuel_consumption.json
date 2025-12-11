@@ -15,9 +15,9 @@
   "configuration": {
     "type": "ENTITY_AGGREGATION",
     "arguments": {
-      "fuelRate": {
+      "fuelConsumptionRate": {
         "refEntityKey": {
-          "key": "fuelRate",
+          "key": "fuelConsumptionRate",
           "type": "TS_LATEST"
         },
         "defaultValue": null
@@ -28,7 +28,7 @@
         "function": "AVG",
         "input": {
           "type": "key",
-          "key": "fuelRate"
+          "key": "fuelConsumptionRate"
         },
         "defaultValue": 0
       }

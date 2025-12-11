@@ -1,11 +1,11 @@
 {
-  "reprocessingOrder": 1,
+  "reprocessingOrder": 3,
   "entityId": {
-    "entityType": "DEVICE_PROFILE",
-    "id": "ff395d16-0c28-4985-802d-bad40f4bf4d0"
+    "entityType": "ASSET_PROFILE",
+    "id": "41d774a9-a4e5-4ea3-9824-530c25dbb422"
   },
   "type": "ENTITY_AGGREGATION",
-  "name": "Haul Truck Avg Hourly Fuel Consumption",
+  "name": "Avg fuel consumption per day across all machines",
   "debugSettings": {
     "failuresEnabled": true,
     "allEnabled": false,
@@ -15,26 +15,25 @@
   "configuration": {
     "type": "ENTITY_AGGREGATION",
     "arguments": {
-      "fuelConsumptionRate": {
+      "totalAvgHourlyFuelConsumption": {
         "refEntityKey": {
-          "key": "fuelConsumptionRate",
+          "key": "totalAvgHourlyFuelConsumption",
           "type": "TS_LATEST"
         },
         "defaultValue": null
       }
     },
     "metrics": {
-      "avgHourlyFuelConsumption": {
-        "function": "AVG",
+      "totalAvgDailyFuelConsumption": {
+        "function": "SUM",
         "input": {
           "type": "key",
-          "key": "fuelConsumptionRate"
-        },
-        "defaultValue": 0
+          "key": "totalAvgHourlyFuelConsumption"
+        }
       }
     },
     "interval": {
-      "type": "HOUR",
+      "type": "DAY",
       "tz": "Europe/Kiev"
     },
     "watermark": null,

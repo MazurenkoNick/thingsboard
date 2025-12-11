@@ -24,7 +24,7 @@
         "timeWindow": 450000
       }
     },
-    "expression": "return {\n    ts: ctx.latestTs,\n    values: {\n        fuelRate: getRate()\n    }\n};\n\n\nfunction getRate() {\n    if (fuelLevel.count() < 2) {\n        return 0;\n    }\n    var first = fuelLevel.first();\n    var last = fuelLevel.last();\n    \n    \n    if (isNaN(first) || isNaN(last)) {\n        return 0;\n    }\n\n    var deltaLevel = first - last;\n    if (deltaLevel <= 0) {\n        return 0;\n    }\n    return toFixed(deltaLevel, 2);\n}",
+    "expression": "return {\n    ts: ctx.latestTs,\n    values: {\n        fuelConsumptionRate: getConsumptionRate()\n    }\n};\n\n\nfunction getConsumptionRate() {\n    if (fuelLevel.count() < 2) {\n        return 0;\n    }\n    var first = fuelLevel.first();\n    var last = fuelLevel.last();\n    \n    \n    if (isNaN(first) || isNaN(last)) {\n        return 0;\n    }\n\n    var deltaLevelPercentage = first - last;\n    if (deltaLevelPercentage <= 0) {\n        return 0;\n    }\n    var fuelTankCapacity = 86.6; // gal (345 L)\n    var fuelConsumptionRate = (deltaLevelPercentage / 100.0) * fuelTankCapacity;\n    return toFixed(fuelConsumptionRate, 2);\n}",
     "output": {
       "type": "TIME_SERIES",
       "strategy": {
