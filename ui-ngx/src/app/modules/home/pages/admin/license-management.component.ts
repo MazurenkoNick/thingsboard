@@ -146,7 +146,7 @@ export class LicenseManagementComponent extends PageComponent implements OnInit 
       url += '&perpetual=true';
     }
     if (items) {
-      url += `&items=${encodeURIComponent(JSON.stringify(items))}`;
+      url += `&manageAddons=true&items=${encodeURIComponent(JSON.stringify(items))}`;
     }
     return url;
   }
