@@ -29,42 +29,22 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { inject, NgModule } from '@angular/core';
-import { ActivatedRouteSnapshot, ResolveFn, RouterModule, RouterStateSnapshot, Routes } from '@angular/router';
-import { Authority } from '@shared/models/authority.enum';
-import { TrendzAnalyticsComponent } from '@home/pages/trendz-analytics/trendz-analytics.component';
-import { MenuId } from '@core/services/menu.models';
-import { map } from 'rxjs';
-import { TrendzSynchronizationStatus } from '@app/shared/models/trendz-analytics.models';
-import { TrendzService } from '@core/http/trendz.service';
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { TrendzSettingsComponent } from '@home/pages/trendz-settings/trendz-settings.component';
+import { SharedModule } from '@shared/shared.module';
+import { TrendzSettingsRoutingModule } from '@home/pages/trendz-settings/trendz-settings-routing.module';
 
-export const TrendzSyncInfoResolver: ResolveFn<boolean> = (
-  route: ActivatedRouteSnapshot,
-  state: RouterStateSnapshot,
-  trendzService = inject(TrendzService)) => {
-    return trendzService.performTrendzHealthcheck()
-      .pipe(map(result => result.status === TrendzSynchronizationStatus.SYNCED));
-}
 
-const routes: Routes = [
-  {
-    path: 'trendzAnalytics',
-    component: TrendzAnalyticsComponent,
-    data: {
-      auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-      title: 'trendz-analytics.trendz-analytics',
-      breadcrumb: {
-        menuId: MenuId.trendz_analytics
-      }
-    },
-    resolve: {
-      trendzSynced: TrendzSyncInfoResolver
-    }
-  }
-];
 
 @NgModule({
-  imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule]
+  declarations: [
+    TrendzSettingsComponent
+  ],
+  imports: [
+    CommonModule,
+    SharedModule,
+    TrendzSettingsRoutingModule
+  ]
 })
-export class TrendzAnalyticsRoutingModule { }
+export class TrendzSettingsModule { }

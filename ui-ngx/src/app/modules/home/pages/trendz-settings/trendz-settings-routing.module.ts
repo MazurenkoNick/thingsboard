@@ -29,36 +29,35 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { inject, NgModule } from '@angular/core';
-import { ActivatedRouteSnapshot, ResolveFn, RouterModule, RouterStateSnapshot, Routes } from '@angular/router';
-import { Authority } from '@shared/models/authority.enum';
-import { TrendzAnalyticsComponent } from '@home/pages/trendz-analytics/trendz-analytics.component';
-import { MenuId } from '@core/services/menu.models';
-import { map } from 'rxjs';
-import { TrendzSynchronizationStatus } from '@app/shared/models/trendz-analytics.models';
-import { TrendzService } from '@core/http/trendz.service';
+import { inject, NgModule } from "@angular/core";
+import { ActivatedRouteSnapshot, ResolveFn, RouterModule, RouterStateSnapshot, Routes } from "@angular/router";
+import { TrendzSettingsComponent } from "./trendz-settings.component";
+import { Authority } from "@app/shared/models/authority.enum";
+import { MenuId } from "@app/core/services/menu.models";
+import { map } from "rxjs";
+import { TrendzSynchronization } from "@app/shared/models/trendz-analytics.models";
+import { TrendzService } from "@app/core/http/trendz.service";
 
-export const TrendzSyncInfoResolver: ResolveFn<boolean> = (
+export const TrendzSyncResolver: ResolveFn<TrendzSynchronization> = (
   route: ActivatedRouteSnapshot,
   state: RouterStateSnapshot,
   trendzService = inject(TrendzService)) => {
-    return trendzService.performTrendzHealthcheck()
-      .pipe(map(result => result.status === TrendzSynchronizationStatus.SYNCED));
+    return trendzService.getTrendzSyncResult()
 }
 
 const routes: Routes = [
   {
-    path: 'trendzAnalytics',
-    component: TrendzAnalyticsComponent,
+    path: 'trendzSettings',
+    component: TrendzSettingsComponent,
     data: {
-      auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-      title: 'trendz-analytics.trendz-analytics',
+      auth: [Authority.SYS_ADMIN],
+      title: 'trendz-analytics.trendz-settings',
       breadcrumb: {
-        menuId: MenuId.trendz_analytics
+        menuId: MenuId.trendz_settings
       }
     },
     resolve: {
-      trendzSynced: TrendzSyncInfoResolver
+      trendzSyncInfo: TrendzSyncResolver
     }
   }
 ];
@@ -67,4 +66,4 @@ const routes: Routes = [
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule]
 })
-export class TrendzAnalyticsRoutingModule { }
+export class TrendzSettingsRoutingModule { }
