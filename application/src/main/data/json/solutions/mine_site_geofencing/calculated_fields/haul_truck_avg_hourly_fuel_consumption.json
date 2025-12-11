@@ -20,7 +20,7 @@
           "key": "fuelRate",
           "type": "TS_LATEST"
         },
-        "defaultValue": ""
+        "defaultValue": null
       }
     },
     "metrics": {

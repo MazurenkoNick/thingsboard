@@ -24,7 +24,7 @@
           "key": "avgHourlyFuelConsumption",
           "type": "TS_LATEST"
         },
-        "defaultValue": "0"
+        "defaultValue": null
       }
     },
     "deduplicationIntervalInSec": 10,
