@@ -4,7 +4,7 @@
     "id": "ff395d16-0c28-4985-802d-bad40f4bf4d0"
   },
   "type": "ALARM",
-  "name": "Excavator High Hydraulic Pressure",
+  "name": "High Hydraulic Pressure",
   "debugSettings": {
     "failuresEnabled": true,
     "allEnabled": false,
