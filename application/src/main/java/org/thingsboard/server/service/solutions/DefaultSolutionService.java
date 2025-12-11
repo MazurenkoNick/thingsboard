@@ -234,8 +234,8 @@ public class DefaultSolutionService implements SolutionService {
         allowedSolutionTemplateLevelsMap.put(SolutionTemplateLevel.STARTUP, Set.of("Startup", "Business"));
     }
 
-    private List<SolutionTemplateInfo> solutions = new ArrayList<>();
-    private Map<String, SolutionTemplateDetails> solutionsMap = new HashMap<>();
+    private final List<SolutionTemplateInfo> solutions = new ArrayList<>();
+    private final Map<String, SolutionTemplateDetails> solutionsMap = new HashMap<>();
 
     private final InstallScripts installScripts;
     private final DeviceProfileService deviceProfileService;
@@ -274,9 +274,8 @@ public class DefaultSolutionService implements SolutionService {
     private final SchedulerEventService schedulerEventService;
     private final SchedulerService schedulerService;
     private final DeviceConnectivityService deviceConnectivityService;
-    private final ExecutorService emulatorExecutor = ThingsBoardExecutors.newWorkStealingPool(10, getClass());
-
-    private final Semaphore cfReprocessLock = new Semaphore(1);
+    private final ExecutorService emulatorExecutor = ThingsBoardExecutors.newWorkStealingPool(10, "solution-emulators-executor");
+    private final ExecutorService cfsReprocessingExecutor = ThingsBoardExecutors.newWorkStealingPool(Math.max(4, Runtime.getRuntime().availableProcessors()), "solution-cfs-reprocessing-executor");
 
     @PostConstruct
     public void init() {
@@ -1447,51 +1446,46 @@ public class DefaultSolutionService implements SolutionService {
         cfs.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "calculated_fields", CalculatedFieldDefinition.class));
 
         List<CalculatedFieldDefinition> createOnly = new ArrayList<>();
-        TreeMap<Integer, CalculatedFieldDefinition> ordered = new TreeMap<>();
+        TreeMap<Integer, List<CalculatedFieldDefinition>> ordered = new TreeMap<>();
 
         for (CalculatedFieldDefinition cf : cfs) {
             if (cf.getReprocessingOrder() == null || cf.getReprocessingOrder() < 0) {
                 createOnly.add(cf);
             } else {
-                ordered.put(cf.getReprocessingOrder(), cf);
+                ordered.computeIfAbsent(cf.getReprocessingOrder(), integer -> new ArrayList<>()).add(cf);
             }
         }
 
         createOnly.forEach(cf -> ctx.register(createCalculatedField(cf, ctx)));
 
-        for (int i = 0; i < ordered.size(); i++) {
-            CalculatedFieldDefinition cfDef = ordered.get(i);
-            CalculatedField calculatedField = createCalculatedField(cfDef, ctx);
-            ctx.register(calculatedField);
-            Map<Integer, String> orderedReprocessingEntities = cfDef.getOrderedReprocessingEntities();
-            TenantId tenantId = calculatedField.getTenantId();
-            Iterable<EntityInfo> targetEntities = resolveTargetEntities(ctx, calculatedField, orderedReprocessingEntities);
-            targetEntities.forEach(entityInfo -> {
-                reprocessCf(tenantId, entityInfo, calculatedField);
-            });
+        for (Map.Entry<Integer, List<CalculatedFieldDefinition>> entry : ordered.entrySet()) {
+            Integer order = entry.getKey();
+            List<CalculatedFieldDefinition> cfDefs = entry.getValue();
+
+            List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+            for (CalculatedFieldDefinition cfDef : cfDefs) {
+                CalculatedField calculatedField = createCalculatedField(cfDef, ctx);
+                ctx.register(calculatedField);
+                TenantId tenantId = calculatedField.getTenantId();
+                Iterable<EntityInfo> targetEntities = resolveTargetEntities(ctx, calculatedField);
+                targetEntities.forEach(entityInfo ->
+                        futures.add(CompletableFuture.runAsync(
+                                () -> reprocessCf(tenantId, entityInfo, calculatedField), cfsReprocessingExecutor)));
+            }
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+            log.debug("Finished reprocessing calculated fields for order {}", order);
         }
     }
 
-    private Iterable<EntityInfo> resolveTargetEntities(SolutionInstallContext ctx, CalculatedField cf, Map<Integer, String> orderedReprocessingEntities) {
+    private Iterable<EntityInfo> resolveTargetEntities(SolutionInstallContext ctx, CalculatedField cf) {
         EntityId cfEntityId = cf.getEntityId();
         TenantId tenantId = cf.getTenantId();
-
-        if (orderedReprocessingEntities != null) {
-            Set<EntityInfo> targetEntities = new HashSet<>();
-            for (int j = 0; j < orderedReprocessingEntities.size(); j++) {
-                String entityName = orderedReprocessingEntities.get(j);
-                EntityType entityType = cfEntityId.getEntityType() == EntityType.ASSET_PROFILE ? EntityType.ASSET : EntityType.DEVICE;
-                EntityId realEntityId = ctx.getIdFromMap(entityType, entityName);
-                targetEntities.add(new EntityInfo(realEntityId.getId(), realEntityId.getEntityType().name(), entityName));
-            }
-            return targetEntities;
-        }
-
         return switch (cfEntityId.getEntityType()) {
-            case DEVICE -> List.of(deviceService.findDeviceEntityInfoById(tenantId, (DeviceId) cfEntityId));
-            case ASSET -> List.of(assetService.findAssetEntityInfoById(tenantId, (AssetId) cfEntityId));
-            case DEVICE_PROFILE -> new PageDataIterable<>(pageLink -> deviceService.findDeviceEntityInfosByTenantIdAndDeviceProfileId(tenantId, (DeviceProfileId) cfEntityId, pageLink), 512);
-            case ASSET_PROFILE -> new PageDataIterable<>(pageLink -> assetService.findAssetEntityInfosByTenantIdAndAssetProfileId(tenantId, (AssetProfileId) cfEntityId, pageLink), 512);
+            case DEVICE -> List.of(deviceService.findDeviceEntityInfoById(tenantId, new DeviceId(cfEntityId.getId())));
+            case ASSET -> List.of(assetService.findAssetEntityInfoById(tenantId, new AssetId(cfEntityId.getId())));
+            case DEVICE_PROFILE -> new PageDataIterable<>(pageLink -> deviceService.findDeviceEntityInfosByTenantIdAndDeviceProfileId(tenantId, new DeviceProfileId(cfEntityId.getId()), pageLink), 512);
+            case ASSET_PROFILE -> new PageDataIterable<>(pageLink -> assetService.findAssetEntityInfosByTenantIdAndAssetProfileId(tenantId, new AssetProfileId(cfEntityId.getId()), pageLink), 512);
             default -> throw new IllegalArgumentException("Unsupported CF entity type " + cfEntityId.getEntityType());
         };
     }
@@ -1499,14 +1493,10 @@ public class DefaultSolutionService implements SolutionService {
 
     private void reprocessCf(TenantId tenantId, EntityInfo entityInfo, CalculatedField cf) {
         try {
-            cfReprocessLock.acquire();
-
             CfReprocessingTask task = createTask(tenantId, entityInfo, cf, 0, System.currentTimeMillis());
             calculatedFieldReprocessingService.reprocess(task);
         } catch (Exception e) {
             log.error("Failed to reprocess calculated field {}", cf.getName(), e);
-        } finally {
-            cfReprocessLock.release();
         }
     }
 
@@ -1558,7 +1548,7 @@ public class DefaultSolutionService implements SolutionService {
             });
         }
 
-        CalculatedField calculatedField = new  CalculatedField(cf);
+        CalculatedField calculatedField = new CalculatedField(cf);
         return calculatedFieldService.save(calculatedField);
     }
 

@@ -30,25 +30,14 @@
  */
 package org.thingsboard.server.service.solutions.data.definition;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.EntityType;
+import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 
-import java.util.Map;
-
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class CalculatedFieldDefinition extends CalculatedField {
 
     private Integer reprocessingOrder;
-    private Map<Integer, String> orderedReprocessingEntities;
-
-    @Override
-    public EntityType getEntityType() {
-        return EntityType.CALCULATED_FIELD;
-    }
 
 }
