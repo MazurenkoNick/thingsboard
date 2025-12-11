@@ -1,4 +1,5 @@
 {
+  "reprocessingOrder": 0,
   "entityId": {
     "entityType": "DEVICE_PROFILE",
     "id": "ff395d16-0c28-4985-802d-bad40f4bf4d0"

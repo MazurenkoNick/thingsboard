@@ -1447,28 +1447,28 @@ public class DefaultSolutionService implements SolutionService {
         cfs.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "calculated_fields", CalculatedFieldDefinition.class));
 
         List<CalculatedFieldDefinition> createOnly = new ArrayList<>();
-        TreeMap<Integer, CalculatedFieldDefinition> ordered = new TreeMap<>();
+        TreeMap<Integer, List<CalculatedFieldDefinition>> ordered = new TreeMap<>();
 
         for (CalculatedFieldDefinition cf : cfs) {
             if (cf.getReprocessingOrder() == null || cf.getReprocessingOrder() < 0) {
                 createOnly.add(cf);
             } else {
-                ordered.put(cf.getReprocessingOrder(), cf);
+                ordered.computeIfAbsent(cf.getReprocessingOrder(), integer -> new ArrayList<>()).add(cf);
             }
         }
 
         createOnly.forEach(cf -> ctx.register(createCalculatedField(cf, ctx)));
 
         for (int i = 0; i < ordered.size(); i++) {
-            CalculatedFieldDefinition cfDef = ordered.get(i);
-            CalculatedField calculatedField = createCalculatedField(cfDef, ctx);
-            ctx.register(calculatedField);
-            Map<Integer, String> orderedReprocessingEntities = cfDef.getOrderedReprocessingEntities();
-            TenantId tenantId = calculatedField.getTenantId();
-            Iterable<EntityInfo> targetEntities = resolveTargetEntities(ctx, calculatedField, orderedReprocessingEntities);
-            targetEntities.forEach(entityInfo -> {
-                reprocessCf(tenantId, entityInfo, calculatedField);
-            });
+            List<CalculatedFieldDefinition> cfDefs = ordered.get(i);
+            for (CalculatedFieldDefinition cfDef : cfDefs) {
+                CalculatedField calculatedField = createCalculatedField(cfDef, ctx);
+                ctx.register(calculatedField);
+                Map<Integer, String> orderedReprocessingEntities = cfDef.getOrderedReprocessingEntities();
+                TenantId tenantId = calculatedField.getTenantId();
+                Iterable<EntityInfo> targetEntities = resolveTargetEntities(ctx, calculatedField, orderedReprocessingEntities);
+                targetEntities.forEach(entityInfo -> reprocessCf(tenantId, entityInfo, calculatedField));
+            }
         }
     }
 
