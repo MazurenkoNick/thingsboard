@@ -38,8 +38,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.pat.ApiKey;
 import org.thingsboard.server.common.data.pat.ApiKeyInfo;
 import org.thingsboard.server.common.data.permission.AuthorityPermissionsInfo;
@@ -55,6 +57,7 @@ import org.thingsboard.server.common.data.trendz.TrendzSynchronizationStatus;
 import org.thingsboard.server.dao.pat.ApiKeyService;
 import org.thingsboard.server.dao.trendz.TrendzSettingsService;
 import org.thingsboard.server.dao.trendz.TrendzSyncService;
+import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
 
 import java.io.Serializable;
@@ -72,6 +75,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
     private static final String MIN_SUPPORTED_VERSION = "1.15.0";
 
     private final ApiKeyService apiKeyService;
+    private final UserService userService;
     private final TrendzSettingsService trendzSettingsService;
     private final SystemSecurityService systemSecurityService;
     private final TrendzClient trendzClient;
@@ -86,7 +90,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
     private String defaultTrendzUrl;
 
     @Override
-    public TrendzSettings performSync(TenantId tenantId, UserId userId) {
+    public TrendzSettings performSync() {
         if (!trendzEnabled) {
             return saveTrendzSettings(null, null, null, 0L,
                     TrendzSynchronizationResultType.SYNC_DISABLED,
@@ -112,7 +116,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
         long updatedTs = System.currentTimeMillis();
 
-        ApiKey trendzApiKey = findOrCreateTrendzApiKey(userId);
+        ApiKey trendzApiKey = findOrCreateTrendzApiKey();
 
         TrendzInfo trendzInfo = validateTrendzConnectionInfo(trendzUrl, tbUrl, updatedTs);
         if (trendzInfo == null) {
@@ -143,6 +147,17 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
     }
 
     @Override
+    public void performPublicSync() {
+        TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+        if (isSyncedUp(trendzSettings)) {
+            log.trace("Trendz is already synced up. Status: {}, Result: {}",
+                    trendzSettings.synchronizationResult().status(), trendzSettings.synchronizationResult().type());
+        } else {
+            performSync();
+        }
+    }
+
+    @Override
     public TrendzHealthcheckResult performHealthcheck() {
         if (!trendzEnabled) {
             return new TrendzHealthcheckResult(
@@ -154,7 +169,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         }
 
         TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
-        if (trendzSettings == null || trendzSettings.synchronizationResult() == null) {
+        if (!isSyncedUp(trendzSettings)) {
             return new TrendzHealthcheckResult(
                     null,
                     TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED,
@@ -239,6 +254,13 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         } catch (Exception e) {
             log.error("Error notifying Trendz about API key rotation", e);
         }
+    }
+
+    private boolean isSyncedUp(TrendzSettings settings) {
+        return settings != null
+               && settings.synchronizationResult() != null
+               && settings.synchronizationResult().status() != null
+               && settings.synchronizationResult().status() != TrendzSynchronizationStatus.NOT_AVAILABLE;
     }
 
     private TrendzSettings createDefaultTrendzSettings() {
@@ -339,7 +361,10 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         }
     }
 
-    private ApiKey findOrCreateTrendzApiKey(UserId userId) {
+    private ApiKey findOrCreateTrendzApiKey() {
+        PageLink pageLink = new PageLink(1, 0, null, new SortOrder("createdTime", SortOrder.Direction.ASC));
+        User sysAdminUser = userService.findSysAdmins(pageLink).getData().get(0);
+
         ApiKey trendzApiKey = apiKeyService.findInternalApiKeyByDescription(TenantId.SYS_TENANT_ID, TRENDZ_API_KEY_DESCRIPTION);
 
         if (trendzApiKey != null && trendzApiKey.isInternal()) {
@@ -350,7 +375,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         log.info("Creating new Trendz internal API key with configured permissions");
         ApiKeyInfo apiKeyInfo = new ApiKeyInfo();
         apiKeyInfo.setTenantId(TenantId.SYS_TENANT_ID);
-        apiKeyInfo.setUserId(userId);
+        apiKeyInfo.setUserId(sysAdminUser.getId());
         apiKeyInfo.setDescription(TRENDZ_API_KEY_DESCRIPTION);
         apiKeyInfo.setEnabled(true);
         apiKeyInfo.setExpirationTime(0);

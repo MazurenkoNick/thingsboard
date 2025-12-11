@@ -47,8 +47,7 @@ import org.thingsboard.server.dao.trendz.TrendzSyncService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -218,7 +217,7 @@ public class TrendzControllerTest extends AbstractControllerTest {
         );
         TrendzSettings settings = new TrendzSettings(config, syncResult);
 
-        when(trendzSyncService.performSync(eq(TenantId.SYS_TENANT_ID), any())).thenReturn(settings);
+        when(trendzSyncService.performSync()).thenReturn(settings);
 
         TrendzSynchronizationResult result = doPost("/api/trendz/connect", TrendzSynchronizationResult.class);
 
@@ -234,4 +233,22 @@ public class TrendzControllerTest extends AbstractControllerTest {
         doPost("/api/trendz/connect").andExpect(status().isForbidden());
     }
 
+    @Test
+    public void testPublicConnectToTrendz() throws Exception {
+        logout();
+
+        TrendzConfiguration config = new TrendzConfiguration(TRENDZ_URL, TB_URL);
+        TrendzSynchronizationResult syncResult = new TrendzSynchronizationResult(
+                TRENDZ_VERSION, System.currentTimeMillis(),
+                TrendzSynchronizationResultType.SYNC_COMPLETED,
+                TrendzSynchronizationStatus.SYNCED
+        );
+        TrendzSettings settings = new TrendzSettings(config, syncResult);
+
+        when(trendzSyncService.performSync())
+                .thenReturn(settings);
+
+        String result = doPost("/api/trendz/public/connect", String.class);
+        assertTrue(result.isEmpty());
+    }
 }

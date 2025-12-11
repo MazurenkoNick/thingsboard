@@ -135,8 +135,17 @@ public class TrendzController extends BaseController {
     @PreAuthorize("hasAuthority('SYS_ADMIN')")
     public TrendzSynchronizationResult connectToTrendz(@AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
         accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.WRITE);
-        TrendzSettings result = trendzSyncService.performSync(TenantId.SYS_TENANT_ID, user.getId());
+        TrendzSettings result = trendzSyncService.performSync();
         return result.synchronizationResult();
+    }
+
+    @ApiOperation(value = "Public connect to Trendz (publicConnectToTrendz)",
+            notes = "Initiates synchronization with Trendz if Trendz is not synced yet. " +
+                    "Uses Trendz configuration from settings or falls back to environment variables. " +
+                    "Generates API key, saves configuration, checks Trendz version, and performs initial sync.")
+    @PostMapping("/public/connect")
+    public void publicConnectToTrendz() {
+        trendzSyncService.performPublicSync();
     }
 
 }
