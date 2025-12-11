@@ -82,7 +82,7 @@ export const defaultSchedulerEventConfigTypes: {[eventType: string]: SchedulerEv
     clearOriginator: true
   },
   generateDashboardReport: {
-    name: 'Generate Dashboard Report',
+    name: 'Generate Dashboard Report (deprecated)',
     componentType: GenerateDashboardReportComponent,
     originator: false,
     msgType: false,
