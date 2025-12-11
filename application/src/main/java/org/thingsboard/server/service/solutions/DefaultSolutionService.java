@@ -574,8 +574,8 @@ public class DefaultSolutionService implements SolutionService {
         CompletableFuture<Void> all = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
 
         try {
-            Thread.sleep(5000);
             all.get(); // wait until all done
+            Thread.sleep(futures.size() * 100L);
         } catch (ExecutionException e) {
             throw new RuntimeException("Telemetry processing failed", e.getCause());
         }
