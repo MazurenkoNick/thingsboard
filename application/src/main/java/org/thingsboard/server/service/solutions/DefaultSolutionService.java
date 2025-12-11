@@ -208,7 +208,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -1462,6 +1461,8 @@ public class DefaultSolutionService implements SolutionService {
             Integer order = entry.getKey();
             List<CalculatedFieldDefinition> cfDefs = entry.getValue();
 
+            log.debug("Starting reprocessing calculated fields for order: {}", order);
+
             List<CompletableFuture<Void>> futures = new ArrayList<>();
 
             for (CalculatedFieldDefinition cfDef : cfDefs) {
@@ -1474,7 +1475,7 @@ public class DefaultSolutionService implements SolutionService {
                                 () -> reprocessCf(tenantId, entityInfo, calculatedField), cfsReprocessingExecutor)));
             }
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-            log.debug("Finished reprocessing calculated fields for order {}", order);
+            log.debug("Finished reprocessing calculated fields for order: {}", order);
         }
     }
 
@@ -1493,7 +1494,10 @@ public class DefaultSolutionService implements SolutionService {
 
     private void reprocessCf(TenantId tenantId, EntityInfo entityInfo, CalculatedField cf) {
         try {
-            CfReprocessingTask task = createTask(tenantId, entityInfo, cf, 0, System.currentTimeMillis());
+            // FIXME: the startTs should be fetched from the solution ctx or elsewhere.
+            long endTs = System.currentTimeMillis();
+            long startTs = endTs - TimeUnit.DAYS.toMillis(7);
+            CfReprocessingTask task = createTask(tenantId, entityInfo, cf, startTs, endTs);
             calculatedFieldReprocessingService.reprocess(task);
         } catch (Exception e) {
             log.error("Failed to reprocess calculated field {}", cf.getName(), e);
