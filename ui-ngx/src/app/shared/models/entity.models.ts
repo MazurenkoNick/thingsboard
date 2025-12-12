@@ -230,6 +230,16 @@ export const entityFields: {[fieldName: string]: EntityField} = {
     keyName: 'additionalInfo',
     name: 'entity-field.additional-info',
     value: 'additionalInfo'
+  },
+  reportType: {
+    keyName: 'reportType',
+    name: 'entity-field.report-type',
+    value: 'reportType'
+  },
+  reportFormat: {
+    keyName: 'reportFormat',
+    name: 'entity-field.report-format',
+    value: 'reportFormat'
   }
 };
 

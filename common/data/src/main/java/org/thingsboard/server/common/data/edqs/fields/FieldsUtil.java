@@ -32,7 +32,6 @@ package org.thingsboard.server.common.data.edqs.fields;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.thingsboard.server.common.data.ApiUsageState;
-import org.thingsboard.server.common.data.BaseData;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.Device;
@@ -40,8 +39,6 @@ import org.thingsboard.server.common.data.DeviceProfile;
 import org.thingsboard.server.common.data.DeviceProfileType;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EntityView;
-import org.thingsboard.server.common.data.HasEntityType;
-import org.thingsboard.server.common.data.HasName;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.User;
@@ -52,11 +49,10 @@ import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.HasId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UUIDBased;
 import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.queue.QueueStats;
+import org.thingsboard.server.common.data.report.Report;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleNode;
@@ -115,6 +111,10 @@ public class FieldsUtil {
             return toFields(apiUsageState);
         } else if (entity instanceof BlobEntity blobEntity) {
             return toFields(blobEntity);
+        } else if (entity instanceof ReportTemplate reportTemplate) {
+            return toFields(reportTemplate);
+        } else if (entity instanceof Report report) {
+            return toFields(report);
         } else {
             throw new IllegalArgumentException("Unsupported entity type: " + entity.getClass().getName());
         }
@@ -400,6 +400,28 @@ public class FieldsUtil {
                 .name(entity.getName())
                 .type(entity.getType())
                 .additionalInfo(getText(entity.getAdditionalInfo()))
+                .build();
+    }
+
+    private static ReportTemplateFields toFields(ReportTemplate entity) {
+        return ReportTemplateFields.builder()
+                .id(entity.getUuidId())
+                .createdTime(entity.getCreatedTime())
+                .customerId(getCustomerId(entity.getCustomerId()))
+                .name(entity.getName())
+                .type(entity.getType().name())
+                .format(entity.getFormat().name())
+                .version(entity.getVersion())
+                .build();
+    }
+
+    private static ReportFields toFields(Report entity) {
+        return ReportFields.builder()
+                .id(entity.getUuidId())
+                .createdTime(entity.getCreatedTime())
+                .customerId(getCustomerId(entity.getCustomerId()))
+                .name(entity.getName())
+                .format(entity.getFormat().name())
                 .build();
     }
 

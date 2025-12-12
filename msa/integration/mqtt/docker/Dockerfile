@@ -29,7 +29,7 @@
 # OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 #
 
-FROM thingsboard/openjdk17:bookworm-slim
+FROM ${docker.base.image}
 
 COPY start-tb-mqtt-integration.sh ${pkg.name}.deb /tmp/
 
