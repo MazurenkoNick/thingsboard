@@ -29,24 +29,29 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SharedModule } from '@shared/shared.module';
-import { TrendzAnalyticsRoutingModule } from '@home/pages/trendz-analytics/trendz-analytics-routing.module';
-import { TrendzAnalyticsComponent } from '@home/pages/trendz-analytics/trendz-analytics.component';
-import { TrendzAnalyticsUnavailableComponent } from '@home/pages/trendz-analytics/trendz-analytics-unavailable.component';
-import { RequestTrendzComponent } from '@home/pages/trendz-analytics/request-trendz.component';
+import { Component, ElementRef, OnInit } from '@angular/core';
+import { PageComponent } from '@shared/components/page.component';
+import { RequestTrendzDialogComponent } from '@shared/components/dialog/request-trendz-dialog.component';
+import { DynamicMatDialog } from '@shared/components/dialog/dynamic/dynamic-dialog';
 
-@NgModule({
-  declarations: [
-    TrendzAnalyticsComponent,
-    TrendzAnalyticsUnavailableComponent,
-    RequestTrendzComponent
-  ],
-  imports: [
-    CommonModule,
-    SharedModule,
-    TrendzAnalyticsRoutingModule,
-  ]
+@Component({
+  selector: 'tb-request-trendz',
+  templateUrl: './request-trendz.component.html',
+  styleUrls: ['./request-trendz.component.scss']
 })
-export class TrendzAnalyticsModule { }
+export class RequestTrendzComponent extends PageComponent implements OnInit {
+
+  constructor(private dialog: DynamicMatDialog,
+              private elementRef: ElementRef) {
+    super();
+  }
+
+  ngOnInit() {
+    this.dialog.open<RequestTrendzDialogComponent>(RequestTrendzDialogComponent,
+      {
+        containerElement: this.elementRef.nativeElement,
+        disableClose: true,
+        panelClass: ['tb-dialog', 'tb-fullscreen-dialog-lt-lg'],
+      });
+  }
+}
