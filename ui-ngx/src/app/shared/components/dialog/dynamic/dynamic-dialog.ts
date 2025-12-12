@@ -30,17 +30,21 @@
 ///
 
 import { Location } from "@angular/common";
-import { Inject, Injectable, Injector, Optional, Renderer2, SkipSelf } from "@angular/core";
+import { Inject, Injectable, Injector, Optional, SkipSelf, TemplateRef } from '@angular/core';
 import {
   MAT_DIALOG_DEFAULT_OPTIONS,
   MAT_DIALOG_SCROLL_STRATEGY,
   MatDialog,
-  MatDialogConfig
+  MatDialogConfig, MatDialogRef
 } from '@angular/material/dialog';
 import { DynamicOverlay } from "./dynamic-overlay";
 import { DynamicOverlayContainer } from '@shared/components/dialog/dynamic/dynamic-overlay-container';
-import { ScrollStrategy } from '@angular/cdk/overlay';
+import { ComponentType, ScrollStrategy } from '@angular/cdk/overlay';
 import { DEFAULT_DIALOG_CONFIG, Dialog, DialogConfig } from '@angular/cdk/dialog';
+
+export interface DynamicMatDialogConfig<D> extends MatDialogConfig<D> {
+  containerElement?: HTMLElement;
+}
 
 @Injectable()
 export class DynamicMatDialog extends MatDialog {
@@ -60,11 +64,25 @@ export class DynamicMatDialog extends MatDialog {
     this._customOverlay = _overlay;
   }
 
-  public setContainerElement( containerElement:HTMLElement, renderer:Renderer2 ):void {
-
-    renderer.setStyle( containerElement, "transform", "translateZ(0)" );
-
-    this._customOverlay.setContainerElement( containerElement );
+  public open<T, D = any, R = any>(component: ComponentType<T> | TemplateRef<T>, config?: DynamicMatDialogConfig<D>): MatDialogRef<T, R> {
+    if (config?.containerElement) {
+      config.containerElement.style.transform = 'translateZ(0)';
+      this._customOverlay.setContainerElement( config.containerElement );
+    }
+    const ref = super.open(component, config);
+    if (config?.containerElement) {
+      ref.afterClosed().subscribe(
+        {
+          next: () => {
+            this._customOverlay.setContainerElement(null);
+          },
+          error: () => {
+            this._customOverlay.setContainerElement(null);
+          }
+        }
+      );
+    }
+    return ref;
   }
 }
 

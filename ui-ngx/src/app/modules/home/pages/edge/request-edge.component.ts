@@ -29,9 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, ElementRef, OnInit, Renderer2 } from '@angular/core';
-import { PageComponent } from '@shared/components/page.component';
-import { MatDialog } from '@angular/material/dialog';
+import { Component, ElementRef, OnInit } from '@angular/core';
 import { RequestEdgeDialogComponent } from '@shared/components/dialog/request-edge-dialog.component';
 import { DynamicMatDialog } from '@shared/components/dialog/dynamic/dynamic-dialog';
 
@@ -40,18 +38,16 @@ import { DynamicMatDialog } from '@shared/components/dialog/dynamic/dynamic-dial
   templateUrl: './request-edge.component.html',
   styleUrls: ['./request-edge.component.scss']
 })
-export class RequestEdgeComponent extends PageComponent implements OnInit {
+export class RequestEdgeComponent implements OnInit {
 
   constructor(private dialog: DynamicMatDialog,
-              private elementRef: ElementRef,
-              private renderer: Renderer2) {
-    super();
+              private elementRef: ElementRef) {
   }
 
   ngOnInit() {
-    this.dialog.setContainerElement( this.elementRef.nativeElement, this.renderer );
     this.dialog.open<RequestEdgeDialogComponent>(RequestEdgeDialogComponent,
       {
+        containerElement: this.elementRef.nativeElement,
         disableClose: true,
         panelClass: ['tb-dialog', 'tb-fullscreen-dialog-lt-lg'],
       });
