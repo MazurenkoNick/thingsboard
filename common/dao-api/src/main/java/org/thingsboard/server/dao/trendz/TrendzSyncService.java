@@ -30,8 +30,6 @@
  */
 package org.thingsboard.server.dao.trendz;
 
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.pat.ApiKey;
 import org.thingsboard.server.common.data.trendz.TrendzSettings;
 import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
@@ -39,7 +37,9 @@ import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
 public interface TrendzSyncService {
     String TRENDZ_API_KEY_DESCRIPTION = "Internal API key used to authenticate with Trendz";
 
-    TrendzSettings performSync(TenantId tenantId, UserId userId);
+    TrendzSettings performSync();
+
+    void performSyncIfNeeded();
 
     TrendzHealthcheckResult performHealthcheck();
 
