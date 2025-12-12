@@ -29,24 +29,35 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';
 import { getMetricLink, TrendzSummary, TrendzViewType } from '@shared/models/trendz-analytics.models';
 import { TrendzService } from '@app/core/http/trendz.service';
 import { ActivatedRoute } from '@angular/router';
+import { TbAnchorComponent } from '@shared/components/tb-anchor.component';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import { getCurrentAuthState } from '@core/auth/auth.selectors';
+import { RequestTrendzComponent } from '@home/pages/trendz-analytics/request-trendz.component';
 
 @Component({
   selector: 'tb-trendz-analytics',
   templateUrl: './trendz-analytics.component.html',
   styleUrls: ['./trendz-analytics.component.scss']
 })
-export class TrendzAnalyticsComponent extends PageComponent {
+export class TrendzAnalyticsComponent extends PageComponent implements OnInit {
+
+  @ViewChild('replaceComponentAnchor', {static: true}) replaceComponentAnchor: TbAnchorComponent;
+
+  authState = getCurrentAuthState(this.store);
+  trendzEnabled = this.authState.licenseVersion > 1 && this.authState.trendzEnabled;
   trendzSummary: TrendzSummary;
   trendzSynced = this.route.snapshot.data.trendzSynced;
   trendzViewTypes = Object.entries(TrendzViewType).map(([key, value]) => ({ key, value }));
   getMetricLink = getMetricLink;
 
-  constructor(private trendzService: TrendzService,
+  constructor(protected store: Store<AppState>,
+              private trendzService: TrendzService,
               private route: ActivatedRoute) {
     super();
 
@@ -56,6 +67,14 @@ export class TrendzAnalyticsComponent extends PageComponent {
           this.trendzSummary = trendzSummary;
         }
       });
+    }
+  }
+
+  ngOnInit(): void {
+    if (!this.trendzEnabled) {
+      const viewContainerRef = this.replaceComponentAnchor.viewContainerRef;
+      viewContainerRef.clear();
+      viewContainerRef.createComponent(RequestTrendzComponent);
     }
   }
 }

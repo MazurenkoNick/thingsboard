@@ -34,10 +34,9 @@ import { ActivatedRouteSnapshot, ResolveFn, RouterModule, RouterStateSnapshot, R
 import { Authority } from '@shared/models/authority.enum';
 import { TrendzAnalyticsComponent } from '@home/pages/trendz-analytics/trendz-analytics.component';
 import { MenuId } from '@core/services/menu.models';
-import { map } from 'rxjs';
+import { map, of } from 'rxjs';
 import { TrendzSynchronizationStatus } from '@app/shared/models/trendz-analytics.models';
 import { TrendzService } from '@core/http/trendz.service';
-import { RequestTrendzComponent } from '@home/pages/trendz-analytics/request-trendz.component';
 import { getCurrentAuthState } from '@core/auth/auth.selectors';
 import { Store } from '@ngrx/store';
 import { AppState } from '@app/core/core.state';
@@ -45,19 +44,16 @@ import { AppState } from '@app/core/core.state';
 export const TrendzSyncInfoResolver: ResolveFn<boolean> = (
   route: ActivatedRouteSnapshot,
   state: RouterStateSnapshot,
+  store: Store<AppState> = inject(Store<AppState>),
   trendzService = inject(TrendzService)) => {
-    return trendzService.performTrendzHealthcheck()
+    const authState = getCurrentAuthState(store);
+    if (authState.licenseVersion > 1 && authState.trendzEnabled) {
+      return trendzService.performTrendzHealthcheck()
       .pipe(map(result => result.status === TrendzSynchronizationStatus.SYNCED));
-}
-
-const disabledTrendzReplaceComponentFunction = (store: Store<AppState>) => {
-  const authState = getCurrentAuthState(store);
-  if (authState.licenseVersion > 1 && !authState.trendzEnabled) {
-    return RequestTrendzComponent;
-  } else {
-    return null;
+    } else {
+      return of(false);
+    }
   }
-}
 
 const routes: Routes = [
   {
@@ -68,8 +64,7 @@ const routes: Routes = [
       title: 'trendz-analytics.trendz-analytics',
       breadcrumb: {
         menuId: MenuId.trendz_analytics
-      },
-      replaceComponent: disabledTrendzReplaceComponentFunction
+      }
     },
     resolve: {
       trendzSynced: TrendzSyncInfoResolver
