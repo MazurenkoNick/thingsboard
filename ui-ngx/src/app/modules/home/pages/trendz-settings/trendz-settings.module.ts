@@ -29,26 +29,22 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
-import { TrendzSettings } from '@shared/models/trendz-settings.models';
-import { defaultHttpOptionsFromConfig, RequestConfig } from '@core/http/http-utils';
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { TrendzSettingsComponent } from '@home/pages/trendz-settings/trendz-settings.component';
+import { SharedModule } from '@shared/shared.module';
+import { TrendzSettingsRoutingModule } from '@home/pages/trendz-settings/trendz-settings-routing.module';
 
-@Injectable({
-  providedIn: 'root'
+
+
+@NgModule({
+  declarations: [
+    TrendzSettingsComponent
+  ],
+  imports: [
+    CommonModule,
+    SharedModule,
+    TrendzSettingsRoutingModule
+  ]
 })
-export class TrendzSettingsService {
-
-  constructor(
-    private http: HttpClient
-  ) {}
-
-  public getTrendzSettings(config?: RequestConfig): Observable<TrendzSettings> {
-    return this.http.get<TrendzSettings>(`/api/trendz/settings`, defaultHttpOptionsFromConfig(config))
-  }
-
-  public saveTrendzSettings(trendzSettings: TrendzSettings, config?: RequestConfig): Observable<TrendzSettings> {
-    return this.http.post<TrendzSettings>(`/api/trendz/settings`, trendzSettings, defaultHttpOptionsFromConfig(config))
-  }
-}
+export class TrendzSettingsModule { }
