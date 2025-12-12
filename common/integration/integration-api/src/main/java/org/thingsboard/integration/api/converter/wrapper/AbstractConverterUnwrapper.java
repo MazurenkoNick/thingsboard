@@ -79,8 +79,15 @@ public abstract class AbstractConverterUnwrapper implements ConverterUnwrapper {
         if (!rxMetadataArray.isEmpty()) {
             JsonNode rxMetadata = findByMaxRssi(rxMetadataArray);
             if (rxMetadata != null) {
-                kvMap.put("rssi", rxMetadata.get("rssi").asInt());
-                kvMap.put("snr", rxMetadata.get("snr").asDouble());
+                JsonNode rssiNode = rxMetadata.get("rssi");
+                if (rssiNode != null) {
+                    kvMap.put("rssi", rssiNode.asInt());
+                }
+
+                JsonNode snrNode = rxMetadata.get("snr");
+                if (snrNode != null) {
+                    kvMap.put("snr", snrNode.asDouble());
+                }
             }
         }
     }

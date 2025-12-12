@@ -810,7 +810,6 @@ abstract class SchedulerModeHandler {
   protected _pageSizeOptions: Array<number>;
   protected _defaultSortOrder: string;
   protected _defaultEventType: string;
-  protected _noDataDisplayMessageText: string;
   protected _pageLink: PageLink;
 
   constructor(component: SchedulerEventsComponent, router: Router, route: ActivatedRoute) {
@@ -938,9 +937,8 @@ class WidgetSchedulerModeHandler extends SchedulerModeHandler {
 
     const noDataDisplayMessage = this.settings.noDataDisplayMessage;
     if (isNotEmptyStr(noDataDisplayMessage)) {
-      this._noDataDisplayMessageText = customTranslatePipe.transform(noDataDisplayMessage);
+      this.component.noDataDisplayMessageText = customTranslatePipe.transform(noDataDisplayMessage);
     }
-    this.component.noDataDisplayMessageText = this._noDataDisplayMessageText;
 
     const sortOrder: SortOrder = sortOrderFromString(this._defaultSortOrder);
     if (sortOrder.property === 'customer') {
