@@ -1,10 +1,13 @@
 {
-  "reprocessingOrder": 9,
+  "reprocessingSettings": {
+    "order": 2,
+    "periodInDays": 7
+  },
   "type": "PROPAGATION",
-  "name": "Propagate weekly consumption to owner",
+  "name": "Propagate daily consumption to owner",
   "entityId": {
-    "entityType": "ASSET",
-    "id": "90bd76d0-e2a3-4f5b-b85e-cd59386f2f44"
+    "entityType": "ASSET_PROFILE",
+    "id": "83595270-c452-42d8-ab35-494d7de7cfcd"
   },
   "debugSettings": {
     "failuresEnabled": true,
@@ -15,9 +18,9 @@
   "configuration": {
     "type": "PROPAGATION",
     "arguments": {
-      "weeklyConsumption": {
+      "dailyConsumption": {
         "refEntityKey": {
-          "key": "weeklyConsumption",
+          "key": "dailyConsumption",
           "type": "TS_LATEST"
         },
         "defaultValue": ""

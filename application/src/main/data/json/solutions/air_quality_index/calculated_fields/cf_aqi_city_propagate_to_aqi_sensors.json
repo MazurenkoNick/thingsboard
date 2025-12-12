@@ -1,5 +1,4 @@
 {
-  "reprocessingOrder": -1,
   "type": "PROPAGATION",
   "name": "Propagate to AQI Sensors",
   "entityId": {

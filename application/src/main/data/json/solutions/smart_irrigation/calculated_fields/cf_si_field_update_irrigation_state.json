@@ -1,4 +1,8 @@
 {
+  "reprocessingSettings": {
+    "order": 2,
+    "periodInDays": 7
+  },
   "type": "SCRIPT",
   "name": "Update irrigation state",
   "entityId": {
@@ -36,7 +40,7 @@
         "defaultValue": ""
       }
     },
-    "expression": "var irrigationTaskJson = JSON.parse(irrigationTask);\nvar irrTask = irrigationTaskJson.value;\n\nirrTask.consumption = currentIrrigationWaterConsumption;\nirrTask.duration = Date.now() - irrTask.startTs;\nvar values = {\n    \"irrigationTask\": irrTask\n};\n\nif (shouldTurnOff()) {\n    values.put(\"irrigationState\", \"DONE\");\n}\n\nreturn {\n    \"ts\": irrigationTaskJson.ts,\n    \"values\": values\n}\n\nfunction shouldTurnOff() {\n    var irrTask = JSON.parse(irrigationTask);\n    if (irrTask == null || irrTask.value == null) {\n        return true;\n    }\n    if(irrTask.value.durationThreshold > 0){\n        return (irrTask.value.startTs + irrTask.value.durationThreshold) < Date.now();\n    } else {\n        return currentIrrigationWaterConsumption >= irrTask.value.consumptionThreshold;\n    }\n}",
+    "expression": "var irrTask = irrigationTask.value;\n\nirrTask.consumption = currentIrrigationWaterConsumption;\nirrTask.duration = Date.now() - irrTask.startTs;\n\nvar values = {\n    \"irrigationTask\": irrTask\n};\n\n\nvar shouldTurnOff = false;\n\nif (irrTask == null) {\n    shouldTurnOff = true;\n} else if (irrTask.durationThreshold > 0) {\n    shouldTurnOff = (irrTask.startTs + irrTask.durationThreshold) < Date.now();\n} else {\n    shouldTurnOff = currentIrrigationWaterConsumption >= irrTask.consumptionThreshold;\n}\n\nif (shouldTurnOff) {\n    values.irrigationState = \"DONE\";\n}\n\nreturn {\n    \"ts\": irrigationTask.ts,\n    \"values\": values\n}",
     "output": {
       "type": "TIME_SERIES",
       "strategy": {

@@ -1,5 +1,8 @@
 {
-  "reprocessingOrder": 1,
+  "reprocessingSettings": {
+    "order": 1,
+    "periodInDays": 7
+  },
   "type": "RELATED_ENTITIES_AGGREGATION",
   "name": "AQI Sensor Aggregation",
   "entityId": {

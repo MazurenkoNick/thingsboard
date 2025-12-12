@@ -38,6 +38,8 @@ import org.thingsboard.server.common.data.cf.CalculatedField;
 @EqualsAndHashCode(callSuper = true)
 public class CalculatedFieldDefinition extends CalculatedField {
 
-    private Integer reprocessingOrder;
+    private ReprocessingSettings reprocessingSettings;
+
+    public record ReprocessingSettings(int order, int periodInDays) {}
 
 }
