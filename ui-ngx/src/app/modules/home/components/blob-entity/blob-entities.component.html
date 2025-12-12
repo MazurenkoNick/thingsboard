@@ -40,27 +40,31 @@
         <ng-template #blobEntitiesTitle>
           <span class="tb-blob-entities-title" translate>blob-entity.files</span>
         </ng-template>
-        <tb-timewindow [(ngModel)]="timewindow"
+        <tb-timewindow [(ngModel)]="timewindow" class="pr-5"
                        (ngModelChange)="onTimewindowChange()"
                        asButton historyOnly></tb-timewindow>
-      </div>
-      <section *ngIf="!widgetMode" class="flex flex-1 flex-row">
         <span class="flex-1"></span>
-        <button [disabled]="isLoading$ | async"
-                mat-icon-button
-                (click)="enterFilterMode()"
-                matTooltip="{{'action.search' | translate }}"
-                matTooltipPosition="above">
-          <mat-icon>search</mat-icon>
-        </button>
-        <button [disabled]="isLoading$ | async"
-                mat-icon-button
-                (click)="reloadBlobEntities()"
-                matTooltip="{{'action.refresh' | translate }}"
-                matTooltipPosition="above">
-          <mat-icon>refresh</mat-icon>
-        </button>
-      </section>
+        @if (widgetMode) {
+          <ng-container *ngTemplateOutlet="widgetComponent.widgetHeaderActionsPanel"></ng-container>
+        } @else {
+          <section>
+            <button [disabled]="isLoading$ | async"
+                    mat-icon-button
+                    (click)="enterFilterMode()"
+                    matTooltip="{{'action.search' | translate }}"
+                    matTooltipPosition="above">
+              <mat-icon>search</mat-icon>
+            </button>
+            <button [disabled]="isLoading$ | async"
+                    mat-icon-button
+                    (click)="reloadBlobEntities()"
+                    matTooltip="{{'action.refresh' | translate }}"
+                    matTooltipPosition="above">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </section>
+        }
+      </div>
     </mat-toolbar>
     <mat-toolbar class="mat-mdc-table-toolbar" [class.!hidden]="!textSearchMode || !dataSource.selection.isEmpty()">
       <div class="mat-toolbar-tools">

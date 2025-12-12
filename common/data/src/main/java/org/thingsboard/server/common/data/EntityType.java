@@ -103,6 +103,8 @@ public enum EntityType {
         }
     };
 
+    // TODO DON'T FORGET TO ADD NEW ENTITY TYPES TO THE END OF THE LIST NOT TO BREAK ORDINALS
+
     @Getter
     private final int protoNumber; // Corresponds to EntityTypeProto
     @Getter
