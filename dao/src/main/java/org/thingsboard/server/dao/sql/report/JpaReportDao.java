@@ -32,9 +32,11 @@ package org.thingsboard.server.dao.sql.report;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.edqs.fields.ReportFields;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.ReportId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -155,6 +157,11 @@ public class JpaReportDao extends JpaPartitionedAbstractDao<ReportEntity, Report
     @Override
     public void createPartition(ReportEntity entity) {
         partitioningRepository.createPartitionIfNotExists(TABLE_NAME, entity.getCreatedTime(), TimeUnit.HOURS.toMillis(partitionSizeInHours));
+    }
+
+    @Override
+    public List<ReportFields> findNextBatch(UUID id, int batchSize) {
+        return reportRepository.findNextBatch(id, Limit.of(batchSize));
     }
 
     @Override

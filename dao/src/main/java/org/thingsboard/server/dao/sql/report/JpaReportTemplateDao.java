@@ -32,10 +32,12 @@ package org.thingsboard.server.dao.sql.report;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.edqs.fields.ReportTemplateFields;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -46,6 +48,7 @@ import org.thingsboard.server.dao.report.ReportTemplateDao;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -88,6 +91,11 @@ public class JpaReportTemplateDao extends JpaAbstractDao<ReportTemplateEntity, R
     public ReportTemplateId getExternalIdByInternal(ReportTemplateId internalId) {
         return Optional.ofNullable(reportTemplateRepository.getExternalIdById(internalId.getId()))
                 .map(ReportTemplateId::new).orElse(null);
+    }
+
+    @Override
+    public List<ReportTemplateFields> findNextBatch(UUID id, int batchSize) {
+        return reportTemplateRepository.findNextBatch(id, Limit.of(batchSize));
     }
 
     @Override
