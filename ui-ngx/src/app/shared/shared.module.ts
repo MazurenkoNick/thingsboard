@@ -282,7 +282,10 @@ import { TimeUnitInputComponent } from '@shared/components/time-unit-input.compo
 import { DateExpirationPipe } from '@shared/pipe/date-expiration.pipe';
 import { EntityLimitExceededDialogComponent } from '@shared/components/dialog/entity-limit-exceeded-dialog.component';
 import { PasswordRequirementsTooltipComponent } from '@shared/components/password-requirements-tooltip.component';
+import { TbCurrencyPipe } from '@shared/pipe/currency.pipe';
 import { DynamicMatDialogModule } from '@shared/components/dialog/dynamic/dynamic-dialog.module';
+import { RequestEdgeDialogComponent } from '@shared/components/dialog/request-edge-dialog.component';
+import { RequestWhiteLabelingDialogComponent } from '@shared/components/dialog/request-white-labeling-dialog.component';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -309,6 +312,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     HtmlWithImagePipe,
     CustomTranslatePipe,
     DurationLeftPipe,
+    TbCurrencyPipe,
     {
       provide: FlowInjectionToken,
       useValue: Flow
@@ -436,6 +440,8 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     WhiteLabelingFeatureDialogComponent,
     EntityLimitDialogComponent,
     EntityLimitExceededDialogComponent,
+    RequestEdgeDialogComponent,
+    RequestWhiteLabelingDialogComponent,
     ColorInputComponent,
     MaterialIconSelectComponent,
     NodeScriptTestDialogComponent,
@@ -461,6 +467,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     ImagePipe,
     HtmlWithImagePipe,
     CustomTranslatePipe,
+    TbCurrencyPipe,
     SafePipe,
     ShortNumberPipe,
     SelectableColumnsPipe,
@@ -737,6 +744,8 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     WhiteLabelingFeatureDialogComponent,
     EntityLimitDialogComponent,
     EntityLimitExceededDialogComponent,
+    RequestEdgeDialogComponent,
+    RequestWhiteLabelingDialogComponent,
     ColorInputComponent,
     MaterialIconSelectComponent,
     NodeScriptTestDialogComponent,
@@ -763,6 +772,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     ImagePipe,
     HtmlWithImagePipe,
     CustomTranslatePipe,
+    TbCurrencyPipe,
     SafePipe,
     ShortNumberPipe,
     SelectableColumnsPipe,

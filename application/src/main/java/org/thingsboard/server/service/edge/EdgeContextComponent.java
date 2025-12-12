@@ -78,6 +78,7 @@ import org.thingsboard.server.dao.rule.RuleChainService;
 import org.thingsboard.server.dao.scheduler.SchedulerEventService;
 import org.thingsboard.server.dao.secret.SecretService;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
+import org.thingsboard.server.dao.subscription.SubscriptionService;
 import org.thingsboard.server.dao.tenant.TenantProfileService;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.dao.translation.CustomTranslationService;
@@ -386,6 +387,10 @@ public class EdgeContextComponent {
 
     @Autowired
     private SchedulerEventEdgeProcessor schedulerEventProcessor;
+
+    @Autowired
+    @Lazy
+    private SubscriptionService subscriptionService;
 
     // config
     @Autowired

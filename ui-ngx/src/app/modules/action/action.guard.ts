@@ -43,6 +43,7 @@ import { DialogService } from '@core/services/dialog.service';
 import { TranslateService } from '@ngx-translate/core';
 import { NotificationService } from '@core/http/notification.service';
 import { AuthService } from '@core/auth/auth.service';
+import { AddonType, addonTypeTranslationMap } from '@shared/models/subscription.models';
 
 @Injectable()
 export class ActionGuard {
@@ -79,6 +80,8 @@ export class ActionGuard {
           let actionObservable: Observable<any> = of(null);
           if (path === 'action.entitiesLimitIncreaseRequest') {
             actionObservable = this.performEntitiesLimitIncreaseRequest(authState, lastChild);
+          } else if (path === 'action.addonAccessRequest') {
+            actionObservable = this.performAddonAccessRequest(authState, lastChild);
           }
           return actionObservable.pipe(
             mergeMap(() => {
@@ -101,11 +104,28 @@ export class ActionGuard {
   performEntitiesLimitIncreaseRequest(authState: AuthState, route: ActivatedRouteSnapshot): Observable<any> {
     if (authState.authUser.authority === Authority.TENANT_ADMIN) {
       const entityType = route.queryParams.entityType;
+      const subscriptionViolation = !!route.queryParams.subscriptionViolation;
       if (entityType) {
-        return this.notificationService.sendEntitiesLimitIncreaseRequest(entityType).pipe(
+        return this.notificationService.sendEntitiesLimitIncreaseRequest(entityType, subscriptionViolation).pipe(
           mergeMap(() => this.dialogs.alert(
             this.translate.instant('entity.increase-limit-request-sent-title'),
             this.translate.instant('entity.increase-limit-request-sent-text'),
+            this.translate.instant('action.close')
+          ))
+        );
+      }
+    }
+    return of(null);
+  }
+
+  performAddonAccessRequest(authState: AuthState, route: ActivatedRouteSnapshot): Observable<any> {
+    if (authState.authUser.authority === Authority.TENANT_ADMIN) {
+      const addonType = route.queryParams.addonType;
+      if (addonType) {
+        return this.notificationService.sendAddonAccessRequest(addonType).pipe(
+          mergeMap(() => this.dialogs.alert(
+            this.translate.instant('subscription.feature-request-sent-title', {addonName: this.translate.instant(addonTypeTranslationMap.get(addonType))}),
+            this.translate.instant('subscription.feature-request-sent-text'),
             this.translate.instant('action.close')
           ))
         );

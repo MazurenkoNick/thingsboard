@@ -1,0 +1,96 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<div class="request-feature-dialog request-white-labeling-dialog">
+  <button mat-icon-button class="close-btn" (click)="cancel()">
+    <tb-icon>close</tb-icon>
+  </button>
+  <div class="request-white-labeling-bg"></div>
+  <div class="request-feature-title">{{ 'subscription.request-white-labeling-title' | translate }}</div>
+  <div class="request-feature-text">{{ 'subscription.request-white-labeling-text' | translate }}</div>
+  <div class="request-feature-cards-container">
+    <div class="request-feature-cards">
+      <div class="request-feature-card">
+        <div class="feature-title">
+          <tb-icon color="primary" class="tb-mat-24">format_paint</tb-icon>
+          <div class="feature-title-text">{{ 'subscription.white-labeling-card-re-branding-title' | translate }}</div>
+          <div class="feature-title-hint" tb-hint-tooltip-icon="{{ 'subscription.white-labeling-card-re-branding-text' | translate }}"></div>
+        </div>
+        <div class="feature-text">{{ 'subscription.white-labeling-card-re-branding-text' | translate }}</div>
+      </div>
+      <div class="request-feature-card">
+        <div class="feature-title">
+          <tb-icon color="primary" class="tb-mat-24">display_settings</tb-icon>
+          <div class="feature-title-text">{{ 'subscription.white-labeling-card-custom-domain-title' | translate }}</div>
+          <div class="feature-title-hint" tb-hint-tooltip-icon="{{ 'subscription.white-labeling-card-custom-domain-text' | translate }}"></div>
+        </div>
+        <div class="feature-text">{{ 'subscription.white-labeling-card-custom-domain-text' | translate }}</div>
+      </div>
+      <div class="request-feature-card">
+        <div class="feature-title">
+          <tb-icon color="primary" class="tb-mat-24">settings_suggest</tb-icon>
+          <div class="feature-title-text">{{ 'subscription.white-labeling-card-ui-title' | translate }}</div>
+          <div class="feature-title-hint" tb-hint-tooltip-icon="{{ 'subscription.white-labeling-card-ui-text' | translate }}"></div>
+        </div>
+        <div class="feature-text">{{ 'subscription.white-labeling-card-ui-text' | translate }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="request-feature-actions">
+    @if (isSysAdmin) {
+      <div class="request-feature-action-text">{{ 'subscription.white-labeling-action-prototype-plan-text' | translate }}</div>
+    } @else {
+      <div class="request-feature-action-text">{{ 'subscription.tenant-request-white-labeling-action-text' | translate }}</div>
+    }
+    <div class="flex flex-row gap-2">
+      @if (isSysAdmin) {
+        <button mat-flat-button color="primary" (click)="upgradePlan($event)">
+          {{ 'subscription.upgrade-plan' | translate }}
+        </button>
+      } @else {
+        <button mat-flat-button color="primary" (click)="requestAccess($event)">
+          {{ 'subscription.request-access' | translate }}
+        </button>
+      }
+      <button mat-button color="primary" (click)="learnMore($event)">
+        {{ 'subscription.learn-more' | translate }}
+      </button>
+    </div>
+  </div>
+  @if (isTenantAdmin) {
+    <div class="request-feature-sysadmin-prompt">
+      {{ 'subscription.request-feature-sysadmin-text' | translate }}
+      <a href="" (click)="loginAsSysAdmin($event)"> {{ 'subscription.login-here' | translate }} </a>
+      {{ 'subscription.to-enable-feature' | translate }}
+    </div>
+  }
+</div>

@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.LicenseInfo;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.subscription.SubscriptionException;
+import org.thingsboard.server.common.data.subscription.SubscriptionInfo;
 
 @Service
 @Slf4j
@@ -54,6 +55,11 @@ public class InstallSubscriptionService implements SubscriptionService {
     }
 
     @Override
+    public void createEdgeAllowed(TenantId tenantId) throws SubscriptionException {
+
+    }
+
+    @Override
     public void whiteLabelingAllowed(TenantId tenantId) throws SubscriptionException {
 
     }
@@ -64,12 +70,37 @@ public class InstallSubscriptionService implements SubscriptionService {
     }
 
     @Override
+    public boolean edgeEnabled(TenantId tenantId) throws SubscriptionException {
+        return false;
+    }
+
+    @Override
+    public boolean trendzEnabled(TenantId tenantId) throws SubscriptionException {
+        return false;
+    }
+
+    @Override
     public boolean isDevelopment(TenantId tenantId) throws SubscriptionException {
         return false;
     }
 
     @Override
     public LicenseInfo getLicenseInfo() {
+        return null;
+    }
+
+    @Override
+    public int getLicenseVersion() {
+        return 1;
+    }
+
+    @Override
+    public SubscriptionInfo getSubscriptionInfo() {
+        return null;
+    }
+
+    @Override
+    public SubscriptionInfo refreshLicense() {
         return null;
     }
 }

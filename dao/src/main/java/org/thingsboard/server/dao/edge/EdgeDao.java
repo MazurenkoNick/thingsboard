@@ -59,6 +59,8 @@ public interface EdgeDao extends Dao<Edge>, TenantEntityDao<Edge> {
 
     PageData<Edge> findEdgesByTenantId(UUID tenantId, PageLink pageLink);
 
+    Long countEdges();
+
     PageData<Edge> findEdgesByTenantIdAndType(UUID tenantId, String type, PageLink pageLink);
 
     ListenableFuture<List<Edge>> findEdgesByTenantIdAndIdsAsync(UUID tenantId, List<UUID> edgeIds);

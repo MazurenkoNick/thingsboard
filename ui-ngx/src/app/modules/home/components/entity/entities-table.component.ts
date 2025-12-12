@@ -42,7 +42,7 @@ import {
   OnDestroy,
   OnInit,
   Renderer2,
-  SimpleChanges,
+  SimpleChanges, Type,
   ViewChild,
   ViewContainerRef
 } from '@angular/core';
@@ -134,6 +134,10 @@ export class EntitiesTableComponent extends PageComponent implements IEntitiesTa
   isDetailsOpen = false;
   detailsPanelOpened = new EventEmitter<boolean>();
 
+  replaceComponent: Type<any>;
+
+  @ViewChild('replaceComponentAnchor', {static: true}) replaceComponentAnchor: TbAnchorComponent;
+
   @ViewChild('entityTableHeader', {static: true}) entityTableHeaderAnchor: TbAnchorComponent;
 
   @ViewChild('searchInput') searchInputField: ElementRef;
@@ -213,8 +217,20 @@ export class EntitiesTableComponent extends PageComponent implements IEntitiesTa
   }
 
   private init(entitiesTableConfig: EntityTableConfig<BaseData<HasId>>) {
+
+    if (this.route.snapshot.data.replaceComponent) {
+      this.replaceComponent = this.route.snapshot.data.replaceComponent(this.store);
+    }
+
+    const viewContainerRef = this.replaceComponentAnchor.viewContainerRef;
+    viewContainerRef.clear();
+    if (this.replaceComponent) {
+      viewContainerRef.createComponent(this.replaceComponent);
+    }
+
     this.isDetailsOpen = false;
     this.entitiesTableConfig = entitiesTableConfig;
+
     this.pageMode = this.entitiesTableConfig.pageMode;
     if (this.entitiesTableConfig.headerComponent) {
       const viewContainerRef = this.entityTableHeaderAnchor.viewContainerRef;

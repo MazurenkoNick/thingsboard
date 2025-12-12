@@ -41,6 +41,12 @@ const routes: Routes = [
     loadComponent: () => of(null),
     data: {},
     canActivate: [ActionGuard],
+  },
+  {
+    path: 'action/addonAccessRequest',
+    loadComponent: () => of(null),
+    data: {},
+    canActivate: [ActionGuard],
   }
 ];
 

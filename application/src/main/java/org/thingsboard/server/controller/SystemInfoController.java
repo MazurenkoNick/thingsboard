@@ -216,6 +216,9 @@ public class SystemInfoController extends BaseController {
         systemParams.setMobileQrEnabled(Optional.ofNullable(qrCodeSettingService.getMergedQrCodeSettings(tenantId))
                 .map(QrCodeSettings::getQrCodeConfig).map(QRCodeConfig::isShowOnHomePage)
                 .orElse(false));
+        systemParams.setLicenseVersion(subscriptionService.getLicenseVersion());
+        systemParams.setEdgeEnabled(subscriptionService.edgeEnabled(tenantId));
+        systemParams.setTrendzEnabled(subscriptionService.trendzEnabled(tenantId));
         return systemParams;
     }
 

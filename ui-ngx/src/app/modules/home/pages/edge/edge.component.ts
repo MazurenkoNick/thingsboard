@@ -41,7 +41,7 @@ import { generateSecret, guid } from '@core/utils';
 import { GroupEntityComponent } from '@home/components/group/group-entity.component';
 import { GroupEntityTableConfig } from '@home/models/group/group-entities-table-config.models';
 import { Authority } from '@shared/models/authority.enum';
-import { getCurrentAuthUser } from '@core/auth/auth.selectors';
+import { getCurrentAuthState, getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { AuthUser } from '@shared/models/user.model';
 import { EntityTableConfig } from '@home/models/entity/entities-table-config.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
@@ -58,6 +58,8 @@ export class EdgeComponent extends GroupEntityComponent<EdgeInfo> {
 
   // edgeScope: 'tenant' | 'customer' | 'customer_user';
   upgradeAvailable: boolean = false;
+
+  licenseVersion = getCurrentAuthState(this.store).licenseVersion;
 
   constructor(protected store: Store<AppState>,
               protected translate: TranslateService,

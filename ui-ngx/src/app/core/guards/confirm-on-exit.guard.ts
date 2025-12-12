@@ -30,7 +30,7 @@
 ///
 
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
 import { UntypedFormGroup } from '@angular/forms';
 import { select, Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
@@ -60,12 +60,17 @@ export class ConfirmOnExitGuard  {
 
   constructor(private store: Store<AppState>,
               private dialogService: DialogService,
+              private router: Router,
               private translate: TranslateService) { }
 
   canDeactivate(component: HasConfirmForm & HasDirtyFlag,
                 route: ActivatedRouteSnapshot,
                 state: RouterStateSnapshot) {
 
+
+    if (this.router.getCurrentNavigation()?.extras?.state?.skipConfirmOnExit) {
+      return true;
+    }
 
     let auth: AuthState = null;
     this.store.pipe(select(selectAuth), take(1)).subscribe(

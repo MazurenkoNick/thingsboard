@@ -49,6 +49,8 @@ import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 })
 export class RouterTabsComponent extends PageComponent implements OnInit {
 
+  @ViewChild('replaceComponentAnchor', {static: true}) replaceComponentAnchor: TbAnchorComponent;
+
   @ViewChild('tabsHeaderComponent', {static: true}) tabsHeaderComponentAnchor: TbAnchorComponent;
 
   tabsHeaderComponentRef: ComponentRef<any>;
@@ -59,6 +61,8 @@ export class RouterTabsComponent extends PageComponent implements OnInit {
 
   tabs$: Observable<Array<MenuSection>>;
 
+  replaceComponent: Type<any>;
+
   constructor(protected store: Store<AppState>,
               private activatedRoute: ActivatedRoute,
               public router: Router,
@@ -68,30 +72,39 @@ export class RouterTabsComponent extends PageComponent implements OnInit {
   }
 
   ngOnInit() {
-    if (this.activatedRoute.snapshot.data.useChildrenRoutesForTabs) {
-      this.tabs$ = this.router.events.pipe(
-        filter((event) => event instanceof NavigationEnd),
-        startWith(''),
-        map(() => this.buildTabsForRoutes(this.activatedRoute))
-      );
+    const viewContainerRef = this.replaceComponentAnchor.viewContainerRef;
+    viewContainerRef.clear();
+    if (this.activatedRoute.snapshot.data.replaceComponent) {
+      this.replaceComponent = this.activatedRoute.snapshot.data.replaceComponent(this.store);
+    }
+    if (this.replaceComponent) {
+      viewContainerRef.createComponent(this.replaceComponent);
     } else {
-      this.tabs$ = merge(this.menuService.menuSections(),
-        this.router.events.pipe(
-          filter((event) => event instanceof NavigationEnd ),
-          distinctUntilChanged())
-      ).pipe(
-        mergeMap(() => this.menuService.menuSections().pipe(take(1))),
-        map((sections) => this.buildTabs(this.activatedRoute, sections))
+      if (this.activatedRoute.snapshot.data.useChildrenRoutesForTabs) {
+        this.tabs$ = this.router.events.pipe(
+          filter((event) => event instanceof NavigationEnd),
+          startWith(''),
+          map(() => this.buildTabsForRoutes(this.activatedRoute))
+        );
+      } else {
+        this.tabs$ = merge(this.menuService.menuSections(),
+          this.router.events.pipe(
+            filter((event) => event instanceof NavigationEnd),
+            distinctUntilChanged())
+        ).pipe(
+          mergeMap(() => this.menuService.menuSections().pipe(take(1))),
+          map((sections) => this.buildTabs(this.activatedRoute, sections))
+        );
+      }
+
+      if (this.activatedRoute.snapshot.data.replaceUrl) {
+        this.replaceUrl = true;
+      }
+
+      this.activatedRoute.data.subscribe(
+        (data) => this.buildTabsHeaderComponent(data)
       );
     }
-
-    if (this.activatedRoute.snapshot.data.replaceUrl) {
-      this.replaceUrl = true;
-    }
-
-    this.activatedRoute.data.subscribe(
-      (data) => this.buildTabsHeaderComponent(data)
-    );
   }
 
   activeComponentChanged(activeComponent: any) {

@@ -59,6 +59,9 @@ export interface SysParamsState {
   converterDebugPerTenantLimitsConfiguration?: string;
   availableLocales: string[];
   trendzSettings: TrendzSettings;
+  licenseVersion: number;
+  edgeEnabled: boolean;
+  trendzEnabled: boolean;
 }
 
 export interface SysParams extends SysParamsState {

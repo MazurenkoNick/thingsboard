@@ -65,4 +65,7 @@ public class SystemParams {
     long minAllowedAggregationIntervalInSecForCF;
     long intermediateAggregationIntervalInSecForCF;
     TrendzSettings trendzSettings;
+    int licenseVersion;
+    boolean edgeEnabled;
+    boolean trendzEnabled;
 }

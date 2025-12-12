@@ -53,6 +53,7 @@ import {
 import { User } from '@shared/models/user.model';
 import { isNotEmptyStr } from '@core/utils';
 import { EntityType } from '@shared/models/entity-type.models';
+import { AddonType } from '@shared/models/subscription.models';
 
 @Injectable({
   providedIn: 'root'
@@ -85,8 +86,12 @@ export class NotificationService {
     return this.http.post<NotificationRequest>('/api/notification/request', notification, defaultHttpOptionsFromConfig(config));
   }
 
-  public sendEntitiesLimitIncreaseRequest(entityType: EntityType, config?: RequestConfig): Observable<void> {
-    return this.http.post<void>(`/api/notification/entitiesLimitIncreaseRequest/${entityType}`, defaultHttpOptionsFromConfig(config));
+  public sendEntitiesLimitIncreaseRequest(entityType: EntityType, subscriptionViolation = false, config?: RequestConfig): Observable<void> {
+    return this.http.post<void>(`/api/notification/entitiesLimitIncreaseRequest/${entityType}?subscriptionViolation=${subscriptionViolation}`, defaultHttpOptionsFromConfig(config));
+  }
+
+  public sendAddonAccessRequest(addonType: AddonType, config?: RequestConfig): Observable<void> {
+    return this.http.post<void>(`/api/notification/sendAddonAccessRequest/${addonType}`, defaultHttpOptionsFromConfig(config));
   }
 
   public getNotificationRequestById(id: string, config?: RequestConfig): Observable<NotificationRequest> {

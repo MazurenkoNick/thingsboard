@@ -29,6 +29,8 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
+import { EntityType } from '@shared/models/entity-type.models';
+
 export enum SubscriptionErrorCode {
   LIMIT_REACHED = 'LIMIT_REACHED',
   FEATURE_DISABLED = 'FEATURE_DISABLED',
@@ -38,6 +40,7 @@ export enum SubscriptionErrorCode {
 export enum SubscriptionEntry {
   DEVICE_COUNT = 'DEVICE_COUNT',
   ASSET_COUNT = 'ASSET_COUNT',
+  EDGE_COUNT = 'EDGE_COUNT',
   WHITE_LABELING = 'WHITE_LABELING'
 }
 
@@ -48,12 +51,21 @@ export interface SubscriptionErrorData {
   message?: string;
 }
 
+export const subscriptionEntryToEntityType = new Map<SubscriptionEntry, EntityType>(
+  [
+    [SubscriptionEntry.DEVICE_COUNT, EntityType.DEVICE],
+    [SubscriptionEntry.ASSET_COUNT, EntityType.ASSET],
+    [SubscriptionEntry.EDGE_COUNT, EntityType.EDGE]
+  ]
+);
+
 export const subscriptionErrorsMap = new Map<SubscriptionErrorCode, Map<SubscriptionEntry, string>>(
   [
     [SubscriptionErrorCode.LIMIT_REACHED, new Map<SubscriptionEntry, string>(
       [
         [SubscriptionEntry.DEVICE_COUNT, 'subscription-error.limit-reached.device-count'],
-        [SubscriptionEntry.ASSET_COUNT, 'subscription-error.limit-reached.asset-count']
+        [SubscriptionEntry.ASSET_COUNT, 'subscription-error.limit-reached.asset-count'],
+        [SubscriptionEntry.EDGE_COUNT, 'subscription-error.limit-reached.edge-count']
       ]
     )],
     [SubscriptionErrorCode.FEATURE_DISABLED, new Map<SubscriptionEntry, string>(
@@ -61,5 +73,60 @@ export const subscriptionErrorsMap = new Map<SubscriptionErrorCode, Map<Subscrip
         [SubscriptionEntry.WHITE_LABELING, 'subscription-error.feature-disabled.white-labeling']
       ]
     )]
+  ]
+);
+
+export enum PlanUiType {
+  TbMaker = 'TbMaker',
+  TbPrototype = 'TbPrototype',
+  TbStartup = 'TbStartup',
+  TbBusiness = 'TbBusiness',
+  TbBusinessPlus = 'TbBusinessPlus',
+  TbPerpetual = 'TbPerpetual'
+}
+
+export interface SubscriptionInfo {
+  subscriptionId: string;
+  subscriptionPlanName: string;
+  planUiType: PlanUiType;
+  perpetual: boolean;
+  offline: boolean;
+  currentPeriodStartTs: number;
+  currentPeriodEndTs: number;
+  endTs: number;
+  upcomingInvoiceDate: number;
+  upcomingInvoiceAmountDue: number;
+  planExtraDeviceEnabled: boolean;
+  planEdgeEnabled: boolean;
+  planExtraEdgeEnabled: boolean;
+  planTrendzEnabled: boolean;
+
+  dataTs: number;
+  licenseServerEndpoint: string;
+
+  maxDevices: number;
+  maxAssets: number;
+  maxEdges: number;
+  whiteLabelingEnabled: boolean;
+  edgeEnabled: boolean;
+  trendzEnabled: boolean;
+  development: boolean;
+
+  devicesCount: number;
+  assetsCount: number;
+  edgesCount: number;
+}
+
+export enum AddonType {
+  EDGE = 'EDGE',
+  TRENDZ = 'TRENDZ',
+  WHITE_LABELING = 'WHITE_LABELING'
+}
+
+export const addonTypeTranslationMap = new Map<AddonType, string>(
+  [
+    [AddonType.EDGE, 'subscription.edge-addon'],
+    [AddonType.TRENDZ, 'subscription.trendz-addon'],
+    [AddonType.WHITE_LABELING, 'subscription.white-labeling'],
   ]
 );

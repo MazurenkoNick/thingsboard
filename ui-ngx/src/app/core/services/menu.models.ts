@@ -126,6 +126,7 @@ export enum MenuId {
   repository_settings = 'repository_settings',
   auto_commit_settings = 'auto_commit_settings',
   queues = 'queues',
+  license_management = 'license_management',
   security_settings = 'security_settings',
   security_settings_general = 'security_settings_general',
   two_fa = 'two_fa',
@@ -514,6 +515,16 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       type: 'link',
       path: '/settings/queues',
       icon: 'swap_calls'
+    }
+  ],
+  [
+    MenuId.license_management,
+    {
+      id: MenuId.license_management,
+      name: 'subscription.license-management',
+      type: 'link',
+      path: '/license',
+      icon: 'mdi:file-cog'
     }
   ],
   [
@@ -1606,6 +1617,10 @@ const menuFilters = new Map<MenuId, MenuFilter>([
             userPermissionsService.hasReadGenericPermission(Resource.ADMIN_SETTINGS)
   ],
   [
+    MenuId.license_management, (authState, userPermissionsService) =>
+    authState.authUser.authority === Authority.SYS_ADMIN && authState.licenseVersion > 1
+  ],
+  [
     MenuId.ai_models, (authState, userPermissionsService) =>
             authState.authUser.authority === Authority.TENANT_ADMIN &&
             userPermissionsService.hasReadGenericPermission(Resource.AI_MODEL)
@@ -1672,6 +1687,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.queues}
         ]
       },
+      {id: MenuId.license_management},
       {
         id: MenuId.security_settings,
         pages: [
@@ -2008,7 +2024,7 @@ const defaultHomeSectionMap = new Map<Authority, HomeSectionReference[]>([
         name: 'admin.system-settings',
         places: [MenuId.general, MenuId.mail_server,
           MenuId.notification_settings, MenuId.security_settings, MenuId.oauth2, MenuId.domains, MenuId.mobile_apps,
-          MenuId.clients, MenuId.two_fa, MenuId.resources_library, MenuId.queues]
+          MenuId.clients, MenuId.two_fa, MenuId.resources_library, MenuId.queues, MenuId.license_management]
       },
       {
         name: 'white-labeling.white-labeling',
@@ -2270,7 +2286,7 @@ const filterMenuReference = (authState: AuthState, userPermissionsService: UserP
   if (allowedMenuIds?.length && !allowedMenuIds.includes(reference.id)) {
     return false;
   }
-  if (authState.authUser.authority === Authority.SYS_ADMIN) {
+  if (authState.authUser.authority === Authority.SYS_ADMIN && reference.id !== MenuId.license_management) {
     return true;
   }
   const filter = menuFilters.get(MenuId[reference.id]);

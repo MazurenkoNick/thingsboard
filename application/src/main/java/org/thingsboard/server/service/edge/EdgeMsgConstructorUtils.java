@@ -405,7 +405,7 @@ public class EdgeMsgConstructorUtils {
         return builder;
     }
 
-    public static EdgeConfiguration constructEdgeConfiguration(Edge edge) {
+    public static EdgeConfiguration constructEdgeConfiguration(Edge edge, int licenseVersion) {
         EdgeConfiguration.Builder builder = EdgeConfiguration.newBuilder()
                 .setEdgeIdMSB(edge.getId().getId().getMostSignificantBits())
                 .setEdgeIdLSB(edge.getId().getId().getLeastSignificantBits())
@@ -418,7 +418,8 @@ public class EdgeMsgConstructorUtils {
                 .setEdgeLicenseKey(edge.getEdgeLicenseKey())
                 .setCloudEndpoint(edge.getCloudEndpoint())
                 .setAdditionalInfo(JacksonUtil.toString(edge.getAdditionalInfo()))
-                .setCloudType("PE");
+                .setCloudType("PE")
+                .setLicenseVersion(licenseVersion);
         if (edge.getCustomerId() != null) {
             builder.setCustomerIdMSB(edge.getCustomerId().getId().getMostSignificantBits())
                     .setCustomerIdLSB(edge.getCustomerId().getId().getLeastSignificantBits());

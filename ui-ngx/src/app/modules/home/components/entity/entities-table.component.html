@@ -30,7 +30,8 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<mat-drawer-container hasBackdrop="false" class="tb-absolute-fill">
+<tb-anchor #replaceComponentAnchor></tb-anchor>
+<mat-drawer-container hasBackdrop="false" class="tb-absolute-fill" [class.!hidden]="!!replaceComponent">
   <mat-drawer *ngIf="entitiesTableConfig.detailsPanelEnabled"
               class="tb-details-drawer mat-elevation-z4"
               #drawer

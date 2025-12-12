@@ -71,6 +71,15 @@ import { JsLibraryTableConfigResolver } from '@home/pages/admin/resource/js-libr
 import { TrendzSettingsComponent } from '@home/pages/admin/trendz-settings.component';
 import { secretsRoutes } from '@home/pages/secret-storage/secret-storage-routing.module';
 import { aiModelRoutes } from '@home/pages/ai-model/ai-model-routing.module';
+import { LicenseManagementComponent } from '@home/pages/admin/license-management.component';
+import { SubscriptionInfo } from '@shared/models/subscription.models';
+import { AdminService } from '@core/http/admin.service';
+
+export const subscriptionInfoResolver: ResolveFn<SubscriptionInfo> = (
+  route: ActivatedRouteSnapshot,
+  state: RouterStateSnapshot,
+  adminService = inject(AdminService)
+): Observable<SubscriptionInfo> => adminService.getSubscriptionInfo();
 
 export const mailTemplateSettingsResolver: ResolveFn<MailTemplatesSettings> = (
   route: ActivatedRouteSnapshot,
@@ -428,6 +437,20 @@ const routes: Routes = [
         redirectTo: '/settings/notifications'
       }
     ]
+  },
+  {
+    path: 'license',
+    component: LicenseManagementComponent,
+    data: {
+      auth: [Authority.SYS_ADMIN],
+      title: 'subscription.license-management',
+      breadcrumb: {
+        menuId: MenuId.license_management
+      }
+    },
+    resolve: {
+      subscriptionInfo: subscriptionInfoResolver
+    }
   },
   {
     path: 'security-settings',

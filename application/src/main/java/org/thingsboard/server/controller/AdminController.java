@@ -83,6 +83,7 @@ import org.thingsboard.server.common.data.security.model.JwtPair;
 import org.thingsboard.server.common.data.security.model.JwtSettings;
 import org.thingsboard.server.common.data.security.model.SecuritySettings;
 import org.thingsboard.server.common.data.sms.config.TestSmsRequest;
+import org.thingsboard.server.common.data.subscription.SubscriptionInfo;
 import org.thingsboard.server.common.data.sync.vc.AutoCommitSettings;
 import org.thingsboard.server.common.data.sync.vc.RepositorySettings;
 import org.thingsboard.server.common.data.sync.vc.RepositorySettingsInfo;
@@ -442,9 +443,26 @@ public class AdminController extends BaseController {
         LicenseUsageInfo licenseUsageInfo = new LicenseUsageInfo(licenseInfo);
         licenseUsageInfo.setDevicesCount(deviceService.countDevices());
         licenseUsageInfo.setAssetsCount(assetService.countAssets());
+        licenseUsageInfo.setEdgesCount(edgeService.countEdges());
         licenseUsageInfo.setDashboardsCount(dashboardService.countDashboards());
         licenseUsageInfo.setIntegrationsCount(integrationService.countCoreIntegrations());
         return licenseUsageInfo;
+    }
+
+    @ApiOperation(value = "Get subscription info (getSubscriptionInfo)",
+            notes = "Get subscription info. " + SYSTEM_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAuthority('SYS_ADMIN')")
+    @GetMapping(value = "/subscriptionInfo")
+    public SubscriptionInfo getSubscriptionInfo() throws ThingsboardException {
+        return subscriptionService.getSubscriptionInfo();
+    }
+
+    @ApiOperation(value = "Refresh license (refreshLicense)",
+            notes = "Refresh license info. " + SYSTEM_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAuthority('SYS_ADMIN')")
+    @PostMapping(value = "/refreshLicense")
+    public SubscriptionInfo refreshLicense() throws ThingsboardException {
+        return subscriptionService.refreshLicense();
     }
 
     @ApiOperation(value = "Get system info (getSystemInfo)",

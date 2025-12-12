@@ -50,6 +50,7 @@ import {
 import { EntitiesVersionControlService } from '@core/http/entities-version-control.service';
 import { tap } from 'rxjs/operators';
 import { LoginResponse } from '@shared/models/login.models';
+import { SubscriptionInfo } from '@shared/models/subscription.models';
 
 @Injectable({
   providedIn: 'root'
@@ -157,6 +158,14 @@ export class AdminService {
 
   public getLicenseUsageInfo(config?: RequestConfig): Observable<LicenseUsageInfo> {
     return this.http.get<LicenseUsageInfo>('/api/admin/licenseUsageInfo', defaultHttpOptionsFromConfig(config));
+  }
+
+  public getSubscriptionInfo(config?: RequestConfig): Observable<SubscriptionInfo> {
+    return this.http.get<SubscriptionInfo>('/api/admin/subscriptionInfo', defaultHttpOptionsFromConfig(config));
+  }
+
+  public refreshLicense(config?: RequestConfig): Observable<SubscriptionInfo> {
+    return this.http.post<SubscriptionInfo>('/api/admin/refreshLicense', defaultHttpOptionsFromConfig(config));
   }
 
   public getLoginProcessingUrl(config?: RequestConfig): Observable<string> {

@@ -43,6 +43,8 @@ import org.thingsboard.license.client.TbLicenseClient;
 import org.thingsboard.license.client.TbLicenseClientListener;
 import org.thingsboard.license.client.TbLicenseCtx;
 import org.thingsboard.license.client.TbLicenseStatisticsService;
+import org.thingsboard.license.shared.PlanDataConstants;
+import org.thingsboard.license.shared.SubscriptionData;
 import org.thingsboard.license.shared.exception.LicenseErrorCode;
 import org.thingsboard.license.shared.exception.LicenseException;
 import org.thingsboard.server.common.data.LicenseInfo;
@@ -52,8 +54,10 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.subscription.SubscriptionEntry;
 import org.thingsboard.server.common.data.subscription.SubscriptionErrorCode;
 import org.thingsboard.server.common.data.subscription.SubscriptionException;
+import org.thingsboard.server.common.data.subscription.SubscriptionInfo;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.device.DeviceService;
+import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.tenant.TenantService;
 
 import javax.annotation.PostConstruct;
@@ -66,16 +70,6 @@ import java.util.TimeZone;
 @Slf4j
 @Profile("!install & !test")
 public class BasicSubscriptionService implements SubscriptionService, TbLicenseClientListener {
-
-    private static final String MAX_DEVICES_KEY = "maxdevices";
-    private static final String MAX_ASSETS_KEY = "maxassets";
-    private static final String WHITELABELING_KEY = "whitelabeling";
-
-    private static final String DEVELOPMENT_KEY = "development";
-
-    private static final String PLAN_KEY = "plan";
-
-    private static final String OFFLINE_ENV_KEY = "TB_OFFLINE_LICENSE_DATA";
 
     @Value("${license.secret}")
     private String licenseSecret;
@@ -94,6 +88,9 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     protected AssetService assetService;
 
     @Autowired
+    protected EdgeService edgeService;
+
+    @Autowired
     private ConfigurableApplicationContext context;
 
     @Autowired
@@ -103,6 +100,8 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     private Optional<TbLicenseStatisticsService> licenseStatisticsService;
 
     private AbstractTbLicenseClient tbLicenseClient;
+    private int licenseVersion;
+    private boolean isOfflineLicense = false;
 
     @PostConstruct
     public void init() {
@@ -119,6 +118,7 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
                             .tbLicenseCtx(licenseCtx)
                             .checkInstanceRequired(zkEnabled) //No need to check instance registry if zk disabled
                             .build();
+                    this.isOfflineLicense = true;
                 } catch (Exception e) {}
                 if (tbLicenseClient == null) {
                     tbLicenseClient = TbLicenseClient.builder()
@@ -127,9 +127,11 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
                             .licenseSecret(this.licenseSecret)
                             .licenseDataFilePath(this.instanceDataFilePath)
                             .releaseDate(releaseDate)
+                            .clusterId(licenseCtx.getClusterId())
                             .build();
                 }
                 tbLicenseClient.init();
+                this.licenseVersion = tbLicenseClient.getLicenseVersion();
             } else {
                 log.error("License secret is not provided!");
                 log.error("Please provide license.secret property value in thingsboard.yml or set TB_LICENSE_SECRET environment variable!");
@@ -162,22 +164,68 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     @Override
     public LicenseInfo getLicenseInfo() {
         LicenseInfo licenseInfo = new LicenseInfo();
-        long maxDevices = this.isUnlimited(MAX_DEVICES_KEY) ? 0 : tbLicenseClient.getPlanLongValue(MAX_DEVICES_KEY);
+        long maxDevices = this.isUnlimited(PlanDataConstants.MAX_DEVICES_KEY) ? 0 : tbLicenseClient.getPlanLongValue(PlanDataConstants.MAX_DEVICES_KEY);
         licenseInfo.setMaxDevices(maxDevices);
-        long maxAssets = this.isUnlimited(MAX_ASSETS_KEY) ? 0 : tbLicenseClient.getPlanLongValue(MAX_ASSETS_KEY);
+        long maxAssets = this.isUnlimited(PlanDataConstants.MAX_ASSETS_KEY) ? 0 : tbLicenseClient.getPlanLongValue(PlanDataConstants.MAX_ASSETS_KEY);
         licenseInfo.setMaxAssets(maxAssets);
-        licenseInfo.setWhiteLabelingEnabled(tbLicenseClient.getPlanBooleanValue(WHITELABELING_KEY));
+        long maxEdges = this.isUnlimited(PlanDataConstants.MAX_EDGES_KEY) ? 0 : tbLicenseClient.getPlanLongValue(PlanDataConstants.MAX_EDGES_KEY);
+        licenseInfo.setMaxEdges(maxEdges);
+        licenseInfo.setWhiteLabelingEnabled(tbLicenseClient.getPlanBooleanValue(PlanDataConstants.WHITELABELING_KEY));
         try {
-            licenseInfo.setDevelopment(tbLicenseClient.getPlanBooleanValue(DEVELOPMENT_KEY));
+            licenseInfo.setDevelopment(tbLicenseClient.getPlanBooleanValue(PlanDataConstants.DEVELOPMENT_KEY));
         } catch (Exception e) {
             licenseInfo.setDevelopment(false);
         }
         try {
-            licenseInfo.setPlan(tbLicenseClient.getPlanStringValue(PLAN_KEY));
+            licenseInfo.setPlan(tbLicenseClient.getPlanStringValue(PlanDataConstants.PLAN_KEY));
         } catch (Exception e) {
             licenseInfo.setPlan("Unknown");
         }
         return licenseInfo;
+    }
+
+    @Override
+    public int getLicenseVersion() {
+        return tbLicenseClient.getLicenseVersion();
+    }
+
+    @Override
+    public SubscriptionInfo getSubscriptionInfo() {
+        SubscriptionInfo subscriptionInfo = new SubscriptionInfo();
+        SubscriptionData subscriptionData = this.tbLicenseClient.getSubscriptionData();
+        subscriptionInfo.setSubscriptionId(subscriptionData.getSubscriptionId());
+        subscriptionInfo.setSubscriptionPlanName(subscriptionData.getSubscriptionPlanName());
+        subscriptionInfo.setPlanUiType(subscriptionData.getPlanUiType());
+        subscriptionInfo.setPerpetual(subscriptionData.isPerpetual());
+        subscriptionInfo.setOffline(this.isOfflineLicense);
+        subscriptionInfo.setCurrentPeriodStartTs(subscriptionData.getCurrentPeriodStartTs());
+        subscriptionInfo.setCurrentPeriodEndTs(subscriptionData.getCurrentPeriodEndTs());
+        subscriptionInfo.setEndTs(subscriptionData.getEndTs());
+        subscriptionInfo.setUpcomingInvoiceDate(subscriptionData.getUpcomingInvoiceDate());
+        subscriptionInfo.setUpcomingInvoiceAmountDue(subscriptionData.getUpcomingInvoiceAmountDue());
+        subscriptionInfo.setPlanExtraDeviceEnabled(subscriptionData.isPlanExtraDeviceEnabled());
+        subscriptionInfo.setPlanEdgeEnabled(subscriptionData.isPlanEdgeEnabled());
+        subscriptionInfo.setPlanExtraEdgeEnabled(subscriptionData.isPlanExtraEdgeEnabled());
+        subscriptionInfo.setPlanTrendzEnabled(subscriptionData.isPlanTrendzEnabled());
+        subscriptionInfo.setDataTs(this.tbLicenseClient.getDataTs());
+        subscriptionInfo.setLicenseServerEndpoint(this.tbLicenseClient.getLicenseServerEndpoint());
+        subscriptionInfo.setMaxDevices(tbLicenseClient.getPlanLongValue(PlanDataConstants.MAX_DEVICES_KEY));
+        subscriptionInfo.setMaxAssets(tbLicenseClient.getPlanLongValue(PlanDataConstants.MAX_ASSETS_KEY));
+        subscriptionInfo.setMaxEdges(tbLicenseClient.getPlanLongValue(PlanDataConstants.MAX_EDGES_KEY));
+        subscriptionInfo.setWhiteLabelingEnabled(tbLicenseClient.getPlanBooleanValue(PlanDataConstants.WHITELABELING_KEY));
+        subscriptionInfo.setEdgeEnabled(tbLicenseClient.getPlanBooleanValue(PlanDataConstants.EDGE_KEY));
+        subscriptionInfo.setTrendzEnabled(tbLicenseClient.getPlanBooleanValue(PlanDataConstants.TRENDZ_KEY));
+        subscriptionInfo.setDevelopment(tbLicenseClient.getPlanBooleanValue(PlanDataConstants.DEVELOPMENT_KEY));
+        subscriptionInfo.setDevicesCount(countDevices());
+        subscriptionInfo.setAssetsCount(countAssets());
+        subscriptionInfo.setEdgesCount(countEdges());
+        return subscriptionInfo;
+    }
+
+    @Override
+    public SubscriptionInfo refreshLicense() {
+        this.tbLicenseClient.refreshInstance();
+        return this.getSubscriptionInfo();
     }
 
     private void doExit(int exitCode, LicenseErrorCode licenseErrorCode, boolean gracefullShutdown) {
@@ -200,43 +248,55 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
         if (limit > 0) {
             return actual >= limit;
         } else {
-            return false;
+            return licenseVersion > 1;
         }
     }
 
     private boolean isUnlimited(String key) {
-        return this.tbLicenseClient.getPlanLongValue(key) <= 0;
+        return this.licenseVersion < 2 && this.tbLicenseClient.getPlanLongValue(key) <= 0;
     }
 
     @Override
     public void createDeviceAllowed(TenantId tenantId) throws SubscriptionException {
-        if (isUnlimited(MAX_DEVICES_KEY)) {
+        if (isUnlimited(PlanDataConstants.MAX_DEVICES_KEY)) {
             return;
         }
         long actualCount = countDevices();
-        if (limitReached(actualCount, MAX_DEVICES_KEY)) {
+        if (limitReached(actualCount, PlanDataConstants.MAX_DEVICES_KEY)) {
             log.error("Maximum allowed devices limit reached!");
             throw new SubscriptionException("Maximum allowed devices limit reached!",
-                    SubscriptionErrorCode.LIMIT_REACHED, SubscriptionEntry.DEVICE_COUNT, this.tbLicenseClient.getPlanLongValue(MAX_DEVICES_KEY));
+                    SubscriptionErrorCode.LIMIT_REACHED, SubscriptionEntry.DEVICE_COUNT, this.tbLicenseClient.getPlanLongValue(PlanDataConstants.MAX_DEVICES_KEY));
         }
     }
 
     @Override
     public void createAssetAllowed(TenantId tenantId) throws SubscriptionException {
-        if (isUnlimited(MAX_ASSETS_KEY)) {
+        if (isUnlimited(PlanDataConstants.MAX_ASSETS_KEY)) {
             return;
         }
         long actualCount = countAssets();
-        if (limitReached(actualCount, MAX_ASSETS_KEY)) {
+        if (limitReached(actualCount, PlanDataConstants.MAX_ASSETS_KEY)) {
             log.error("Maximum allowed assets limit reached!");
             throw new SubscriptionException("Maximum allowed assets limit reached!",
-                    SubscriptionErrorCode.LIMIT_REACHED, SubscriptionEntry.ASSET_COUNT, this.tbLicenseClient.getPlanLongValue(MAX_ASSETS_KEY));
+                    SubscriptionErrorCode.LIMIT_REACHED, SubscriptionEntry.ASSET_COUNT, this.tbLicenseClient.getPlanLongValue(PlanDataConstants.MAX_ASSETS_KEY));
+        }
+    }
+
+    @Override
+    public void createEdgeAllowed(TenantId tenantId) throws SubscriptionException {
+        if (this.licenseVersion > 1) {
+            long actualCount = countEdges();
+            if (limitReached(actualCount, PlanDataConstants.MAX_EDGES_KEY)) {
+                log.error("Maximum allowed edges limit reached!");
+                throw new SubscriptionException("Maximum allowed edges limit reached!",
+                        SubscriptionErrorCode.LIMIT_REACHED, SubscriptionEntry.EDGE_COUNT, this.tbLicenseClient.getPlanLongValue(PlanDataConstants.MAX_EDGES_KEY));
+            }
         }
     }
 
     @Override
     public void whiteLabelingAllowed(TenantId tenantId) throws SubscriptionException {
-        if (!this.tbLicenseClient.getPlanBooleanValue(WHITELABELING_KEY)) {
+        if (!this.tbLicenseClient.getPlanBooleanValue(PlanDataConstants.WHITELABELING_KEY)) {
             throw new SubscriptionException("White Labeling feature is disabled!",
                     SubscriptionErrorCode.FEATURE_DISABLED, SubscriptionEntry.WHITE_LABELING, 0);
         }
@@ -244,13 +304,23 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
 
     @Override
     public boolean whiteLabelingEnabled(TenantId tenantId) throws SubscriptionException {
-        return this.tbLicenseClient.getPlanBooleanValue(WHITELABELING_KEY);
+        return this.tbLicenseClient.getPlanBooleanValue(PlanDataConstants.WHITELABELING_KEY);
+    }
+
+    @Override
+    public boolean edgeEnabled(TenantId tenantId) throws SubscriptionException {
+        return this.tbLicenseClient.getPlanBooleanValue(PlanDataConstants.EDGE_KEY);
+    }
+
+    @Override
+    public boolean trendzEnabled(TenantId tenantId) throws SubscriptionException {
+        return this.tbLicenseClient.getPlanBooleanValue(PlanDataConstants.TRENDZ_KEY);
     }
 
     @Override
     public boolean isDevelopment(TenantId tenantId) throws SubscriptionException {
         try {
-            return this.tbLicenseClient.getPlanBooleanValue(DEVELOPMENT_KEY);
+            return this.tbLicenseClient.getPlanBooleanValue(PlanDataConstants.DEVELOPMENT_KEY);
         } catch (Exception e) {
             return false;
         }
@@ -262,6 +332,10 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
 
     private long countAssets() {
         return assetService.countAssets();
+    }
+
+    private long countEdges() {
+        return edgeService.countEdges();
     }
 
 }

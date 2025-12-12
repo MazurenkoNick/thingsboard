@@ -75,6 +75,8 @@ public interface EdgeService extends EntityDaoService {
 
     PageData<Edge> findEdgesByTenantId(TenantId tenantId, PageLink pageLink);
 
+    Long countEdges();
+
     PageData<Edge> findEdgesByTenantIdAndType(TenantId tenantId, String type, PageLink pageLink);
 
     ListenableFuture<List<Edge>> findEdgesByTenantIdAndIdsAsync(TenantId tenantId, List<EdgeId> edgeIds);

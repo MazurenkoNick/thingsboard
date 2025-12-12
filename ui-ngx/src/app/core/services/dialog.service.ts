@@ -54,7 +54,7 @@ import { TodoDialogComponent } from '@shared/components/dialog/todo-dialog.compo
 import { ProgressDialogComponent, ProgressDialogData } from '@shared/components/dialog/progress-dialog.component';
 import { WhiteLabelingFeatureDialogComponent } from '@shared/components/dialog/white-labeling-feature-dialog.component';
 import {
-  SubscriptionEntry,
+  SubscriptionEntry, subscriptionEntryToEntityType,
   SubscriptionErrorCode,
   SubscriptionErrorData,
   subscriptionErrorsMap
@@ -72,6 +72,10 @@ import {
   EntityLimitExceededDialogComponent,
   EntityLimitExceededDialogData
 } from '@shared/components/dialog/entity-limit-exceeded-dialog.component';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import { getCurrentAuthState } from '@core/auth/auth.selectors';
+import { RequestWhiteLabelingDialogComponent } from '@shared/components/dialog/request-white-labeling-dialog.component';
 
 @Injectable({
   providedIn: 'root'
@@ -79,6 +83,7 @@ import {
 export class DialogService {
 
   constructor(
+    private store: Store<AppState>,
     private translate: TranslateService,
     private authService: AuthService,
     public dialog: MatDialog
@@ -163,7 +168,7 @@ export class DialogService {
       }).afterClosed();
   }
 
-  entitiesLimitExceeded(entityLimitData: {entityType: EntityType, limit: number}): Observable<any> {
+  entitiesLimitExceeded(entityLimitData: {entityType: EntityType, limit: number, subscriptionViolation: boolean}): Observable<any> {
     return this.dialog.open<EntityLimitExceededDialogComponent, EntityLimitExceededDialogData>(EntityLimitExceededDialogComponent,
       {
         disableClose: true,
@@ -192,24 +197,39 @@ export class DialogService {
     const subscriptionErrorCode = error.subscriptionErrorCode;
     const subscriptionEntry = error.subscriptionEntry;
     const value = error.subscriptionValue;
-    return this.dialog.open<EntityLimitDialogComponent, EntityLimitDialogData>(EntityLimitDialogComponent,
-      {
-        disableClose: true,
-        panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
-        data: {
-          subscriptionErrorCode,
-          subscriptionEntry,
-          value
-        }
-      }).afterClosed();
+    if (getCurrentAuthState(this.store).licenseVersion > 1) {
+      const entityType = subscriptionEntryToEntityType.get(subscriptionEntry);
+      const limit = value;
+      return this.entitiesLimitExceeded({entityType, limit, subscriptionViolation: true});
+    } else {
+      return this.dialog.open<EntityLimitDialogComponent, EntityLimitDialogData>(EntityLimitDialogComponent,
+        {
+          disableClose: true,
+          panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+          data: {
+            subscriptionErrorCode,
+            subscriptionEntry,
+            value
+          }
+        }).afterClosed();
+    }
   }
 
   whiteLabelingFeature(): Observable<any> {
-    return this.dialog.open<WhiteLabelingFeatureDialogComponent>(WhiteLabelingFeatureDialogComponent,
-      {
-        disableClose: true,
-        panelClass: ['tb-dialog', 'tb-fullscreen-dialog', 'tb-fullscreen-dialog-gt-sm'],
-      }).afterClosed();
+    if (getCurrentAuthState(this.store).licenseVersion > 1) {
+      return this.dialog.open<RequestWhiteLabelingDialogComponent>(RequestWhiteLabelingDialogComponent,
+        {
+          disableClose: true,
+          autoFocus: false,
+          panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+        }).afterClosed();
+    } else {
+      return this.dialog.open<WhiteLabelingFeatureDialogComponent>(WhiteLabelingFeatureDialogComponent,
+        {
+          disableClose: true,
+          panelClass: ['tb-dialog', 'tb-fullscreen-dialog', 'tb-fullscreen-dialog-gt-sm'],
+        }).afterClosed();
+    }
   }
 
   unsupportedSolutionTemplateLevel(error: SubscriptionErrorData): Observable<any> {
