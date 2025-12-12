@@ -55,6 +55,13 @@ import { deepClone, isUndefined } from '@core/utils';
 import { Filter, Filters, KeyFilterInfo } from '@shared/models/query/query.models';
 import { FilterDialogComponent, FilterDialogData } from '@home/components/filter/filter-dialog.component';
 import { DashboardUtilsService } from '@core/services/dashboard-utils.service';
+import {
+  AlarmTableReportComponentConfig,
+  DataReportComponentConfig,
+  ReportComponentConfig,
+  ReportComponentType
+} from '@shared/models/report-component.models';
+import { reportComponentTypesData } from '@home/pages/reporting/template/components/report-component.models';
 
 export interface FiltersDialogData {
   filters: Filters;
@@ -65,6 +72,8 @@ export interface FiltersDialogData {
   singleFilter?: Filter;
   customTitle?: string;
   disableUserEdit?: boolean;
+  reportMode?: boolean;
+  reportComponents?:  ReportComponentConfig[];
 }
 
 @Component({
@@ -129,6 +138,27 @@ export class FiltersDialogComponent extends DialogComponent<FiltersDialogCompone
         });
       }
     }
+
+    if(data.reportMode && data.reportComponents.length) {
+      let componentsTitleList: Array<string>;
+      this.data.reportComponents.forEach((component) => {
+        const typedComponent = component as DataReportComponentConfig;
+        const datasources = typedComponent.type === ReportComponentType.ALARM_TABLE ? [(typedComponent as AlarmTableReportComponentConfig).alarmSource] : typedComponent.dataSources;
+        datasources.forEach((datasource) => {
+          if (datasource.filterId) {
+            componentsTitleList = this.filterToWidgetsMap[datasource.filterId];
+            if (!componentsTitleList) {
+              componentsTitleList = [];
+              this.filterToWidgetsMap[datasource.filterId] = componentsTitleList;
+            }
+            if (!componentsTitleList.includes(typedComponent.type)) {
+              componentsTitleList.push(typedComponent.type);
+            }
+          }
+        });
+      });
+    }
+
     const filterControls: Array<AbstractControl> = [];
     for (const filterId of Object.keys(this.data.filters)) {
       const filter = this.data.filters[filterId];
@@ -173,9 +203,13 @@ export class FiltersDialogComponent extends DialogComponent<FiltersDialogCompone
     if (widgetsTitleList) {
       let widgetsListHtml = '';
       for (const widgetTitle of widgetsTitleList) {
-        widgetsListHtml += '<br/>\'' + widgetTitle + '\'';
+        const title = this.data.reportMode ?
+          this.translate.instant(reportComponentTypesData.getReportComponentTypeData(widgetTitle as ReportComponentType).title)
+          : widgetTitle;
+        widgetsListHtml += '<br/>\'' + title + '\'';
       }
-      const message = this.translate.instant('filter.unable-delete-filter-text',
+      const messageKey = this.data.reportMode ? 'filter.unable-delete-filter-text-components' : 'entity.unable-delete-filter-text';
+      const message = this.translate.instant(messageKey,
         {filter: filter.filter, widgetsList: widgetsListHtml});
       this.dialogs.alert(this.translate.instant('filter.unable-delete-filter-title'),
         message, this.translate.instant('action.close'), true);
