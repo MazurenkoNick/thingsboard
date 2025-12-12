@@ -221,7 +221,7 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
             handleExpiredInterval(intervalEntry, args, results);
             expiredIntervals.add(intervalEntry);
         } else if (now - startTs >= intervalEntry.getIntervalDuration()) {
-            handleActiveInterval(ctx.getCfCheckReevaluationInterval(), intervalEntry, args, results);
+            handleActiveInterval(ctx.getCfCheckReevaluationIntervalMillis(), intervalEntry, args, results);
             if (watermarkDuration == 0) {
                 expiredIntervals.add(intervalEntry);
             }
