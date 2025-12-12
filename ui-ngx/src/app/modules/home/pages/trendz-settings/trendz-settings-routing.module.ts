@@ -31,7 +31,7 @@
 
 import { inject, NgModule } from "@angular/core";
 import { ActivatedRouteSnapshot, ResolveFn, RouterModule, RouterStateSnapshot, Routes } from "@angular/router";
-import { TrendzSettingsComponent } from "./trendz-settings.component";
+import { TrendzSettingsComponent } from "@home/pages/trendz-settings/trendz-settings.component";
 import { Authority } from "@app/shared/models/authority.enum";
 import { MenuId } from "@app/core/services/menu.models";
 import { map } from "rxjs";

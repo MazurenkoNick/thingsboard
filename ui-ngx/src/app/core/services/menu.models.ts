@@ -1868,7 +1868,6 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.notification_settings},
           {id: MenuId.repository_settings},
           {id: MenuId.auto_commit_settings},
-          {id: MenuId.trendz_settings},
           {id: MenuId.ai_models}
         ]
       },
@@ -2115,7 +2114,7 @@ const defaultHomeSectionMap = new Map<Authority, HomeSectionReference[]>([
       {
         name: 'admin.system-settings',
         places: [MenuId.home_settings, MenuId.mail_server, MenuId.notification_settings, MenuId.self_registration,
-          MenuId.two_fa, MenuId.resources_library, MenuId.repository_settings, MenuId.auto_commit_settings, MenuId.trendz_settings]
+          MenuId.two_fa, MenuId.resources_library, MenuId.repository_settings, MenuId.auto_commit_settings]
       }
     ]
   ],

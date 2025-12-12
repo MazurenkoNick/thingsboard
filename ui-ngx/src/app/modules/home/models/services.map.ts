@@ -77,7 +77,6 @@ import { EventService } from '@core/http/event.service';
 import { UnitService } from '@core/services/unit.service';
 import { AuditLogService } from '@core/http/audit-log.service';
 import { BlobEntityService } from '@core/http/blob-entity.service';
-import { TrendzSettingsService } from '@core/http/trendz-settings.service';
 import { SecretStorageService } from '@core/http/secret-storage.service';
 import { AiModelService } from '@core/http/ai-model.service';
 import { DashboardReportService } from '@core/http/dashboard-report.service';
@@ -139,7 +138,6 @@ export const ServicesMap = new Map<string, Type<any>>(
    ['actionNotificationShow', ActionNotificationShow],
    ['actionNotificationHide', ActionNotificationHide],
    ['store', Store],
-   ['trendzSettingsService', TrendzSettingsService],
    ['secretStorageService', SecretStorageService],
    ['aiModelService', AiModelService]
   ]
