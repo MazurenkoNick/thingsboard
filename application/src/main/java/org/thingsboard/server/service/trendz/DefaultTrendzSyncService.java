@@ -147,7 +147,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
     }
 
     @Override
-    public void performPublicSync() {
+    public void performSyncIfNeeded() {
         TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
         if (isSyncedUp(trendzSettings)) {
             log.trace("Trendz is already synced up. Status: {}, Result: {}",

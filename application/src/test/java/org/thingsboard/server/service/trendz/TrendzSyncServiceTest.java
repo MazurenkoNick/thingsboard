@@ -250,7 +250,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
     }
 
     @Test
-    public void testPerformPublicSync_whenSynced() {
+    public void testPerformSync_IfNeeded_whenSynced() {
         TrendzSettings trendzSettings = new TrendzSettings(
                 new TrendzConfiguration(TEST_TRENDZ_URL, TEST_TB_URL),
                 new TrendzSynchronizationResult(TEST_TRENDZ_VERSION, 0L,
@@ -260,13 +260,13 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, trendzSettings);
 
         reset(trendzSettingsService);
-        trendzSyncService.performPublicSync();
+        trendzSyncService.performSyncIfNeeded();
         verify(trendzSettingsService, never())
                 .saveTrendzSettings(any(), any());
     }
 
     @Test
-    public void testPerformPublicSync_whenUnsynced() {
+    public void testPerformSync_IfNeeded_whenUnsynced() {
         TrendzSettings trendzSettings = new TrendzSettings(
                 new TrendzConfiguration(TEST_TRENDZ_URL, TEST_TB_URL),
                 new TrendzSynchronizationResult(TEST_TRENDZ_VERSION, 0L,
@@ -276,7 +276,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, trendzSettings);
 
         reset(trendzSettingsService);
-        trendzSyncService.performPublicSync();
+        trendzSyncService.performSyncIfNeeded();
         verify(trendzSettingsService)
                 .saveTrendzSettings(any(), any());
     }

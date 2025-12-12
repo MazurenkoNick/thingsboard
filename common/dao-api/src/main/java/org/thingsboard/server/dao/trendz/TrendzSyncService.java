@@ -38,7 +38,7 @@ public interface TrendzSyncService {
 
     TrendzSettings performSync();
 
-    void performPublicSync();
+    void performSyncIfNeeded();
 
     TrendzHealthcheckResult performHealthcheck();
 

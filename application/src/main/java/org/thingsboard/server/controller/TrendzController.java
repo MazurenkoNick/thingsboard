@@ -145,7 +145,11 @@ public class TrendzController extends BaseController {
                     "Generates API key, saves configuration, checks Trendz version, and performs initial sync.")
     @PostMapping("/public/connect")
     public void publicConnectToTrendz() {
-        trendzSyncService.performPublicSync();
+        try {
+            trendzSyncService.performSyncIfNeeded();
+        } catch (Exception e) {
+            log.error("Failed to perform Trendz public synchronization.", e);
+        }
     }
 
 }

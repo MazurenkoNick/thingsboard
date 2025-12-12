@@ -62,7 +62,7 @@ public class TrendzStartupSynchronizer {
         ExecutorService executor = Executors.newSingleThreadExecutor(ThingsBoardThreadFactory.forName("trendz-startup-sync"));
         executor.submit(() -> {
             try {
-                trendzSyncService.performPublicSync();
+                trendzSyncService.performSyncIfNeeded();
             } catch (Exception e) {
                 log.error("Failed to perform Trendz startup synchronization", e);
             } finally {
