@@ -59,6 +59,8 @@ public enum EntityType {
     RULE_NODE(12),
     SCHEDULER_EVENT(103),
     BLOB_ENTITY(104),
+    REPORT_TEMPLATE(108),
+    REPORT(109),
     ENTITY_VIEW(15, true) {
         // backward compatibility for TbOriginatorTypeSwitchNode to return correct rule node connection.
         @Override
@@ -99,9 +101,9 @@ public enum EntityType {
         public String getNormalName() {
             return "AI model";
         }
-    },
-    REPORT_TEMPLATE(108),
-    REPORT(109);
+    };
+
+    // TODO DON'T FORGET TO ADD NEW ENTITY TYPES TO THE END OF THE LIST NOT TO BREAK ORDINALS
 
     @Getter
     private final int protoNumber; // Corresponds to EntityTypeProto
