@@ -1,17 +1,17 @@
-The Mine Site Monitoring template refers to a lightweight heavy-machinery monitoring solution designed for clay mining sites.
+The Mine site monitoring template refers to a lightweight heavy-machinery monitoring solution designed for clay mining sites.
 With this template, you get an interactive dashboard with real-time excavator and haul truck tracking, geofencing visualization, and clear indicators of machine presence inside operational zones.
 
 Press the **Install** button to instantly deploy a ready-to-use application that demonstrates the most common requirements of zone-based monitoring in mining operations.
 
 #### Solution structure
 
-* **Mine Site Monitoring** dashboard;
-* **Mine Site** asset representing the overall mining area with predefined Loading, Unloading, and Restricted zones;
+* **Mine site monitoring** dashboard;
+* **Mine site** asset representing the overall mining area with predefined loading, unloading, and restricted zones;
 * One **Excavator** placed inside the loading area;
-* One **Haul Truck** traveling between the loading and unloading areas to demonstrate zone-to-zone movement;
-* One **Haul Truck** positioned in the restricted zone to demonstrate geofence breach detection;
+* One **Haul truck** traveling between the loading and unloading areas to demonstrate zone-to-zone movement;
+* One **Haul truck** positioned in the restricted zone to demonstrate geofence breach detection;
 * One **Excavator** located outside the Mine site boundary for boundary-related alarm behavior;
-* Generic **Mine Site Zone** asset profile representing Loading, Unloading, and Restricted areas;
-* Device profiles for **Excavator** and **Haul Truck**;
+* Generic **Mine site zone** asset profile representing loading, unloading, and restricted areas;
+* Device profiles for **Excavator** and **Haul truck**;
 * Built-in **alarms** for zone presence, zone overstays, restricted area entry, and low fuel;
 * **Telemetry history** that includes location, fuel levels, and machine-specific signals.

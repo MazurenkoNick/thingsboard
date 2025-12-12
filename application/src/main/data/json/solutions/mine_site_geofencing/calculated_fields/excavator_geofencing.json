@@ -5,7 +5,7 @@
     "id": "ff395d16-0c28-4985-802d-bad40f4bf4d0"
   },
   "type": "GEOFENCING",
-  "name": "Excavator Geofencing",
+  "name": "Excavator geofencing",
   "debugSettings": {
     "failuresEnabled": true,
     "allEnabled": false,

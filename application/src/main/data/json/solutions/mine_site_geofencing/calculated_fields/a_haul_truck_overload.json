@@ -65,7 +65,7 @@
           },
           "schedule": null
         },
-        "alarmDetails": "Haul truck weight load is near the critical limit. Current weight: ${loadWeight} t.",
+        "alarmDetails": "Haul truck weight load is near the critical limit. Current weight: ${loadWeight}.",
         "dashboardId": null
       },
       "CRITICAL": {
@@ -94,7 +94,7 @@
           },
           "schedule": null
         },
-        "alarmDetails": "Haul truck has exceeded the safe load limit. Current weight: ${loadWeight} t.",
+        "alarmDetails": "Haul truck has exceeded the safe load limit. Current weight: ${loadWeight}.",
         "dashboardId": null
       }
     },
@@ -124,7 +124,7 @@
         },
         "schedule": null
       },
-      "alarmDetails": "Haul truck load has returned to normal range. Current weight: ${loadWeight} t.",
+      "alarmDetails": "Haul truck load has returned to normal range. Current weight: ${loadWeight}.",
       "dashboardId": null
     },
     "propagate": false,

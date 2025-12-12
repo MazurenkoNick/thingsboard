@@ -1,8 +1,8 @@
 [
   {
-    "name": "Clay Ridge Mine Site",
-    "type": "Mine Site",
-    "label": "Clay Ridge Mine Site",
+    "name": "Clay ridge mine site",
+    "type": "Mine site",
+    "label": "Clay ridge mine site",
     "group": "MineSites",
     "attributes": {
       "address": "North Ridge Clay Deposit, Sample County",
@@ -17,19 +17,19 @@
     "relations": [
       {
         "entityType": "ASSET",
-        "entityName": "Loading Zone A",
+        "entityName": "Loading zone A",
         "direction": "TO",
         "type": "MineSiteToLoadingZone"
       },
       {
         "entityType": "ASSET",
-        "entityName": "Unloading Zone A",
+        "entityName": "Unloading zone A",
         "direction": "TO",
         "type": "MineSiteToUnloadingZone"
       },
       {
         "entityType": "ASSET",
-        "entityName": "Restricted Zone A",
+        "entityName": "Restricted zone A",
         "direction": "TO",
         "type": "MineSiteToRestrictedZone"
       },
@@ -47,13 +47,13 @@
       },
       {
         "entityType": "DEVICE",
-        "entityName": "Haul Truck A",
+        "entityName": "Haul truck A",
         "direction": "TO",
         "type": "MineSiteToMachine"
       },
       {
         "entityType": "DEVICE",
-        "entityName": "Haul Truck B",
+        "entityName": "Haul truck B",
         "direction": "TO",
         "type": "MineSiteToMachine"
       }
@@ -61,9 +61,9 @@
     "jsonId": "d0e23905-8c79-4dd8-a765-289ba27bd4fa"
   },
   {
-    "name": "Loading Zone A",
-    "type": "Mine Site Zone",
-    "label": "Loading Zone A",
+    "name": "Loading zone A",
+    "type": "Mine site zone",
+    "label": "Loading zone A",
     "group": "MineSiteZones",
     "attributes": {
       "perimeter": [
@@ -76,9 +76,9 @@
     "relations": []
   },
   {
-    "name": "Unloading Zone A",
-    "type": "Mine Site Zone",
-    "label": "Unloading Zone A",
+    "name": "Unloading zone A",
+    "type": "Mine site zone",
+    "label": "Unloading zone A",
     "group": "MineSiteZones",
     "attributes": {
       "perimeter": [
@@ -91,9 +91,9 @@
     "relations": []
   },
   {
-    "name": "Restricted Zone A",
-    "type": "Mine Site Zone",
-    "label": "Restricted Zone A",
+    "name": "Restricted zone A",
+    "type": "Mine site zone",
+    "label": "Restricted zone A",
     "group": "MineSiteZones",
     "attributes": {
       "perimeter": [

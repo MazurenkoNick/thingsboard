@@ -1,5 +1,5 @@
 {
-  "name": "Mine Site",
+  "name": "Mine site",
   "description": "Represents a clay mine site that groups all zones and machinery for geofencing monitoring and analytics.",
   "image": null,
   "defaultRuleChainId": null,

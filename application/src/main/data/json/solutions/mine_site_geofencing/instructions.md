@@ -1,6 +1,6 @@
 ## Solution instructions
 
-As part of this solution, we have created the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Mine Site Monitoring"</a> dashboard that displays
+As part of this solution, we have created the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Mine site monitoring"</a> dashboard that displays
 data from multiple heavy machines. You may use the dashboard to:
 
 * observe the location of excavators and haul trucks;
@@ -12,7 +12,7 @@ You may browse a machine’s location history popup by clicking the "Location hi
 You may also drill down to the machine details state by clicking on a table row.
 The details state allows you to view machine-specific alarms, fuel history, movement history, and geofence interactions.
 
-You may always customize the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Mine Site Monitoring"</a> dashboard using dashboard development <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">guide</a>.
+You may always customize the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Mine site monitoring"</a> dashboard using dashboard development <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">guide</a>.
 
 ### Devices
 

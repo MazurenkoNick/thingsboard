@@ -1,6 +1,6 @@
 ### Solution description
 
-With the Mine Site Monitoring template, you get a ready-to-use tool for tracking heavy machinery inside a clay mine.
+With the Mine site monitoring template, you get a ready-to-use tool for tracking heavy machinery inside a clay mine.
 This template is designed to make onboarding fast and simple, showcasing how geofencing and basic telemetry analytics can bring immediate operational value to mining operations.
 
 #### Benefits

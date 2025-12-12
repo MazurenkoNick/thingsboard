@@ -24,9 +24,9 @@
     "relations": []
   },
   {
-    "name": "Haul Truck A",
-    "type": "Haul Truck",
-    "label": "Haul Truck A",
+    "name": "Haul truck A",
+    "type": "Haul truck",
+    "label": "Haul truck A",
     "group": "Machines",
     "emulator": "loadingToUnloadingHaulTruck",
     "attributes": {
@@ -36,9 +36,9 @@
     "relations": []
   },
   {
-    "name": "Haul Truck B",
-    "type": "Haul Truck",
-    "label": "Haul Truck B",
+    "name": "Haul truck B",
+    "type": "Haul truck",
+    "label": "Haul truck B",
     "group": "Machines",
     "emulator": "insideRestrictedZoneHaulTruck",
     "attributes": {

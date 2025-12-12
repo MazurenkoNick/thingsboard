@@ -5,7 +5,7 @@
     "id": "93855be4-461e-4a35-b925-50a70d30c738"
   },
   "type": "SCRIPT",
-  "name": "Haul Truck Fuel Rate",
+  "name": "Haul truck fuel rate",
   "debugSettings": {
     "failuresEnabled": true,
     "allEnabled": false,

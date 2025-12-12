@@ -4,7 +4,7 @@
     "id": "ff395d16-0c28-4985-802d-bad40f4bf4d0"
   },
   "type": "ALARM",
-  "name": "High Hydraulic Pressure",
+  "name": "High hydraulic pressure",
   "debugSettings": {
     "failuresEnabled": true,
     "allEnabled": false,
@@ -65,7 +65,7 @@
           },
           "schedule": null
         },
-        "alarmDetails": "Hydraulic pressure is approaching critical level. Current pressure: ${hydraulicPressure} bar.",
+        "alarmDetails": "Hydraulic pressure is approaching critical level. Current pressure: ${hydraulicPressure}.",
         "dashboardId": null
       },
       "CRITICAL": {
@@ -94,7 +94,7 @@
           },
           "schedule": null
         },
-        "alarmDetails": "Critical hydraulic pressure detected! Current pressure: ${hydraulicPressure} bar.",
+        "alarmDetails": "Critical hydraulic pressure detected! Current pressure: ${hydraulicPressure}.",
         "dashboardId": null
       }
     },
@@ -124,7 +124,7 @@
         },
         "schedule": null
       },
-      "alarmDetails": "Hydraulic pressure has returned to a safe level. Current pressure: ${hydraulicPressure} bar.",
+      "alarmDetails": "Hydraulic pressure has returned to a safe level. Current pressure: ${hydraulicPressure}.",
       "dashboardId": null
     },
     "propagate": false,

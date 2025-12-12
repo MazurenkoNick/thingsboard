@@ -4,7 +4,7 @@
     "id": "93855be4-461e-4a35-b925-50a70d30c738"
   },
   "type": "ALARM",
-  "name": "Entered Restricted Area",
+  "name": "Entered restricted area",
   "debugSettings": {
     "failuresEnabled": true,
     "allEnabled": false,
@@ -50,7 +50,7 @@
           },
           "schedule": null
         },
-        "alarmDetails": "Haul Track entered the Mine Site Restricted Area",
+        "alarmDetails": "Haul track entered the mine site restricted area",
         "dashboardId": null
       }
     },
@@ -81,7 +81,7 @@
         },
         "schedule": null
       },
-      "alarmDetails": "Haul Track left the Mine Site Restricted Area",
+      "alarmDetails": "Haul track left the mine site restricted area",
       "dashboardId": null
     },
     "propagate": false,

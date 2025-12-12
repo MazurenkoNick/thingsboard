@@ -5,7 +5,7 @@
     "id": "ff395d16-0c28-4985-802d-bad40f4bf4d0"
   },
   "type": "ENTITY_AGGREGATION",
-  "name": "Haul Truck Avg Hourly Fuel Consumption",
+  "name": "Excavator avg hourly fuel consumption",
   "debugSettings": {
     "failuresEnabled": true,
     "allEnabled": false,

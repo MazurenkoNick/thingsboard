@@ -1,5 +1,5 @@
 {
-  "name": "Haul Truck",
+  "name": "Haul truck",
   "description": "Haul truck used for transporting clay between zones inside the mine site.",
   "type": "DEFAULT",
   "transportType": "DEFAULT",

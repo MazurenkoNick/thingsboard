@@ -4,7 +4,7 @@
     "id": "ff395d16-0c28-4985-802d-bad40f4bf4d0"
   },
   "type": "ALARM",
-  "name": "Entered Restricted Area",
+  "name": "Entered restricted area",
   "debugSettings": {
     "failuresEnabled": true,
     "allEnabled": false,
@@ -50,7 +50,7 @@
           },
           "schedule": null
         },
-        "alarmDetails": "Excavator entered the Mine Site Restricted Area",
+        "alarmDetails": "Excavator entered the mine site restricted area",
         "dashboardId": null
       }
     },
@@ -81,7 +81,7 @@
         },
         "schedule": null
       },
-      "alarmDetails": "Excavator left the Mine Site Restricted Area",
+      "alarmDetails": "Excavator left the Mine site restricted area",
       "dashboardId": null
     },
     "propagate": false,

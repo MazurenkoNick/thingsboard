@@ -1,5 +1,5 @@
 {
-  "title": "Mine Site Monitoring",
+  "title": "Mine site monitoring",
   "image": null,
   "mobileHide": false,
   "mobileOrder": null,
@@ -8,7 +8,7 @@
     "widgets": {},
     "states": {
       "default": {
-        "name": "Mine Site Monitoring",
+        "name": "Mine site monitoring",
         "root": true,
         "layouts": {
           "main": {
@@ -71,6 +71,6 @@
       "toolbarAlwaysOpen": true
     }
   },
-  "name": "Mine Site Monitoring",
+  "name": "Mine site monitoring",
   "resources": []
 }

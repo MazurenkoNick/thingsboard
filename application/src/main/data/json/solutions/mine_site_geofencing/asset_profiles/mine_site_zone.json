@@ -1,5 +1,5 @@
 {
-  "name": "Mine Site Zone",
+  "name": "Mine site zone",
   "description": "Generic zone inside a mine site (e.g. loading, unloading, restricted) used with geofencing to track machinery locations and activities.",
   "image": null,
   "defaultRuleChainId": null,
