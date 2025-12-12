@@ -38,13 +38,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.ObjectType;
 import org.thingsboard.server.common.data.ShortCustomerInfo;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.edqs.EdqsState.EdqsSyncStatus;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DashboardId;
@@ -55,6 +59,9 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.integration.AbstractIntegration;
 import org.thingsboard.server.common.data.integration.Integration;
+import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
+import org.thingsboard.server.common.data.kv.JsonDataEntry;
+import org.thingsboard.server.common.data.kv.KvEntry;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -62,6 +69,7 @@ import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.asset.AssetService;
+import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.device.DeviceService;
@@ -76,6 +84,7 @@ import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
 import org.thingsboard.server.service.component.ComponentDiscoveryService;
 import org.thingsboard.server.service.component.RuleNodeClassInfo;
+import org.thingsboard.server.service.edqs.EdqsSyncState;
 import org.thingsboard.server.service.install.DbUpgradeExecutorService;
 import org.thingsboard.server.service.install.SystemDataLoaderService;
 import org.thingsboard.server.utils.TbNodeUpgradeUtils;
@@ -87,7 +96,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -110,6 +121,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
     private final CustomerService customerService;
     private final AssetService assetService;
     private final DeviceService deviceService;
+    private final AttributesService attributesService;
     private final DashboardService dashboardService;
     private final EntityViewService entityViewService;
     private final EdgeService edgeService;
@@ -124,6 +136,15 @@ public class DefaultDataUpdateService implements DataUpdateService {
             updateDataFromCe();
         } else {
             //TODO: should be cleaned after each release
+            EdqsSyncState state = attributesService.find(TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID, AttributeScope.SERVER_SCOPE, "edqsSyncState").get(30, TimeUnit.SECONDS)
+                    .flatMap(KvEntry::getJsonValue)
+                    .map(value -> JacksonUtil.fromString(value, EdqsSyncState.class))
+                    .orElse(null);
+            if (state != null && state.getStatus() == EdqsSyncStatus.FINISHED) {
+                EdqsSyncState edqsSyncState = new EdqsSyncState(EdqsSyncStatus.REQUESTED, Set.of(ObjectType.REPORT_TEMPLATE, ObjectType.REPORT));
+                attributesService.save(TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID, AttributeScope.SERVER_SCOPE, new BaseAttributeKvEntry(
+                        new JsonDataEntry("edqsSyncState", JacksonUtil.toString(edqsSyncState)), System.currentTimeMillis()));
+            }
 
         }
         log.info("Data updated.");
