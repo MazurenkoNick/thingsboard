@@ -29,14 +29,41 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-export interface TrendzSettings {
-  enabled: boolean,
-  baseUrl: string,
-  apiKey: string
+import { inject, NgModule } from "@angular/core";
+import { ActivatedRouteSnapshot, ResolveFn, RouterModule, RouterStateSnapshot, Routes } from "@angular/router";
+import { TrendzSettingsComponent } from "@home/pages/trendz-settings/trendz-settings.component";
+import { Authority } from "@app/shared/models/authority.enum";
+import { MenuId } from "@app/core/services/menu.models";
+import { map } from "rxjs";
+import { TrendzSynchronization } from "@app/shared/models/trendz-analytics.models";
+import { TrendzService } from "@app/core/http/trendz.service";
+
+export const TrendzSyncResolver: ResolveFn<TrendzSynchronization> = (
+  route: ActivatedRouteSnapshot,
+  state: RouterStateSnapshot,
+  trendzService = inject(TrendzService)) => {
+    return trendzService.getTrendzSyncResult()
 }
 
-export const initialTrendzSettings: TrendzSettings = {
-  enabled: false,
-  baseUrl: null,
-  apiKey: null
-}
+const routes: Routes = [
+  {
+    path: 'trendzSettings',
+    component: TrendzSettingsComponent,
+    data: {
+      auth: [Authority.SYS_ADMIN],
+      title: 'trendz-analytics.trendz-settings',
+      breadcrumb: {
+        menuId: MenuId.trendz_settings
+      }
+    },
+    resolve: {
+      trendzSyncInfo: TrendzSyncResolver
+    }
+  }
+];
+
+@NgModule({
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule]
+})
+export class TrendzSettingsRoutingModule { }

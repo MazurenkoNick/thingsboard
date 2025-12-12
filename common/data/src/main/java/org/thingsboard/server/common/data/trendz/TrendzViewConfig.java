@@ -28,17 +28,16 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-@import '../../../../../scss/constants';
+package org.thingsboard.server.common.data.trendz;
 
-:host {
-  display: flex;
-  flex: 1 1 0;
-  .tb-request-password-reset-content {
-    background-color: #eee;
-    .tb-request-password-reset-card {
-      @media #{$mat-gt-xs} {
-        width: 450px !important;
-      }
-    }
-  }
-}
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.UUID;
+
+public record TrendzViewConfig(
+        @JsonProperty("id") UUID id,
+        @JsonProperty("name") String name,
+        @JsonProperty("runtimeFilters") List<Object> filters
+) implements Serializable {}

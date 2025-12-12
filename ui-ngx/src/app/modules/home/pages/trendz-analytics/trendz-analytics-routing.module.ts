@@ -29,12 +29,12 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { inject, Injectable, NgModule } from '@angular/core';
-import { ActivatedRouteSnapshot, ResolveFn, Router, RouterModule, RouterStateSnapshot, Routes } from '@angular/router';
+import { inject, NgModule } from '@angular/core';
+import { ActivatedRouteSnapshot, ResolveFn, RouterModule, RouterStateSnapshot, Routes } from '@angular/router';
 import { Authority } from '@shared/models/authority.enum';
 import { TrendzAnalyticsComponent } from '@home/pages/trendz-analytics/trendz-analytics.component';
 import { MenuId } from '@core/services/menu.models';
-import { map, Observable } from 'rxjs';
+import { map } from 'rxjs';
 import { TrendzSynchronizationStatus } from '@app/shared/models/trendz-analytics.models';
 import { TrendzService } from '@core/http/trendz.service';
 
@@ -42,7 +42,7 @@ export const TrendzSyncInfoResolver: ResolveFn<boolean> = (
   route: ActivatedRouteSnapshot,
   state: RouterStateSnapshot,
   trendzService = inject(TrendzService)) => {
-    return trendzService.getTrendzSyncStatus()
+    return trendzService.performTrendzHealthcheck()
       .pipe(map(result => result.status === TrendzSynchronizationStatus.SYNCED));
 }
 
