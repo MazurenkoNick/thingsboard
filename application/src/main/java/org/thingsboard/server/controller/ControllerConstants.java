@@ -102,6 +102,7 @@ public class ControllerConstants {
     protected static final String VC_REQUEST_ID_PARAM_DESCRIPTION = "A string value representing the version control request id. For example, '784f394c-42b6-435a-983c-b7beff2784f9'";
     protected static final String RESOURCE_ID_PARAM_DESCRIPTION = "A string value representing the resource id. For example, '784f394c-42b6-435a-983c-b7beff2784f9'";
     protected static final String API_KEY_ID_PARAM_DESCRIPTION = "A string value representing the api key id. For example, '784f394c-42b6-435a-983c-b7beff2784f9'";
+    protected static final String TRENDZ_VIEW_ID_PARAM_DESCRIPTION = "A string value representing the Trendz view id. For example, '784f394c-42b6-435a-983c-b7beff2784f9'";
     protected static final String CUSTOM_MENU_ID_PARAM_DESCRIPTION = "A string value representing the custom menu id. For example, '784f394c-42b6-435a-983c-b7beff2784f9'";
     protected static final String CUSTOM_MENU_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'substring' filter based on the custom menu name.";
     protected static final String CUSTOM_MENU_SCOPE_PARAM_DESCRIPTION = "Custom menu scope.";
@@ -148,6 +149,7 @@ public class ControllerConstants {
     protected static final String AI_MODEL_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'substring' filter based on the AI model name, provider and model ID.";
     protected static final String SECRET_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'substring' filter based on the secret name and description.";
     protected static final String API_KEY_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'substring' filter based on the description.";
+    protected static final String TRENDZ_VIEW_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'substring' filter based on the Trendz view name.";
 
     protected static final String ASSET_PROFILE_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'substring' filter based on the asset profile name.";
     protected static final String CUSTOMER_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'substring' filter based on the customer title.";
@@ -200,6 +202,8 @@ public class ControllerConstants {
     protected static final String EDGE_UNASSIGN_RECEIVE_STEP_DESCRIPTION = "(Edge will receive this instantly, if it's currently connected, or once it's going to be connected to platform). ";
     protected static final String EDGE_ASSIGN_ASYNC_FIRST_STEP_DESCRIPTION = "Assignment works in async way - first, notification event pushed to edge service queue on platform. ";
     protected static final String EDGE_ASSIGN_RECEIVE_STEP_DESCRIPTION = "(Edge will receive this instantly, if it's currently connected, or once it's going to be connected to platform). ";
+
+    protected static final String TRENDZ_ENDPOINT_AVAILABILITY_DESCRIPTION = "Can only be used if Trendz is already synchronized and integration is enabled. ";
 
     protected static final String ENTITY_VERSION_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'substring' filter based on the entity version name.";
     protected static final String VERSION_ID_PARAM_DESCRIPTION = "Version id, for example fd82625bdd7d6131cf8027b44ee967012ecaf990. Represents commit hash.";

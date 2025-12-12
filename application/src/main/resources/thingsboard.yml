@@ -1703,6 +1703,17 @@ license:
       # Enable/disable anonymous usage statistics collection.
       enabled: "${TB_ANONYMOUS_USAGE_REPORTING:true}"
 
+# Trendz parameters
+trendz:
+  # Enable/disable Trendz synchronization
+  enabled: "${TRENDZ_ENABLED:true}"
+  # Default ThingsBoard URL used for startup synchronization
+  default_tb_url: "${TRENDZ_DEFAULT_TB_URL:}"
+  # Default Trendz URL used for startup synchronization
+  default_trendz_url: "${TRENDZ_DEFAULT_URL:}"
+  # Request timeout in ms
+  request_timeout_ms: "${TRENDZ_REQUEST_TIMEOUT_MS:15000}"
+
 # Spring doc common parameters
 springdoc:
   # If false swagger API docs will be unavailable

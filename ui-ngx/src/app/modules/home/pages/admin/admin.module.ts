@@ -57,7 +57,6 @@ import { OAuth2Module } from '@home/pages/admin/oauth2/oauth2.module';
 import { JsLibraryTableHeaderComponent } from '@home/pages/admin/resource/js-library-table-header.component';
 import { JsResourceComponent } from '@home/pages/admin/resource/js-resource.component';
 import { NgxFlowModule } from '@flowjs/ngx-flow';
-import { TrendzSettingsComponent } from '@home/pages/admin/trendz-settings.component';
 import { ResourceLibraryTabsComponent } from '@home/pages/admin/resource/resource-library-tabs.component';
 import { LicenseManagementComponent } from '@home/pages/admin/license-management.component';
 import { AddLicenseItemDialogComponent } from '@home/pages/admin/add-license-item-dialog.component';
@@ -87,7 +86,6 @@ import { AddLicenseItemDialogComponent } from '@home/pages/admin/add-license-ite
       RepositoryAdminSettingsComponent,
       AutoCommitAdminSettingsComponent,
       TwoFactorAuthSettingsComponent,
-      TrendzSettingsComponent,
       LicenseManagementComponent,
       AddLicenseItemDialogComponent
     ],

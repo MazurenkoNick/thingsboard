@@ -29,14 +29,26 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-export interface TrendzSettings {
-  enabled: boolean,
-  baseUrl: string,
-  apiKey: string
-}
+import { Component } from '@angular/core';
+import { DialogService } from '@app/core/services/dialog.service';
+import { TranslateService } from '@ngx-translate/core';
 
-export const initialTrendzSettings: TrendzSettings = {
-  enabled: false,
-  baseUrl: null,
-  apiKey: null
+@Component({
+  selector: 'tb-trendz-analytics-unavailable',
+  templateUrl: './trendz-analytics-unavailable.component.html',
+  styleUrls: ['./trendz-analytics-unavailable.component.scss']
+})
+export class TrendzAnalyticsUnavailableComponent {
+  constructor(private dialogs: DialogService,
+    private translate: TranslateService) {
+  }
+
+  requestAccess(): void {
+    //TO DO: Add contact admin request
+    this.dialogs.alert(
+      this.translate.instant('trendz-analytics.contact-admin-title'),
+      this.translate.instant('trendz-analytics.contact-admin-message'),
+      this.translate.instant('action.close')
+    );
+  }
 }

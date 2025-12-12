@@ -28,34 +28,21 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
- @import "../../../../../scss/constants";
+package org.thingsboard.server.dao.trendz;
 
-:host {
-  .mat-mdc-card-header {
-    min-height: 64px;
-  }
+import org.thingsboard.server.common.data.pat.ApiKey;
+import org.thingsboard.server.common.data.trendz.TrendzSettings;
+import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
 
-  .tb-trendz-section {
-    margin: 16px 0;
-  }
+public interface TrendzSyncService {
+    String TRENDZ_API_KEY_DESCRIPTION = "Internal API key used to authenticate with Trendz";
 
-  .tb-trendz-url {
-      @media #{$mat-gt-sm} {
-        padding-right: 12px;
-      }
+    TrendzSettings performSync();
 
-      @media #{$mat-lt-md} {
-        padding-bottom: 12px;
-      }
-  }
+    void performSyncIfNeeded();
 
-  .tb-trendz-api-key {
-      @media #{$mat-gt-sm} {
-        padding-right: 12px;
-      }
+    TrendzHealthcheckResult performHealthcheck();
 
-      @media #{$mat-lt-md} {
-        padding-bottom: 12px;
-      }
-  }
+    void performApiKeyRotationSync(ApiKey newApiKey, ApiKey oldApiKey);
+
 }
