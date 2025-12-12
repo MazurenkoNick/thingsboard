@@ -29,14 +29,22 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-export interface TrendzSettings {
-  enabled: boolean,
-  baseUrl: string,
-  apiKey: string
-}
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { TrendzSettingsComponent } from '@home/pages/trendz-settings/trendz-settings.component';
+import { SharedModule } from '@shared/shared.module';
+import { TrendzSettingsRoutingModule } from '@home/pages/trendz-settings/trendz-settings-routing.module';
 
-export const initialTrendzSettings: TrendzSettings = {
-  enabled: false,
-  baseUrl: null,
-  apiKey: null
-}
+
+
+@NgModule({
+  declarations: [
+    TrendzSettingsComponent
+  ],
+  imports: [
+    CommonModule,
+    SharedModule,
+    TrendzSettingsRoutingModule
+  ]
+})
+export class TrendzSettingsModule { }

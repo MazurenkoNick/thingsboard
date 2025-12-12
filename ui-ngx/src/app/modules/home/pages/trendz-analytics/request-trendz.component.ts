@@ -29,26 +29,29 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
-import { TrendzSettings } from '@shared/models/trendz-settings.models';
-import { defaultHttpOptionsFromConfig, RequestConfig } from '@core/http/http-utils';
+import { Component, ElementRef, OnInit } from '@angular/core';
+import { PageComponent } from '@shared/components/page.component';
+import { RequestTrendzDialogComponent } from '@shared/components/dialog/request-trendz-dialog.component';
+import { DynamicMatDialog } from '@shared/components/dialog/dynamic/dynamic-dialog';
 
-@Injectable({
-  providedIn: 'root'
+@Component({
+  selector: 'tb-request-trendz',
+  templateUrl: './request-trendz.component.html',
+  styleUrls: ['./request-trendz.component.scss']
 })
-export class TrendzSettingsService {
+export class RequestTrendzComponent extends PageComponent implements OnInit {
 
-  constructor(
-    private http: HttpClient
-  ) {}
-
-  public getTrendzSettings(config?: RequestConfig): Observable<TrendzSettings> {
-    return this.http.get<TrendzSettings>(`/api/trendz/settings`, defaultHttpOptionsFromConfig(config))
+  constructor(private dialog: DynamicMatDialog,
+              private elementRef: ElementRef) {
+    super();
   }
 
-  public saveTrendzSettings(trendzSettings: TrendzSettings, config?: RequestConfig): Observable<TrendzSettings> {
-    return this.http.post<TrendzSettings>(`/api/trendz/settings`, trendzSettings, defaultHttpOptionsFromConfig(config))
+  ngOnInit() {
+    this.dialog.open<RequestTrendzDialogComponent>(RequestTrendzDialogComponent,
+      {
+        containerElement: this.elementRef.nativeElement,
+        disableClose: true,
+        panelClass: ['tb-dialog', 'tb-fullscreen-dialog-lt-lg'],
+      });
   }
 }
