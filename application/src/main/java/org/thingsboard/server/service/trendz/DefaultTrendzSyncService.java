@@ -67,8 +67,6 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class DefaultTrendzSyncService implements TrendzSyncService {
 
-    public static final String TRENDZ_API_KEY_DESCRIPTION = "Internal API key used to authenticate with Trendz";
-
     private static final String MIN_SUPPORTED_VERSION = "1.15.0";
 
     private final ApiKeyService apiKeyService;
@@ -154,7 +152,10 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         }
 
         TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
-        if (trendzSettings == null || trendzSettings.synchronizationResult() == null) {
+        if (trendzSettings == null
+            || trendzSettings.synchronizationResult() == null
+            || trendzSettings.synchronizationResult().status() == TrendzSynchronizationStatus.NOT_AVAILABLE
+        ) {
             return new TrendzHealthcheckResult(
                     null,
                     TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED,

@@ -28,21 +28,47 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.trendz;
+package org.thingsboard.server.service.trendz;
 
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UserId;
-import org.thingsboard.server.common.data.pat.ApiKey;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
-import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.trendz.TrendzSummary;
+import org.thingsboard.server.common.data.trendz.TrendzUsage;
+import org.thingsboard.server.common.data.trendz.TrendzViewConfig;
+import org.thingsboard.server.common.data.trendz.TrendzViewConfigLite;
+import org.thingsboard.server.dao.trendz.TrendzApiService;
 
-public interface TrendzSyncService {
-    String TRENDZ_API_KEY_DESCRIPTION = "Internal API key used to authenticate with Trendz";
+import java.util.UUID;
 
-    TrendzSettings performSync(TenantId tenantId, UserId userId);
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class DefaultTrendzApiService implements TrendzApiService {
+    private final TrendzClient trendzClient;
 
-    TrendzHealthcheckResult performHealthcheck();
+    @Override
+    public TrendzViewConfig getViewById(User user, UUID viewId) throws ThingsboardException {
+        return trendzClient.getTrendzViewById(viewId, user);
+    }
 
-    void performApiKeyRotationSync(ApiKey newApiKey, ApiKey oldApiKey);
+    @Override
+    public PageData<TrendzViewConfigLite> getAllViews(User user, PageLink pageLink) throws ThingsboardException {
+        return trendzClient.getAllTrendzViews(pageLink, user)
+                .toPageData();
+    }
 
+    @Override
+    public TrendzSummary getTrendzSummary(User user) throws ThingsboardException {
+        return trendzClient.getTrendzSummary(user);
+    }
+
+    @Override
+    public TrendzUsage getTrendzUsage(User user) throws ThingsboardException {
+        return trendzClient.getTrendzUsage(user);
+    }
 }

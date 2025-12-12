@@ -30,19 +30,23 @@
  */
 package org.thingsboard.server.dao.trendz;
 
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UserId;
-import org.thingsboard.server.common.data.pat.ApiKey;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
-import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
+import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.trendz.TrendzSummary;
+import org.thingsboard.server.common.data.trendz.TrendzUsage;
+import org.thingsboard.server.common.data.trendz.TrendzViewConfig;
+import org.thingsboard.server.common.data.trendz.TrendzViewConfigLite;
 
-public interface TrendzSyncService {
-    String TRENDZ_API_KEY_DESCRIPTION = "Internal API key used to authenticate with Trendz";
+import java.util.UUID;
 
-    TrendzSettings performSync(TenantId tenantId, UserId userId);
+public interface TrendzApiService {
+    TrendzViewConfig getViewById(User user, UUID viewId) throws ThingsboardException;
 
-    TrendzHealthcheckResult performHealthcheck();
+    PageData<TrendzViewConfigLite> getAllViews(User user, PageLink pageLink) throws ThingsboardException;
 
-    void performApiKeyRotationSync(ApiKey newApiKey, ApiKey oldApiKey);
+    TrendzSummary getTrendzSummary(User user) throws ThingsboardException;
 
+    TrendzUsage getTrendzUsage(User user) throws ThingsboardException;
 }

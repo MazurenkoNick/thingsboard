@@ -28,21 +28,18 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.trendz;
+package org.thingsboard.server.common.data.trendz;
 
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UserId;
-import org.thingsboard.server.common.data.pat.ApiKey;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
-import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public interface TrendzSyncService {
-    String TRENDZ_API_KEY_DESCRIPTION = "Internal API key used to authenticate with Trendz";
+import java.io.Serializable;
+import java.util.List;
 
-    TrendzSettings performSync(TenantId tenantId, UserId userId);
-
-    TrendzHealthcheckResult performHealthcheck();
-
-    void performApiKeyRotationSync(ApiKey newApiKey, ApiKey oldApiKey);
-
-}
+public record TrendzSummary(
+        @JsonProperty("metricSummaryItems") List<Object> metricSummaryItems,
+        @JsonProperty("anomalyModelSummaryItems") List<Object> anomalyModelSummaryItems,
+        @JsonProperty("calculationFieldSummaryItems") List<Object> calculationFieldSummaryItems,
+        @JsonProperty("predictionModelSummaryItems") List<Object> predictionModelSummaryItems,
+        @JsonProperty("viewSummaryItems") List<Object> viewSummaryItems,
+        @JsonProperty("aiSummaryItems") List<Object> aiSummaryItems
+) implements Serializable { }

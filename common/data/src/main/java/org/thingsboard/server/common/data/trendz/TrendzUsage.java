@@ -28,21 +28,28 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.trendz;
+package org.thingsboard.server.common.data.trendz;
 
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UserId;
-import org.thingsboard.server.common.data.pat.ApiKey;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
-import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public interface TrendzSyncService {
-    String TRENDZ_API_KEY_DESCRIPTION = "Internal API key used to authenticate with Trendz";
+public record TrendzUsage(
+        @JsonProperty("used") boolean used,
 
-    TrendzSettings performSync(TenantId tenantId, UserId userId);
+        @JsonProperty("anomalyUsage") Entity anomalyUsage,
+        @JsonProperty("predictionUsage") Entity predictionUsage,
+        @JsonProperty("calculationUsage") Entity calculationUsage,
+        @JsonProperty("viewUsage") SimpleEntity viewUsage,
+        @JsonProperty("metricUsage") SimpleEntity metricUsage,
+        @JsonProperty("chatUsage") SimpleEntity chatUsage
+) {
+    public record Entity(
+            @JsonProperty("used") boolean used,
+            @JsonProperty("activeCount") long activeCount,
+            @JsonProperty("totalCount") long totalCount
+    ) { }
 
-    TrendzHealthcheckResult performHealthcheck();
-
-    void performApiKeyRotationSync(ApiKey newApiKey, ApiKey oldApiKey);
-
+    public record SimpleEntity(
+            @JsonProperty("used") boolean used,
+            @JsonProperty("totalCount") long totalCount
+    ) { }
 }
