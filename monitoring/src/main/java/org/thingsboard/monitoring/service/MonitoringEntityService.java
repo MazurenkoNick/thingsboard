@@ -36,6 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.RegexUtils;
 import org.thingsboard.monitoring.client.TbClient;
@@ -88,6 +90,11 @@ import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleChainType;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.server.common.data.security.DeviceCredentialsType;
+import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.group.EntityGroupInfo;
+import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.User;
 
 import java.net.URI;
 import java.util.List;
@@ -107,6 +114,8 @@ public class MonitoringEntityService {
 
     private static final String DASHBOARD_TITLE = "[Monitoring] Cloud monitoring";
     private static final String DASHBOARD_RESOURCE_PATH = "dashboard_cloud_monitoring.json";
+    private static final String ENTITY_GROUP_PUBLIC_DASHBOARDS_NAME = "[Monitoring] Public dashboards";
+    private static final String ENTITY_GROUP_PUBLIC_ASSETS_NAME = "[Monitoring] Public assets";
 
     private final TbClient tbClient;
 
@@ -152,11 +161,15 @@ public class MonitoringEntityService {
 
         Asset asset = getOrCreateMonitoringAsset();
         Dashboard dashboard = getOrCreateMonitoringDashboard();
-
-        tbClient.assignAssetToPublicCustomer(asset.getId());
-        tbClient.assignDashboardToPublicCustomer(dashboard.getId());
-
         this.dashboardId = Optional.ofNullable(dashboard).map(Dashboard::getId).orElse(null);
+
+        // In PE, use public entity groups instead of CE public customer assignment
+        EntityGroupInfo publicAssetsGroup = getOrCreatePublicGroup(ENTITY_GROUP_PUBLIC_ASSETS_NAME, EntityType.ASSET);
+        addEntityToGroupIfMissing(publicAssetsGroup, asset.getId());
+
+        EntityGroupInfo publicDashboardsGroup = getOrCreatePublicGroup(ENTITY_GROUP_PUBLIC_DASHBOARDS_NAME, EntityType.DASHBOARD);
+        addEntityToGroupIfMissing(publicDashboardsGroup, dashboard.getId());
+
     }
 
     public Asset getOrCreateMonitoringAsset() {
@@ -290,6 +303,7 @@ public class MonitoringEntityService {
         tbClient.saveCalculatedField(calculatedField);
     }
 
+    @Deprecated // this method stays here for easy merge with CE
     public String getDashboardPublicLink() {
         String link = "";
         try {
@@ -308,6 +322,34 @@ public class MonitoringEntityService {
                     log.info("Public Monitoring dashboard link: {}", link);
                 } else {
                     log.warn("Dashboard is not assigned to public customer. Public link can't be generated.");
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to get a public link to Monitoring dashboard ", e);
+        }
+        return link;
+    }
+
+    public String getDashboardPublicLinkPE() {
+        String link = "";
+        try {
+            if (dashboardId == null) {
+                return link;
+            }
+            Optional<DashboardInfo> infoOpt = tbClient.getDashboardInfoById(dashboardId);
+            if (infoOpt.isPresent()) {
+                // In PE, public link is based on public entity group that contains this dashboard
+                EntityGroupInfo publicDashboardsGroup = getOrCreatePublicGroup(ENTITY_GROUP_PUBLIC_DASHBOARDS_NAME, EntityType.DASHBOARD);
+                JsonNode additionalInfo = publicDashboardsGroup.getAdditionalInfo();
+                String publicCustomerId = null;
+                if (additionalInfo != null && additionalInfo.has("publicCustomerId")) {
+                    publicCustomerId = additionalInfo.get("publicCustomerId").asText();
+                }
+                if (publicCustomerId != null && !publicCustomerId.isEmpty()) {
+                    link = buildPublicDashboardLink(dashboardId, publicCustomerId);
+                    log.info("Public Monitoring dashboard link: {}", link);
+                } else {
+                    log.warn("Public dashboards group doesn't contain publicCustomerId. Public link can't be generated.");
                 }
             }
         } catch (Exception e) {
@@ -343,6 +385,66 @@ public class MonitoringEntityService {
     private String buildPublicDashboardLink(DashboardId dashboardId, String publicCustomerId) {
         String base = getBaseUrl();
         return String.format("%s/dashboard/%s?publicId=%s", base, dashboardId.getId().toString(), publicCustomerId);
+    }
+
+    private EntityGroupInfo getOrCreatePublicGroup(String groupName, EntityType type) {
+        // Owner is the current tenant
+        EntityId ownerId = tbClient.getUser().map(User::getOwnerId).orElseThrow();
+        // Try to find existing group by owner and name
+        EntityGroupInfo group = tbClient.getEntityGroupInfoByOwnerAndNameAndType(ownerId, type, groupName)
+                .orElse(null);
+        if (group == null) {
+            EntityGroup newGroup = new EntityGroup();
+            newGroup.setName(groupName);
+            newGroup.setType(type);
+            newGroup.setOwnerId(ownerId);
+            EntityGroupInfo saved = tbClient.saveEntityGroup(newGroup);
+            // Make group public (idempotent)
+            try {
+                tbClient.makeEntityGroupPublic(saved.getId());
+            } catch (HttpClientErrorException e) {
+                if (!(e.getStatusCode() == HttpStatus.BAD_REQUEST &&
+                        e.getResponseBodyAsString() != null &&
+                        e.getResponseBodyAsString().contains("already public"))) {
+                    throw e;
+                }
+            }
+            // Refetch to ensure updated additionalInfo (isPublic, publicCustomerId)
+            return tbClient.getEntityGroupById(saved.getId()).orElse(saved);
+        } else {
+            if (!group.isPublic()) {
+                try {
+                    tbClient.makeEntityGroupPublic(group.getId());
+                } catch (HttpClientErrorException e) {
+                    if (!(e.getStatusCode() == HttpStatus.BAD_REQUEST &&
+                            e.getResponseBodyAsString() != null &&
+                            e.getResponseBodyAsString().contains("already public"))) {
+                        throw e;
+                    }
+                }
+                group = tbClient.getEntityGroupById(group.getId()).orElse(group);
+            }
+            return group;
+        }
+    }
+
+    private void addEntityToGroupIfMissing(EntityGroupInfo group, EntityId entityId) {
+        boolean present = false;
+        try {
+            // Check presence using REST call
+            present = tbClient.getGroupEntity(group.getId(), entityId).isPresent();
+        } catch (HttpClientErrorException e) {
+            String body = e.getResponseBodyAsString();
+            if (e.getStatusCode() == HttpStatus.BAD_REQUEST && body != null && body.contains("not present in entity group")) {
+                // Treat as not present; we'll add it below
+                present = false;
+            } else {
+                throw e;
+            }
+        }
+        if (!present) {
+            tbClient.addEntitiesToEntityGroup(group.getId(), List.of(entityId));
+        }
     }
 
     private String getBaseUrl() {

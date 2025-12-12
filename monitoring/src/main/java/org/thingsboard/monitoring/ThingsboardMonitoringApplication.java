@@ -85,7 +85,7 @@ public class ThingsboardMonitoringApplication {
             scheduler.scheduleWithFixedDelay(service::runChecks, initialDelay, monitoringRateMs, TimeUnit.MILLISECONDS);
         }
 
-        String publicDashboardUrl = entityService.getDashboardPublicLink();
+        String publicDashboardUrl = entityService.getDashboardPublicLinkPE();
         notificationService.sendNotification(new InfoNotification(":rocket: <"+publicDashboardUrl+"|Monitoring> started"));
     }
 
