@@ -38,13 +38,19 @@
                 {{ 'trendz-analytics.service-connection' | translate }}
             </div>
             <div class="sync-result flex flex-1 flex-col gap-4" [class.active]="trendzSyncInfo.status === TrendzSynchronizationStatus.SYNCED">
-                <div class="sync-result-title flex items-center gap-2">
-                    @if(trendzSyncInfo.status === TrendzSynchronizationStatus.SYNCED) {
-                        <mat-icon svgIcon="mdi:check-circle-outline"></mat-icon>
-                    } @else {
-                        <mat-icon class="material-icons">block</mat-icon>
-                    }
-                    {{ TrendzSynchronizationResultTypeTranslationMap.get(trendzSyncInfo.type) | translate }}
+                <div class="flex flex-col gap-2">
+                    <div class="sync-result-title flex items-center gap-2">
+                        @if(trendzSyncInfo.status === TrendzSynchronizationStatus.SYNCED) {
+                            <mat-icon svgIcon="mdi:check-circle-outline"></mat-icon>
+                            {{ 'trendz-analytics.trendz-synced' | translate }}
+                        } @else {
+                            <mat-icon class="material-icons">block</mat-icon>
+                            {{ (trendzSyncInfo.status === TrendzSynchronizationStatus.AVAILABLE ? 'trendz-analytics.trendz-available' : 'trendz-analytics.trendz-unavailable') | translate }}
+                        }
+                    </div>
+                    <div class="sync-result-description">
+                        {{ TrendzSynchronizationResultTypeTranslationMap.get(trendzSyncInfo.type) | translate }}
+                    </div>
                 </div>
                 <div class="flex gap-2">
                     <button mat-button mat-raised-button color="primary" type="button" [disabled]="(isLoading$ | async)" (click)="retryDiscovery()">
@@ -55,12 +61,7 @@
                         <button mat-stroked-button color="primary" type="button" [disabled]="(isLoading$ | async)" (click)="retryHealthcheck()">
                             {{ 'trendz-analytics.retry-healthcheck' | translate }}
                         </button>
-                    } @else if(trendzSyncInfo.type === TrendzSynchronizationResultType.TRENDZ_UNSUPPORTED_VERSION) {
-                        <a mat-stroked-button color="primary" href="https://thingsboard.io/docs/trendz/" target="_blank">
-                            <tb-icon matButtonIcon>refresh</tb-icon>
-                            {{ 'trendz-analytics.read-upgrade-guide' | translate }}
-                        </a>
-                    } 
+                    }
                 </div>
             </div>
         </div>
