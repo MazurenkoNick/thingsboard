@@ -254,6 +254,11 @@ export class WhiteLabelingService {
     return this.getCurrentWlParams() ? this.getCurrentWlParams().platformName : '';
   }
 
+  public getTrendzName(): string {
+    const isOverrideTrendzName = this.getCurrentWlParams() ? this.getCurrentWlParams().overrideTrendzName : false;
+    return isOverrideTrendzName ? 'trendz-analytics.advanced-analytics' : 'trendz-analytics.trendz-analytics';
+  }
+
   public getPlatformName$(): Observable<string> {
     return this.asWhiteLabelingObservable(() => this.getPlatformName());
   }
@@ -401,12 +406,7 @@ export class WhiteLabelingService {
   private wlChanged(): Observable<any> {
     applyCustomCss(this.currentWLParams.customCss, false);
     const menu = menuSectionMap.get(MenuId.trendz_analytics);
-    let trendzMenuName: string;
-    if (this.currentWLParams.overrideTrendzName) {
-      trendzMenuName = "trendz-analytics.advanced-analytics";
-    } else {
-      trendzMenuName = "trendz-analytics.trendz-analytics";
-    }
+    const trendzMenuName = this.getTrendzName();
     if (menu.name !== trendzMenuName) {
       menu.name = trendzMenuName;
       this.menuService.buildMenu();

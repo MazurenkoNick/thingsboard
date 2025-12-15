@@ -37,7 +37,7 @@
       <mat-card appearance="outlined" class="card flex flex-col">
         <mat-card-header>
           <div class="card-header flex items-start justify-center">
-            <div class="card-title-container flex flex-col flex-1">
+            <div class="card-title-container flex flex-1 flex-col">
               <div class="card-title flex items-center">
                 <tb-icon color="primary">show_chart</tb-icon>
                 <div tbTruncateWithTooltip>{{ 'trendz-analytics.metric-explorer' | translate }}</div>
@@ -49,7 +49,7 @@
             </a>
           </div>
         </mat-card-header>
-        <mat-card-content class="card-content flex-1 flex">
+        <mat-card-content class="card-content flex flex-1">
           @if(isLoading$ | async) {
             <ng-container [ngTemplateOutlet]="loading" [ngTemplateOutletContext]="{loadingKey: 'trendz-analytics.loading-metric-explorer'}"></ng-container>
           } @else if(trendzSummary?.metricSummaryItems.length > 0) {
@@ -70,7 +70,7 @@
       <mat-card appearance="outlined" class="card flex flex-col">
         <mat-card-header>
           <div class="card-header flex items-start justify-center">
-            <div class="card-title-container flex flex-col flex-1">
+            <div class="card-title-container flex flex-1 flex-col">
               <div class="card-title flex items-center">
                 <tb-icon color="primary">query_stats</tb-icon>
                 <div tbTruncateWithTooltip>{{ 'trendz-analytics.anomaly-detection' | translate }}</div>
@@ -91,7 +91,7 @@
             }
           </div>
         </mat-card-header>
-        <mat-card-content class="card-content flex-1 flex">
+        <mat-card-content class="card-content flex flex-1">
           @if(isLoading$ | async) {
             <ng-container [ngTemplateOutlet]="loading" [ngTemplateOutletContext]="{loadingKey: 'trendz-analytics.loading-anomaly-model'}"></ng-container>
           } @else if(trendzSummary?.anomalyModelSummaryItems.length > 0) {
@@ -113,7 +113,7 @@
       <mat-card appearance="outlined" class="card flex flex-col">
         <mat-card-header>
           <div class="card-header flex items-start justify-center">
-            <div class="card-title-container flex flex-col flex-1">
+            <div class="card-title-container flex flex-1 flex-col">
               <div class="card-title flex items-center">
                 <tb-icon color="primary">calculate</tb-icon>
                 <div tbTruncateWithTooltip>{{ 'trendz-analytics.calculated-fields' | translate }}</div>
@@ -134,7 +134,7 @@
             }
           </div>
         </mat-card-header>
-        <mat-card-content class="card-content flex-1 flex">
+        <mat-card-content class="card-content flex flex-1">
           @if(isLoading$ | async) {
             <ng-container [ngTemplateOutlet]="loading" [ngTemplateOutletContext]="{loadingKey: 'trendz-analytics.loading-calculation-field'}"></ng-container>
           } @else if(trendzSummary?.calculationFieldSummaryItems.length > 0){
@@ -156,7 +156,7 @@
       <mat-card appearance="outlined" class="card flex flex-col">
         <mat-card-header>
           <div class="card-header flex items-start justify-center">
-            <div class="card-title-container flex flex-col flex-1">
+            <div class="card-title-container flex flex-1 flex-col">
               <div class="card-title flex items-center">
                 <tb-icon color="primary">troubleshoot</tb-icon>
                 <div tbTruncateWithTooltip>{{ 'trendz-analytics.prediction-models' | translate }}</div>
@@ -177,7 +177,7 @@
             }
           </div>
         </mat-card-header>
-        <mat-card-content class="card-content flex-1 flex">
+        <mat-card-content class="card-content flex flex-1">
           @if(isLoading$ | async) {
             <ng-container [ngTemplateOutlet]="loading" [ngTemplateOutletContext]="{loadingKey: 'trendz-analytics.loading-prediction-model'}"></ng-container>
           } @else if(trendzSummary?.predictionModelSummaryItems.length > 0){
@@ -199,12 +199,12 @@
       <mat-card appearance="outlined" class="card flex flex-col">
         <mat-card-header>
           <div class="card-header flex items-start justify-center">
-            <div class="card-title-container flex flex-col flex-1">
+            <div class="card-title-container flex flex-1 flex-col">
               <div class="card-title flex items-center">
                 <tb-icon color="primary">visibility-outline</tb-icon>
-                <div tbTruncateWithTooltip>{{ 'trendz-analytics.trendz-views' | translate }}</div>
+                <div tbTruncateWithTooltip>{{ 'trendz-analytics.views' | translate }}</div>
               </div>
-              <div class="card-subtitle" tbTruncateWithTooltip>{{ 'trendz-analytics.trendz-views-description' | translate }}</div>
+              <div class="card-subtitle" tbTruncateWithTooltip>{{ 'trendz-analytics.views-description' | translate }}</div>
             </div>
             @if(trendzSummary?.viewSummaryItems.length > 0) {
               <button mat-icon-button [matMenuTriggerFor]="viewTypeMenu" class="tb-mat-40 flex">
@@ -225,9 +225,9 @@
             </mat-menu>
           </div>
         </mat-card-header>
-        <mat-card-content class="card-content flex-1 flex">
+        <mat-card-content class="card-content flex flex-1">
           @if(isLoading$ | async) {
-            <ng-container [ngTemplateOutlet]="loading" [ngTemplateOutletContext]="{loadingKey: 'trendz-analytics.loading-trendz-views'}"></ng-container>
+            <ng-container [ngTemplateOutlet]="loading" [ngTemplateOutletContext]="{loadingKey: 'trendz-analytics.loading-views'}"></ng-container>
           } @else {
             @if(trendzSummary?.viewSummaryItems.length > 0) {
               <div class="entities-table flex-1">
@@ -240,7 +240,7 @@
                 }
               </div>
             } @else {
-              <ng-container [ngTemplateOutlet]="noData" [ngTemplateOutletContext]="{emptyKey: 'trendz-analytics.no-trendz-views-found'}"></ng-container>
+              <ng-container [ngTemplateOutlet]="noData" [ngTemplateOutletContext]="{emptyKey: 'trendz-analytics.no-views-found'}"></ng-container>
             }
           }
         </mat-card-content>
@@ -248,7 +248,7 @@
       <mat-card appearance="outlined" class="card flex flex-col">
         <mat-card-header>
           <div class="card-header flex items-start justify-center">
-            <div class="card-title-container flex flex-col flex-1">
+            <div class="card-title-container flex flex-1 flex-col">
               <div class="card-title flex items-center">
                 <tb-icon color="primary">reviews</tb-icon>
                 <div tbTruncateWithTooltip>{{ 'trendz-analytics.ai-assistant' | translate }}</div>
@@ -269,7 +269,7 @@
             }
           </div>
         </mat-card-header>
-        <mat-card-content class="card-content flex-1 flex">
+        <mat-card-content class="card-content flex flex-1">
           @if(isLoading$ | async) {
             <ng-container [ngTemplateOutlet]="loading" [ngTemplateOutletContext]="{loadingKey: 'trendz-analytics.loading-ai-assistant'}"></ng-container>
           } @else if(trendzSummary?.aiSummaryItems.length > 0){
