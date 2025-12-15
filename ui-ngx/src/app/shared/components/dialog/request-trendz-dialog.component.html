@@ -96,9 +96,11 @@
       </button>
     </div>
   </div>
-  <div class="request-feature-sysadmin-prompt">
-    {{ 'subscription.request-feature-sysadmin-text' | translate }}
-    <a href="" (click)="loginAsSysAdmin($event)"> {{ 'subscription.login-here' | translate }} </a>
-    {{ 'subscription.to-get-addon' | translate }}
-  </div>
+  @if (!isCustomerUser) {
+    <div class="request-feature-sysadmin-prompt">
+      {{ 'subscription.request-feature-sysadmin-text' | translate }}
+      <a href="" (click)="loginAsSysAdmin($event)"> {{ 'subscription.login-here' | translate }} </a>
+      {{ 'subscription.to-get-addon' | translate }}
+    </div>
+  }
 </div>

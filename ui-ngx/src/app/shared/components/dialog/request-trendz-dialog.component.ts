@@ -40,6 +40,8 @@ import { DialogService } from '@core/services/dialog.service';
 import { TranslateService } from '@ngx-translate/core';
 import { NotificationService } from '@core/http/notification.service';
 import { AddonType, addonTypeTranslationMap } from '@shared/models/subscription.models';
+import { getCurrentAuthUser } from '@core/auth/auth.selectors';
+import { Authority } from '@shared/models/authority.enum';
 
 @Component({
   selector: 'tb-request-trendz-dialog',
@@ -48,6 +50,8 @@ import { AddonType, addonTypeTranslationMap } from '@shared/models/subscription.
   encapsulation: ViewEncapsulation.None
 })
 export class RequestTrendzDialogComponent extends DialogComponent<RequestTrendzDialogComponent>{
+
+  isCustomerUser = getCurrentAuthUser(this.store).authority === Authority.CUSTOMER_USER;
 
   constructor(protected store: Store<AppState>,
               protected router: Router,
@@ -66,7 +70,7 @@ export class RequestTrendzDialogComponent extends DialogComponent<RequestTrendzD
 
     this.notificationService.sendAddonAccessRequest(AddonType.TRENDZ).subscribe(() => {
       this.dialogs.alert(
-        this.translate.instant('subscription.feature-request-sent-title', { addonType: this.translate.instant(addonTypeTranslationMap.get(AddonType.TRENDZ)) }),
+        this.translate.instant('subscription.feature-request-sent-title', { addonName: this.translate.instant(addonTypeTranslationMap.get(AddonType.TRENDZ)) }),
         this.translate.instant('subscription.feature-request-sent-text'),
         this.translate.instant('action.close')
       );

@@ -90,6 +90,7 @@ import org.thingsboard.server.dao.notification.NotificationService;
 import org.thingsboard.server.dao.notification.NotificationSettingsService;
 import org.thingsboard.server.dao.notification.NotificationTargetService;
 import org.thingsboard.server.dao.notification.NotificationTemplateService;
+import org.thingsboard.server.dao.subscription.SubscriptionService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.notification.NotificationProcessingContext;
 import org.thingsboard.server.service.security.model.SecurityUser;
@@ -135,6 +136,7 @@ public class NotificationController extends BaseController {
     private final NotificationSettingsService notificationSettingsService;
     private final TranslationService translationService;
     private final SystemSecurityService systemSecurityService;
+    private final SubscriptionService subscriptionService;
 
     @ApiOperation(value = "Get notifications (getNotifications)",
             notes = "Returns the page of notifications for current user." + NEW_LINE +
@@ -378,8 +380,15 @@ public class NotificationController extends BaseController {
             if (sysAdmins.isPresent()) {
                 NotificationTargetId notificationTargetId = sysAdmins.get().getId();
                 String baseUrl = systemSecurityService.getBaseUrl(TenantId.SYS_TENANT_ID, new CustomerId(EntityId.NULL_UUID), request);
-                String actionLabel = AddonType.WHITE_LABELING.equals(addonType) ? "Upgrade plan" : "Add to plan";
-                String actionLink = "/license";
+                String actionLabel;
+                String actionLink;
+                if (addonType == AddonType.TRENDZ && subscriptionService.getLicenseVersion() < 2) {
+                    actionLabel = "Configure";
+                    actionLink = "/trendzSettings";
+                } else {
+                    actionLabel = AddonType.WHITE_LABELING.equals(addonType) ? "Upgrade plan" : "Add to plan";
+                    actionLink = "/license";
+                }
                 NotificationInfo info = AddonAccessRequestNotificationInfo.builder()
                         .addonType(addonType)
                         .userEmail(user.getEmail())

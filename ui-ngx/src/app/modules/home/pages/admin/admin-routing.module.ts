@@ -73,12 +73,16 @@ import { aiModelRoutes } from '@home/pages/ai-model/ai-model-routing.module';
 import { LicenseManagementComponent } from '@home/pages/admin/license-management.component';
 import { SubscriptionInfo } from '@shared/models/subscription.models';
 import { AdminService } from '@core/http/admin.service';
+import { getCurrentAuthState } from '@core/auth/auth.selectors';
+import { AppState } from '@core/core.state';
+import { Store } from '@ngrx/store';
 
 export const subscriptionInfoResolver: ResolveFn<SubscriptionInfo> = (
   route: ActivatedRouteSnapshot,
   state: RouterStateSnapshot,
+  store = inject(Store<AppState>),
   adminService = inject(AdminService)
-): Observable<SubscriptionInfo> => adminService.getSubscriptionInfo();
+): Observable<SubscriptionInfo> => getCurrentAuthState(store).licenseVersion > 1 ? adminService.getSubscriptionInfo() : of(null);
 
 export const mailTemplateSettingsResolver: ResolveFn<MailTemplatesSettings> = (
   route: ActivatedRouteSnapshot,
