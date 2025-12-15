@@ -35,6 +35,7 @@ import { Router } from '@angular/router';
 import { AppState } from '@app/core/core.state';
 import { DialogComponent } from '@app/shared/components/dialog.component';
 import { Store } from '@ngrx/store';
+import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 @Component({
   selector: 'tb-trendz-analytics-unavailable',
@@ -42,10 +43,13 @@ import { Store } from '@ngrx/store';
   styleUrls: ['./trendz-analytics-unavailable.component.scss']
 })
 export class TrendzAnalyticsUnavailableComponent extends DialogComponent<TrendzAnalyticsUnavailableComponent> {
-  
+
+  name = this.wl.getTrendzName();
+
   constructor(protected store: Store<AppState>,
               protected router: Router,
-              public dialogRef: MatDialogRef<TrendzAnalyticsUnavailableComponent>) {
+              protected dialogRef: MatDialogRef<TrendzAnalyticsUnavailableComponent>,
+              private wl: WhiteLabelingService) {
     super(store,  router, dialogRef);
   }
 

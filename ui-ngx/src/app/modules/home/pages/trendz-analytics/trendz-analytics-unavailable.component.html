@@ -32,7 +32,7 @@
 -->
 
 <div class="trendz-unavailable flex flex-col gap-4">
-  <div class="trendz-unavailable-title">{{ 'trendz-analytics.service-unavailable' | translate }}</div>
-  <div class="trendz-unavailable-text">{{ 'trendz-analytics.service-unavailable-message' | translate }}</div>
+  <div class="trendz-unavailable-title">{{ 'trendz-analytics.service-unavailable' | translate: {name: (name | translate)} }}</div>
+  <div class="trendz-unavailable-text">{{ 'trendz-analytics.service-unavailable-message' | translate: {name: (name | translate)} }}</div>
   <div class="trendz-unavailable-text">{{ 'trendz-analytics.service-unavailable-incident-reported' | translate }}</div>
 </div>
