@@ -12,18 +12,10 @@
           "random": true,
           "telemetry": {
             "latitude": [
-              37.751250,
-              37.751280,
-              37.751210,
-              37.751190,
-              37.751230
+              36.215228
             ],
             "longitude": [
-              -122.391700,
-              -122.391550,
-              -122.391450,
-              -122.391600,
-              -122.391520
+              -88.667268
             ]
           }
         }
@@ -91,7 +83,90 @@
     ]
   },
   {
-    "name": "outsideMineSiteExcavator",
+    "name": "unloadingExcavator",
+    "publishPeriodInDays": 1,
+    "publishFrequencyInSeconds": 300,
+    "publishPauseInMillis": 1,
+    "telemetryProfiles": [
+      {
+        "key": "coordinates",
+        "valueStrategy": {
+          "type": "sequence",
+          "random": true,
+          "telemetry": {
+            "latitude": [
+              36.213242
+            ],
+            "longitude": [
+              -88.663985
+            ]
+          }
+        }
+      },
+      {
+        "key": "speed",
+        "valueStrategy": {
+          "type": "natural",
+          "precision": 1,
+          "minStartValue": 2,
+          "maxStartValue": 8,
+          "minLowValue": 0,
+          "maxLowValue": 5,
+          "minHighValue": 5,
+          "maxHighValue": 10,
+          "minIncrement": 0.5,
+          "maxIncrement": 1.0,
+          "minDecrement": 1.0,
+          "maxDecrement": 2.0,
+          "holidayMultiplier": 1.0,
+          "workHoursMultiplier": 1.0,
+          "nightHoursMultiplier": 0.5
+        }
+      },
+      {
+        "key": "fuelLevel",
+        "valueStrategy": {
+          "type": "natural",
+          "precision": 1,
+          "minStartValue": 80,
+          "maxStartValue": 80,
+          "minLowValue": 20,
+          "maxLowValue": 20,
+          "minHighValue": 80,
+          "maxHighValue": 80,
+          "minIncrement": 60.0,
+          "maxIncrement": 60.0,
+          "minDecrement": 0.1,
+          "maxDecrement": 0.8,
+          "holidayMultiplier": 2.0,
+          "workHoursMultiplier": 1.0,
+          "nightHoursMultiplier": 0.5
+        }
+      },
+      {
+        "key": "hydraulicPressure",
+        "valueStrategy": {
+          "type": "natural",
+          "precision": 1,
+          "minStartValue": 160,
+          "maxStartValue": 190,
+          "minLowValue": 150,
+          "maxLowValue": 185,
+          "minHighValue": 185,
+          "maxHighValue": 205,
+          "minIncrement": 2.0,
+          "maxIncrement": 5.0,
+          "minDecrement": 3.0,
+          "maxDecrement": 6.0,
+          "holidayMultiplier": 1.0,
+          "workHoursMultiplier": 1.2,
+          "nightHoursMultiplier": 0.8
+        }
+      }
+    ]
+  },
+  {
+    "name": "outsideMineSiteHaulTruck",
     "publishPeriodInDays": 1,
     "publishFrequencyInSeconds": 300,
     "publishPauseInMillis": 1,
@@ -100,14 +175,14 @@
         "key": "latitude",
         "valueStrategy": {
           "type": "constant",
-          "value": 37.747800
+          "value": 36.211191
         }
       },
       {
         "key": "longitude",
         "valueStrategy": {
           "type": "constant",
-          "value": -122.388000
+          "value": -88.664576
         }
       },
       {
@@ -125,7 +200,7 @@
         }
       },
       {
-        "key": "hydraulicPressure",
+        "key": "loadWeight",
         "valueStrategy": {
           "type": "constant",
           "value": 0
@@ -146,20 +221,74 @@
           "random": true,
           "telemetry": {
             "latitude": [
-              37.751200,
-              37.750800,
-              37.750300,
-              37.749900,
-              37.749700,
-              37.749650
+              36.213242,
+              36.213242,
+              36.213242,
+              36.2132333458292,
+              36.2132290187437,
+              36.2132290187437,
+              36.2132506541665,
+              36.2132809437432,
+              36.213367485322,
+              36.2134670080029,
+              36.2136314364936,
+              36.2136920153408,
+              36.2138304810707,
+              36.2139429842771,
+              36.2140771224818,
+              36.2141636631944,
+              36.2142415497324,
+              36.2143194361843,
+              36.2143929955399,
+              36.2144752089083,
+              36.2145401140892,
+              36.2146396353006,
+              36.2147478103868,
+              36.2147997343837,
+              36.2148430043404,
+              36.2149468520757,
+              36.2150506996788,
+              36.2150766615538,
+              36.2150982964562,
+              36.2151026234366,
+              36.2151242583294,
+              36.2151761820506,
+              36.2151978169231
             ],
             "longitude": [
-              -122.391500,
-              -122.391200,
-              -122.390900,
-              -122.390700,
-              -122.390500,
-              -122.390400
+              -88.66486,
+              -88.6649029153443,
+              -88.6649458306885,
+              -88.6650102037049,
+              -88.6650799411392,
+              -88.6651443141556,
+              -88.6652891534424,
+              -88.6653588908768,
+              -88.665396441803,
+              -88.6654178994751,
+              -88.6654608148194,
+              -88.6654876369095,
+              -88.6655144589997,
+              -88.6655466455079,
+              -88.6655841964341,
+              -88.6656056541062,
+              -88.6656271117783,
+              -88.6656539338684,
+              -88.6656646627045,
+              -88.6657075780487,
+              -88.6657290357209,
+              -88.6657612222291,
+              -88.6657987731553,
+              -88.6658899682618,
+              -88.6660455363846,
+              -88.6662171977616,
+              -88.6664425033189,
+              -88.6666356223679,
+              -88.6667643684006,
+              -88.6669360297776,
+              -88.6670701402283,
+              -88.6671506064988,
+              -88.6672578948594
             ]
           }
         }
@@ -236,14 +365,14 @@
         "key": "latitude",
         "valueStrategy": {
           "type": "constant",
-          "value": 37.749450
+          "value": 36.214826
         }
       },
       {
         "key": "longitude",
         "valueStrategy": {
           "type": "constant",
-          "value": -122.391950
+          "value": -88.663277
         }
       },
       {

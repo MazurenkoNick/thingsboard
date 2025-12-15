@@ -16,7 +16,7 @@
     "type": "Excavator",
     "label": "Excavator B",
     "group": "Machines",
-    "emulator": "outsideMineSiteExcavator",
+    "emulator": "unloadingExcavator",
     "attributes": {
       "hydraulicPressureWarningThreshold": 180,
       "hydraulicPressureCriticalThreshold": 200
@@ -41,6 +41,18 @@
     "label": "Haul truck B",
     "group": "Machines",
     "emulator": "insideRestrictedZoneHaulTruck",
+    "attributes": {
+      "loadWeightWarningThreshold": 20,
+      "loadWeightCriticalThreshold": 25
+    },
+    "relations": []
+  },
+  {
+    "name": "Haul truck C",
+    "type": "Haul truck",
+    "label": "Haul truck C",
+    "group": "Machines",
+    "emulator": "outsideMineSiteHaulTruck",
     "attributes": {
       "loadWeightWarningThreshold": 20,
       "loadWeightCriticalThreshold": 25
