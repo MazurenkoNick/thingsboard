@@ -78,6 +78,7 @@ public class EntityKeyMapping {
     public static final String CREATED_TIME = "createdTime";
     public static final String ENTITY_TYPE = "entityType";
     public static final String NAME = "name";
+    public static final String FORMAT = "format";
     public static final String TYPE = "type";
     public static final String LABEL = "label";
     public static final String DISPLAY_NAME = "displayName";
@@ -113,6 +114,9 @@ public class EntityKeyMapping {
     public static final String OWNER_TYPE_SELECT_QUERY = "case when e.customer_id = '" + NULL_UUID + "' " +
             "then 'TENANT' " +
             "else 'CUSTOMER' end";
+    public static final String REPORT_FORMAT_SELECT_QUERY = "case when e.format = '0' " +
+            "then 'PDF' " +
+            "else 'CSV' end";
     public static final String QUEUE_STATS_NAME_QUERY = "concat(e.queue_name, '_', e.service_id)";
     public static final Map<String, String> ownerPropertiesFunctions = Map.of(
             OWNER_NAME, OWNER_NAME_SELECT_QUERY,
@@ -129,7 +133,7 @@ public class EntityKeyMapping {
             DISPLAY_NAME, USER_DISPLAY_NAME_SELECT_QUERY
     );
     public static final Map<String, String> queueStatsPropertiesFunctions = Map.of(NAME, QUEUE_STATS_NAME_QUERY);
-
+    public static final Map<String, String> reportPropertiesFunctions = Map.of(FORMAT, REPORT_FORMAT_SELECT_QUERY);
     public static final List<String> typedEntityFields = Arrays.asList(CREATED_TIME, ENTITY_TYPE, NAME, TYPE, ADDITIONAL_INFO);
     public static final List<String> widgetEntityFields = Arrays.asList(CREATED_TIME, ENTITY_TYPE, NAME);
     public static final List<String> commonEntityFields = Arrays.asList(CREATED_TIME, ENTITY_TYPE, NAME, ADDITIONAL_INFO);
@@ -179,6 +183,8 @@ public class EntityKeyMapping {
         allowedEntityFieldMap.put(EntityType.DEVICE_PROFILE, Set.of(CREATED_TIME, NAME, TYPE));
         allowedEntityFieldMap.put(EntityType.ASSET_PROFILE, Set.of(CREATED_TIME, NAME));
         allowedEntityFieldMap.put(EntityType.QUEUE_STATS, new HashSet<>(Arrays.asList(CREATED_TIME, QUEUE_NAME, SERVICE_ID)));
+        allowedEntityFieldMap.put(EntityType.REPORT, new HashSet<>(Arrays.asList(CREATED_TIME, NAME)));
+        allowedEntityFieldMap.put(EntityType.REPORT_TEMPLATE, new HashSet<>(Arrays.asList(CREATED_TIME, NAME, TYPE, FORMAT)));
 
         entityFieldColumnMap.put(CREATED_TIME, ModelConstants.CREATED_TIME_PROPERTY);
         entityFieldColumnMap.put(ENTITY_TYPE, ModelConstants.ENTITY_TYPE_PROPERTY);
@@ -206,6 +212,7 @@ public class EntityKeyMapping {
         entityFieldColumnMap.put(EDGE_TEMPLATE, ModelConstants.INTEGRATION_IS_EDGE_TEMPLATE_MODE_PROPERTY);
         entityFieldColumnMap.put(QUEUE_NAME, ModelConstants.QUEUE_STATS_QUEUE_NAME_PROPERTY);
         entityFieldColumnMap.put(SERVICE_ID, ModelConstants.QUEUE_STATS_SERVICE_ID_PROPERTY);
+        entityFieldColumnMap.put(FORMAT, ModelConstants.REPORT_FORMAT_PROPERTY);
 
         Map<String, String> contactBasedAliases = new HashMap<>();
         contactBasedAliases.put(NAME, TITLE);
@@ -232,6 +239,7 @@ public class EntityKeyMapping {
         propertiesFunctions.put(EntityType.USER, userPropertiesFunctions);
         propertiesFunctions.put(EntityType.DASHBOARD, ownerPropertiesFunctions);
         propertiesFunctions.put(EntityType.QUEUE_STATS, queueStatsPropertiesFunctions);
+        propertiesFunctions.put(EntityType.REPORT, reportPropertiesFunctions);
 
         Map<String, String> userEntityAliases = new HashMap<>();
         userEntityAliases.put(TITLE, EMAIL);

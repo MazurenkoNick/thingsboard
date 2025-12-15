@@ -30,25 +30,23 @@
 ///
 
 import { Component } from '@angular/core';
-import { DialogService } from '@app/core/services/dialog.service';
-import { TranslateService } from '@ngx-translate/core';
+import { MatDialogRef } from '@angular/material/dialog';
+import { Router } from '@angular/router';
+import { AppState } from '@app/core/core.state';
+import { DialogComponent } from '@app/shared/components/dialog.component';
+import { Store } from '@ngrx/store';
 
 @Component({
   selector: 'tb-trendz-analytics-unavailable',
   templateUrl: './trendz-analytics-unavailable.component.html',
   styleUrls: ['./trendz-analytics-unavailable.component.scss']
 })
-export class TrendzAnalyticsUnavailableComponent {
-  constructor(private dialogs: DialogService,
-    private translate: TranslateService) {
+export class TrendzAnalyticsUnavailableComponent extends DialogComponent<TrendzAnalyticsUnavailableComponent> {
+  
+  constructor(protected store: Store<AppState>,
+              protected router: Router,
+              public dialogRef: MatDialogRef<TrendzAnalyticsUnavailableComponent>) {
+    super(store,  router, dialogRef);
   }
 
-  requestAccess(): void {
-    //TO DO: Add contact admin request
-    this.dialogs.alert(
-      this.translate.instant('trendz-analytics.contact-admin-title'),
-      this.translate.instant('trendz-analytics.contact-admin-message'),
-      this.translate.instant('action.close')
-    );
-  }
 }

@@ -34,15 +34,29 @@ import { ActivatedRouteSnapshot, ResolveFn, RouterModule, RouterStateSnapshot, R
 import { TrendzSettingsComponent } from "@home/pages/trendz-settings/trendz-settings.component";
 import { Authority } from "@app/shared/models/authority.enum";
 import { MenuId } from "@app/core/services/menu.models";
-import { map } from "rxjs";
-import { TrendzSynchronization } from "@app/shared/models/trendz-analytics.models";
+import {
+  TrendzSynchronization,
+  TrendzSynchronizationResultType,
+  TrendzSynchronizationStatus
+} from "@app/shared/models/trendz-analytics.models";
 import { TrendzService } from "@app/core/http/trendz.service";
+import { subscriptionInfoResolver } from '@home/pages/admin/admin-routing.module';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import { getCurrentAuthState } from '@core/auth/auth.selectors';
+import { of } from 'rxjs';
 
 export const TrendzSyncResolver: ResolveFn<TrendzSynchronization> = (
   route: ActivatedRouteSnapshot,
   state: RouterStateSnapshot,
+  store: Store<AppState> = inject(Store<AppState>),
   trendzService = inject(TrendzService)) => {
-    return trendzService.getTrendzSyncResult()
+    const authState = getCurrentAuthState(store);
+    if (authState.licenseVersion > 1 && authState.trendzEnabled) {
+      return trendzService.getTrendzSyncResult()
+    } else {
+      return of({status: TrendzSynchronizationStatus.NOT_AVAILABLE, type: TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED});
+    }
 }
 
 const routes: Routes = [
@@ -57,7 +71,8 @@ const routes: Routes = [
       }
     },
     resolve: {
-      trendzSyncInfo: TrendzSyncResolver
+      trendzSyncInfo: TrendzSyncResolver,
+      subscriptionInfo: subscriptionInfoResolver
     }
   }
 ];

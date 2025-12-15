@@ -41,6 +41,7 @@ export interface AddLicenseItemDialogData {
   add: boolean;
   isPerpetual: boolean;
   licensePortalUrl: string;
+  disabledClose?: boolean;
 }
 
 @Component({

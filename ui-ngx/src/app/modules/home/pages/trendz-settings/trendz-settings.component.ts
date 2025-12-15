@@ -29,40 +29,65 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PageComponent } from '@shared/components/page.component';
 import { TrendzService } from '@core/http/trendz.service';
-import { TrendzConfiguration, TrendzSynchronizationResultType, TrendzSynchronizationStatus, TrendzSynchronizationResultTypeTranslationMap } from '@shared/models/trendz-analytics.models';
+import {
+  TrendzConfiguration,
+  TrendzSynchronizationResultType,
+  TrendzSynchronizationResultTypeTranslationMap,
+  TrendzSynchronizationStatus
+} from '@shared/models/trendz-analytics.models';
 import { ActivatedRoute } from '@angular/router';
+import { getCurrentAuthState } from '@core/auth/auth.selectors';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import {
+  AddLicenseItemDialogComponent,
+  AddLicenseItemDialogData
+} from '@home/pages/admin/add-license-item-dialog.component';
+import { DynamicMatDialog } from '@shared/components/dialog/dynamic/dynamic-dialog';
+import { TranslateService } from '@ngx-translate/core';
+import { createManageSubscriptionUrl, SubscriptionInfo } from '@shared/models/subscription.models';
+import { Observable } from 'rxjs';
+import { AdminService } from '@core/http/admin.service';
 
 @Component({
   selector: 'tb-trendz-settings',
   templateUrl: './trendz-settings.component.html',
   styleUrls: ['./trendz-settings.component.scss', '../admin/settings-card.scss']
 })
-export class TrendzSettingsComponent extends PageComponent implements OnInit{
+export class TrendzSettingsComponent extends PageComponent implements OnInit {
   trendzSettingsForm: FormGroup;
   trendzSyncInfo = this.route.snapshot.data.trendzSyncInfo;
   TrendzSynchronizationStatus = TrendzSynchronizationStatus;
   TrendzSynchronizationResultType = TrendzSynchronizationResultType;
   TrendzSynchronizationResultTypeTranslationMap = TrendzSynchronizationResultTypeTranslationMap;
 
-  constructor(private fb: FormBuilder,
+  authState = getCurrentAuthState(this.store);
+  trendzEnabled = this.authState.licenseVersion > 1 && this.authState.trendzEnabled;
+
+  private subscriptionInfo: SubscriptionInfo;
+
+  constructor(protected store: Store<AppState>,
+              private fb: FormBuilder,
               private trendzService: TrendzService,
-              private route: ActivatedRoute){
+              private adminService: AdminService,
+              private route: ActivatedRoute,
+              private translate: TranslateService,
+              private dialog: DynamicMatDialog,
+              private elementRef: ElementRef) {
     super()
   }
 
   ngOnInit(): void {
+    this.subscriptionInfo = this.route.snapshot.data.subscriptionInfo;
     this.trendzSettingsForm = this.fb.group({
       trendzUrl: [null, [Validators.required, Validators.pattern(/^(https?:\/\/)[^\s/$.?#].[^\s]*$/i)]],
       tbUrl: [null, [Validators.required, Validators.pattern(/^(https?:\/\/)[^\s/$.?#].[^\s]*$/i)]]
     });
-
-    this.trendzService.getTrendzConfig().subscribe((settings) => {
-      this.trendzSettingsForm.patchValue(settings);
-    });
+    this.initTrendzSettings();
   }
 
   save(): void {
@@ -81,5 +106,38 @@ export class TrendzSettingsComponent extends PageComponent implements OnInit{
     this.trendzService.performTrendzHealthcheck().subscribe(result => {
       this.trendzSyncInfo = result;
     });
+  }
+
+  private initTrendzSettings() {
+    if (!this.trendzEnabled) {
+      this.addTrendzLicense().subscribe(() => {
+        this.adminService.refreshLicense().subscribe(subscriptionInfo => {
+          this.subscriptionInfo = subscriptionInfo;
+          this.trendzEnabled = this.authState.licenseVersion > 1 && this.subscriptionInfo.trendzEnabled;
+          this.initTrendzSettings();
+        });
+      })
+    } else {
+      this.trendzService.getTrendzConfig().subscribe((settings) => {
+        this.trendzSettingsForm.patchValue(settings);
+      });
+    }
+  }
+
+  private addTrendzLicense(): Observable<boolean> {
+    return this.dialog.open<AddLicenseItemDialogComponent, AddLicenseItemDialogData, boolean>(AddLicenseItemDialogComponent,
+      {
+        disableClose: true,
+        autoFocus: false,
+        panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+        containerElement: this.elementRef.nativeElement,
+        data: {
+          itemName: this.translate.instant('subscription.trendz'),
+          add: false,
+          isPerpetual: this.subscriptionInfo.perpetual,
+          licensePortalUrl: createManageSubscriptionUrl(this.subscriptionInfo, { trendzEnabled: true }),
+          disabledClose: true
+        }
+      }).afterClosed()
   }
 }
