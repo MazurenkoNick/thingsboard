@@ -29,20 +29,19 @@
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
 
-:host {
-  z-index: 3
-}
-
 .trendz-unavailable {
-  padding: 40px;
-}
-
-.trendz-unavailable-title {
-  font-weight: 500;
-}
-
-.trendz-unavailable-description {
+  max-width: 750px;
+  padding: 24px;  
   color: rgba(0, 0, 0, 0.76);
+
+  .trendz-unavailable-title {
+    font-size: 20px;
+    font-weight: 600
+  }
+
+  .trendz-unavailable-text {
+    line-height: 20px;
+  }
 }
 
 

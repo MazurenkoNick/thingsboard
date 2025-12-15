@@ -12602,8 +12602,9 @@
         "retry-healthcheck": "Retry healthcheck",
         "save-configuration": "Save configuration",
         "service-connection": "Service Connection",
-        "service-unavailable": "Analytics service unavailable",
-        "service-unavailable-message": "Integration conflict detected. Restore operation required. Contact your system administrator to fix this problem.",
+        "service-unavailable": "Advanced Analytics is temporarily unavailable",
+        "service-unavailable-message": "We're currently experiencing a technical issue that is preventing access to the Advanced Analytics service.",
+        "service-unavailable-incident-reported": "The cause is a configuration or connectivity problem between the Platform and the Analytics servers. This incident has been reported to the System Administrator.",
         "sync": {
             "sync-completed": "Synchronization completed successfully",
             "sync-disabled": "Synchronization is disabled by Trendz configuration",
