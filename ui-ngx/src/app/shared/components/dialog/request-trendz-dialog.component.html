@@ -31,7 +31,7 @@
 
 -->
 <div class="request-feature-dialog">
-  <div class="request-feature-title">{{ 'subscription.request-trendz-title' | translate }}</div>
+  <div class="request-feature-title">{{ 'subscription.request-trendz-title' | translate : {name: name} }}</div>
   <div class="request-feature-text">{{ 'subscription.request-trendz-text' | translate }}</div>
   <div class="request-feature-cards-container">
     <div class="request-feature-cards">
@@ -86,7 +86,7 @@
     </div>
   </div>
   <div class="request-feature-actions">
-    <div class="request-feature-action-text">{{ 'subscription.request-trendz-action-text' | translate }}</div>
+    <div class="request-feature-action-text">{{ 'subscription.request-trendz-action-text' | translate : {name: name} }}</div>
     <div class="flex flex-row gap-2">
       <button mat-flat-button color="primary" (click)="requestAccess($event)">
         {{ 'subscription.request-access' | translate }}

@@ -39,9 +39,10 @@ import { AuthService } from '@core/auth/auth.service';
 import { DialogService } from '@core/services/dialog.service';
 import { TranslateService } from '@ngx-translate/core';
 import { NotificationService } from '@core/http/notification.service';
-import { AddonType, addonTypeTranslationMap } from '@shared/models/subscription.models';
+import { AddonType } from '@shared/models/subscription.models';
 import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Authority } from '@shared/models/authority.enum';
+import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 @Component({
   selector: 'tb-request-trendz-dialog',
@@ -53,13 +54,16 @@ export class RequestTrendzDialogComponent extends DialogComponent<RequestTrendzD
 
   isCustomerUser = getCurrentAuthUser(this.store).authority === Authority.CUSTOMER_USER;
 
+  name = this.translate.instant(this.wl.getTrendzName());
+
   constructor(protected store: Store<AppState>,
               protected router: Router,
               protected dialogRef: MatDialogRef<RequestTrendzDialogComponent>,
               private authService: AuthService,
               private dialogs: DialogService,
               private translate: TranslateService,
-              private notificationService: NotificationService) {
+              private notificationService: NotificationService,
+              private wl: WhiteLabelingService) {
     super(store,  router, dialogRef);
   }
 
@@ -70,7 +74,9 @@ export class RequestTrendzDialogComponent extends DialogComponent<RequestTrendzD
 
     this.notificationService.sendAddonAccessRequest(AddonType.TRENDZ).subscribe(() => {
       this.dialogs.alert(
-        this.translate.instant('subscription.feature-request-sent-title', { addonName: this.translate.instant(addonTypeTranslationMap.get(AddonType.TRENDZ)) }),
+        this.translate.instant('subscription.feature-request-sent-title', {
+          addonName: this.translate.instant('subscription.trendz-name-addon', {name: this.name})
+        }),
         this.translate.instant('subscription.feature-request-sent-text'),
         this.translate.instant('action.close')
       );
@@ -81,7 +87,7 @@ export class RequestTrendzDialogComponent extends DialogComponent<RequestTrendzD
     if ($event) {
       $event.stopPropagation();
     }
-    window.open('https://thingsboard.io/docs/trendz/', '_blank');
+    window.open(`${this.wl.getHelpLinkBaseUrl()}/docs/trendz/`, '_blank');
   }
 
   loginAsSysAdmin($event: Event) {
