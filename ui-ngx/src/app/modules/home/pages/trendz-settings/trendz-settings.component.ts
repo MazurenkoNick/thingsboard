@@ -35,6 +35,7 @@ import { PageComponent } from '@shared/components/page.component';
 import { TrendzService } from '@core/http/trendz.service';
 import { TrendzConfiguration, TrendzSynchronizationResultType, TrendzSynchronizationStatus, TrendzSynchronizationResultTypeTranslationMap } from '@shared/models/trendz-analytics.models';
 import { ActivatedRoute } from '@angular/router';
+import { of, switchMap } from 'rxjs';
 
 @Component({
   selector: 'tb-trendz-settings',
@@ -68,12 +69,23 @@ export class TrendzSettingsComponent extends PageComponent implements OnInit{
   save(): void {
     const trendzConfig: TrendzConfiguration = this.trendzSettingsForm.value;
 
-    this.trendzService.saveTrendzConfig(trendzConfig).subscribe();
+    this.trendzService.saveTrendzConfig(trendzConfig).subscribe((savedConfig) => {
+      if (savedConfig) {
+        this.trendzSettingsForm.patchValue(savedConfig);
+        this.trendzSettingsForm.markAsPristine();
+      }
+    });
   }
 
   retryDiscovery(): void {
-    this.trendzService.connectToTrendz().subscribe(result => {
-      this.trendzSyncInfo = result;
+    this.trendzService.connectToTrendz().pipe(
+      switchMap(result => {
+        if (result.status === TrendzSynchronizationStatus.SYNCED) {
+          return this.trendzService.performTrendzHealthcheck();
+        }
+        return of(result);
+      })).subscribe(result => {
+        this.trendzSyncInfo = result;
     });
   }
 
