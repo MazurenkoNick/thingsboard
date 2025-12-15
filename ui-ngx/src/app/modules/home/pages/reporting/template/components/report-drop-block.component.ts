@@ -33,6 +33,7 @@ import {
   AfterViewInit,
   Component,
   EventEmitter,
+  HostBinding,
   Input,
   OnChanges,
   OnDestroy,
@@ -80,6 +81,8 @@ import { alignment } from '@shared/models/widget-settings.models';
   encapsulation: ViewEncapsulation.None
 })
 export class ReportDropBlockComponent implements IReportComponent, OnInit, OnChanges, AfterViewInit, OnDestroy {
+
+  @HostBinding('style.display') display = 'block';
 
   @ViewChild(CdkDropList) dropList?: CdkDropList;
 

@@ -56,5 +56,14 @@
         opacity: 1 !important;
       }
     }
+    .mat-toolbar-tools {
+      .tb-widget-actions {
+        .mdc-icon-button {
+          .mat-icon {
+            color: var(--mat-icon-color);
+          }
+        }
+      }
+    }
   }
 }

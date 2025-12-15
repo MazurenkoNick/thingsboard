@@ -28,17 +28,10 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-@import '../../../../../scss/constants';
+package org.thingsboard.server.common.data.trendz;
 
-:host {
-  display: flex;
-  flex: 1 1 0;
-  .tb-request-password-reset-content {
-    background-color: #eee;
-    .tb-request-password-reset-card {
-      @media #{$mat-gt-xs} {
-        width: 450px !important;
-      }
-    }
-  }
+public enum TrendzSynchronizationStatus {
+
+    NOT_AVAILABLE, AVAILABLE, SYNCED
+
 }

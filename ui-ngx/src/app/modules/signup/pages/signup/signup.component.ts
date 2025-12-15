@@ -33,7 +33,6 @@ import { Component, HostBinding, ViewChild } from '@angular/core';
 import { AuthService } from '@core/auth/auth.service';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
-import { PageComponent } from '@shared/components/page.component';
 import { FormBuilder } from '@angular/forms';
 import { SignupRequest, SignupRequestValues, SignUpResult } from '@shared/models/signup.models';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -55,7 +54,7 @@ import { passwordStrengthValidator } from '@shared/models/password.models';
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.scss']
 })
-export class SignupComponent extends PageComponent {
+export class SignupComponent {
 
   @ViewChild('recaptcha') recaptchaComponent: ReCaptcha2Component;
 
@@ -67,12 +66,15 @@ export class SignupComponent extends PageComponent {
   })
   acceptPrivacyPolicy: boolean;
   acceptTermsOfUse: boolean;
+  acceptAll: boolean;
   signupParams = this.selfRegistrationService.signUpParams;
   passwordPolicy: UserPasswordPolicy;
 
+  isLoading = false;
+
   @HostBinding('class') class = 'tb-custom-css';
 
-  constructor(protected store: Store<AppState>,
+  constructor(private store: Store<AppState>,
               private route: ActivatedRoute,
               private router: Router,
               private authService: AuthService,
@@ -84,7 +86,6 @@ export class SignupComponent extends PageComponent {
               private reCaptchaV3Service: ReCaptchaV3Service,
               private dialog: MatDialog,
               private fb: FormBuilder) {
-    super(store);
     this.passwordPolicy = this.route.snapshot.data['passwordPolicy'];
     this.signup.get('fields.PASSWORD').setValidators(passwordStrengthValidator(this.passwordPolicy));
   }
@@ -118,9 +119,11 @@ export class SignupComponent extends PageComponent {
   }
 
   private executeSignup(signupRequest: SignupRequestValues): void {
+    this.isLoading = true;
     this.signupService.signup(signupRequest).subscribe({
       next: (signupResult) => {
         if (signupResult === SignUpResult.INACTIVE_USER_EXISTS) {
+          this.isLoading = false;
           this.promptToResendEmailVerification();
           if (this.recaptchaComponent) {
             this.recaptchaComponent.resetCaptcha();
@@ -130,6 +133,7 @@ export class SignupComponent extends PageComponent {
         }
       },
       error: () => {
+        this.isLoading = false;
         if (this.recaptchaComponent) {
           this.recaptchaComponent.resetCaptcha();
         }
@@ -161,15 +165,30 @@ export class SignupComponent extends PageComponent {
         type: 'error' }));
       return false;
     }
-    if (this.signupParams.showPrivacyPolicy && !this.acceptPrivacyPolicy) {
-      this.store.dispatch(new ActionNotificationShow({ message: this.translate.instant('signup.accept-privacy-policy-message'),
-        type: 'error' }));
-      return false;
-    }
-    if (this.signupParams.showTermsOfUse && !this.acceptTermsOfUse) {
-      this.store.dispatch(new ActionNotificationShow({ message: this.translate.instant('signup.accept-terms-of-use-message'),
-        type: 'error' }));
-      return false;
+    if (this.signupParams.showPrivacyPolicy && this.signupParams.showTermsOfUse) {
+      if (!this.acceptAll) {
+        this.store.dispatch(new ActionNotificationShow({
+          message: this.translate.instant('signup.accept-privacy-policy-and-terms-of-use-message'),
+          type: 'error'
+        }));
+        return false;
+      }
+    } else if (this.signupParams.showPrivacyPolicy) {
+      if (!this.acceptPrivacyPolicy) {
+        this.store.dispatch(new ActionNotificationShow({
+          message: this.translate.instant('signup.accept-privacy-policy-message'),
+          type: 'error'
+        }));
+        return false;
+      }
+    } else if (this.signupParams.showTermsOfUse) {
+      if (!this.acceptTermsOfUse) {
+        this.store.dispatch(new ActionNotificationShow({
+          message: this.translate.instant('signup.accept-terms-of-use-message'),
+          type: 'error'
+        }));
+        return false;
+      }
     }
     return true;
   }
@@ -191,6 +210,9 @@ export class SignupComponent extends PageComponent {
       .subscribe((res) => {
         if (res) {
           this.acceptPrivacyPolicy = true;
+          if (this.signupParams.showTermsOfUse && this.acceptTermsOfUse) {
+            this.acceptAll = true;
+          }
         }
       });
   }
@@ -212,6 +234,9 @@ export class SignupComponent extends PageComponent {
       .subscribe((res) => {
         if (res) {
           this.acceptTermsOfUse = true;
+          if (this.signupParams.showPrivacyPolicy && this.acceptPrivacyPolicy) {
+            this.acceptAll = true;
+          }
         }
       });
   }

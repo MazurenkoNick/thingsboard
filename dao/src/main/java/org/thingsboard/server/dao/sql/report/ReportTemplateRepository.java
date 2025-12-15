@@ -30,14 +30,17 @@
  */
 package org.thingsboard.server.dao.sql.report;
 
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.thingsboard.server.common.data.edqs.fields.ReportTemplateFields;
 import org.thingsboard.server.dao.ExportableEntityRepository;
 import org.thingsboard.server.dao.model.sql.ReportTemplateEntity;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface ReportTemplateRepository extends JpaRepository<ReportTemplateEntity, UUID>, ExportableEntityRepository<ReportTemplateEntity> {
@@ -57,4 +60,8 @@ public interface ReportTemplateRepository extends JpaRepository<ReportTemplateEn
 
     @Query("SELECT se.id FROM ReportTemplateEntity se WHERE se.tenantId = :tenantId")
     Page<UUID> findIdsByTenantId(@Param("tenantId") UUID tenantId, Pageable pageable);
+
+    @Query("SELECT new org.thingsboard.server.common.data.edqs.fields.ReportTemplateFields(r.id, r.createdTime, r.tenantId, " +
+            "r.customerId, r.name, r.type, r.format, r.version) FROM ReportTemplateEntity r WHERE r.id > :id ORDER BY r.id")
+    List<ReportTemplateFields> findNextBatch(@Param("id") UUID id, Limit limit);
 }

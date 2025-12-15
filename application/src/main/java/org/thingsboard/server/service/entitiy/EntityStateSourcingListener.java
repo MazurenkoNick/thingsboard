@@ -65,6 +65,7 @@ import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.data.notification.NotificationRequest;
+import org.thingsboard.server.common.data.pat.ApiKey;
 import org.thingsboard.server.common.data.plugin.ComponentLifecycleEvent;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.rule.RuleChain;
@@ -86,6 +87,7 @@ import org.thingsboard.server.dao.eventsourcing.RelationActionEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.secret.SecretService;
 import org.thingsboard.server.dao.tenant.TenantService;
+import org.thingsboard.server.dao.trendz.TrendzSyncService;
 import org.thingsboard.server.gen.transport.TransportProtos.EntityActionEventProto;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCalculatedFieldMsg;
 import org.thingsboard.server.queue.TbQueueCallback;
@@ -113,6 +115,7 @@ public class EntityStateSourcingListener {
     private final Optional<GitVersionControlQueueService> gitServiceQueue;
     private final Optional<EntitiesVersionControlService> versionControlService;
     private final CalculatedFieldCache calculatedFieldCache;
+    private final Optional<TrendzSyncService> trendzSyncService;
 
     @PostConstruct
     public void init() {
@@ -227,6 +230,12 @@ public class EntityStateSourcingListener {
                     schedulerService.ifPresent(service -> service.onSchedulerEventAdded(schedulerEvent));
                 } else {
                     schedulerService.ifPresent(service -> service.onSchedulerEventUpdated(schedulerEvent));
+                }
+            }
+            case API_KEY -> {
+                if (!isCreated) {
+                    trendzSyncService.ifPresent(service ->
+                            service.performApiKeyRotationSync((ApiKey) event.getEntity(), (ApiKey) event.getOldEntity()));
                 }
             }
             default -> {}

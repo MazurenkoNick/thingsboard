@@ -56,6 +56,12 @@ import { deepClone, isUndefined } from '@core/utils';
 import { EntityAliasDialogComponent, EntityAliasDialogData } from './entity-alias-dialog.component';
 import { DashboardUtilsService } from '@core/services/dashboard-utils.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+  AlarmTableReportComponentConfig, DataReportComponentConfig,
+  ReportComponentConfig,
+  ReportComponentType
+} from '@shared/models/report-component.models';
+import { reportComponentTypesData } from '@home/pages/reporting/template/components/report-component.models';
 
 export interface EntityAliasesDialogData {
   entityAliases: EntityAliases;
@@ -69,6 +75,7 @@ export interface EntityAliasesDialogData {
   disableResolveMultiple?: boolean;
   reportMode?: boolean;
   subReport?: boolean;
+  reportComponents?:  ReportComponentConfig[];
 }
 
 @Component({
@@ -141,6 +148,25 @@ export class EntityAliasesDialogComponent extends DialogComponent<EntityAliasesD
         });
       }
     }
+
+    if(data.reportMode && data.reportComponents.length) {
+      this.data.reportComponents.forEach((component) => {
+        const typedComponent = component as DataReportComponentConfig;
+        if (typedComponent.type === ReportComponentType.ALARM_TABLE) {
+          const alarmSource = (typedComponent as AlarmTableReportComponentConfig).alarmSource
+          if (alarmSource) {
+            this.addWidgetTitleToWidgetsMap(alarmSource.entityAliasId, typedComponent.type);
+          }
+        } else {
+          typedComponent.dataSources.forEach((datasource) => {
+            if ([DatasourceType.entity, DatasourceType.entityCount, DatasourceType.alarmCount].includes(datasource.type)
+              && datasource.entityAliasId) {
+              this.addWidgetTitleToWidgetsMap(datasource.entityAliasId, typedComponent.type);
+            }
+          });
+        }
+      });
+    }
     const entityAliasControls: Array<AbstractControl> = [];
     for (const aliasId of Object.keys(this.data.entityAliases)) {
       const entityAlias = this.data.entityAliases[aliasId];
@@ -203,9 +229,13 @@ export class EntityAliasesDialogComponent extends DialogComponent<EntityAliasesD
     if (widgetsTitleList) {
       let widgetsListHtml = '';
       for (const widgetTitle of widgetsTitleList) {
-        widgetsListHtml += '<br/>\'' + widgetTitle + '\'';
+        const title = this.data.reportMode ?
+          this.translate.instant(reportComponentTypesData.getReportComponentTypeData(widgetTitle as ReportComponentType).title)
+          : widgetTitle;
+        widgetsListHtml += '<br/>\'' + title + '\'';
       }
-      const message = this.translate.instant('entity.unable-delete-entity-alias-text',
+      const messageKey = this.data.reportMode ? 'entity.unable-delete-entity-alias-text-components' : 'entity.unable-delete-entity-alias-text';
+      const message = this.translate.instant(messageKey,
         {entityAlias: entityAlias.alias, widgetsList: widgetsListHtml});
       this.dialogs.alert(this.translate.instant('entity.unable-delete-entity-alias-title'),
         message, this.translate.instant('action.close'), true);

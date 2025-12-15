@@ -28,17 +28,21 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-@import '../../../../../scss/constants';
+package org.thingsboard.server.dao.trendz;
 
-:host {
-  display: flex;
-  flex: 1 1 0;
-  .tb-create-password-content {
-    background-color: #eee;
-    .tb-create-password-card {
-      @media #{$mat-gt-xs} {
-        width: 450px !important;
-      }
-    }
-  }
+import org.thingsboard.server.common.data.pat.ApiKey;
+import org.thingsboard.server.common.data.trendz.TrendzSettings;
+import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
+
+public interface TrendzSyncService {
+    String TRENDZ_API_KEY_DESCRIPTION = "Internal API key used to authenticate with Trendz";
+
+    TrendzSettings performSync();
+
+    void performSyncIfNeeded();
+
+    TrendzHealthcheckResult performHealthcheck();
+
+    void performApiKeyRotationSync(ApiKey newApiKey, ApiKey oldApiKey);
+
 }

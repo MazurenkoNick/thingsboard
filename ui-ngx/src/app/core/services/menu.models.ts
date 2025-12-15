@@ -199,7 +199,8 @@ export enum MenuId {
   reporting = 'reporting',
   report_templates = 'report_templates',
   report_scheduling = 'report_scheduling',
-  reports = 'reports'
+  reports = 'reports',
+  trendz_analytics = 'trendz_analytics'
 }
 
 declare type MenuFilter = (_authState: AuthState, userPermissionsService: UserPermissionsService) => boolean;
@@ -1274,14 +1275,24 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
     }
   ],
   [
+    MenuId.trendz_analytics,
+    {
+      id: MenuId.trendz_analytics,
+      name: 'trendz-analytics.trendz-analytics',
+      type: 'link',
+      path: '/trendzAnalytics',
+      icon: 'trendz',
+      isNew: true
+    }
+  ],
+  [
     MenuId.trendz_settings,
     {
       id: MenuId.trendz_settings,
-      name: 'admin.trendz',
-      fullName: 'admin.trendz-settings',
+      name: 'trendz-analytics.trendz-settings',
       type: 'link',
-      path: '/settings/trendz',
-      icon: 'trendz-settings'
+      path: '/trendzSettings',
+      icon: 'trendz'
     }
   ]
 ]);
@@ -1601,14 +1612,13 @@ const menuFilters = new Map<MenuId, MenuFilter>([
             userPermissionsService.hasReadGenericPermission(Resource.REPORT)
   ],
   [
-    MenuId.trendz_settings, (authState, userPermissionsService) =>
-            authState.authUser.authority === Authority.TENANT_ADMIN &&
-            userPermissionsService.hasReadGenericPermission(Resource.ADMIN_SETTINGS)
-  ],
-  [
     MenuId.ai_models, (authState, userPermissionsService) =>
             authState.authUser.authority === Authority.TENANT_ADMIN &&
             userPermissionsService.hasReadGenericPermission(Resource.AI_MODEL)
+  ],
+  [
+    MenuId.trendz_settings, (authState) =>
+            authState.authUser.authority === Authority.SYS_ADMIN
   ]
 ]);
 
@@ -1663,6 +1673,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.custom_menu}
         ]
       },
+      {id: MenuId.trendz_settings},
       {
         id: MenuId.settings,
         pages: [
@@ -1717,6 +1728,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
         ]
       },
       {id: MenuId.solution_templates},
+      {id: MenuId.trendz_analytics},
       {
         id: MenuId.entities,
         pages: [
@@ -1856,7 +1868,6 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.notification_settings},
           {id: MenuId.repository_settings},
           {id: MenuId.auto_commit_settings},
-          {id: MenuId.trendz_settings},
           {id: MenuId.ai_models}
         ]
       },
@@ -1892,6 +1903,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.dashboard_shared}
         ]
       },
+      {id: MenuId.trendz_analytics},
       {
         id: MenuId.entities,
         pages: [
@@ -2008,7 +2020,7 @@ const defaultHomeSectionMap = new Map<Authority, HomeSectionReference[]>([
         name: 'admin.system-settings',
         places: [MenuId.general, MenuId.mail_server,
           MenuId.notification_settings, MenuId.security_settings, MenuId.oauth2, MenuId.domains, MenuId.mobile_apps,
-          MenuId.clients, MenuId.two_fa, MenuId.resources_library, MenuId.queues]
+          MenuId.clients, MenuId.two_fa, MenuId.resources_library, MenuId.queues, MenuId.trendz_settings]
       },
       {
         name: 'white-labeling.white-labeling',
@@ -2102,7 +2114,7 @@ const defaultHomeSectionMap = new Map<Authority, HomeSectionReference[]>([
       {
         name: 'admin.system-settings',
         places: [MenuId.home_settings, MenuId.mail_server, MenuId.notification_settings, MenuId.self_registration,
-          MenuId.two_fa, MenuId.resources_library, MenuId.repository_settings, MenuId.auto_commit_settings, MenuId.trendz_settings]
+          MenuId.two_fa, MenuId.resources_library, MenuId.repository_settings, MenuId.auto_commit_settings]
       }
     ]
   ],

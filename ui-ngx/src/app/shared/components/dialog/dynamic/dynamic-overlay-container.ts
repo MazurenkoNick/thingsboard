@@ -29,14 +29,14 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-export interface TrendzSettings {
-  enabled: boolean,
-  baseUrl: string,
-  apiKey: string
-}
+import { OverlayContainer } from "@angular/cdk/overlay";
+import { Injectable } from "@angular/core";
 
-export const initialTrendzSettings: TrendzSettings = {
-  enabled: false,
-  baseUrl: null,
-  apiKey: null
+@Injectable()
+export class DynamicOverlayContainer extends OverlayContainer {
+
+  public setContainerElement( containerElement:HTMLElement ):void {
+
+    this._containerElement = containerElement;
+  }
 }

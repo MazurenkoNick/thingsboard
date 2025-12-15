@@ -47,6 +47,8 @@ import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportInfo;
 import org.thingsboard.server.common.data.report.ReportInfoQuery;
 import org.thingsboard.server.dao.entity.AbstractEntityService;
+import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
+import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.service.ConstraintValidator;
 import org.thingsboard.server.dao.service.validator.ReportDataValidator;
 
@@ -79,6 +81,8 @@ public class DefaultReportService extends AbstractEntityService implements Repor
 
         report = reportDao.save(report.getTenantId(), report);
         reportDao.saveData(report.getTenantId(), report.getId(), data);
+        eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(report.getTenantId()).entityId(report.getId())
+                .entity(report).created(true).build());
         return report;
     }
 
@@ -153,6 +157,7 @@ public class DefaultReportService extends AbstractEntityService implements Repor
     @Override
     public void deleteEntity(TenantId tenantId, EntityId id, boolean force) {
         reportDao.removeById(tenantId, id.getId());
+        eventPublisher.publishEvent(DeleteEntityEvent.builder().tenantId(tenantId).entityId(id).build());
     }
 
     @Override

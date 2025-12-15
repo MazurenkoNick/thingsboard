@@ -29,26 +29,24 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
-import { TrendzSettings } from '@shared/models/trendz-settings.models';
-import { defaultHttpOptionsFromConfig, RequestConfig } from '@core/http/http-utils';
+import { Component } from '@angular/core';
+import { MatDialogRef } from '@angular/material/dialog';
+import { Router } from '@angular/router';
+import { AppState } from '@app/core/core.state';
+import { DialogComponent } from '@app/shared/components/dialog.component';
+import { Store } from '@ngrx/store';
 
-@Injectable({
-  providedIn: 'root'
+@Component({
+  selector: 'tb-trendz-analytics-unavailable',
+  templateUrl: './trendz-analytics-unavailable.component.html',
+  styleUrls: ['./trendz-analytics-unavailable.component.scss']
 })
-export class TrendzSettingsService {
-
-  constructor(
-    private http: HttpClient
-  ) {}
-
-  public getTrendzSettings(config?: RequestConfig): Observable<TrendzSettings> {
-    return this.http.get<TrendzSettings>(`/api/trendz/settings`, defaultHttpOptionsFromConfig(config))
+export class TrendzAnalyticsUnavailableComponent extends DialogComponent<TrendzAnalyticsUnavailableComponent> {
+  
+  constructor(protected store: Store<AppState>,
+              protected router: Router,
+              public dialogRef: MatDialogRef<TrendzAnalyticsUnavailableComponent>) {
+    super(store,  router, dialogRef);
   }
 
-  public saveTrendzSettings(trendzSettings: TrendzSettings, config?: RequestConfig): Observable<TrendzSettings> {
-    return this.http.post<TrendzSettings>(`/api/trendz/settings`, trendzSettings, defaultHttpOptionsFromConfig(config))
-  }
 }
