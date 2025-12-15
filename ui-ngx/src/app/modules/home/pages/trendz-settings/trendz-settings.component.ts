@@ -66,7 +66,7 @@ export class TrendzSettingsComponent extends PageComponent implements OnInit {
   TrendzSynchronizationResultTypeTranslationMap = TrendzSynchronizationResultTypeTranslationMap;
 
   authState = getCurrentAuthState(this.store);
-  trendzEnabled = this.authState.licenseVersion > 1 && this.authState.trendzEnabled;
+  trendzEnabled = this.authState.licenseVersion < 2 || this.authState.trendzEnabled;
 
   private subscriptionInfo: SubscriptionInfo;
 
@@ -113,7 +113,7 @@ export class TrendzSettingsComponent extends PageComponent implements OnInit {
       this.addTrendzLicense().subscribe(() => {
         this.adminService.refreshLicense().subscribe(subscriptionInfo => {
           this.subscriptionInfo = subscriptionInfo;
-          this.trendzEnabled = this.authState.licenseVersion > 1 && this.subscriptionInfo.trendzEnabled;
+          this.trendzEnabled = this.authState.licenseVersion < 2 || this.subscriptionInfo.trendzEnabled;
           this.initTrendzSettings();
         });
       })
