@@ -153,6 +153,8 @@ export class WhiteLabelingComponent extends PageComponent implements OnInit, Has
       this.wlSettings.addControl('prohibitDifferentUrl',
         this.fb.control('', [])
       );
+    } else {
+      this.wlSettings.addControl('overrideTrendzName', this.fb.control(false, []));
     }
 
     if (this.isLoginWl && !this.isSysAdmin) {

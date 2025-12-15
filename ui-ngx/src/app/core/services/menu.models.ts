@@ -1280,7 +1280,7 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       id: MenuId.trendz_analytics,
       name: 'trendz-analytics.trendz-analytics',
       type: 'link',
-      path: '/trendzAnalytics',
+      path: '/analytics',
       icon: 'trendz',
       isNew: true
     }
@@ -1728,7 +1728,6 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
         ]
       },
       {id: MenuId.solution_templates},
-      {id: MenuId.trendz_analytics},
       {
         id: MenuId.entities,
         pages: [
@@ -1806,6 +1805,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.converter_templates}
         ]
       },
+      {id: MenuId.trendz_analytics},
       {
         id: MenuId.features,
         pages: [
@@ -1903,7 +1903,6 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.dashboard_shared}
         ]
       },
-      {id: MenuId.trendz_analytics},
       {
         id: MenuId.entities,
         pages: [
@@ -1957,6 +1956,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.edge_shared},
         ]
       },
+      {id: MenuId.trendz_analytics},
       {
         id: MenuId.resources,
         pages: [
