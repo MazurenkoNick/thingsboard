@@ -3911,8 +3911,7 @@
         "service-id": "Service Id",
         "owner-name": "Owner name",
         "owner-type": "Owner type",
-        "report-type": "Report type",
-        "report-format": "Report format"
+        "format": "Format"
     },
     "entity-view": {
         "all": "All",
