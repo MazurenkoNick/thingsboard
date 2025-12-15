@@ -58,11 +58,12 @@ import { ActionSettingsChangeWhiteLabeling } from '@core/settings/settings.actio
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import cssjs from '@core/css/css';
-import { DomSanitizer } from '@angular/platform-browser';
 import { DOCUMENT } from '@angular/common';
 import { defaultHttpOptionsFromConfig, RequestConfig } from '@core/http/http-utils';
 import { MailTemplatesSettings } from '@shared/models/settings.models';
 import { docPlatformPrefix } from '@shared/models/constants';
+import { MenuId, menuSectionMap } from '@core/services/menu.models';
+import { MenuService } from '@core/services/menu.service';
 
 const cssParser = new cssjs();
 cssParser.testMode = false;
@@ -157,9 +158,9 @@ export class WhiteLabelingService {
   constructor(
     private http: HttpClient,
     private store: Store<AppState>,
-    private sanitizer: DomSanitizer,
     rendererFactory: RendererFactory2,
-    @Inject(DOCUMENT) private document: Document
+    @Inject(DOCUMENT) private document: Document,
+    private menuService: MenuService
   ) {
     this.renderer = rendererFactory.createRenderer(null, null);
     this.ROOT = this.document.documentElement;
@@ -399,6 +400,17 @@ export class WhiteLabelingService {
 
   private wlChanged(): Observable<any> {
     applyCustomCss(this.currentWLParams.customCss, false);
+    const menu = menuSectionMap.get(MenuId.trendz_analytics);
+    let trendzMenuName: string;
+    if (this.currentWLParams.overrideTrendzName) {
+      trendzMenuName = "trendz-analytics.advanced-analytics";
+    } else {
+      trendzMenuName = "trendz-analytics.trendz-analytics";
+    }
+    if (menu.name !== trendzMenuName) {
+      menu.name = trendzMenuName;
+      this.menuService.buildMenu();
+    }
     return this.applyThemePalettes(this.currentWLParams.paletteSettings).pipe(
       tap(() => {
         this.notifyWlChanged();

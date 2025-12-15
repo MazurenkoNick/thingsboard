@@ -87,7 +87,7 @@ export class MenuService {
     });
   }
 
-  private buildMenu() {
+  public buildMenu() {
     this.store.pipe(select(selectAuth), take(1)).subscribe(
       (authState: AuthState) => {
         if (authState.authUser) {

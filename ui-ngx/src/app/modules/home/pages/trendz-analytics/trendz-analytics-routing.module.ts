@@ -48,7 +48,7 @@ export const TrendzSyncInfoResolver: ResolveFn<boolean> = (
 
 const routes: Routes = [
   {
-    path: 'trendzAnalytics',
+    path: 'analytics',
     component: TrendzAnalyticsComponent,
     data: {
       auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
