@@ -127,3 +127,8 @@ ANALYZE calculated_field;
 
 ALTER TABLE custom_menu ADD COLUMN IF NOT EXISTS user_group_names text[];
 
+-- REMOVAL OF OLD TRENDZ SETTINGS
+
+DELETE FROM admin_settings AS settings WHERE settings.key = 'trendz';
+
+-- REMOVAL OF OLD TRENDZ SETTINGS END
