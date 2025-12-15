@@ -3910,7 +3910,9 @@
         "queue-name": "Queue name",
         "service-id": "Service Id",
         "owner-name": "Owner name",
-        "owner-type": "Owner type"
+        "owner-type": "Owner type",
+        "report-type": "Report type",
+        "report-format": "Report format"
     },
     "entity-view": {
         "all": "All",

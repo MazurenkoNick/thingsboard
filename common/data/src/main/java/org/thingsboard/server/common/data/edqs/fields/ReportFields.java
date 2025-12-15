@@ -28,42 +28,24 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-.tb-blob-entities {
-  .tb-blob-entities-content {
-    width: 100%;
-    height: 100%;
-    background: #fff;
-    overflow: hidden;
+package org.thingsboard.server.common.data.edqs.fields;
 
-    &.tb-outlined-border {
-      box-shadow: 0 0 0 0 rgb(0 0 0 / 20%), 0 0 0 0 rgb(0 0 0 / 14%), 0 0 0 0 rgb(0 0 0 / 12%);
-      border: solid 1px #e0e0e0;
-      border-radius: 4px;
-    }
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 
-    .tb-blob-entities-title {
-      padding-right: 20px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+import java.util.UUID;
 
-    .table-container {
-      overflow: auto;
-      flex: 1 1 0;
+@Data
+@NoArgsConstructor
+@SuperBuilder
+public class ReportFields extends AbstractEntityFields {
 
-      .mat-sort-header-sorted .mat-sort-header-arrow {
-        opacity: 1 !important;
-      }
+    private String format;
+
+    public ReportFields(UUID id, long createdTime, UUID tenantId, UUID customerId, String name, TbReportFormat format) {
+        super(id, createdTime, tenantId, customerId, name, null);
+        this.format = format.name();
     }
-    .mat-toolbar-tools {
-      .tb-widget-actions {
-        .mdc-icon-button {
-          .mat-icon {
-            color: var(--mat-icon-color);
-          }
-        }
-      }
-    }
-  }
 }

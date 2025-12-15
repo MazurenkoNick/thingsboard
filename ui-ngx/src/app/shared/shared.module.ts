@@ -279,6 +279,7 @@ import { TimeUnitInputComponent } from '@shared/components/time-unit-input.compo
 import { DateExpirationPipe } from '@shared/pipe/date-expiration.pipe';
 import { EntityLimitExceededDialogComponent } from '@shared/components/dialog/entity-limit-exceeded-dialog.component';
 import { PasswordRequirementsTooltipComponent } from '@shared/components/password-requirements-tooltip.component';
+import { DynamicMatDialogModule } from '@shared/components/dialog/dynamic/dynamic-dialog.module';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -593,7 +594,8 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
         useFactory: MarkedOptionsFactory,
         deps: [MarkedOptionsService]
       }
-    })
+    }),
+    DynamicMatDialogModule
   ],
   exports: [
     FooterComponent,
@@ -826,6 +828,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     ReportTemplateAutocompleteComponent,
     TimeUnitInputComponent,
     PasswordRequirementsTooltipComponent,
+    DynamicMatDialogModule
   ]
 })
 export class SharedModule { }
