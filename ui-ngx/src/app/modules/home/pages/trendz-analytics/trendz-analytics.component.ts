@@ -29,28 +29,48 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component } from '@angular/core';
+import { Component, ElementRef, OnInit } from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';
 import { getMetricLink, TrendzSummary, TrendzViewType } from '@shared/models/trendz-analytics.models';
 import { TrendzService } from '@app/core/http/trendz.service';
 import { ActivatedRoute } from '@angular/router';
+import { TrendzAnalyticsUnavailableComponent } from './trendz-analytics-unavailable.component';
+import { DynamicMatDialog } from '@app/shared/components/dialog/dynamic/dynamic-dialog';
 
 @Component({
   selector: 'tb-trendz-analytics',
   templateUrl: './trendz-analytics.component.html',
   styleUrls: ['./trendz-analytics.component.scss']
 })
-export class TrendzAnalyticsComponent extends PageComponent {
+export class TrendzAnalyticsComponent extends PageComponent implements OnInit {
   trendzSummary: TrendzSummary;
   trendzSynced = this.route.snapshot.data.trendzSynced;
   trendzViewTypes = Object.entries(TrendzViewType).map(([key, value]) => ({ key, value }));
   getMetricLink = getMetricLink;
 
   constructor(private trendzService: TrendzService,
-              private route: ActivatedRoute) {
+              private route: ActivatedRoute,
+              private dialog: DynamicMatDialog,
+              private elementRef: ElementRef) {
     super();
 
     if(this.trendzSynced) {
+      this.trendzService.getTrendzSummary().subscribe(trendzSummary => {
+        if (trendzSummary) {
+          this.trendzSummary = trendzSummary;
+        }
+      });
+    }
+  }
+
+  ngOnInit(): void {
+    if(!this.trendzSynced) {
+      this.dialog.open(TrendzAnalyticsUnavailableComponent, {
+        containerElement: this.elementRef.nativeElement,
+        disableClose: true,
+        panelClass: ['tb-dialog', 'tb-fullscreen-dialog-lt-lg'],
+      });
+    } else {
       this.trendzService.getTrendzSummary().subscribe(trendzSummary => {
         if (trendzSummary) {
           this.trendzSummary = trendzSummary;

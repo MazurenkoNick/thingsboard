@@ -31,12 +31,8 @@
 
 -->
 
-<mat-card appearance="outlined">
-  <div class="trendz-unavailable flex flex-col gap-4 items-start">
-    <div class="trendz-unavailable-title">{{ 'trendz-analytics.service-unavailable' | translate }}</div>
-    <div class="trendz-unavailable-text">{{ 'trendz-analytics.service-unavailable-message' | translate }}</div>
-    <button mat-button mat-raised-button color="primary" (click)="requestAccess()">{{
-      'trendz-analytics.contact-sys-admin' | translate }}
-    </button>
-  </div>
-</mat-card>
+<div class="trendz-unavailable flex flex-col gap-4">
+  <div class="trendz-unavailable-title">{{ 'trendz-analytics.service-unavailable' | translate }}</div>
+  <div class="trendz-unavailable-text">{{ 'trendz-analytics.service-unavailable-message' | translate }}</div>
+  <div class="trendz-unavailable-text">{{ 'trendz-analytics.service-unavailable-incident-reported' | translate }}</div>
+</div>
