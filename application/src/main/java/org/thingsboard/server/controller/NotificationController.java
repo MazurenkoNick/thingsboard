@@ -406,8 +406,16 @@ public class NotificationController extends BaseController {
             if (tenantAdmins.isPresent()) {
                 NotificationTargetId notificationTargetId = tenantAdmins.get().getId();
                 String baseUrl = systemSecurityService.getBaseUrl(user.getTenantId(), new CustomerId(EntityId.NULL_UUID), request);
+                String addonNameOverride = null;
+                if (addonType == AddonType.TRENDZ && subscriptionService.whiteLabelingEnabled(user.getTenantId())) {
+                    var params = whiteLabelingService.getMergedTenantWhiteLabelingParams(getTenantId());
+                    if (params != null && params.getOverrideTrendzName() != null && params.getOverrideTrendzName()) {
+                        addonNameOverride = "Advanced Analytics";
+                    }
+                }
                 NotificationInfo info = AddonAccessRequestNotificationInfo.builder()
                         .addonType(addonType)
+                        .addonNameOverride(addonNameOverride)
                         .userEmail(user.getEmail())
                         .enableAddonActionLabel("Request access")
                         .enableAddonLink("/action/addonAccessRequest?addonType=" + addonType.name())

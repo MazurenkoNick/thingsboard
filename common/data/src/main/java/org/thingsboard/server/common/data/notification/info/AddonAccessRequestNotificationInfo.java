@@ -34,6 +34,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.subscription.AddonType;
 
 import java.util.Map;
@@ -47,6 +48,7 @@ import static org.thingsboard.server.common.data.util.CollectionsUtil.mapOf;
 public class AddonAccessRequestNotificationInfo implements NotificationInfo {
 
     private AddonType addonType;
+    private String addonNameOverride;
     private String userEmail;
     private String enableAddonActionLabel;
     private String enableAddonLink;
@@ -55,7 +57,7 @@ public class AddonAccessRequestNotificationInfo implements NotificationInfo {
     @Override
     public Map<String, String> getTemplateData() {
         return mapOf(
-                "addon", addonType.getAddonName(),
+                "addon", StringUtils.isNotBlank(addonNameOverride) ? addonNameOverride : addonType.getAddonName(),
                 "userEmail", userEmail,
                 "enableAddonActionLabel", enableAddonActionLabel,
                 "enableAddonLink", enableAddonLink,
