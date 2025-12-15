@@ -31,7 +31,7 @@
 
 import { Component, OnInit } from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';
-import { PlanUiType, SubscriptionInfo } from '@shared/models/subscription.models';
+import { createManageSubscriptionUrl, PlanUiType, SubscriptionInfo } from '@shared/models/subscription.models';
 import { ActivatedRoute } from '@angular/router';
 import { AdminService } from '@core/http/admin.service';
 import { MatDialog } from '@angular/material/dialog';
@@ -67,7 +67,7 @@ export class LicenseManagementComponent extends PageComponent implements OnInit 
     if ($event) {
       $event.stopPropagation();
     }
-    window.open(this.createManageSubscriptionUrl(), '_blank');
+    window.open(createManageSubscriptionUrl(this.subscriptionInfo), '_blank');
   }
 
   refreshLicenseInfo($event?: Event) {
@@ -133,21 +133,10 @@ export class LicenseManagementComponent extends PageComponent implements OnInit 
           itemName,
           add,
           isPerpetual: this.subscriptionInfo.perpetual,
-          licensePortalUrl: this.createManageSubscriptionUrl(items)
+          licensePortalUrl: createManageSubscriptionUrl(this.subscriptionInfo, items)
         }
       }).afterClosed().subscribe(
         () => this.refreshLicenseInfo()
       );
-  }
-
-  private createManageSubscriptionUrl(items?: any) {
-    let url = `${this.subscriptionInfo.licenseServerEndpoint}/?manageSubscription=true&subscriptionId=${this.subscriptionInfo.subscriptionId}`;
-    if (this.subscriptionInfo.perpetual) {
-      url += '&perpetual=true';
-    }
-    if (items) {
-      url += `&manageAddons=true&items=${encodeURIComponent(JSON.stringify(items))}`;
-    }
-    return url;
   }
 }

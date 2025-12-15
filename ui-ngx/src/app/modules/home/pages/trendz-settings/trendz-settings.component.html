@@ -47,12 +47,12 @@
                     {{ TrendzSynchronizationResultTypeTranslationMap.get(trendzSyncInfo.type) | translate }}
                 </div>
                 <div class="flex gap-2">
-                    <button mat-button mat-raised-button color="primary" type="button" [disabled]="(isLoading$ | async)" (click)="retryDiscovery()">
+                    <button mat-button mat-raised-button color="primary" type="button" [disabled]="(isLoading$ | async) || !this.trendzEnabled" (click)="retryDiscovery()">
                         <tb-icon matButtonIcon>refresh</tb-icon>
                         {{ 'trendz-analytics.retry-discovery' | translate }}
                     </button>
                     @if(trendzSyncInfo.status === TrendzSynchronizationStatus.SYNCED) {
-                        <button mat-stroked-button color="primary" type="button" [disabled]="(isLoading$ | async)" (click)="retryHealthcheck()">
+                        <button mat-stroked-button color="primary" type="button" [disabled]="(isLoading$ | async) || !this.trendzEnabled" (click)="retryHealthcheck()">
                             {{ 'trendz-analytics.retry-healthcheck' | translate }}
                         </button>
                     } @else if(trendzSyncInfo.type === TrendzSynchronizationResultType.TRENDZ_UNSUPPORTED_VERSION) {
@@ -60,7 +60,7 @@
                             <tb-icon matButtonIcon>refresh</tb-icon>
                             {{ 'trendz-analytics.read-upgrade-guide' | translate }}
                         </a>
-                    } 
+                    }
                 </div>
             </div>
         </div>
@@ -99,7 +99,7 @@
                 </mat-form-field>
             </div>
             <div class="flex w-full flex-row flex-wrap items-center justify-end">
-                <button mat-button mat-raised-button color="primary" [disabled]="(isLoading$ | async) || trendzSettingsForm.invalid || !trendzSettingsForm.dirty" (click)="save()">
+                <button mat-button mat-raised-button color="primary" [disabled]="(isLoading$ | async) || trendzSettingsForm.invalid || !trendzSettingsForm.dirty || !this.trendzEnabled" (click)="save()">
                   {{ 'trendz-analytics.save-configuration' | translate }}
                 </button>
               </div>

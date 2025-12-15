@@ -98,8 +98,8 @@ export interface TrendzSummaryItemParam {
 }
 
 export interface TrendzSynchronization {
-    version: string,
-    message: string;
+    version?: string,
+    message?: string;
     type: TrendzSynchronizationResultType,
     status: TrendzSynchronizationStatus
 }

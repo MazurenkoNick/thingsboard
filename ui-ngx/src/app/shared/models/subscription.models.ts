@@ -130,3 +130,14 @@ export const addonTypeTranslationMap = new Map<AddonType, string>(
     [AddonType.WHITE_LABELING, 'subscription.white-labeling'],
   ]
 );
+
+export const createManageSubscriptionUrl = (subscriptionInfo: SubscriptionInfo, items?: any) => {
+  let url = `${subscriptionInfo.licenseServerEndpoint}/?manageSubscription=true&subscriptionId=${subscriptionInfo.subscriptionId}`;
+  if (subscriptionInfo.perpetual) {
+    url += '&perpetual=true';
+  }
+  if (items) {
+    url += `&manageAddons=true&items=${encodeURIComponent(JSON.stringify(items))}`;
+  }
+  return url;
+}
