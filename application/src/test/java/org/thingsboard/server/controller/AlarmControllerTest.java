@@ -33,6 +33,7 @@ package org.thingsboard.server.controller;
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
 import org.junit.After;
@@ -52,6 +53,7 @@ import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntitySubtype;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.EntityView;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmInfo;
@@ -64,6 +66,8 @@ import org.thingsboard.server.common.data.id.AlarmId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.objects.AttributesEntityView;
+import org.thingsboard.server.common.data.objects.TelemetryEntityView;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.permission.GroupPermission;
 import org.thingsboard.server.common.data.role.Role;
@@ -80,6 +84,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -1394,6 +1399,45 @@ public class AlarmControllerTest extends AbstractControllerTest {
                     .getData().stream().map(EntitySubtype::getType).sorted().toList();
             Assert.assertTrue(actualTypes.isEmpty());
         });
+    }
+
+    @Test
+    public void testAlarmInfoWithEntityViewOriginator() throws Exception {
+        loginTenantAdmin();
+        EntityView view = createEntityView("Alarm test entity view");
+        view = doPost("/api/entityView", view, EntityView.class);
+
+        Alarm alarm = Alarm.builder()
+                .tenantId(tenantId)
+                .originator(view.getId())
+                .severity(AlarmSeverity.CRITICAL)
+                .type("Test Entity View Alarm")
+                .build();
+
+        alarm = doPost("/api/alarm", alarm, Alarm.class);
+
+        AlarmInfo retrievedAlarmInfo = doGet("/api/alarm/info/" + alarm.getId(), AlarmInfo.class);
+        assertThat(retrievedAlarmInfo.getOriginator()).isEqualTo(view.getId());
+        assertThat(retrievedAlarmInfo.getOriginatorName()).isEqualTo(view.getName());
+        assertThat(retrievedAlarmInfo.getOriginatorLabel()).isEqualTo(view.getName());
+    }
+
+    private EntityView createEntityView(String name) {
+        Device device = new Device();
+        device.setName("Test device 4view");
+        device.setType("default");
+        device = doPost("/api/device", device, Device.class);
+
+        TelemetryEntityView telemetry = new TelemetryEntityView(
+                List.of("tsKey1", "tsKey2", "tsKey3"), null);
+
+        EntityView view = new EntityView();
+        view.setEntityId(device.getId());
+        view.setTenantId(tenantId);
+        view.setName(name);
+        view.setType("default");
+        view.setKeys(telemetry);
+        return view;
     }
 
 }

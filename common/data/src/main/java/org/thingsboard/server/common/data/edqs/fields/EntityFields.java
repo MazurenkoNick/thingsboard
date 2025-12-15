@@ -140,6 +140,10 @@ public interface EntityFields {
         return "";
     }
 
+    default String getFormat() {
+        return "";
+    }
+
     default boolean isDefault() {
         return false;
     }
@@ -178,6 +182,7 @@ public interface EntityFields {
             case "originatorType" -> getOriginatorId().getEntityType().toString();
             case "queueName" -> getQueueName();
             case "serviceId" -> getServiceId();
+            case "format" -> getFormat();
             default -> {
                 log.warn("Unknown field '{}'", key);
                 yield null;
