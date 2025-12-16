@@ -1,0 +1,92 @@
+{
+  "fqn": "trendz_view_static",
+  "name": "Advanced Analytics View Static",
+  "deprecated": false,
+  "image": "tb-image;/api/images/system/analytics-static.svg",
+  "description": "Displays saved Advanced Analytics visualizations.",
+  "descriptor": {
+    "type": "static",
+    "sizeX": 7.5,
+    "sizeY": 3,
+    "resources": [
+      {
+        "url": "/trendz/bundle/trendz-tb-lib.js",
+        "isModule": true
+      }
+    ],
+    "templateHtml": "<div *ngIf=\"!inited\" class=\"center-scree\">Native Static Analytic View</div>\n<div *ngIf=\"jwt\" (click)=\"onClick($event)\">\n  <tb-example\n    [jwt]=\"getJwtToken()\"\n    [jwtRefresh]=\"getRefreshToken()\"\n    [ctx]=\"ctx\"\n    [isInEditMode]=\"ctx.isEdit\"\n    [isViewMode]=\"true\"\n    [resourceURL]=\"resourceURL\"\n    (dataChannel)=\"onDataChannleInit($event)\"\n  ></tb-example>\n</div>\n",
+    "templateCss": ".center-scree {\n    width: 100%; \n    height: 100%;\n    border: 0; \n    text-align: center;\n    font-size: 40px;\n}",
+    "controllerScript": "let $scope;\n\nself.actionSources = function () {\n  return {\n    'rowClick': {\n      name: 'widget-action.row-click',\n      multiple: false\n    },\n    'dateSelected': {\n      name: 'date-selected',\n      multiple: false\n    },\n    'changedRadioButton': {\n      name: 'changed-radio-button',\n      multiple: false\n    },\n     'elementClick': {\n        name: 'widget-action.element-click',\n        multiple: true\n    }\n  };\n}\n\nself.onInit = function () { \n $scope = self.ctx.$scope;\n  $scope.ctx = self.ctx;\n  $scope.jwt = self.getJwtToken();\n  $scope.jwtRefresh = self.getRefreshToken();\n  $scope.inited = false;\n\n  $scope.getJwtToken = self.getJwtToken;\n  $scope.ctx.getJwtToken = self.getJwtToken;\n\n  $scope.getRefreshToken = self.getRefreshToken;\n  $scope.ctx.getRefreshToken = self.getRefreshToken;\n\n  $scope.onDataChannleInit = self.onDataChannleInit;\n  $scope.ctx.onDataChannleInit = self.onDataChannleInit;\n\n  self.ctx.jwt = $scope.jwt;\n  \n  let widgetService = self.ctx.entityService.widgetService;\n  let resourceURL = '';\n    \n  if(widgetService.widgetsInfoInMemoryCache) {\n    let widgetInfo = widgetService.widgetsInfoInMemoryCache.get(self.ctx.widget.typeFullFqn)\n    if(widgetInfo && widgetInfo.resources.length) {\n        resourceURL = widgetInfo.resources[0].url\n    }\n  }\n\n  $scope.resourceURL = resourceURL;\n  \n  settings = JSON.parse(JSON.stringify($scope.ctx.settings)) || {};\n  if(!settings.viewUrl && !settings.view) {\n      $scope.inited = false;\n  } else {\n      $scope.inited = true;\n  }\n  \n    self.ctx.$scope.onClick = function(e) {\n        if (e.target.className.includes('mat-menu-trigger')\n            || e.target.className.includes('mat-button-wrapper')\n        ) {\n            return;\n        }\n\n        let descriptors = self.ctx.$scope.ctx\n            .actionsApi.getActionDescriptors(\n                'elementClick');\n        let actionEvent;\n        if (descriptors.length) {\n            actionEvent = descriptors[0];\n        \n          setTimeout(() => {\n            self.ctx.$scope.ctx.actionsApi\n                .handleWidgetAction(null,\n                    actionEvent);\n          }, 0);\n        }\n\n    }\n}\n\nself.onDataUpdated = function() {\n\n}\n\nself.onDestroy = function () {\n}\n\nself.onEditModeChanged = function (e) {\n}\n\nself.onResize = function () {\n  if ($scope.subscriptionService) {\n    $scope.subscriptionService.emit('parentResize', 'tb_dashboard', 'onResizeEvent');\n  }\n}\n\nself.onDataChannleInit = function (subscriptionService) {\n  $scope.subscriptionService = subscriptionService;\n}\n\n\nself.getRefreshToken = function () {\n  let jwtToken = localStorage.getItem('refresh_token');\n  if (jwtToken) {\n    jwtToken = jwtToken.replaceAll('\"', \"\");\n  return jwtToken;\n  }\n\n  return 'unknwown';\n}\n\nself.getJwtToken = function () {\n  let jwtToken = localStorage.getItem('jwt_token');\n  if (jwtToken) {\n    jwtToken = jwtToken.replaceAll('\"', \"\");\n  return jwtToken;\n  }\n\n  return 'unknwown';\n}\n",
+    "settingsForm": [
+      {
+        "id": "viewUrl",
+        "name": "View URL",
+        "type": "text",
+        "required": true,
+        "fieldClass": "flex"
+      },
+      {
+        "id": "useDashboardTimeWindow",
+        "name": "Use Dashboard Time Window",
+        "type": "switch",
+        "required": false
+      },
+      {
+        "id": "enableViewCaching",
+        "name": "Enable view caching",
+        "type": "switch",
+        "default": true,
+        "required": false
+      },
+      {
+        "id": "canCancelViewLoading",
+        "name": "Show button for cancel view loading",
+        "type": "switch",
+        "required": false
+      },
+      {
+        "id": "isFiltersBroadcasting",
+        "name": "Broadcast filter change event",
+        "type": "switch",
+        "required": false
+      },
+      {
+        "id": "isFiltersListen",
+        "name": "Listen filter change event",
+        "type": "switch",
+        "required": false
+      },
+      {
+        "id": "channelName",
+        "name": "Filter change event name",
+        "type": "text",
+        "default": "trendz-filter",
+        "required": false,
+        "fieldClass": "flex"
+      },
+      {
+        "id": "isSaveFilters",
+        "name": "Save filters selection",
+        "type": "switch",
+        "required": false
+      }
+    ],
+    "dataKeySettingsForm": [],
+    "defaultConfig": "{\"datasources\":[{\"type\":\"static\",\"name\":\"function\",\"dataKeys\":[{\"name\":\"f(x)\",\"type\":\"function\",\"label\":\"Random\",\"color\":\"#2196f3\",\"settings\":{},\"_hash\":0.15479322438769105,\"funcBody\":\"var value = prevValue + Math.random() * 100 - 50;\\nvar multiplier = Math.pow(10, 2 || 0);\\nvar value = Math.round(value * multiplier) / multiplier;\\nif (value < -1000) {\\n\\tvalue = -1000;\\n} else if (value > 1000) {\\n\\tvalue = 1000;\\n}\\nreturn value;\"}]}],\"timewindow\":{\"realtime\":{\"timewindowMs\":60000}},\"showTitle\":false,\"backgroundColor\":\"rgb(255, 255, 255)\",\"color\":\"rgba(0, 0, 0, 0.87)\",\"padding\":\"8px\",\"settings\":{\"viewUrl\":\"http://localhost:4200/viewMode/{id}/\",\"useDashboardTimeWindow\":false},\"title\":\"tmp-native-trndz\",\"dropShadow\":true}"
+  },
+  "resources": [
+    {
+      "link": "/api/images/system/analytics-static.svg",
+      "title": "Advanced Analytics Static",
+      "type": "IMAGE",
+      "subType": "IMAGE",
+      "fileName": "analytics-static.svg",
+      "publicResourceKey": "EZbiqPKiCGVDQP64xNs0eQPnxGLGloFR",
+      "mediaType": "image/svg+xml",
+      "data": "PHN2ZyB3aWR0aD0iMTIwMCIgaGVpZ2h0PSI2MDAiIHZpZXdCb3g9IjAgMCAxMjAwIDYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBmb250LWZhbWlseT0iQXJpYWwsIEhlbHZldGljYSwgc2Fucy1zZXJpZiI+DQogIDxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IndoaXRlIi8+DQoNCiAgPHRleHQgeD0iNjAwIiB5PSI1MCIgZm9udC1zaXplPSIyNCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiM1YTZhODUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkNvbnN1bXB0aW9uIGJ5IG1vbnRoIHBlciB5ZWFyPC90ZXh0Pg0KDQogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUwLCAyMCkiPg0KICAgIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIxMiIgZmlsbD0iI2RjZTBmMCIgcng9IjMiLz4NCiAgICA8dGV4dCB4PSIyNSIgeT0iMTAiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM1YTZhODUiPjIwMjE8L3RleHQ+DQogICAgDQogICAgPHJlY3QgeD0iNjAiIHk9IjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIxMiIgZmlsbD0iIzlkYjBlOCIgcng9IjMiLz4NCiAgICA8dGV4dCB4PSI4NSIgeT0iMTAiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM1YTZhODUiPjIwMjI8L3RleHQ+DQogICAgDQogICAgPHJlY3QgeD0iMTIwIiB5PSIwIiB3aWR0aD0iMjAiIGhlaWdodD0iMTIiIGZpbGw9IiM3MDdlZjAiIHJ4PSIzIi8+DQogICAgPHRleHQgeD0iMTQ1IiB5PSIxMCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzVhNmE4NSI+MjAyMzwvdGV4dD4NCiAgPC9nPg0KDQogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDgwLCA4MCkiPg0KICAgIDxnIHN0cm9rZT0iI2VlZjJmOSIgc3Ryb2tlLXdpZHRoPSIxIj4NCiAgICAgIDxsaW5lIHgxPSIwIiB5MT0iNDUwIiB4Mj0iMTA4MCIgeTI9IjQ1MCIvPiA8bGluZSB4MT0iMCIgeTE9IjM2MCIgeDI9IjEwODAiIHkyPSIzNjAiLz4gPGxpbmUgeDE9IjAiIHkxPSIyNzAiIHgyPSIxMDgwIiB5Mj0iMjcwIi8+IDxsaW5lIHgxPSIwIiB5MT0iMTgwIiB4Mj0iMTA4MCIgeTI9IjE4MCIvPiA8bGluZSB4MT0iMCIgeTE9IjkwIiB4Mj0iMTA4MCIgeTI9IjkwIi8+ICA8bGluZSB4MT0iMCIgeTE9IjAiIHgyPSIxMDgwIiB5Mj0iMCIvPiAgICA8L2c+DQoNCiAgICA8ZyBmb250LXNpemU9IjExIiBmaWxsPSIjN2E4YTk1IiB0ZXh0LWFuY2hvcj0iZW5kIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMTAsIDUpIj4NCiAgICAgIDx0ZXh0IHk9IjQ1MCI+MDwvdGV4dD4NCiAgICAgIDx0ZXh0IHk9IjM2MCI+MzAwMDAwPC90ZXh0Pg0KICAgICAgPHRleHQgeT0iMjcwIj42MDAwMDA8L3RleHQ+DQogICAgICA8dGV4dCB5PSIxODAiPjkwMDAwMDwvdGV4dD4NCiAgICAgIDx0ZXh0IHk9IjkwIj4xMjAwMDAwPC90ZXh0Pg0KICAgIDwvZz4NCiAgICANCiAgICA8dGV4dCB4PSItMjUwIiB5PSItNTAiIGZvbnQtc2l6ZT0iMTIiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjNWE2YTg1IiB0cmFuc2Zvcm09InJvdGF0ZSgtOTApIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5jb25zdW1wdGlvbjwvdGV4dD4NCg0KICAgIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIwLCAwKSI+DQogICAgICA8cmVjdCB4PSIwIiB5PSI2MCIgd2lkdGg9IjE4IiBoZWlnaHQ9IjM5MCIgZmlsbD0iI2RjZTBmMCIgcng9IjQiLz4NCiAgICAgIDxyZWN0IHg9IjIyIiB5PSI1NSIgd2lkdGg9IjE4IiBoZWlnaHQ9IjM5NSIgZmlsbD0iIzlkYjBlOCIgcng9IjQiLz4NCiAgICAgIDxyZWN0IHg9IjQ0IiB5PSI0NSIgd2lkdGg9IjE4IiBoZWlnaHQ9IjQwNSIgZmlsbD0iIzcwN2VmMCIgcng9IjQiLz4NCiAgICA8L2c+DQoNCiAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMTAsIDApIj4NCiAgICAgIDxyZWN0IHg9IjAiIHk9IjEwMCIgd2lkdGg9IjE4IiBoZWlnaHQ9IjM1MCIgZmlsbD0iI2RjZTBmMCIgcng9IjQiLz4NCiAgICAgIDxyZWN0IHg9IjIyIiB5PSIxMDAiIHdpZHRoPSIxOCIgaGVpZ2h0PSIzNTAiIGZpbGw9IiM5ZGIwZTgiIHJ4PSI0Ii8+DQogICAgICA8cmVjdCB4PSI0NCIgeT0iNzAiIHdpZHRoPSIxOCIgaGVpZ2h0PSIzODAiIGZpbGw9IiM3MDdlZjAiIHJ4PSI0Ii8+DQogICAgPC9nPg0KDQogICAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjAwLCAwKSI+DQogICAgICA8cmVjdCB4PSIwIiB5PSI2NSIgd2lkdGg9IjE4IiBoZWlnaHQ9IjM4NSIgZmlsbD0iI2RjZTBmMCIgcng9IjQiLz4NCiAgICAgIDxyZWN0IHg9IjIyIiB5PSI2MCIgd2lkdGg9IjE4IiBoZWlnaHQ9IjM5MCIgZmlsbD0iIzlkYjBlOCIgcng9IjQiLz4NCiAgICAgIDxyZWN0IHg9IjQ0IiB5PSI1OCIgd2lkdGg9IjE4IiBoZWlnaHQ9IjM5MiIgZmlsbD0iIzcwN2VmMCIgcng9IjQiLz4NCiAgICA8L2c+DQoNCiAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyOTAsIDApIj4NCiAgICAgIDxyZWN0IHg9IjAiIHk9IjU1IiB3aWR0aD0iMTgiIGhlaWdodD0iMzk1IiBmaWxsPSIjZGNlMGYwIiByeD0iNCIvPg0KICAgICAgPHJlY3QgeD0iMjIiIHk9IjU1IiB3aWR0aD0iMTgiIGhlaWdodD0iMzk1IiBmaWxsPSIjOWRiMGU4IiByeD0iNCIvPg0KICAgICAgPHJlY3QgeD0iNDQiIHk9IjEwNSIgd2lkdGg9IjE4IiBoZWlnaHQ9IjM0NSIgZmlsbD0iIzcwN2VmMCIgcng9IjQiLz4gPC9nPg0KDQogICAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzgwLCAwKSI+DQogICAgICA8cmVjdCB4PSIwIiB5PSIzMCIgd2lkdGg9IjE4IiBoZWlnaHQ9IjQyMCIgZmlsbD0iI2RjZTBmMCIgcng9IjQiLz4NCiAgICAgIDxyZWN0IHg9IjIyIiB5PSIzMCIgd2lkdGg9IjE4IiBoZWlnaHQ9IjQyMCIgZmlsbD0iIzlkYjBlOCIgcng9IjQiLz4NCiAgICAgIDxyZWN0IHg9IjQ0IiB5PSIyNzAiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxODAiIGZpbGw9IiM3MDdlZjAiIHJ4PSI0Ii8+IDwvZz4NCg0KICAgIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQ3MCwgMCkiPg0KICAgICAgPHJlY3QgeD0iMCIgeT0iNTUiIHdpZHRoPSIxOCIgaGVpZ2h0PSIzOTUiIGZpbGw9IiNkY2UwZjAiIHJ4PSI0Ii8+DQogICAgICA8cmVjdCB4PSIyMiIgeT0iNTUiIHdpZHRoPSIxOCIgaGVpZ2h0PSIzOTUiIGZpbGw9IiM5ZGIwZTgiIHJ4PSI0Ii8+DQogICAgPC9nPg0KDQogICAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNTYwLCAwKSI+DQogICAgICA8cmVjdCB4PSIwIiB5PSI2MCIgd2lkdGg9IjE4IiBoZWlnaHQ9IjM5MCIgZmlsbD0iI2RjZTBmMCIgcng9IjQiLz4NCiAgICAgIDxyZWN0IHg9IjIyIiB5PSI2MiIgd2lkdGg9IjE4IiBoZWlnaHQ9IjM4OCIgZmlsbD0iIzlkYjBlOCIgcng9IjQiLz4NCiAgICA8L2c+DQoNCiAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg2NTAsIDApIj4NCiAgICAgIDxyZWN0IHg9IjAiIHk9IjQwIiB3aWR0aD0iMTgiIGhlaWdodD0iNDEwIiBmaWxsPSIjZGNlMGYwIiByeD0iNCIvPg0KICAgICAgPHJlY3QgeD0iMjIiIHk9IjM4IiB3aWR0aD0iMTgiIGhlaWdodD0iNDEyIiBmaWxsPSIjOWRiMGU4IiByeD0iNCIvPg0KICAgIDwvZz4NCg0KICAgIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDc0MCwgMCkiPg0KICAgICAgPHJlY3QgeD0iMCIgeT0iMTUiIHdpZHRoPSIxOCIgaGVpZ2h0PSI0MzUiIGZpbGw9IiNkY2UwZjAiIHJ4PSI0Ii8+DQogICAgICA8cmVjdCB4PSIyMiIgeT0iMTUiIHdpZHRoPSIxOCIgaGVpZ2h0PSI0MzUiIGZpbGw9IiM5ZGIwZTgiIHJ4PSI0Ii8+DQogICAgPC9nPg0KDQogICAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoODMwLCAwKSI+DQogICAgICA8cmVjdCB4PSIwIiB5PSIyMCIgd2lkdGg9IjE4IiBoZWlnaHQ9IjQzMCIgZmlsbD0iI2RjZTBmMCIgcng9IjQiLz4NCiAgICAgIDxyZWN0IHg9IjIyIiB5PSIxOCIgd2lkdGg9IjE4IiBoZWlnaHQ9IjQzMiIgZmlsbD0iIzlkYjBlOCIgcng9IjQiLz4NCiAgICA8L2c+DQoNCiAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg5MjAsIDApIj4NCiAgICAgIDxyZWN0IHg9IjAiIHk9IjQ1IiB3aWR0aD0iMTgiIGhlaWdodD0iNDA1IiBmaWxsPSIjZGNlMGYwIiByeD0iNCIvPg0KICAgICAgPHJlY3QgeD0iMjIiIHk9IjQ1IiB3aWR0aD0iMTgiIGhlaWdodD0iNDA1IiBmaWxsPSIjOWRiMGU4IiByeD0iNCIvPg0KICAgIDwvZz4NCg0KICAgIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwMTAsIDApIj4NCiAgICAgIDxyZWN0IHg9IjAiIHk9IjI1IiB3aWR0aD0iMTgiIGhlaWdodD0iNDI1IiBmaWxsPSIjZGNlMGYwIiByeD0iNCIvPg0KICAgICAgPHJlY3QgeD0iMjIiIHk9IjI4IiB3aWR0aD0iMTgiIGhlaWdodD0iNDIyIiBmaWxsPSIjOWRiMGU4IiByeD0iNCIvPg0KICAgIDwvZz4NCg0KICAgIDxnIGZvbnQtc2l6ZT0iMTEiIGZpbGw9IiM3YThhOTUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDMwLCA0NzApIj4NCiAgICAgIDx0ZXh0IHg9IjIwIj5KYW48L3RleHQ+DQogICAgICA8dGV4dCB4PSIxMTAiPkZlYjwvdGV4dD4NCiAgICAgIDx0ZXh0IHg9IjIwMCI+TWFyPC90ZXh0Pg0KICAgICAgPHRleHQgeD0iMjkwIj5BcHI8L3RleHQ+DQogICAgICA8dGV4dCB4PSIzODAiPk1heTwvdGV4dD4NCiAgICAgIDx0ZXh0IHg9IjQ3MCI+SnVuPC90ZXh0Pg0KICAgICAgPHRleHQgeD0iNTYwIj5KdWw8L3RleHQ+DQogICAgICA8dGV4dCB4PSI2NTAiPkF1ZzwvdGV4dD4NCiAgICAgIDx0ZXh0IHg9Ijc0MCI+U2VwPC90ZXh0Pg0KICAgICAgPHRleHQgeD0iODMwIj5PY3Q8L3RleHQ+DQogICAgICA8dGV4dCB4PSI5MjAiPk5vdjwvdGV4dD4NCiAgICAgIDx0ZXh0IHg9IjEwMTAiPkRlYzwvdGV4dD4NCiAgICA8L2c+DQogIDwvZz4NCjwvc3ZnPg==",
+      "public": true
+    }
+  ],
+  "scada": false,
+  "tags": null
+}
