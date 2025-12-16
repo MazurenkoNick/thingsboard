@@ -16,7 +16,7 @@ You may always customize the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Mi
 
 ### Devices
 
-We have already created two excavators, and two haul trucks and loaded demo telemetry for them. See the device info and credentials below:
+We have already created two excavators and three haul trucks with loaded demo telemetry for them. See the device info and credentials below:
 
 <div class="tb-markdown-view table-wrapper">
 
@@ -28,14 +28,22 @@ The solution expects that machinery devices will upload "latitude", "longitude",
 "fuelLevel", and machine-specific telemetry such as "hydraulicPressure" for excavators and "loadWeight"
 for haul trucks.
 
+The most simple example of the expected payload is in JSON format:
+
 ```json
-{"latitude":  37.764702, "longitude":  -122.476071}{:copy-code}
+{
+  "latitude": 36.215322,
+  "longitude": -88.665637,
+  "speed": 18.5,
+  "fuelLevel": 72.3,
+  "loadWeight": 56000
+}{:copy-code}
 ```
 
 To emulate data upload on behalf of device "Haul truck A", execute the following command:
 
 ```bash
-curl -v -X POST -d "{\"latitude\":  37.764702, \"longitude\":  -122.476071}" ${BASE_URL}/api/v1/${Bus CACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
+curl -v -X POST -d "{\"latitude\": 36.215322,\"longitude\": -88.665637,\"speed\": 18.5,\"fuelLevel\": 72.3,\"loadWeight\": 56000}" ${BASE_URL}/api/v1/${Haul truck AACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
 ```
 
 The example above uses <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a>.

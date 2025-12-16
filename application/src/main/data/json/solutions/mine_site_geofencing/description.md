@@ -15,8 +15,8 @@ Install and uninstall the template with one click, without additional configurat
 As an Administrator, you always know where each excavator and haul truck is located inside the mine.
 Machine positions are highlighted on the map, with clear visual indicators showing whether a machine is inside a loading, unloading, or restricted zone.
 
-Built-in alarms help quickly react to potential issues, such as entering a restricted zone, exceeding the maximum allowed time inside a zone, or operating under critical conditions.
-This allows the Administrator to quickly respond to zone violations or delays and maintain safe, continuous operation across the site.
+Built-in alarms help quickly react to potential issues, such as entering a restricted zone, or operating under critical conditions.
+This allows the Administrator to quickly respond to zone violations and maintain safe, continuous operation across the site.
 
 #### How to use?
 
