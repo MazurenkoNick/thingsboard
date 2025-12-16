@@ -107,7 +107,7 @@ export class AlarmRulesTableComponent {
           this.utilsService,
           this.readonly(),
           this.hideClearEventAction(),
-          this.pageMode
+          this.pageMode,
         );
         this.cd.markForCheck();
       }

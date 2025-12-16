@@ -31,6 +31,7 @@
 
 import {
   DateEntityTableColumn,
+  EntityLinkTableColumn,
   EntityTableColumn,
   EntityTableConfig
 } from '@home/models/entity/entities-table-config.models';
@@ -54,8 +55,10 @@ import {
   ArgumentEntityType,
   ArgumentType,
   CalculatedField,
+  CalculatedFieldAlarmRule,
   CalculatedFieldEventArguments,
   CalculatedFieldScriptConfiguration,
+  CalculatedFieldsQuery,
   CalculatedFieldType,
   CalculatedFieldTypeTranslations,
   getCalculatedFieldArgumentsEditorCompleter,
@@ -70,7 +73,7 @@ import {
   CalculatedFieldTestScriptDialogData
 } from './components/public-api';
 import { ImportExportService } from '@shared/import-export/import-export.service';
-import { isObject } from '@core/utils';
+import { getEntityDetailsPageURL, isObject } from '@core/utils';
 import { EntityDebugSettingsService } from '@home/components/entity/debug/entity-debug-settings.service';
 import { DatePipe } from '@angular/common';
 import { TbPopoverService } from '@shared/components/popover.service';
@@ -79,6 +82,9 @@ import { Resource } from '@shared/models/security.models';
 import { UtilsService } from "@core/services/utils.service";
 import { CalculatedFieldEventBody, DebugEventType, Event as DebugEvent, EventType } from '@shared/models/event.models';
 import { EventsDialogComponent, EventsDialogData } from '@home/dialogs/events-dialog.component';
+import {
+  CalculatedFieldsHeaderComponent
+} from '@home/components/calculated-fields/table-header/calculated-fields-header.component';
 import { ActionNotificationShow } from "@core/notification/notification.actions";
 
 export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedField> {
@@ -88,6 +94,8 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
     title: this.translate.instant('calculated-fields.see-debug-events'),
     action: (calculatedField: CalculatedField) => this.openDebugEventsDialog.call(this, calculatedField),
   };
+
+  calculatedFieldFilterConfig: CalculatedFieldsQuery;
 
   constructor(private calculatedFieldsService: CalculatedFieldsService,
               private translate: TranslateService,
@@ -106,11 +114,14 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
               private hideClearEventAction: boolean = false,
               private popoverService: TbPopoverService,
               private userPermissionsService: UserPermissionsService,
+              public pageMode = false,
   ) {
     super();
-    this.tableTitle = this.translate.instant('entity.type-calculated-fields');
+    if (this.pageMode) {
+      this.headerComponent = CalculatedFieldsHeaderComponent;
+    }
+    this.tableTitle = this.pageMode ? '' : this.translate.instant('entity.type-calculated-fields');
     this.detailsPanelEnabled = false;
-    this.pageMode = false;
     this.entityType = EntityType.CALCULATED_FIELD;
     this.entityTranslations = entityTypeTranslations.get(EntityType.CALCULATED_FIELD);
 
@@ -152,10 +163,18 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
     };
 
     this.columns.push(new DateEntityTableColumn<CalculatedField>('createdTime', 'common.created-time', this.datePipe, '150px'));
-    this.columns.push(new EntityTableColumn<CalculatedField>('name', 'common.name', '33%',
+    this.columns.push(new EntityTableColumn<CalculatedField>('name', 'common.name', this.pageMode ? '30%' :'33%',
       entity => this.utilsService.customTranslation(entity.name, entity.name)));
     this.columns.push(new EntityTableColumn<CalculatedField>('type', 'common.type', '170px', entity => this.translate.instant(CalculatedFieldTypeTranslations.get(entity.type).name), () => ({whiteSpace: 'nowrap' })));
     this.columns.push(expressionColumn);
+
+    if (this.pageMode) {
+      this.columns.push(new EntityTableColumn<CalculatedFieldAlarmRule>('entityType', 'alarm-rule.target-entity-type', '15%',
+        entity => this.translate.instant(entityTypeTranslations.get(entity.entityId.entityType).type)));
+      this.columns.push(new EntityLinkTableColumn<CalculatedFieldAlarmRule>('entityName', 'alarm-rule.target-entity', '30%',
+        entity => this.utilsService.customTranslation(entity['entityName'], entity['entityName']),
+        entity => getEntityDetailsPageURL(entity.entityId?.id, entity.entityId?.entityType as EntityType), false));
+    }
 
     if (!this.readonly && this.userPermissionsService.hasReadGenericPermission(Resource.JOB)) {
       this.cellActionDescriptors.push({
@@ -213,7 +232,9 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
   }
 
   fetchCalculatedFields(pageLink: PageLink): Observable<PageData<CalculatedField>> {
-    return this.calculatedFieldsService.getCalculatedFields(this.entityId, pageLink);
+    return this.pageMode ?
+      this.calculatedFieldsService.getCalculatedFieldsFilter(pageLink, this.calculatedFieldFilterConfig):
+      this.calculatedFieldsService.getCalculatedFields(this.entityId, pageLink);
   }
 
   onOpenDebugConfig($event: Event, calculatedField: CalculatedField): void {

@@ -30,6 +30,6 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-@if (calculatedFieldsTableConfig) {
-  <tb-entities-table [class.white-background]="!pageMode" [entitiesTableConfig]="calculatedFieldsTableConfig"></tb-entities-table>
-}
+<tb-calculated-fields-filter-config [ngModel]="calculatedFieldsTableConfig.calculatedFieldFilterConfig"
+                                    (ngModelChange)="calculatedFieldsFilterChanged($event)">
+</tb-calculated-fields-filter-config>

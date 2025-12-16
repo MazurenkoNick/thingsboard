@@ -30,65 +30,20 @@
 ///
 
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-import { Authority } from '@shared/models/authority.enum';
-import { AlarmTableComponent } from '@home/components/alarm/alarm-table.component';
-import { AlarmsMode } from '@shared/models/alarm.models';
-import { MenuId } from '@core/services/menu.models';
-import { RouterTabsComponent } from "@home/components/router-tabs.component";
-import { AlarmRulesTableComponent } from "@home/components/alarm-rules/alarm-rules-table.component";
-
-const routes: Routes = [
-  {
-    path: 'alarms',
-    component: RouterTabsComponent,
-    data: {
-      auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-      breadcrumb: {
-        menuId: MenuId.alarms_center
-      }
-    },
-    children: [
-      {
-        path: '',
-        children: [],
-        data: {
-          auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-          redirectTo: '/alarms/alarms'
-        }
-      },
-      {
-        path: 'alarms',
-        component: AlarmTableComponent,
-        data: {
-          auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-          title: 'alarm.alarms',
-          breadcrumb: {
-            menuId: MenuId.alarms
-          },
-          isPage: true,
-          alarmsMode: AlarmsMode.ALL
-        }
-      },
-      {
-        path: 'alarm-rules',
-        component: AlarmRulesTableComponent,
-        data: {
-          auth: [Authority.TENANT_ADMIN],
-          title: 'alarm-rule.alarm-rules',
-          breadcrumb: {
-            menuId: MenuId.alarm_rules
-          },
-          isPage: true,
-        }
-      }
-    ]
-  }
-];
+import { CommonModule } from '@angular/common';
+import { SharedModule } from '@shared/shared.module';
+import { HomeDialogsModule } from '../../dialogs/home-dialogs.module';
+import { HomeComponentsModule } from '@modules/home/components/home-components.module';
+import { CalculatedFieldsRoutingModule } from '@home/pages/calculated-fields/calculated-fields-routing.module';
 
 @NgModule({
-  imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule],
-  providers: []
+  declarations: [],
+  imports: [
+    CommonModule,
+    SharedModule,
+    HomeComponentsModule,
+    HomeDialogsModule,
+    CalculatedFieldsRoutingModule
+  ]
 })
-export class AlarmRoutingModule { }
+export class CalculatedFieldsModule { }
