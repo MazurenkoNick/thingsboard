@@ -1,5 +1,8 @@
 {
-  "reprocessingOrder": 3,
+  "reprocessingSettings": {
+    "order": 3,
+    "periodInDays": 1
+  },
   "entityId": {
     "entityType": "ASSET_PROFILE",
     "id": "41d774a9-a4e5-4ea3-9824-530c25dbb422"

@@ -1,10 +1,13 @@
 {
-  "reprocessingOrder": 6,
+  "reprocessingSettings": {
+    "order": 1,
+    "periodInDays": 7
+  },
   "type": "RELATED_ENTITIES_AGGREGATION",
-  "name": "Calculate Daily Consumption",
+  "name": "Calculate Weekly Consumption",
   "entityId": {
-    "entityType": "ASSET",
-    "id": "90bd76d0-e2a3-4f5b-b85e-cd59386f2f44"
+    "entityType": "ASSET_PROFILE",
+    "id": "83595270-c452-42d8-ab35-494d7de7cfcd"
   },
   "debugSettings": {
     "failuresEnabled": true,
@@ -19,9 +22,9 @@
       "relationType": "Contains"
     },
     "arguments": {
-      "dailyConsumption": {
+      "weeklyConsumption": {
         "refEntityKey": {
-          "key": "dailyConsumption",
+          "key": "weeklyConsumption",
           "type": "TS_LATEST"
         },
         "defaultValue": "0"
@@ -29,11 +32,11 @@
     },
     "deduplicationIntervalInSec": 10,
     "metrics": {
-      "dailyConsumption": {
+      "weeklyConsumption": {
         "function": "SUM",
         "input": {
           "type": "key",
-          "key": "dailyConsumption"
+          "key": "weeklyConsumption"
         }
       }
     },

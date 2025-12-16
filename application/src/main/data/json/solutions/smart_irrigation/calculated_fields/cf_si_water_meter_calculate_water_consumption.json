@@ -1,4 +1,8 @@
 {
+  "reprocessingSettings": {
+    "order": 0,
+    "periodInDays": 7
+  },
   "type": "PROPAGATION",
   "name": "Calculate water consumption and save on Field",
   "entityId": {
@@ -23,7 +27,7 @@
         "timeWindow": 3600
       }
     },
-    "expression": "var waterConsumption = 0;\n\nif (pulseCounter.values.size() == 1) {\n    waterConsumption = pulseCounter[0].value;\n} else if (pulseCounter.values.size() >= 2) {\n    waterConsumption = pulseCounter.values[1].value - pulseCounter.values[0].value;\n}\n\nreturn {\n    ts: ctx.latestTs,\n    values: {\n        \"waterConsumption\": waterConsumption\n    }\n}",
+    "expression": "var waterConsumption = 0;\n\nif (pulseCounter.values.size() == 1) {\n    waterConsumption = pulseCounter.values[0].value;\n} else if (pulseCounter.values.size() >= 2) {\n    waterConsumption = pulseCounter.values[1].value - pulseCounter.values[0].value;\n}\n\nreturn {\n    ts: ctx.latestTs,\n    values: {\n        \"waterConsumption\": waterConsumption\n    }\n}",
     "output": {
       "type": "TIME_SERIES",
       "strategy": {

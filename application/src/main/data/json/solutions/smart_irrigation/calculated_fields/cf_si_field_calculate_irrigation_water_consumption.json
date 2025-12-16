@@ -1,4 +1,8 @@
 {
+  "reprocessingSettings": {
+    "order": 1,
+    "periodInDays": 7
+  },
   "type": "SCRIPT",
   "name": "Calculate irrigation water consumption",
   "entityId": {

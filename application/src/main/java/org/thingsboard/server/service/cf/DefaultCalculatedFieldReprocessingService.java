@@ -38,10 +38,12 @@ import com.google.gson.JsonParser;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.function.TriConsumer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.thingsboard.rule.engine.api.TimeseriesSaveRequest.Strategy;
 import org.thingsboard.server.actors.ActorSystemContext;
+import org.thingsboard.server.actors.calculatedField.MultipleTbCallback;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.EntityType;
@@ -287,9 +289,32 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         JsonElement result = JsonParser.parseString(Objects.requireNonNull(calculatedFieldResult.stringValue()));
         log.trace("[{}][{}] Saving CF result: {}", ctx.getTenantId(), ctx.getEntityId(), result);
         SettableFuture<Void> future = SettableFuture.create();
-        saveTimeSeries(ctx.getTenantId(), ctx.getEntityId(), result, ts, strategy, TbCallback.wrap(future));
+        if (calculatedFieldResult instanceof PropagationCalculatedFieldResult propagationCalculatedFieldResult) {
+            handlePropagationResults(propagationCalculatedFieldResult, TbCallback.wrap(future), (entity, telemetryResult, callback) -> saveTimeSeries(ctx.getTenantId(), entity, result, ts, strategy, callback));
+        } else {
+            saveTimeSeries(ctx.getTenantId(), ctx.getEntityId(), result, ts, strategy, TbCallback.wrap(future));
+        }
         return future;
     }
+
+    private void handlePropagationResults(PropagationCalculatedFieldResult propagationResult, TbCallback callback,
+                                          TriConsumer<EntityId, TelemetryCalculatedFieldResult, TbCallback> telemetryResultHandler) {
+        List<EntityId> propagationEntityIds = propagationResult.getPropagationEntityIds();
+        if (propagationEntityIds.isEmpty()) {
+            callback.onSuccess();
+            return;
+        }
+        if (propagationEntityIds.size() == 1) {
+            EntityId propagationEntityId = propagationEntityIds.get(0);
+            telemetryResultHandler.accept(propagationEntityId, propagationResult.getResult(), callback);
+            return;
+        }
+        MultipleTbCallback multipleTbCallback = new MultipleTbCallback(propagationEntityIds.size(), callback);
+        for (var propagationEntityId : propagationEntityIds) {
+            telemetryResultHandler.accept(propagationEntityId, propagationResult.getResult(), multipleTbCallback);
+        }
+    }
+
 
     private CFReprocessingCtx buildCtx(TenantId tenantId, EntityId entityId,
                                        CalculatedFieldCtx cfCtx, CalculatedFieldState state) {

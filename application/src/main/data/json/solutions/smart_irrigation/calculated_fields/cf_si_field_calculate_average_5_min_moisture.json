@@ -1,4 +1,8 @@
 {
+  "reprocessingSettings": {
+    "order": 1,
+    "periodInDays": 7
+  },
   "type": "ENTITY_AGGREGATION",
   "name": "Calculate average 5 min moisture",
   "entityId": {

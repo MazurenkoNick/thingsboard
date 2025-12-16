@@ -1,4 +1,8 @@
 {
+  "reprocessingSettings": {
+    "order": 0,
+    "periodInDays": 7
+  },
   "type": "PROPAGATION",
   "name": "Propagate moisture to Field",
   "entityId": {

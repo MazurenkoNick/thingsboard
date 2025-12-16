@@ -1448,10 +1448,10 @@ public class DefaultSolutionService implements SolutionService {
         TreeMap<Integer, List<CalculatedFieldDefinition>> ordered = new TreeMap<>();
 
         for (CalculatedFieldDefinition cf : cfs) {
-            if (cf.getReprocessingOrder() == null || cf.getReprocessingOrder() < 0) {
+            if (cf.getReprocessingSettings() == null) {
                 createOnly.add(cf);
             } else {
-                ordered.computeIfAbsent(cf.getReprocessingOrder(), integer -> new ArrayList<>()).add(cf);
+                ordered.computeIfAbsent(cf.getReprocessingSettings().order(), integer -> new ArrayList<>()).add(cf);
             }
         }
 
@@ -1465,21 +1465,23 @@ public class DefaultSolutionService implements SolutionService {
 
             List<CompletableFuture<Void>> futures = new ArrayList<>();
 
+            log.debug("Start reprocessing calculated fields for order {}", order);
             for (CalculatedFieldDefinition cfDef : cfDefs) {
                 CalculatedField calculatedField = createCalculatedField(cfDef, ctx);
                 ctx.register(calculatedField);
-                TenantId tenantId = calculatedField.getTenantId();
-                Iterable<EntityInfo> targetEntities = resolveTargetEntities(ctx, calculatedField);
+                Iterable<EntityInfo> targetEntities = resolveTargetEntities(calculatedField);
                 targetEntities.forEach(entityInfo ->
-                        futures.add(CompletableFuture.runAsync(
-                                () -> reprocessCf(tenantId, entityInfo, calculatedField), cfsReprocessingExecutor)));
+                        futures.add(CompletableFuture.runAsync(() -> {
+                            log.debug("Reprocessing calculated field: {}", calculatedField.getName());
+                            reprocessCf(ctx.getTenantId(), entityInfo, calculatedField, cfDef.getReprocessingSettings().periodInDays());
+                        }, cfsReprocessingExecutor)));
             }
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
             log.debug("Finished reprocessing calculated fields for order: {}", order);
         }
     }
 
-    private Iterable<EntityInfo> resolveTargetEntities(SolutionInstallContext ctx, CalculatedField cf) {
+    private Iterable<EntityInfo> resolveTargetEntities(CalculatedField cf) {
         EntityId cfEntityId = cf.getEntityId();
         TenantId tenantId = cf.getTenantId();
         return switch (cfEntityId.getEntityType()) {
@@ -1491,13 +1493,11 @@ public class DefaultSolutionService implements SolutionService {
         };
     }
 
-
-    private void reprocessCf(TenantId tenantId, EntityInfo entityInfo, CalculatedField cf) {
+    private void reprocessCf(TenantId tenantId, EntityInfo entityInfo, CalculatedField cf, int reprocessingPeriod) {
         try {
-            // FIXME: the startTs should be fetched from the solution ctx or elsewhere.
-            long endTs = System.currentTimeMillis();
-            long startTs = endTs - TimeUnit.DAYS.toMillis(7);
-            CfReprocessingTask task = createTask(tenantId, entityInfo, cf, startTs, endTs);
+            long now = System.currentTimeMillis();
+            long startTs = now - TimeUnit.DAYS.toMillis(reprocessingPeriod);
+            CfReprocessingTask task = createTask(tenantId, entityInfo, cf, startTs, now);
             calculatedFieldReprocessingService.reprocess(task);
         } catch (Exception e) {
             log.error("Failed to reprocess calculated field {}", cf.getName(), e);
