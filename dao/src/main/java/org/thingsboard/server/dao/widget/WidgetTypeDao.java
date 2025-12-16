@@ -128,4 +128,6 @@ public interface WidgetTypeDao extends Dao<WidgetTypeDetails>, ExportableEntityD
     void labelWidgetTypesAsDeprecatedByFqns(Set<String> fqns);
 
     Set<String> findUniqueExternalHostsInAnalyticsBundleByFqns(Collection<String> fqns);
+
+    void insertBaseUrlIntoSystemTrendzWidgetTypes(Collection<String> fqns, String baseUrl);
 }

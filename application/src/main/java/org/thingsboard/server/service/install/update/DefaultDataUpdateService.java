@@ -194,32 +194,34 @@ public class DefaultDataUpdateService implements DataUpdateService {
     private void migrateTenantTrendzWidgetBundleToSysadminLevel() throws Exception {
         String bundleAlias = "trendz_bundle";
         Set<String> fqns = Set.of(
-                bundleAlias + ".trendz_builder",
-                bundleAlias + ".trendz_view_latest",
-                bundleAlias + ".trendz_view_static",
-                bundleAlias + ".trendz_view_latest_chat"
+                "trendz_builder",
+                "trendz_view_latest",
+                "trendz_view_static",
+                "trendz_view_latest_chat"
         );
+        Set<String> fullFqns = fqns.stream()
+                .map(fqn -> bundleAlias + "." + fqn)
+                .collect(Collectors.toSet());
 
-        this.trendzUpdater.labelWidgetTypesAsDeprecatedByFqns(fqns);
-        this.trendzUpdater.findUniqueTrendzBaseUrlFromWidgetTypes(fqns)
+        this.trendzUpdater.labelWidgetTypesAsDeprecatedByFqns(fullFqns);
+        this.trendzUpdater.findUniqueTrendzBaseUrlFromWidgetTypes(fullFqns)
                 .ifPresent(baseUrl -> {
                     String urlString = baseUrl.toString();
+
                     TrendzSettings settings = this.trendzUpdater.createSettings(urlString, urlString);
                     this.trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
 
-                    for (String fqn : fqns) {
-                        makeReplacement(fqn);
+                    this.trendzUpdater.insertBaseUrlIntoSystemTrendzWidgetTypes(fqns, urlString);
+
+                    for (String fqn : fullFqns) {
+                        String fqnSuffix = StringUtils.substringAfterLast(fqn, ".");
+                        String tenantFqnOld = "tenant." + fqn;
+                        String tenantFqnNew = "tenant." + fqnSuffix;
+                        String systemFqn = "system." + fqnSuffix;
+                        this.trendzUpdater.replacePatternInAllDashboardsConfigurations(tenantFqnNew, systemFqn);
+                        this.trendzUpdater.replacePatternInAllDashboardsConfigurations(tenantFqnOld, systemFqn);
                     }
                 });
-    }
-
-    private void makeReplacement(String fqn) {
-        String fqnSuffix = StringUtils.substringAfterLast(fqn, ".");
-        String tenantFqnOld = "tenant." + fqn;
-        String tenantFqnNew = "tenant." + fqnSuffix;
-        String systemFqn = "system." + fqnSuffix;
-        this.trendzUpdater.replacePatternInAllDashboardsConfigurations(tenantFqnNew, systemFqn);
-        this.trendzUpdater.replacePatternInAllDashboardsConfigurations(tenantFqnOld, systemFqn);
     }
 
     // Replacing all without old (it is appropriate)

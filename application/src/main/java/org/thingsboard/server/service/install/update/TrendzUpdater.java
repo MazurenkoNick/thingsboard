@@ -96,4 +96,12 @@ public class TrendzUpdater {
         );
         return new TrendzSettings(config, syncResult);
     }
+
+    public void insertBaseUrlIntoSystemTrendzWidgetTypes(Set<String> fqns, String baseUrl) {
+        if (fqns.isEmpty()) {
+            return;
+        }
+        fqns.forEach(fqn -> Validator.validateString(fqn, f -> "Incorrect fqn " + f));
+        this.widgetTypeDao.insertBaseUrlIntoSystemTrendzWidgetTypes(fqns, baseUrl);
+    }
 }

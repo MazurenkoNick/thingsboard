@@ -317,4 +317,12 @@ public class JpaWidgetTypeDao extends JpaAbstractDao<WidgetTypeDetailsEntity, Wi
         }
         return widgetTypeInfoRepository.findUniqueExternalHostsInAnalyticsBundleByFqns(fqns);
     }
+
+    @Override
+    public void insertBaseUrlIntoSystemTrendzWidgetTypes(Collection<String> fqns, String baseUrl) {
+        if (fqns.isEmpty()) {
+            return;
+        }
+        widgetTypeInfoRepository.insertBaseUrlIntoSystemTrendzWidgetTypes(fqns, baseUrl, TenantId.SYS_TENANT_ID.getId());
+    }
 }

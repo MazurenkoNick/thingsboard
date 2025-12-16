@@ -263,4 +263,23 @@ public interface WidgetTypeInfoRepository extends JpaRepository<WidgetTypeInfoEn
                     WHERE raw_url IS NOT NULL AND raw_url ~ '^https?://'
                     """)
     Set<String> findUniqueExternalHostsInAnalyticsBundleByFqns(@Param("fqns") Collection<String> fqns);
+
+    @Query(nativeQuery = true,
+            value = """
+                    UPDATE widget_type
+                    SET descriptor = CAST(
+                        jsonb_set(
+                            CAST(descriptor AS jsonb),
+                            '{resources,0,url}',
+                            to_jsonb(:baseUrl || (CAST(descriptor AS jsonb) -> 'resources' -> 0 ->> 'url'))
+                        )
+                    AS VARCHAR)
+                    WHERE
+                        fqn IN (:fqns) AND
+                        (CAST(descriptor AS jsonb) -> 'resources' -> 0 ->> 'url') IS NOT NULL AND
+                        tenant_id = :tenantId AND
+                        (CAST(descriptor AS jsonb) -> 'resources' -> 0 ->> 'url') !~ '^https?://'
+                    """)
+    @Modifying
+    void insertBaseUrlIntoSystemTrendzWidgetTypes(@Param("fqns") Collection<String> fqns, @Param("baseUrl") String baseUrl, @Param("tenantId") UUID tenantId);
 }
