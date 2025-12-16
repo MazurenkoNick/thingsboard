@@ -351,10 +351,10 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
             return true;
         } catch (NumberFormatException e) {
-            log.debug("Failed to parse version '{}': Invalid number format in version string", version, e);
+            log.warn("Failed to parse version '{}': Invalid number format in version string", version, e);
             return false;
         } catch (Exception e) {
-            log.debug("Failed to parse version '{}': {}", version, e.getMessage(), e);
+            log.warn("Failed to parse version '{}': {}", version, e.getMessage(), e);
             return false;
         }
     }
