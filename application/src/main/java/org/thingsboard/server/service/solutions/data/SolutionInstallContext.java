@@ -41,6 +41,7 @@ import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetProfile;
 import org.thingsboard.server.common.data.cf.CalculatedField;
+import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -167,7 +168,8 @@ public class SolutionInstallContext {
 
     public void register(CalculatedField calculatedField) {
         register(calculatedField.getId());
-        createdEntities.put(calculatedField.getUuidId(), new CreatedEntityInfo(calculatedField.getName(), "Calculated field", "Tenant"));
+        String type = calculatedField.getType() == CalculatedFieldType.ALARM ? "Alarm rule" : "Calculated field";
+        createdEntities.put(calculatedField.getUuidId(), new CreatedEntityInfo(calculatedField.getName(), type, "Tenant"));
     }
 
     public void put(EntitySearchKey entitySearchKey, EntityId entityId) {
