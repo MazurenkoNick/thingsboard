@@ -98,7 +98,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
 
         if (!isValidTrendzConfiguration(trendzSettings)) {
-            trendzSettings = createDefaultTrendzSettings();
+            trendzSettings = createDefaultTrendzSettings(trendzSettings);
         }
 
         String tbUrl = trendzSettings.configuration().tbUrl();
@@ -261,23 +261,34 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
                && settings.synchronizationResult().status() != TrendzSynchronizationStatus.NOT_AVAILABLE;
     }
 
-    private TrendzSettings createDefaultTrendzSettings() {
-        TrendzSettings settings;
-        if (StringUtils.isNotBlank(defaultTbUrl) && StringUtils.isNotBlank(defaultTrendzUrl)) {
-            settings = createSettings(
-                    defaultTrendzUrl, defaultTbUrl,
-                    null, 0L,
-                    TrendzSynchronizationResultType.SYNC_DISABLED,
-                    TrendzSynchronizationStatus.NOT_AVAILABLE
-            );
+    private TrendzSettings createDefaultTrendzSettings(TrendzSettings prevVersion) {
+        String trendzUrl;
+        if (prevVersion != null && prevVersion.configuration() != null && prevVersion.configuration().trendzUrl() != null) {
+            trendzUrl = prevVersion.configuration().trendzUrl();
+        } else if (StringUtils.isNotBlank(defaultTrendzUrl)) {
+            trendzUrl = defaultTrendzUrl;
         } else {
-            settings = createSettings(
-                    null, null,
-                    null, 0L,
-                    TrendzSynchronizationResultType.SYNC_DISABLED,
-                    TrendzSynchronizationStatus.NOT_AVAILABLE
-            );
+            trendzUrl = null;
         }
+
+        String tbUrl;
+        if (prevVersion != null && prevVersion.configuration() != null && prevVersion.configuration().tbUrl() != null) {
+            tbUrl = prevVersion.configuration().tbUrl();
+        } else if (StringUtils.isNotBlank(defaultTbUrl)) {
+            tbUrl = defaultTbUrl;
+        } else {
+            tbUrl = null;
+        }
+
+        TrendzSettings settings = new TrendzSettings(
+                new TrendzConfiguration(
+                        trendzUrl, tbUrl
+                ),
+                new TrendzSynchronizationResult(
+                        null, 0L, TrendzSynchronizationResultType.SYNC_DISABLED,TrendzSynchronizationStatus.NOT_AVAILABLE
+                )
+        );
+
         trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
         return settings;
     }

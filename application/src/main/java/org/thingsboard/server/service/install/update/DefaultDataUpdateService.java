@@ -211,8 +211,6 @@ public class DefaultDataUpdateService implements DataUpdateService {
                     TrendzSettings settings = this.trendzUpdater.createSettings(urlString, urlString);
                     this.trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
 
-                    this.trendzUpdater.insertBaseUrlIntoSystemTrendzWidgetTypes(fqns, urlString);
-
                     for (String fqn : fullFqns) {
                         String fqnSuffix = StringUtils.substringAfterLast(fqn, ".");
                         String tenantFqnOld = "tenant." + fqn;
