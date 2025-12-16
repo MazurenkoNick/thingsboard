@@ -44,9 +44,7 @@ See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_bla
 ### Alarms
 
 Alarms are generated using <a href="${DOCS_BASE_URL}/user-guide/device-profiles/#alarm-rules" target="_blank">Alarm rules</a>
-configured in the "Excavator" and "Haul truck" <a href="/profiles/deviceProfiles" target="_blank">device profiles</a>.
-
-Both device profiles include the following alarm rules:
+configured in the "Excavator" and "Haul truck" <a href="/profiles/deviceProfiles" target="_blank">device profiles</a>. Both device profiles include the following alarm rules:
 
 * Entered restricted zone
 * Outside mine site perimeter
