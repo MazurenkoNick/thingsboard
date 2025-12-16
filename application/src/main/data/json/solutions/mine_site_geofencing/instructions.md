@@ -43,18 +43,19 @@ See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_bla
 
 ### Alarms
 
-Alarms are generated using X <a href="${DOCS_BASE_URL}/user-guide/device-profiles/#alarm-rules"
-target="_blank">Alarm rules</a> in in the Excavator and Haul truck device profiles <a href="/profiles/deviceProfiles"
-target="_blank">device profile</a>.
+Alarms are generated using <a href="${DOCS_BASE_URL}/user-guide/device-profiles/#alarm-rules" target="_blank">Alarm rules</a>
+configured in the "Excavator" and "Haul truck" <a href="/profiles/deviceProfiles" target="_blank">device profiles</a>.
 
-The template includes:
+Both device profiles include the following alarm rules:
 
-* Restricted zone breach — machine enters a flood-risk zone
-* Max stay duration — machine remains too long in a loading, unloading, or restricted zone
+* Entered restricted zone
+* Outside mine site perimeter
 * Low fuel level
-* Machine-specific alarms, such as:
-* High hydraulic pressure (excavator)
-* Overloaded (haul truck)
+* Speed limit exceeded
+
+In addition:
+* The "Excavator" device profile includes a "High hydraulic pressure" alarm rule.
+* The "Haul Truck" device profile includes an "Overload" alarm rule.
 
 ### Solution entities
 

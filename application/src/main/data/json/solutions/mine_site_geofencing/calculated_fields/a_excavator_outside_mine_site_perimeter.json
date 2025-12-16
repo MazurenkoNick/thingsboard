@@ -4,7 +4,7 @@
     "id": "ff395d16-0c28-4985-802d-bad40f4bf4d0"
   },
   "type": "ALARM",
-  "name": "Outside mine site area",
+  "name": "Outside mine site perimeter",
   "debugSettings": {
     "failuresEnabled": true,
     "allEnabled": false,
@@ -50,7 +50,7 @@
           },
           "schedule": null
         },
-        "alarmDetails": "Excavator outside the mine site area",
+        "alarmDetails": "Excavator outside the mine site perimeter",
         "dashboardId": null
       }
     },
@@ -81,7 +81,7 @@
         },
         "schedule": null
       },
-      "alarmDetails": "Excavator inside the mine site area",
+      "alarmDetails": "Excavator back inside into the mine site perimeter",
       "dashboardId": null
     },
     "propagate": false,

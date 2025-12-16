@@ -4,7 +4,7 @@
     "id": "93855be4-461e-4a35-b925-50a70d30c738"
   },
   "type": "ALARM",
-  "name": "Speed limit",
+  "name": "Speed limit exceeded",
   "debugSettings": {
     "failuresEnabled": true,
     "allEnabled": false,

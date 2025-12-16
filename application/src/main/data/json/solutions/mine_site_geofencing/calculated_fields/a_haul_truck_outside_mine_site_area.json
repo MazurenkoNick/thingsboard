@@ -4,7 +4,7 @@
     "id": "93855be4-461e-4a35-b925-50a70d30c738"
   },
   "type": "ALARM",
-  "name": "Outside mine site area",
+  "name": "Outside mine site perimeter",
   "debugSettings": {
     "failuresEnabled": true,
     "allEnabled": false,
@@ -50,7 +50,7 @@
           },
           "schedule": null
         },
-        "alarmDetails": "Haul track outside the mine site area",
+        "alarmDetails": "Haul track outside the mine site perimeter",
         "dashboardId": null
       }
     },
@@ -81,7 +81,7 @@
         },
         "schedule": null
       },
-      "alarmDetails": "Haul track inside the mine site area",
+      "alarmDetails": "Haul track back inside into the mine site perimeter",
       "dashboardId": null
     },
     "propagate": false,
