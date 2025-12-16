@@ -58,11 +58,13 @@ import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 import org.thingsboard.server.dao.widget.WidgetTypeDao;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -300,4 +302,19 @@ public class JpaWidgetTypeDao extends JpaAbstractDao<WidgetTypeDetailsEntity, Wi
         return EntityType.WIDGET_TYPE;
     }
 
+    @Override
+    public void labelWidgetTypesAsDeprecatedByFqns(Set<String> fqns) {
+        if (fqns.isEmpty()) {
+            return;
+        }
+        widgetTypeInfoRepository.labelWidgetTypesAsDeprecatedByFqns(fqns);
+    }
+
+    @Override
+    public Set<String> findUniqueExternalHostsInAnalyticsBundleByFqns(Collection<String> fqns) {
+        if (fqns.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return widgetTypeInfoRepository.findUniqueExternalHostsInAnalyticsBundleByFqns(fqns);
+    }
 }
