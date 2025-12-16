@@ -166,7 +166,8 @@ public class PropagationArgumentEntryTest {
 
     @Test
     void testUpdateEntryWhenPartitionStateRestoreAddsMissingIds() {
-        var restore = new PropagationArgumentEntry(List.of(ENTITY_1_ID, ENTITY_2_ID, ENTITY_3_ID), true);
+        var restore = new PropagationArgumentEntry(List.of(ENTITY_1_ID, ENTITY_2_ID, ENTITY_3_ID));
+        restore.setIgnoreRemovedEntities(true);
 
         boolean changed = entry.updateEntry(restore);
 
@@ -174,12 +175,13 @@ public class PropagationArgumentEntryTest {
         assertThat(entry.getEntityIds()).containsExactlyInAnyOrder(ENTITY_1_ID, ENTITY_2_ID, ENTITY_3_ID);
         assertThat(entry.getAdded()).containsExactly(ENTITY_3_ID);
         assertThat(entry.getRemoved()).isNull();
-        assertThat(entry.isPartitionStateRestore()).isFalse();
+        assertThat(entry.isIgnoreRemovedEntities()).isFalse();
     }
 
     @Test
     void testUpdateEntryWhenPartitionStateRestoreRemovesStaleIds() {
-        var restore = new PropagationArgumentEntry(List.of(ENTITY_1_ID), true);
+        var restore = new PropagationArgumentEntry(List.of(ENTITY_1_ID));
+        restore.setIgnoreRemovedEntities(true);
 
         boolean changed = entry.updateEntry(restore);
 
@@ -187,12 +189,13 @@ public class PropagationArgumentEntryTest {
         assertThat(entry.getEntityIds()).containsExactlyInAnyOrder(ENTITY_1_ID);
         assertThat(entry.getAdded()).isNull();
         assertThat(entry.getRemoved()).isNull();
-        assertThat(entry.isPartitionStateRestore()).isFalse();
+        assertThat(entry.isIgnoreRemovedEntities()).isFalse();
     }
 
     @Test
     void testUpdateEntryWhenPartitionStateRestoreAddsAndRemoves() {
-        var restore = new PropagationArgumentEntry(List.of(ENTITY_1_ID, ENTITY_3_ID), true);
+        var restore = new PropagationArgumentEntry(List.of(ENTITY_1_ID, ENTITY_3_ID));
+        restore.setIgnoreRemovedEntities(true);
 
         boolean changed = entry.updateEntry(restore);
 
@@ -200,13 +203,14 @@ public class PropagationArgumentEntryTest {
         assertThat(entry.getEntityIds()).containsExactlyInAnyOrder(ENTITY_1_ID, ENTITY_3_ID);
         assertThat(entry.getAdded()).containsExactly(ENTITY_3_ID);
         assertThat(entry.getRemoved()).isNull();
-        assertThat(entry.isPartitionStateRestore()).isFalse();
+        assertThat(entry.isIgnoreRemovedEntities()).isFalse();
     }
 
 
     @Test
     void testUpdateEntryWhenPartitionStateRestoreNoChanges() {
-        var restore = new PropagationArgumentEntry(List.of(ENTITY_1_ID, ENTITY_2_ID), true);
+        var restore = new PropagationArgumentEntry(List.of(ENTITY_1_ID, ENTITY_2_ID));
+        restore.setIgnoreRemovedEntities(true);
 
         boolean changed = entry.updateEntry(restore);
 
@@ -214,12 +218,13 @@ public class PropagationArgumentEntryTest {
         assertThat(entry.getEntityIds()).containsExactlyInAnyOrder(ENTITY_1_ID, ENTITY_2_ID);
         assertThat(entry.getAdded()).isNull();
         assertThat(entry.getRemoved()).isNull();
-        assertThat(entry.isPartitionStateRestore()).isFalse();
+        assertThat(entry.isIgnoreRemovedEntities()).isFalse();
     }
 
     @Test
     void testUpdateEntryWhenPartitionStateRestoreEmptySet() {
-        var restore = new PropagationArgumentEntry(List.of(), true);
+        var restore = new PropagationArgumentEntry(List.of());
+        restore.setIgnoreRemovedEntities(true);
 
         boolean changed = entry.updateEntry(restore);
 
@@ -227,7 +232,7 @@ public class PropagationArgumentEntryTest {
         assertThat(entry.getEntityIds()).isEmpty();
         assertThat(entry.getAdded()).isNull();
         assertThat(entry.getRemoved()).isNull();
-        assertThat(entry.isPartitionStateRestore()).isFalse();
+        assertThat(entry.isIgnoreRemovedEntities()).isFalse();
     }
 
     @Test
