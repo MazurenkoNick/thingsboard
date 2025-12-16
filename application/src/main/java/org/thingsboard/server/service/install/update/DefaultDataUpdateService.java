@@ -208,7 +208,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 .ifPresent(baseUrl -> {
                     String urlString = baseUrl.toString();
 
-                    TrendzSettings settings = this.trendzUpdater.createSettings(urlString, urlString);
+                    TrendzSettings settings = this.trendzUpdater.createSettings(urlString, null);
                     this.trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
 
                     for (String fqn : fullFqns) {
