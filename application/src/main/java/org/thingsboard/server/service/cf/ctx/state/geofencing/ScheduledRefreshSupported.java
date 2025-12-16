@@ -28,33 +28,14 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.edge.rpc;
+package org.thingsboard.server.service.cf.ctx.state.geofencing;
 
-import org.thingsboard.server.gen.edge.v1.DownlinkMsg;
-import org.thingsboard.server.gen.edge.v1.DownlinkResponseMsg;
-import org.thingsboard.server.gen.edge.v1.EdgeConfiguration;
-import org.thingsboard.server.gen.edge.v1.UplinkMsg;
-import org.thingsboard.server.gen.edge.v1.UplinkResponseMsg;
+public interface ScheduledRefreshSupported {
 
-import java.util.function.Consumer;
+    void resetScheduledRefreshTs();
 
-public interface EdgeRpcClient {
+    long getLastScheduledRefreshTs();
 
-    void connect(String integrationKey,
-                 String integrationSecret,
-                 Consumer<UplinkResponseMsg> onUplinkResponse,
-                 Consumer<EdgeConfiguration> onEdgeUpdate,
-                 Consumer<DownlinkMsg> onDownlink,
-                 Consumer<Exception> onError);
-
-    void disconnect(boolean onError) throws InterruptedException;
-
-    void sendSyncRequestMsg(boolean fullSyncRequired);
-
-    void sendUplinkMsg(UplinkMsg uplinkMsg);
-
-    void sendDownlinkResponseMsg(DownlinkResponseMsg downlinkResponseMsg);
-
-    int getServerMaxInboundMessageSize();
+    void updateScheduledRefreshTs();
 
 }

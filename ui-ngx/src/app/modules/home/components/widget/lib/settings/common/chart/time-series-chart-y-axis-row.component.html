@@ -45,16 +45,29 @@
       </mat-option>
     </mat-select>
   </mat-form-field>
-  <div class="tb-min-field" formGroupName="min">
-    <mat-form-field appearance="outline" class="tb-inline-field number" subscriptSizing="dynamic">
-      <input matInput formControlName="value" type="number" placeholder="{{ 'widgets.chart.chart-axis.scale-auto' | translate }}">
-    </mat-form-field>
-  </div>
-  <div class="tb-max-field" formGroupName="max">
-    <mat-form-field appearance="outline" class="tb-inline-field number" subscriptSizing="dynamic">
-      <input matInput formControlName="value" type="number" placeholder="{{ 'widgets.chart.chart-axis.scale-auto' | translate }}">
-    </mat-form-field>
-  </div>
+  @if (!reportMode) {
+    <div class="tb-min-field" formGroupName="min">
+      <mat-form-field appearance="outline" class="tb-inline-field number" subscriptSizing="dynamic">
+        <input matInput formControlName="value" type="number" placeholder="{{ 'widgets.chart.chart-axis.scale-auto' | translate }}">
+      </mat-form-field>
+    </div>
+    <div class="tb-max-field" formGroupName="max">
+      <mat-form-field appearance="outline" class="tb-inline-field number" subscriptSizing="dynamic">
+        <input matInput formControlName="value" type="number" placeholder="{{ 'widgets.chart.chart-axis.scale-auto' | translate }}">
+      </mat-form-field>
+    </div>
+  } @else {
+    <div class="tb-min-field">
+      <mat-form-field appearance="outline" class="tb-inline-field number" subscriptSizing="dynamic">
+        <input matInput formControlName="min" type="number" placeholder="{{ 'widgets.chart.chart-axis.scale-auto' | translate }}">
+      </mat-form-field>
+    </div>
+    <div class="tb-max-field">
+      <mat-form-field appearance="outline" class="tb-inline-field number" subscriptSizing="dynamic">
+        <input matInput formControlName="max" type="number" placeholder="{{ 'widgets.chart.chart-axis.scale-auto' | translate }}">
+      </mat-form-field>
+    </div>
+  }
   <div class="tb-units-field">
     <tb-unit-input formControlName="units" [supportsUnitConversion]="supportsUnitConversion">
     </tb-unit-input>
