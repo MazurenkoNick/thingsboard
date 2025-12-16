@@ -6,8 +6,8 @@
     "group": "Machines",
     "emulator": "loadingExcavator",
     "attributes": {
-      "hydraulicPressureWarningThreshold": 180,
-      "hydraulicPressureCriticalThreshold": 200
+      "hydraulicPressureWarningThreshold": 4000,
+      "hydraulicPressureCriticalThreshold": 4500
     },
     "relations": []
   },
@@ -18,8 +18,8 @@
     "group": "Machines",
     "emulator": "unloadingExcavator",
     "attributes": {
-      "hydraulicPressureWarningThreshold": 180,
-      "hydraulicPressureCriticalThreshold": 200
+      "hydraulicPressureWarningThreshold": 4000,
+      "hydraulicPressureCriticalThreshold": 4500
     },
     "relations": []
   },
@@ -30,8 +30,8 @@
     "group": "Machines",
     "emulator": "loadingToUnloadingHaulTruck",
     "attributes": {
-      "loadWeightWarningThreshold": 25,
-      "loadWeightCriticalThreshold": 30
+      "loadWeightWarningThreshold": 55000,
+      "loadWeightCriticalThreshold": 60000
     },
     "relations": []
   },
@@ -42,8 +42,8 @@
     "group": "Machines",
     "emulator": "insideRestrictedZoneHaulTruck",
     "attributes": {
-      "loadWeightWarningThreshold": 20,
-      "loadWeightCriticalThreshold": 25
+      "loadWeightWarningThreshold": 55000,
+      "loadWeightCriticalThreshold": 60000
     },
     "relations": []
   },
@@ -54,8 +54,8 @@
     "group": "Machines",
     "emulator": "outsideMineSiteHaulTruck",
     "attributes": {
-      "loadWeightWarningThreshold": 20,
-      "loadWeightCriticalThreshold": 25
+      "loadWeightWarningThreshold": 55000,
+      "loadWeightCriticalThreshold": 60000
     },
     "relations": []
   }

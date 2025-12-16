@@ -27,7 +27,7 @@
           "type": "ATTRIBUTE",
           "scope": "SERVER_SCOPE"
         },
-        "defaultValue": "30"
+        "defaultValue": null
       },
       "loadWeightWarningThreshold": {
         "refEntityKey": {
@@ -35,7 +35,7 @@
           "type": "ATTRIBUTE",
           "scope": "SERVER_SCOPE"
         },
-        "defaultValue": "25"
+        "defaultValue": null
       }
     },
     "createRules": {
