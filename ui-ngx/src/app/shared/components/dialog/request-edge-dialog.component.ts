@@ -40,6 +40,7 @@ import { DialogService } from '@core/services/dialog.service';
 import { TranslateService } from '@ngx-translate/core';
 import { NotificationService } from '@core/http/notification.service';
 import { AddonType, addonTypeTranslationMap } from '@shared/models/subscription.models';
+import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 @Component({
   selector: 'tb-request-edge-dialog',
@@ -55,7 +56,8 @@ export class RequestEdgeDialogComponent extends DialogComponent<RequestEdgeDialo
               private authService: AuthService,
               private dialogs: DialogService,
               private translate: TranslateService,
-              private notificationService: NotificationService) {
+              private notificationService: NotificationService,
+              private wl: WhiteLabelingService) {
     super(store,  router, dialogRef);
   }
 
@@ -78,7 +80,7 @@ export class RequestEdgeDialogComponent extends DialogComponent<RequestEdgeDialo
     if ($event) {
       $event.stopPropagation();
     }
-    window.open('https://thingsboard.io/products/thingsboard-edge/', '_blank');
+    window.open(`${this.wl.getHelpLinkBaseUrl()}/products/thingsboard-edge/`, '_blank');
   }
 
   loginAsSysAdmin($event: Event) {

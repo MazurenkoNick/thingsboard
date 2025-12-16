@@ -12534,7 +12534,7 @@
         "edges": "Edges",
         "trendz": "Trendz Analytics",
         "trendz-addon": "Trendz Analytics Add-on",
-        "trendz-name-addon": "{{name}} Add-on",
+        "name-addon": "{{name}} Add-on",
         "choose-prototype-plan": "Choose Prototype plan",
         "add-to-plan": "Add to plan",
         "add-license-item-title": "To {{ action }} {{ item }}, you need to update your {{ package }} on the ThingsBoard License Portal.",

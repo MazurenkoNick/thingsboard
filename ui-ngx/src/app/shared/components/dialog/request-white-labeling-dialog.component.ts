@@ -42,6 +42,7 @@ import { NotificationService } from '@core/http/notification.service';
 import { AddonType, addonTypeTranslationMap } from '@shared/models/subscription.models';
 import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Authority } from '@shared/models/authority.enum';
+import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 @Component({
   selector: 'tb-request-white-labeling-dialog',
@@ -62,7 +63,8 @@ export class RequestWhiteLabelingDialogComponent extends DialogComponent<Request
               private authService: AuthService,
               private dialogs: DialogService,
               private translate: TranslateService,
-              private notificationService: NotificationService) {
+              private notificationService: NotificationService,
+              private wl: WhiteLabelingService) {
     super(store,  router, dialogRef);
   }
 
@@ -97,7 +99,7 @@ export class RequestWhiteLabelingDialogComponent extends DialogComponent<Request
     if ($event) {
       $event.stopPropagation();
     }
-    window.open('https://thingsboard.io/docs/user-guide/white-labeling/', '_blank');
+    window.open(`${this.wl.getHelpLinkBaseUrl()}/docs/user-guide/white-labeling/`, '_blank');
   }
 
   loginAsSysAdmin($event: Event) {

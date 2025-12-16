@@ -75,7 +75,7 @@ export class RequestTrendzDialogComponent extends DialogComponent<RequestTrendzD
     this.notificationService.sendAddonAccessRequest(AddonType.TRENDZ).subscribe(() => {
       this.dialogs.alert(
         this.translate.instant('subscription.feature-request-sent-title', {
-          addonName: this.translate.instant('subscription.trendz-name-addon', {name: this.name})
+          addonName: this.translate.instant('subscription.name-addon', {name: this.name})
         }),
         this.translate.instant('subscription.feature-request-sent-text'),
         this.translate.instant('action.close')
