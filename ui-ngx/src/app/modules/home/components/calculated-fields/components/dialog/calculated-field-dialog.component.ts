@@ -58,6 +58,8 @@ import { deepTrim, isDefined } from '@core/utils';
 import { EntityTypeSelectComponent } from '@shared/components/entity/entity-type-select.component';
 import { EntityAutocompleteComponent } from '@shared/components/entity/entity-autocomplete.component';
 import { EntityService } from '@core/http/entity.service';
+import { UserPermissionsService } from '@core/http/user-permissions.service';
+import { Operation, resourceByEntityType } from '@shared/models/security.models';
 
 export interface CalculatedFieldDialogData {
   value?: CalculatedField;
@@ -99,7 +101,8 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
   entityName = this.data.entityName;
 
   readonly EntityType = EntityType;
-  readonly calculatedFieldsEntityTypeList = calculatedFieldsEntityTypeList;
+  readonly calculatedFieldsEntityTypeList = calculatedFieldsEntityTypeList.filter(entityType =>
+    this.userPermissionsService.hasResourcesGenericPermission(resourceByEntityType.get(entityType), Operation.WRITE_CALCULATED_FIELD));
   readonly CalculatedFieldType = CalculatedFieldType;
   readonly fieldTypes = calculatedFieldTypes;
   readonly CalculatedFieldTypeTranslations = CalculatedFieldTypeTranslations;
@@ -114,7 +117,8 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
               private calculatedFieldsService: CalculatedFieldsService,
               private entityService: EntityService,
               private destroyRef: DestroyRef,
-              private fb: FormBuilder) {
+              private fb: FormBuilder,
+              private userPermissionsService: UserPermissionsService) {
     super(store, router, dialogRef);
     this.observeIsLoading();
     this.observeType();

@@ -249,8 +249,9 @@ public class CalculatedFieldController extends BaseController {
 
         Set<EntityType> entityTypes;
         if (entityType == null) {
+            Set<CalculatedFieldType> finalTypes = types;
             entityTypes = CalculatedField.SUPPORTED_ENTITIES.entrySet().stream()
-                    .filter(entry -> entry.getValue().contains(type))
+                    .filter(entry -> entry.getValue().stream().anyMatch(finalTypes::contains))
                     .map(Map.Entry::getKey)
                     .filter(t -> {
                         try {
