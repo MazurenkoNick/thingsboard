@@ -154,8 +154,8 @@ export class TimeSeriesChartYAxisRowComponent implements ControlValueAccessor, O
 
   writeValue(value: TimeSeriesChartYAxisSettings): void {
     this.modelValue = value;
-    const min = this.normalizeLimit(value.min);
-    const max = this.normalizeLimit(value.max);
+    const min = this.reportMode ? value.min : this.normalizeLimit(value.min);
+    const max = this.reportMode ? value.max : this.normalizeLimit(value.max);
 
     this.axisFormGroup.patchValue({
       label: value.label,
@@ -235,12 +235,12 @@ export class TimeSeriesChartYAxisRowComponent implements ControlValueAccessor, O
       this.axisFormGroup.get('units').disable({emitEvent: false});
       this.axisFormGroup.get('decimals').disable({emitEvent: false});
     }
-    if(!this.checkIsConstantLimit('min')){
+    if(!this.reportMode && !this.checkIsConstantLimit('min')){
       this.axisFormGroup.get('min').disable({emitEvent: false});
     } else {
       this.axisFormGroup.get('min').enable({emitEvent: false});
     }
-    if(!this.checkIsConstantLimit('max')){
+    if(!this.reportMode && !this.checkIsConstantLimit('max')){
       this.axisFormGroup.get('max').disable({emitEvent: false});
     } else {
       this.axisFormGroup.get('max').enable({emitEvent: false});
@@ -261,7 +261,7 @@ export class TimeSeriesChartYAxisRowComponent implements ControlValueAccessor, O
   }
 
   private createLimitFormGroup() {
-    return this.fb.group({
+    return this.reportMode ? this.fb.control(null) : this.fb.group({
       type: [ValueSourceType.constant, []],
       value: [null, []],
       latestKey: [null, []],
