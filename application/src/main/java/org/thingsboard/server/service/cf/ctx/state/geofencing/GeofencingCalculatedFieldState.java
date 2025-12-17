@@ -36,8 +36,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.geo.Coordinates;
@@ -67,11 +65,9 @@ import static org.thingsboard.server.common.data.cf.configuration.geofencing.Ent
 import static org.thingsboard.server.common.data.cf.configuration.geofencing.GeofencingPresenceStatus.INSIDE;
 import static org.thingsboard.server.common.data.cf.configuration.geofencing.GeofencingPresenceStatus.OUTSIDE;
 
-@Getter
-@Setter
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
-public class GeofencingCalculatedFieldState extends BaseCalculatedFieldState {
+public class GeofencingCalculatedFieldState extends BaseCalculatedFieldState implements ScheduledRefreshSupported {
 
     private long lastDynamicArgumentsRefreshTs = DEFAULT_LAST_UPDATE_TS;
 
@@ -162,10 +158,21 @@ public class GeofencingCalculatedFieldState extends BaseCalculatedFieldState {
     @Override
     public void reset() {
         super.reset();
+        resetScheduledRefreshTs();
+    }
+
+    @Override
+    public void resetScheduledRefreshTs() {
         lastDynamicArgumentsRefreshTs = DEFAULT_LAST_UPDATE_TS;
     }
 
-    public void updateLastDynamicArgumentsRefreshTs() {
+    @Override
+    public long getLastScheduledRefreshTs() {
+        return lastDynamicArgumentsRefreshTs;
+    }
+
+    @Override
+    public void updateScheduledRefreshTs() {
         lastDynamicArgumentsRefreshTs = System.currentTimeMillis();
     }
 

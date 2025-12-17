@@ -91,6 +91,8 @@ import org.thingsboard.server.service.security.model.UserPrincipal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -419,15 +421,14 @@ public class DashboardController extends BaseController {
     @GetMapping(value = "/dashboards", params = {"dashboardIds"})
     public List<DashboardInfo> getDashboardsByIds(
             @Parameter(description = "A list of dashboard ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
-            @RequestParam("dashboardIds") String[] strDashboardIds) throws ThingsboardException, ExecutionException, InterruptedException {
-        checkArrayParameter("dashboardIds", strDashboardIds);
+            @RequestParam("dashboardIds") Set<UUID> dashboardUUIDs) throws ThingsboardException {
         SecurityUser user = getCurrentUser();
         TenantId tenantId = user.getTenantId();
         List<DashboardId> dashboardIds = new ArrayList<>();
-        for (String strDashboardId : strDashboardIds) {
-            dashboardIds.add(new DashboardId(toUUID(strDashboardId)));
+        for (UUID dashboardUUID : dashboardUUIDs) {
+            dashboardIds.add(new DashboardId(dashboardUUID));
         }
-        List<DashboardInfo> dashboards = checkNotNull(dashboardService.findDashboardInfoByIdsAsync(tenantId, dashboardIds).get());
+        List<DashboardInfo> dashboards = dashboardService.findDashboardInfoByIds(tenantId, dashboardIds);
         return filterDashboardsByReadPermission(dashboards);
     }
 

@@ -66,6 +66,8 @@ public interface AssetProfileService extends EntityDaoService {
 
     ListenableFuture<List<AssetProfileInfo>> findAssetProfilesByIdsAsync(TenantId tenantId, List<AssetProfileId> assetProfileIds);
 
+    List<AssetProfileInfo> findAssetProfilesByIds(TenantId tenantId, List<AssetProfileId> assetProfileIds);
+
     AssetProfile findOrCreateAssetProfile(TenantId tenantId, String profileName);
 
     AssetProfile createDefaultAssetProfile(TenantId tenantId);

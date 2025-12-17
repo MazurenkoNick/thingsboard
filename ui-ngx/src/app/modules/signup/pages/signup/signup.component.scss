@@ -32,50 +32,50 @@
 
 :host {
   display: flex;
-  flex: 1 1 0%;
+  flex: 1 1 ;
   .tb-signup-content {
     background-color: #eee;
+    --mdc-elevated-card-container-elevation: none;
     .tb-signup-form {
       @media #{$mat-gt-sm} {
-        width: 550px !important;
+        width: 480px !important;
       }
       span.tb-signup-message {
-        font-size: 18px;
-        line-height: 26px;
+        font-size: 20px;
+        line-height: 24px;
+        letter-spacing: .1px;
         text-align: center;
-        opacity: .9;
-        margin-top: 20px;
-        margin-bottom: -20px;
+        margin-bottom: 16px;
       }
-      .tb-recaptcha {
-        margin-left: -10px;
-
-        @media #{$mat-gt-sm} {
-          margin-left: 0;
+      .tb-accept {
+        --mdc-checkbox-state-layer-size: 24px;
+        margin-bottom: 20px;
+        .label {
+          font-size: 16px;
+          letter-spacing: 0.15px;
+          line-height: 24px;
         }
-      }
-      .tb-accept-privacy-policy, .tb-accept-terms-of-use {
-        .privacy-policy, .terms-of-use {
-          font-weight: 600;
-          color: #51c4ff;
+        .text {
+          opacity: 0.8;
+        }
+        .read {
+          color: #51C4FF;
           text-decoration: underline;
           outline: none;
         }
       }
 
       .has-account-section {
-        padding: 10px 0;
-        span.has-account-message {
-          font-size: 14px;
+        font-size: 14px;
+        .message {
           opacity: .8;
         }
         a {
-          font-size: 14px;
-          color: white;
-          margin-left: 10px;
+          color: var(--mat-app-text-color, var(--mat-app-on-background, inherit));
+          margin-left: 8px;
           font-weight: 500;
           &:hover {
-            border-bottom-color: white;
+            border-bottom-color: var(--mat-app-text-color, var(--mat-app-on-background, inherit));
           }
         }
       }

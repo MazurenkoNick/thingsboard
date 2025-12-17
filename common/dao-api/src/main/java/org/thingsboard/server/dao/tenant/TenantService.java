@@ -52,6 +52,8 @@ public interface TenantService extends EntityDaoService {
 
     ListenableFuture<List<Tenant>> findTenantsByIdsAsync(TenantId callerId, List<TenantId> tenantIds);
 
+    List<Tenant> findTenantsByIds(TenantId callerId, List<TenantId> tenantIds);
+
     Tenant saveTenant(Tenant tenant);
 
     Tenant saveTenant(Tenant tenant, Consumer<TenantId> defaultEntitiesCreator);

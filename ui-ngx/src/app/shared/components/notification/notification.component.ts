@@ -172,6 +172,8 @@ export class NotificationComponent implements OnInit {
       return {color: AlarmSeverityNotificationColors.get(this.notification.info.alarmSeverity)};
     } else if (this.notification.type === NotificationType.RULE_ENGINE_COMPONENT_LIFECYCLE_EVENT) {
       return {color: '#D12730'};
+    } else if (this.notification.type === NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST) {
+      return {color: 'var(--tb-primary-500)'};
     }
     return null;
   }

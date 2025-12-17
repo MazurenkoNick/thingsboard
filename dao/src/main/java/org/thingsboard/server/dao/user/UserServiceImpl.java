@@ -216,6 +216,12 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
     }
 
     @Override
+    public List<User> findUsersByTenantIdAndIds(TenantId tenantId, List<UserId> userIds) {
+        log.trace("Executing findUsersByTenantIdAndIds, tenantId [{}], userIds [{}]", tenantId, userIds);
+        return userDao.findUsersByTenantIdAndIds(tenantId.getId(), toUUIDs(userIds));
+    }
+
+    @Override
     public User changeOwner(User user, EntityId targetOwnerId) {
         if (EntityType.CUSTOMER.equals(targetOwnerId.getEntityType())) {
             user.setAuthority(Authority.CUSTOMER_USER);

@@ -28,34 +28,8 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
- @import "../../../../../scss/constants";
+package org.thingsboard.server.common.data.trendz;
 
-:host {
-  .mat-mdc-card-header {
-    min-height: 64px;
-  }
+import java.io.Serializable;
 
-  .tb-trendz-section {
-    margin: 16px 0;
-  }
-
-  .tb-trendz-url {
-      @media #{$mat-gt-sm} {
-        padding-right: 12px;
-      }
-
-      @media #{$mat-lt-md} {
-        padding-bottom: 12px;
-      }
-  }
-
-  .tb-trendz-api-key {
-      @media #{$mat-gt-sm} {
-        padding-right: 12px;
-      }
-
-      @media #{$mat-lt-md} {
-        padding-bottom: 12px;
-      }
-  }
-}
+public record TrendzConfiguration(String trendzUrl, String tbUrl) implements Serializable {}

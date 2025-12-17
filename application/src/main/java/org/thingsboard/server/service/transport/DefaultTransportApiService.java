@@ -99,7 +99,7 @@ import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
-import org.thingsboard.server.exception.EntitiesLimitException;
+import org.thingsboard.server.exception.EntitiesLimitExceededException;
 import org.thingsboard.server.gen.transport.TransportProtos;
 import org.thingsboard.server.gen.transport.TransportProtos.GetDeviceCredentialsRequestMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.GetDeviceRequestMsg;
@@ -430,7 +430,7 @@ public class DefaultTransportApiService implements TransportApiService {
         } catch (JsonProcessingException e) {
             log.warn("[{}] Failed to lookup device by gateway id and name: [{}]", gatewayId, requestMsg.getDeviceName(), e);
             throw new RuntimeException(e);
-        } catch (EntitiesLimitException e) {
+        } catch (EntitiesLimitExceededException e) {
             log.warn("[{}][{}] API limit exception: [{}]", e.getTenantId(), gatewayId, e.getMessage());
             return TransportApiResponseMsg.newBuilder()
                     .setGetOrCreateDeviceResponseMsg(

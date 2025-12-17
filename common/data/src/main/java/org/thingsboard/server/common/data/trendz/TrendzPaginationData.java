@@ -28,22 +28,21 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-@import '../../../../../scss/constants';
+package org.thingsboard.server.common.data.trendz;
 
-:host {
-  display: flex;
-  flex: 1 1 0;
-  .tb-reset-password-content {
-    background-color: #eee;
-    .tb-reset-password-card {
-      @media #{$mat-gt-sm} {
-        width: 450px !important;
-      }
-    }
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.thingsboard.server.common.data.page.PageData;
 
-    .tb-card-title{
-      padding-top: 0;
-      padding-bottom: 0;
+import java.io.Serializable;
+import java.util.List;
+
+public record TrendzPaginationData<T> (
+        @JsonProperty("content") List<T> content,
+        @JsonProperty("pageNumber") int pageNumber,
+        @JsonProperty("totalPages") int totalPages,
+        @JsonProperty("totalElements") long totalElements
+) implements Serializable {
+    public PageData<T> toPageData() {
+        return new PageData<>(content, totalPages, totalElements, pageNumber + 1 != totalPages);
     }
-  }
 }

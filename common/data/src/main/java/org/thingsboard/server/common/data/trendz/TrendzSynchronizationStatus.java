@@ -28,14 +28,10 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-:host {
-  display: flex;
-  flex: 1 1 0%;
+package org.thingsboard.server.common.data.trendz;
 
-  .tb-email-verified-content {
-    background-color: #eee;
-    .tb-email-verification {
-      font-size: 18px;
-    }
-  }
+public enum TrendzSynchronizationStatus {
+
+    NOT_AVAILABLE, AVAILABLE, SYNCED
+
 }

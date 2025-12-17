@@ -33,17 +33,13 @@ package org.thingsboard.server.service.cf;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.function.TriConsumer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.thingsboard.rule.engine.api.TimeseriesSaveRequest.Strategy;
 import org.thingsboard.server.actors.ActorSystemContext;
-import org.thingsboard.server.actors.calculatedField.MultipleTbCallback;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.EntityType;
@@ -90,7 +86,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.Set;
@@ -286,35 +281,17 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
     }
 
     private Future<Void> saveResult(CFReprocessingCtx ctx, CalculatedFieldResult calculatedFieldResult, long ts, Strategy strategy) {
-        JsonElement result = JsonParser.parseString(Objects.requireNonNull(calculatedFieldResult.stringValue()));
-        log.trace("[{}][{}] Saving CF result: {}", ctx.getTenantId(), ctx.getEntityId(), result);
         SettableFuture<Void> future = SettableFuture.create();
-        if (calculatedFieldResult instanceof PropagationCalculatedFieldResult propagationCalculatedFieldResult) {
-            handlePropagationResults(propagationCalculatedFieldResult, TbCallback.wrap(future), (entity, telemetryResult, callback) -> saveTimeSeries(ctx.getTenantId(), entity, result, ts, strategy, callback));
+        if (calculatedFieldResult instanceof PropagationCalculatedFieldResult propagationResult) {
+            TbCallback rootCallback = TbCallback.wrap(future);
+            handlePropagationResults(propagationResult, rootCallback,
+                    (entityId, res, cb) ->
+                            saveReprocessingTimeSeriesResult(ctx.getTenantId(), entityId, res.toJsonElement(), ts, strategy, cb));
         } else {
-            saveTimeSeries(ctx.getTenantId(), ctx.getEntityId(), result, ts, strategy, TbCallback.wrap(future));
+            saveReprocessingTimeSeriesResult(ctx.getTenantId(), ctx.getEntityId(), calculatedFieldResult.toJsonElement(), ts, strategy, TbCallback.wrap(future));
         }
         return future;
     }
-
-    private void handlePropagationResults(PropagationCalculatedFieldResult propagationResult, TbCallback callback,
-                                          TriConsumer<EntityId, TelemetryCalculatedFieldResult, TbCallback> telemetryResultHandler) {
-        List<EntityId> propagationEntityIds = propagationResult.getPropagationEntityIds();
-        if (propagationEntityIds.isEmpty()) {
-            callback.onSuccess();
-            return;
-        }
-        if (propagationEntityIds.size() == 1) {
-            EntityId propagationEntityId = propagationEntityIds.get(0);
-            telemetryResultHandler.accept(propagationEntityId, propagationResult.getResult(), callback);
-            return;
-        }
-        MultipleTbCallback multipleTbCallback = new MultipleTbCallback(propagationEntityIds.size(), callback);
-        for (var propagationEntityId : propagationEntityIds) {
-            telemetryResultHandler.accept(propagationEntityId, propagationResult.getResult(), multipleTbCallback);
-        }
-    }
-
 
     private CFReprocessingCtx buildCtx(TenantId tenantId, EntityId entityId,
                                        CalculatedFieldCtx cfCtx, CalculatedFieldState state) {
