@@ -46,6 +46,7 @@ import {
   isHomeMenuItem,
   MenuItem
 } from '@shared/models/custom-menu.models';
+import { calculatedFieldsEntityTypeList } from '@shared/models/calculated-field.models';
 
 export declare type MenuSectionType = 'link' | 'toggle';
 
@@ -146,6 +147,7 @@ export enum MenuId {
   device_profiles = 'device_profiles',
   asset_profiles = 'asset_profiles',
   customers = 'customers',
+  calculated_fields = 'calculated_fields',
   rule_chains = 'rule_chains',
   edge_management = 'edge_management',
   edges = 'edges',
@@ -716,6 +718,16 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       type: 'link',
       path: '/customers',
       icon: 'supervisor_account'
+    }
+  ],
+  [
+    MenuId.calculated_fields,
+    {
+      id: MenuId.calculated_fields,
+      name: 'entity.type-calculated-fields',
+      type: 'link',
+      path: '/calculatedFields',
+      icon: 'mdi:function-variant',
     }
   ],
   [
@@ -1408,6 +1420,11 @@ const menuFilters = new Map<MenuId, MenuFilter>([
           authState.authUser.authority === Authority.TENANT_ADMIN && userPermissionsService.hasReadGenericPermission(Resource.CONVERTER)
   ],
   [
+    MenuId.calculated_fields, (authState, userPermissionsService) =>
+          authState.authUser.authority === Authority.TENANT_ADMIN
+          && calculatedFieldsEntityTypeList.some(entityType => userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.READ_CALCULATED_FIELD, entityType))
+  ],
+  [
     MenuId.rule_chains, (authState, userPermissionsService) =>
           authState.authUser.authority === Authority.TENANT_ADMIN && userPermissionsService.hasReadGenericPermission(Resource.RULE_CHAIN)
   ],
@@ -1788,6 +1805,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.converters}
         ]
       },
+      {id: MenuId.calculated_fields},
       {id: MenuId.rule_chains},
       {
         id: MenuId.edge_management,

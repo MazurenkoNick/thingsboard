@@ -32,57 +32,21 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { Authority } from '@shared/models/authority.enum';
-import { AlarmTableComponent } from '@home/components/alarm/alarm-table.component';
-import { AlarmsMode } from '@shared/models/alarm.models';
 import { MenuId } from '@core/services/menu.models';
-import { RouterTabsComponent } from "@home/components/router-tabs.component";
-import { AlarmRulesTableComponent } from "@home/components/alarm-rules/alarm-rules-table.component";
+import { CalculatedFieldsTableComponent } from '@home/components/calculated-fields/calculated-fields-table.component';
 
 const routes: Routes = [
   {
-    path: 'alarms',
-    component: RouterTabsComponent,
+    path: 'calculatedFields',
+    component: CalculatedFieldsTableComponent,
     data: {
-      auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+      auth: [Authority.TENANT_ADMIN],
+      title: 'entity.type-calculated-fields',
       breadcrumb: {
-        menuId: MenuId.alarms_center
-      }
-    },
-    children: [
-      {
-        path: '',
-        children: [],
-        data: {
-          auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-          redirectTo: '/alarms/alarms'
-        }
+        menuId: MenuId.calculated_fields
       },
-      {
-        path: 'alarms',
-        component: AlarmTableComponent,
-        data: {
-          auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-          title: 'alarm.alarms',
-          breadcrumb: {
-            menuId: MenuId.alarms
-          },
-          isPage: true,
-          alarmsMode: AlarmsMode.ALL
-        }
-      },
-      {
-        path: 'alarm-rules',
-        component: AlarmRulesTableComponent,
-        data: {
-          auth: [Authority.TENANT_ADMIN],
-          title: 'alarm-rule.alarm-rules',
-          breadcrumb: {
-            menuId: MenuId.alarm_rules
-          },
-          isPage: true,
-        }
-      }
-    ]
+      isPage: true,
+    }
   }
 ];
 
@@ -91,4 +55,4 @@ const routes: Routes = [
   exports: [RouterModule],
   providers: []
 })
-export class AlarmRoutingModule { }
+export class CalculatedFieldsRoutingModule { }
