@@ -30,11 +30,14 @@
  */
 package org.thingsboard.server.service.cf;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.msg.TbMsg;
 
 import java.util.List;
+import java.util.Objects;
 
 public interface CalculatedFieldResult {
 
@@ -43,5 +46,9 @@ public interface CalculatedFieldResult {
     String stringValue();
 
     boolean isEmpty();
+
+    default JsonElement toJsonElement() {
+        return JsonParser.parseString(Objects.requireNonNull(stringValue()));
+    }
 
 }

@@ -51,6 +51,7 @@ import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.cf.CalculatedFieldLink;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
+import org.thingsboard.server.common.data.cf.configuration.HasRelationPathLevel;
 import org.thingsboard.server.common.data.cf.configuration.aggregation.RelatedEntitiesAggregationCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
@@ -181,10 +182,13 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
 
         if (ctx != null) {
             msg.setCtx(ctx);
-            log.debug("Pushing CF state restore msg to specific actor [{}]", msg.getId().entityId());
+            log.debug("[{}] Pushing CF state restore msg to specific actor [{}]", tenantId, msg.getId().entityId());
             getOrCreateActor(msg.getId().entityId()).tellWithHighPriority(msg);
-        } else {
+        } else if (msg.getState() != null) {
+            log.debug("[{}] Received CF state restore msg for non-existing CF [{}]. Removing state", tenantId, cfId);
             cfStateService.deleteState(msg.getId(), msg.getCallback());
+        } else {
+            msg.getCallback().onSuccess();
         }
     }
 
@@ -385,7 +389,7 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
 
         List<CalculatedFieldCtx> matchingCfs = cfsByEntityIdAndProfile.stream()
                 .filter(cf -> {
-                    if (cf.getCalculatedField().getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration config) {
+                    if (cf.getCalculatedField().getConfiguration() instanceof HasRelationPathLevel config) {
                         RelationPathLevel relation = config.getRelation();
                         return direction.equals(relation.direction()) && relationType.equals(relation.relationType());
                     }

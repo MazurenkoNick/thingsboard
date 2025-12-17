@@ -34,8 +34,10 @@ import {
   ChangeDetectorRef,
   Component,
   ElementRef,
-  Input, NgZone,
+  Input,
+  NgZone,
   OnInit,
+  Optional,
   ViewChild,
   ViewEncapsulation
 } from '@angular/core';
@@ -66,6 +68,7 @@ import { UtilsService } from '@core/services/utils.service';
 import { hidePageSizePixelValue } from '@shared/models/constants';
 import { FormBuilder } from '@angular/forms';
 import { isValidPageStepCount, isValidPageStepIncrement } from '@home/components/widget/lib/table-widget.models';
+import { WidgetComponent } from "@home/components/widget/widget.component";
 
 @Component({
   selector: 'tb-blob-entities',
@@ -131,7 +134,8 @@ export class BlobEntitiesComponent extends PageComponent implements OnInit, Afte
               private dialogService: DialogService,
               private cd: ChangeDetectorRef,
               private fb: FormBuilder,
-              private zone: NgZone) {
+              private zone: NgZone,
+              @Optional() public widgetComponent: WidgetComponent) {
     super(store);
   }
 

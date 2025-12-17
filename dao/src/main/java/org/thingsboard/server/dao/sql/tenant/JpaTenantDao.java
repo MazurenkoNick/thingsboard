@@ -89,6 +89,11 @@ public class JpaTenantDao extends JpaAbstractDao<TenantEntity, Tenant> implement
         return service.submit(() -> DaoUtil.convertDataList(tenantRepository.findTenantsByIdIn(tenantIds)));
     }
 
+    @Override
+    public List<Tenant> findTenantsByIds(UUID tenantId, List<UUID> tenantIds) {
+        return DaoUtil.convertDataList(tenantRepository.findTenantsByIdIn(tenantIds));
+    }
+
     public PageData<TenantInfo> findTenantInfos(TenantId tenantId, PageLink pageLink) {
         return DaoUtil.toPageData(tenantRepository
                 .findTenantInfosNextPage(

@@ -59,6 +59,8 @@ public interface AssetProfileDao extends Dao<AssetProfile>, ExportableEntityDao<
 
     ListenableFuture<List<AssetProfileInfo>> findAssetProfilesByTenantIdAndIdsAsync(UUID tenantId, List<UUID> assetProfileIds);
 
+    List<AssetProfileInfo> findAssetProfilesByTenantIdAndIds(UUID tenantId, List<UUID> assetProfileIds);
+
     AssetProfile findDefaultAssetProfile(TenantId tenantId);
 
     AssetProfileInfo findDefaultAssetProfileInfo(TenantId tenantId);

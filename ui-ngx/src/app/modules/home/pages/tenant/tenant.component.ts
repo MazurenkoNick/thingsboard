@@ -127,6 +127,6 @@ export class TenantComponent extends ContactBasedComponent<TenantInfo> {
   }
 
   onTenantProfileUpdated() {
-    this.entitiesTableConfig.updateData(false);
+    this.entitiesTableConfig.updateData(false, false);
   }
 }

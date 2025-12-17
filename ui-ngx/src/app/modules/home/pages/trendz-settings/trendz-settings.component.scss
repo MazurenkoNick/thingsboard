@@ -28,17 +28,23 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-@import '../../../../../scss/constants';
 
-:host {
-  display: flex;
-  flex: 1 1 0;
-  .tb-request-password-reset-content {
-    background-color: #eee;
-    .tb-request-password-reset-card {
-      @media #{$mat-gt-xs} {
-        width: 450px !important;
-      }
+.sync-result {
+    --mat-text-button-with-icon-horizontal-padding: 16px;
+    border: 1px solid rgba(0, 0, 0, .12);
+    border-left: 4px solid #DD2C00;
+    border-radius: 6px;
+    padding: 20px;
+
+    .sync-result-title {
+        color: #DD2C00;
     }
-  }
+
+    &.active {
+        border-left-color: #198038;
+
+        .sync-result-title {
+            color: #198038;
+        }
+    }
 }

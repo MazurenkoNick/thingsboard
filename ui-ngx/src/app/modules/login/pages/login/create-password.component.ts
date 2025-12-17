@@ -31,7 +31,6 @@
 
 import { Component, HostBinding } from '@angular/core';
 import { AuthService } from '@core/auth/auth.service';
-import { PageComponent } from '@shared/components/page.component';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { UserPasswordPolicy } from '@shared/models/settings.models';
@@ -41,12 +40,14 @@ import { WhiteLabelingService } from '@core/http/white-labeling.service';
 @Component({
   selector: 'tb-create-password',
   templateUrl: './create-password.component.html',
-  styleUrls: ['./create-password.component.scss']
+  styleUrls: ['./password.component.scss']
 })
-export class CreatePasswordComponent extends PageComponent {
+export class CreatePasswordComponent {
 
   passwordPolicy: UserPasswordPolicy;
   createPassword: FormGroup;
+
+  isLoading = false;
 
   private activateToken: string;
 
@@ -56,7 +57,6 @@ export class CreatePasswordComponent extends PageComponent {
               private authService: AuthService,
               public wl: WhiteLabelingService,
               private fb: FormBuilder) {
-    super();
 
     this.activateToken = this.route.snapshot.queryParams['activateToken'] || '';
     this.passwordPolicy = this.route.snapshot.data['passwordPolicy'];
@@ -79,9 +79,11 @@ export class CreatePasswordComponent extends PageComponent {
     if (this.createPassword.invalid) {
       this.createPassword.markAllAsTouched();
     } else {
-      this.authService.activate(
-        this.activateToken,
-        this.createPassword.get('newPassword').value, true).subscribe();
+      this.isLoading = true
+      this.authService.activate(this.activateToken, this.createPassword.get('newPassword').value, true)
+        .subscribe({
+          error: () => {this.isLoading = false;}
+        });
     }
   }
 }

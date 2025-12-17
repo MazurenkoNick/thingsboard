@@ -48,23 +48,23 @@ export class TranslateDefaultLoader implements TranslateLoader {
   }
 
   getTranslation(lang: string): Observable<object> {
-    let observe: Observable<object>;
+    let tasks: Array<Observable<object>>
     if (this.isAuthenticated) {
-      const tasks = [this.http.get(`/api/translation/full/${lang}`)];
-      if (!env.production && env.supportedLangs && env.supportedLangs.indexOf(lang) !== -1) {
-        tasks.push(this.http.get(`/assets/locale/locale.constant-${lang}.json`));
-      }
-      observe = forkJoin(tasks).pipe(
-        map((results) => {
-          if (results.length > 1) {
-            return mergeDeep({}, results[0], results[1]);
-          }
-          return results[0];
-        })
-      );
+      tasks = [this.http.get(`/api/translation/full/${lang}`)];
     } else {
-      observe = this.http.get<object>(`/api/noauth/translation/login/${lang}`);
+      tasks = [this.http.get<object>(`/api/noauth/translation/login/${lang}`)];
     }
+    if (!env.production && env.supportedLangs && env.supportedLangs.indexOf(lang) !== -1) {
+      tasks.push(this.http.get(`/assets/locale/locale.constant-${lang}.json`));
+    }
+    const observe = forkJoin(tasks).pipe(
+      map((results) => {
+        if (results.length > 1) {
+          return mergeDeep({}, results[0], results[1]);
+        }
+        return results[0];
+      })
+    );
     return observe.pipe(
       catchError(() => this.loadSystemLang(lang))
     );

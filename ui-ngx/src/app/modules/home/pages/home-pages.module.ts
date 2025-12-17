@@ -75,6 +75,8 @@ import { CustomMenuModule } from '@home/pages/custom-menu/custom-menu.module';
 import { SecretStorageModule } from '@home/pages/secret-storage/secret-storage.module';
 import { AiModelModule } from '@home/pages/ai-model/ai-model.module';
 import { ReportingModule } from '@home/pages/reporting/reporting.module';
+import { TrendzAnalyticsModule } from '@home/pages/trendz-analytics/trendz-analytics.module';
+import { TrendzSettingsModule } from '@home/pages/trendz-settings/trendz-settings.module';
 
 @NgModule({
   exports: [
@@ -123,7 +125,9 @@ import { ReportingModule } from '@home/pages/reporting/reporting.module';
     CustomTranslationModule,
     CustomMenuModule,
     AiModelModule,
-    ReportingModule
+    ReportingModule,
+    TrendzAnalyticsModule,
+    TrendzSettingsModule
   ]
 })
 export class HomePagesModule { }
