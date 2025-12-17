@@ -52,16 +52,26 @@ See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_bla
 ### Alarms
 
 Alarms are generated using <a href="${DOCS_BASE_URL}/user-guide/device-profiles/#alarm-rules" target="_blank">Alarm rules</a>
-configured in the "Excavator" and "Haul truck" <a href="/profiles/deviceProfiles" target="_blank">device profiles</a>. Both device profiles include the following alarm rules:
+configured in the "Excavator" and "Haul truck" <a href="/profiles/deviceProfiles" target="_blank">device profiles</a>. 
+The alarm rules configured for these device profiles are listed below:
 
-* Entered restricted zone
-* Outside mine site perimeter
-* Low fuel level
-* Speed limit exceeded
+<div class="tb-markdown-view table-wrapper">
 
-In addition:
-* The "Excavator" device profile includes a "High hydraulic pressure" alarm rule.
-* The "Haul Truck" device profile includes an "Overload" alarm rule.
+${alarm_rules}
+
+</div>
+
+### Calculated fields
+
+Calculated fields are used to derive new telemetry values and events based on incoming data. They are configured in the "Excavator" and "Haul truck"
+<a href="/profiles/deviceProfiles" target="_blank">device profiles</a> and in the Mine site <a href="/profiles/assetProfiles" target="_blank">asset profile</a>.
+The configured calculated fields are listed below:
+
+<div class="tb-markdown-view table-wrapper">
+
+${calculated_fields}
+
+</div>
 
 ### Solution entities
 

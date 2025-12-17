@@ -28,16 +28,26 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.alarm;
+package org.thingsboard.server.service.solutions.data;
 
-import lombok.Getter;
-import org.apache.commons.lang3.StringUtils;
+import org.thingsboard.server.common.data.alarm.AlarmSeverity;
+import org.thingsboard.server.common.data.cf.CalculatedField;
+import org.thingsboard.server.common.data.cf.CalculatedFieldType;
+import org.thingsboard.server.common.data.cf.configuration.AlarmCalculatedFieldConfiguration;
 
-public enum AlarmSeverity {
+import java.util.stream.Collectors;
 
-    CRITICAL, MAJOR, MINOR, WARNING, INDETERMINATE;
+public record CreatedAlarmRuleInfo(String profileName, String alarmType, String severities) {
 
-    @Getter
-    private final String normalName = StringUtils.capitalize(name().toLowerCase());
-
+    public static CreatedAlarmRuleInfo from(String profileName, CalculatedField calculatedField) {
+        if (calculatedField.getType() != CalculatedFieldType.ALARM) {
+            throw new UnsupportedOperationException("Only alarm calculated fields are supported");
+        }
+        String severities = ((AlarmCalculatedFieldConfiguration) calculatedField.getConfiguration())
+                .getCreateRules().keySet().stream()
+                .map(AlarmSeverity::getNormalName)
+                .sorted()
+                .collect(Collectors.joining(", "));
+        return new CreatedAlarmRuleInfo(profileName, calculatedField.getName(), severities);
+    }
 }

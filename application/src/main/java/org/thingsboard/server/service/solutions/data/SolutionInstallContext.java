@@ -85,6 +85,8 @@ public class SolutionInstallContext {
     private final Map<String, DeviceCredentialsInfo> createdDevices = new LinkedHashMap<>();
     private final Map<String, UserCredentialsInfo> createdUsers = new LinkedHashMap<>();
     private final Map<UUID, CreatedEntityInfo> createdEntities = new LinkedHashMap<>();
+    private final Map<UUID, CreatedAlarmRuleInfo> createdAlarmRules = new LinkedHashMap<>();
+    private final Map<UUID, CreatedCalculatedFieldInfo> createdCalculatedFields = new LinkedHashMap<>();
     private final List<DashboardLinkInfo> dashboardLinks = new ArrayList<>();
     private final Map<String, EdgeLinkInfo> createdEdges = new LinkedHashMap<>();
 
@@ -168,8 +170,17 @@ public class SolutionInstallContext {
 
     public void register(CalculatedField calculatedField) {
         register(calculatedField.getId());
-        String type = calculatedField.getType() == CalculatedFieldType.ALARM ? "Alarm rule" : "Calculated field";
-        createdEntities.put(calculatedField.getUuidId(), new CreatedEntityInfo(calculatedField.getName(), type, "Tenant"));
+        CreatedEntityInfo entityProfileInfo = createdEntities.get(calculatedField.getEntityId().getId());
+        boolean alarmRule = calculatedField.getType() == CalculatedFieldType.ALARM;
+        if (entityProfileInfo == null) {
+            String entityToRegister = alarmRule ? "Alarm rule" : "Calculated field";
+            throw new IllegalStateException("Failed to register " + entityToRegister + " for non-existing entity profile: " + calculatedField.getName());
+        }
+        if (alarmRule) {
+            createdAlarmRules.put(calculatedField.getUuidId(), CreatedAlarmRuleInfo.from(entityProfileInfo.getName(), calculatedField));
+            return;
+        }
+        createdCalculatedFields.put(calculatedField.getUuidId(), CreatedCalculatedFieldInfo.from(entityProfileInfo.getName(), calculatedField));
     }
 
     public void put(EntitySearchKey entitySearchKey, EntityId entityId) {

@@ -143,6 +143,8 @@ import org.thingsboard.server.service.install.InstallScripts;
 import org.thingsboard.server.service.rule.TbRuleChainService;
 import org.thingsboard.server.service.scheduler.SchedulerService;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
+import org.thingsboard.server.service.solutions.data.CreatedAlarmRuleInfo;
+import org.thingsboard.server.service.solutions.data.CreatedCalculatedFieldInfo;
 import org.thingsboard.server.service.solutions.data.CreatedEntityInfo;
 import org.thingsboard.server.service.solutions.data.DashboardLinkInfo;
 import org.thingsboard.server.service.solutions.data.DeviceCredentialsInfo;
@@ -196,6 +198,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -645,7 +648,7 @@ public class DefaultSolutionService implements SolutionService {
 
         StringBuilder userList = new StringBuilder();
 
-        userList.append("| Name | Login | Password | Customer name | User Group |");
+        userList.append("| Name | Login | Password | Customer name | User group |");
         userList.append(System.lineSeparator());
         userList.append("| :---  | :---  | :---  | :---  | :---  |");
         userList.append(System.lineSeparator());
@@ -660,6 +663,38 @@ public class DefaultSolutionService implements SolutionService {
         }
 
         template = template.replace("${user_list}", userList.toString());
+
+        StringBuilder alarmRules = new StringBuilder();
+
+        alarmRules.append("| Profile Name | Alarm Type | Severities |");
+        alarmRules.append(System.lineSeparator());
+        alarmRules.append("| :---  | :---  | :---  |");
+        alarmRules.append(System.lineSeparator());
+
+        ctx.getCreatedAlarmRules().values().stream().sorted(Comparator.comparing(CreatedAlarmRuleInfo::profileName, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(CreatedAlarmRuleInfo::alarmType, String.CASE_INSENSITIVE_ORDER)).forEach(alarmRuleInfo ->
+                alarmRules.append("|").append(alarmRuleInfo.profileName()).append("|")
+                        .append(alarmRuleInfo.alarmType()).append("|")
+                        .append(alarmRuleInfo.severities())
+                        .append(System.lineSeparator()));
+
+        template = template.replace("${alarm_rules}", alarmRules.toString());
+
+        StringBuilder calculatedFields = new StringBuilder();
+
+        calculatedFields.append("| Profile Name | Field Type | Field Name |");
+        calculatedFields.append(System.lineSeparator());
+        calculatedFields.append("| :---  | :---  | :---  |");
+        calculatedFields.append(System.lineSeparator());
+
+        ctx.getCreatedCalculatedFields().values().stream().sorted(Comparator.comparing(CreatedCalculatedFieldInfo::profileName, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(CreatedCalculatedFieldInfo::name, String.CASE_INSENSITIVE_ORDER)).forEach(cfInfo ->
+                calculatedFields.append("|").append(cfInfo.profileName()).append("|")
+                        .append(cfInfo.type()).append("|")
+                        .append(cfInfo.name())
+                        .append(System.lineSeparator()));
+
+        template = template.replace("${calculated_fields}", calculatedFields.toString());
 
         StringBuilder entityList = new StringBuilder();
 
@@ -804,7 +839,8 @@ public class DefaultSolutionService implements SolutionService {
     }
 
     private void provisionDeviceProfiles(SolutionInstallContext ctx) {
-        List<DeviceProfileDefinition> deviceProfiles = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "device_profiles.json", new TypeReference<>() {});
+        List<DeviceProfileDefinition> deviceProfiles = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "device_profiles.json", new TypeReference<>() {
+        });
         deviceProfiles.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "device_profiles", DeviceProfileDefinition.class));
         deviceProfiles.forEach(deviceProfile -> {
             deviceProfile.setId(null);
@@ -1496,8 +1532,10 @@ public class DefaultSolutionService implements SolutionService {
         return switch (cfEntityId.getEntityType()) {
             case DEVICE -> List.of(deviceService.findDeviceEntityInfoById(tenantId, new DeviceId(cfEntityId.getId())));
             case ASSET -> List.of(assetService.findAssetEntityInfoById(tenantId, new AssetId(cfEntityId.getId())));
-            case DEVICE_PROFILE -> new PageDataIterable<>(pageLink -> deviceService.findDeviceEntityInfosByTenantIdAndDeviceProfileId(tenantId, new DeviceProfileId(cfEntityId.getId()), pageLink), 512);
-            case ASSET_PROFILE -> new PageDataIterable<>(pageLink -> assetService.findAssetEntityInfosByTenantIdAndAssetProfileId(tenantId, new AssetProfileId(cfEntityId.getId()), pageLink), 512);
+            case DEVICE_PROFILE ->
+                    new PageDataIterable<>(pageLink -> deviceService.findDeviceEntityInfosByTenantIdAndDeviceProfileId(tenantId, new DeviceProfileId(cfEntityId.getId()), pageLink), 512);
+            case ASSET_PROFILE ->
+                    new PageDataIterable<>(pageLink -> assetService.findAssetEntityInfosByTenantIdAndAssetProfileId(tenantId, new AssetProfileId(cfEntityId.getId()), pageLink), 512);
             default -> throw new IllegalArgumentException("Unsupported CF entity type " + cfEntityId.getEntityType());
         };
     }
