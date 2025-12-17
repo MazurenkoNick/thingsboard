@@ -132,3 +132,26 @@ ALTER TABLE custom_menu ADD COLUMN IF NOT EXISTS user_group_names text[];
 DELETE FROM admin_settings AS settings WHERE settings.key = 'trendz';
 
 -- REMOVAL OF OLD TRENDZ SETTINGS END
+
+-- UPGRADING WL settings with overrideTrendzName flag
+
+UPDATE white_labeling SET settings = jsonb_set(settings::jsonb, '{overrideTrendzName}', 'true', true)::text
+                      WHERE type = 'GENERAL' AND customer_id = '13814000-1dd2-11b2-8080-808080808080' AND (settings::jsonb -> 'platformName' <> 'null'::jsonb);
+
+UPDATE white_labeling g SET settings = jsonb_set(settings::jsonb, '{overrideTrendzName}', 'true', true)::text
+                      WHERE type = 'GENERAL' AND customer_id = '13814000-1dd2-11b2-8080-808080808080' AND EXISTS (
+                      SELECT 1 from white_labeling l WHERE l.tenant_id = g.tenant_id AND l.type = 'LOGIN'
+                                                       AND (l.settings::jsonb -> 'platformName' <> 'null'::jsonb));
+
+-- tenant specific updates
+UPDATE white_labeling SET settings = jsonb_set(settings::jsonb, '{overrideTrendzName}', 'true', true)::text
+WHERE type = 'GENERAL' AND tenant_id <> '13814000-1dd2-11b2-8080-808080808080' AND customer_id = '13814000-1dd2-11b2-8080-808080808080'
+  AND (settings::jsonb ->> 'hideConnectivityDialog')::boolean IS TRUE;
+
+-- sys admin specific updates
+UPDATE white_labeling SET settings = jsonb_set(settings::jsonb, '{overrideTrendzName}', 'true', true)::text
+                      WHERE type = 'GENERAL' AND tenant_id = '13814000-1dd2-11b2-8080-808080808080' AND
+                            ((settings::jsonb ->> 'enableHelpLinks')::boolean IS FALSE OR
+                             ((settings::jsonb ->> 'enableHelpLinks')::boolean IS TRUE AND (settings::jsonb ->> 'helpLinkBaseUrl') <> 'https://thingsboard.io'));
+
+-- UPGRADING WL settings with overrideTrendzName flag END
