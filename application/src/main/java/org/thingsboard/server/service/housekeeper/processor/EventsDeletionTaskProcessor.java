@@ -36,6 +36,7 @@ import org.thingsboard.server.common.data.event.ErrorEventFilter;
 import org.thingsboard.server.common.data.event.EventFilter;
 import org.thingsboard.server.common.data.event.EventType;
 import org.thingsboard.server.common.data.event.LifeCycleEventFilter;
+import org.thingsboard.server.common.data.event.RawDataEventFilter;
 import org.thingsboard.server.common.data.event.StatisticsEventFilter;
 import org.thingsboard.server.common.data.housekeeper.HousekeeperTask;
 import org.thingsboard.server.common.data.housekeeper.HousekeeperTaskType;
@@ -63,6 +64,7 @@ public class EventsDeletionTaskProcessor extends HousekeeperTaskProcessor<Housek
             case ERROR -> new ErrorEventFilter();
             case LC_EVENT -> new LifeCycleEventFilter();
             case STATS -> new StatisticsEventFilter();
+            case RAW_DATA -> new RawDataEventFilter();
             default -> throw new IllegalArgumentException("Unexpected non-debug event type: " + eventType);
         };
     }
