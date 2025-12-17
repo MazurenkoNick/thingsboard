@@ -81,6 +81,9 @@ import {
   CalculatedFieldScriptTestDialogComponent,
   CalculatedFieldTestScriptDialogData
 } from "@home/components/calculated-fields/components/test-dialog/calculated-field-script-test-dialog.component";
+import { Operation } from "@shared/models/security.models";
+import { alarmRuleEntityTypeList } from "@shared/models/alarm-rule.models";
+import { UserPermissionsService } from "@core/http/user-permissions.service";
 
 export class AlarmRulesTableConfig extends EntityTableConfig<any> {
 
@@ -107,11 +110,21 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
               private utilsService: UtilsService,
               private readonly: boolean = false,
               private hideClearEventAction: boolean = false,
+              private userPermissionsService: UserPermissionsService,
               public pageMode: boolean = false,
   ) {
     super();
     if (this.pageMode) {
       this.headerComponent = AlarmRuleTableHeaderComponent;
+
+      this.rowPointer = true;
+
+      this.readonly = !alarmRuleEntityTypeList.some(entityType => this.userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.WRITE_CALCULATED_FIELD, entityType));
+
+      this.handleRowClick = ($event, model) => {
+        this.editCalculatedField($event, model);
+        return true;
+      };
     }
     this.tableTitle = this.pageMode ? '' : this.translate.instant('alarm-rule.alarm-rules');
     this.detailsPanelEnabled = false;
@@ -134,6 +147,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
     this.deleteEntityContent = () => this.translate.instant('alarm-rule.delete-text');
     this.deleteEntitiesTitle = count => this.translate.instant('alarm-rule.delete-multiple-title', {count});
     this.deleteEntitiesContent = () => this.translate.instant('alarm-rule.delete-multiple-text');
+    this.deleteEnabled = (field: CalculatedField) => this.allowWritePermission(field);
     this.deleteEntity = id => this.calculatedFieldsService.deleteCalculatedField(id.id);
     this.addActionDescriptors = [
       {
@@ -173,7 +187,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
           name: this.translate.instant('alarm-rule.copy'),
           icon: 'content_copy',
           isEnabled: () => true,
-          onAction: ($event, entity) => this.copyCalculatedField(entity)
+          onAction: ($event, entity) => this.copyCalculatedField($event, entity)
         }
       );
     }
@@ -182,13 +196,13 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
         name: this.translate.instant('action.export'),
         icon: 'file_download',
         isEnabled: () => true,
-        onAction: (event$, entity) => this.exportAlarmRule(event$, entity),
+        onAction: ($event, entity) => this.exportAlarmRule($event, entity),
       },
       {
         name: this.translate.instant('entity-view.events'),
         icon: 'mdi:clipboard-text-clock',
         isEnabled: () => true,
-        onAction: (_, entity) => this.openDebugEventsDialog(entity),
+        onAction: ($event, entity) => this.openDebugEventsDialog($event, entity),
       },
     );
     if (!this.readonly) {
@@ -196,18 +210,18 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
         name: '',
         nameFunction: entity => this.entityDebugSettingsService.getDebugConfigLabel(entity?.debugSettings),
         icon: 'mdi:bug',
-        isEnabled: () => true,
+        isEnabled: (entity) => this.allowWritePermission(entity),
         iconFunction: ({ debugSettings }) => this.entityDebugSettingsService.isDebugActive(debugSettings?.allEnabledUntil) || debugSettings?.failuresEnabled ? 'mdi:bug' : 'mdi:bug-outline',
         onAction: ($event, entity) => this.onOpenDebugConfig($event, entity),
       });
     }
     this.cellActionDescriptors.push({
       name: this.translate.instant('action.edit'),
-      nameFunction: () => this.translate.instant(this.readonly ? 'action.view' : 'action.edit'),
+      nameFunction: entity => this.translate.instant((this.readonly || !this.allowWritePermission(entity)) ? 'action.view' : 'action.edit'),
       icon: 'edit',
-      iconFunction: () => this.readonly ? 'visibility' : 'edit',
+      iconFunction: entity => (this.readonly || !this.allowWritePermission(entity)) ? 'visibility' : 'edit',
       isEnabled: () => true,
-      onAction: (_, entity) => this.editCalculatedField(entity),
+      onAction: ($event, entity) => this.editCalculatedField($event, entity),
     });
   }
 
@@ -217,15 +231,17 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
       this.calculatedFieldsService.getCalculatedFields(this.entityId, pageLink, CalculatedFieldType.ALARM);
   }
 
+  private allowWritePermission(entity?: CalculatedField): boolean {
+    return this.pageMode ? this.userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.WRITE_CALCULATED_FIELD, entity?.entityId?.entityType as EntityType) : true;
+  }
+
   onOpenDebugConfig($event: Event, calculatedField: CalculatedField): void {
+    $event?.stopPropagation();
     const { debugSettings = {}, id } = calculatedField;
     const additionalActionConfig = {
       ...this.additionalDebugActionConfig,
-      action: () => this.openDebugEventsDialog(calculatedField)
+      action: () => this.openDebugEventsDialog($event, calculatedField)
     };
-    if ($event) {
-      $event.stopPropagation();
-    }
 
     const { viewContainerRef, renderer } = this.entityDebugSettingsService;
     if (!viewContainerRef || !renderer) {
@@ -244,7 +260,8 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
     }, $event.target as Element);
   }
 
-  private editCalculatedField(calculatedField: CalculatedField, isDirty = false): void {
+  private editCalculatedField($event: Event, calculatedField: CalculatedField, isDirty = false): void {
+    $event?.stopPropagation();
     this.getCalculatedAlarmDialog(calculatedField, 'action.apply', isDirty)
       .subscribe((res) => {
         if (res) {
@@ -253,7 +270,8 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
       });
   }
 
-  private copyCalculatedField(calculatedField: CalculatedField, isDirty = false): void {
+  private copyCalculatedField($event: Event, calculatedField: CalculatedField, isDirty = false): void {
+    $event?.stopPropagation();
     const copyCalculatedAlarmRule = deepClone(calculatedField);
     if (this.pageMode) {
       copyCalculatedAlarmRule.entityId = null;
@@ -268,19 +286,20 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
   }
 
   private getCalculatedAlarmDialog(value?: CalculatedField, buttonTitle = 'action.add', isDirty = false): Observable<CalculatedField> {
+    const entityId = this.entityId || value?.entityId;
     return this.dialog.open<AlarmRuleDialogComponent, AlarmRuleDialogData, CalculatedField>(AlarmRuleDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
         value,
         buttonTitle,
-        entityId: this.entityId,
+        entityId,
         tenantId: this.tenantId,
         entityName: this.entityName,
         ownerId: this.ownerId,
         additionalDebugActionConfig: this.additionalDebugActionConfig,
         isDirty,
-        readonly: this.readonly,
+        readonly: this.readonly || entityId?.entityType && !this.userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.WRITE_CALCULATED_FIELD, entityId.entityType as EntityType),
         getTestScriptDialogFn: this.getTestScriptDialog.bind(this),
       },
       enterAnimationDuration: isDirty ? 0 : null,
@@ -289,7 +308,8 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
       .pipe(filter(Boolean));
   }
 
-  private openDebugEventsDialog(calculatedField: CalculatedField): void {
+  private openDebugEventsDialog($event: Event, calculatedField: CalculatedField): void {
+    $event?.stopPropagation();
     this.dialog.open<EventsDialogComponent, EventsDialogData, null>(EventsDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
@@ -309,9 +329,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
   }
 
   private exportAlarmRule($event: Event, calculatedField: CalculatedField): void {
-    if ($event) {
-      $event.stopPropagation();
-    }
+    $event?.stopPropagation();
     this.importExportService.exportCalculatedField(calculatedField.id.id);
   }
 
@@ -382,14 +400,14 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
             argumentsEditorCompleter: getCalculatedFieldArgumentsEditorCompleter(calculatedField.configuration.arguments),
             argumentsHighlightRules: getCalculatedFieldArgumentsHighlights(calculatedField.configuration.arguments),
             openCalculatedFieldEdit,
-            readonly: this.readonly
+            readonly: this.readonly || !this.allowWritePermission(calculatedField)
           }
         }).afterClosed()
         .pipe(
           filter(Boolean),
           tap(expression => {
             if (openCalculatedFieldEdit) {
-              this.editCalculatedField({
+              this.editCalculatedField(null, {
                 entityId: this.entityId, ...calculatedField,
                 configuration: {...calculatedField.configuration, expression} as any
               }, true)

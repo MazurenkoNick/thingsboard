@@ -47,6 +47,7 @@ import {
   MenuItem
 } from '@shared/models/custom-menu.models';
 import { calculatedFieldsEntityTypeList } from '@shared/models/calculated-field.models';
+import { alarmRuleEntityTypeList } from "@shared/models/alarm-rule.models";
 
 export declare type MenuSectionType = 'link' | 'toggle';
 
@@ -1315,8 +1316,9 @@ const menuFilters = new Map<MenuId, MenuFilter>([
           userPermissionsService.hasReadGenericPermission(Resource.ALARM)
   ],
   [
-    MenuId.alarm_rules, (_authState, userPermissionsService) =>
-    [Resource.DEVICE, Resource.ASSET, Resource.CUSTOMER, Resource.DEVICE_PROFILE, Resource.ASSET_PROFILE].some(res => userPermissionsService.hasResourcesGenericPermission(res, Operation.READ_CALCULATED_FIELD))
+    MenuId.alarm_rules, (authState, userPermissionsService) =>
+          authState.authUser.authority === Authority.TENANT_ADMIN &&
+          alarmRuleEntityTypeList.some(entityType => userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.READ_CALCULATED_FIELD, entityType))
   ],
   [
     MenuId.dashboard_all, (_authState, userPermissionsService) =>
