@@ -49,9 +49,6 @@ import org.thingsboard.server.dao.util.SqlDao;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * @author Andrii Shvaika
- */
 @Component
 @SqlDao
 public class JpaApiUsageStateDao extends JpaAbstractDao<ApiUsageStateEntity, ApiUsageState> implements ApiUsageStateDao {
