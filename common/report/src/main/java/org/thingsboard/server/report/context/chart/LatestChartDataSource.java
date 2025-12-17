@@ -130,7 +130,7 @@ public class LatestChartDataSource {
         if (dataKey.getAggregationType() != null && dataKey.getAggregationType() != Aggregation.NONE) {
             if (this.entityData.getTimeseries() != null) {
                 Map<String, TsValue[]> timeseries = this.entityData.getTimeseries();
-                TsValue[] values = timeseries.get(dataKey.getName());
+                TsValue[] values = timeseries.get(dataKey.getLabel());
                 if (values != null && values.length > 0) {
                     return values[0];
                 }
