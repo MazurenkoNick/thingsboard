@@ -28,27 +28,14 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.cf;
+package org.thingsboard.server.service.cf.ctx.state.geofencing;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-import org.thingsboard.server.common.data.id.CalculatedFieldId;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.msg.TbMsg;
+public interface ScheduledRefreshSupported {
 
-import java.util.List;
-import java.util.Objects;
+    void resetScheduledRefreshTs();
 
-public interface CalculatedFieldResult {
+    long getLastScheduledRefreshTs();
 
-    TbMsg toTbMsg(EntityId entityId, String cfName, List<CalculatedFieldId> cfIds);
-
-    String stringValue();
-
-    boolean isEmpty();
-
-    default JsonElement toJsonElement() {
-        return JsonParser.parseString(Objects.requireNonNull(stringValue()));
-    }
+    void updateScheduledRefreshTs();
 
 }
