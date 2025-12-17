@@ -135,6 +135,7 @@ import org.thingsboard.server.gen.edge.v1.WhiteLabelingProto;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -1072,6 +1073,29 @@ abstract public class AbstractEdgeTest extends AbstractControllerTest {
         customMenu.setScope(scope);
         customMenu.setAssigneeType(CMAssigneeType.ALL);
         return customMenu;
+    }
+
+    protected void verifyEdgeDisconnected() {
+        verifyEdgeActiveFlag(false);
+    }
+
+    protected void verifyEdgeConnected() {
+        verifyEdgeActiveFlag(true);
+    }
+
+    private void verifyEdgeActiveFlag(boolean value) {
+        Awaitility.await()
+                .atMost(TIMEOUT, TimeUnit.SECONDS)
+                .until(() -> {
+                    List<Map<String, Object>> values = doGetAsyncTyped("/api/plugins/telemetry/EDGE/" + edge.getId() +
+                            "/values/attributes/SERVER_SCOPE", new TypeReference<>() {});
+                    Optional<Map<String, Object>> activeAttrOpt = values.stream().filter(att -> att.get("key").equals("active")).findFirst();
+                    if (activeAttrOpt.isEmpty()) {
+                        return false;
+                    }
+                    Map<String, Object> activeAttr = activeAttrOpt.get();
+                    return Boolean.toString(value).equals(activeAttr.get("value").toString());
+                });
     }
 
 }
