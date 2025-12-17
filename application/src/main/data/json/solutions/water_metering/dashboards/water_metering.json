@@ -22,7 +22,7 @@
             "allowClear": true,
             "displayPagination": false,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "alarmsTitle": "Active Alarms",
             "enableSelectColumnDisplay": true,
             "enableFilter": true
@@ -44,7 +44,7 @@
             "filterId": null,
             "dataKeys": [
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -695,7 +695,7 @@
             "allowClear": true,
             "displayPagination": false,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "alarmsTitle": "Active Alarms",
             "enableSelectColumnDisplay": true,
             "enableFilter": true
@@ -717,7 +717,7 @@
             "filterId": null,
             "dataKeys": [
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -913,7 +913,7 @@
             "allowClear": true,
             "displayPagination": true,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "alarmsTitle": "Alarms",
             "enableSelectColumnDisplay": true,
             "enableFilter": true
@@ -935,7 +935,7 @@
             "filterId": null,
             "dataKeys": [
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -1024,7 +1024,7 @@
             "allowClear": true,
             "displayPagination": false,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "alarmsTitle": "Active Alarms",
             "enableSelectColumnDisplay": true,
             "enableFilter": true,
@@ -1047,7 +1047,7 @@
             "filterId": null,
             "dataKeys": [
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -1199,7 +1199,7 @@
             "allowClear": true,
             "displayPagination": true,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "alarmsTitle": "Alarms"
           },
           "title": "Alarms",
@@ -1216,7 +1216,7 @@
             "type": "entity",
             "dataKeys": [
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -2698,7 +2698,7 @@
             "allowClear": false,
             "displayPagination": false,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "alarmsTitle": "Active Alarms",
             "enableSelectColumnDisplay": true,
             "enableStatusFilter": false
@@ -2717,7 +2717,7 @@
             "type": "entity",
             "dataKeys": [
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -3167,7 +3167,7 @@
             "allowClear": true,
             "displayPagination": false,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "alarmsTitle": "Active Water Meter Alarms",
             "enableSelectColumnDisplay": true,
             "enableFilter": true
@@ -3189,7 +3189,7 @@
             "filterId": "f5f657e4-89f6-c90d-fd0f-16d0d3bb91ec",
             "dataKeys": [
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -3457,7 +3457,7 @@
             "allowClear": true,
             "displayPagination": false,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "alarmsTitle": "Low Battery Water Meter Alarms",
             "enableSelectColumnDisplay": true,
             "enableFilter": true
@@ -3479,7 +3479,7 @@
             "filterId": "c5135f23-0850-88ed-3176-bdcdb8fddcba",
             "dataKeys": [
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -3747,7 +3747,7 @@
             "allowClear": true,
             "displayPagination": false,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "alarmsTitle": "Inactive Water Meter Alarms",
             "enableSelectColumnDisplay": true,
             "enableFilter": true
@@ -3769,7 +3769,7 @@
             "filterId": "0f79c9b4-ffdb-f8fa-e860-a45095837597",
             "dataKeys": [
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",

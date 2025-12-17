@@ -800,7 +800,7 @@
             "displayActivity": false,
             "displayPagination": true,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "enableSelectColumnDisplay": true,
             "enableStickyAction": false,
             "enableFilter": true,
@@ -823,7 +823,7 @@
             "entityAliasId": "80f96c31-13dc-5425-0595-547501dc4e0d",
             "dataKeys": [
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -2526,7 +2526,7 @@
             "displayActivity": false,
             "displayPagination": true,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "enableSelectColumnDisplay": true,
             "enableStickyAction": false,
             "enableFilter": true,
@@ -2549,7 +2549,7 @@
             "entityAliasId": "1c770287-a30e-5426-fcc7-4cb4df4cc037",
             "dataKeys": [
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -3974,7 +3974,7 @@
             "displayActivity": false,
             "displayPagination": true,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "enableSelectColumnDisplay": true,
             "enableStickyAction": false,
             "enableFilter": true,
@@ -3997,7 +3997,7 @@
             "entityAliasId": "1c770287-a30e-5426-fcc7-4cb4df4cc037",
             "dataKeys": [
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -5633,7 +5633,7 @@
             "displayActivity": false,
             "displayPagination": true,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "enableSelectColumnDisplay": false,
             "enableStickyAction": false,
             "enableFilter": false,
@@ -5656,7 +5656,7 @@
             "entityAliasId": "d38e5427-ad3a-6ab5-1488-4afa9232c816",
             "dataKeys": [
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",

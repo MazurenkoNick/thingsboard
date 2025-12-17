@@ -213,7 +213,7 @@
             "allowClear": true,
             "displayPagination": true,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "enableSelectColumnDisplay": false,
             "alarmsTitle": "Alarms",
             "enableFilter": true
@@ -235,7 +235,7 @@
             "filterId": null,
             "dataKeys": [
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
