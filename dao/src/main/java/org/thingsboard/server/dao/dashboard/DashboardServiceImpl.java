@@ -38,14 +38,12 @@ import com.google.common.util.concurrent.ListenableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.cache.TbTransactionalCache;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
@@ -65,7 +63,6 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.TimePageLink;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
-import org.thingsboard.server.common.data.widget.WidgetTypeDetails;
 import org.thingsboard.server.dao.customer.CustomerDao;
 import org.thingsboard.server.dao.entity.AbstractEntityService;
 import org.thingsboard.server.dao.entity.EntityCountService;
@@ -77,7 +74,6 @@ import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.service.PaginatedRemover;
 import org.thingsboard.server.dao.service.Validator;
 import org.thingsboard.server.dao.sql.JpaExecutorService;
-import org.thingsboard.server.dao.widget.WidgetTypeService;
 import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.ArrayList;
@@ -87,7 +83,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
@@ -112,9 +107,6 @@ public class DashboardServiceImpl extends AbstractEntityService implements Dashb
 
     @Autowired
     private CustomerDao customerDao;
-
-    @Autowired
-    private WidgetTypeService widgetTypeService;
 
     @Autowired
     private ImageService imageService;
@@ -219,9 +211,6 @@ public class DashboardServiceImpl extends AbstractEntityService implements Dashb
             }
             imageService.updateImagesUsage(dashboard);
             resourceService.updateResourcesUsage(tenantId, dashboard);
-
-            // Replacing old Trendz FQNs
-            updateDashboardTrendzLinks(dashboard);
 
             var saved = dashboardDao.save(tenantId, dashboard);
             if (dashboard.getId() == null) {
@@ -623,38 +612,4 @@ public class DashboardServiceImpl extends AbstractEntityService implements Dashb
         return dashboards;
     }
 
-
-    public void updateDashboardTrendzLinks(Dashboard dashboard) {
-        Set<String> fqns = Set.of(
-                "trendz_bundle.trendz_builder",
-                "trendz_bundle.trendz_view_latest",
-                "trendz_bundle.trendz_view_static",
-                "trendz_bundle.trendz_view_latest_chat"
-        );
-
-        String before = dashboard.getConfiguration().toString();
-        String after = before;
-
-        after = after
-                .replaceAll(
-                        "/api/resource/js_module/tenant/ai-summary-module.js",
-                        "/api/resource/js_module/system/ai-summary-module.js"
-                );
-
-        for (String fqn : fqns) {
-            String fqnSuffix = StringUtils.substringAfterLast(fqn, ".");
-            WidgetTypeDetails tenantWidgetType = this.widgetTypeService.findWidgetTypeDetailsByTenantIdAndFqn(dashboard.getTenantId(), fqn);
-            if (tenantWidgetType == null) {
-                String tenantFqnOld = "tenant." + fqn;
-                String tenantFqnNew = "tenant." + fqnSuffix;
-                String systemFqn = "system." + fqnSuffix;
-
-                after = after
-                        .replaceAll(tenantFqnNew, systemFqn)
-                        .replaceAll(tenantFqnOld, systemFqn);
-            }
-        }
-        JsonNode jsonConfig = JacksonUtil.toJsonNode(after);
-        dashboard.setConfiguration(jsonConfig);
-    }
 }
