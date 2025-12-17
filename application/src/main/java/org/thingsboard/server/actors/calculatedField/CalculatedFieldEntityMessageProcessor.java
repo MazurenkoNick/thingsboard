@@ -599,6 +599,7 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
         if (!relatedEntityArgs.isEmpty() || !args.isEmpty()) {
             for (TsKvProto item : data) {
                 ReferencedEntityKey key = new ReferencedEntityKey(item.getKv().getKey(), ArgumentType.TS_LATEST, null);
+
                 SingleValueArgumentEntry relatedArgIncoming = new SingleValueArgumentEntry(originator, item);
                 mapLatest(relatedArgIncoming, relatedEntityArgs.get(key), arguments);
 
