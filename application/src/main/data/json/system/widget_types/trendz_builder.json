@@ -1,9 +1,9 @@
 {
   "fqn": "trendz_builder",
-  "name": "Advanced Analytics Builder",
+  "name": "Advanced analytics Builder",
   "deprecated": true,
   "image": "tb-image;/api/images/system/analytics-builder.svg",
-  "description": "Advanced Analytics Visualization Builder for providing a self-service interface to your end-users, so they can create their own analysis using the dashboard.",
+  "description": "Advanced analytics Visualization Builder for providing a self-service interface to your end-users, so they can create their own analysis using the dashboard.",
   "descriptor": {
     "type": "static",
     "sizeX": 9.5,
@@ -27,7 +27,7 @@
   "resources": [
     {
       "link": "/api/images/system/analytics-builder.svg",
-      "title": "Advanced Analytics Builder Image",
+      "title": "Advanced analytics Builder Image",
       "type": "IMAGE",
       "subType": "IMAGE",
       "fileName": "analytics-builder.svg",

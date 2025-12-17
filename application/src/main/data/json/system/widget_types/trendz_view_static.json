@@ -1,9 +1,9 @@
 {
   "fqn": "trendz_view_static",
-  "name": "Advanced Analytics View Static",
+  "name": "Advanced analytics View Static",
   "deprecated": false,
   "image": "tb-image;/api/images/system/analytics-static.svg",
-  "description": "Displays saved Advanced Analytics visualizations.",
+  "description": "Displays saved Advanced analytics visualizations.",
   "descriptor": {
     "type": "static",
     "sizeX": 7.5,
@@ -72,12 +72,12 @@
       }
     ],
     "dataKeySettingsForm": [],
-    "defaultConfig": "{\"datasources\":[{\"type\":\"static\",\"name\":\"function\",\"dataKeys\":[{\"name\":\"f(x)\",\"type\":\"function\",\"label\":\"Random\",\"color\":\"#2196f3\",\"settings\":{},\"_hash\":0.15479322438769105,\"funcBody\":\"var value = prevValue + Math.random() * 100 - 50;\\nvar multiplier = Math.pow(10, 2 || 0);\\nvar value = Math.round(value * multiplier) / multiplier;\\nif (value < -1000) {\\n\\tvalue = -1000;\\n} else if (value > 1000) {\\n\\tvalue = 1000;\\n}\\nreturn value;\"}]}],\"timewindow\":{\"realtime\":{\"timewindowMs\":60000}},\"showTitle\":false,\"backgroundColor\":\"rgb(255, 255, 255)\",\"color\":\"rgba(0, 0, 0, 0.87)\",\"padding\":\"8px\",\"settings\":{},\"title\":\"Advanced Analytics View Static\"}"
+    "defaultConfig": "{\"datasources\":[{\"type\":\"static\",\"name\":\"function\",\"dataKeys\":[{\"name\":\"f(x)\",\"type\":\"function\",\"label\":\"Random\",\"color\":\"#2196f3\",\"settings\":{},\"_hash\":0.15479322438769105,\"funcBody\":\"var value = prevValue + Math.random() * 100 - 50;\\nvar multiplier = Math.pow(10, 2 || 0);\\nvar value = Math.round(value * multiplier) / multiplier;\\nif (value < -1000) {\\n\\tvalue = -1000;\\n} else if (value > 1000) {\\n\\tvalue = 1000;\\n}\\nreturn value;\"}]}],\"timewindow\":{\"realtime\":{\"timewindowMs\":60000}},\"showTitle\":false,\"backgroundColor\":\"rgb(255, 255, 255)\",\"color\":\"rgba(0, 0, 0, 0.87)\",\"padding\":\"8px\",\"settings\":{},\"title\":\"Advanced analytics View Static\"}"
   },
   "resources": [
     {
       "link": "/api/images/system/analytics-static.svg",
-      "title": "Advanced Analytics View Static Image",
+      "title": "Advanced analytics View Static Image",
       "type": "IMAGE",
       "subType": "IMAGE",
       "fileName": "analytics-static.svg",
