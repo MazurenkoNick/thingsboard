@@ -535,6 +535,8 @@ public class DefaultSolutionService implements SolutionService {
 
             provisionEdges(user, ctx, request);
 
+            provisionAlarmRules(ctx);
+
             Set<CompletableFuture<Void>> telemetryLoading = launchEmulators(ctx, devices, assets);
 
             waitForTelemetryCompletion(telemetryLoading);
@@ -1439,7 +1441,14 @@ public class DefaultSolutionService implements SolutionService {
         }
     }
 
-    protected void provisionCalculatedFields(SolutionInstallContext ctx) {
+    private void provisionAlarmRules(SolutionInstallContext ctx) {
+        List<CalculatedField> cfs = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "alarm_rules.json", new TypeReference<>() {
+        });
+        cfs.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "alarm_rules", CalculatedField.class));
+        cfs.forEach(cf -> ctx.register(createCalculatedField(cf, ctx)));
+    }
+
+    private void provisionCalculatedFields(SolutionInstallContext ctx) {
         List<CalculatedFieldDefinition> cfs = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "calculated_fields.json", new TypeReference<>() {
         });
         cfs.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "calculated_fields", CalculatedFieldDefinition.class));
