@@ -1051,7 +1051,7 @@
             "allowClear": true,
             "displayPagination": true,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "useRowStyleFunction": false
           },
           "title": "New Alarms table",
@@ -1071,7 +1071,7 @@
             "filterId": null,
             "dataKeys": [
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -1301,7 +1301,7 @@
             "allowClear": true,
             "displayPagination": true,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "useRowStyleFunction": false
           },
           "title": "New Alarms table",
@@ -1321,7 +1321,7 @@
             "filterId": null,
             "dataKeys": [
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",

@@ -654,7 +654,7 @@
             "allowAcknowledgment": false,
             "allowClear": false,
             "displayPagination": false,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "useRowStyleFunction": false
           },
           "title": "New Alarms table",
@@ -689,7 +689,7 @@
                 "_hash": 0.2780007688856758
               },
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -984,7 +984,7 @@
             "allowAcknowledgment": false,
             "allowClear": true,
             "displayPagination": false,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "useRowStyleFunction": false
           },
           "title": "New Alarms table",
@@ -1019,7 +1019,7 @@
                 "_hash": 0.2780007688856758
               },
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
