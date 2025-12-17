@@ -34,7 +34,7 @@ import { AuthState } from '@core/auth/auth.models';
 import { Authority } from '@shared/models/authority.enum';
 import { deepClone, isDefinedAndNotNull, isNotEmptyStr } from '@core/utils';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
-import { Operation, Resource, resourceByEntityType } from '@shared/models/security.models';
+import { Operation, Resource } from '@shared/models/security.models';
 import {
   CMItemLinkType,
   CMItemType,
@@ -1422,7 +1422,7 @@ const menuFilters = new Map<MenuId, MenuFilter>([
   [
     MenuId.calculated_fields, (authState, userPermissionsService) =>
           authState.authUser.authority === Authority.TENANT_ADMIN
-          && calculatedFieldsEntityTypeList.some(entityType => userPermissionsService.hasResourcesGenericPermission(resourceByEntityType.get(entityType), Operation.READ_CALCULATED_FIELD))
+          && calculatedFieldsEntityTypeList.some(entityType => userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.READ_CALCULATED_FIELD, entityType))
   ],
   [
     MenuId.rule_chains, (authState, userPermissionsService) =>

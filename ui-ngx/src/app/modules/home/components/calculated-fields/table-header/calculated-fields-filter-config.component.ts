@@ -60,6 +60,8 @@ import {
 } from '@shared/models/calculated-field.models';
 import { StringItemsOption } from '@shared/components/string-items-list.component';
 import { TranslateService } from '@ngx-translate/core';
+import { Operation } from '@shared/models/security.models';
+import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 export const CALCULATED_FIELDS_CONFIG_DATA = new InjectionToken<any>('CalculatedFieldsFilterConfigData');
 
@@ -117,7 +119,8 @@ export class CalculatedFieldsFilterConfigComponent implements OnInit, ControlVal
 
   entityType = EntityType;
 
-  listEntityTypes = calculatedFieldsEntityTypeList;
+  listEntityTypes = calculatedFieldsEntityTypeList.filter(entityType =>
+    this.userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.READ_CALCULATED_FIELD, entityType));
   entityTypeTranslations = entityTypeTranslations;
 
   readonly types: StringItemsOption[] = calculatedFieldTypes.map(item => ({
@@ -139,7 +142,8 @@ export class CalculatedFieldsFilterConfigComponent implements OnInit, ControlVal
               private nativeElement: ElementRef,
               private viewContainerRef: ViewContainerRef,
               private destroyRef: DestroyRef,
-              private translate: TranslateService) {
+              private translate: TranslateService,
+              private userPermissionsService: UserPermissionsService) {
   }
 
   ngOnInit(): void {
