@@ -29,6 +29,12 @@
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
 
+.service-connection {
+    .tb-form-panel {
+        gap: 0;
+    }
+}
+
 .sync-result {
     --mat-text-button-with-icon-horizontal-padding: 16px;
     border: 1px solid rgba(0, 0, 0, .12);
