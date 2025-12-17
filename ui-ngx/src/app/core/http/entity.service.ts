@@ -1197,14 +1197,12 @@ export class EntityService {
         break
       case EntityType.REPORT:
         entityFieldKeys.push(entityFields.name.keyName);
-        entityFieldKeys.push(entityFields.reportType.keyName);
-        entityFieldKeys.push(entityFields.reportFormat.keyName);
+        entityFieldKeys.push(entityFields.format.keyName);
         break;
       case EntityType.REPORT_TEMPLATE:
         entityFieldKeys.push(entityFields.name.keyName);
         entityFieldKeys.push(entityFields.type.keyName);
-        entityFieldKeys.push(entityFields.reportType.keyName);
-        entityFieldKeys.push(entityFields.reportFormat.keyName);
+        entityFieldKeys.push(entityFields.format.keyName);
     }
     return query ? entityFieldKeys.filter((entityField) => entityField.toLowerCase().indexOf(query) === 0) : entityFieldKeys;
   }
