@@ -73,7 +73,7 @@ import {
   CalculatedFieldTestScriptDialogData
 } from './components/public-api';
 import { ImportExportService } from '@shared/import-export/import-export.service';
-import { getEntityDetailsPageURL, isObject } from '@core/utils';
+import { deepClone, getEntityDetailsPageURL, isObject } from '@core/utils';
 import { EntityDebugSettingsService } from '@home/components/entity/debug/entity-debug-settings.service';
 import { DatePipe } from '@angular/common';
 import { TbPopoverService } from '@shared/components/popover.service';
@@ -92,7 +92,7 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
   readonly tenantId = getCurrentAuthUser(this.store).tenantId;
   additionalDebugActionConfig = {
     title: this.translate.instant('calculated-fields.see-debug-events'),
-    action: (calculatedField: CalculatedField) => this.openDebugEventsDialog.call(this, calculatedField),
+    action: (calculatedField: CalculatedField) => this.openDebugEventsDialog.call(this, null, calculatedField),
   };
 
   calculatedFieldFilterConfig: CalculatedFieldsQuery;
@@ -119,6 +119,12 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
     super();
     if (this.pageMode) {
       this.headerComponent = CalculatedFieldsHeaderComponent;
+
+      this.handleRowClick = ($event, entity) => {
+        this.editCalculatedField($event, entity);
+        this.rowPointer = true;
+        return true;
+      };
     }
     this.tableTitle = this.pageMode ? '' : this.translate.instant('entity.type-calculated-fields');
     this.detailsPanelEnabled = false;
@@ -151,30 +157,15 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
 
     this.defaultSortOrder = {property: 'createdTime', direction: Direction.DESC};
 
-    const expressionColumn = new EntityTableColumn<CalculatedField>('expression', 'calculated-fields.expression', '250px');
-    expressionColumn.sortable = false;
-    expressionColumn.cellContentFunction = entity => {
-      const expressionLabel = this.getExpressionLabel(entity);
-      return expressionLabel?.length < 45 ? expressionLabel : `<span style="display: inline-block; width: 45ch">${expressionLabel.substring(0, 44)}…</span>`;
-    }
-    expressionColumn.cellTooltipFunction = entity => {
-      const expressionLabel = this.getExpressionLabel(entity);
-      return expressionLabel?.length < 45 ? null : expressionLabel
-    };
-
     this.columns.push(new DateEntityTableColumn<CalculatedField>('createdTime', 'common.created-time', this.datePipe, '150px'));
-    this.columns.push(new EntityTableColumn<CalculatedField>('name', 'common.name', this.pageMode ? '30%' :'33%',
+    this.columns.push(new EntityTableColumn<CalculatedField>('name', 'common.name', this.pageMode ? '33%' : '60%',
       entity => this.utilsService.customTranslation(entity.name, entity.name)));
-    this.columns.push(new EntityTableColumn<CalculatedField>('type', 'common.type', '170px', entity => this.translate.instant(CalculatedFieldTypeTranslations.get(entity.type).name), () => ({whiteSpace: 'nowrap' })));
-    this.columns.push(expressionColumn);
-
     if (this.pageMode) {
-      this.columns.push(new EntityTableColumn<CalculatedFieldAlarmRule>('entityType', 'alarm-rule.target-entity-type', '15%',
-        entity => this.translate.instant(entityTypeTranslations.get(entity.entityId.entityType).type)));
-      this.columns.push(new EntityLinkTableColumn<CalculatedFieldAlarmRule>('entityName', 'alarm-rule.target-entity', '30%',
+      this.columns.push(new EntityLinkTableColumn<CalculatedFieldAlarmRule>('entityName', 'calculated-fields.target-entity', '33%',
         entity => this.utilsService.customTranslation(entity['entityName'], entity['entityName']),
         entity => getEntityDetailsPageURL(entity.entityId?.id, entity.entityId?.entityType as EntityType), false));
     }
+    this.columns.push(new EntityTableColumn<CalculatedField>('type', 'common.type', this.pageMode ? '33%' : '40%', entity => this.translate.instant(CalculatedFieldTypeTranslations.get(entity.type).name), () => ({whiteSpace: 'nowrap' })));
 
     if (!this.readonly && this.userPermissionsService.hasReadGenericPermission(Resource.JOB)) {
       this.cellActionDescriptors.push({
@@ -187,16 +178,22 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
 
     this.cellActionDescriptors.push(
       {
+        name: this.translate.instant('action.copy'),
+        icon: 'content_copy',
+        isEnabled: () => true,
+        onAction: ($event, entity) => this.copyCalculatedField($event, entity),
+      },
+      {
         name: this.translate.instant('action.export'),
         icon: 'file_download',
         isEnabled: () => true,
-        onAction: (event$, entity) => this.exportCalculatedField(event$, entity),
+        onAction: ($event, entity) => this.exportCalculatedField($event, entity),
       },
       {
         name: this.translate.instant('entity-view.events'),
         icon: 'mdi:clipboard-text-clock',
         isEnabled: () => true,
-        onAction: (_, entity) => this.openDebugEventsDialog(entity),
+        onAction: ($event, entity) => this.openDebugEventsDialog($event, entity),
       }
     );
 
@@ -217,18 +214,8 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
       icon: 'edit',
       iconFunction: () => this.readonly ? 'visibility' : 'edit',
       isEnabled: () => true,
-      onAction: (_, entity) => this.editCalculatedField(entity),
+      onAction: ($event, entity) => this.editCalculatedField($event, entity),
     });
-  }
-
-  private getExpressionLabel(entity: CalculatedField): string {
-    if (entity.type === CalculatedFieldType.SCRIPT ||
-      entity.type === CalculatedFieldType.PROPAGATION && entity.configuration.applyExpressionToResolvedArguments === true) {
-      return 'function calculate(ctx, ' + Object.keys(entity.configuration.arguments).join(', ') + ')';
-    } else if (entity.type === CalculatedFieldType.SIMPLE) {
-      return entity.configuration.expression ?? '';
-    }
-    return '';
   }
 
   fetchCalculatedFields(pageLink: PageLink): Observable<PageData<CalculatedField>> {
@@ -238,14 +225,12 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
   }
 
   onOpenDebugConfig($event: Event, calculatedField: CalculatedField): void {
+    $event?.stopPropagation();
     const { debugSettings = {}, id } = calculatedField;
     const additionalActionConfig = {
       ...this.additionalDebugActionConfig,
-      action: () => this.openDebugEventsDialog(calculatedField)
+      action: () => this.openDebugEventsDialog($event, calculatedField)
     };
-    if ($event) {
-      $event.stopPropagation();
-    }
 
     const { viewContainerRef, renderer } = this.entityDebugSettingsService;
     if (!viewContainerRef || !renderer) {
@@ -263,7 +248,8 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
     }, $event.target as Element);
   }
 
-  private editCalculatedField(calculatedField: CalculatedField, isDirty = false): void {
+  private editCalculatedField($event: Event, calculatedField: CalculatedField, isDirty = false): void {
+    $event?.stopPropagation();
     this.getCalculatedFieldDialog(calculatedField, 'action.apply', isDirty)
       .subscribe((res) => {
         if (res) {
@@ -273,13 +259,14 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
   }
 
   private getCalculatedFieldDialog(value?: CalculatedField, buttonTitle = 'action.add', isDirty = false): Observable<CalculatedField> {
+    const entityId = this.entityId || value?.entityId;
     return this.dialog.open<CalculatedFieldDialogComponent, CalculatedFieldDialogData, CalculatedField>(CalculatedFieldDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
         value,
         buttonTitle,
-        entityId: this.entityId,
+        entityId,
         tenantId: this.tenantId,
         entityName: this.entityName,
         ownerId: this.ownerId,
@@ -294,7 +281,8 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
       .pipe(filter(Boolean));
   }
 
-  private openDebugEventsDialog(calculatedField: CalculatedField): void {
+  private openDebugEventsDialog($event: Event, calculatedField: CalculatedField): void {
+    $event?.stopPropagation();
     const debugActionEnabledFn = (event: DebugEvent) => {
       return (calculatedField.type === CalculatedFieldType.SCRIPT ||
         (calculatedField.type === CalculatedFieldType.PROPAGATION &&
@@ -327,10 +315,23 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
   }
 
   private exportCalculatedField($event: Event, calculatedField: CalculatedField): void {
-    if ($event) {
-      $event.stopPropagation();
-    }
+    $event?.stopPropagation();
     this.importExportService.exportCalculatedField(calculatedField.id.id);
+  }
+
+  private copyCalculatedField($event: Event, calculatedField: CalculatedField): void {
+    $event?.stopPropagation();
+    const copyCalculatedAlarmRule = deepClone(calculatedField);
+    if (this.pageMode) {
+      copyCalculatedAlarmRule.entityId = null;
+    }
+    delete copyCalculatedAlarmRule.id;
+    this.getCalculatedFieldDialog(copyCalculatedAlarmRule, 'action.apply', false)
+      .subscribe((res) => {
+        if (res) {
+          this.updateData();
+        }
+      });
   }
 
   private importCalculatedField(): void {
@@ -419,7 +420,7 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
           filter(Boolean),
           tap(expression => {
             if (openCalculatedFieldEdit) {
-              this.editCalculatedField({
+              this.editCalculatedField(null, {
                 entityId: this.entityId, ...calculatedField,
                 configuration: {...calculatedField.configuration, expression} as any
               }, true)

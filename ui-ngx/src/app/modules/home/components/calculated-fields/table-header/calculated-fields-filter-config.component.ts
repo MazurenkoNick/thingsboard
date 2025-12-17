@@ -104,7 +104,6 @@ export class CalculatedFieldsFilterConfigComponent implements OnInit, ControlVal
 
   @Input()
   initialCfFilterConfig: CalculatedFieldsQuery = {
-    name: [],
     types: [],
     entityType: null,
     entities: []
@@ -154,7 +153,6 @@ export class CalculatedFieldsFilterConfigComponent implements OnInit, ControlVal
       }
     }
     this.cfFilterForm = this.fb.group({
-      name: [null, []],
       types: [null, []],
       entityType: [null, []],
       entities: [null, []]
@@ -264,9 +262,6 @@ export class CalculatedFieldsFilterConfigComponent implements OnInit, ControlVal
     if ((isUndefinedOrNull(filter1) || isEmpty(filter1)) && (isUndefinedOrNull(filter2) || isEmpty(filter2))) {
       return true;
     } else if (isDefinedAndNotNull(filter1) && isDefinedAndNotNull(filter2)) {
-      if (!isArraysEqualIgnoreUndefined(filter1.name, filter2.name)) {
-        return false;
-      }
       if (!isArraysEqualIgnoreUndefined(filter1.types, filter2.types)) {
         return false;
       }
@@ -280,7 +275,6 @@ export class CalculatedFieldsFilterConfigComponent implements OnInit, ControlVal
 
   private updateCfConfigForm(cfFilterConfig?: CalculatedFieldsQuery) {
     this.cfFilterForm.patchValue({
-      name: cfFilterConfig?.name ?? [],
       types: cfFilterConfig?.types ?? [],
       entityType: cfFilterConfig?.entityType ?? null,
       entities: cfFilterConfig?.entities ?? [],
@@ -294,7 +288,6 @@ export class CalculatedFieldsFilterConfigComponent implements OnInit, ControlVal
 
   private cfFilterFromFormValue(formValue: any): CalculatedFieldsQuery {
     return {
-      name: formValue?.name ?? [],
       types: formValue?.types ?? [],
       entityType: formValue?.entityType ?? null,
       entities: formValue?.entities ?? [],
