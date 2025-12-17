@@ -7253,6 +7253,7 @@
         "timezone-description": "Time zone in which target dashboard will be presented in report.",
         "reporting": "Reporting",
         "templates": "Templates",
+        "report": "Report",
         "reports": "Reports",
         "scheduling": "Scheduling",
         "generating-report": "Generating report...",
@@ -7269,7 +7270,9 @@
         "file-name": "File name",
         "format": "Format",
         "download": "Download report",
-        "reports-filter": "Reports filter"
+        "reports-filter": "Reports filter",
+        "no-reports-matching": "No reports matching '{{entity}}' were found.",
+        "report-required": "Report is required"
     },
     "report-template": {
         "report-template": "Report template",
