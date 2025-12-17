@@ -59,7 +59,7 @@ import { EntityTypeSelectComponent } from '@shared/components/entity/entity-type
 import { EntityAutocompleteComponent } from '@shared/components/entity/entity-autocomplete.component';
 import { BaseData } from '@shared/models/base-data';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
-import { Operation, resourceByEntityType } from '@shared/models/security.models';
+import { Operation } from '@shared/models/security.models';
 
 export interface CalculatedFieldDialogData {
   value?: CalculatedField;
@@ -85,7 +85,7 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
   fieldFormGroup = this.fb.group({
     name: ['', [Validators.required, Validators.pattern(oneSpaceInsideRegex), Validators.maxLength(255)]],
     entityId: this.fb.group({
-      entityType: this.fb.control<EntityType | AliasEntityType | null>(EntityType.DEVICE_PROFILE, Validators.required),
+      entityType: this.fb.control<EntityType | AliasEntityType | null>(null, Validators.required),
       id: [null as null | string, Validators.required],
     }),
     type: [CalculatedFieldType.SIMPLE],
@@ -105,7 +105,7 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
 
   readonly EntityType = EntityType;
   readonly calculatedFieldsEntityTypeList = calculatedFieldsEntityTypeList.filter(entityType =>
-    this.userPermissionsService.hasResourcesGenericPermission(resourceByEntityType.get(entityType), Operation.WRITE_CALCULATED_FIELD));
+    this.userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.WRITE_CALCULATED_FIELD, entityType));
   readonly CalculatedFieldType = CalculatedFieldType;
   readonly fieldTypes = calculatedFieldTypes;
   readonly CalculatedFieldTypeTranslations = CalculatedFieldTypeTranslations;
@@ -140,10 +140,16 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
           this.fieldFormGroup.get('configuration').enable({emitEvent: false});
         }
       });
+      if (this.calculatedFieldsEntityTypeList.includes(EntityType.DEVICE_PROFILE)) {
+        this.fieldFormGroup.get('entityId.entityType').patchValue(EntityType.DEVICE_PROFILE, {emitEvent: false});
+      } else if (this.calculatedFieldsEntityTypeList.length === 1) {
+        this.fieldFormGroup.get('entityId.entityType').patchValue(this.calculatedFieldsEntityTypeList[0], {emitEvent: false});
+      }
     }
 
     if (this.data.readonly) {
       this.fieldFormGroup.disable();
+      this.disabledConfiguration = true;
     }
   }
 

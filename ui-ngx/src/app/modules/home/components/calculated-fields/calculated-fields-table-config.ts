@@ -58,6 +58,7 @@ import {
   CalculatedFieldAlarmRule,
   CalculatedFieldEventArguments,
   CalculatedFieldScriptConfiguration,
+  calculatedFieldsEntityTypeList,
   CalculatedFieldsQuery,
   CalculatedFieldType,
   CalculatedFieldTypeTranslations,
@@ -78,7 +79,7 @@ import { EntityDebugSettingsService } from '@home/components/entity/debug/entity
 import { DatePipe } from '@angular/common';
 import { TbPopoverService } from '@shared/components/popover.service';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
-import { Resource } from '@shared/models/security.models';
+import { Operation, Resource } from '@shared/models/security.models';
 import { UtilsService } from "@core/services/utils.service";
 import { CalculatedFieldEventBody, DebugEventType, Event as DebugEvent, EventType } from '@shared/models/event.models';
 import { EventsDialogComponent, EventsDialogData } from '@home/dialogs/events-dialog.component';
@@ -119,6 +120,7 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
     super();
     if (this.pageMode) {
       this.headerComponent = CalculatedFieldsHeaderComponent;
+      this.readonly = !calculatedFieldsEntityTypeList.some(entityType => this.userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.WRITE_CALCULATED_FIELD, entityType));
 
       this.handleRowClick = ($event, entity) => {
         this.editCalculatedField($event, entity);
@@ -139,6 +141,7 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
     this.deleteEntityContent = () => this.translate.instant('calculated-fields.delete-text');
     this.deleteEntitiesTitle = count => this.translate.instant('calculated-fields.delete-multiple-title', {count});
     this.deleteEntitiesContent = () => this.translate.instant('calculated-fields.delete-multiple-text');
+    this.deleteEnabled = (field: CalculatedField) => this.allowWritePermission(field);
     this.deleteEntity = id => this.calculatedFieldsService.deleteCalculatedField(id.id);
     this.addActionDescriptors = [
       {
@@ -167,7 +170,7 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
     }
     this.columns.push(new EntityTableColumn<CalculatedField>('type', 'common.type', this.pageMode ? '33%' : '40%', entity => this.translate.instant(CalculatedFieldTypeTranslations.get(entity.type).name), () => ({whiteSpace: 'nowrap' })));
 
-    if (!this.readonly && this.userPermissionsService.hasReadGenericPermission(Resource.JOB)) {
+    if (this.userPermissionsService.hasReadGenericPermission(Resource.JOB)) {
       this.cellActionDescriptors.push({
         name: this.translate.instant('calculated-fields.reprocess-calculated-field'),
         icon: 'autorenew',
@@ -176,13 +179,16 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
       });
     }
 
-    this.cellActionDescriptors.push(
-      {
+    if (!this.readonly) {
+      this.cellActionDescriptors.push({
         name: this.translate.instant('action.copy'),
         icon: 'content_copy',
         isEnabled: () => true,
         onAction: ($event, entity) => this.copyCalculatedField($event, entity),
-      },
+      })
+    }
+
+    this.cellActionDescriptors.push(
       {
         name: this.translate.instant('action.export'),
         icon: 'file_download',
@@ -202,7 +208,7 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
         name: '',
         nameFunction: entity => this.entityDebugSettingsService.getDebugConfigLabel(entity?.debugSettings),
         icon: 'mdi:bug',
-        isEnabled: () => true,
+        isEnabled: (entity) => this.allowWritePermission(entity),
         iconFunction: ({ debugSettings }) => this.entityDebugSettingsService.isDebugActive(debugSettings?.allEnabledUntil) || debugSettings?.failuresEnabled ? 'mdi:bug' : 'mdi:bug-outline',
         onAction: ($event, entity) => this.onOpenDebugConfig($event, entity),
       });
@@ -210,9 +216,9 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
 
     this.cellActionDescriptors.push({
       name: this.translate.instant('action.edit'),
-      nameFunction: () => this.translate.instant(this.readonly ? 'action.view' : 'action.edit'),
+      nameFunction: (entity) => this.translate.instant((this.readonly || !this.allowWritePermission(entity)) ? 'action.view' : 'action.edit'),
       icon: 'edit',
-      iconFunction: () => this.readonly ? 'visibility' : 'edit',
+      iconFunction: (entity) => (this.readonly || !this.allowWritePermission(entity)) ? 'visibility' : 'edit',
       isEnabled: () => true,
       onAction: ($event, entity) => this.editCalculatedField($event, entity),
     });
@@ -273,12 +279,16 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
         additionalDebugActionConfig: this.additionalDebugActionConfig,
         getTestScriptDialogFn: this.getTestScriptDialog.bind(this),
         isDirty,
-        readonly: this.readonly,
+        readonly: this.readonly || entityId?.entityType && !this.userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.WRITE_CALCULATED_FIELD, entityId.entityType as EntityType),
       },
       enterAnimationDuration: isDirty ? 0 : null,
     })
       .afterClosed()
       .pipe(filter(Boolean));
+  }
+
+  private allowWritePermission(entity?: CalculatedField): boolean {
+    return this.pageMode ? this.userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.WRITE_CALCULATED_FIELD, entity?.entityId?.entityType as EntityType) : true;
   }
 
   private openDebugEventsDialog($event: Event, calculatedField: CalculatedField): void {
@@ -413,7 +423,7 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
             argumentsEditorCompleter: getCalculatedFieldArgumentsEditorCompleter(calculatedField.configuration.arguments),
             argumentsHighlightRules: getCalculatedFieldArgumentsHighlights(calculatedField.configuration.arguments),
             openCalculatedFieldEdit,
-            readonly: this.readonly,
+            readonly: this.readonly || !this.allowWritePermission(calculatedField),
           }
         }).afterClosed()
         .pipe(
