@@ -448,7 +448,7 @@ export function mergeDeep<T>(target: T, ...sources: T[]): T {
 
 function ignoreArrayMergeFunc(target: any, sources: any) {
   if (_.isArray(target)) {
-    return sources;
+    return deepClone(sources);
   }
 }
 

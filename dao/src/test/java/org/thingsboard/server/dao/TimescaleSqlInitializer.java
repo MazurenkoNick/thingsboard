@@ -48,7 +48,8 @@ public class TimescaleSqlInitializer {
             "sql/schema-entities.sql",
             "sql/schema-entities-idx.sql",
             "sql/schema-entities-idx-psql-addon.sql",
-            "sql/schema-views-and-functions.sql",
+            "sql/schema-views.sql",
+            "sql/schema-functions.sql",
             "sql/system-data.sql",
             "sql/system-test-psql.sql");
     private static final String dropAllTablesSqlFile = "sql/psql/drop-all-tables.sql";
@@ -78,4 +79,5 @@ public class TimescaleSqlInitializer {
             throw new RuntimeException("Unable to clean up the Timescale database. Reason: " + e.getMessage(), e);
         }
     }
+
 }
