@@ -81,6 +81,7 @@
         "show-more": "Show more",
         "dont-show-again": "Do not show again",
         "see-documentation": "See documentation",
+        "see-debug-events": "See debug events",
         "clear": "Clear",
         "upload": "Upload",
         "delete-anyway": "Delete anyway",
@@ -1228,7 +1229,6 @@
         "argument-owner": "Current owner",
         "argument-relation-query": "Related entities",
         "argument-type": "Argument type",
-        "see-debug-events": "See debug events",
         "attribute": "Attribute",
         "copy-argument-name": "Copy argument name",
         "timeseries-key": "Time series key",
@@ -1958,8 +1958,7 @@
         "decoder-output": "Decoder output",
         "converter-output": "Converter output",
         "converter-type": "Converter type",
-        "update-raw-payload": "Updated RAW payload",
-        "see-debug-events": "See debug events"
+        "update-raw-payload": "Updated RAW payload"
     },
     "content-type": {
         "json": "Json",
@@ -5031,8 +5030,7 @@
         "downlink-connection-string": "Downlink connection string",
         "downlink-connection-string-required": "Downlink connection string is required",
         "downlink-topic-name": "Downlink topic name",
-        "downlink-topic-name-required": "Downlink topic name is required",
-        "see-debug-events": "See debug events"
+        "downlink-topic-name-required": "Downlink topic name is required"
     },
     "scada": {
         "symbols": "SCADA symbols",
