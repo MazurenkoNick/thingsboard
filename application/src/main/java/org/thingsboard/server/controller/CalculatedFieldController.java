@@ -251,12 +251,11 @@ public class CalculatedFieldController extends BaseController {
         if (entityType == null) {
             Set<CalculatedFieldType> finalTypes = types;
             entityTypes = CalculatedField.SUPPORTED_ENTITIES.entrySet().stream()
-                    .filter(entry -> entry.getValue().stream().anyMatch(finalTypes::contains))
+                    .filter(entry -> CollectionUtils.containsAny(entry.getValue(), finalTypes))
                     .map(Map.Entry::getKey)
                     .filter(t -> {
                         try {
-                            accessControlService.checkPermission(user, Resource.resourceFromEntityType(t), Operation.READ_CALCULATED_FIELD);
-                            return true;
+                            return accessControlService.hasPermission(user, Resource.resourceFromEntityType(t), Operation.READ_CALCULATED_FIELD);
                         } catch (ThingsboardException e) {
                             return false;
                         }
