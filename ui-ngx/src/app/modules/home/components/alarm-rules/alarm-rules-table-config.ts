@@ -81,6 +81,9 @@ import {
   CalculatedFieldScriptTestDialogComponent,
   CalculatedFieldTestScriptDialogData
 } from "@home/components/calculated-fields/components/test-dialog/calculated-field-script-test-dialog.component";
+import { Operation } from "@shared/models/security.models";
+import { alarmRuleEntityTypeList } from "@shared/models/alarm-rule.models";
+import { UserPermissionsService } from "@core/http/user-permissions.service";
 
 export class AlarmRulesTableConfig extends EntityTableConfig<any> {
 
@@ -107,6 +110,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
               private utilsService: UtilsService,
               private readonly: boolean = false,
               private hideClearEventAction: boolean = false,
+              private userPermissionsService: UserPermissionsService,
               public pageMode: boolean = false,
   ) {
     super();
@@ -114,6 +118,8 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
       this.headerComponent = AlarmRuleTableHeaderComponent;
 
       this.rowPointer = true;
+
+      this.readonly = !alarmRuleEntityTypeList.some(entityType => this.userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.WRITE_CALCULATED_FIELD, entityType));
 
       this.handleRowClick = ($event, model) => {
         this.editCalculatedField($event, model);
@@ -141,6 +147,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
     this.deleteEntityContent = () => this.translate.instant('alarm-rule.delete-text');
     this.deleteEntitiesTitle = count => this.translate.instant('alarm-rule.delete-multiple-title', {count});
     this.deleteEntitiesContent = () => this.translate.instant('alarm-rule.delete-multiple-text');
+    this.deleteEnabled = (field: CalculatedField) => this.allowWritePermission(field);
     this.deleteEntity = id => this.calculatedFieldsService.deleteCalculatedField(id.id);
     this.addActionDescriptors = [
       {
@@ -203,16 +210,16 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
         name: '',
         nameFunction: entity => this.entityDebugSettingsService.getDebugConfigLabel(entity?.debugSettings),
         icon: 'mdi:bug',
-        isEnabled: () => true,
+        isEnabled: (entity) => this.allowWritePermission(entity),
         iconFunction: ({ debugSettings }) => this.entityDebugSettingsService.isDebugActive(debugSettings?.allEnabledUntil) || debugSettings?.failuresEnabled ? 'mdi:bug' : 'mdi:bug-outline',
         onAction: ($event, entity) => this.onOpenDebugConfig($event, entity),
       });
     }
     this.cellActionDescriptors.push({
       name: this.translate.instant('action.edit'),
-      nameFunction: () => this.translate.instant(this.readonly ? 'action.view' : 'action.edit'),
+      nameFunction: entity => this.translate.instant((this.readonly || !this.allowWritePermission(entity)) ? 'action.view' : 'action.edit'),
       icon: 'edit',
-      iconFunction: () => this.readonly ? 'visibility' : 'edit',
+      iconFunction: entity => (this.readonly || !this.allowWritePermission(entity)) ? 'visibility' : 'edit',
       isEnabled: () => true,
       onAction: ($event, entity) => this.editCalculatedField($event, entity),
     });
@@ -222,6 +229,10 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
     return this.pageMode ?
       this.calculatedFieldsService.getCalculatedFieldsFilter(pageLink, {types: [CalculatedFieldType.ALARM], ...this.alarmRuleFilterConfig}) :
       this.calculatedFieldsService.getCalculatedFields(this.entityId, pageLink, CalculatedFieldType.ALARM);
+  }
+
+  private allowWritePermission(entity?: CalculatedField): boolean {
+    return this.pageMode ? this.userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.WRITE_CALCULATED_FIELD, entity?.entityId?.entityType as EntityType) : true;
   }
 
   onOpenDebugConfig($event: Event, calculatedField: CalculatedField): void {
@@ -288,7 +299,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
         ownerId: this.ownerId,
         additionalDebugActionConfig: this.additionalDebugActionConfig,
         isDirty,
-        readonly: this.readonly,
+        readonly: this.readonly || entityId?.entityType && !this.userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.WRITE_CALCULATED_FIELD, entityId.entityType as EntityType),
         getTestScriptDialogFn: this.getTestScriptDialog.bind(this),
       },
       enterAnimationDuration: isDirty ? 0 : null,
@@ -389,7 +400,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
             argumentsEditorCompleter: getCalculatedFieldArgumentsEditorCompleter(calculatedField.configuration.arguments),
             argumentsHighlightRules: getCalculatedFieldArgumentsHighlights(calculatedField.configuration.arguments),
             openCalculatedFieldEdit,
-            readonly: this.readonly
+            readonly: this.readonly || !this.allowWritePermission(calculatedField)
           }
         }).afterClosed()
         .pipe(

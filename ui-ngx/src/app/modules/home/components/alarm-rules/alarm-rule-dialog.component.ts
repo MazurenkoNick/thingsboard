@@ -112,7 +112,8 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
 
   ownerId = this.data.ownerId ?? null;
 
-  alarmRuleEntityTypeList = alarmRuleEntityTypeList;
+  alarmRuleEntityTypeList = alarmRuleEntityTypeList.filter(entityType =>
+    this.userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.WRITE_CALCULATED_FIELD, entityType));
 
   readonly EntityType = EntityType;
   readonly entityTypeTranslations = entityTypeTranslations;
@@ -140,16 +141,6 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
               private fb: FormBuilder,
               private userPermissionsService: UserPermissionsService) {
     super(store, router, dialogRef);
-    this.alarmRuleEntityTypeList = this.entityService.prepareAllowedEntityTypesList(this.alarmRuleEntityTypeList, false, Operation.WRITE) as EntityType[];
-    if (this.userPermissionsService.hasGenericPermission(Resource.DEVICE_PROFILE, Operation.WRITE)) {
-      this.alarmRuleEntityTypeList.push(EntityType.DEVICE_PROFILE);
-    }
-    if (this.userPermissionsService.hasGenericPermission(Resource.ASSET_PROFILE, Operation.WRITE)) {
-      this.alarmRuleEntityTypeList.push(EntityType.ASSET_PROFILE);
-    }
-    if (this.alarmRuleEntityTypeList.includes(EntityType.DEVICE_PROFILE)) {
-      this.fieldFormGroup.get('entityId.entityType').patchValue(EntityType.DEVICE_PROFILE, {emitEvent: false});
-    }
     this.applyDialogData();
     this.updateRulesValidators();
 
@@ -159,6 +150,7 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
 
     if (this.data.readonly) {
       this.fieldFormGroup.disable();
+      this.disabledArguments = true;
     }
 
     this.fieldFormGroup.get('configuration.arguments').valueChanges.pipe(
@@ -186,6 +178,11 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
           argsControl.enable({ emitEvent: false });
         }
       });
+      if (this.alarmRuleEntityTypeList.includes(EntityType.DEVICE_PROFILE)) {
+        this.fieldFormGroup.get('entityId.entityType').patchValue(EntityType.DEVICE_PROFILE, {emitEvent: false});
+      } else if (this.alarmRuleEntityTypeList.length === 1) {
+        this.fieldFormGroup.get('entityId.entityType').patchValue(this.alarmRuleEntityTypeList[0], {emitEvent: false});
+      }
     }
   }
 
