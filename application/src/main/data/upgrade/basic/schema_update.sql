@@ -129,6 +129,6 @@ ALTER TABLE custom_menu ADD COLUMN IF NOT EXISTS user_group_names text[];
 
 -- REMOVAL OF OLD TRENDZ SETTINGS
 
-DELETE FROM admin_settings AS settings WHERE settings.key = 'trendz';
+DELETE FROM admin_settings WHERE key = 'trendz' AND tenant_id != '13814000-1dd2-11b2-8080-808080808080';
 
 -- REMOVAL OF OLD TRENDZ SETTINGS END
