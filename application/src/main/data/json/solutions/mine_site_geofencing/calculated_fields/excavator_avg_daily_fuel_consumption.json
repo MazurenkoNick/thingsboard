@@ -1,11 +1,11 @@
 {
-  "reprocessingOrder": 1,
+  "reprocessingOrder": 2,
   "entityId": {
     "entityType": "DEVICE_PROFILE",
     "id": "ff395d16-0c28-4985-802d-bad40f4bf4d0"
   },
   "type": "ENTITY_AGGREGATION",
-  "name": "Excavator avg hourly fuel consumption",
+  "name": "Excavator avg daily fuel consumption",
   "debugSettings": {
     "failuresEnabled": true,
     "allEnabled": false,
@@ -15,26 +15,26 @@
   "configuration": {
     "type": "ENTITY_AGGREGATION",
     "arguments": {
-      "fuelConsumptionRate": {
+      "avgHourlyFuelConsumption": {
         "refEntityKey": {
-          "key": "fuelConsumptionRate",
+          "key": "avgHourlyFuelConsumption",
           "type": "TS_LATEST"
         },
         "defaultValue": null
       }
     },
     "metrics": {
-      "avgHourlyFuelConsumption": {
+      "avgDailyFuelConsumption": {
         "function": "SUM",
         "input": {
           "type": "key",
-          "key": "fuelConsumptionRate"
+          "key": "avgHourlyFuelConsumption"
         },
         "defaultValue": 0
       }
     },
     "interval": {
-      "type": "HOUR",
+      "type": "DAY",
       "tz": "Europe/Kiev"
     },
     "watermark": null,
