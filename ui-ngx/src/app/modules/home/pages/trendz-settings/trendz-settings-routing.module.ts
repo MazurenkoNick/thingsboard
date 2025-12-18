@@ -34,15 +34,33 @@ import { ActivatedRouteSnapshot, ResolveFn, RouterModule, RouterStateSnapshot, R
 import { TrendzSettingsComponent } from "@home/pages/trendz-settings/trendz-settings.component";
 import { Authority } from "@app/shared/models/authority.enum";
 import { MenuId } from "@app/core/services/menu.models";
-import { map } from "rxjs";
-import { TrendzSynchronization } from "@app/shared/models/trendz-analytics.models";
+import { map, of, switchMap } from "rxjs";
+import { TrendzStatus, TrendzSynchronizationStatus } from "@app/shared/models/trendz-analytics.models";
 import { TrendzService } from "@app/core/http/trendz.service";
 
-export const TrendzSyncResolver: ResolveFn<TrendzSynchronization> = (
+export const TrendzSyncResolver: ResolveFn<TrendzStatus> = (
   route: ActivatedRouteSnapshot,
   state: RouterStateSnapshot,
   trendzService = inject(TrendzService)) => {
-    return trendzService.getTrendzSyncResult()
+    return trendzService.getTrendzSyncResult().pipe(
+      switchMap(result => {
+        const trendzStatus: TrendzStatus = {
+          type: result.type,
+          syncStatus: result.status,
+          healthcheckStatus: result.status,
+        }
+        if (result.status === TrendzSynchronizationStatus.SYNCED) {
+          return trendzService.performTrendzHealthcheck().pipe(
+            map(healthcheckResult => {
+              trendzStatus.healthcheckStatus = healthcheckResult.status;
+              trendzStatus.type = healthcheckResult.type;
+              return trendzStatus;
+            })
+          );
+        }
+        return of(trendzStatus);
+      }),
+    )
 }
 
 const routes: Routes = [

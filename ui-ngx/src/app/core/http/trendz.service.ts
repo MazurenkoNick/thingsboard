@@ -31,7 +31,12 @@
 
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { TrendzConfiguration, TrendzSummary, TrendzSynchronization } from '@app/shared/models/trendz-analytics.models';
+import {
+  TrendzConfiguration,
+  TrendzHealthcheckResult,
+  TrendzSummary,
+  TrendzSynchronization
+} from '@app/shared/models/trendz-analytics.models';
 import { Observable } from 'rxjs';
 import { defaultHttpOptionsFromConfig, RequestConfig } from '@core/http/http-utils';
 
@@ -46,8 +51,8 @@ export class TrendzService {
     return this.http.get<TrendzSummary>(`/api/trendz/summary`, defaultHttpOptionsFromConfig(config));
   }
 
-  public performTrendzHealthcheck(config?: RequestConfig): Observable<TrendzSynchronization> {
-    return this.http.get<TrendzSynchronization>('/api/trendz/healthcheck', defaultHttpOptionsFromConfig(config))
+  public performTrendzHealthcheck(config?: RequestConfig): Observable<TrendzHealthcheckResult> {
+    return this.http.get<TrendzHealthcheckResult>('/api/trendz/healthcheck', defaultHttpOptionsFromConfig(config))
   }
 
   public getTrendzConfig(config?: RequestConfig): Observable<TrendzConfiguration> {
