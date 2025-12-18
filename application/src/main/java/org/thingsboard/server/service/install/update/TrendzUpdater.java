@@ -94,7 +94,7 @@ public class TrendzUpdater {
     public TrendzSettings createSettings(String trendzUrl, String tbUrl) {
         TrendzConfiguration config = new TrendzConfiguration(trendzUrl, tbUrl);
         TrendzSynchronizationResult syncResult = new TrendzSynchronizationResult(
-                null, 0L, TrendzSynchronizationResultType.SYNC_DISABLED, TrendzSynchronizationStatus.NOT_AVAILABLE
+                null, 0L, TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, TrendzSynchronizationStatus.NOT_AVAILABLE
         );
         return new TrendzSettings(config, syncResult);
     }
