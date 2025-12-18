@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.report;
 
+import com.google.common.util.concurrent.FluentFuture;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,12 +47,15 @@ import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportInfo;
 import org.thingsboard.server.common.data.report.ReportInfoQuery;
 import org.thingsboard.server.dao.entity.AbstractEntityService;
+import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
+import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.service.ConstraintValidator;
 import org.thingsboard.server.dao.service.validator.ReportDataValidator;
 
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 
@@ -77,6 +81,8 @@ public class DefaultReportService extends AbstractEntityService implements Repor
 
         report = reportDao.save(report.getTenantId(), report);
         reportDao.saveData(report.getTenantId(), report.getId(), data);
+        eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(report.getTenantId()).entityId(report.getId())
+                .entity(report).created(true).build());
         return report;
     }
 
@@ -143,12 +149,20 @@ public class DefaultReportService extends AbstractEntityService implements Repor
     }
 
     @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(reportDao.findByIdAsync(tenantId, entityId.getId()))
+                .transform(Optional::ofNullable, directExecutor());
+    }
+
+    @Override
     public void deleteEntity(TenantId tenantId, EntityId id, boolean force) {
         reportDao.removeById(tenantId, id.getId());
+        eventPublisher.publishEvent(DeleteEntityEvent.builder().tenantId(tenantId).entityId(id).build());
     }
 
     @Override
     public EntityType getEntityType() {
         return EntityType.REPORT;
     }
+
 }

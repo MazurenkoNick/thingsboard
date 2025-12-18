@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.dao.alarm;
 
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -100,6 +99,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.service.Validator.validateEntityDataPageLink;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 
@@ -117,8 +117,8 @@ public class BaseAlarmService extends AbstractCachedEntityService<TenantId, Page
     private final EntityService entityService;
     private final OwnerService ownerService;
 
-    @TransactionalEventListener(classes = AlarmTypesCacheEvictEvent.class)
     @Override
+    @TransactionalEventListener
     public void handleEvictEvent(AlarmTypesCacheEvictEvent event) {
         TenantId tenantId = event.getTenantId();
         cache.evict(tenantId);
@@ -494,6 +494,12 @@ public class BaseAlarmService extends AbstractCachedEntityService<TenantId, Page
     @Override
     public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {
         return Optional.ofNullable(findAlarmById(tenantId, new AlarmId(entityId.getId())));
+    }
+
+    @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(findAlarmByIdAsync(tenantId, new AlarmId(entityId.getId())))
+                .transform(Optional::ofNullable, directExecutor());
     }
 
     @Override

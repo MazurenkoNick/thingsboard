@@ -161,6 +161,33 @@ public class AssetControllerTest extends AbstractControllerTest {
     }
 
     @Test
+    public void testShouldForbidAssetCreationAcrossCustomerBoundaries() throws Exception {
+        loginDifferentCustomerAdmin();
+
+        Asset asset = new Asset();
+        asset.setName("My asset");
+        asset.setType("default");
+        asset.setTenantId(tenantId);
+        asset.setCustomerId(customerId);
+
+        doPost("/api/asset", asset)
+                .andExpect(status().isForbidden())
+                .andExpect(statusReason(containsString(msgErrorPermissionCreate + "ASSET" + " '" + asset.getName() + "'!")));
+
+        //create valid asset
+        loginCustomerAdminUser();
+        Asset savedAsset = doPost("/api/asset", asset, Asset.class);
+
+        // try to update user under first customer
+        loginDifferentCustomerAdmin();
+        savedAsset.setLabel("new label");
+
+        doPost("/api/asset", savedAsset)
+                .andExpect(status().isForbidden())
+                .andExpect(statusReason(containsString(msgErrorPermissionWrite + "ASSET" + " '" + asset.getName() + "'!")));
+    }
+
+    @Test
     public void testSaveAssetWithViolationOfLengthValidation() throws Exception {
         Asset asset = new Asset();
         asset.setName(StringUtils.randomAlphabetic(300));

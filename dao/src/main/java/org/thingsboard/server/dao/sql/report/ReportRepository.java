@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.sql.report;
 
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -38,6 +39,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import org.thingsboard.server.common.data.edqs.fields.ReportFields;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.util.TbPair;
 import org.thingsboard.server.dao.model.sql.ReportEntity;
@@ -55,7 +57,7 @@ public interface ReportRepository extends JpaRepository<ReportEntity, UUID> {
                                                    Pageable pageable);
 
     @Query("SELECT r FROM ReportEntity r WHERE r.tenantId = :tenantId AND r.customerId = :customerId " +
-            "AND (:searchText IS NULL OR ilike(r.name, CONCAT('%', :searchText, '%')) = true)")
+           "AND (:searchText IS NULL OR ilike(r.name, CONCAT('%', :searchText, '%')) = true)")
     Page<ReportEntity> findByTenantIdAndCustomerId(@Param("tenantId") UUID tenantId,
                                                    @Param("customerId") UUID customerId,
                                                    Pageable pageable);
@@ -79,5 +81,9 @@ public interface ReportRepository extends JpaRepository<ReportEntity, UUID> {
 
     @Query("SELECT new org.thingsboard.server.common.data.util.TbPair(r.format, COUNT(*)) FROM ReportEntity r GROUP BY r.format")
     List<TbPair<TbReportFormat, Long>> countReportsByFormatType();
+
+    @Query("SELECT new org.thingsboard.server.common.data.edqs.fields.ReportFields(r.id, r.createdTime, r.tenantId, " +
+           "r.customerId, r.name, r.format) FROM ReportEntity r WHERE r.id > :id ORDER BY r.id")
+    List<ReportFields> findNextBatch(@Param("id") UUID id, Limit limit);
 
 }

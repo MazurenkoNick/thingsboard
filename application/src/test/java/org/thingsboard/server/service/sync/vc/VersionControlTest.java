@@ -143,7 +143,9 @@ import org.thingsboard.server.common.data.sync.vc.VersionCreationResult;
 import org.thingsboard.server.common.data.sync.vc.VersionLoadResult;
 import org.thingsboard.server.common.data.sync.vc.request.create.ComplexVersionCreateRequest;
 import org.thingsboard.server.common.data.sync.vc.request.create.EntityTypeVersionCreateConfig;
+import org.thingsboard.server.common.data.sync.vc.request.create.SingleEntityVersionCreateRequest;
 import org.thingsboard.server.common.data.sync.vc.request.create.SyncStrategy;
+import org.thingsboard.server.common.data.sync.vc.request.create.VersionCreateConfig;
 import org.thingsboard.server.common.data.sync.vc.request.create.VersionCreateRequest;
 import org.thingsboard.server.common.data.sync.vc.request.load.EntityTypeVersionLoadConfig;
 import org.thingsboard.server.common.data.sync.vc.request.load.EntityTypeVersionLoadRequest;
@@ -771,6 +773,37 @@ public class VersionControlTest extends AbstractControllerTest {
         assertThat(importedDeviceGroupOtaPackage.getGroupId()).isEqualTo(importedDeviceGroup.getId());
         assertThat(importedDeviceGroupOtaPackage.getOtaPackageId()).isEqualTo(importedFirmware.getId());
         assertThat(importedDeviceGroupOtaPackage.getOtaPackageType()).isEqualTo(OtaPackageType.FIRMWARE);
+    }
+
+    @Test
+    public void testDeviceGroupVcWithoutEntities_betweenTenants() throws Exception {
+        EntityGroup deviceGroup = createEntityGroup(tenantId1, EntityType.DEVICE, "Device group");
+        Device device = createDevice(null, null, "Test device", "test1");
+        assignEntityToGroup(deviceGroup.getId(), device.getId());
+
+        SingleEntityVersionCreateRequest request = new SingleEntityVersionCreateRequest();
+        request.setEntityId(deviceGroup.getId());
+        VersionCreateConfig config = new VersionCreateConfig();
+        config.setSaveGroupEntities(false);
+        config.setSaveAttributes(true);
+        config.setSaveRelations(false);
+        config.setSavePermissions(false);
+        config.setSaveCredentials(false);
+        config.setSaveCalculatedFields(false);
+        request.setConfig(config);
+        request.setVersionName("device group without entities");
+        request.setBranch(branch);
+        String versionId = createVersion(request);
+
+        loginTenant2();
+        loadVersion(versionId, EntityType.DEVICE, EntityType.DEVICE_PROFILE);
+
+        EntityGroup importedDeviceGroup = findEntityGroup(deviceGroup.getName(), EntityType.DEVICE);
+        checkImportedEntity(tenantId1, tenantId1, deviceGroup, tenantId2, tenantId2, importedDeviceGroup);
+    }
+
+    private void assignEntityToGroup(EntityGroupId id, EntityId entityId) throws Exception {
+        doPost("/api/entityGroup/" + id.getId() + "/addEntities", List.of(entityId.getId().toString()));
     }
 
     @Test

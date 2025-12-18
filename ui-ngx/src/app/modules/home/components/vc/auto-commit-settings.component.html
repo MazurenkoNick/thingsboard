@@ -53,7 +53,7 @@
               <mat-expansion-panel class="entity-type-config flex-1" [formGroup]="entityTypeFormGroup" [expanded]="entityTypesFormGroupExpanded(entityTypeFormGroup)">
                 <mat-expansion-panel-header>
                   <div class="flex flex-1 flex-row items-center justify-start">
-                    <mat-panel-title>
+                    <mat-panel-title  class="basis-auto">
                       <div class="flex flex-1 flex-row items-center justify-start">
                         <div [innerHTML]="entityTypeText(entityTypeFormGroup)"></div>
                       </div>
@@ -73,9 +73,10 @@
                   <div class="entity-type-config-content flex flex-col gap-2">
                     <mat-divider></mat-divider>
                     <div class="flex flex-col gt-lg:flex-row gt-lg:gap-4">
-                      <div class="flex flex-row gap-4">
+                      <div class="flex flex-col gt-xs:flex-row gap-1 gt-xs:gap-4">
                         <tb-entity-type-select
                           showLabel
+                          appearance="outline"
                           formControlName="entityType"
                           required
                           [overrideEntityTypeTranslations]="overrideEntityTypeTranslationsMap"
@@ -84,13 +85,15 @@
                         </tb-entity-type-select>
                         <div formGroupName="config">
                           <tb-branch-autocomplete
+                            appearance="outline"
                             emptyPlaceholder="{{ 'version-control.default' | translate }}"
                             [selectDefaultBranch]="false"
                             formControlName="branch">
                           </tb-branch-autocomplete>
                         </div>
                       </div>
-                      <div class="flex flex-1 flex-row items-center justify-start gap-4" formGroupName="config">
+                      <div class="flex flex-1 flex-col gt-xs:flex-row items-start gt-xs:items-center justify-start gap-1 gt-xs:gap-4"
+                           formGroupName="config">
                         <mat-checkbox *ngIf="entityTypeFormGroup.get('entityType').value === entityTypes.USER" formControlName="savePermissions">
                           {{ 'version-control.export-roles' | translate }}
                         </mat-checkbox>

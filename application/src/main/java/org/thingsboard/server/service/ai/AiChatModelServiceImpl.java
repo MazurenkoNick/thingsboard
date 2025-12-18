@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.service.ai;
 
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.util.concurrent.FluentFuture;
@@ -51,8 +52,6 @@ import org.thingsboard.server.dao.secret.SecretConfigurationService;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static org.thingsboard.server.common.data.StringUtils.escapeControlChars;
 
 @Service
 @RequiredArgsConstructor
@@ -102,7 +101,7 @@ class AiChatModelServiceImpl implements AiChatModelService {
 
     private Content prepareContent(Content content) {
         if (content instanceof TextContent txt) {
-            return new TextContent(escapeControlChars(txt.text()));
+            return new TextContent(new String(JsonStringEncoder.getInstance().quoteAsString(txt.text())));
         }
         return content;
     }

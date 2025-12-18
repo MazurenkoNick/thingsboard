@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.device;
 
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -80,6 +81,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validateIds;
@@ -395,6 +397,12 @@ public class DeviceProfileServiceImpl extends CachedVersionedEntityService<Devic
     }
 
     @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(deviceProfileDao.findByIdAsync(tenantId, entityId.getId()))
+                .transform(Optional::ofNullable, directExecutor());
+    }
+
+    @Override
     public EntityType getEntityType() {
         return EntityType.DEVICE_PROFILE;
     }
@@ -457,8 +465,7 @@ public class DeviceProfileServiceImpl extends CachedVersionedEntityService<Devic
             if (certificates.length > 1) {
                 return EncryptionUtil.certTrimNewLinesForChainInDeviceProfile(certificateValue);
             }
-        } catch (CertificateException ignored) {
-        }
+        } catch (CertificateException ignored) {}
         return EncryptionUtil.certTrimNewLines(certificateValue);
     }
 

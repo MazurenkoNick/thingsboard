@@ -224,6 +224,11 @@ export const entityFields: {[fieldName: string]: EntityField} = {
     keyName: 'additionalInfo',
     name: 'entity-field.additional-info',
     value: 'additionalInfo'
+  },
+  format: {
+    keyName: 'format',
+    name: 'entity-field.format',
+    value: 'format'
   }
 };
 

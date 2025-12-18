@@ -377,7 +377,9 @@ public class UserController extends BaseController {
         if (user.getAuthority() == Authority.SYS_ADMIN && getCurrentUser().getId().equals(userId)) {
             throw new ThingsboardException("Sysadmin is not allowed to delete himself", ThingsboardErrorCode.PERMISSION_DENIED);
         }
-
+        if (user.getAuthority() == Authority.TENANT_ADMIN && entityGroupService.containsLastTenantAdmin(user.getTenantId(), List.of(user.getId()))) {
+            throw new ThingsboardException("At least one tenant administrator must remain!", ThingsboardErrorCode.INVALID_ARGUMENTS);
+        }
         userPermissionsService.onUserUpdatedOrRemoved(user);
 
         tbUserService.delete(getTenantId(), getCurrentUser().getCustomerId(), user, getCurrentUser());

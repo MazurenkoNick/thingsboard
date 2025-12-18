@@ -94,6 +94,7 @@ import static org.thingsboard.server.report.util.ReportUtils.ENTITY_TIME_FIELDS;
 import static org.thingsboard.server.report.util.ReportUtils.RAW_TS_PREFIX;
 import static org.thingsboard.server.report.util.ReportUtils.convertStringToTypedValue;
 import static org.thingsboard.server.report.util.ReportUtils.formatTimestamp;
+import static org.thingsboard.server.report.util.ReportUtils.formatValueWithPrecisionAndUnits;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 @Slf4j
@@ -162,15 +163,17 @@ public abstract class AbstractReportService implements ReportService {
         return Collections.emptyList();
     }
 
-    private void updateWithAggregatedData(TbReportCtx ctx, List<DataKey> dataKeysWithAggregation, EntityData entityData) {
-        if (!dataKeysWithAggregation.isEmpty()) {
-            List<BaseReadTsKvQuery> queries = buildReadTsKvQueries(ctx, dataKeysWithAggregation);
+    private void updateWithAggregatedData(TbReportCtx ctx, List<DataKey> dataKeys, EntityData entityData) {
+        if (!dataKeys.isEmpty()) {
+            List<BaseReadTsKvQuery> queries = buildReadTsKvQueries(ctx, dataKeys);
             List<ReadTsKvQueryResult> result = dataService.findTimeseriesByQueries(entityData.getEntityId(), queries, ctx);
+            int i = 0;
             for (ReadTsKvQueryResult queryResult : result) {
                 List<TsKvEntry> queryResultData = queryResult.getData();
                 if (CollectionUtils.isNotEmpty(queryResultData)) {
-                    entityData.getTimeseries().put(queryResultData.get(0).getKey(), queryResult.toTsValues());
+                    entityData.getTimeseries().put(dataKeys.get(i).getLabel(), queryResult.toTsValues());
                 }
+                i++;
             }
         }
     }
@@ -342,6 +345,10 @@ public abstract class AbstractReportService implements ReportService {
             return;
         }
         for (DataKey dataKey : dataKeys) {
+            var agg = dataKey.getAggregationType();
+            if (agg != null && agg != Aggregation.NONE) {
+                continue;
+            }
             Map<String, TsValue> keyValueMap = latest.get(EntityKeyType.fromName(dataKey.getType()));
             if (keyValueMap != null) {
                 TsValue tsValue = keyValueMap.get(dataKey.getName());
@@ -365,7 +372,7 @@ public abstract class AbstractReportService implements ReportService {
                 continue;
             }
 
-            TsValue[] series = timeseries.get(dk.getName());
+            TsValue[] series = timeseries.get(dk.getLabel());
             if (series == null || series.length == 0) {
                 continue;
             }
@@ -442,7 +449,11 @@ public abstract class AbstractReportService implements ReportService {
             return null;
         }
 
-        return processed.toString();
+        String formattedValue = processed.toString();
+        if (dataKey.getDecimals() != null || dataKey.getUnits() != null) {
+            formattedValue = formatValueWithPrecisionAndUnits(formattedValue, dataKey);
+        }
+        return formattedValue;
     }
 
     protected Object postProcess(TbReportCtx ctx, DataKey dataKey, long timestamp, Object value, boolean parseString) {

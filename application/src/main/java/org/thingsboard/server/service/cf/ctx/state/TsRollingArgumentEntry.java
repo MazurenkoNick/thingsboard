@@ -47,6 +47,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 
+import static org.thingsboard.server.service.cf.ctx.state.BaseCalculatedFieldState.DEFAULT_LAST_UPDATE_TS;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -99,6 +101,11 @@ public class TsRollingArgumentEntry implements ArgumentEntry {
         return tsRecords;
     }
 
+    public long getLatestTs() {
+        var lastEntry = tsRecords.lastEntry();
+        return (lastEntry != null) ? lastEntry.getKey() : DEFAULT_LAST_UPDATE_TS;
+    }
+
     @Override
     public TbelCfArg toTbelCfArg() {
         List<TbelCfTsDoubleVal> values = new ArrayList<>(tsRecords.size());
@@ -131,20 +138,11 @@ public class TsRollingArgumentEntry implements ArgumentEntry {
     }
 
     private void addTsRecord(Long ts, KvEntry value) {
-        try {
-            switch (value.getDataType()) {
-                case LONG -> value.getLongValue().ifPresent(aLong -> tsRecords.put(ts, aLong.doubleValue()));
-                case DOUBLE -> value.getDoubleValue().ifPresent(aDouble -> tsRecords.put(ts, aDouble));
-                case BOOLEAN -> value.getBooleanValue().ifPresent(aBoolean -> tsRecords.put(ts, aBoolean ? 1.0 : 0.0));
-                case STRING -> value.getStrValue().ifPresent(aString -> tsRecords.put(ts, Double.parseDouble(aString)));
-                case JSON -> value.getJsonValue().ifPresent(aString -> tsRecords.put(ts, Double.parseDouble(aString)));
-            }
-        } catch (Exception e) {
-            tsRecords.put(ts, Double.NaN);
-            log.debug("Invalid value '{}' for time series rolling arguments. Only numeric values are supported.", value.getValue());
-        } finally {
-            cleanupExpiredRecords();
+        Double recordValue = getValueForTsRecord(value);
+        if (recordValue != null) {
+            tsRecords.put(ts, recordValue);
         }
+        cleanupExpiredRecords();
     }
 
     private void addTsRecord(Long ts, double value) {
@@ -160,6 +158,21 @@ public class TsRollingArgumentEntry implements ArgumentEntry {
                 .map(Map.Entry::getKey)
                 .orElse(System.currentTimeMillis());
         tsRecords.entrySet().removeIf(tsRecord -> tsRecord.getKey() < timeWindowEndTs - timeWindow);
+    }
+
+    public static Double getValueForTsRecord(KvEntry value) {
+        try {
+            return switch (value.getDataType()) {
+                case LONG -> value.getLongValue().map(Long::doubleValue).orElse(null);
+                case DOUBLE -> value.getDoubleValue().orElse(null);
+                case BOOLEAN -> value.getBooleanValue().map(b -> b ? 1.0 : 0.0).orElse(null);
+                case STRING -> value.getStrValue().map(Double::parseDouble).orElse(null);
+                case JSON -> value.getJsonValue().map(Double::parseDouble).orElse(null);
+            };
+        } catch (Exception e) {
+            log.debug("Invalid value '{}' for time series rolling arguments. Only numeric values are supported.", value.getValue());
+            return Double.NaN;
+        }
     }
 
 }

@@ -76,6 +76,9 @@
           <mat-form-field class="mat-block">
             <mat-label translate>white-labeling.app-title</mat-label>
             <input matInput formControlName="appTitle"/>
+            <mat-error *ngIf="wlSettings.get('appTitle').hasError('maxlength')">
+                {{ 'white-labeling.app-title-max-length' | translate }}
+            </mat-error>
           </mat-form-field>
           <div formGroupName="favicon" class="flex flex-col">
             <tb-gallery-image-input

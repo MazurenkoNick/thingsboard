@@ -1437,6 +1437,7 @@
         "delete-converters-text": "Be careful, after the confirmation all selected data converters will be removed and all related data will become unrecoverable.",
         "events": "Events",
         "add": "Add data converter",
+        "edit": "Edit data converter",
         "search": "Search data converters",
         "converter-details": "Data converter details",
         "details": "Details",
@@ -3436,7 +3437,8 @@
         "queue-name": "Queue name",
         "service-id": "Service Id",
         "owner-name": "Owner name",
-        "owner-type": "Owner type"
+        "owner-type": "Owner type",
+        "format": "Format"
     },
     "entity-view": {
         "all": "All",
@@ -5066,7 +5068,11 @@
         "accept-privacy-policy-message": "You must accept our Privacy Policy",
         "recaptcha-title": "reCAPTCHA",
         "terms-of-use": "Terms of Use",
-        "accept-terms-of-use-message": "You must accept our Terms Of Use"
+        "accept-terms-of-use-message": "You must accept our Terms Of Use",
+        "firstname-max-length": "First name should be less than 256",
+        "lastname-max-length": "Last name should be less than 256",
+        "firstname-required": "First name is required",
+        "lastname-required": "Last name is required"
     },
     "mobile": {
         "add-application": "Add application",
@@ -7247,6 +7253,7 @@
         "timezone-description": "Time zone in which target dashboard will be presented in report.",
         "reporting": "Reporting",
         "templates": "Templates",
+        "report": "Report",
         "reports": "Reports",
         "scheduling": "Scheduling",
         "generating-report": "Generating report...",
@@ -7263,7 +7270,9 @@
         "file-name": "File name",
         "format": "Format",
         "download": "Download report",
-        "reports-filter": "Reports filter"
+        "reports-filter": "Reports filter",
+        "no-reports-matching": "No reports matching '{{entity}}' were found.",
+        "report-required": "Report is required"
     },
     "report-template": {
         "report-template": "Report template",
@@ -7999,13 +8008,13 @@
     "timewindow": {
         "timewindow": "Time window",
         "timewindow-settings": "Time window settings",
-        "years": "{ years, plural, =1 { year } other {# years } }",
+        "years": "{ years, plural, =1 {1 year } other {# years } }",
         "years-short": "{{ years }}y",
-        "months": "{ months, plural, =1 { month } other {# months } }",
+        "months": "{ months, plural, =1 {1 month } other {# months } }",
         "months-short": "{{ months }}M",
-        "weeks": "{ weeks, plural, =1 { week } other {# weeks } }",
+        "weeks": "{ weeks, plural, =1 {1 week } other {# weeks } }",
         "weeks-short": "{{ weeks }}w",
-        "days": "{ days, plural, =1 { day } other {# days } }",
+        "days": "{ days, plural, =1 {1 day } other {# days } }",
         "days-short": "{{ days }}d",
         "hours": "{ hours, plural, =0 { hour } =1 {1 hour } other {# hours } }",
         "hr": "{{ hr }} hr",
@@ -9357,7 +9366,8 @@
         "reset-white-label-title": "Are you sure you want to reset the white labeling settings to default?",
         "reset-white-label-text": "Be careful, after confirmation, all customized settings will be lost and cannot be recovered.",
         "reset-login-white-label-title": "Are you sure you want to reset the login white labeling settings to default?",
-        "reset-login-white-label-text": "Be careful, after confirmation, all customized settings will be lost and cannot be recovered."
+        "reset-login-white-label-text": "Be careful, after confirmation, all customized settings will be lost and cannot be recovered.",
+        "app-title-max-length": "Application title should be less than 256 characters"
     },
     "widgets": {
         "mobile-app-qr-code": {

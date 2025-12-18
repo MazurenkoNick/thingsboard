@@ -28,36 +28,26 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.transport.lwm2m.rpc.sql;
+package org.thingsboard.server.common.data.edqs.fields;
 
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
-import org.thingsboard.server.transport.lwm2m.rpc.AbstractRpcLwM2MIntegrationObserve_Ver_1_0_Test;
-import org.thingsboard.server.transport.lwm2m.rpc.AbstractRpcLwM2MIntegrationObserve_Ver_1_1_Test;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import org.thingsboard.server.common.data.report.ReportTemplateType;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 
-import static org.junit.Assert.assertTrue;
-import static org.thingsboard.server.transport.lwm2m.Lwm2mTestHelper.RESOURCE_ID_NAME_3_9;
+import java.util.UUID;
 
-@Slf4j
-public class RpcLwm2mIntegrationObserve_Ver_1_0_Test extends AbstractRpcLwM2MIntegrationObserve_Ver_1_0_Test {
+@Data
+@NoArgsConstructor
+@SuperBuilder
+public class ReportTemplateFields extends AbstractEntityFields {
+    private String type;
+    private String format;
 
-    @Before
-    public void setupObserveTest() throws Exception {
-        awaitObserveReadAll(4,lwM2MTestClient.getDeviceIdStr());
-    }
-
-    /**
-     * Observe "3_1.0/0/9"
-     * @throws Exception
-     */
-    @Test
-    public void testObserveOneResource_Result_CONTENT_Value_Count_3_After_Cancel_Count_2() throws Exception {
-        long initSendTelemetryAtCount = countSendParametersOnThingsboardTelemetryResource(RESOURCE_ID_NAME_3_9);
-        sendObserveCancelAllWithAwait(lwM2MTestClient.getDeviceIdStr());
-        sendRpcObserveWithContainsLwM2mSingleResource(idVer_3_0_9);
-        updateRegAtLeastOnceAfterAction();
-        long lastSendTelemetryAtCount = countSendParametersOnThingsboardTelemetryResource(RESOURCE_ID_NAME_3_9);
-        assertTrue(lastSendTelemetryAtCount > initSendTelemetryAtCount);
+    public ReportTemplateFields(UUID id, long createdTime, UUID tenantId, UUID customerId, String name, ReportTemplateType type, TbReportFormat format, Long version) {
+        super(id, createdTime, tenantId, customerId, name, version);
+        this.format = format.name();
+        this.type = type.name();
     }
 }

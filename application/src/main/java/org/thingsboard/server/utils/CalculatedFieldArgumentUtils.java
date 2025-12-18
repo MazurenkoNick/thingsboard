@@ -30,16 +30,18 @@
  */
 package org.thingsboard.server.utils;
 
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
+import lombok.NonNull;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
+import org.thingsboard.server.common.data.kv.AttributeKvEntry;
+import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
+import org.thingsboard.server.common.data.kv.BasicTsKvEntry;
 import org.thingsboard.server.common.data.kv.BooleanDataEntry;
 import org.thingsboard.server.common.data.kv.DoubleDataEntry;
 import org.thingsboard.server.common.data.kv.KvEntry;
 import org.thingsboard.server.common.data.kv.StringDataEntry;
+import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldState;
@@ -47,23 +49,23 @@ import org.thingsboard.server.service.cf.ctx.state.ScriptCalculatedFieldState;
 import org.thingsboard.server.service.cf.ctx.state.SimpleCalculatedFieldState;
 import org.thingsboard.server.service.cf.ctx.state.SingleValueArgumentEntry;
 
-import java.util.Optional;
+import static org.thingsboard.server.service.cf.ctx.state.SingleValueArgumentEntry.DEFAULT_VERSION;
 
 public class CalculatedFieldArgumentUtils {
 
-    public static ListenableFuture<ArgumentEntry> transformSingleValueArgument(ListenableFuture<Optional<? extends KvEntry>> kvEntryFuture, ListeningExecutorService executor) {
-        return Futures.transform(kvEntryFuture, CalculatedFieldArgumentUtils::transformSingleValueArgument, executor);
+    public static ArgumentEntry transformSingleValueArgument(@NonNull KvEntry kvEntry) {
+        return kvEntry.getValue() != null ? ArgumentEntry.createSingleValueArgument(kvEntry) : new SingleValueArgumentEntry();
     }
 
-    public static ArgumentEntry transformSingleValueArgument(Optional<? extends KvEntry> kvEntry) {
-        if (kvEntry.isPresent() && kvEntry.get().getValue() != null) {
-            return ArgumentEntry.createSingleValueArgument(kvEntry.get());
-        } else {
-            return new SingleValueArgumentEntry();
-        }
+    public static TsKvEntry createDefaultTsKvEntry(Argument argument, long ts) {
+        return new BasicTsKvEntry(ts, createDefaultKvEntry(argument), DEFAULT_VERSION);
     }
 
-    public static KvEntry createDefaultKvEntry(Argument argument) {
+    public static AttributeKvEntry createDefaultAttributeEntry(Argument argument, long ts) {
+        return new BaseAttributeKvEntry(createDefaultKvEntry(argument), ts, DEFAULT_VERSION);
+    }
+
+    private static KvEntry createDefaultKvEntry(Argument argument) {
         String key = argument.getRefEntityKey().getKey();
         String defaultValue = argument.getDefaultValue();
         if (StringUtils.isBlank(defaultValue)) {

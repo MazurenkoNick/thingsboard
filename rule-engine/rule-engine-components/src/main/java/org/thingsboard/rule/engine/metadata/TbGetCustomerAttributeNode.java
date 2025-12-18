@@ -32,19 +32,21 @@ package org.thingsboard.rule.engine.metadata;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.thingsboard.rule.engine.api.RuleNode;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbNodeConfiguration;
 import org.thingsboard.rule.engine.api.TbNodeException;
 import org.thingsboard.rule.engine.api.util.TbNodeUtils;
-import org.thingsboard.rule.engine.util.EntitiesCustomerIdAsyncLoader;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.plugin.ComponentType;
 import org.thingsboard.server.common.data.util.TbPair;
+
+import java.util.NoSuchElementException;
+
+import static com.google.common.util.concurrent.Futures.immediateFuture;
 
 @RuleNode(
         type = ComponentType.ENRICHMENT,
@@ -61,7 +63,6 @@ import org.thingsboard.server.common.data.util.TbPair;
 )
 public class TbGetCustomerAttributeNode extends TbAbstractGetEntityDataNode<CustomerId> {
 
-    private static final String CUSTOMER_NOT_FOUND_MESSAGE = "Failed to find customer for entity with id: %s and type: %s";
     private boolean preserveOriginatorIfCustomer;
 
     @Override
@@ -75,14 +76,19 @@ public class TbGetCustomerAttributeNode extends TbAbstractGetEntityDataNode<Cust
 
     @Override
     protected ListenableFuture<CustomerId> findEntityAsync(TbContext ctx, EntityId originator) {
-        boolean preserveOriginator = preserveOriginatorIfCustomer && originator.getEntityType().equals(EntityType.CUSTOMER);
-        ListenableFuture<CustomerId> entityIdAsync = preserveOriginator ?
-                Futures.immediateFuture((CustomerId) originator) :
-                EntitiesCustomerIdAsyncLoader.findEntityIdAsync(ctx, originator);
-        return Futures.transformAsync(entityIdAsync,
-                checkIfEntityIsPresentOrThrow(String.format(CUSTOMER_NOT_FOUND_MESSAGE, originator.getId(), originator.getEntityType().getNormalName())),
-                ctx.getDbCallbackExecutor()
-        );
+        if (preserveOriginatorIfCustomer && originator.getEntityType() == EntityType.CUSTOMER) {
+            return immediateFuture((CustomerId) originator);
+        }
+        return ctx.getEntityService().fetchEntityCustomerIdAsync(ctx.getTenantId(), originator)
+                .transform(customerIdOpt -> {
+                    if (customerIdOpt.isEmpty()) {
+                        throw new NoSuchElementException("Originator not found");
+                    }
+                    if (customerIdOpt.get().isNullUid()) {
+                        throw new IllegalStateException("Originator is not assigned to any customer");
+                    }
+                    return customerIdOpt.get();
+                }, ctx.getDbCallbackExecutor());
     }
 
     @Override

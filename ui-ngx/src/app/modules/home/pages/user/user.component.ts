@@ -37,7 +37,7 @@ import { UserInfo } from '@shared/models/user.model';
 import { getCurrentAuthUser, selectAuth, selectAuthUser } from '@core/auth/auth.selectors';
 import { map } from 'rxjs/operators';
 import { Authority } from '@shared/models/authority.enum';
-import { isDefinedAndNotNull } from '@core/utils';
+import { isDefinedAndNotNull, validateEmail } from '@core/utils';
 import { EntityTableConfig } from '@home/models/entity/entities-table-config.models';
 import { ActionNotificationShow } from '@app/core/notification/notification.actions';
 import { TranslateService } from '@ngx-translate/core';
@@ -51,7 +51,7 @@ import { CMAssigneeType, CMScope } from '@shared/models/custom-menu.models';
   templateUrl: './user.component.html',
   styleUrls: ['./user.component.scss']
 })
-export class UserComponent extends GroupEntityComponent<UserInfo> {
+export class UserComponent extends GroupEntityComponent<UserInfo>{
 
   CMScope = CMScope;
 
@@ -84,7 +84,7 @@ export class UserComponent extends GroupEntityComponent<UserInfo> {
               protected cd: ChangeDetectorRef,
               protected translate: TranslateService,
               protected userPermissionsService: UserPermissionsService) {
-    super(store, fb, entityValue, entitiesTableConfigValue, cd, userPermissionsService);
+       super(store, fb, entityValue, entitiesTableConfigValue, cd, userPermissionsService);
   }
 
   hideDelete() {
@@ -114,7 +114,7 @@ export class UserComponent extends GroupEntityComponent<UserInfo> {
   buildForm(entity: UserInfo): UntypedFormGroup {
     return this.fb.group(
       {
-        email: [entity ? entity.email : '', [Validators.required, Validators.email]],
+        email: [entity ? entity.email : '', [Validators.required, validateEmail]],
         firstName: [entity ? entity.firstName : ''],
         lastName: [entity ? entity.lastName : ''],
         phone: [entity ? entity.phone : ''],
