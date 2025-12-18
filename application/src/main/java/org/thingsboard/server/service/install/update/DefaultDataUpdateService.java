@@ -230,8 +230,6 @@ public class DefaultDataUpdateService implements DataUpdateService {
 
     // Replacing all without old (it is appropriate)
     private void migrateTenantTrendzJsModuleToSysadminLevel() {
-        log.debug("Starting migrating trendz js module ...");
-
         String resourceKey = "ai-summary-module.js";
         TbResource system = this.resourceService.findResourceByTenantIdAndKey(TenantId.SYS_TENANT_ID, ResourceType.JS_MODULE, resourceKey);
         if (system == null) {
