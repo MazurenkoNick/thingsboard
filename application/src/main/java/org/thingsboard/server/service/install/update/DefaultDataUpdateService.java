@@ -192,6 +192,8 @@ public class DefaultDataUpdateService implements DataUpdateService {
 
     // Replacing old if safe
     private void migrateTenantTrendzWidgetBundleToSysadminLevel() throws Exception {
+        log.debug("Starting migrating trendz widget bundle ...");
+
         String bundleAlias = "trendz_bundle";
         Set<String> fqns = Set.of(
                 "trendz_builder",
@@ -205,8 +207,10 @@ public class DefaultDataUpdateService implements DataUpdateService {
 
         this.trendzUpdater.labelWidgetTypesAsDeprecatedByFqns(fullFqns);
         this.trendzUpdater.findUniqueTrendzBaseUrlFromWidgetTypes(fullFqns)
-                .ifPresent(baseUrl -> {
+                .ifPresentOrElse(baseUrl -> {
                     String urlString = baseUrl.toString();
+                    log.debug("Found unique trendz url: {}", urlString);
+                    log.debug("Start migrating trendz widget bundles to sysadmin level in all dashboards ...");
 
                     TrendzSettings settings = this.trendzUpdater.createSettings(urlString, null);
                     this.trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
@@ -219,24 +223,32 @@ public class DefaultDataUpdateService implements DataUpdateService {
                         this.trendzUpdater.replacePatternInAllDashboardsConfigurations(tenantFqnNew, systemFqn);
                         this.trendzUpdater.replacePatternInAllDashboardsConfigurations(tenantFqnOld, systemFqn);
                     }
+                }, () -> {
+                    log.debug("Unique trendz url is not found, skip migration of trendz widget bundles in dashboards");
                 });
+        log.debug("Finished trendz widget bundle upgrade.");
     }
 
     // Replacing all without old (it is appropriate)
     private void migrateTenantTrendzJsModuleToSysadminLevel() {
+        log.debug("Starting migrating trendz js module ...");
+
         String resourceKey = "ai-summary-module.js";
         TbResource system = this.resourceService.findResourceByTenantIdAndKey(TenantId.SYS_TENANT_ID, ResourceType.JS_MODULE, resourceKey);
         if (system == null) {
-            throw new RuntimeException("Resource not found: " + resourceKey);
+            throw new RuntimeException("Can not find trendz js module as resource with key: " + resourceKey);
         }
 
         String systemLink = system.getLink();
+        log.debug("Found trendz js module as system resource with link \"{}\"", systemLink);
+        log.debug("Replacing js module link in all dashboards (it can took time)...");
         this.trendzUpdater.replacePatternInAllDashboardsConfigurations(
                 "/api/resource/js_module/tenant/ai-summary-module.js",
                 systemLink
         );
 
         this.trendzUpdater.deleteAllTenantResourcesByResourceKey(system.getResourceKey());
+        log.debug("Finished trendz js module upgrade.");
     }
 
 
