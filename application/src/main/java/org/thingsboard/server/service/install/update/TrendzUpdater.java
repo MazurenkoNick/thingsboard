@@ -32,6 +32,7 @@ package org.thingsboard.server.service.install.update;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.trendz.TrendzConfiguration;
 import org.thingsboard.server.common.data.trendz.TrendzSettings;
@@ -49,6 +50,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
+@Profile("install")
 @Component
 @RequiredArgsConstructor
 public class TrendzUpdater {

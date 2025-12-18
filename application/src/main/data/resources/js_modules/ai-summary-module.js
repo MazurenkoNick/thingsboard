@@ -85,7 +85,10 @@ class AnalyticsDialogController {
         const {delay, switchMap} = this.services.rxjs;
 
         this.services.ctx.http.post(`/apiTrendz/agent/prompts/execute`, summaryRequest, {
-            headers: {'X-Authorization': `Bearer ${this.services.jwtToken}`}
+            headers: {
+                'X-Authorization': `Bearer ${this.services.jwtToken}`,
+                'Jwt': `${this.services.jwtToken}`
+            }
         })
             .pipe(
                 delay(200),
@@ -117,7 +120,10 @@ class AnalyticsDialogController {
         const {delay, switchMap, of} = this.services.rxjs;
 
         return this.services.ctx.http.get(`/apiTrendz/task/execution/poll/${executionId}`, {
-            headers: {'X-Authorization': `Bearer ${this.services.jwtToken}`}
+            headers: {
+                'X-Authorization': `Bearer ${this.services.jwtToken}`,
+                'Jwt': `${this.services.jwtToken}`
+            }
         })
             .pipe(
                 delay(300),
