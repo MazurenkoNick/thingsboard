@@ -7797,7 +7797,7 @@
         "file-name": "File name",
         "format": "Format",
         "download": "Download report",
-        "reports-filter": "Reports filter",
+        "report-filter": "Report filter",
         "no-reports-matching": "No reports matching '{{entity}}' were found.",
         "report-required": "Report is required"
     },
@@ -7806,7 +7806,7 @@
         "report-templates": "Report templates",
         "add": "Add report template",
         "search": "Search report templates",
-        "templates-filter": "Templates filter",
+        "template-filter": "Template filter",
         "sub-report": "Subreport",
         "no-report-templates-text": "No report templates found",
         "no-sub-reports-text": "No subreports found",
@@ -9408,8 +9408,8 @@
             "calculated-field-reprocessing": "Calculated field reprocessing",
             "report": "Report generation"
         },
-        "tasks-filter": "Tasks filter",
-        "tasks-filter-params": "Filter: {{ filterParams }}",
+        "task-filter": "Task filter",
+        "task-filter-params": "Filter: {{ filterParams }}",
         "tasks-status-list": "Tasks status list",
         "tasks-type-list": "Tasks type list",
         "time-taken": "Time taken",
