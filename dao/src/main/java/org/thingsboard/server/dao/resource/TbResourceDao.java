@@ -68,4 +68,6 @@ public interface TbResourceDao extends Dao<TbResource>, TenantEntityWithDataDao,
     long getResourceSize(TenantId tenantId, TbResourceId resourceId);
 
     TbResourceDataInfo getResourceDataInfo(TenantId tenantId, TbResourceId resourceId);
+
+    void deleteAllTenantResourcesByResourceKey(String resourceKey);
 }

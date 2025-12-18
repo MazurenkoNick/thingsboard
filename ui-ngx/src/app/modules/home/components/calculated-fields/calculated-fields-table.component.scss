@@ -29,9 +29,7 @@
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
 :host ::ng-deep {
-  tb-entities-table {
-    .mat-drawer-container {
-      background-color: white;
-    }
+  .white-background {
+    --mat-sidenav-content-background-color: white;
   }
 }

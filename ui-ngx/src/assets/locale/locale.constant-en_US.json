@@ -81,6 +81,7 @@
         "show-more": "Show more",
         "dont-show-again": "Do not show again",
         "see-documentation": "See documentation",
+        "see-debug-events": "See debug events",
         "clear": "Clear",
         "upload": "Upload",
         "delete-anyway": "Delete anyway",
@@ -1228,7 +1229,6 @@
         "argument-owner": "Current owner",
         "argument-relation-query": "Related entities",
         "argument-type": "Argument type",
-        "see-debug-events": "See debug events",
         "attribute": "Attribute",
         "copy-argument-name": "Copy argument name",
         "timeseries-key": "Time series key",
@@ -1328,6 +1328,10 @@
         "deduplication-interval": "Deduplication interval",
         "deduplication-interval-min": "Deduplication interval should be at least {{ sec }} seconds.",
         "deduplication-interval-required": "Deduplication interval is required.",
+        "calculated-fields-filter": "Calculated fields filter",
+        "calculated-field-types": "Calculated field types",
+        "any-type": "Any type",
+        "target-entity": "Target entity",
         "metrics": {
             "metrics": "Metrics",
             "metrics-empty": "At least one metric must be configured.",
@@ -1954,8 +1958,7 @@
         "decoder-output": "Decoder output",
         "converter-output": "Converter output",
         "converter-type": "Converter type",
-        "update-raw-payload": "Updated RAW payload",
-        "see-debug-events": "See debug events"
+        "update-raw-payload": "Updated RAW payload"
     },
     "content-type": {
         "json": "Json",
@@ -5027,8 +5030,7 @@
         "downlink-connection-string": "Downlink connection string",
         "downlink-connection-string-required": "Downlink connection string is required",
         "downlink-topic-name": "Downlink topic name",
-        "downlink-topic-name-required": "Downlink topic name is required",
-        "see-debug-events": "See debug events"
+        "downlink-topic-name-required": "Downlink topic name is required"
     },
     "scada": {
         "symbols": "SCADA symbols",
@@ -7783,6 +7785,7 @@
         "timezone-description": "Time zone in which target dashboard will be presented in report.",
         "reporting": "Reporting",
         "templates": "Templates",
+        "report": "Report",
         "reports": "Reports",
         "scheduling": "Scheduling",
         "generating-report": "Generating report...",
@@ -7799,7 +7802,9 @@
         "file-name": "File name",
         "format": "Format",
         "download": "Download report",
-        "reports-filter": "Reports filter"
+        "reports-filter": "Reports filter",
+        "no-reports-matching": "No reports matching '{{entity}}' were found.",
+        "report-required": "Report is required"
     },
     "report-template": {
         "report-template": "Report template",
@@ -12596,6 +12601,9 @@
         "trendz-settings": "Trendz settings",
         "views": "Views",
         "views-description": "Configured visualization groups and reports",
+        "trendz-synced": "Synchronization completed successfully",
+        "trendz-available": "Synchronization not completed",
+        "trendz-unavailable": "Service not detected",
         "view-all": "View all",
         "view-type": {
             "ai-card": "AI Card",

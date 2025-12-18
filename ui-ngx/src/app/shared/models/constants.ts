@@ -295,8 +295,9 @@ export const HelpLinks = {
     reportTemplates: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/reporting/reporting-key-concepts/`,
     scheduledReports: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/reports`,
     reports: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/reports`,
-    trendzSettings: `${helpBaseUrl}/docs/trendz/`,
+    trendzSettings: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/ui/trendz-settings`,
     secretStorage: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/secrets-storage`,
+    alarmRules: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/alarm-rules/`,
   }
 };
 /* eslint-enable max-len */

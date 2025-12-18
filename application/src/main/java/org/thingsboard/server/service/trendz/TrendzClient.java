@@ -68,6 +68,7 @@ import org.thingsboard.server.common.data.trendz.TrendzViewConfigLite;
 import org.thingsboard.server.dao.pat.ApiKeyService;
 import org.thingsboard.server.dao.trendz.TrendzSettingsService;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
@@ -182,6 +183,8 @@ public class TrendzClient {
         String trendzUrl = getBaseTrendzUrl();
 
         try {
+            headers.set(HttpHeaders.HOST, URI.create(trendzUrl).getHost());
+
             String url = trendzUrl + uriPath;
             log.debug("Trendz proxy request at: {}", url);
 
@@ -280,7 +283,6 @@ public class TrendzClient {
         Optional<TrendzSettings> trendzSettings = Optional.ofNullable(trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID));
         trendzSettings.map(TrendzSettings::synchronizationResult)
                 .map(TrendzSynchronizationResult::status)
-                .filter(status -> status != TrendzSynchronizationStatus.NOT_AVAILABLE)
                 .orElseThrow(() -> new ThingsboardException(
                         "Trendz is not synced. Please sync before using it.", ThingsboardErrorCode.GENERAL
                 ));

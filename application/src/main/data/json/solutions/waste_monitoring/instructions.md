@@ -57,7 +57,7 @@ The profile by default is configured to raise alarms if:
 
 
 #### Alarms
-Alarms are generated using two <a href="${DOCS_BASE_URL}/user-guide/device-profiles/#alarm-rules" target="_blank">Alarm rules</a> in the
+Alarms are generated using two <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> in the
 "Waste Sensor" <a href="/profiles/deviceProfiles" target="_blank">device profile</a>.
 User may configure the alarm rules via the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Waste Management"</a> dashboard using "Alarm rules" form.
 

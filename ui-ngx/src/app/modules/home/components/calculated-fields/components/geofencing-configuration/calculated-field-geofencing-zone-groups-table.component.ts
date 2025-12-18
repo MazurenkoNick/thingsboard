@@ -107,6 +107,7 @@ export class CalculatedFieldGeofencingZoneGroupsTableComponent implements Contro
   entityNameMap = new Map<string, string>();
   sortOrder = { direction: 'asc', property: '' };
   dataSource = new CalculatedFieldZoneDatasource();
+  disable = false;
 
   readonly GeofencingReportStrategyTranslations = GeofencingReportStrategyTranslations;
   readonly entityTypeTranslations = entityTypeTranslations;
@@ -150,6 +151,10 @@ export class CalculatedFieldGeofencingZoneGroupsTableComponent implements Contro
   validate(): ValidationErrors | null {
     this.updateErrorText();
     return this.errorText ? { zonesFormArray: false } : null;
+  }
+
+  setDisabledState(isDisabled: boolean): void {
+    this.disable = isDisabled;
   }
 
   onDelete($event: Event, zone: CalculatedFieldGeofencingValue): void {

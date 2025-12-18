@@ -167,4 +167,8 @@ public class JpaTbResourceDao extends JpaAbstractDao<TbResourceEntity, TbResourc
         return EntityType.TB_RESOURCE;
     }
 
+    @Override
+    public void deleteAllTenantResourcesByResourceKey(String resourceKey) {
+        this.resourceRepository.deleteAllTenantResourceByResourceKey(resourceKey);
+    }
 }
