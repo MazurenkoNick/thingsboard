@@ -832,7 +832,7 @@
               {
                 "name": "startTime",
                 "type": "alarm",
-                "label": "Created time",
+                "label": "Time",
                 "color": "#2196f3",
                 "settings": {
                   "useCellStyleFunction": false,
@@ -2668,7 +2668,7 @@
               {
                 "name": "startTime",
                 "type": "alarm",
-                "label": "Created time",
+                "label": "Time",
                 "color": "#2196f3",
                 "settings": {
                   "useCellStyleFunction": false,
@@ -4161,7 +4161,7 @@
               {
                 "name": "startTime",
                 "type": "alarm",
-                "label": "Created time",
+                "label": "Time",
                 "color": "#2196f3",
                 "settings": {
                   "useCellStyleFunction": false,
@@ -5656,7 +5656,7 @@
               {
                 "name": "startTime",
                 "type": "alarm",
-                "label": "Created time",
+                "label": "Time",
                 "color": "#2196f3",
                 "settings": {
                   "useCellStyleFunction": false,
