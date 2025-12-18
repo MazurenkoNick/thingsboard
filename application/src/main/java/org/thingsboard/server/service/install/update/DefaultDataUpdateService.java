@@ -192,7 +192,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
 
     // Replacing old if safe
     private void migrateTenantTrendzWidgetBundleToSysadminLevel() throws Exception {
-        log.debug("Starting migrating trendz widget bundle ...");
+        log.info("Starting Trendz widget bundle migration ...");
 
         String bundleAlias = "trendz_bundle";
         Set<String> fqns = Set.of(
@@ -209,8 +209,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
         this.trendzUpdater.findUniqueTrendzBaseUrlFromWidgetTypes(fullFqns)
                 .ifPresentOrElse(baseUrl -> {
                     String urlString = baseUrl.toString();
-                    log.debug("Found unique trendz url: {}", urlString);
-                    log.debug("Start migrating trendz widget bundles to sysadmin level in all dashboards ...");
+                    log.info("Found unique Trendz URL '{}'. Migrating dashboards to use system Trendz widgets", urlString);
 
                     TrendzSettings settings = this.trendzUpdater.createSettings(urlString, null);
                     this.trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
@@ -224,7 +223,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
                         this.trendzUpdater.replacePatternInAllDashboardsConfigurations(tenantFqnOld, systemFqn);
                     }
                 }, () -> {
-                    log.debug("Unique trendz url is not found, skip migration of trendz widget bundles in dashboards");
+                    log.info("Couldn't find unique Trendz URL, skipping migration of dashboards to system Trendz widgets");
                 });
         log.debug("Finished trendz widget bundle upgrade.");
     }
@@ -240,15 +239,13 @@ public class DefaultDataUpdateService implements DataUpdateService {
         }
 
         String systemLink = system.getLink();
-        log.debug("Found trendz js module as system resource with link \"{}\"", systemLink);
-        log.debug("Replacing js module link in all dashboards (it can took time)...");
+        log.info("Migrating dashboards to use system ai-summary-module.js");
         this.trendzUpdater.replacePatternInAllDashboardsConfigurations(
                 "/api/resource/js_module/tenant/ai-summary-module.js",
                 systemLink
         );
 
         this.trendzUpdater.deleteAllTenantResourcesByResourceKey(system.getResourceKey());
-        log.debug("Finished trendz js module upgrade.");
     }
 
 
