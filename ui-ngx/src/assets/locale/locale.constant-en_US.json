@@ -12601,6 +12601,9 @@
         "trendz-settings": "Trendz settings",
         "views": "Views",
         "views-description": "Configured visualization groups and reports",
+        "trendz-synced": "Synchronization completed successfully",
+        "trendz-available": "Synchronization not completed",
+        "trendz-unavailable": "Service not detected",
         "view-all": "View all",
         "view-type": {
             "ai-card": "AI Card",

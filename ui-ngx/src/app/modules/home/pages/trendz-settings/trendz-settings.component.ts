@@ -33,8 +33,16 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PageComponent } from '@shared/components/page.component';
 import { TrendzService } from '@core/http/trendz.service';
-import { TrendzConfiguration, TrendzSynchronizationResultType, TrendzSynchronizationStatus, TrendzSynchronizationResultTypeTranslationMap } from '@shared/models/trendz-analytics.models';
+import {
+  TrendzConfiguration,
+  TrendzStatus,
+  TrendzSynchronization,
+  TrendzSynchronizationResultType,
+  TrendzSynchronizationResultTypeTranslationMap,
+  TrendzSynchronizationStatus
+} from '@shared/models/trendz-analytics.models';
 import { ActivatedRoute } from '@angular/router';
+import { map, Observable, of, switchMap } from 'rxjs';
 
 @Component({
   selector: 'tb-trendz-settings',
@@ -43,7 +51,7 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class TrendzSettingsComponent extends PageComponent implements OnInit{
   trendzSettingsForm: FormGroup;
-  trendzSyncInfo = this.route.snapshot.data.trendzSyncInfo;
+  trendzSyncInfo: TrendzStatus = this.route.snapshot.data.trendzSyncInfo;
   TrendzSynchronizationStatus = TrendzSynchronizationStatus;
   TrendzSynchronizationResultType = TrendzSynchronizationResultType;
   TrendzSynchronizationResultTypeTranslationMap = TrendzSynchronizationResultTypeTranslationMap;
@@ -68,18 +76,50 @@ export class TrendzSettingsComponent extends PageComponent implements OnInit{
   save(): void {
     const trendzConfig: TrendzConfiguration = this.trendzSettingsForm.value;
 
-    this.trendzService.saveTrendzConfig(trendzConfig).subscribe();
+    this.trendzService.saveTrendzConfig(trendzConfig).subscribe((savedConfig) => {
+      if (savedConfig) {
+        this.trendzSettingsForm.patchValue(savedConfig);
+        this.trendzSettingsForm.markAsPristine();
+
+        this.updateTrendzStatus(this.trendzService.getTrendzSyncResult()).subscribe(trendzStatus => {
+          this.trendzSyncInfo = trendzStatus;
+        });
+      }
+    });
   }
 
   retryDiscovery(): void {
-    this.trendzService.connectToTrendz().subscribe(result => {
-      this.trendzSyncInfo = result;
+    this.updateTrendzStatus(this.trendzService.connectToTrendz()).subscribe(trendzStatus => {
+      this.trendzSyncInfo = trendzStatus;
     });
+  }
+
+  private updateTrendzStatus(syncResult$: Observable<TrendzSynchronization>): Observable<TrendzStatus> {
+    return syncResult$.pipe(
+      switchMap(result => {
+        const trendzStatus: TrendzStatus = {
+          type: result.type,
+          syncStatus: result.status,
+          healthcheckStatus: TrendzSynchronizationStatus.NOT_AVAILABLE,
+        };
+        if (result.status === TrendzSynchronizationStatus.SYNCED) {
+          return this.trendzService.performTrendzHealthcheck().pipe(
+            map(healthcheckResult => {
+              trendzStatus.healthcheckStatus = healthcheckResult.status;
+              trendzStatus.type = healthcheckResult.type;
+              return trendzStatus;
+            })
+          );
+        }
+        return of(trendzStatus);
+      })
+    );
   }
 
   retryHealthcheck(): void {
     this.trendzService.performTrendzHealthcheck().subscribe(result => {
-      this.trendzSyncInfo = result;
+      this.trendzSyncInfo.healthcheckStatus = result.status;
+      this.trendzSyncInfo.type = result.type;
     });
   }
 }
