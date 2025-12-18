@@ -106,7 +106,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
         if (tbUrl == null || trendzUrl == null) {
             return saveTrendzSettings(trendzUrl, tbUrl, null, 0L,
-                    TrendzSynchronizationResultType.SYNC_DISABLED,
+                    TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED,
                     TrendzSynchronizationStatus.NOT_AVAILABLE);
         }
 
@@ -285,7 +285,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
                         trendzUrl, tbUrl
                 ),
                 new TrendzSynchronizationResult(
-                        null, 0L, TrendzSynchronizationResultType.SYNC_DISABLED,TrendzSynchronizationStatus.NOT_AVAILABLE
+                        null, 0L, TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, TrendzSynchronizationStatus.NOT_AVAILABLE
                 )
         );
 
