@@ -45,7 +45,7 @@ public record CreatedAlarmRuleInfo(String profileName, String alarmType, String 
         }
         String severities = ((AlarmCalculatedFieldConfiguration) calculatedField.getConfiguration())
                 .getCreateRules().keySet().stream()
-                .map(AlarmSeverity::getNormalName)
+                .map(AlarmSeverity::getDisplayName)
                 .sorted()
                 .collect(Collectors.joining(", "));
         return new CreatedAlarmRuleInfo(profileName, calculatedField.getName(), severities);

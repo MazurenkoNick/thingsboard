@@ -31,12 +31,11 @@
 package org.thingsboard.server.service.solutions.data;
 
 import org.thingsboard.server.common.data.cf.CalculatedField;
-import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 
-public record CreatedCalculatedFieldInfo(String profileName, CalculatedFieldType type, String name) {
+public record CreatedCalculatedFieldInfo(String profileName, String type, String name) {
 
     public static CreatedCalculatedFieldInfo from(String profileName, CalculatedField calculatedField) {
-        return new CreatedCalculatedFieldInfo(profileName, calculatedField.getType(), calculatedField.getName());
+        return new CreatedCalculatedFieldInfo(profileName, calculatedField.getType().getDisplayName(), calculatedField.getName());
     }
 
 }

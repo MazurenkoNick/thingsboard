@@ -38,6 +38,6 @@ public enum AlarmSeverity {
     CRITICAL, MAJOR, MINOR, WARNING, INDETERMINATE;
 
     @Getter
-    private final String normalName = StringUtils.capitalize(name().toLowerCase());
+    private final String displayName = StringUtils.capitalize(name().toLowerCase());
 
 }
