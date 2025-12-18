@@ -356,7 +356,7 @@ public class DeviceProfileDataValidator extends AbstractHasOtaPackageValidator<D
                 throw new DeviceCredentialsValidationException("Bootstrap config must not include \"Bootstrap Server\". \"Include Bootstrap Server updates\" is " + isBootstrapServerUpdateEnable + ".");
             }
 
-            if (serverConfig.isBootstrapServerIs()){
+            if (serverConfig.isBootstrapServerIs()) {
                 if (serverConfig.getShortServerId() != null) {
                     if (serverConfig.getShortServerId() == 0) {
                         serverConfig.setShortServerId(null);

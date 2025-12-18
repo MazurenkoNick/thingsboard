@@ -140,7 +140,7 @@ public abstract class EdgeGrpcSession implements Closeable {
     private static final int MAX_DOWNLINK_ATTEMPTS = 3;
     private static final String RATE_LIMIT_REACHED = "Rate limit reached";
 
-    protected static final ConcurrentLinkedQueue<EdgeEvent> highPriorityQueue = new ConcurrentLinkedQueue<>();
+    protected final ConcurrentLinkedQueue<EdgeEvent> highPriorityQueue = new ConcurrentLinkedQueue<>();
 
     protected UUID sessionId;
     private BiConsumer<EdgeId, EdgeGrpcSession> sessionOpenListener;
@@ -699,7 +699,8 @@ public abstract class EdgeGrpcSession implements Closeable {
 
     protected List<DownlinkMsg> convertToDownlinkMsgsPack(List<EdgeEvent> edgeEvents) {
         List<DownlinkMsg> result = new ArrayList<>();
-        for (EdgeEvent edgeEvent : edgeEvents) {
+        List<EdgeEvent> filtered = EdgeMsgConstructorUtils.mergeAndFilterDownlinkDuplicates(edgeEvents);
+        for (EdgeEvent edgeEvent : filtered) {
             log.trace("[{}][{}] converting edge event to downlink msg [{}]", tenantId, edge.getId(), edgeEvent);
             DownlinkMsg downlinkMsg = null;
             try {

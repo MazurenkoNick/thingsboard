@@ -28,16 +28,19 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.exception;
+package org.thingsboard.server.transport.mqtt;
 
-public class DataValidationException extends RuntimeException {
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 
-    public DataValidationException(String message) {
-        super(message);
-    }
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-    public DataValidationException(String message, Throwable cause) {
-        super(message, cause);
-    }
+/**
+ * Same as @TbMqttTransportComponent with additional condition by `transport.mqtt.ssl.enabled == true`
+ */
 
-}
+@Inherited
+@Retention(RetentionPolicy.RUNTIME)
+@ConditionalOnExpression("'${service.type:null}'=='tb-transport' || ('${service.type:null}'=='monolith' && '${transport.api_enabled:true}'=='true' && '${transport.mqtt.enabled:true}'=='true' && '${transport.mqtt.ssl.enabled:false}'=='true')")
+public @interface TbMqttSslTransportComponent {}

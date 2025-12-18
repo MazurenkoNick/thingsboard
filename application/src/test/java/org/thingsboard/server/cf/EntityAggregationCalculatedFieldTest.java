@@ -230,10 +230,11 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
         LocalDate testDate = LocalDate.of(2025, 11, 11);
         ZonedDateTime dateTime = ZonedDateTime.of(testDate, LocalTime.of(13, 24), ZoneId.of(TZ));
         // reprocessing time window(TW)
-        long startTs = dateTime.minusHours(5).toInstant().toEpochMilli(); // 2025-11-11 8:24
+        long startTs = dateTime.minusHours(4).toInstant().toEpochMilli(); // 2025-11-11 9:24
         long endTs = dateTime.toInstant().toEpochMilli(); // 2025-11-11 13:24
 
         // outside the TW
+        long interval_1_startTs = ts(testDate, 8, 0, 0);
         long interval_1_1 = ts(testDate, 8, 11, 23);
         long interval_1_2 = ts(testDate, 8, 33, 56);
         long interval_1_3 = ts(testDate, 8, 47, 12);
@@ -243,7 +244,7 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
         postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":8}}", interval_1_3));
 
         // outside the TW (but telemetry will be used for initial processing)
-        long interval_2_nextStartTs = ts(testDate, 10, 0, 0);
+        long interval_2_startTs = ts(testDate, 9, 0, 0);
         long interval_2_1 = ts(testDate, 9, 0, 0);
         long interval_2_2 = ts(testDate, 9, 15, 11);
 
@@ -251,7 +252,7 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
         postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":35}}", interval_2_2));
 
         // inside the TW
-        long interval_3_nextStartTs = ts(testDate, 11, 0, 0);
+        long interval_3_startTs = ts(testDate, 10, 0, 0);
         long interval_3_1 = ts(testDate, 10, 20, 44);
         long interval_3_2 = ts(testDate, 10, 40, 33);
         long interval_3_3 = ts(testDate, 10, 55, 22);
@@ -261,7 +262,10 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
         postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":22}}", interval_3_3));
 
         // inside the TW
-        long interval_5_nextStartTs = ts(testDate, 13, 0, 0);
+        long interval_4_startTs = ts(testDate, 11, 0, 0);
+
+        // inside the TW
+        long interval_5_startTs = ts(testDate, 12, 0, 0);
         long interval_5_1 = ts(testDate, 12, 11, 46);
         long interval_5_2 = ts(testDate, 12, 26, 11);
         long interval_5_3 = ts(testDate, 12, 59, 31);
@@ -270,10 +274,8 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
         postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":51}}", interval_5_2));
         postTelemetry(device.getId(), String.format("{\"ts\":%s, \"values\":{\"energy\":12}}", interval_5_3));
 
-        // inside the TW
-        long interval_4_nextStartTs = ts(testDate, 12, 0, 0);
-
         // outside the TW
+        long interval_6_startTs = ts(testDate, 13, 0, 0);
         long interval_6_1 = ts(testDate, 13, 17, 32);
         long interval_6_2 = ts(testDate, 13, 38, 31);
 
@@ -299,25 +301,25 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
         await().alias("reprocess -> perform calculation for time window").atMost(TIMEOUT, TimeUnit.SECONDS)
                 .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
                 .untilAsserted(() -> {
-                    ObjectNode result = getTimeSeries(device.getId(), startTs, endTs, "consumption", "avgConsumption");
+                    ObjectNode result = getTimeSeries(device.getId(), interval_1_startTs - 1, interval_6_startTs + 1, "consumption", "avgConsumption");
                     assertThat(result).isNotNull();
 
-                    assertThat(result.get("consumption").get(0).get("ts").asText()).isEqualTo(Long.toString(interval_5_nextStartTs - 1));
+                    assertThat(result.get("consumption").get(0).get("ts").asText()).isEqualTo(Long.toString(interval_5_startTs));
                     assertThat(result.get("consumption").get(0).get("value").asText()).isEqualTo("68");
-                    assertThat(result.get("avgConsumption").get(0).get("ts").asText()).isEqualTo(Long.toString(interval_5_nextStartTs - 1));
+                    assertThat(result.get("avgConsumption").get(0).get("ts").asText()).isEqualTo(Long.toString(interval_5_startTs));
                     assertThat(result.get("avgConsumption").get(0).get("value").asText()).isEqualTo("23");
 
-                    assertThat(result.get("consumption").get(1).get("ts").asText()).isEqualTo(Long.toString(interval_4_nextStartTs - 1));
+                    assertThat(result.get("consumption").get(1).get("ts").asText()).isEqualTo(Long.toString(interval_4_startTs));
                     assertThat(result.get("consumption").get(1).get("value").asText()).isEqualTo("9999");
 
-                    assertThat(result.get("consumption").get(2).get("ts").asText()).isEqualTo(Long.toString(interval_3_nextStartTs - 1));
+                    assertThat(result.get("consumption").get(2).get("ts").asText()).isEqualTo(Long.toString(interval_3_startTs));
                     assertThat(result.get("consumption").get(2).get("value").asText()).isEqualTo("47");
-                    assertThat(result.get("avgConsumption").get(1).get("ts").asText()).isEqualTo(Long.toString(interval_3_nextStartTs - 1));
+                    assertThat(result.get("avgConsumption").get(1).get("ts").asText()).isEqualTo(Long.toString(interval_3_startTs));
                     assertThat(result.get("avgConsumption").get(1).get("value").asText()).isEqualTo("16");
 
-                    assertThat(result.get("consumption").get(3).get("ts").asText()).isEqualTo(Long.toString(interval_2_nextStartTs - 1));
+                    assertThat(result.get("consumption").get(3).get("ts").asText()).isEqualTo(Long.toString(interval_2_startTs));
                     assertThat(result.get("consumption").get(3).get("value").asText()).isEqualTo("48");
-                    assertThat(result.get("avgConsumption").get(2).get("ts").asText()).isEqualTo(Long.toString(interval_2_nextStartTs - 1));
+                    assertThat(result.get("avgConsumption").get(2).get("ts").asText()).isEqualTo(Long.toString(interval_2_startTs));
                     assertThat(result.get("avgConsumption").get(2).get("value").asText()).isEqualTo("24");
                 });
 
