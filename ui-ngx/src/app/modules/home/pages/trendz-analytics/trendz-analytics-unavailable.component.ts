@@ -37,6 +37,7 @@ import { DialogComponent } from '@app/shared/components/dialog.component';
 import { Store } from '@ngrx/store';
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
 import { TranslateService } from '@ngx-translate/core';
+import { DialogService } from '@app/core/services/dialog.service';
 
 @Component({
   selector: 'tb-trendz-analytics-unavailable',
@@ -51,8 +52,18 @@ export class TrendzAnalyticsUnavailableComponent extends DialogComponent<TrendzA
               protected router: Router,
               protected dialogRef: MatDialogRef<TrendzAnalyticsUnavailableComponent>,
               private wl: WhiteLabelingService,
-              private translate: TranslateService) {
+              private translate: TranslateService,
+              private dialogs: DialogService) {
     super(store,  router, dialogRef);
+  }
+
+  reportIssue() {
+    // TODO: Call notification
+    this.dialogs.alert(
+      this.translate.instant('trendz-analytics.service-unavailable-request-sent-title'),
+      this.translate.instant('trendz-analytics.service-unavailable-request-sent-message'),
+      this.translate.instant('action.close')
+    )
   }
 
 }

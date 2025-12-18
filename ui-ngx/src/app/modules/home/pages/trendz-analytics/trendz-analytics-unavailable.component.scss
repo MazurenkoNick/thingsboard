@@ -31,8 +31,11 @@
 
 .trendz-unavailable {
   max-width: 750px;
-  padding: 24px;  
   color: rgba(0, 0, 0, 0.76);
+
+  .trendz-unavailable-content {
+    padding: 24px;
+  }
 
   .trendz-unavailable-title {
     font-size: 20px;
@@ -41,6 +44,10 @@
 
   .trendz-unavailable-text {
     line-height: 20px;
+  }
+
+  .trendz-unavailable-actions {
+    padding: 8px;
   }
 }
 
