@@ -148,6 +148,9 @@ public class ThingsboardInstallService {
                     systemDataLoaderService.createDefaultCustomMenu();
                     installScripts.updateSystemNotificationTemplates();
                     databaseSchemaVersionService.updateSchemaVersion();
+
+                    // is needed as separate of dataUpdateService.updateData because needs to process some data made by systemDataLoaderService.loadSystemWidgets
+                    dataUpdateService.postUpdateData();
                 }
                 log.info("Upgrade finished successfully!");
 
