@@ -372,7 +372,7 @@ export class ConverterComponent extends EntityComponent<Converter> implements On
 
   get additionalActionConfig (): AdditionalDebugActionConfig {
     return {
-      title: this.translate.instant('integration.see-debug-events'),
+      title: this.translate.instant('action.see-debug-events'),
       action: this.openDebugEventsDialog.bind(this)
     }
   }

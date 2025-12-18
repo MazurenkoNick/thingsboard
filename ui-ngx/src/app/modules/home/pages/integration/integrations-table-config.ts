@@ -329,7 +329,7 @@ export class IntegrationsTableConfig extends EntityTableConfig<Integration, Page
     }
 
     const additionalActionConfig = {
-      title: this.translate.instant('integration.see-debug-events'),
+      title: this.translate.instant('action.see-debug-events'),
       action: () => this.openDebugEventDetails($event, entity)
     };
 

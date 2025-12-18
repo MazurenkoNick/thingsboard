@@ -298,6 +298,7 @@ export const HelpLinks = {
     reports: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/reports`,
     trendzSettings: `${helpBaseUrl}/docs/trendz/`,
     secretStorage: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/secrets-storage`,
+    alarmRules: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/alarm-rules/`,
   }
 };
 /* eslint-enable max-len */

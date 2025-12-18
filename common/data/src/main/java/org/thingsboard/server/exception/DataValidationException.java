@@ -32,8 +32,6 @@ package org.thingsboard.server.exception;
 
 public class DataValidationException extends RuntimeException {
 
-    private static final long serialVersionUID = 7659985660312721830L;
-
     public DataValidationException(String message) {
         super(message);
     }
@@ -41,4 +39,5 @@ public class DataValidationException extends RuntimeException {
     public DataValidationException(String message, Throwable cause) {
         super(message, cause);
     }
+
 }

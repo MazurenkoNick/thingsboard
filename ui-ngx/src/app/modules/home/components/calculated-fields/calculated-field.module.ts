@@ -60,6 +60,12 @@ import {
   EntityAggregationComponentModule
 } from '@home/components/calculated-fields/components/entity-aggregation-configuration/entity-aggregation-component.module';
 import {
+  CalculatedFieldsHeaderComponent
+} from '@home/components/calculated-fields/table-header/calculated-fields-header.component';
+import {
+  CalculatedFieldsFilterConfigComponent
+} from '@home/components/calculated-fields/table-header/calculated-fields-filter-config.component';
+import {
   CalculatedFieldReprocessingPanelComponent
 } from '@home/components/calculated-fields/components/reprocessing/calculated-field-reprocessing-panel.component';
 
@@ -68,6 +74,8 @@ import {
     CalculatedFieldDialogComponent,
     CalculatedFieldScriptTestDialogComponent,
     CalculatedFieldTestArgumentsComponent,
+    CalculatedFieldsHeaderComponent,
+    CalculatedFieldsFilterConfigComponent,
     CalculatedFieldReprocessingPanelComponent
   ],
   imports: [
