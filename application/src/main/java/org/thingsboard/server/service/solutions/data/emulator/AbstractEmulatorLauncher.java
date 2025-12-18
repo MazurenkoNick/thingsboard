@@ -84,7 +84,10 @@ public abstract class AbstractEmulatorLauncher<T extends GroupEntity<?>> {
     private final Emulator emulator;
     private ScheduledFuture<?> scheduledFuture;
 
-    public AbstractEmulatorLauncher(T entity, EmulatorDefinition emulatorDefinition, ExecutorService oldTelemetryExecutor, TbClusterService tbClusterService,
+    public AbstractEmulatorLauncher(T entity,
+                                    EmulatorDefinition emulatorDefinition,
+                                    ExecutorService oldTelemetryExecutor,
+                                    TbClusterService tbClusterService,
                                     PartitionService partitionService,
                                     TbQueueProducerProvider tbQueueProducerProvider,
                                     TbServiceInfoProvider serviceInfoProvider,
@@ -106,15 +109,15 @@ public abstract class AbstractEmulatorLauncher<T extends GroupEntity<?>> {
         emulator.init(emulatorDefinition);
     }
 
-    public CompletableFuture<Void> launch(long now) {
-        final long oldestTs = now - TimeUnit.DAYS.toMillis(emulatorDefinition.getPublishPeriodInDays()) - publishFrequency;
+    public CompletableFuture<Void> launch(long solutionInstallTs) {
+        final long oldestTs = emulatorDefinition.getOldestTs(solutionInstallTs);
         CompletableFuture<Void> future = new CompletableFuture<>();
         oldTelemetryExecutor.submit(() -> {
             AtomicInteger pending = new AtomicInteger(1);
             try {
                 if (emulator instanceof SimpleEmulator) {
-                    if (oldestTs < (now - publishFrequency)) {
-                        pushOldTelemetry(oldestTs, now, pending, future);
+                    if (oldestTs < (solutionInstallTs - publishFrequency)) {
+                        pushOldTelemetry(oldestTs, solutionInstallTs, pending, future);
                     }
                 } else if (emulator instanceof CustomEmulator customEmulator) {
                     Pair<Long, ObjectNode> telemetry = customEmulator.getNextValue();

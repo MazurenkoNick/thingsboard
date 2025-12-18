@@ -1,8 +1,5 @@
 {
-  "reprocessingSettings": {
-    "order": 2,
-    "periodInDays": 7
-  },
+  "reprocessingOrder": 2,
   "type": "RELATED_ENTITIES_AGGREGATION",
   "name": "Calculate Daily Consumption",
   "entityId": {

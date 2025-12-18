@@ -1,8 +1,5 @@
 {
-  "reprocessingSettings": {
-    "order": 2,
-    "periodInDays": 7
-  },
+  "reprocessingOrder": 2,
   "type": "SCRIPT",
   "name": "Update irrigation state",
   "entityId": {

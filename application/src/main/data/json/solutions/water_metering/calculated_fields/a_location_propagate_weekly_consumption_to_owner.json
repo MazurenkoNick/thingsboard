@@ -1,8 +1,5 @@
 {
-  "reprocessingSettings": {
-    "order": 3,
-    "periodInDays": 7
-  },
+  "reprocessingOrder": 3,
   "type": "PROPAGATION",
   "name": "Propagate weekly consumption to owner",
   "entityId": {

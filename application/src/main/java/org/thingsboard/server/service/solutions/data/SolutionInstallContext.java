@@ -55,6 +55,7 @@ import org.thingsboard.server.service.solutions.data.definition.DashboardDefinit
 import org.thingsboard.server.service.solutions.data.definition.DeviceDefinition;
 import org.thingsboard.server.service.solutions.data.definition.DeviceProfileDefinition;
 import org.thingsboard.server.service.solutions.data.definition.EdgeDefinition;
+import org.thingsboard.server.service.solutions.data.definition.EmulatorDefinition;
 import org.thingsboard.server.service.solutions.data.definition.EntityDefinition;
 import org.thingsboard.server.service.solutions.data.definition.EntitySearchKey;
 import org.thingsboard.server.service.solutions.data.definition.RelationDefinition;
@@ -90,12 +91,20 @@ public class SolutionInstallContext {
     private final List<DashboardLinkInfo> dashboardLinks = new ArrayList<>();
     private final Map<String, EdgeLinkInfo> createdEdges = new LinkedHashMap<>();
 
+    private final long installTs;
+
+    // for timeseries and attributes emulation and also for CFs reprocessing
+    private long oldestTelemetryTs;
+    private Map<String, EmulatorDefinition> deviceEmulators;
+    private Map<String, EmulatorDefinition> assetEmulators;
+
     public SolutionInstallContext(TenantId tenantId, String solutionId, User user, TenantSolutionTemplateInstructions solutionInstructions) {
         this.tenantId = tenantId;
         this.solutionId = solutionId;
         this.user = user;
         this.solutionInstructions = solutionInstructions;
         put(new EntitySearchKey(tenantId, EntityType.TENANT, null, false), tenantId);
+        this.installTs = System.currentTimeMillis();
     }
 
     public void registerReferenceOnly(String referenceId, EntityId entityId) {

@@ -1,8 +1,5 @@
 {
-  "reprocessingSettings": {
-    "order": 0,
-    "periodInDays": 7
-  },
+  "reprocessingOrder": 0,
   "type": "PROPAGATION",
   "name": "Calculate water consumption and save on Field",
   "entityId": {

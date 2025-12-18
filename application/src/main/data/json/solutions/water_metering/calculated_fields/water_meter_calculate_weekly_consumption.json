@@ -1,8 +1,5 @@
 {
-  "reprocessingSettings": {
-    "order": 0,
-    "periodInDays": 7
-  },
+  "reprocessingOrder": 0,
   "type": "ENTITY_AGGREGATION",
   "name": "Calculate Weekly Consumption",
   "entityId": {

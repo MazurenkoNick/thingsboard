@@ -32,10 +32,12 @@ package org.thingsboard.server.service.solutions.data.definition;
 
 import lombok.Data;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.service.solutions.data.SolutionInstallContext;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -70,4 +72,13 @@ public class EmulatorDefinition {
         parent.getTelemetryProfiles().forEach(tp -> profilesMap.putIfAbsent(tp.getKey(), tp));
         telemetryProfiles = new ArrayList<>(profilesMap.values());
     }
+
+    public long getOldestTs(SolutionInstallContext ctx) {
+        return getOldestTs(ctx.getInstallTs());
+    }
+
+    public long getOldestTs(long solutionInstallTs) {
+        return solutionInstallTs - TimeUnit.DAYS.toMillis(publishPeriodInDays) - publishFrequencyInSeconds;
+    }
+
 }

@@ -507,6 +507,8 @@ public class DefaultSolutionService implements SolutionService {
     private SolutionInstallResponse doInstallSolution(User user, TenantId tenantId, String solutionId, HttpServletRequest request) {
         SolutionInstallContext ctx = new SolutionInstallContext(tenantId, solutionId, user, new TenantSolutionTemplateInstructions());
         try {
+            registerEmulatorsAndComputeOldestTelemetryTs(ctx);
+
             provisionRoles(ctx);
 
             provisionTenantDetails(ctx);
@@ -1040,8 +1042,8 @@ public class DefaultSolutionService implements SolutionService {
             DeviceId entityId = entity.getId();
             ctx.putIdToMap(entityDef, entityId);
 
-            saveServerSideAttributes(ctx.getTenantId(), entityId, entityDef.getAttributes());
-            saveSharedAttributes(ctx.getTenantId(), entityId, entityDef.getSharedAttributes());
+            saveServerSideAttributes(ctx, entityId, entityDef.getAttributes());
+            saveSharedAttributes(ctx, entityId, entityDef.getSharedAttributes());
             ctx.put(entityId, entityDef.getRelations());
             addEntityToGroup(ctx, entityDef, entityId);
 
@@ -1073,7 +1075,7 @@ public class DefaultSolutionService implements SolutionService {
         }
     }
 
-    private Set<CompletableFuture<Void>> launchEmulators(SolutionInstallContext ctx, Map<Device, DeviceDefinition> devicesMap, Map<Asset, AssetDefinition> assets) throws Exception {
+    private void registerEmulatorsAndComputeOldestTelemetryTs(SolutionInstallContext ctx) {
         List<EmulatorDefinition> emulatorDefinitions = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "device_emulators.json", new TypeReference<>() {
         });
         Map<String, EmulatorDefinition> deviceEmulators = emulatorDefinitions.stream().collect(Collectors.toMap(EmulatorDefinition::getName, Function.identity()));
@@ -1084,37 +1086,51 @@ public class DefaultSolutionService implements SolutionService {
                         ed.enrich(parent);
                     }
                 });
+        Map<String, EmulatorDefinition> assetEmulators = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "asset_emulators.json", new TypeReference<List<EmulatorDefinition>>() {
+        }).stream().collect(Collectors.toMap(EmulatorDefinition::getName, Function.identity()));
 
+        ctx.setDeviceEmulators(deviceEmulators);
+        ctx.setAssetEmulators(assetEmulators);
+
+        long solutionInstallTs = ctx.getInstallTs();
+        long oldestDeviceEmulatorsTs = deviceEmulators.values().stream()
+                .mapToLong(value -> value.getOldestTs(ctx))
+                .min().orElse(solutionInstallTs);
+        long oldestAssetEmulatorsTs = assetEmulators.values().stream()
+                .mapToLong(value -> value.getOldestTs(ctx))
+                .min().orElse(solutionInstallTs);
+        long solutionOldestTs = Math.min(oldestDeviceEmulatorsTs, oldestAssetEmulatorsTs);
+
+        ctx.setOldestTelemetryTs(solutionOldestTs);
+    }
+
+    private Set<CompletableFuture<Void>> launchEmulators(SolutionInstallContext ctx, Map<Device, DeviceDefinition> devicesMap, Map<Asset, AssetDefinition> assets) throws Exception {
         Set<CompletableFuture<Void>> results = new HashSet<>();
 
-        long now = System.currentTimeMillis();
         for (var entry : devicesMap.entrySet().stream().filter(e -> StringUtils.isNotBlank(e.getValue().getEmulator())).collect(Collectors.toSet())) {
             results.add(DeviceEmulatorLauncher.builder()
                     .entity(entry.getKey())
-                    .emulatorDefinition(deviceEmulators.get(entry.getValue().getEmulator()))
+                    .emulatorDefinition(ctx.getDeviceEmulators().get(entry.getValue().getEmulator()))
                     .oldTelemetryExecutor(emulatorExecutor)
                     .tbClusterService(tbClusterService)
                     .partitionService(partitionService)
                     .tbQueueProducerProvider(tbQueueProducerProvider)
                     .serviceInfoProvider(serviceInfoProvider)
                     .tsSubService(tsSubService)
-                    .build().launch(now));
+                    .build().launch(ctx.getInstallTs()));
         }
-
-        Map<String, EmulatorDefinition> assetEmulators = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "asset_emulators.json", new TypeReference<List<EmulatorDefinition>>() {
-        }).stream().collect(Collectors.toMap(EmulatorDefinition::getName, Function.identity()));
 
         for (var entry : assets.entrySet().stream().filter(e -> StringUtils.isNotBlank(e.getValue().getEmulator())).collect(Collectors.toSet())) {
             results.add(AssetEmulatorLauncher.builder()
                     .entity(entry.getKey())
-                    .emulatorDefinition(assetEmulators.get(entry.getValue().getEmulator()))
+                    .emulatorDefinition(ctx.getAssetEmulators().get(entry.getValue().getEmulator()))
                     .oldTelemetryExecutor(emulatorExecutor)
                     .tbClusterService(tbClusterService)
                     .partitionService(partitionService)
                     .tbQueueProducerProvider(tbQueueProducerProvider)
                     .serviceInfoProvider(serviceInfoProvider)
                     .tsSubService(tsSubService)
-                    .build().launch(now));
+                    .build().launch(ctx.getInstallTs()));
         }
 
         return results;
@@ -1123,7 +1139,7 @@ public class DefaultSolutionService implements SolutionService {
     protected void provisionTenantDetails(SolutionInstallContext ctx) throws Exception {
         TenantDefinition tenant = loadEntityIfFileExists(ctx.getSolutionId(), "tenant.json", TenantDefinition.class);
         if (tenant != null) {
-            saveServerSideAttributes(ctx.getTenantId(), ctx.getTenantId(), tenant.getAttributes());
+            saveServerSideAttributes(ctx, ctx.getTenantId(), tenant.getAttributes());
             ctx.put(ctx.getTenantId(), tenant.getRelations());
 
             for (UserGroupDefinition ugDef : tenant.getUserGroups()) {
@@ -1177,7 +1193,7 @@ public class DefaultSolutionService implements SolutionService {
             log.info("[{}] Saved asset: {}", entity.getId(), entity);
             AssetId entityId = entity.getId();
             ctx.putIdToMap(entityDef, entityId);
-            saveServerSideAttributes(ctx.getTenantId(), entityId, entityDef.getAttributes());
+            saveServerSideAttributes(ctx, entityId, entityDef.getAttributes());
             ctx.put(entityId, entityDef.getRelations());
             addEntityToGroup(ctx, entityDef, entityId);
             result.put(entity, entityDef);
@@ -1218,7 +1234,7 @@ public class DefaultSolutionService implements SolutionService {
             ctx.register(entityDef, entity);
             CustomerId entityId = entity.getId();
             ctx.putIdToMap(entityDef, entityId);
-            saveServerSideAttributes(ctx.getTenantId(), entityId, entityDef.getAttributes(), entityDef.getRandomNameData());
+            saveServerSideAttributes(ctx, entityId, entityDef.getAttributes(), entityDef.getRandomNameData());
             ctx.put(entityId, entityDef.getRelations());
 
             entityDef.getAssetGroups().forEach(name -> createEntityGroup(ctx, entityId, name, EntityType.ASSET));
@@ -1295,7 +1311,7 @@ public class DefaultSolutionService implements SolutionService {
                 ctx.put(user.getId(), uDef.getRelations());
                 ctx.putIdToMap(EntityType.USER, originalName, user.getId());
                 ctx.putIdToMap(EntityType.USER, uDef.getName(), user.getId());
-                saveServerSideAttributes(ctx.getTenantId(), user.getId(), uDef.getAttributes());
+                saveServerSideAttributes(ctx, user.getId(), uDef.getAttributes());
             }
         }
     }
@@ -1375,7 +1391,7 @@ public class DefaultSolutionService implements SolutionService {
             log.info("[{}] Saved edge: {}", entity.getId(), entity);
             EdgeId entityId = entity.getId();
             ctx.putIdToMap(entityDef, entityId);
-            saveServerSideAttributes(ctx.getTenantId(), entityId, entityDef.getAttributes());
+            saveServerSideAttributes(ctx, entityId, entityDef.getAttributes());
             ctx.put(entityId, entityDef.getRelations());
             addEntityToGroup(ctx, entityDef, entityId);
 
@@ -1493,10 +1509,10 @@ public class DefaultSolutionService implements SolutionService {
         TreeMap<Integer, List<CalculatedFieldDefinition>> ordered = new TreeMap<>();
 
         for (CalculatedFieldDefinition cf : cfs) {
-            if (cf.getReprocessingSettings() == null) {
+            if (cf.getReprocessingOrder() == null || cf.getReprocessingOrder() < 0) {
                 createOnly.add(cf);
             } else {
-                ordered.computeIfAbsent(cf.getReprocessingSettings().order(), integer -> new ArrayList<>()).add(cf);
+                ordered.computeIfAbsent(cf.getReprocessingOrder(), integer -> new ArrayList<>()).add(cf);
             }
         }
 
@@ -1518,7 +1534,7 @@ public class DefaultSolutionService implements SolutionService {
                 targetEntities.forEach(entityInfo ->
                         futures.add(CompletableFuture.runAsync(() -> {
                             log.debug("Reprocessing calculated field: {}", calculatedField.getName());
-                            reprocessCf(ctx.getTenantId(), entityInfo, calculatedField, cfDef.getReprocessingSettings().periodInDays());
+                            reprocessCf(ctx, entityInfo, calculatedField);
                         }, cfsReprocessingExecutor)));
             }
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
@@ -1540,11 +1556,14 @@ public class DefaultSolutionService implements SolutionService {
         };
     }
 
-    private void reprocessCf(TenantId tenantId, EntityInfo entityInfo, CalculatedField cf, int reprocessingPeriod) {
+    private void reprocessCf(SolutionInstallContext ctx, EntityInfo entityInfo, CalculatedField cf) {
         try {
-            long now = System.currentTimeMillis();
-            long startTs = now - TimeUnit.DAYS.toMillis(reprocessingPeriod);
-            CfReprocessingTask task = createTask(tenantId, entityInfo, cf, startTs, now);
+            // NOTE: We use solutionOldestTelemetryTs as a reprocessing startTs for all calculated fields.
+            // This assumes a telemetry emulation window is effectively uniform across all entities in the solution.
+            // If different emulators start generating telemetry with different history windows (e.g., 7d vs 1d),
+            // then CF reprocessing should use per-profile/per-emulator oldestTs instead of the global minimum.
+            long reprocessingStartTs = ctx.getOldestTelemetryTs();
+            CfReprocessingTask task = createTask(ctx.getTenantId(), entityInfo, cf, reprocessingStartTs, System.currentTimeMillis());
             calculatedFieldReprocessingService.reprocess(task);
         } catch (Exception e) {
             log.error("Failed to reprocess calculated field {}", cf.getName(), e);
@@ -1664,30 +1683,30 @@ public class DefaultSolutionService implements SolutionService {
         return ugEntity;
     }
 
-    private void saveServerSideAttributes(TenantId tenantId, EntityId entityId, JsonNode attributes) {
-        saveServerSideAttributes(tenantId, entityId, attributes, null);
+    private void saveServerSideAttributes(SolutionInstallContext ctx, EntityId entityId, JsonNode attributes) {
+        saveServerSideAttributes(ctx, entityId, attributes, null);
     }
 
-    private void saveServerSideAttributes(TenantId tenantId, EntityId entityId, JsonNode attributes, RandomNameData randomNameData) {
-        saveAttributes(tenantId, entityId, attributes, randomNameData, AttributeScope.SERVER_SCOPE);
+    private void saveServerSideAttributes(SolutionInstallContext ctx, EntityId entityId, JsonNode attributes, RandomNameData randomNameData) {
+        saveAttributes(ctx, entityId, attributes, randomNameData, AttributeScope.SERVER_SCOPE);
     }
 
-    private void saveSharedAttributes(TenantId tenantId, EntityId entityId, JsonNode attributes) {
+    private void saveSharedAttributes(SolutionInstallContext ctx, EntityId entityId, JsonNode attributes) {
         if (!EntityType.DEVICE.equals(entityId.getEntityType())) {
             throw new IllegalArgumentException(entityId.getEntityType() + " cannot have shared attributes.");
         }
-        saveAttributes(tenantId, entityId, attributes, null, AttributeScope.SHARED_SCOPE);
+        saveAttributes(ctx, entityId, attributes, null, AttributeScope.SHARED_SCOPE);
     }
 
-    private void saveAttributes(TenantId tenantId, EntityId entityId, JsonNode attributes, RandomNameData randomNameData, AttributeScope attributeScope) {
-        if (attributes != null && !attributes.isNull() && attributes.size() > 0) {
+    private void saveAttributes(SolutionInstallContext ctx, EntityId entityId, JsonNode attributes, RandomNameData randomNameData, AttributeScope attributeScope) {
+        if (attributes != null && !attributes.isNull() && !attributes.isEmpty()) {
             attributes = prepareAttributes(attributes);
             log.info("[{}] Saving attributes: {}", entityId, attributes);
             if (randomNameData != null) {
                 attributes = JacksonUtil.toJsonNode(randomize(JacksonUtil.toString(attributes), randomNameData, null));
             }
-            attributesService.save(tenantId, entityId, attributeScope,
-                    new ArrayList<>(JsonConverter.convertToAttributes(JsonParser.parseString(JacksonUtil.toString(attributes)))));
+            attributesService.save(ctx.getTenantId(), entityId, attributeScope,
+                    new ArrayList<>(JsonConverter.convertToAttributes(JsonParser.parseString(JacksonUtil.toString(attributes)), ctx.getOldestTelemetryTs())));
         }
     }
 
