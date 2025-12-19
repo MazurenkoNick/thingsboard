@@ -201,12 +201,12 @@ public class TrendzClient {
             log.debug("Trendz proxy request completed successfully");
             return response;
         } catch (RestClientResponseException e) {
-            log.warn("Trendz proxy request received non-successful response: {}", e.getStatusCode());
+            log.debug("Trendz proxy request received non-successful response: {}", e.getStatusCode());
             return ResponseEntity.status(e.getStatusCode())
                     .headers(e.getResponseHeaders())
                     .body(e.getResponseBodyAsByteArray());
         } catch (Exception e) {
-            log.error("Trendz proxy request failed at {} [{}]: {}", trendzUrl, uriPath, e.getMessage(), e);
+            log.debug("Trendz proxy request failed at {} [{}]: {}", trendzUrl, uriPath, e.getMessage(), e);
             throw new ThingsboardException("Unexpected error during Trendz proxy request", e, ThingsboardErrorCode.GENERAL);
         }
     }
@@ -224,7 +224,7 @@ public class TrendzClient {
             ResponseEntity<T> response = restTemplate.exchange(url, method, request, responseType);
             return fetchContent(response, operationName);
         } catch (Exception e) {
-            log.error("{} failed at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
+            log.debug("{} failed at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
             return null;
         }
     }
@@ -245,13 +245,13 @@ public class TrendzClient {
             ResponseEntity<T> response = restTemplate.exchange(trendzUrl + urlWithParams, method, entity, typeReference);
             return fetchContent(response, operationName);
         } catch (HttpClientErrorException.NotFound e) {
-            log.warn("{} not found at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
+            log.debug("{} not found at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
             throw new ThingsboardException("%s. Item wasn't found".formatted(operationName), ThingsboardErrorCode.ITEM_NOT_FOUND);
         } catch (HttpClientErrorException.BadRequest e) {
-            log.warn("{} bad request at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
+            log.debug("{} bad request at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
             throw new ThingsboardException("%s. Bad request.".formatted(operationName), ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         } catch (Exception e) {
-            log.error("{} failed at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
+            log.warn("{} failed at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
             throw new ThingsboardException("%s. Unexpected error during Trendz request.".formatted(operationName), ThingsboardErrorCode.GENERAL);
         }
     }
@@ -261,7 +261,7 @@ public class TrendzClient {
             log.debug("{} completed successfully", operationName);
             return response.getBody();
         }
-        log.warn("{} received non-successful response: {}", operationName, response.getStatusCode());
+        log.debug("{} received non-successful response: {}", operationName, response.getStatusCode());
         return null;
     }
 
