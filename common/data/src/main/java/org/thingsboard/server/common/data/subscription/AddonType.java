@@ -33,6 +33,7 @@ package org.thingsboard.server.common.data.subscription;
 import lombok.Getter;
 
 public enum AddonType {
+
     EDGE("Edge Computing add-on"),
     TRENDZ("Trendz Analytics add-on"),
     WHITE_LABELING("White labeling");
