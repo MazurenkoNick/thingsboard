@@ -155,6 +155,40 @@ public class DefaultNotifications {
                             </table>""")
                     .build())
             .build();
+    public static final DefaultNotification addonAccessError = DefaultNotification.builder()
+            .name("Add-on access error")
+            .type(NotificationType.ADDON_ACCESS_ERROR)
+            .subject("${addon} access error")
+            .text("${userEmail} was unable to access ${addon}.")
+            .button("${checkConfigurationActionLabel}").link("${checkConfiguration}")
+            .emailTemplate(DefaultEmailTemplate.builder()
+                    .subject("${addon} access error")
+                    .body("""
+                            <table style="box-sizing: border-box; border-radius: 3px; width: 100%; background-color: #f6f6f6; margin: 0px auto;" cellspacing="0" cellpadding="0" bgcolor="#f6f6f6">
+                            <tbody>
+                            <tr style="box-sizing: border-box; margin: 0px;">
+                            <td style="box-sizing: border-box; vertical-align: middle; margin: 0px; padding: 40px;" align="center" valign="middle">
+                            <table style="box-sizing: border-box; border: 1px solid #E0E0E0; border-radius: 3px; margin: 0px; background-color: #ffffff; max-width: 600px !important;" cellspacing="0" cellpadding="0">
+                            <tbody>
+                            <tr style="box-sizing: border-box; margin: 0px;">
+                            <td style="box-sizing: border-box; vertical-align: middle; border-bottom: 1px solid #E0E0E0; margin: 0px; padding: 20px; color: #212121; font-family: Arial; font-size: 20px; line-height: 20px; font-style: normal; font-weight: bold;" valign="middle">${addon} access error</td>
+                            </tr>
+                            <tr style="box-sizing: border-box; margin: 0px;">
+                            <td style="box-sizing: border-box; vertical-align: top; margin: 0px; padding: 16px 24px; color: #212121; font-family: Arial; font-size: 16px; line-height: 24px; font-weight: 400;" valign="top">${userEmail} was unable to access ${addon}.</td>
+                            </tr>
+                            <tr style="box-sizing: border-box; margin: 0px;">
+                            <td style="box-sizing: border-box; vertical-align: top; margin: 0px; padding: 0 24px 16px 24px; color: #212121; font-family: Arial; font-size: 16px; line-height: 24px; font-weight: 400;" valign="top">
+                            <a style="display: inline-block; padding: 10px 16px; border-radius: 4px; background: #106CC8; color: #fff; font-family: Arial; font-size: 14px; line-height: 20px; font-weight: bold; text-decoration: none;" href="${baseUrl}${checkConfiguration}">${checkConfigurationActionLabel}</a>
+                            </td>
+                            </tr>
+                            </tbody>
+                            </table>
+                            </td>
+                            </tr>
+                            </tbody>
+                            </table>""")
+                    .build())
+            .build();
     public static final DefaultNotification apiFeatureWarningForSysadmin = DefaultNotification.builder()
             .name("API feature warning notification for sysadmin")
             .type(NotificationType.API_USAGE_LIMIT)
@@ -573,6 +607,7 @@ public class DefaultNotifications {
     public static class DefaultEmailTemplate {
         private final String subject;
         private final String body;
+
     }
 
     @Data
