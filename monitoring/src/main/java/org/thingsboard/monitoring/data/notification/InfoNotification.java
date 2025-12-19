@@ -28,44 +28,15 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-@import '../scss/constants';
+package org.thingsboard.monitoring.data.notification;
 
-:host {
-  display: flex;
-  max-width: 100%;
-  .mdc-button {
-    max-width: 100%;
-  }
-}
+import lombok.RequiredArgsConstructor;
 
-:host ::ng-deep {
-  .mdc-button {
-    .mat-icon {
-      min-width: 24px;
+@RequiredArgsConstructor
+public class InfoNotification implements Notification {
+    private final String message;
+    @Override
+    public String getText() {
+        return message;
     }
-    .mdc-button__label {
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-  }
-}
-
-::ng-deep {
-  .tb-alarm-filter-config-component {
-    max-width: 100%;
-    width: 600px;
-    min-width: 100%;
-    flex: 1;
-
-
-    tb-entity-subtype-list {
-      flex: 1;
-      @media #{$mat-gt-xs} {
-        width: 180px;
-      }
-      .mdc-evolution-chip-set__chips {
-        width: 100%;
-      }
-    }
-  }
 }

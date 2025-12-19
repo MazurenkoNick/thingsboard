@@ -34,5 +34,7 @@ public interface DataUpdateService {
 
     void updateData(boolean fromCe) throws Exception;
 
+    void postUpdateData() throws Exception;
+
     void upgradeRuleNodes();
 }

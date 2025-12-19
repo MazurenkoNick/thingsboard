@@ -149,6 +149,9 @@ public class ThingsboardInstallService {
                     installScripts.updateSystemNotificationTemplates();
                     databaseSchemaVersionService.updateSchemaVersion();
                     entityDatabaseSchemaService.generateClusterIdIfNotExist(); //Need for offline build
+
+                    // is needed as separate of dataUpdateService.updateData because needs to process some data made by systemDataLoaderService.loadSystemWidgets
+                    dataUpdateService.postUpdateData();
                 }
                 log.info("Upgrade finished successfully!");
 
