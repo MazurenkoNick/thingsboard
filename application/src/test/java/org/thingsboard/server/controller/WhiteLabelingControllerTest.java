@@ -363,6 +363,44 @@ public class WhiteLabelingControllerTest extends AbstractControllerTest {
         tenantId = null;
     }
 
+    @Test
+    public void shouldGetCorrectMergedOverrideTrendzSettings() throws Exception {
+        loginSysAdmin();
+        WhiteLabelingParams sysAdminWhitelabelParams = doGet("/api/whiteLabel/currentWhiteLabelParams", WhiteLabelingParams.class);
+        sysAdminWhitelabelParams.setOverrideTrendzName(true);
+        doPost("/api/whiteLabel/whiteLabelParams", sysAdminWhitelabelParams, WhiteLabelingParams.class);
+
+        loginTenantAdmin();
+        WhiteLabelingParams tenantWhiteLabelParams = doGet("/api/whiteLabel/whiteLabelParams", WhiteLabelingParams.class);
+        assertThat(tenantWhiteLabelParams.getOverrideTrendzName()).isTrue();
+
+        loginCustomerAdminUser();
+        WhiteLabelingParams customerWhiteLabelParams = doGet("/api/whiteLabel/whiteLabelParams", WhiteLabelingParams.class);
+        assertThat(customerWhiteLabelParams.getOverrideTrendzName()).isTrue();
+
+        loginSubCustomerAdminUser();
+        WhiteLabelingParams subCustomerWhiteLabelParams = doGet("/api/whiteLabel/whiteLabelParams", WhiteLabelingParams.class);
+        assertThat(subCustomerWhiteLabelParams.getOverrideTrendzName()).isTrue();
+
+        //override tenant value
+        loginTenantAdmin();
+        tenantWhiteLabelParams.setOverrideTrendzName(false);
+        doPost("/api/whiteLabel/whiteLabelParams", tenantWhiteLabelParams, WhiteLabelingParams.class);
+
+        loginCustomerAdminUser();
+        customerWhiteLabelParams = doGet("/api/whiteLabel/whiteLabelParams", WhiteLabelingParams.class);
+        assertThat(customerWhiteLabelParams.getOverrideTrendzName()).isFalse();
+
+        loginSubCustomerAdminUser();
+        subCustomerWhiteLabelParams = doGet("/api/whiteLabel/whiteLabelParams", WhiteLabelingParams.class);
+        assertThat(subCustomerWhiteLabelParams.getOverrideTrendzName()).isFalse();
+
+        subCustomerWhiteLabelParams.setOverrideTrendzName(true);
+        doPost("/api/whiteLabel/whiteLabelParams", subCustomerWhiteLabelParams, WhiteLabelingParams.class);
+        subCustomerWhiteLabelParams = doGet("/api/whiteLabel/whiteLabelParams", WhiteLabelingParams.class);
+        assertThat(subCustomerWhiteLabelParams.getOverrideTrendzName()).isTrue();
+    }
+
     private void updateAppTitleAndVerify(String appTile) throws Exception {
 
         WhiteLabelingParams whiteLabelingParams = doGet("/api/whiteLabel/currentWhiteLabelParams", WhiteLabelingParams.class);

@@ -33,13 +33,13 @@ package org.thingsboard.server.service.trendz;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -50,9 +50,7 @@ public class DefaultTrendzProxyService implements TrendzProxyService {
     @Override
     public ResponseEntity<byte[]> proxy(HttpServletRequest request, byte[] body) throws ThingsboardException {
         String path = request.getRequestURI();
-        String query = request.getQueryString();
-
-        String trendzUri = path + (query != null ? "?" + query : "");
+        Map<String, String[]> parameterMap = request.getParameterMap();
 
         HttpMethod httpMethod = HttpMethod.valueOf(request.getMethod());
 
@@ -64,6 +62,6 @@ public class DefaultTrendzProxyService implements TrendzProxyService {
                         .forEachRemaining(value -> headers.add(name, value))
                 );
 
-        return trendzClient.sendTrendzProxyRequest(trendzUri, httpMethod, body, headers);
+        return trendzClient.sendTrendzProxyRequest(path, parameterMap, httpMethod, body, headers);
     }
 }
