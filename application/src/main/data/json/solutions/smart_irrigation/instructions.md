@@ -18,15 +18,7 @@ is designed to provision fields and related devices. It has multiple states:
     * Click the field polygon on the map to open the field state;
 * **Field** state allows you to manage irrigation schedule and devices.
   You may provision new schedule items. The schedule dialog will create scheduler events on the background.
-  Click on the "Alarms" button to browse all alarms. You may also add sensors to the field if needed. 
-      
-### Rule Chains
-
-* "SI Soil Moisture" Rule Chain is responsible for processing of telemetry from Soil Moisture sensors. 
-* "SI Water Meter" Rule Chain is processing data from the water meter and calculate the water consumption.
-* "SI Field" Rule Chain is responsible for start/stop of the irrigation based on the water consumption or irrigation duration;
-* "SI Count Alarms" Rule Chain helps to count alarms for particular entity: device or asset. It is referenced from other rule chains;
-* "SI Smart Valve" Rule Chain helps to send RPC commands to the smart valve device to stop the irrigation;
+  Click on the "Alarms" button to browse all alarms. You may also add sensors to the field if needed.
 
 ### Device & Asset Profiles
 
@@ -35,6 +27,32 @@ The device & asset profiles listed below use pre-defined values for alarm thresh
 ##### SI Field
 
 The field asset profile is configured to forward all incoming events to the "SI Field" rule chain.
+
+### Devices
+
+We have already created 12+ devices and loaded some demo data for them. See device info and credentials below:
+
+<div class="tb-markdown-view table-wrapper">
+
+${device_list_and_credentials}
+
+</div>
+
+Solution expects that the device telemetry will correspond to the samples provided in device profile section of the instruction.
+The most simple example of the moisture sensor payload is in JSON format:
+
+```json
+{"moisture": 57}{:copy-code}
+```
+
+To emulate the data upload on behalf of device "SI Soil Moisture 1" located inside field "Field 1", one should execute the following command to raise the Critical Alarm for Field 1:
+
+```bash
+curl -v -X POST -d "{\"moisture\":  77}" ${BASE_URL}/api/v1/${SI Soil Moisture 1ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
+```
+
+The example above uses <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a> for simplicity of demonstration.
+See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_blank">connecting devices</a> for other connectivity options.
 
 ##### SI Water Meter
 
@@ -74,32 +92,36 @@ The device also accepts the RPC command to enable or disable the water flow. Sam
 {"method": "TURN_ON", "params": {}}{:copy-code}
 ```
 
-### Devices
+### Alarms
 
-We have already created 12+ devices and loaded some demo data for them. See device info and credentials below:
+Alarms are generated using <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm Rules</a> configured in the Smart Irrigation device profiles.
 
 <div class="tb-markdown-view table-wrapper">
 
-${device_list_and_credentials}
+${alarm_rules}
 
 </div>
 
-Solution expects that the device telemetry will correspond to the samples provided in device profile section of the instruction.
-The most simple example of the moisture sensor payload is in JSON format:
+### Calculated fields
 
-```json
-{"moisture": 57}{:copy-code}
-```
+Calculated Fields are used to derive irrigation-related metrics and indicators based on incoming device telemetry.
 
-To emulate the data upload on behalf of device "SI Soil Moisture 1" located inside field "Field 1", one should execute the following command to raise the Critical Alarm for Field 1:
+<div class="tb-markdown-view table-wrapper">
 
-```bash
-curl -v -X POST -d "{\"moisture\":  77}" ${BASE_URL}/api/v1/${SI Soil Moisture 1ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
-```
+${calculated_fields}
 
-The example above uses <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a> for simplicity of demonstration.
-See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_blank">connecting devices</a> for other connectivity options.
-      
+</div>
+
+### Rule Chains
+
+* **SI Devices** rule chain processes telemetry from all device types, including soil moisture sensors, water meters, and smart valves.
+  This rule chain is responsible for telemetry ingestion and alarm counting.
+* **SI Field** rule chain is responsible for field-level logic and irrigation control.
+  It processes aggregated events related to a field and performs actions such as:
+  * starting and stopping irrigation;
+  * controlling smart valve devices via RPC;
+  * reacting to water consumption limits or irrigation duration rules.
+
 ### Solution entities
 
 As part of this solution, the following entities were created:
@@ -115,7 +137,7 @@ ${all_entities}
 **Optionally**, this solution can be extended to use edge computing.
 
 <a href="https://thingsboard.io/products/thingsboard-edge/" target="_blank">ThingsBoard Edge</a> allows bringing data analysis and management to the edge, where the data created.
-At the same time ThingsBoard Edge seamlessly synchronizing with the ThingsBoard cloud according to your business needs.
+At the same time ThingsBoard Edge seamlessly synchronizes with the ThingsBoard cloud according to your business needs.
 
 As example, in the context of Smart Irrigation solution, edge computing could be useful if you have farms that are located in different parts of country or worldwide.
 In this case, ThingsBoard Edge can be deployed into every farm to process data from soil moisture sensors, enabling real-time analysis and decision-making, such as enable the irrigation in case humidity thresholds are violated.

@@ -1117,7 +1117,7 @@ public class DefaultSolutionService implements SolutionService {
                     .tbQueueProducerProvider(tbQueueProducerProvider)
                     .serviceInfoProvider(serviceInfoProvider)
                     .tsSubService(tsSubService)
-                    .build().launch(ctx.getInstallTs()));
+                    .build().launch());
         }
 
         for (var entry : assets.entrySet().stream().filter(e -> StringUtils.isNotBlank(e.getValue().getEmulator())).collect(Collectors.toSet())) {
@@ -1130,7 +1130,7 @@ public class DefaultSolutionService implements SolutionService {
                     .tbQueueProducerProvider(tbQueueProducerProvider)
                     .serviceInfoProvider(serviceInfoProvider)
                     .tsSubService(tsSubService)
-                    .build().launch(ctx.getInstallTs()));
+                    .build().launch());
         }
 
         return results;

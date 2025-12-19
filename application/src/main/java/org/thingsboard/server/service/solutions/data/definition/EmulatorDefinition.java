@@ -77,8 +77,8 @@ public class EmulatorDefinition {
         return getOldestTs(ctx.getInstallTs());
     }
 
-    public long getOldestTs(long solutionInstallTs) {
-        return solutionInstallTs - TimeUnit.DAYS.toMillis(publishPeriodInDays) - publishFrequencyInSeconds;
+    public long getOldestTs(long startTs) {
+        return startTs - TimeUnit.DAYS.toMillis(publishPeriodInDays) - publishFrequencyInSeconds;
     }
 
 }
