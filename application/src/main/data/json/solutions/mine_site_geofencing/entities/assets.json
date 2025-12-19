@@ -11,37 +11,37 @@
     "relations": [
       {
         "entityType": "ASSET",
-        "entityName": "Loading zone A",
+        "entityName": "Zone L1",
         "direction": "TO",
         "type": "MineSiteToLoadingZone"
       },
       {
         "entityType": "ASSET",
-        "entityName": "Loading zone B",
+        "entityName": "Zone L2",
         "direction": "TO",
         "type": "MineSiteToLoadingZone"
       },
       {
         "entityType": "ASSET",
-        "entityName": "Unloading zone A",
+        "entityName": "Zone U1",
         "direction": "TO",
         "type": "MineSiteToUnloadingZone"
       },
       {
         "entityType": "ASSET",
-        "entityName": "Unloading zone B",
+        "entityName": "Zone U2",
         "direction": "TO",
         "type": "MineSiteToUnloadingZone"
       },
       {
         "entityType": "ASSET",
-        "entityName": "Restricted zone A",
+        "entityName": "Zone R1",
         "direction": "TO",
         "type": "MineSiteToRestrictedZone"
       },
       {
         "entityType": "ASSET",
-        "entityName": "Restricted zone B",
+        "entityName": "Zone R2",
         "direction": "TO",
         "type": "MineSiteToRestrictedZone"
       },
@@ -79,9 +79,9 @@
     "jsonId": "d0e23905-8c79-4dd8-a765-289ba27bd4fa"
   },
   {
-    "name": "Loading zone A",
+    "name": "Zone L1",
     "type": "Mine site zone",
-    "label": "Loading zone A",
+    "label": "Zone L1",
     "group": "MineSiteZones",
     "attributes": {
       "type": "Loading",
@@ -90,9 +90,9 @@
     "relations": []
   },
   {
-    "name": "Loading zone B",
+    "name": "Zone L2",
     "type": "Mine site zone",
-    "label": "Loading zone B",
+    "label": "Zone L2",
     "group": "MineSiteZones",
     "attributes": {
       "type": "Loading",
@@ -101,9 +101,9 @@
     "relations": []
   },
   {
-    "name": "Unloading zone A",
+    "name": "Zone U1",
     "type": "Mine site zone",
-    "label": "Unloading zone A",
+    "label": "Zone U1",
     "group": "MineSiteZones",
     "attributes": {
       "type": "Unloading",
@@ -112,9 +112,9 @@
     "relations": []
   },
   {
-    "name": "Unloading zone B",
+    "name": "Zone U2",
     "type": "Mine site zone",
-    "label": "Unloading zone B",
+    "label": "Zone U2",
     "group": "MineSiteZones",
     "attributes": {
       "type": "Unloading",
@@ -123,9 +123,9 @@
     "relations": []
   },
   {
-    "name": "Restricted zone A",
+    "name": "Zone R1",
     "type": "Mine site zone",
-    "label": "Restricted zone A",
+    "label": "Zone R1",
     "group": "MineSiteZones",
     "attributes": {
       "type": "Restricted",
@@ -134,9 +134,9 @@
     "relations": []
   },
   {
-    "name": "Restricted zone B",
+    "name": "Zone R2",
     "type": "Mine site zone",
-    "label": "Restricted zone B",
+    "label": "Zone R2",
     "group": "MineSiteZones",
     "attributes": {
       "type": "Restricted",
