@@ -143,11 +143,11 @@ UPDATE white_labeling g SET settings = jsonb_set(settings::jsonb, '{overrideTren
                                                        AND ((l.settings::jsonb -> 'platformName' <> 'null'::jsonb) AND (LOWER(settings::jsonb ->> 'platformName') <> 'thingsboard')));
 
 UPDATE white_labeling SET settings = jsonb_set(settings::jsonb, '{overrideTrendzName}', 'true', true)::text
-                      WHERE type = 'GENERAL' AND (settings::jsonb -> 'appTitle' <> 'null'::jsonb);
+                      WHERE type = 'GENERAL' AND ((settings::jsonb -> 'appTitle' <> 'null'::jsonb) AND (LOWER(settings::jsonb ->> 'appTitle') <> 'thingsboard'));
 
 UPDATE white_labeling g SET settings = jsonb_set(settings::jsonb, '{overrideTrendzName}', 'true', true)::text
                         WHERE type = 'GENERAL' AND EXISTS (SELECT 1 from white_labeling l WHERE l.tenant_id = g.tenant_id AND l.customer_id = g.customer_id AND l.type = 'LOGIN'
-                                                        AND (l.settings::jsonb -> 'appTitle' <> 'null'::jsonb));
+                                                        AND ((l.settings::jsonb -> 'appTitle' <> 'null'::jsonb) AND (LOWER(l.settings::jsonb ->> 'appTitle') <> 'thingsboard')));
 
 -- tenant specific updates
 UPDATE white_labeling SET settings = jsonb_set(settings::jsonb, '{overrideTrendzName}', 'true', true)::text
