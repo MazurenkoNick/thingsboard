@@ -58,7 +58,7 @@
           "minHighValue": 3400,
           "maxHighValue": 4600,
           "minIncrement": 40.0,
-          "maxIncrement": 160.0,
+          "maxIncrement": 100,
           "minDecrement": 40.0,
           "maxDecrement": 180.0,
           "holidayMultiplier": 1.0,
