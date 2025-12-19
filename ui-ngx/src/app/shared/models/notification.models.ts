@@ -819,3 +819,9 @@ export const singleNotificationTypeTemplate = (type: NotificationType) => {
          type === NotificationType.USER_REGISTERED ||
          type === NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST;
 }
+
+export enum AddonType {
+  EDGE = 'EDGE',
+  TRENDZ = 'TRENDZ',
+  WHITE_LABELING = 'WHITE_LABELING'
+}
