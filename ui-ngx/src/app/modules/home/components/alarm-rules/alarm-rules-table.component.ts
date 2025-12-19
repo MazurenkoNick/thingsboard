@@ -52,6 +52,7 @@ import { DatePipe } from '@angular/common';
 import { AlarmRulesTableConfig } from "@home/components/alarm-rules/alarm-rules-table-config";
 import { UtilsService } from "@core/services/utils.service";
 import { ActivatedRoute } from "@angular/router";
+import { UserPermissionsService } from "@core/http/user-permissions.service";
 
 @Component({
   selector: 'tb-alarm-rules-table',
@@ -87,6 +88,7 @@ export class AlarmRulesTableComponent {
               private utilsService: UtilsService,
               private destroyRef: DestroyRef,
               private route: ActivatedRoute,
+              private userPermissionsService: UserPermissionsService,
   ) {
     this.pageMode = !!this.route.snapshot.data.isPage;
     effect(() => {
@@ -107,7 +109,8 @@ export class AlarmRulesTableComponent {
           this.utilsService,
           this.readonly(),
           this.hideClearEventAction(),
-          this.pageMode
+          this.userPermissionsService,
+          this.pageMode,
         );
         this.cd.markForCheck();
       }

@@ -29,26 +29,14 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
-import { TrendzSettings } from '@shared/models/trendz-settings.models';
-import { defaultHttpOptionsFromConfig, RequestConfig } from '@core/http/http-utils';
+import { OverlayContainer } from "@angular/cdk/overlay";
+import { Injectable } from "@angular/core";
 
-@Injectable({
-  providedIn: 'root'
-})
-export class TrendzSettingsService {
+@Injectable()
+export class DynamicOverlayContainer extends OverlayContainer {
 
-  constructor(
-    private http: HttpClient
-  ) {}
+  public setContainerElement( containerElement:HTMLElement ):void {
 
-  public getTrendzSettings(config?: RequestConfig): Observable<TrendzSettings> {
-    return this.http.get<TrendzSettings>(`/api/trendz/settings`, defaultHttpOptionsFromConfig(config))
-  }
-
-  public saveTrendzSettings(trendzSettings: TrendzSettings, config?: RequestConfig): Observable<TrendzSettings> {
-    return this.http.post<TrendzSettings>(`/api/trendz/settings`, trendzSettings, defaultHttpOptionsFromConfig(config))
+    this._containerElement = containerElement;
   }
 }

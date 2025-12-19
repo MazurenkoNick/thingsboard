@@ -166,7 +166,7 @@ export class IntegrationComponent extends EntityComponent<Integration, PageLink,
 
   get additionalActionConfig (): AdditionalDebugActionConfig {
     return {
-      title: this.translate.instant('integration.see-debug-events'),
+      title: this.translate.instant('action.see-debug-events'),
       action: this.openDebugEventsDialog.bind(this)
     }
   }

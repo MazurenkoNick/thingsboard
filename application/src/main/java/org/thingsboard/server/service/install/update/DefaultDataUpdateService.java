@@ -36,16 +36,20 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.AttributeScope;
+import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.ObjectType;
+import org.thingsboard.server.common.data.ResourceType;
 import org.thingsboard.server.common.data.ShortCustomerInfo;
+import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.edqs.EdqsState.EdqsSyncStatus;
@@ -68,6 +72,7 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.security.Authority;
+import org.thingsboard.server.common.data.trendz.TrendzSettings;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.customer.CustomerService;
@@ -78,8 +83,10 @@ import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.relation.RelationService;
+import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.dao.rule.RuleChainService;
 import org.thingsboard.server.dao.tenant.TenantService;
+import org.thingsboard.server.dao.trendz.TrendzSettingsService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
 import org.thingsboard.server.service.component.ComponentDiscoveryService;
@@ -128,6 +135,9 @@ public class DefaultDataUpdateService implements DataUpdateService {
     private final SystemDataLoaderService systemDataLoaderService;
     private final ComponentDiscoveryService componentDiscoveryService;
     private final DbUpgradeExecutorService executorService;
+    private final ResourceService resourceService;
+    private final TrendzUpdater trendzUpdater;
+    private final TrendzSettingsService trendzSettingsService;
 
     @Override
     public void updateData(boolean fromCe) throws Exception {
@@ -148,6 +158,14 @@ public class DefaultDataUpdateService implements DataUpdateService {
 
         }
         log.info("Data updated.");
+    }
+
+    @Override
+    @Transactional
+    public void postUpdateData() throws Exception {
+        //TODO: should be cleaned after each release
+        migrateTenantTrendzWidgetBundleToSysadminLevel();
+        migrateTenantTrendzJsModuleToSysadminLevel();
     }
 
     private void updateDataFromCe() throws Exception {
@@ -190,6 +208,64 @@ public class DefaultDataUpdateService implements DataUpdateService {
         }
         log.info("Finished rule nodes upgrade. Upgraded rule nodes count: {}", totalRuleNodesUpgraded);
     }
+
+
+    // Replacing old if safe
+    private void migrateTenantTrendzWidgetBundleToSysadminLevel() throws Exception {
+        log.info("Starting Trendz widget bundle migration ...");
+
+        String bundleAlias = "trendz_bundle";
+        Set<String> fqns = Set.of(
+                "trendz_builder",
+                "trendz_view_latest",
+                "trendz_view_static",
+                "trendz_view_latest_chat"
+        );
+        Set<String> fullFqns = fqns.stream()
+                .map(fqn -> bundleAlias + "." + fqn)
+                .collect(Collectors.toSet());
+
+        this.trendzUpdater.labelWidgetTypesAsDeprecatedByFqns(fullFqns);
+        this.trendzUpdater.findUniqueTrendzBaseUrlFromWidgetTypes(fullFqns)
+                .ifPresentOrElse(baseUrl -> {
+                    String urlString = baseUrl.toString();
+                    log.info("Found unique Trendz URL '{}'. Migrating dashboards to use system Trendz widgets", urlString);
+
+                    TrendzSettings settings = this.trendzUpdater.createSettings(urlString, null);
+                    this.trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
+
+                    for (String fqn : fullFqns) {
+                        String fqnSuffix = StringUtils.substringAfterLast(fqn, ".");
+                        String tenantFqnOld = "tenant." + fqn;
+                        String tenantFqnNew = "tenant." + fqnSuffix;
+                        String systemFqn = "system." + fqnSuffix;
+                        this.trendzUpdater.replacePatternInAllDashboardsConfigurations(tenantFqnNew, systemFqn);
+                        this.trendzUpdater.replacePatternInAllDashboardsConfigurations(tenantFqnOld, systemFqn);
+                    }
+                }, () -> {
+                    log.info("Couldn't find unique Trendz URL, skipping migration of dashboards to system Trendz widgets");
+                });
+        log.debug("Finished trendz widget bundle upgrade.");
+    }
+
+    // Replacing all without old (it is appropriate)
+    private void migrateTenantTrendzJsModuleToSysadminLevel() {
+        String resourceKey = "ai-summary-module.js";
+        TbResource system = this.resourceService.findResourceByTenantIdAndKey(TenantId.SYS_TENANT_ID, ResourceType.JS_MODULE, resourceKey);
+        if (system == null) {
+            throw new RuntimeException("Can not find trendz js module as resource with key: " + resourceKey);
+        }
+
+        String systemLink = system.getLink();
+        log.info("Migrating dashboards to use system ai-summary-module.js");
+        this.trendzUpdater.replacePatternInAllDashboardsConfigurations(
+                "/api/resource/js_module/tenant/ai-summary-module.js",
+                systemLink
+        );
+
+        this.trendzUpdater.deleteAllTenantResourcesByResourceKey(system.getResourceKey());
+    }
+
 
     private int processRuleNodePack(List<RuleNodeId> ruleNodeIdsBatch, RuleNodeClassInfo ruleNodeClassInfo) {
         var saveFutures = new ArrayList<ListenableFuture<?>>(MAX_PENDING_SAVE_RULE_NODE_FUTURES);

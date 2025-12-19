@@ -36,11 +36,11 @@
 <ng-template #componentMode>
   <ng-container *ngIf="buttonMode; else reportFilterContent">
     <button color="primary"
-            matTooltip="{{ 'report.reports-filter' | translate }}"
+            matTooltip="{{ 'report.report-filter' | translate }}"
             matTooltipPosition="above"
             mat-stroked-button
             (click)="toggleReportFilterPanel($event)">
-      <mat-icon>filter_list</mat-icon>{{ 'report.reports-filter' | translate }}
+      <mat-icon>filter_list</mat-icon>{{ 'report.report-filter' | translate }}
     </button>
   </ng-container>
 </ng-template>

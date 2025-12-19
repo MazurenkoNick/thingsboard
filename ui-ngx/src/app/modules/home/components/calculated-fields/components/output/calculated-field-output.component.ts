@@ -93,6 +93,8 @@ export class CalculatedFieldOutputComponent implements ControlValueAccessor, Val
   @Input({required: true})
   entityId: EntityId;
 
+  disabled = false;
+
   readonly outputTypes = Object.values(OutputType) as OutputType[];
   readonly OutputType = OutputType;
   readonly AttributeScope = AttributeScope;
@@ -134,6 +136,10 @@ export class CalculatedFieldOutputComponent implements ControlValueAccessor, Val
         this.toggleScopeByOutputType(type);
         this.updatedStrategy();
       });
+
+    this.outputForm.get('strategy.saveTimeSeries').valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(value => this.updateTimeSeriesTtl(value));
 
     merge(
       this.outputForm.get('strategy.type').valueChanges,
@@ -186,6 +192,7 @@ export class CalculatedFieldOutputComponent implements ControlValueAccessor, Val
   registerOnTouched(_: any): void { }
 
   setDisabledState(isDisabled: boolean): void {
+    this.disabled = isDisabled;
     if (isDisabled) {
       this.outputForm.disable({emitEvent: false});
     } else {
@@ -193,6 +200,7 @@ export class CalculatedFieldOutputComponent implements ControlValueAccessor, Val
       this.updatedFormWithMode();
       this.toggleScopeByOutputType(this.outputForm.get('type').value);
       this.updatedStrategy();
+      this.updateTimeSeriesTtl(this.outputForm.get('strategy.saveTimeSeries').value);
     }
   }
 
@@ -255,6 +263,15 @@ export class CalculatedFieldOutputComponent implements ControlValueAccessor, Val
           this.outputForm.get('strategy.ttl').enable({emitEvent: false});
         }
       }
+    }
+  }
+
+  private updateTimeSeriesTtl(value: boolean) {
+    if (value) {
+      this.outputForm.get('strategy.useCustomTtl').enable({emitEvent: true});
+    } else {
+      this.outputForm.get('strategy.useCustomTtl').disable({emitEvent: false});
+      this.outputForm.get('strategy.ttl').disable({emitEvent: false});
     }
   }
 }

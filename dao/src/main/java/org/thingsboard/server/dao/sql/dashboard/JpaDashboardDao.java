@@ -139,4 +139,8 @@ public class JpaDashboardDao extends JpaAbstractDao<DashboardEntity, Dashboard> 
         return EntityType.DASHBOARD;
     }
 
+    @Override
+    public void replacePatternInAllDashboardsConfigurations(String pattern, String replacement) {
+        dashboardRepository.replaceStringInAllDashboardConfigs(pattern, replacement);
+    }
 }

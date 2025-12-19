@@ -57,7 +57,9 @@ import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.permission.GroupPermission;
 import org.thingsboard.server.common.data.permission.GroupPermissionInfo;
 import org.thingsboard.server.common.data.permission.ShareGroupRequest;
@@ -95,6 +97,13 @@ import org.thingsboard.server.common.data.queue.QueueStats;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.EntitySearchDirection;
 import org.thingsboard.server.common.data.relation.RelationEntityTypeFilter;
+import org.thingsboard.server.common.data.report.ReportInfo;
+import org.thingsboard.server.common.data.report.ReportRequest;
+import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.ReportTemplateType;
+import org.thingsboard.server.common.data.report.TbReportFormat;
+import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
+import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.role.RoleType;
 import org.thingsboard.server.common.data.scheduler.MonthlyRepeat;
@@ -1753,6 +1762,68 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
         PageData<EntityData> result3 = findByQueryAndCheck(currentUserQuery, 1);
         String ownerName3 = result3.getData().get(0).getLatest().get(EntityKeyType.ENTITY_FIELD).get("name").getValue();
         assertThat(ownerName3).isEqualTo(TEST_TENANT_NAME);
+    }
+
+    @Test
+    public void testGetReportInfos() throws Exception {
+        loginTenantAdmin();
+        ReportTemplate csvTemplate = buildReportTemplate(TbReportFormat.CSV);
+        csvTemplate = doPost("/api/reportTemplate", csvTemplate, ReportTemplate.class);
+
+        ReportTemplate pdfTemplate = buildReportTemplate(TbReportFormat.PDF);
+        pdfTemplate = doPost("/api/reportTemplate", pdfTemplate, ReportTemplate.class);
+
+        for (int i = 0; i < 5; i++) {
+            ReportRequest csvRequest = new ReportRequest();
+            csvRequest.setReportTemplateId(csvTemplate.getId());
+            doPost("/api/v2/report/request", csvRequest, Job.class);
+
+            ReportRequest pdfRequest = new ReportRequest();
+            pdfRequest.setReportTemplateId(pdfTemplate.getId());
+            doPost("/api/v2/report/request", pdfRequest, Job.class);
+        }
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() ->
+                        doGetTypedWithPageLink("/api/v2/reportInfos/all?", new TypeReference<PageData<ReportInfo>>() {
+                        }, new PageLink(30)),
+                result -> result.getData().size() == 10);
+
+        EntityTypeFilter entityTypeFilter = new EntityTypeFilter();
+        entityTypeFilter.setEntityType(EntityType.REPORT_TEMPLATE);
+        List<EntityKey> entityFields = List.of(
+                new EntityKey(EntityKeyType.ENTITY_FIELD, "name"),
+                new EntityKey(EntityKeyType.ENTITY_FIELD, "format")
+        );
+        EntityDataPageLink pageLink = new EntityDataPageLink(1000, 0, null, null);
+
+        EntityDataQuery query = new EntityDataQuery(entityTypeFilter, pageLink, entityFields, null, null);
+        PageData<EntityData> reportTemplates = findByQueryAndCheck(query, 2);
+        List<String> reportTemplateNames = reportTemplates.getData().stream().map(entityData -> entityData.getLatest().get(EntityKeyType.ENTITY_FIELD).get("name").getValue()).toList();
+        assertThat(reportTemplateNames).containsOnly(csvTemplate.getName(), pdfTemplate.getName());
+
+        entityTypeFilter.setEntityType(EntityType.REPORT);
+        PageData<EntityData> reports = findByQueryAndCheck(query, 10);
+        List<String> reportFormat = reports.getData().stream().map(entityData -> entityData.getLatest().get(EntityKeyType.ENTITY_FIELD).get("format").getValue()).toList();
+        assertThat(reportFormat).containsOnly(TbReportFormat.CSV.name(), TbReportFormat.PDF.name());
+    }
+
+    private ReportTemplate buildReportTemplate(TbReportFormat format) {
+        ReportTemplate template = new ReportTemplate();
+        template.setName(StringUtils.randomAlphabetic(10));
+        template.setType(ReportTemplateType.REPORT);
+        template.setFormat(format);
+        switch (format){
+            case CSV -> {
+                CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
+                configuration.setComponents(new ArrayList<>());
+                template.setConfiguration(configuration);
+            }
+            case PDF -> {
+                PdfReportTemplateConfig configuration = new PdfReportTemplateConfig();
+                configuration.setComponents(new ArrayList<>());
+                template.setConfiguration(configuration);
+            }
+        }
+        return template;
     }
 
     private void clearCustomerAdminPermissionGroup() throws Exception {

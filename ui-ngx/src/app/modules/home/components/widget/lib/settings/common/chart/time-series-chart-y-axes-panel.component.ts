@@ -172,7 +172,7 @@ export class TimeSeriesChartYAxesPanelComponent implements ControlValueAccessor,
   }
 
   writeValue(value: TimeSeriesChartYAxes | undefined): void {
-    const yAxes: TimeSeriesChartYAxes = this.checkLatestDataKeys(value || {});
+    const yAxes: TimeSeriesChartYAxes = this.reportMode ? value : this.checkLatestDataKeys(value || {});
     if (!yAxes.default) {
       yAxes.default = mergeDeep({} as TimeSeriesChartYAxisSettings, defaultTimeSeriesChartYAxisSettings,
         {id: 'default', order: 0} as TimeSeriesChartYAxisSettings);
@@ -241,8 +241,8 @@ export class TimeSeriesChartYAxesPanelComponent implements ControlValueAccessor,
     for (const [id, axis] of Object.entries(yAxes)) {
       axis.min = this.normalizeAxisLimit(axis.min);
       axis.max = this.normalizeAxisLimit(axis.max);
-      const minCfg = axis.min;
-      const maxCfg = axis.max;
+      const minCfg = axis.min as ValueSourceConfig;
+      const maxCfg = axis.max as ValueSourceConfig;
 
       const minValid = !!minCfg && (
         minCfg.type !== ValueSourceType.latestKey ||
@@ -314,19 +314,22 @@ export class TimeSeriesChartYAxesPanelComponent implements ControlValueAccessor,
         d.type === limit.latestKeyType);
   }
 
-  private normalizeAxisLimit(limit: string | number | ValueSourceConfig): ValueSourceConfig {
-    if (!limit) {
-      return {
-        type: ValueSourceType.constant,
-        value: null,
-        entityAlias: null
-      };
-    } else if (typeof limit === 'number' || typeof limit === 'string') {
-      return {
-        type: ValueSourceType.constant,
-        value: Number(limit),
-        entityAlias: null
-      };
+  private normalizeAxisLimit(limit: string | number | ValueSourceConfig): string | number | ValueSourceConfig  {
+    if(!this.reportMode){
+      if (!limit) {
+        return {
+          type: ValueSourceType.constant,
+          value: null,
+          entityAlias: null
+        };
+      } else if (typeof limit === 'number' || typeof limit === 'string') {
+        return {
+          type: ValueSourceType.constant,
+          value: Number(limit),
+          entityAlias: null
+        };
+      }
+      return limit;
     }
     return limit;
   }

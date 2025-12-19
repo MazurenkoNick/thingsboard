@@ -91,7 +91,10 @@ public class ApiKeyDataValidator extends DataValidator<ApiKey> {
             throw new DataValidationException("Cannot update API key expiration time!");
         }
         if (old.isInternal() != apiKey.isInternal()) {
-            throw new DataValidationException("Cannot change internal flag of existing API Key!");
+            throw new DataValidationException("Cannot change internal flag of existing API key!");
+        }
+        if (old.isInternal() && !old.getDescription().equals(apiKey.getDescription())) {
+            throw new DataValidationException("Cannot update internal API key description!");
         }
         return old;
     }

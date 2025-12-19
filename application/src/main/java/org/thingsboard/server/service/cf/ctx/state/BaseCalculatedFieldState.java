@@ -63,7 +63,6 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState, 
 
     protected Map<String, ArgumentEntry> arguments = new HashMap<>();
     protected boolean sizeExceedsLimit;
-    protected long latestTimestamp = DEFAULT_LAST_UPDATE_TS;
     protected ReadinessStatus readinessStatus;
 
     @Setter
@@ -78,7 +77,7 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState, 
         this.ctx = ctx;
         this.actorCtx = actorCtx;
         this.requiredArguments = ctx.getArgNames();
-        this.readinessStatus = checkReadiness(requiredArguments, arguments);
+        this.readinessStatus = checkReadiness();
     }
 
     @Override
@@ -123,7 +122,7 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState, 
         if (updatedArguments == null) {
             return Collections.emptyMap();
         }
-        readinessStatus = checkReadiness(requiredArguments, arguments);
+        readinessStatus = checkReadiness();
         return updatedArguments;
     }
 
@@ -136,7 +135,6 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState, 
         requiredArguments = null;
         arguments.clear();
         sizeExceedsLimit = false;
-        latestTimestamp = DEFAULT_LAST_UPDATE_TS;
     }
 
     @Override
@@ -198,13 +196,13 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState, 
         return latestTs;
     }
 
-    protected ReadinessStatus checkReadiness(List<String> requiredArguments, Map<String, ArgumentEntry> currentArguments) {
-        if (currentArguments == null) {
+    protected ReadinessStatus checkReadiness() {
+        if (arguments == null) {
             return ReadinessStatus.from(requiredArguments);
         }
         List<String> emptyArguments = null;
         for (String requiredArgumentKey : requiredArguments) {
-            ArgumentEntry argumentEntry = currentArguments.get(requiredArgumentKey);
+            ArgumentEntry argumentEntry = arguments.get(requiredArgumentKey);
             if (argumentEntry == null || argumentEntry.isEmpty()) {
                 if (emptyArguments == null) {
                     emptyArguments = new ArrayList<>();

@@ -54,10 +54,9 @@ import { fromEvent, Subscription } from 'rxjs';
 import { POSITION_MAP } from '@shared/models/overlay.models';
 import { UtilsService } from '@core/services/utils.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AlarmRuleFilterConfig } from "@shared/models/alarm-rule.models";
-import { Operation, Resource } from "@shared/models/security.models";
-import { EntityService } from "@core/http/entity.service";
+import { alarmRuleEntityTypeList, AlarmRuleFilterConfig } from "@shared/models/alarm-rule.models";
 import { UserPermissionsService } from "@core/http/user-permissions.service";
+import { Operation } from "@shared/models/security.models";
 
 export const ALARM_FILTER_CONFIG_DATA = new InjectionToken<any>('AlarmRuleFilterConfigData');
 
@@ -91,14 +90,6 @@ export class AlarmRuleFilterConfigComponent implements OnInit, ControlValueAcces
   @Input()
   buttonMode = true;
 
-  @coerceBoolean()
-  @Input()
-  userMode = false;
-
-  @coerceBoolean()
-  @Input()
-  propagatedFilter = true;
-
   @Input()
   initialAlarmRuleFilterConfig: AlarmRuleFilterConfig = {
     name: [],
@@ -118,7 +109,8 @@ export class AlarmRuleFilterConfigComponent implements OnInit, ControlValueAcces
 
   entityType = EntityType;
 
-  listEntityTypes = [EntityType.DEVICE, EntityType.ASSET, EntityType.CUSTOMER, EntityType.DEVICE_PROFILE, EntityType.ASSET_PROFILE];
+  listEntityTypes = alarmRuleEntityTypeList.filter(entityType =>
+    this.userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.READ_CALCULATED_FIELD, entityType));
   entityTypeTranslations = entityTypeTranslations;
 
   private alarmRuleFilterConfig: AlarmRuleFilterConfig;
@@ -137,26 +129,17 @@ export class AlarmRuleFilterConfigComponent implements OnInit, ControlValueAcces
               private viewContainerRef: ViewContainerRef,
               private utils: UtilsService,
               private destroyRef: DestroyRef,
-              private entityService: EntityService,
               private userPermissionsService: UserPermissionsService) {
   }
 
   ngOnInit(): void {
     if (this.data) {
       this.panelMode = this.data.panelMode;
-      this.userMode = this.data.userMode;
       this.alarmRuleFilterConfig = this.data.alarmRuleFilterConfig;
       this.initialAlarmRuleFilterConfig = this.data.initialAlarmRuleFilterConfig;
       if (this.panelMode && !this.initialAlarmRuleFilterConfig) {
         this.initialAlarmRuleFilterConfig = deepClone(this.alarmRuleFilterConfig);
       }
-    }
-    this.listEntityTypes = this.entityService.prepareAllowedEntityTypesList(this.listEntityTypes, false, Operation.WRITE) as EntityType[];
-    if (this.userPermissionsService.hasGenericPermission(Resource.DEVICE_PROFILE, Operation.WRITE)) {
-      this.listEntityTypes.push(EntityType.DEVICE_PROFILE);
-    }
-    if (this.userPermissionsService.hasGenericPermission(Resource.ASSET_PROFILE, Operation.WRITE)) {
-      this.listEntityTypes.push(EntityType.ASSET_PROFILE);
     }
     this.alarmRuleFilterConfigForm = this.fb.group({
       name: [null, []],
@@ -275,7 +258,7 @@ export class AlarmRuleFilterConfigComponent implements OnInit, ControlValueAcces
       if (!isArraysEqualIgnoreUndefined(filter1.entities, filter2.entities)) {
         return false;
       }
-      return filter1.entityType !== filter2.entityType;
+      return filter1.entityType === filter2.entityType;
     }
     return false;
   };
@@ -314,7 +297,7 @@ export class AlarmRuleFilterConfigComponent implements OnInit, ControlValueAcces
       if (!filterTextParts.length) {
         this.buttonDisplayValue = this.translate.instant('alarm-rule.alarm-rule-filter-title');
       } else {
-        this.buttonDisplayValue = this.translate.instant('alarm-rule.alarm-rule-filter-title') + `: ${filterTextParts.join(', ')}`;
+        this.buttonDisplayValue = this.translate.instant('alarm-rule.filter-title') + `: ${filterTextParts.join(', ')}`;
       }
     }
   }
