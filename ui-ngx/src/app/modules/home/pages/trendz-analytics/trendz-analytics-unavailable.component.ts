@@ -33,11 +33,13 @@ import { Component } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { AppState } from '@app/core/core.state';
-import { DialogComponent } from '@app/shared/components/dialog.component';
+import { DialogComponent } from '@shared/components/dialog.component';
 import { Store } from '@ngrx/store';
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
 import { TranslateService } from '@ngx-translate/core';
-import { DialogService } from '@app/core/services/dialog.service';
+import { DialogService } from '@core/services/dialog.service';
+import { NotificationService } from '@core/http/notification.service';
+import { AddonType } from '@shared/models/notification.models';
 
 @Component({
   selector: 'tb-trendz-analytics-unavailable',
@@ -53,17 +55,18 @@ export class TrendzAnalyticsUnavailableComponent extends DialogComponent<TrendzA
               protected dialogRef: MatDialogRef<TrendzAnalyticsUnavailableComponent>,
               private wl: WhiteLabelingService,
               private translate: TranslateService,
-              private dialogs: DialogService) {
+              private dialogs: DialogService,
+              private notificationService: NotificationService) {
     super(store,  router, dialogRef);
   }
 
   reportIssue() {
-    // TODO: Call notification
-    this.dialogs.alert(
-      this.translate.instant('trendz-analytics.service-unavailable-request-sent-title'),
-      this.translate.instant('trendz-analytics.service-unavailable-request-sent-message'),
-      this.translate.instant('action.close')
-    )
+    this.notificationService.sendAddonAccessError(AddonType.TRENDZ).subscribe(() => {
+      this.dialogs.alert(
+        this.translate.instant('trendz-analytics.service-unavailable-request-sent-title'),
+        this.translate.instant('trendz-analytics.service-unavailable-request-sent-message'),
+        this.translate.instant('action.close')
+      )
+    });
   }
-
 }
