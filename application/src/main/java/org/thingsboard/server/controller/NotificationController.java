@@ -63,6 +63,7 @@ import org.thingsboard.server.common.data.notification.NotificationRequest;
 import org.thingsboard.server.common.data.notification.NotificationRequestInfo;
 import org.thingsboard.server.common.data.notification.NotificationRequestPreview;
 import org.thingsboard.server.common.data.notification.NotificationType;
+import org.thingsboard.server.common.data.notification.info.AddonAccessErrorNotificationInfo;
 import org.thingsboard.server.common.data.notification.info.AddonAccessRequestNotificationInfo;
 import org.thingsboard.server.common.data.notification.info.EntitiesLimitIncreaseRequestNotificationInfo;
 import org.thingsboard.server.common.data.notification.info.NotificationInfo;
@@ -315,8 +316,8 @@ public class NotificationController extends BaseController {
     }
 
     @ApiOperation(value = "Send entity limit increase request notification to System/Tenant administrators (sendEntitiesLimitIncreaseRequest)",
-                  notes = "Send entity limit increase request notification by Tenant Administrator or Customer User to System/Tenant administrators." +
-                  TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+            notes = "Send entity limit increase request notification by Tenant Administrator or Customer User to System/Tenant administrators." +
+                    TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PostMapping("/notification/entitiesLimitIncreaseRequest/{entityType}")
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     public void sendEntitiesLimitIncreaseRequest(@Parameter(description = "Entity type", required = true, schema = @Schema(allowableValues = {"DEVICE", "ASSET", "CUSTOMER", "USER", "DASHBOARD", "RULE_CHAIN", "EDGE", "INTEGRATION", "CONVERTER", "SCHEDULER_EVENT"}))
@@ -332,7 +333,7 @@ public class NotificationController extends BaseController {
                 NotificationTargetId notificationTargetId = sysAdmins.get().getId();
                 String baseUrl = systemSecurityService.getBaseUrl(TenantId.SYS_TENANT_ID, new CustomerId(EntityId.NULL_UUID), request);
                 String actionLabel = subscriptionViolation ? "Manage license" : "Set new limit";
-                String actionLink = subscriptionViolation ? "/license" : "/tenants/"+user.getTenantId().toString();
+                String actionLink = subscriptionViolation ? "/license" : "/tenants/" + user.getTenantId().toString();
                 NotificationInfo info = EntitiesLimitIncreaseRequestNotificationInfo.builder()
                         .entityType(entityType)
                         .userEmail(user.getEmail())
@@ -422,6 +423,66 @@ public class NotificationController extends BaseController {
                         .baseUrl(baseUrl)
                         .build();
                 notificationCenter.sendSystemNotification(user.getTenantId(), notificationTargetId, NotificationType.ADDON_ACCESS_REQUEST, info);
+            } else {
+                throw new IllegalArgumentException("Notification target for 'Tenant administrators' not found");
+            }
+        }
+    }
+
+    @ApiOperation(value = "Send add-on access error notification to System/Tenant administrators (sendAddonAccessError)",
+            notes = "Send add-on access error notification by Tenant Administrator or Customer User to System/Tenant administrators." +
+                    TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PostMapping("/notification/sendAddonAccessError/{addonType}")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    public void sendAddonAccessError(@Parameter(description = "Addon type", required = true, schema = @Schema(allowableValues = {"EDGE", "TRENDZ", "WHITE_LABELING"}))
+                                     @PathVariable("addonType") String strAddonType,
+                                     @AuthenticationPrincipal SecurityUser user,
+                                     HttpServletRequest request) throws Exception {
+        AddonType addonType = checkEnumParameter("addonType", strAddonType, AddonType::valueOf);
+        if (user.isTenantAdmin()) {
+            Optional<NotificationTarget> sysAdmins = notificationTargetService.findNotificationTargetsByTenantIdAndUsersFilterType(TenantId.SYS_TENANT_ID, UsersFilterType.SYSTEM_ADMINISTRATORS)
+                    .stream().findFirst();
+            if (sysAdmins.isPresent()) {
+                NotificationTargetId notificationTargetId = sysAdmins.get().getId();
+                String baseUrl = systemSecurityService.getBaseUrl(TenantId.SYS_TENANT_ID, new CustomerId(EntityId.NULL_UUID), request);
+                String actionLabel = "Check configuration";
+                String actionLink = null;
+                if (addonType == AddonType.TRENDZ && subscriptionService.getLicenseVersion() < 2) {
+                    actionLink = "/trendzSettings";
+                }
+                NotificationInfo info = AddonAccessErrorNotificationInfo.builder()
+                        .addonType(addonType)
+                        .userEmail(user.getEmail())
+                        .checkConfigurationActionLabel(actionLabel)
+                        .checkConfigurationLink(actionLink)
+                        .baseUrl(baseUrl)
+                        .build();
+                notificationCenter.sendSystemNotification(TenantId.SYS_TENANT_ID, notificationTargetId, NotificationType.ADDON_ACCESS_ERROR, info);
+            } else {
+                throw new IllegalArgumentException("Notification target for 'System administrators' not found");
+            }
+        } else {
+            Optional<NotificationTarget> tenantAdmins = notificationTargetService.findNotificationTargetsByTenantIdAndUsersFilterType(user.getTenantId(), UsersFilterType.TENANT_ADMINISTRATORS)
+                    .stream().findFirst();
+            if (tenantAdmins.isPresent()) {
+                NotificationTargetId notificationTargetId = tenantAdmins.get().getId();
+                String baseUrl = systemSecurityService.getBaseUrl(user.getTenantId(), new CustomerId(EntityId.NULL_UUID), request);
+                String addonNameOverride = null;
+                if (addonType == AddonType.TRENDZ && subscriptionService.whiteLabelingEnabled(user.getTenantId())) {
+                    var params = whiteLabelingService.getMergedTenantWhiteLabelingParams(getTenantId());
+                    if (params != null && params.getOverrideTrendzName() != null && params.getOverrideTrendzName()) {
+                        addonNameOverride = "Advanced Analytics";
+                    }
+                }
+                NotificationInfo info = AddonAccessErrorNotificationInfo.builder()
+                        .addonType(addonType)
+                        .addonNameOverride(addonNameOverride)
+                        .userEmail(user.getEmail())
+                        .checkConfigurationActionLabel("Report issue")
+                        .checkConfigurationLink("/action/addonAccessError?addonType=" + addonType.name())
+                        .baseUrl(baseUrl)
+                        .build();
+                notificationCenter.sendSystemNotification(user.getTenantId(), notificationTargetId, NotificationType.ADDON_ACCESS_ERROR, info);
             } else {
                 throw new IllegalArgumentException("Notification target for 'Tenant administrators' not found");
             }

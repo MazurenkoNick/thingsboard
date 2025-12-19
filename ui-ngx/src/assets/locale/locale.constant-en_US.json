@@ -5992,6 +5992,7 @@
             "device-activity": "Device activity",
             "entities-limit": "Entities limit",
             "entities-limit-increase-request": "Entities limit increase request",
+            "addon-access-error": "Add-on/Feature access error",
             "addon-access-request": "Add-on/Feature access request",
             "entity-action": "Entity action",
             "general": "General",
