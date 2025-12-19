@@ -1295,6 +1295,10 @@ public class DefaultSolutionService implements SolutionService {
         });
         RuleChain edgeTemplateRootRuleChain = ruleChainService.getEdgeTemplateRootRuleChain(ctx.getTenantId());
         for (EdgeDefinition entityDef : edges) {
+            if (!subscriptionService.isCreateEdgeAllowed(ctx.getTenantId())) {
+                log.warn("Skip provision edges for tenant {} ", ctx.getTenantId());
+                break;
+            }
             Edge entity = new Edge();
             entity.setTenantId(ctx.getTenantId());
             entity.setName(entityDef.getName());
