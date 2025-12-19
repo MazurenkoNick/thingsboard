@@ -5,7 +5,7 @@
     "id": "93855be4-461e-4a35-b925-50a70d30c738"
   },
   "type": "ENTITY_AGGREGATION",
-  "name": "Haul truck avg hourly fuel consumption",
+  "name": "Haul truck hourly fuel consumption",
   "debugSettings": {
     "failuresEnabled": true,
     "allEnabled": false,
@@ -24,7 +24,7 @@
       }
     },
     "metrics": {
-      "avgHourlyFuelConsumption": {
+      "hourlyFuelConsumption": {
         "function": "SUM",
         "input": {
           "type": "key",

@@ -5,7 +5,7 @@
     "id": "93855be4-461e-4a35-b925-50a70d30c738"
   },
   "type": "ENTITY_AGGREGATION",
-  "name": "Haul truck avg daily fuel consumption",
+  "name": "Haul truck daily fuel consumption",
   "debugSettings": {
     "failuresEnabled": true,
     "allEnabled": false,
@@ -15,20 +15,20 @@
   "configuration": {
     "type": "ENTITY_AGGREGATION",
     "arguments": {
-      "avgHourlyFuelConsumption": {
+      "hourlyFuelConsumption": {
         "refEntityKey": {
-          "key": "avgHourlyFuelConsumption",
+          "key": "hourlyFuelConsumption",
           "type": "TS_LATEST"
         },
         "defaultValue": null
       }
     },
     "metrics": {
-      "avgDailyFuelConsumption": {
+      "dailyFuelConsumption": {
         "function": "SUM",
         "input": {
           "type": "key",
-          "key": "avgHourlyFuelConsumption"
+          "key": "hourlyFuelConsumption"
         },
         "defaultValue": 0
       }

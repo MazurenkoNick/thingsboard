@@ -5,7 +5,7 @@
     "id": "ff395d16-0c28-4985-802d-bad40f4bf4d0"
   },
   "type": "ENTITY_AGGREGATION",
-  "name": "Excavator avg hourly fuel consumption",
+  "name": "Excavator hourly fuel consumption",
   "debugSettings": {
     "failuresEnabled": true,
     "allEnabled": false,
@@ -24,7 +24,7 @@
       }
     },
     "metrics": {
-      "avgHourlyFuelConsumption": {
+      "hourlyFuelConsumption": {
         "function": "SUM",
         "input": {
           "type": "key",

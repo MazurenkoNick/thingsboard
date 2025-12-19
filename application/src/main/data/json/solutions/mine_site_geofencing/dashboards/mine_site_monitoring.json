@@ -5789,7 +5789,7 @@
               "entityAliasId": "a2e4e1f8-0538-e41b-34e2-6c5eede83e12",
               "dataKeys": [
                 {
-                  "name": "totalAvgDailyFuelConsumption",
+                  "name": "totalDailyFuelConsumption",
                   "type": "timeseries",
                   "label": "Daily fuel consumption",
                   "color": "#2196f3",
