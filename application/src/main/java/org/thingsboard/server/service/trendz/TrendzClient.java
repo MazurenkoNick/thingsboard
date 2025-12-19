@@ -178,18 +178,24 @@ public class TrendzClient {
                 }, user, "Get Trendz usage");
     }
 
-    public ResponseEntity<byte[]> sendTrendzProxyRequest(String uriPath, HttpMethod method, byte[] body, HttpHeaders headers) throws ThingsboardException {
+    public ResponseEntity<byte[]> sendTrendzProxyRequest(String uriPath, Map<String, String[]> params, HttpMethod method, byte[] body, HttpHeaders headers) throws ThingsboardException {
 
         String trendzUrl = getBaseTrendzUrl();
 
         try {
-            headers.set(HttpHeaders.HOST, URI.create(trendzUrl).getHost());
+            UriComponentsBuilder uriBuilder = UriComponentsBuilder
+                    .fromUriString(trendzUrl)
+                    .path(uriPath);
+            params.forEach(uriBuilder::queryParam);
+            URI uri = uriBuilder.build(false)
+                    .toUri();
 
-            String url = trendzUrl + uriPath;
-            log.debug("Trendz proxy request at: {}", url);
+            headers.set(HttpHeaders.HOST, uri.getHost());
+
+            log.debug("Trendz proxy request at: {}", uri);
 
             ResponseEntity<byte[]> response = restTemplate.exchange(
-                    url, method, new HttpEntity<>(body, headers), byte[].class
+                    uri, method, new HttpEntity<>(body, headers), byte[].class
             );
 
             log.debug("Trendz proxy request completed successfully");
