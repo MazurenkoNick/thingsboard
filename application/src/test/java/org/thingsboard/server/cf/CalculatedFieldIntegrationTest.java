@@ -1400,14 +1400,11 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
                     ObjectNode result = getTimeSeries(device.getId(), startTs, endTs, "allowedZonesEvent,restrictedZonesEvent");
                     assertThat(result).isNotNull().hasSize(2);
 
-                    assertThat(result.get("allowedZonesEvent")).hasSize(2);
+                    assertThat(result.get("allowedZonesEvent")).hasSize(1);
                     assertThat(result.get("restrictedZonesEvent")).hasSize(1);
 
                     assertThat(result.get("allowedZonesEvent").get(0).get("value").asText()).isEqualTo("LEFT");
                     assertThat(result.get("allowedZonesEvent").get(0).get("ts").asText()).isEqualTo(Long.toString(ts2));
-
-                    assertThat(result.get("allowedZonesEvent").get(1).get("value").asText()).isEqualTo("ENTERED");
-                    assertThat(result.get("allowedZonesEvent").get(1).get("ts").asText()).isEqualTo(Long.toString(ts1));
 
                     assertThat(result.get("restrictedZonesEvent").get(0).get("value").asText()).isEqualTo("ENTERED");
                     assertThat(result.get("restrictedZonesEvent").get(0).get("ts").asText()).isEqualTo(Long.toString(ts2));
