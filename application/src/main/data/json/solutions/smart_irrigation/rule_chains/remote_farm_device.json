@@ -1,7 +1,7 @@
 {
   "ruleChain": {
-    "name": "SI Water Meter",
-    "type": "CORE",
+    "name": "SI Device (Remote Farm)",
+    "type": "EDGE",
     "firstRuleNodeId": null,
     "root": false,
     "debugMode": false,
@@ -28,8 +28,8 @@
           }
         },
         "additionalInfo": {
-          "layoutX": 917,
-          "layoutY": 297
+          "layoutX": 822,
+          "layoutY": 294
         }
       },
       {
@@ -49,8 +49,8 @@
           "updateAttributesOnlyOnValueChange": false
         },
         "additionalInfo": {
-          "layoutX": 915,
-          "layoutY": 224
+          "layoutX": 824,
+          "layoutY": 221
         }
       },
       {
@@ -64,8 +64,8 @@
           "version": 0
         },
         "additionalInfo": {
-          "layoutX": 381,
-          "layoutY": 303
+          "layoutX": 374,
+          "layoutY": 260
         }
       },
       {
@@ -82,8 +82,8 @@
         },
         "additionalInfo": {
           "description": null,
-          "layoutX": 915,
-          "layoutY": 386
+          "layoutX": 824,
+          "layoutY": 383
         }
       },
       {
@@ -100,8 +100,8 @@
         },
         "additionalInfo": {
           "description": null,
-          "layoutX": 914,
-          "layoutY": 447
+          "layoutX": 823,
+          "layoutY": 444
         }
       },
       {
@@ -115,8 +115,8 @@
           "timeoutInSeconds": 60
         },
         "additionalInfo": {
-          "layoutX": 913,
-          "layoutY": 510
+          "layoutX": 822,
+          "layoutY": 507
         }
       },
       {
@@ -127,17 +127,46 @@
         "queueName": null,
         "configurationVersion": 1,
         "configuration": {
-          "ruleChainId": "fa108300-4a3d-11ed-bda9-a3d6eb01ab48",
+          "ruleChainId": "dceb0310-9676-11ed-b5e1-392bb934190c",
           "forwardMsgToDefaultRuleChain": false
         },
         "additionalInfo": {
           "description": "",
-          "layoutX": 584,
-          "layoutY": 144
+          "layoutX": 566,
+          "layoutY": 95
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.edge.TbMsgPushToCloudNode",
+        "name": "Push to cloud",
+        "debugSettings": {
+          "failuresEnabled": false,
+          "allEnabled": false,
+          "allEnabledUntil": 0
+        },
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 0,
+        "configuration": {
+          "scope": "SERVER_SCOPE"
+        },
+        "additionalInfo": {
+          "layoutX": 1129,
+          "layoutY": 253
         }
       }
     ],
     "connections": [
+      {
+        "fromIndex": 0,
+        "toIndex": 7,
+        "type": "Success"
+      },
+      {
+        "fromIndex": 1,
+        "toIndex": 7,
+        "type": "Success"
+      },
       {
         "fromIndex": 2,
         "toIndex": 0,

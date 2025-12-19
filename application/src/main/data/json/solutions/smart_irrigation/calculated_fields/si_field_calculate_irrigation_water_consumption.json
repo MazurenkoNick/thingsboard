@@ -20,14 +20,14 @@
           "key": "currentIrrigationWaterConsumption",
           "type": "TS_LATEST"
         },
-        "defaultValue": ""
+        "defaultValue": "0"
       },
       "irrigationState": {
         "refEntityKey": {
           "key": "irrigationState",
           "type": "TS_LATEST"
         },
-        "defaultValue": ""
+        "defaultValue": "DONE"
       },
       "waterConsumption": {
         "refEntityKey": {

@@ -37,7 +37,7 @@
         "defaultValue": ""
       }
     },
-    "expression": "var irrTask = irrigationTask.value;\n\nirrTask.consumption = currentIrrigationWaterConsumption;\nirrTask.duration = Date.now() - irrTask.startTs;\n\nvar values = {\n    \"irrigationTask\": irrTask\n};\n\n\nvar shouldTurnOff = false;\n\nif (irrTask == null) {\n    shouldTurnOff = true;\n} else if (irrTask.durationThreshold > 0) {\n    shouldTurnOff = (irrTask.startTs + irrTask.durationThreshold) < Date.now();\n} else {\n    shouldTurnOff = currentIrrigationWaterConsumption >= irrTask.consumptionThreshold;\n}\n\nif (shouldTurnOff) {\n    values.irrigationState = \"DONE\";\n}\n\nreturn {\n    \"ts\": irrigationTask.ts,\n    \"values\": values\n}",
+    "expression": "irrigationTask.consumption = currentIrrigationWaterConsumption;\nirrigationTask.duration = Date.now() - irrigationTask.startTs;\n\nvar values = {\n    \"irrigationTask\": irrigationTask\n};\n\n\nvar shouldTurnOff = false;\n\nif (irrigationTask == null) {\n    shouldTurnOff = true;\n} else if (irrigationTask.durationThreshold > 0) {\n    shouldTurnOff = (irrigationTask.startTs + irrigationTask.durationThreshold) < Date.now();\n} else {\n    shouldTurnOff = currentIrrigationWaterConsumption >= irrigationTask.consumptionThreshold;\n}\n\nif (shouldTurnOff) {\n    values.irrigationState = \"DONE\";\n}\n\nreturn {\n    \"ts\": irrigationTask.ts,\n    \"values\": values\n}",
     "output": {
       "type": "TIME_SERIES",
       "strategy": {

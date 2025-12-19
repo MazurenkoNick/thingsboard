@@ -1,6 +1,6 @@
 {
   "ruleChain": {
-    "name": "SI Smart Valve",
+    "name": "SI Device",
     "type": "CORE",
     "firstRuleNodeId": null,
     "root": false,
