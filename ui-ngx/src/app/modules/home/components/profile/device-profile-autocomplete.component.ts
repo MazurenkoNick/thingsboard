@@ -63,7 +63,7 @@ import { Operation, Resource } from '@shared/models/security.models';
 import { AddDeviceProfileDialogComponent, AddDeviceProfileDialogData } from './add-device-profile-dialog.component';
 import { emptyPageData } from '@shared/models/page/page-data';
 import { getEntityDetailsPageURL } from '@core/utils';
-import { SubscriptSizing } from '@angular/material/form-field';
+import { MatFormFieldAppearance, SubscriptSizing } from '@angular/material/form-field';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { AuthUser } from '@shared/models/user.model';
 import { getCurrentAuthUser } from '@core/auth/auth.selectors';
@@ -88,6 +88,9 @@ export class DeviceProfileAutocompleteComponent implements ControlValueAccessor,
   selectDeviceProfileFormGroup: UntypedFormGroup;
 
   modelValue: DeviceProfileId | null;
+
+  @Input()
+  appearance: MatFormFieldAppearance = 'fill';
 
   @Input()
   subscriptSizing: SubscriptSizing = 'fixed';
@@ -125,6 +128,10 @@ export class DeviceProfileAutocompleteComponent implements ControlValueAccessor,
 
   @Input()
   hint: string;
+
+  @Input()
+  @coerceBoolean()
+  inlineField: boolean;
 
   @Output()
   deviceProfileUpdated = new EventEmitter<DeviceProfileId>();

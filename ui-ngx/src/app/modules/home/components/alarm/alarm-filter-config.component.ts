@@ -126,7 +126,7 @@ export class AlarmFilterConfigComponent implements OnInit, OnDestroy, ControlVal
 
   alarmSeverityTranslationMap = alarmSeverityTranslations;
 
-  buttonDisplayValue = this.translate.instant('alarm.alarm-filter');
+  buttonDisplayValue = this.translate.instant('alarm.alarm-filter-title');
 
   alarmFilterConfigForm: UntypedFormGroup;
 
