@@ -73,7 +73,7 @@ ${alarm_rules}
 
 ### Calculated fields
 
-Calculated Fields are used to derive daily and weekly water consumption metrics and analytical indicators based on incoming telemetry.
+Calculated fields are used to derive daily and weekly water consumption metrics and analytical indicators based on incoming telemetry.
 
 The aggregation is done in the UTC time zone by default. You may configure settings like the time zone or interval duration in Calculated fields.
 

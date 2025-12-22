@@ -104,7 +104,7 @@ ${alarm_rules}
 
 ### Calculated fields
 
-Calculated Fields are used to derive irrigation-related metrics and indicators based on incoming device telemetry.
+Calculated fields are used to derive irrigation-related metrics and indicators based on incoming device telemetry.
 
 <div class="tb-markdown-view table-wrapper">
 

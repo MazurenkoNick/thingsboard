@@ -36,15 +36,6 @@ The user can go to the bin state in several ways: click on the line in the Bins 
 <img src="https://img.thingsboard.io/solutions/waste_monitoring/waste-monitoring-2.png" alt="Waste Management">
 </div>
 
-
-#### Rule Chains
-
-The **"Waste Sensor Rule Chain"** is processing all incoming messages from waste sensors. This rule chain is responsible for counting alarms of both types and updating the status of the garbage bin by fullness and battery levels.
-
-<div class="img-float" style="max-width:50%;margin: 10px auto">
-<img src="https://img.thingsboard.io/solutions/waste_monitoring/rule-chain.png" alt="Waste Management">
-</div>
-
 #### Device Profiles
 
 The device profile listed below uses predefined values for alarm thresholds. Administrators may configure alarm thresholds for all devices by navigating to alarm rules.
@@ -81,6 +72,14 @@ curl -v -X POST -d "{\"batteryLevel\":  77, \"fullLevel\":  91 }" ${BASE_URL}/ap
 
 The example above uses <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a>.
 See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_blank">connecting devices</a> for other connectivity options.
+
+#### Rule Chains
+
+The **"Waste Sensor Rule Chain"** is processing all incoming messages from waste sensors. This rule chain is responsible for counting alarms of both types and updating the status of the garbage bin by fullness and battery levels.
+
+<div class="img-float" style="max-width:50%;margin: 10px auto">
+<img src="https://img.thingsboard.io/solutions/waste_monitoring/rule-chain.png" alt="Waste Management">
+</div>
 
 ### Solution entities
 

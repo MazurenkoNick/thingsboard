@@ -115,7 +115,7 @@ User may turn alarms on and off as well as configure the alarm thresholds via th
 
 #### Calculated fields
 
-Calculated Fields are used to compute AQI values and derived indicators based on incoming telemetry.
+Calculated fields are used to compute AQI values and derived indicators based on incoming telemetry.
 
 <div class="tb-markdown-view table-wrapper">
 

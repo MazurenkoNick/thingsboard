@@ -84,56 +84,10 @@ is designed for supermarket managers to monitor state of the supermarket and rea
       Nevertheless, the common elements of the device details is the header and alarms list.
       Header contains information about current state of the device and it's battery level (if device is battery powered). 
       Header also allows you to navigate to the settings of the particular device. Those settings allow you to configure the alarm thresholds.
-      
-### Roles
-
-The "Smart Retail Read Only" role is created to share the read-only access to "Smart Supermarket" dashboards with all users of all customers.
-
-The "Smart Retail User" role is for Supermarket Users. This role allows read only access to all entities and write access to alarms and device/asset attributes.
-
-The "Smart Retail Administrator" role is for Supermarket Administrators. This role allows write access to devices and assets within a specific Customer(if assigned to Customer User) or even entire Tenant (if assigned to Tenant User). 
-
-### Entity Groups
-
-Each Customer has:
-
- * asset group "Supermarkets" to store all supermarkets that belong to this customer.
- * device group "Supermarket Devices" to store all devices that belong to this customer.
- * device group "Unassigned Devices" to store devices that are not yet assigned to any supermarket.
- * user group "Smart Retail Users" to store users with "Smart Retail User" role.
- * user group "Smart Retail Administrators" to store users with "Smart Retail Administrator" role.
-   
-Tenant has:
-
- * dashboard group "Supermarket Users Shared" to share "Smart Supermarket" dashboard in read-only mode with all Customer user groups named "Smart Retail Users".
- * dashboard group "Supermarket Admins Shared" to share "Smart Supermarket Administration" dashboard in read-only mode with all Customer user groups named "Smart Retail Administrators".
-
-
-### Rule Chains
-
-The "Supermarket Devices" Rule Chain is responsible for processing all telemetry from devices and raising the alarms. The "alarms count" node is used to propagate alarm counts to Tenant, Customer and Supermarket assets.
-
-### Customers
-
-Supermarkets "S1" and "S2" are assigned to a newly created customer "Retail Company A". Supermarket "S3" is assigned to customer "Retail Company B".
-
-You may notice that both "Retail Company A" and "Retail Company B" has two users.
-One of the users is a supermarket manager with default dashboard "Smart Supermarket Administration" assigned.
-The other user is a supermarket user with default dashboard "Smart Supermarket" assigned.
-
-You may create more Customers and more Users via <a href="${Smart Supermarket AdministrationDASHBOARD_URL}" target="_blank">Smart Supermarket Administration</a> dashboard.
-
-**User list**
-
-<div class="tb-markdown-view table-wrapper">
-
-${user_list}
-
-</div>
 
 ### Device Profiles
 
-The device profile listed below use pre-defined values for alarm thresholds. This values are common for all devices that share same device profile.
+The device profile listed below use pre-defined values for alarm thresholds. These values are common for all devices that share same device profile.
 Supermarket manager may tune alarm thresholds for each specific device by navigating to device details via <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Smart Supermarket"</a> dashboard.
 
 ##### Smart Shelf
@@ -276,7 +230,52 @@ If this is your case, you may explore <a href="https://thingsboard.io/docs/iot-g
 develop your own gateway using <a href="https://thingsboard.io/docs/paas/reference/gateway-mqtt-api/" target="_blank">ThingsBoard MQTT Gateway API</a>.
 You may also integrate existing gateways or LoRaWAN, Sigfox, and NB IoT devices.
 Please check <a href="https://thingsboard.io/docs/user-guide/integrations/" target="_blank">ThingsBoard Integrations</a> for more info.
+      
+### Roles
 
+The "Smart Retail Read Only" role is created to share the read-only access to "Smart Supermarket" dashboards with all users of all customers.
+
+The "Smart Retail User" role is for Supermarket Users. This role allows read only access to all entities and write access to alarms and device/asset attributes.
+
+The "Smart Retail Administrator" role is for Supermarket Administrators. This role allows write access to devices and assets within a specific Customer(if assigned to Customer User) or even entire Tenant (if assigned to Tenant User). 
+
+### Entity Groups
+
+Each Customer has:
+
+ * asset group "Supermarkets" to store all supermarkets that belong to this customer.
+ * device group "Supermarket Devices" to store all devices that belong to this customer.
+ * device group "Unassigned Devices" to store devices that are not yet assigned to any supermarket.
+ * user group "Smart Retail Users" to store users with "Smart Retail User" role.
+ * user group "Smart Retail Administrators" to store users with "Smart Retail Administrator" role.
+   
+Tenant has:
+
+ * dashboard group "Supermarket Users Shared" to share "Smart Supermarket" dashboard in read-only mode with all Customer user groups named "Smart Retail Users".
+ * dashboard group "Supermarket Admins Shared" to share "Smart Supermarket Administration" dashboard in read-only mode with all Customer user groups named "Smart Retail Administrators".
+
+
+### Rule Chains
+
+The "Supermarket Devices" Rule Chain is responsible for processing all telemetry from devices and raising the alarms. The "alarms count" node is used to propagate alarm counts to Tenant, Customer and Supermarket assets.
+
+### Customers
+
+Supermarkets "S1" and "S2" are assigned to a newly created customer "Retail Company A". Supermarket "S3" is assigned to customer "Retail Company B".
+
+You may notice that both "Retail Company A" and "Retail Company B" has two users.
+One of the users is a supermarket manager with default dashboard "Smart Supermarket Administration" assigned.
+The other user is a supermarket user with default dashboard "Smart Supermarket" assigned.
+
+You may create more Customers and more Users via <a href="${Smart Supermarket AdministrationDASHBOARD_URL}" target="_blank">Smart Supermarket Administration</a> dashboard.
+
+**User list**
+
+<div class="tb-markdown-view table-wrapper">
+
+${user_list}
+
+</div>
       
 ### Implementation details
 

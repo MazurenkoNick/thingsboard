@@ -1,10 +1,10 @@
 {
-  "reprocessingOrder": 1,
+  "reprocessingOrder": 2,
   "type": "RELATED_ENTITIES_AGGREGATION",
-  "name": "Aggregate Latest Moisture",
+  "name": "Calculate total daily consumption",
   "entityId": {
-    "entityType": "ASSET_PROFILE",
-    "id": "0d58a217-f0d9-4ab6-b8be-d7d41fb36437"
+    "entityType": "ASSET",
+    "id": "90bd76d0-e2a3-4f5b-b85e-cd59386f2f44"
   },
   "debugSettings": {
     "failuresEnabled": true,
@@ -16,20 +16,12 @@
     "type": "RELATED_ENTITIES_AGGREGATION",
     "relation": {
       "direction": "FROM",
-      "relationType": "FieldToMoistureSensor"
+      "relationType": "Contains"
     },
     "arguments": {
-      "active": {
+      "dailyConsumption": {
         "refEntityKey": {
-          "key": "active",
-          "type": "ATTRIBUTE",
-          "scope": "SERVER_SCOPE"
-        },
-        "defaultValue": "false"
-      },
-      "moisture": {
-        "refEntityKey": {
-          "key": "moisture",
+          "key": "dailyConsumption",
           "type": "TS_LATEST"
         },
         "defaultValue": "0"
@@ -37,20 +29,25 @@
     },
     "deduplicationIntervalInSec": 10,
     "metrics": {
-      "latestAvgMoisture": {
-        "function": "AVG",
-        "filter": "return active == true;",
+      "dailyConsumption": {
+        "function": "SUM",
         "input": {
           "type": "key",
-          "key": "moisture"
+          "key": "dailyConsumption"
         }
       }
     },
     "output": {
       "type": "TIME_SERIES",
       "strategy": {
-        "type": "RULE_CHAIN"
-      }
+        "type": "IMMEDIATE",
+        "ttl": 0,
+        "saveTimeSeries": false,
+        "saveLatest": false,
+        "sendWsUpdate": false,
+        "processCfs": true
+      },
+      "decimalsByDefault": 2
     },
     "useLatestTs": true,
     "scheduledUpdateInterval": 60,

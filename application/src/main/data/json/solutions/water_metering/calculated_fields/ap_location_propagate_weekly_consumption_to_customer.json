@@ -1,7 +1,7 @@
 {
   "reprocessingOrder": 2,
   "type": "PROPAGATION",
-  "name": "Propagate weekly consumption to owner",
+  "name": "Propagate location weekly consumption to customer",
   "entityId": {
     "entityType": "ASSET_PROFILE",
     "id": "83595270-c452-42d8-ab35-494d7de7cfcd"

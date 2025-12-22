@@ -1,10 +1,10 @@
 {
-  "reprocessingOrder": 2,
+  "reprocessingOrder": 1,
   "type": "RELATED_ENTITIES_AGGREGATION",
-  "name": "Calculate Weekly Consumption",
+  "name": "Calculate average moisture",
   "entityId": {
-    "entityType": "ASSET",
-    "id": "90bd76d0-e2a3-4f5b-b85e-cd59386f2f44"
+    "entityType": "ASSET_PROFILE",
+    "id": "0d58a217-f0d9-4ab6-b8be-d7d41fb36437"
   },
   "debugSettings": {
     "failuresEnabled": true,
@@ -16,12 +16,20 @@
     "type": "RELATED_ENTITIES_AGGREGATION",
     "relation": {
       "direction": "FROM",
-      "relationType": "Contains"
+      "relationType": "FieldToMoistureSensor"
     },
     "arguments": {
-      "weeklyConsumption": {
+      "active": {
         "refEntityKey": {
-          "key": "weeklyConsumption",
+          "key": "active",
+          "type": "ATTRIBUTE",
+          "scope": "SERVER_SCOPE"
+        },
+        "defaultValue": "false"
+      },
+      "moisture": {
+        "refEntityKey": {
+          "key": "moisture",
           "type": "TS_LATEST"
         },
         "defaultValue": "0"
@@ -29,25 +37,20 @@
     },
     "deduplicationIntervalInSec": 10,
     "metrics": {
-      "weeklyConsumption": {
-        "function": "SUM",
+      "latestAvgMoisture": {
+        "function": "AVG",
+        "filter": "return active == true;",
         "input": {
           "type": "key",
-          "key": "weeklyConsumption"
+          "key": "moisture"
         }
       }
     },
     "output": {
       "type": "TIME_SERIES",
       "strategy": {
-        "type": "IMMEDIATE",
-        "ttl": 0,
-        "saveTimeSeries": false,
-        "saveLatest": false,
-        "sendWsUpdate": false,
-        "processCfs": true
-      },
-      "decimalsByDefault": 2
+        "type": "RULE_CHAIN"
+      }
     },
     "useLatestTs": true,
     "scheduledUpdateInterval": 60,
