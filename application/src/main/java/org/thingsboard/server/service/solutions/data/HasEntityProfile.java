@@ -30,14 +30,23 @@
  */
 package org.thingsboard.server.service.solutions.data;
 
-import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.id.EntityId;
 
-public record CreatedCalculatedFieldInfo(EntityId profileId, String profileName, String type,
-                                         String name) implements HasEntityProfile {
+public interface HasEntityProfile {
 
-    public static CreatedCalculatedFieldInfo from(EntityId profileId, String profileName, CalculatedField calculatedField) {
-        return new CreatedCalculatedFieldInfo(profileId, profileName, calculatedField.getType().getDisplayName(), calculatedField.getName());
+    EntityId profileId();
+
+    default String getProfileLink() {
+        EntityId profileId = profileId();
+        if (profileId == null) {
+            return null;
+        }
+        String profileIdStr = profileId.getId().toString();
+        return switch (profileId.getEntityType()) {
+            case DEVICE_PROFILE -> "/profiles/deviceProfiles/" + profileIdStr;
+            case ASSET_PROFILE -> "/profiles/assetProfiles/" + profileIdStr;
+            default -> null;
+        };
     }
 
 }

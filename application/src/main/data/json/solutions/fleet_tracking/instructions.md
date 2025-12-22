@@ -41,8 +41,15 @@ See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_bla
 
 ### Alarms
 
-Alarms are generated using three <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> in the
-"bus" <a href="/profiles/deviceProfiles" target="_blank">device profile</a>: "Speed limit", "Stopped" and "Low fuel" alarm types.
+Alarms are generated using three <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/"
+target="_blank">Alarm rules</a> configured in the "bus" <a href="/profiles/deviceProfiles" target="_blank">device profile</a>. 
+The alarm rules configured for this device profile are listed below:
+
+<div class="tb-markdown-view table-wrapper">
+
+${alarm_rules}
+
+</div>
 
 ### Solution entities
 
