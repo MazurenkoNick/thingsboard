@@ -34,12 +34,14 @@ import org.thingsboard.server.common.data.alarm.AlarmSeverity;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.cf.configuration.AlarmCalculatedFieldConfiguration;
+import org.thingsboard.server.common.data.id.EntityId;
 
 import java.util.stream.Collectors;
 
-public record CreatedAlarmRuleInfo(String profileName, String alarmType, String severities) {
+public record CreatedAlarmRuleInfo(EntityId profileId, String profileName, String alarmType,
+                                   String severities) implements HasEntityProfile {
 
-    public static CreatedAlarmRuleInfo from(String profileName, CalculatedField calculatedField) {
+    public static CreatedAlarmRuleInfo from(EntityId profileId, String profileName, CalculatedField calculatedField) {
         if (calculatedField.getType() != CalculatedFieldType.ALARM) {
             throw new UnsupportedOperationException("Only alarm calculated fields are supported");
         }
@@ -48,6 +50,7 @@ public record CreatedAlarmRuleInfo(String profileName, String alarmType, String 
                 .map(AlarmSeverity::getDisplayName)
                 .sorted()
                 .collect(Collectors.joining(", "));
-        return new CreatedAlarmRuleInfo(profileName, calculatedField.getName(), severities);
+        return new CreatedAlarmRuleInfo(profileId, profileName, calculatedField.getName(), severities);
     }
+
 }

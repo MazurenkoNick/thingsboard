@@ -666,38 +666,8 @@ public class DefaultSolutionService implements SolutionService {
 
         template = template.replace("${user_list}", userList.toString());
 
-        StringBuilder alarmRules = new StringBuilder();
-
-        alarmRules.append("| Profile Name | Alarm Type | Severities |");
-        alarmRules.append(System.lineSeparator());
-        alarmRules.append("| :---  | :---  | :---  |");
-        alarmRules.append(System.lineSeparator());
-
-        ctx.getCreatedAlarmRules().values().stream().sorted(Comparator.comparing(CreatedAlarmRuleInfo::profileName, String.CASE_INSENSITIVE_ORDER)
-                .thenComparing(CreatedAlarmRuleInfo::alarmType, String.CASE_INSENSITIVE_ORDER)).forEach(alarmRuleInfo ->
-                alarmRules.append("|").append(alarmRuleInfo.profileName()).append("|")
-                        .append(alarmRuleInfo.alarmType()).append("|")
-                        .append(alarmRuleInfo.severities())
-                        .append(System.lineSeparator()));
-
-        template = template.replace("${alarm_rules}", alarmRules.toString());
-
-        StringBuilder calculatedFields = new StringBuilder();
-
-        calculatedFields.append("| Profile Name | Field Type | Field Name |");
-        calculatedFields.append(System.lineSeparator());
-        calculatedFields.append("| :---  | :---  | :---  |");
-        calculatedFields.append(System.lineSeparator());
-
-        ctx.getCreatedCalculatedFields().values().stream().sorted(Comparator.comparing(CreatedCalculatedFieldInfo::profileName, String.CASE_INSENSITIVE_ORDER)
-                .thenComparing(CreatedCalculatedFieldInfo::name, String.CASE_INSENSITIVE_ORDER)).forEach(cfInfo ->
-                calculatedFields.append("|").append(cfInfo.profileName()).append("|")
-                        .append(cfInfo.type()).append("|")
-                        .append(cfInfo.name())
-                        .append(System.lineSeparator()));
-
-        template = template.replace("${calculated_fields}", calculatedFields.toString());
-
+        template = replaceAlarmRules(ctx, template);
+        template = replaceCalculatedFields(ctx, template);
         template = replaceCreatedEntities(ctx, template);
 
         for (Map.Entry<String, EdgeLinkInfo> edgeLinkInfoEntry : ctx.getCreatedEdges().entrySet()) {
@@ -712,6 +682,52 @@ public class DefaultSolutionService implements SolutionService {
         }
 
         return template;
+    }
+
+    private static String replaceAlarmRules(SolutionInstallContext ctx, String template) {
+        StringBuilder alarmRules = new StringBuilder();
+
+        alarmRules.append("| Entity Profile Name | Alarm Type | Severities |").append(System.lineSeparator());
+        alarmRules.append("| :--- | :--- | :--- |").append(System.lineSeparator());
+
+        ctx.getCreatedAlarmRules().values().stream()
+                .sorted(Comparator.comparing(CreatedAlarmRuleInfo::profileName, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(CreatedAlarmRuleInfo::alarmType, String.CASE_INSENSITIVE_ORDER))
+                .forEach(alarmRuleInfo -> {
+                    // TODO: add details page for Alarm Rule so we can link to it.
+                    String profileName = alarmRuleInfo.profileId() != null ?
+                            "[" + alarmRuleInfo.profileName() + "](" + alarmRuleInfo.getProfileLink() + ")" : alarmRuleInfo.profileName();
+                    alarmRules.append("|")
+                            .append(profileName).append("|")
+                            .append(alarmRuleInfo.alarmType()).append("|")
+                            .append(alarmRuleInfo.severities()).append("|")
+                            .append(System.lineSeparator());
+                });
+
+        return template.replace("${alarm_rules}", alarmRules.toString());
+    }
+
+    private static String replaceCalculatedFields(SolutionInstallContext ctx, String template) {
+        StringBuilder calculatedFields = new StringBuilder();
+
+        calculatedFields.append("| Entity Profile Name | Field Name | Field Type |").append(System.lineSeparator());
+        calculatedFields.append("| :--- | :--- | :--- |").append(System.lineSeparator());
+
+        ctx.getCreatedCalculatedFields().values().stream()
+                .sorted(Comparator.comparing(CreatedCalculatedFieldInfo::profileName, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(CreatedCalculatedFieldInfo::name, String.CASE_INSENSITIVE_ORDER))
+                .forEach(cfInfo -> {
+                    // TODO: add details page for CFs so we can link to it.
+                    String profileName = cfInfo.profileId() != null ?
+                            "[" + cfInfo.profileName() + "](" + cfInfo.getProfileLink() + ")" : cfInfo.profileName();
+                    calculatedFields.append("|")
+                            .append(profileName).append("|")
+                            .append(cfInfo.name()).append("|")
+                            .append(cfInfo.type()).append("|")
+                            .append(System.lineSeparator());
+                });
+
+        return template.replace("${calculated_fields}", calculatedFields.toString());
     }
 
     private static String replaceCreatedEntities(SolutionInstallContext ctx, String template) {
