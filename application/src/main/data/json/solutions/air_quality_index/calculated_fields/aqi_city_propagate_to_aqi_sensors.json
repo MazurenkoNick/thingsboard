@@ -1,6 +1,6 @@
 {
   "type": "PROPAGATION",
-  "name": "Propagate to AQI Sensors",
+  "name": "Propagate thresholds to AQI Sensors",
   "entityId": {
     "entityType": "ASSET_PROFILE",
     "id": "6fa4e7a9-5645-45ca-b91c-ce5ae27ed4ee"

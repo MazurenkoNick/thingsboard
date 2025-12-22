@@ -1,7 +1,7 @@
 {
   "reprocessingOrder": 1,
   "type": "RELATED_ENTITIES_AGGREGATION",
-  "name": "Calculate Daily Consumption",
+  "name": "Calculate location daily consumption",
   "entityId": {
     "entityType": "ASSET_PROFILE",
     "id": "83595270-c452-42d8-ab35-494d7de7cfcd"

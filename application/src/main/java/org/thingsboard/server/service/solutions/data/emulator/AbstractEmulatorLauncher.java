@@ -109,15 +109,15 @@ public abstract class AbstractEmulatorLauncher<T extends GroupEntity<?>> {
         emulator.init(emulatorDefinition);
     }
 
-    public CompletableFuture<Void> launch(long solutionInstallTs) {
-        final long oldestTs = emulatorDefinition.getOldestTs(solutionInstallTs);
+    public CompletableFuture<Void> launch() {
+        final long oldestTs = emulatorDefinition.getOldestTs(System.currentTimeMillis());
         CompletableFuture<Void> future = new CompletableFuture<>();
         oldTelemetryExecutor.submit(() -> {
             AtomicInteger pending = new AtomicInteger(1);
             try {
                 if (emulator instanceof SimpleEmulator) {
-                    if (oldestTs < (solutionInstallTs - publishFrequency)) {
-                        pushOldTelemetry(oldestTs, solutionInstallTs, pending, future);
+                    if (oldestTs < (System.currentTimeMillis() - publishFrequency)) {
+                        pushOldTelemetry(oldestTs, pending, future);
                     }
                 } else if (emulator instanceof CustomEmulator customEmulator) {
                     Pair<Long, ObjectNode> telemetry = customEmulator.getNextValue();
@@ -152,8 +152,8 @@ public abstract class AbstractEmulatorLauncher<T extends GroupEntity<?>> {
     protected void postProcessEntity(T entity) {
     }
 
-    private void pushOldTelemetry(long oldestTs, long now, AtomicInteger pending, CompletableFuture<Void> future) throws InterruptedException {
-        for (long ts = oldestTs; ts < now; ts += publishFrequency) {
+    private void pushOldTelemetry(long oldestTs, AtomicInteger pending, CompletableFuture<Void> future) throws InterruptedException {
+        for (long ts = oldestTs; ts < System.currentTimeMillis(); ts += publishFrequency) {
             pending.incrementAndGet();
             publishTelemetry(ts, pending, future);
         }

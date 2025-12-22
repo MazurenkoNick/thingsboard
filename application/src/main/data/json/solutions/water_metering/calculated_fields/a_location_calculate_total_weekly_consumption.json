@@ -1,10 +1,10 @@
 {
-  "reprocessingOrder": 1,
+  "reprocessingOrder": 2,
   "type": "RELATED_ENTITIES_AGGREGATION",
-  "name": "Calculate Weekly Consumption",
+  "name": "Calculate total weekly consumption",
   "entityId": {
-    "entityType": "ASSET_PROFILE",
-    "id": "83595270-c452-42d8-ab35-494d7de7cfcd"
+    "entityType": "ASSET",
+    "id": "90bd76d0-e2a3-4f5b-b85e-cd59386f2f44"
   },
   "debugSettings": {
     "failuresEnabled": true,

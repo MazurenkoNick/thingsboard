@@ -1,7 +1,7 @@
 {
   "reprocessingOrder": 0,
   "type": "ENTITY_AGGREGATION",
-  "name": "Calculate Daily Consumption",
+  "name": "Calculate water meter daily consumption",
   "entityId": {
     "entityType": "DEVICE_PROFILE",
     "id": "58183d7e-4b7a-4ad6-a476-5d6c6571174c"

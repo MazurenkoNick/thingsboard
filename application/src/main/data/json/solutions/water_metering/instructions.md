@@ -15,7 +15,6 @@ water metering devices, users and alarms:
     * browse active alarms for a particular water meter device;
     * change water meter location information
     * upload water meter photo;
-    * change location of the device;
 * use "Customers" view to manage your customers;   
 * use "Alarms" view to browse and clear alarms from water meters;
 * use "Settings" view to:
@@ -42,6 +41,7 @@ We have already created three water metering devices and loaded some demo data f
 ${device_list_and_credentials}
 
 </div>
+
 Solution expects that the water meter device will report "pulseCounter", "temperature", "battery" and "leakage" values.
 The most simple example of the expected payload is in JSON format:
 
@@ -62,17 +62,30 @@ Most of the water meters are using LoRaWAN, Sigfox or NB IoT technology. Please 
 
 ### Alarms
 
-Alarms are generated using three <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> in the
-"Water Meter" <a href="/profiles/deviceProfiles" target="_blank">device profile</a>. 
+Alarms are generated using <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> configured in the "Water Meter" <a href="/profiles/deviceProfiles" target="_blank">device profile</a>. 
 Alarms notifications are sent via SMS or email to Tenant Administrators and Customer Users depending on the thresholds and settings defined in the dashboard.
+
+<div class="tb-markdown-view table-wrapper">
+
+${alarm_rules}
+
+</div>
+
+### Calculated fields
+
+Calculated fields are used to derive daily and weekly water consumption metrics and analytical indicators based on incoming telemetry.
+
+The aggregation is done in the UTC time zone by default. You may configure settings like the time zone or interval duration in Calculated fields.
+
+<div class="tb-markdown-view table-wrapper">
+
+${calculated_fields}
+
+</div>
 
 ### Rule Chains
 
-The "Water Metering Solution Main" rule chain is processing all incoming messages from water metering devices. 
-This rule chain is responsible for aggregation of the incoming data on a daily and weekly basis for device, customer and tenant level. 
-Aggregated data is stored as telemetry as well. The aggregation is done in the UTC time zone by default. 
-You may change the time zone in the "aggregate stream" rule nodes. You may also aggregate data in different time zones.
-
+The "Water Metering Solution Main" rule chain is processing all incoming messages from water metering devices.
 There are two other rule chains: "Water Metering Solution Tenant Alarm Routing" and "Water Metering Solution Customer Alarm Routing". 
 They are responsible for routing incoming messages to tenant administrators and customer users respectively.  
 
@@ -105,7 +118,7 @@ ${all_entities}
 **Optionally**, this solution can be extended to use edge computing.
 
 <a href="https://thingsboard.io/products/thingsboard-edge/" target="_blank">ThingsBoard Edge</a> allows bringing data analysis and management to the edge, where the data created.
-At the same time ThingsBoard Edge seamlessly synchronizing with the ThingsBoard cloud according to your business needs.
+At the same time ThingsBoard Edge seamlessly synchronizes with the ThingsBoard cloud according to your business needs.
 
 As example, in the context of Water metering solution, edge computing could be useful if you have remote facilities that are located in different parts of town, country or worldwide.
 In this case, ThingsBoard Edge can be deployed into every remote facility to process data from water meters, calculating daily consumption, enabling real-time analysis and decision-making, such as alarm generation in case no data from sensors after X hours. 

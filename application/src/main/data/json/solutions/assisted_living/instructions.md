@@ -78,21 +78,22 @@ You can create a device of the appropriate type and attach it to the correspondi
 <img src="https://img.thingsboard.io/solutions/assisted_living/5-customer-hierarchy.png" alt="Assisted Living" style="border: 1px solid #eee;">
 </div>
 
+### Devices
 
-### Rule Chains
+The solution includes wearable devices and room sensors connected via gateways.
 
-* **AL Gateway Rule Chain** rule chain responsible for processing the data from the gateways: deduplication and enrichment of the payload with the signal strength and location of the gateway.
+Device types include:
+- Resident wristbands
+- Room sensors (temperature, humidity, IAQ, smoke, leak, door/window)
+- BLE or LoRa gateways
 
-The "Fetch Room attributes" node enriches the incoming message with the location of the gateway. 
-The "Change Owner from Gateway to Device" nodes transforms the incoming message and lookup associated device based on the value of serial number.
-The "Switch by Device Type" node routes the incoming message to "Room" or "Wristband" rule chains.
-The "Deduplicate From Multiple Gateways" combines all copies of the message from multiple gateways. Each copy contains parameters of the gateway including the RSSI. 
-The "Use msg with Max RSSI" node calculates the location of the resident beacon based on the attributes of the closest gateway. 
-  
-* **AL Wristband Device Rule Chain** is very similar to default platform rule chain. The rule chain also count number of alarms and propagate the value to corresponding resident user.
+Each device sends telemetry that is processed by Rule Chains and evaluated against alarm rules.
 
-* **AL Room Device Rule Chain** is very similar to "AL Wristband Device Rule Chain" but does not propagate alarm counts to the user.
+<div class="tb-markdown-view table-wrapper">
 
+${device_list_and_credentials}
+
+</div>
 
 ### Device Profiles
 
@@ -144,6 +145,20 @@ The profile by default is configured to raise alarms if:
 
 * the value of "battery" is equal or less than a configured. Also Major and Critical alarms for Battery level defined by the administrator;
 * the value of "doorOpen" is equal or greater than a configured. Also Major and Critical duration of alarms for Door opened defined by the administrator;
+
+### Rule Chains
+
+* **AL Gateway Rule Chain** rule chain responsible for processing the data from the gateways: deduplication and enrichment of the payload with the signal strength and location of the gateway.
+
+The "Fetch Room attributes" node enriches the incoming message with the location of the gateway.
+The "Change Owner from Gateway to Device" nodes transforms the incoming message and lookup associated device based on the value of serial number.
+The "Switch by Device Type" node routes the incoming message to "Room" or "Wristband" rule chains.
+The "Deduplicate From Multiple Gateways" combines all copies of the message from multiple gateways. Each copy contains parameters of the gateway including the RSSI.
+The "Use msg with Max RSSI" node calculates the location of the resident beacon based on the attributes of the closest gateway.
+
+* **AL Wristband Device Rule Chain** is very similar to default platform rule chain. The rule chain also count number of alarms and propagate the value to corresponding resident user.
+
+* **AL Room Device Rule Chain** is very similar to "AL Wristband Device Rule Chain" but does not propagate alarm counts to the user.
 
 #### Examples
 
