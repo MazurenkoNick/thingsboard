@@ -52662,8 +52662,7 @@
             {
               "type": "entity",
               "name": "",
-              "deviceId": null,
-              "entityAliasId": "b26d354a-0f6a-b0a6-1bfe-ad5d64a2f1e1",
+              "entityAliasId": "42b74b63-6dbf-290c-4c05-d53d5e801f9c",
               "dataKeys": [
                 {
                   "name": "phLevel",
