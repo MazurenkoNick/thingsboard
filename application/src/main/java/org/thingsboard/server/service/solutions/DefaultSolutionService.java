@@ -698,21 +698,7 @@ public class DefaultSolutionService implements SolutionService {
 
         template = template.replace("${calculated_fields}", calculatedFields.toString());
 
-        StringBuilder entityList = new StringBuilder();
-
-        entityList.append("| Name | Type | Owner |");
-        entityList.append(System.lineSeparator());
-        entityList.append("| :---  | :---  | :---  |");
-        entityList.append(System.lineSeparator());
-
-        for (CreatedEntityInfo entityInfo : ctx.getCreatedEntities().values()) {
-            entityList.append("|").append(entityInfo.getName())
-                    .append("|").append(entityInfo.getType()).append("|")
-                    .append(entityInfo.getOwner());
-            entityList.append(System.lineSeparator());
-        }
-
-        template = template.replace("${all_entities}", entityList.toString());
+        template = replaceCreatedEntities(ctx, template);
 
         for (Map.Entry<String, EdgeLinkInfo> edgeLinkInfoEntry : ctx.getCreatedEdges().entrySet()) {
             EdgeLinkInfo edgeLinkInfo = edgeLinkInfoEntry.getValue();
@@ -726,6 +712,27 @@ public class DefaultSolutionService implements SolutionService {
         }
 
         return template;
+    }
+
+    private static String replaceCreatedEntities(SolutionInstallContext ctx, String template) {
+        StringBuilder entityList = new StringBuilder();
+
+        entityList.append("| Name | Type | Owner |").append(System.lineSeparator());
+        entityList.append("| :--- | :--- | :--- |").append(System.lineSeparator());
+
+        for (Map.Entry<UUID, CreatedEntityInfo> entry : ctx.getCreatedEntities().entrySet()) {
+            UUID key = entry.getKey();
+            var entityInfo = entry.getValue();
+            String link = entityInfo.getLink(key);
+            String entityName = entityInfo.getName();
+            String name = link != null ? "[" + entityName + "](" + link + ")" : entityName;
+            entityList.append("|")
+                    .append(name).append("|")
+                    .append(entityInfo.getType().getNormalName()).append("|")
+                    .append(entityInfo.getOwner()).append("|")
+                    .append(System.lineSeparator());
+        }
+        return template.replace("${all_entities}", entityList.toString());
     }
 
     private String getDashboardLink(TenantSolutionTemplateInstructions solutionInstructions, EntityGroupId dashboardGroupId, DashboardId dashboardId, boolean isPublic) {
