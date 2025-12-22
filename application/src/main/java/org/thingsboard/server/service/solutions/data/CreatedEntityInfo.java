@@ -32,13 +32,32 @@ package org.thingsboard.server.service.solutions.data;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.thingsboard.server.common.data.EntityType;
+
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
 public class CreatedEntityInfo {
 
     private String name;
-    private String type;
+    private EntityType type;
     private String owner;
+
+    public String getLink(UUID key) {
+        return switch (type) {
+            case DEVICE -> "/entities/devices/all/" + key.toString();
+            case ASSET -> "/entities/assets/all/" + key.toString();
+            case DEVICE_PROFILE -> "/profiles/deviceProfiles/" + key.toString();
+            case ASSET_PROFILE -> "/profiles/assetProfiles/" + key.toString();
+            case USER -> "/users/all/" + key.toString();
+            case CUSTOMER -> "/customers/all/" + key.toString();
+            case DASHBOARD -> "/dashboards/all/" + key.toString();
+            case RULE_CHAIN -> "/ruleChains/" + key.toString();
+            case ROLE -> "/security-settings/roles/" + key.toString();
+            case EDGE -> "/edgeManagement/instances/all/" + key.toString();
+            default -> null;
+        };
+    }
 
 }

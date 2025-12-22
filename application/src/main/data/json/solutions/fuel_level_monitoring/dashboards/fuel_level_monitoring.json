@@ -422,7 +422,7 @@
             "allowAssign": true,
             "displayActivity": true,
             "displayPagination": false,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "useRowStyleFunction": false
           },
           "title": "New Alarms table",
@@ -458,9 +458,9 @@
                 "postFuncBody": null
               },
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
-                "label": "Created time",
+                "label": "Time",
                 "color": "#2196f3",
                 "settings": {
                   "useCellStyleFunction": false,
@@ -978,7 +978,7 @@
             "allowAssign": true,
             "displayActivity": true,
             "displayPagination": false,
-            "defaultSortOrder": "-createdTime",
+            "defaultSortOrder": "-startTime",
             "useRowStyleFunction": false
           },
           "title": "New Alarms table",
@@ -1014,9 +1014,9 @@
                 "postFuncBody": null
               },
               {
-                "name": "createdTime",
+                "name": "startTime",
                 "type": "alarm",
-                "label": "Created time",
+                "label": "Time",
                 "color": "#2196f3",
                 "settings": {
                   "useCellStyleFunction": false,
