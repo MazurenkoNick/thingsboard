@@ -7160,7 +7160,7 @@
             "controlsPosition": "topleft",
             "zoomActions": [],
             "scales": [],
-            "dragModeButton": false,
+            "dragModeButton": true,
             "fitMapBounds": true,
             "useDefaultCenterPosition": false,
             "defaultCenterPosition": "0,0",
