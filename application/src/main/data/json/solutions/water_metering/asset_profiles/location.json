@@ -1,6 +1,6 @@
 {
   "name": "Location",
-  "description": "Default asset profile",
+  "description": "Represents a specific geographical location within a city where one or more water meters are installed for localized consumption monitoring and analysis.",
   "image": null,
   "defaultRuleChainId": null,
   "defaultEdgeRuleChainId": null,

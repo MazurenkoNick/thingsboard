@@ -78,23 +78,6 @@ You can create a device of the appropriate type and attach it to the correspondi
 <img src="https://img.thingsboard.io/solutions/assisted_living/5-customer-hierarchy.png" alt="Assisted Living" style="border: 1px solid #eee;">
 </div>
 
-### Devices
-
-The solution includes wearable devices and room sensors connected via gateways.
-
-Device types include:
-- Resident wristbands
-- Room sensors (temperature, humidity, IAQ, smoke, leak, door/window)
-- BLE or LoRa gateways
-
-Each device sends telemetry that is processed by Rule Chains and evaluated against alarm rules.
-
-<div class="tb-markdown-view table-wrapper">
-
-${device_list_and_credentials}
-
-</div>
-
 ### Device Profiles
 
 The device profile listed below uses pre-defined values for alarm thresholds. Administrator may configure alarm thresholds for all devices by navigating to alarm rules.
@@ -145,6 +128,23 @@ The profile by default is configured to raise alarms if:
 
 * the value of "battery" is equal or less than a configured. Also Major and Critical alarms for Battery level defined by the administrator;
 * the value of "doorOpen" is equal or greater than a configured. Also Major and Critical duration of alarms for Door opened defined by the administrator;
+
+### Devices
+
+The solution includes wearable devices and room sensors connected via gateways.
+
+Device types include:
+- Resident wristbands
+- Room sensors (temperature, humidity, IAQ, smoke, leak, door/window)
+- BLE or LoRa gateways
+
+Each device sends telemetry that is processed by Rule Chains and evaluated against alarm rules.
+
+<div class="tb-markdown-view table-wrapper">
+
+${device_list_and_credentials}
+
+</div>
 
 ### Rule Chains
 

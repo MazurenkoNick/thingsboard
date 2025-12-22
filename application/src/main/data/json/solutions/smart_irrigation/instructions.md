@@ -28,32 +28,6 @@ The device & asset profiles listed below use pre-defined values for alarm thresh
 
 The field asset profile is configured to forward all incoming events to the "SI Field" rule chain.
 
-### Devices
-
-We have already created 12+ devices and loaded some demo data for them. See device info and credentials below:
-
-<div class="tb-markdown-view table-wrapper">
-
-${device_list_and_credentials}
-
-</div>
-
-Solution expects that the device telemetry will correspond to the samples provided in device profile section of the instruction.
-The most simple example of the moisture sensor payload is in JSON format:
-
-```json
-{"moisture": 57}{:copy-code}
-```
-
-To emulate the data upload on behalf of device "SI Soil Moisture 1" located inside field "Field 1", one should execute the following command to raise the Critical Alarm for Field 1:
-
-```bash
-curl -v -X POST -d "{\"moisture\":  77}" ${BASE_URL}/api/v1/${SI Soil Moisture 1ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
-```
-
-The example above uses <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a> for simplicity of demonstration.
-See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_blank">connecting devices</a> for other connectivity options.
-
 ##### SI Water Meter
 
 The profile is configured to raise alarms if the value of "battery" telemetry is below a configurable threshold. 
@@ -91,6 +65,32 @@ The device also accepts the RPC command to enable or disable the water flow. Sam
 ```json
 {"method": "TURN_ON", "params": {}}{:copy-code}
 ```
+
+### Devices
+
+We have already created 12+ devices and loaded some demo data for them. See device info and credentials below:
+
+<div class="tb-markdown-view table-wrapper">
+
+${device_list_and_credentials}
+
+</div>
+
+Solution expects that the device telemetry will correspond to the samples provided in device profile section of the instruction.
+The most simple example of the moisture sensor payload is in JSON format:
+
+```json
+{"moisture": 57}{:copy-code}
+```
+
+To emulate the data upload on behalf of device "SI Soil Moisture 1" located inside field "Field 1", one should execute the following command to raise the Critical Alarm for Field 1:
+
+```bash
+curl -v -X POST -d "{\"moisture\":  77}" ${BASE_URL}/api/v1/${SI Soil Moisture 1ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
+```
+
+The example above uses <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a> for simplicity of demonstration.
+See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_blank">connecting devices</a> for other connectivity options.
 
 ### Alarms
 

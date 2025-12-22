@@ -1,10 +1,10 @@
 {
   "reprocessingOrder": 3,
   "type": "PROPAGATION",
-  "name": "Propagate total daily consumption to tenant",
+  "name": "Propagate city weekly consumption to tenant",
   "entityId": {
-    "entityType": "ASSET",
-    "id": "90bd76d0-e2a3-4f5b-b85e-cd59386f2f44"
+    "entityType": "ASSET_PROFILE",
+    "id": "72f0ad58-5a8d-4c98-817e-6c9062c57bbf"
   },
   "debugSettings": {
     "failuresEnabled": true,
@@ -15,9 +15,9 @@
   "configuration": {
     "type": "PROPAGATION",
     "arguments": {
-      "dailyConsumption": {
+      "weeklyConsumption": {
         "refEntityKey": {
-          "key": "dailyConsumption",
+          "key": "weeklyConsumption",
           "type": "TS_LATEST"
         },
         "defaultValue": ""

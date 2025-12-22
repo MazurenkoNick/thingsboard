@@ -12,7 +12,7 @@
       },
       {
         "entityType": "ASSET",
-        "entityName": "Location",
+        "entityName": "Los Angeles, CA",
         "direction": "FROM",
         "type": "Contains"
       }
@@ -32,7 +32,7 @@
       },
       {
         "entityType": "ASSET",
-        "entityName": "Location",
+        "entityName": "Los Angeles, CA",
         "direction": "FROM",
         "type": "Contains"
       }
@@ -40,8 +40,8 @@
     "jsonId": "99c2376c-dfe9-49f7-99f9-e0c3f1dcbf72"
   },
   {
-    "name": "Location",
-    "type": "default",
+    "name": "Los Angeles, CA",
+    "type": "City",
     "relations": [
       {
         "entityType": "TENANT",

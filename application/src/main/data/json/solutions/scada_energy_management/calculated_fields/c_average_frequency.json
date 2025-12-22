@@ -2,8 +2,8 @@
   "type": "SIMPLE",
   "name": "Average frequency",
   "entityId": {
-    "id": "e9ce9340-1503-11f0-8308-dfc38c65ed1c",
-    "entityType": "DEVICE"
+    "id": "51be019a-7518-47a6-b60f-a04922736fe8",
+    "entityType": "DEVICE_PROFILE"
   },
   "debugSettings": {
     "failuresEnabled": true,

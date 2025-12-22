@@ -46,13 +46,6 @@ The profile by default is configured to raise alarms if:
 - the value of "batteryLevel" is equal or less than a configured. By default, the value is set to 30%.
 - the value of "fullLevel" is equal or greater than a configured. By default, the value is set to 90%.
 
-
-#### Alarms
-Alarms are generated using two <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> in the
-"Waste Sensor" <a href="/profiles/deviceProfiles" target="_blank">device profile</a>.
-User may configure the alarm rules via the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Waste Management"</a> dashboard using "Alarm rules" form.
-
-
 #### Devices
 
 We have already created ten sensors and loaded some demo data for them. See device info and credentials below:
@@ -72,6 +65,18 @@ curl -v -X POST -d "{\"batteryLevel\":  77, \"fullLevel\":  91 }" ${BASE_URL}/ap
 
 The example above uses <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a>.
 See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_blank">connecting devices</a> for other connectivity options.
+
+#### Alarms
+Alarms are generated using two <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> in the
+"Waste Sensor" <a href="/profiles/deviceProfiles" target="_blank">device profile</a>.
+
+<div class="tb-markdown-view table-wrapper">
+
+${alarm_rules}
+
+</div>
+
+User may configure the alarm rules via the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Waste Management"</a> dashboard using "Alarm rules" form.
 
 #### Rule Chains
 
