@@ -47,7 +47,7 @@
     <properties>
         <main.dir>${basedir}/..</main.dir>
         <docker.repo>thingsboard</docker.repo>
-        <docker.base.image>thingsboard/openjdk17:bookworm-slim</docker.base.image>
+        <docker.base.image>thingsboard/openjdk25:trixie-slim</docker.base.image>
         <dockerfile.skip>true</dockerfile.skip>
         <tb.docker.id>pe</tb.docker.id>
         <blackBoxTests.skip>true</blackBoxTests.skip>
@@ -134,6 +134,48 @@
                                         <argument>build</argument>
                                         <argument>-t</argument>
                                         <argument>${docker.repo}/${docker.name}:${project.version}</argument>
+                                        <argument>--platform=linux/amd64,linux/arm64</argument>
+                                        <argument>-o</argument>
+                                        <argument>type=registry</argument>
+                                        <argument>.</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>lts</id>
+            <activation>
+                <property>
+                    <name>lts</name>
+                </property>
+            </activation>
+            <properties>
+                <docker.lts.tag>4.2.1-latest</docker.lts.tag>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>push-lts-docker-amd-arm-images</id>
+                                <phase>${docker.push-arm-amd-image.phase}</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>docker</executable>
+                                    <workingDirectory>${project.build.directory}</workingDirectory>
+                                    <arguments>
+                                        <argument>buildx</argument>
+                                        <argument>build</argument>
+                                        <argument>-t</argument>
+                                        <argument>${docker.repo}/${docker.name}:${docker.lts.tag}</argument>
                                         <argument>--platform=linux/amd64,linux/arm64</argument>
                                         <argument>-o</argument>
                                         <argument>type=registry</argument>
