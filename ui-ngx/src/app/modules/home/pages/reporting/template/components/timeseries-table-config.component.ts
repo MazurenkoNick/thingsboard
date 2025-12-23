@@ -118,10 +118,12 @@ export class TimeseriesTableConfigComponent extends AbstractReportComponentConfi
         if (oldColumn) {
           const newColumn = current.find(c => c.name === oldColumn.name);
           if (newColumn && newColumn.label !== tableSortOrder.column) {
-            form.get('tableSortOrder').patchValue({
-              column: newColumn.label,
-              direction: tableSortOrder.direction
-            });
+            setTimeout(() => {
+              form.get('tableSortOrder').patchValue({
+                column: newColumn.label,
+                direction: tableSortOrder.direction
+              });
+            }, 0);
           }
         }
       }
@@ -133,10 +135,12 @@ export class TimeseriesTableConfigComponent extends AbstractReportComponentConfi
     ).subscribe(([prevLabel, currentLabel]) => {
       const tableSortOrder = form.get("tableSortOrder").value;
       if (tableSortOrder && tableSortOrder.column === prevLabel && form.get('showTimestamp').value) {
-        form.get('tableSortOrder').patchValue({
-          column: currentLabel,
-          direction: tableSortOrder.direction
-        });
+        setTimeout(() => {
+          form.get('tableSortOrder').patchValue({
+            column: currentLabel,
+            direction: tableSortOrder.direction
+          });
+        }, 0);
       }
     });
     this.updateValidators(form);

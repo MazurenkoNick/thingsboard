@@ -116,6 +116,7 @@ export class TableSortOrderComponent implements OnInit, ControlValueAccessor, On
     if (!this.tableSortOrderFormGroup.get('direction').value) {
       this.tableSortOrderFormGroup.get('direction').patchValue(Direction.ASC, {emitEvent: false});
     }
+    this.checkColumn();
   }
 
   private updateModel() {
