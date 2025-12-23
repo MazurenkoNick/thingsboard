@@ -103,11 +103,7 @@ public class EdgeEventSourcingListener {
 
     @TransactionalEventListener(fallbackExecution = true)
     public void handleEvent(SaveEntityEvent<?> event) {
-        if (Boolean.FALSE.equals(event.getBroadcastEvent())) {
-            log.trace("Ignoring event {}", event);
-            return;
-        }
-
+        log.info("Save event: {}", event);
         try {
             if (!isValidSaveEntityEventForEdgeProcessing(event)) {
                 return;
