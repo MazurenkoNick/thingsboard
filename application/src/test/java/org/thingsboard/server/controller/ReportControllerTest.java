@@ -244,6 +244,17 @@ public class ReportControllerTest extends AbstractControllerTest {
         minTemp.setTimewindow(buildCurrentDateTimeWindow());
         minTemp.setDecimals(1);
 
+        TimeWindowConfiguration yesterdayRange = new TimeWindowConfiguration();
+        History history = new History();
+        history.setHistoryType(2);
+        history.setQuickInterval(QuickTimeInterval.YESTERDAY);
+        yesterdayRange.setHistory(history);
+
+        DataKey minTempYesterday = new DataKey("temperature", "timeseries", "MIN TEMPERATURE YESTERDAY");
+        minTempYesterday.setAggregationType(Aggregation.MIN);
+        minTempYesterday.setTimewindow(yesterdayRange);
+        minTempYesterday.setDecimals(1);
+
         tableComponent.setDataSources(List.of(DataSource.builder()
                 .type(DataSourceType.ENTITY)
                 .entityAliasId(devicesAliasId)
@@ -251,7 +262,8 @@ public class ReportControllerTest extends AbstractControllerTest {
                         new DataKey("createdTime", "entityField", "CREATED TIME"),
                         new DataKey("name", "entityField", "NAME"),
                         avgTemp,
-                        minTemp
+                        minTemp,
+                        minTempYesterday
                 ))
                 .build()));
 
@@ -268,7 +280,7 @@ public class ReportControllerTest extends AbstractControllerTest {
             List<String> actualReportRows = Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim).toList();
             log.warn("Report rows: {}", actualReportRows);
             return actualReportRows
-                    .containsAll(List.of("CREATED TIME,NAME,AVG TEMPERATURE,MIN TEMPERATURE", formatter.format(Instant.ofEpochMilli(finalTestDevice.getCreatedTime())) + "," + finalTestDevice.getName() + ",4.5,0.0"));
+                    .containsAll(List.of("CREATED TIME,NAME,AVG TEMPERATURE,MIN TEMPERATURE,MIN TEMPERATURE YESTERDAY", formatter.format(Instant.ofEpochMilli(finalTestDevice.getCreatedTime())) + "," + finalTestDevice.getName() + ",4.5,0.0,"));
         });
     }
 
