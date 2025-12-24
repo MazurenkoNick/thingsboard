@@ -227,6 +227,7 @@ public class EdgeMsgConstructorUtils {
             ),
             EdgeVersion.V_4_0_0,
             Set.of(
+                    TbGenerateReportV2Node.class.getName(),
                     TbAiNode.class.getName()
             ),
             EdgeVersion.V_3_9_0,
