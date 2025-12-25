@@ -31,6 +31,7 @@
 
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 @Component({
   selector: 'tb-link-expired',
@@ -43,7 +44,8 @@ export class LinkExpiredComponent {
   title: string;
   message: string;
 
-  constructor(private route: ActivatedRoute) {
+  constructor(private route: ActivatedRoute,
+              public wl: WhiteLabelingService) {
     this.isPasswordLinkExpired = this.route.snapshot.data.passwordLinkExpired;
     this.title = this.isPasswordLinkExpired ? 'login.reset-password-link-expired' : 'login.activation-link-expired';
     this.message = this.isPasswordLinkExpired ? 'login.reset-password-link-expired-message' :
