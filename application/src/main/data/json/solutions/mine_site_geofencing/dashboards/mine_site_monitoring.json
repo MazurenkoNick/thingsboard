@@ -4586,7 +4586,7 @@
                     "postFuncBody": {
                       "body": "return utils.geoStatusToColor(value);",
                       "modules": {
-                        "utils": "tb-resource;/api/resource/js_module/tenant/Mine site monitoring solution JS utils.js"
+                        "utils": "tb-resource;/api/resource/js_module/system/Mine site monitoring solution JS utils.js"
                       }
                     }
                   },
