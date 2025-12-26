@@ -52,10 +52,11 @@ import { EntityId } from '@shared/models/id/entity-id';
 import { AdditionalDebugActionConfig } from '@home/components/entity/debug/entity-debug-settings.model';
 import { deepTrim } from '@core/utils';
 import { BaseData } from '@shared/models/base-data';
-import { CalculatedFieldFormService } from '@home/components/calculated-fields/calculated-field-form.service';
+import { CalculatedFieldFormService } from '@core/services/calculated-field-form.service';
 import { FormGroup } from '@angular/forms';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { Operation } from '@shared/models/security.models';
+import { TenantId } from '@shared/models/id/tenant-id';
 
 export interface CalculatedFieldDialogData {
   value?: CalculatedField;
@@ -86,6 +87,7 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
   } : null;
 
   entityName = this.data.entityName;
+  ownerId = this.data.ownerId;
   defaultEntityType: EntityType;
 
   disabledConfiguration = false;
@@ -173,6 +175,7 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
 
   changeEntity(entity: BaseData<EntityId>): void {
     this.entityName = entity.name;
+    this.ownerId = entity.ownerId ?? new TenantId(this.data.tenantId);
   }
 
   get entityId(): EntityId {

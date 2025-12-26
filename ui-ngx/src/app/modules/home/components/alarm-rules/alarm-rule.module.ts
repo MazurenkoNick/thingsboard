@@ -68,6 +68,7 @@ import { AlarmRuleTableHeaderComponent } from "@home/components/alarm-rules/alar
 import {
   AlarmRuleFilterPredicateNoDataValueComponent
 } from "@home/components/alarm-rules/filter/alarm-rule-filter-predicate-no-data-value.component";
+import { AlarmRulesComponent } from '@home/components/alarm-rules/alarm-rules.component';
 
 @NgModule({
   declarations: [
@@ -88,7 +89,8 @@ import {
     AlarmRuleDetailsDialogComponent,
     AlarmRuleFilterConfigComponent,
     AlarmRuleTableHeaderComponent,
-    AlarmRuleFilterPredicateNoDataValueComponent
+    AlarmRuleFilterPredicateNoDataValueComponent,
+    AlarmRulesComponent
   ],
   imports: [
     CommonModule,
@@ -98,6 +100,7 @@ import {
   ],
   exports: [
     AlarmRuleDialogComponent,
+    AlarmRulesComponent
   ]
 })
 export class AlarmRuleModule { }

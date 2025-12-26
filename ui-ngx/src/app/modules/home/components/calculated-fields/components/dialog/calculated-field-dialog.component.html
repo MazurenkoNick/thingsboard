@@ -73,6 +73,7 @@
         @if (!data.entityId) {
           <tb-entity-select formControlName="entityId"
                             appearance="outline"
+                            required
                             [filterAllowedEntityTypes]="false"
                             [allowedEntityTypes]="calculatedFieldsEntityTypeList"
                             [defaultEntityType]="defaultEntityType"
@@ -97,7 +98,7 @@
                                        [class.tb-form-panel-disabled]="disabledConfiguration"
                                        [entityId]="entityId"
                                        [entityName]="entityName"
-                                       [ownerId]="data.ownerId"
+                                       [ownerId]="ownerId"
                                        [tenantId]="data.tenantId"
                                        [readonly]="data.readonly"
           ></tb-geofencing-configuration>
@@ -108,7 +109,7 @@
                                         [entityId]="entityId"
                                         [entityName]="entityName"
                                         [tenantId]="data.tenantId"
-                                        [ownerId]="data.ownerId"
+                                        [ownerId]="ownerId"
                                         [testScript]="onTestScript.bind(this)"
                                         [readonly]="data.readonly"
           ></tb-propagation-configuration>
@@ -137,7 +138,7 @@
                                    [class.tb-form-panel-disabled]="disabledConfiguration"
                                    [entityId]="entityId"
                                    [entityName]="entityName"
-                                   [ownerId]="data.ownerId"
+                                   [ownerId]="ownerId"
                                    [tenantId]="data.tenantId"
                                    [isScript]="fieldFormGroup.get('type').value === CalculatedFieldType.SCRIPT"
                                    [testScript]="onTestScript.bind(this)"
