@@ -55,7 +55,7 @@ public record CreatedAlarmRuleInfo(EntityId entityId, String entityName, String 
     }
 
     @Override
-    public String getCfPageLink(UUID key) {
-        return "/alarms/alarm-rules/" + key.toString();
+    public String getCfPageLink(UUID cfId) {
+        return "/alarms/alarm-rules/" + cfId;
     }
 }

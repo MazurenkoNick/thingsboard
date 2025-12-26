@@ -43,7 +43,7 @@ public record CreatedCalculatedFieldInfo(EntityId entityId, String entityName, S
     }
 
     @Override
-    public String getCfPageLink(UUID key) {
-        return "/calculatedFields/" + key.toString();
+    public String getCfPageLink(UUID cfId) {
+        return "/calculatedFields/" + cfId;
     }
 }

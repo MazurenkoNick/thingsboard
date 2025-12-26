@@ -38,7 +38,7 @@ public interface HasAppliedToEntity {
 
     EntityId entityId();
 
-    String getCfPageLink(UUID key);
+    String getCfPageLink(UUID cfId);
 
     default String getEntityPageLink() {
         EntityId id = entityId();

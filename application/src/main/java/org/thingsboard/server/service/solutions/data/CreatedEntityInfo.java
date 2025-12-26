@@ -44,18 +44,18 @@ public class CreatedEntityInfo {
     private EntityType type;
     private String owner;
 
-    public String getEntityPageLink(UUID key) {
+    public String getEntityPageLink(UUID id) {
         return switch (type) {
-            case DEVICE -> "/entities/devices/all/" + key.toString();
-            case ASSET -> "/entities/assets/all/" + key.toString();
-            case DEVICE_PROFILE -> "/profiles/deviceProfiles/" + key.toString();
-            case ASSET_PROFILE -> "/profiles/assetProfiles/" + key.toString();
-            case USER -> "/users/all/" + key.toString();
-            case CUSTOMER -> "/customers/all/" + key.toString();
-            case DASHBOARD -> "/dashboards/all/" + key.toString();
-            case RULE_CHAIN -> "/ruleChains/" + key.toString();
-            case ROLE -> "/security-settings/roles/" + key.toString();
-            case EDGE -> "/edgeManagement/instances/all/" + key.toString();
+            case DEVICE -> "/entities/devices/all/" + id;
+            case ASSET -> "/entities/assets/all/" + id;
+            case DEVICE_PROFILE -> "/profiles/deviceProfiles/" + id;
+            case ASSET_PROFILE -> "/profiles/assetProfiles/" + id;
+            case USER -> "/users/all/" + id;
+            case CUSTOMER -> "/customers/all/" + id;
+            case DASHBOARD -> "/dashboards/all/" + id;
+            case RULE_CHAIN -> "/ruleChains/" + id;
+            case ROLE -> "/security-settings/roles/" + id;
+            case EDGE -> "/edgeManagement/instances/all/" + id;
             default -> null;
         };
     }
