@@ -29,24 +29,36 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SharedModule } from '@shared/shared.module';
-import { HomeDialogsModule } from '../../dialogs/home-dialogs.module';
-import { HomeComponentsModule } from '@modules/home/components/home-components.module';
-import { AlarmRoutingModule } from '@home/pages/alarm/alarm-routing.module';
-import { AlarmRulesTabsComponent } from '@home/pages/alarm/alarm-rules-tabs.component';
+import { Component } from '@angular/core';
+import { EntityTabsComponent } from '../../components/entity/entity-tabs.component';
+import { CalculatedFieldEventBody, DebugEventType, EventType } from '@shared/models/event.models';
+import type {
+  CalculatedFieldsTableConfig,
+  CalculatedFieldsTableEntity
+} from '@home/components/calculated-fields/calculated-fields-table-config';
+import { debugCfActionEnabled } from '@shared/models/calculated-field.models';
 
-@NgModule({
-  declarations: [
-    AlarmRulesTabsComponent
-  ],
-  imports: [
-    CommonModule,
-    SharedModule,
-    HomeComponentsModule,
-    HomeDialogsModule,
-    AlarmRoutingModule
-  ]
+@Component({
+  selector: 'tb-alarm-rules-tabs',
+  templateUrl: './alarm-rules-tabs.component.html',
+  styleUrls: []
 })
-export class AlarmModule { }
+export class AlarmRulesTabsComponent extends EntityTabsComponent<CalculatedFieldsTableEntity> {
+
+  readonly DebugEventType = DebugEventType;
+  readonly EventType = EventType;
+
+  constructor() {
+    super();
+  }
+
+  get debugActionDisabled(): boolean {
+    return !debugCfActionEnabled(this.entity);
+  };
+
+  onDebugEventSelected(event: CalculatedFieldEventBody) {
+    (this.entitiesTableConfig as CalculatedFieldsTableConfig).getTestScriptDialog(this.entity, JSON.parse(event.arguments))
+      .subscribe((expression) => {
+      });
+  };
+}
