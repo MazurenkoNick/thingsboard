@@ -134,7 +134,7 @@ export class TimeseriesTableConfigComponent extends AbstractReportComponentConfi
       pairwise()
     ).subscribe(([prevLabel, currentLabel]) => {
       const tableSortOrder = form.get("tableSortOrder").value;
-      if (tableSortOrder && tableSortOrder.column === prevLabel && form.get('showTimestamp').value) {
+      if (tableSortOrder && tableSortOrder.column === prevLabel) {
         setTimeout(() => {
           form.get('tableSortOrder').patchValue({
             column: currentLabel,
