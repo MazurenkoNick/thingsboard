@@ -147,14 +147,14 @@
         "key": "latitude",
         "valueStrategy": {
           "type": "constant",
-          "value": 36.211191
+          "value": 36.212697
         }
       },
       {
         "key": "longitude",
         "valueStrategy": {
           "type": "constant",
-          "value": -88.664576
+          "value": -88.661942
         }
       },
       {
