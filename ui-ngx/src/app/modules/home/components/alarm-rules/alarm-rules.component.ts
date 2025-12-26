@@ -70,7 +70,7 @@ export class AlarmRulesComponent extends EntityComponent<CalculatedFieldsTableEn
   @Input()
   entityName: string;
 
-  readonly ownerId = new TenantId(getCurrentAuthUser(this.store).tenantId);
+  ownerId: EntityId = new TenantId(getCurrentAuthUser(this.store).tenantId);
   readonly tenantId = getCurrentAuthUser(this.store).tenantId;
   readonly EntityType = EntityType;
   readonly calculatedFieldsEntityTypeList = calculatedFieldsEntityTypeList;
@@ -118,6 +118,7 @@ export class AlarmRulesComponent extends EntityComponent<CalculatedFieldsTableEn
 
   changeEntity(entity: BaseData<EntityId>): void {
     this.entityName = entity?.name;
+    this.ownerId = entity?.ownerId ?? new TenantId(getCurrentAuthUser(this.store).tenantId);
   }
 
   buildForm(_entity?: CalculatedFieldInfo): FormGroup {

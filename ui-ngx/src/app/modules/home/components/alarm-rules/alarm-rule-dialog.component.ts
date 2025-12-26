@@ -102,6 +102,7 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
 
   entityName = this.data.entityName;
   ownerId = this.data.ownerId;
+  defaultEntityType: EntityType;
 
   disabledClearRuleButton = false;
   disabledArguments = false;
@@ -152,9 +153,9 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
         }
       });
       if (this.alarmRuleEntityTypeList.includes(EntityType.DEVICE_PROFILE)) {
-        this.fieldFormGroup.get('entityId.entityType').patchValue(EntityType.DEVICE_PROFILE, {emitEvent: false});
+        this.defaultEntityType = EntityType.DEVICE_PROFILE;
       } else if (this.alarmRuleEntityTypeList.length === 1) {
-        this.fieldFormGroup.get('entityId.entityType').patchValue(this.alarmRuleEntityTypeList[0], {emitEvent: false});
+        this.defaultEntityType = this.alarmRuleEntityTypeList[0];
       }
     }
   }
