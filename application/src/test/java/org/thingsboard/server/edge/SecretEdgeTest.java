@@ -82,6 +82,20 @@ public class SecretEdgeTest extends AbstractEdgeTest {
         secretFromMsg = JacksonUtil.fromString(msg.getEntity(), Secret.class, true);
         Assert.assertEquals(UPDATED_SECRET_DESCRIPTION, secretFromMsg.getDescription());
 
+        // update without setting the value
+        edgeImitator.expectMessageAmount(1);
+        savedSecret.setDescription(UPDATED_SECRET_DESCRIPTION);
+        secret = new Secret(savedSecret, secret.getEncryptedValue());
+        savedSecret = doPost("/api/secret", secret, SecretInfo.class);
+        Assert.assertTrue(edgeImitator.waitForMessages());
+
+        latestMessage = edgeImitator.getLatestMessage();
+        msg = (SecretUpdateMsg) latestMessage;
+        Assert.assertEquals(UpdateMsgType.ENTITY_UPDATED_RPC_MESSAGE, msg.getMsgType());
+
+        secretFromMsg = JacksonUtil.fromString(msg.getEntity(), Secret.class, true);
+        Assert.assertEquals(UPDATED_SECRET_DESCRIPTION, secretFromMsg.getDescription());
+
         // delete
         edgeImitator.expectMessageAmount(1);
         doDelete("/api/secret/" + savedSecret.getUuidId()).andExpect(status().isOk());

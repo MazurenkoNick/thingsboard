@@ -345,6 +345,10 @@ public abstract class AbstractReportService implements ReportService {
             return;
         }
         for (DataKey dataKey : dataKeys) {
+            var agg = dataKey.getAggregationType();
+            if (agg != null && agg != Aggregation.NONE) {
+                continue;
+            }
             Map<String, TsValue> keyValueMap = latest.get(EntityKeyType.fromName(dataKey.getType()));
             if (keyValueMap != null) {
                 TsValue tsValue = keyValueMap.get(dataKey.getName());

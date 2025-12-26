@@ -87,6 +87,7 @@ import org.thingsboard.server.common.data.SystemInfo;
 import org.thingsboard.server.common.data.TbImageDeleteResult;
 import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.TbResourceInfo;
+import org.thingsboard.server.common.data.TbSecretDeleteResult;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.TenantInfo;
 import org.thingsboard.server.common.data.TenantProfile;
@@ -157,6 +158,7 @@ import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.RuleNodeId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
+import org.thingsboard.server.common.data.id.SecretId;
 import org.thingsboard.server.common.data.id.TbResourceId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.TenantProfileId;
@@ -229,6 +231,8 @@ import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleChainType;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
+import org.thingsboard.server.common.data.secret.Secret;
+import org.thingsboard.server.common.data.secret.SecretInfo;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.server.common.data.security.DeviceCredentialsType;
 import org.thingsboard.server.common.data.security.model.JwtPair;
@@ -5262,6 +5266,83 @@ public class RestClient implements Closeable {
                 new ParameterizedTypeReference<List<SchedulerEventInfo>>() {
                 },
                 listIdsToString(schedulerEventIds)).getBody();
+    }
+
+    public SecretInfo saveSecret(Secret secret) {
+        return restTemplate.postForEntity(baseURL + "/api/secret", secret, SecretInfo.class).getBody();
+    }
+
+    public SecretInfo updateSecretDescription(SecretId secretId, String description) {
+        return restTemplate.exchange(
+                baseURL + "/api/secret/{id}/description",
+                HttpMethod.PUT,
+                new HttpEntity<>(description),
+                SecretInfo.class,
+                secretId.getId()).getBody();
+    }
+
+    public SecretInfo updateSecretValue(SecretId secretId, String value) {
+        return restTemplate.exchange(
+                baseURL + "/api/secret/{id}/value",
+                HttpMethod.PUT,
+                new HttpEntity<>(value),
+                SecretInfo.class,
+                secretId.getId()).getBody();
+    }
+
+    public ResponseEntity<TbSecretDeleteResult> deleteSecret(SecretId secretId) {
+        return restTemplate.exchange(
+                baseURL + "/api/secret/{id}",
+                HttpMethod.DELETE,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<>() {},
+                secretId.getId());
+    }
+
+    public PageData<SecretInfo> getSecretInfos(PageLink pageLink) {
+        Map<String, String> params = new HashMap<>();
+        addPageLinkToParam(params, pageLink);
+        return restTemplate.exchange(
+                baseURL + "/api/secrets?" + getUrlParams(pageLink),
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<PageData<SecretInfo>>() {},
+                params).getBody();
+    }
+
+    public List<String> getSecretNames() {
+        return restTemplate.exchange(
+                        baseURL + "/api/secret/names",
+                        HttpMethod.GET,
+                        HttpEntity.EMPTY,
+                        new ParameterizedTypeReference<List<String>>() {})
+                .getBody();
+    }
+
+    public Optional<SecretInfo> getSecretInfoById(UUID secretId) {
+        try {
+            ResponseEntity<SecretInfo> secretInfo = restTemplate.getForEntity(baseURL + "/api/secret/{id}/info", SecretInfo.class, secretId);
+            return Optional.ofNullable(secretInfo.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public Optional<SecretInfo> getSecretInfoByName(String name) {
+        try {
+            ResponseEntity<SecretInfo> secretInfo = restTemplate.getForEntity(baseURL + "/api/secret?name={name}", SecretInfo.class, name);
+            return Optional.ofNullable(secretInfo.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
     }
 
     public SelfRegistrationParams saveSelfRegistrationParams(SelfRegistrationParams selfRegistrationParams) {

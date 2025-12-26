@@ -43,6 +43,7 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.controller.AbstractControllerTest;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -71,7 +72,7 @@ public class TrendzProxyServiceTest extends AbstractControllerTest {
         requestHeaders.add("trendz_request_header", "trendz_request_header_value");
         byte[] requestBody = "trendz_request_body".getBytes();
 
-        when(trendzClient.sendTrendzProxyRequest(trendzUri, HttpMethod.POST, requestBody, requestHeaders))
+        when(trendzClient.sendTrendzProxyRequest(trendzUri, Collections.emptyMap(), HttpMethod.POST, requestBody, requestHeaders))
                 .thenReturn(expected);
 
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("POST", trendzUri);
@@ -91,13 +92,18 @@ public class TrendzProxyServiceTest extends AbstractControllerTest {
 
         HttpHeaders requestHeaders = new HttpHeaders();
         requestHeaders.add("trendz_request_header", "trendz_request_header_value");
+        Map<String, String[]> expectedMap = Map.of(
+                "param1", new String[]{"value1"},
+                "param2", new String[]{"value2"}
+        );
 
-        when(trendzClient.sendTrendzProxyRequest("/apiTrendz/test?param1=value1&param2=value2", HttpMethod.GET, null, requestHeaders))
-                .thenReturn(expected);
+        when(trendzClient.sendTrendzProxyRequest(
+                "/apiTrendz/test", expectedMap, HttpMethod.GET, null, requestHeaders
+        )).thenReturn(expected);
 
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "/apiTrendz/test");
         httpServletRequest.addHeader("trendz_request_header", "trendz_request_header_value");
-        httpServletRequest.setQueryString("param1=value1&param2=value2");
+        httpServletRequest.setParameters(expectedMap);
 
         ResponseEntity<byte[]> actual = trendzProxyService.proxy(httpServletRequest, null);
         assertEquals(expected, actual);

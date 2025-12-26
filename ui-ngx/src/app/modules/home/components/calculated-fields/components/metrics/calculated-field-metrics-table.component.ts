@@ -234,7 +234,7 @@ export class CalculatedFieldMetricsTableComponent implements OnInit, ControlValu
   }
 
   writeValue(metrics: Record<string, CalculatedFieldAggMetric>): void {
-    this.metricsFormArray.clear();
+    this.metricsFormArray.clear({emitEvent: false});
     this.populateZonesFormArray(metrics);
   }
 
@@ -246,7 +246,7 @@ export class CalculatedFieldMetricsTableComponent implements OnInit, ControlValu
       };
       this.metricsFormArray.push(this.fb.control(value), { emitEvent: false });
     });
-    this.metricsFormArray.updateValueAndValidity();
+    this.updateDataSource(this.metricsFormArray.value);
   }
 
   private getSortValue(metric: CalculatedFieldAggMetricValue, column: string): string {
