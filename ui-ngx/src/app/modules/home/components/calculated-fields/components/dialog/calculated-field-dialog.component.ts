@@ -86,6 +86,7 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
   } : null;
 
   entityName = this.data.entityName;
+  defaultEntityType: EntityType;
 
   disabledConfiguration = false;
   isLoading = false;
@@ -126,9 +127,9 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
         }
       });
       if (this.calculatedFieldsEntityTypeList.includes(EntityType.DEVICE_PROFILE)) {
-        this.fieldFormGroup.get('entityId.entityType').patchValue(EntityType.DEVICE_PROFILE, {emitEvent: false});
+        this.defaultEntityType = EntityType.DEVICE_PROFILE;
       } else if (this.calculatedFieldsEntityTypeList.length === 1) {
-        this.fieldFormGroup.get('entityId.entityType').patchValue(this.calculatedFieldsEntityTypeList[0], {emitEvent: false});
+        this.defaultEntityType = this.calculatedFieldsEntityTypeList[0];
       }
     }
 

@@ -70,8 +70,8 @@ export class CalculatedFieldComponent extends EntityComponent<CalculatedFieldsTa
 
   disabledConfiguration = false;
 
+  ownerId: EntityId = new TenantId(getCurrentAuthUser(this.store).tenantId);
   readonly tenantId = getCurrentAuthUser(this.store).tenantId;
-  readonly ownerId = new TenantId(getCurrentAuthUser(this.store).tenantId);
   readonly EntityType = EntityType;
   readonly calculatedFieldsEntityTypeList = calculatedFieldsEntityTypeList;
   readonly CalculatedFieldType = CalculatedFieldType;
@@ -120,6 +120,7 @@ export class CalculatedFieldComponent extends EntityComponent<CalculatedFieldsTa
 
   changeEntity(entity: BaseData<EntityId>): void {
     this.entityName = entity?.name;
+    this.ownerId = entity?.ownerId ?? new TenantId(getCurrentAuthUser(this.store).tenantId);
   }
 
   buildForm(_entity?: CalculatedFieldInfo): FormGroup {

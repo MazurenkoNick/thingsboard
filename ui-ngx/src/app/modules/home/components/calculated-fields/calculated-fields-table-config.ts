@@ -148,6 +148,7 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
     this.loadEntity = id => this.calculatedFieldsService.getCalculatedFieldById(id.id);
     this.addEnabled = !this.readonly;
     this.entitiesDeleteEnabled = !this.readonly;
+    this.detailsReadonly = (field) => this.readonly || !this.allowWritePermission(field);
     this.deleteEntityTitle = (field) => this.translate.instant('calculated-fields.delete-title', {title: field.name});
     this.deleteEntityContent = () => this.translate.instant('calculated-fields.delete-text');
     this.deleteEntitiesTitle = count => this.translate.instant('calculated-fields.delete-multiple-title', {count});

@@ -75,7 +75,7 @@
                             appearance="outline"
                             [filterAllowedEntityTypes]="false"
                             [allowedEntityTypes]="calculatedFieldsEntityTypeList"
-                            [defaultEntityType]="EntityType.DEVICE_PROFILE"
+                            [defaultEntityType]="defaultEntityType"
                             (entityChanged)="changeEntity($event)">
           </tb-entity-select>
         }
