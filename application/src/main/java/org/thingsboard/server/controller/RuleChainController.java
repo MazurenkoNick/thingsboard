@@ -97,9 +97,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static org.thingsboard.server.controller.ControllerConstants.EDGE_ASSIGN_ASYNC_FIRST_STEP_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.EDGE_ASSIGN_RECEIVE_STEP_DESCRIPTION;
@@ -243,7 +243,7 @@ public class RuleChainController extends BaseController {
             @Parameter(description = "A JSON value representing the rule chain.")
             @RequestBody RuleChain ruleChain) throws Exception {
         ruleChain.setTenantId(getCurrentUser().getTenantId());
-        checkEntity(ruleChain.getId(), ruleChain, Resource.RULE_CHAIN, null);
+        checkEntity(ruleChain.getId(), ruleChain, Resource.RULE_CHAIN);
         return tbRuleChainService.save(ruleChain, getCurrentUser());
     }
 
@@ -433,6 +433,7 @@ public class RuleChainController extends BaseController {
             @Parameter(description = "A limit of rule chains to export.", required = true)
             @RequestParam("limit") int limit) throws ThingsboardException {
         TenantId tenantId = getCurrentUser().getTenantId();
+        accessControlService.checkPermission(getCurrentUser(), Resource.RULE_CHAIN, Operation.READ);
         PageLink pageLink = new PageLink(limit);
         return checkNotNull(ruleChainService.exportTenantRuleChains(tenantId, pageLink));
     }
@@ -446,6 +447,7 @@ public class RuleChainController extends BaseController {
             @Parameter(description = "Enables overwrite for existing rule chains with the same name.")
             @RequestParam(required = false, defaultValue = "false") boolean overwrite) throws ThingsboardException {
         TenantId tenantId = getCurrentUser().getTenantId();
+        accessControlService.checkPermission(getCurrentUser(), Resource.RULE_CHAIN, Operation.WRITE);
         return ruleChainService.importTenantRuleChains(tenantId, ruleChainData, overwrite, tbRuleChainService::updateRuleNodeConfiguration);
     }
 
@@ -591,6 +593,7 @@ public class RuleChainController extends BaseController {
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @GetMapping("/ruleChain/autoAssignToEdgeRuleChains")
     public List<RuleChain> getAutoAssignToEdgeRuleChains() throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.RULE_CHAIN, Operation.READ);
         TenantId tenantId = getCurrentUser().getTenantId();
         List<RuleChain> result = new ArrayList<>();
         PageDataIterableByTenant<RuleChain> autoAssignRuleChainsIterator =
@@ -608,18 +611,17 @@ public class RuleChainController extends BaseController {
     @GetMapping(value = "/ruleChains", params = {"ruleChainIds"})
     public List<RuleChain> getRuleChainsByIds(
             @Parameter(description = "A list of rule chain ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
-            @RequestParam("ruleChainIds") String[] strRuleChainIds) throws Exception {
-        checkArrayParameter("ruleChainIds", strRuleChainIds);
+            @RequestParam("ruleChainIds") Set<UUID> ruleChainUUIDs) throws Exception {
         if (!accessControlService.hasPermission(getCurrentUser(), Resource.RULE_CHAIN, Operation.READ)) {
             return Collections.emptyList();
         }
         SecurityUser user = getCurrentUser();
         TenantId tenantId = user.getTenantId();
         List<RuleChainId> ruleChainIds = new ArrayList<>();
-        for (String strRuleChainId : strRuleChainIds) {
-            ruleChainIds.add(new RuleChainId(toUUID(strRuleChainId)));
+        for (UUID ruleChainUUID : ruleChainUUIDs) {
+            ruleChainIds.add(new RuleChainId(ruleChainUUID));
         }
-        List<RuleChain> ruleChains = checkNotNull(ruleChainService.findRuleChainsByIdsAsync(tenantId, ruleChainIds).get());
+        List<RuleChain> ruleChains = ruleChainService.findRuleChainsByIds(tenantId, ruleChainIds);
         return filterRuleChainsByReadPermission(ruleChains);
     }
 
@@ -630,7 +632,7 @@ public class RuleChainController extends BaseController {
             } catch (ThingsboardException e) {
                 return false;
             }
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
 }

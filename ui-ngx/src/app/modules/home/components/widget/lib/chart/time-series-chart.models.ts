@@ -397,8 +397,8 @@ export interface TimeSeriesChartYAxisSettings extends TimeSeriesChartAxisSetting
   decimals?: number;
   interval?: number;
   splitNumber?: number;
-  min?: number | string;
-  max?: number | string;
+  min?: number | string | ValueSourceConfig;
+  max?: number | string | ValueSourceConfig;
   ticksGenerator?: TimeSeriesChartTicksGenerator | string;
   ticksFormatter?: TimeSeriesChartTicksFormatter | string;
 }
@@ -883,6 +883,9 @@ export interface TimeSeriesChartAxis {
   id: string;
   settings: TimeSeriesChartAxisSettings;
   option: CartesianAxisOption;
+  minLatestDataKey?: DataKey;
+  maxLatestDataKey?: DataKey;
+  unitConvertor?: (value: number) => number;
 }
 
 export interface TimeSeriesChartYAxis extends TimeSeriesChartAxis {
@@ -942,6 +945,29 @@ export const createTimeSeriesYAxis = (units: string,
       return ticks?.filter(tick => tick.value >= extent[0] && tick.value <= extent[1]);
     };
   }
+
+  let initialMin: number | string | undefined;
+  if (isDefinedAndNotNull(settings.min)) {
+    if (typeof settings.min === 'object' && 'type' in settings.min) {
+      initialMin = undefined;
+    } else if (typeof settings.min === 'number') {
+      initialMin = unitConvertor ? unitConvertor(settings.min) : settings.min;
+    } else if (typeof settings.min === 'string') {
+      initialMin = settings.min;
+    }
+  }
+
+  let initialMax: number | string | undefined;
+  if (isDefinedAndNotNull(settings.max)) {
+    if (typeof settings.max === 'object' && 'type' in settings.max) {
+      initialMax = undefined;
+    } else if (typeof settings.max === 'number') {
+      initialMax = unitConvertor ? unitConvertor(settings.max) : settings.max;
+    } else if (typeof settings.max === 'string') {
+      initialMax = settings.max;
+    }
+  }
+
   return {
     id: settings.id,
     decimals,
@@ -955,8 +981,8 @@ export const createTimeSeriesYAxis = (units: string,
       offset: 0,
       alignTicks: true,
       scale: true,
-      min: isDefinedAndNotNull(settings.min) ? unitConvertor(Number(settings.min)) : settings.min,
-      max: isDefinedAndNotNull(settings.max) ? unitConvertor(Number(settings.max)) : settings.max,
+      min: initialMin,
+      max: initialMax,
       minInterval,
       splitNumber,
       interval,
@@ -1435,6 +1461,13 @@ const createTimeSeriesChartSeries = (item: TimeSeriesChartDataItem,
     }
   }
   seriesOption.data = item.data;
+  if (seriesOption.type === 'line') {
+    const settings: TimeSeriesChartKeySettings = item.dataKey.settings;
+    const lineSettings = settings.lineSettings;
+    if (!lineSettings.showPoints) {
+      seriesOption.showSymbol = item.data.length === 1;
+    }
+  }
   return seriesOption;
 };
 

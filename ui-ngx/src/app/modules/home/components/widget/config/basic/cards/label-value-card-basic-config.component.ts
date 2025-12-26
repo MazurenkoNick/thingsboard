@@ -40,6 +40,7 @@ import {
   datasourcesHasAggregation,
   datasourcesHasOnlyComparisonAggregation,
   WidgetConfig,
+  widgetTitleAutocompleteValues,
 } from '@shared/models/widget.models';
 import { WidgetConfigComponent } from '@home/components/widget/widget-config.component';
 import { formatValue, isUndefined } from '@core/utils';
@@ -75,6 +76,8 @@ export class LabelValueCardBasicConfigComponent extends BasicWidgetConfigCompone
 
   valuePreviewFn = this._valuePreviewFn.bind(this);
 
+  predefinedValues = widgetTitleAutocompleteValues;
+  
   constructor(protected store: Store<AppState>,
               protected widgetConfigComponent: WidgetConfigComponent,
               private fb: UntypedFormBuilder) {

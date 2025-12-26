@@ -34,10 +34,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.Dashboard;
+import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.gen.edge.v1.DashboardUpdateMsg;
 import org.thingsboard.server.service.edge.rpc.processor.BaseEdgeProcessor;
@@ -65,13 +67,15 @@ public abstract class BaseDashboardProcessor extends BaseEdgeProcessor {
             changeOwnerIfRequired(tenantId, null, dashboardId);
         }
 
-        dashboardValidator.validate(dashboard, Dashboard::getTenantId);
-        if (created) {
-            dashboard.setId(dashboardId);
-        }
-        Dashboard savedDashboard = edgeCtx.getDashboardService().saveDashboard(dashboard, false);
-        if (created) {
-            edgeCtx.getEntityGroupService().addEntityToEntityGroupAll(savedDashboard.getTenantId(), savedDashboard.getOwnerId(), savedDashboard.getId());
+        if (isSaveRequired(dashboardById, dashboard)) {
+            dashboardValidator.validate(dashboard, Dashboard::getTenantId);
+            if (created) {
+                dashboard.setId(dashboardId);
+            }
+            Dashboard savedDashboard = edgeCtx.getDashboardService().saveDashboard(dashboard, false);
+            if (created) {
+                edgeCtx.getEntityGroupService().addEntityToEntityGroupAll(savedDashboard.getTenantId(), savedDashboard.getOwnerId(), savedDashboard.getId());
+            }
         }
         safeAddToEntityGroup(tenantId, dashboardUpdateMsg, dashboardId);
         return created;
@@ -82,6 +86,18 @@ public abstract class BaseDashboardProcessor extends BaseEdgeProcessor {
             UUID entityGroupUUID = safeGetUUID(dashboardUpdateMsg.getEntityGroupIdMSB(),
                     dashboardUpdateMsg.getEntityGroupIdLSB());
             safeAddEntityToGroup(tenantId, new EntityGroupId(entityGroupUUID), dashboardId);
+        }
+    }
+
+    protected void deleteDashboard(TenantId tenantId, DashboardId dashboardId) {
+        deleteDashboard(tenantId, null, dashboardId);
+    }
+
+    protected void deleteDashboard(TenantId tenantId, Edge edge, DashboardId dashboardId) {
+        Dashboard dashboardById = edgeCtx.getDashboardService().findDashboardById(tenantId, dashboardId);
+        if (dashboardById != null) {
+            edgeCtx.getDashboardService().deleteDashboard(tenantId, dashboardId);
+            pushEntityEventToRuleEngine(tenantId, edge, dashboardById, TbMsgType.ENTITY_DELETED);
         }
     }
 

@@ -44,6 +44,7 @@ import org.thingsboard.edge.rpc.EdgeGrpcClient;
 import org.thingsboard.edge.rpc.EdgeRpcClient;
 import org.thingsboard.server.controller.AbstractWebTest;
 import org.thingsboard.server.gen.edge.v1.AdminSettingsUpdateMsg;
+import org.thingsboard.server.gen.edge.v1.AiModelUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.AlarmCommentUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.AlarmUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.AssetProfileUpdateMsg;
@@ -75,6 +76,7 @@ import org.thingsboard.server.gen.edge.v1.OAuth2DomainUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.OtaPackageUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.QueueUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.RelationUpdateMsg;
+import org.thingsboard.server.gen.edge.v1.ReportTemplateUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.ResourceUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.RoleProto;
 import org.thingsboard.server.gen.edge.v1.RuleChainMetadataUpdateMsg;
@@ -346,6 +348,11 @@ public class EdgeImitator {
                 result.add(saveDownlinkMsg(schedulerEventUpdateMsg));
             }
         }
+        if (downlinkMsg.getReportTemplateUpdateMsgCount() > 0 ) {
+            for (ReportTemplateUpdateMsg reportTemplateUpdateMsg : downlinkMsg.getReportTemplateUpdateMsgList()) {
+                result.add(saveDownlinkMsg(reportTemplateUpdateMsg));
+            }
+        }
         if (downlinkMsg.getRoleMsgCount() > 0) {
             for (RoleProto roleProto : downlinkMsg.getRoleMsgList()) {
                 result.add(saveDownlinkMsg(roleProto));
@@ -434,6 +441,11 @@ public class EdgeImitator {
         if (downlinkMsg.getSecretUpdateMsgCount() > 0) {
             for (SecretUpdateMsg secretUpdateMsg : downlinkMsg.getSecretUpdateMsgList()) {
                 result.add(saveDownlinkMsg(secretUpdateMsg));
+            }
+        }
+        if (downlinkMsg.getAiModelUpdateMsgCount() > 0) {
+            for (AiModelUpdateMsg aiModelUpdateMsg : downlinkMsg.getAiModelUpdateMsgList()) {
+                result.add(saveDownlinkMsg(aiModelUpdateMsg));
             }
         }
         if (downlinkMsg.hasEdgeConfiguration()) {

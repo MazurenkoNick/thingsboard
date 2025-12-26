@@ -1,0 +1,74 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<div class="tb-alarm-rule-condition flex min-w-0 flex-col gap-4" [formGroup]="alarmRuleConditionFormGroup">
+  <div class="tb-form-row column-xs">
+    <div class="min-w-40 xs:min-w-fit">{{ 'alarm-rule.condition' | translate }}</div>
+    <button type="button" [disabled]="disabled"
+            class="tb-alarm-rule-condition-button"
+            mat-stroked-button [color]="conditionSet() && this.filtersArgumentsValid ? 'primary' : 'warn'"
+            (click)="openFilterDialog($event)">
+      <div class="flex items-center justify-between gap-2">
+        <tb-alarm-rule-filter-text [alarmRuleExpression]="alarmRuleConditionFormGroup.get('expression').value"
+                                   [arguments]="arguments"
+                                   [disabled]="disabled"
+                                   class="flex-1"
+                                   [nowrap]="true"
+                                   [specText]="specText"
+                                   required
+                                   addFilterPrompt="{{ 'alarm-rule.enter-alarm-rule-condition-prompt' | translate }}">
+        </tb-alarm-rule-filter-text>
+        <mat-icon [color]="disabled ? '' : (conditionSet() && this.filtersArgumentsValid ? 'primary' : 'warn')"
+                  class="tb-mat-20 tb-alarm-rule-schedule-edit-icon">
+          {{ conditionSet() ? 'edit' : 'add' }}
+        </mat-icon>
+      </div>
+    </button>
+  </div>
+  <div class="tb-form-row column-xs">
+    <div class="min-w-40 xs:min-w-fit">{{ 'alarm-rule.schedule-title' | translate }}</div>
+    <button [disabled]="disabled"
+            [color]="schedulerArgumentsValid ? 'primary' : 'warn'"
+            type="button"
+            class="tb-alarm-rule-condition-button"
+            mat-stroked-button
+            (click)="openScheduleDialog($event)">
+      <div class="flex items-center gap-2">
+        <span class="tb-alarm-rule-condition-label" tbTruncateWithTooltip [innerHTML]="scheduleText"></span>
+        <mat-icon [color]="disabled ? '' : (schedulerArgumentsValid ? 'primary' : 'warn')"
+                  class="tb-mat-20 tb-alarm-rule-schedule-edit-icon">
+          edit
+        </mat-icon>
+      </div>
+    </button>
+  </div>
+</div>

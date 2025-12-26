@@ -102,11 +102,11 @@ export const alarmSearchStatusTranslations = new Map<AlarmSearchStatus, string>(
 
 export const alarmSeverityColors = new Map<AlarmSeverity, string>(
   [
-    [AlarmSeverity.CRITICAL, 'red'],
-    [AlarmSeverity.MAJOR, 'orange'],
-    [AlarmSeverity.MINOR, '#ffca3d'],
-    [AlarmSeverity.WARNING, '#abab00'],
-    [AlarmSeverity.INDETERMINATE, 'green']
+    [AlarmSeverity.CRITICAL, '#D12730'],
+    [AlarmSeverity.MAJOR, '#FEAC0C'],
+    [AlarmSeverity.MINOR, '#F2DA05'],
+    [AlarmSeverity.WARNING, '#F66716'],
+    [AlarmSeverity.INDETERMINATE, '#00000061']
   ]
 );
 
@@ -134,12 +134,27 @@ export enum AlarmCommentType {
   OTHER = 'OTHER'
 }
 
+export enum AlarmMessage {
+  ACKED_BY_USER = "alarm.system-comments.acked-by-user",
+  CLEARED_BY_USER = "alarm.system-comments.cleared-by-user",
+  ASSIGNED_TO_USER = "alarm.system-comments.assigned-to-user",
+  UNASSIGNED_BY_USER = "alarm.system-comments.unassigned-to-user",
+  UNASSIGNED_FROM_DELETED_USER = "alarm.system-comments.unassigned-from-deleted-user",
+  COMMENT_DELETED = "alarm.system-comments.comment-deleted",
+  SEVERITY_CHANGED = "alarm.system-comments.severity-changed",
+}
+
 export interface AlarmComment extends BaseData<AlarmCommentId> {
   alarmId: AlarmId;
   userId?: UserId;
   type: AlarmCommentType;
   comment: {
     text: string;
+    subtype?: keyof typeof AlarmMessage;
+    userName?: string;
+    assigneeName?: string;
+    oldSeverity?: AlarmSeverity;
+    newSeverity?: AlarmSeverity;
     edited?: boolean;
     editedOn?: number;
   };
@@ -154,6 +169,7 @@ export interface AlarmCommentInfo extends AlarmComment {
 export interface AlarmInfo extends Alarm {
   originatorName: string;
   originatorLabel: string;
+  originatorDisplayName?: string;
   assignee: AlarmAssignee;
 }
 
@@ -186,6 +202,7 @@ export const simulatedAlarm: AlarmInfo = {
   clearTs: 0,
   assignTs: 0,
   originatorName: 'Simulated',
+  originatorDisplayName: 'Simulated',
   originatorLabel: 'Simulated',
   assignee: {
     firstName: '',
@@ -256,6 +273,11 @@ export const alarmFields: {[fieldName: string]: AlarmField} = {
     value: 'originatorName',
     name: 'alarm.originator'
   },
+  originatorDisplayName: {
+    keyName: 'originatorDisplayName',
+    value: 'originatorDisplayName',
+    name: 'alarm.originator'
+  },
   originatorLabel: {
     keyName: 'originatorLabel',
     value: 'originatorLabel',
@@ -285,6 +307,11 @@ export const alarmFields: {[fieldName: string]: AlarmField} = {
     keyName: 'assignee',
     value: 'assignee',
     name: 'alarm.assignee'
+  },
+  details: {
+    keyName: 'details',
+    value: 'details',
+    name: 'alarm.details'
   }
 };
 

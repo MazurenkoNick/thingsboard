@@ -37,6 +37,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.Customer;
+import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.edqs.fields.CustomerFields;
 import org.thingsboard.server.common.data.id.CustomMenuId;
@@ -94,6 +95,11 @@ public class JpaCustomerDao extends JpaAbstractDao<CustomerEntity, Customer> imp
     public ListenableFuture<List<Customer>> findCustomersByTenantIdAndIdsAsync(UUID tenantId, List<UUID> customerIds) {
         return DaoUtil.getEntitiesByTenantIdAndIdIn(customerIds, ids ->
                 customerRepository.findCustomersByTenantIdAndIdIn(tenantId, ids), service);
+    }
+
+    @Override
+    public List<Customer> findCustomersByTenantIdAndIds(UUID tenantId, List<UUID> customerIds) {
+        return DaoUtil.convertDataList(customerRepository.findCustomersByTenantIdAndIdIn(tenantId, customerIds));
     }
 
     @Override
@@ -182,6 +188,15 @@ public class JpaCustomerDao extends JpaAbstractDao<CustomerEntity, Customer> imp
     }
 
     @Override
+    public PageData<Customer> findByTenantIdAndParentCustomerId(TenantId tenantId, CustomerId parentCustomerId, PageLink pageLink) {
+        if (parentCustomerId != null && !parentCustomerId.isNullUid()) {
+            return DaoUtil.toPageData(customerRepository.findByTenantIdAndParentCustomerId(tenantId.getId(), parentCustomerId.getId(), DaoUtil.toPageable(pageLink)));
+        } else {
+            return DaoUtil.toPageData(customerRepository.findByTenantIdAndNullParentCustomerId(tenantId.getId(), DaoUtil.toPageable(pageLink)));
+        }
+    }
+
+    @Override
     public PageData<Customer> findAllByTenantId(TenantId tenantId, PageLink pageLink) {
         return findByTenantId(tenantId.getId(), pageLink);
     }
@@ -189,6 +204,11 @@ public class JpaCustomerDao extends JpaAbstractDao<CustomerEntity, Customer> imp
     @Override
     public List<CustomerFields> findNextBatch(UUID id, int batchSize) {
         return customerRepository.findNextBatch(id, Limit.of(batchSize));
+    }
+
+    @Override
+    public List<EntityInfo> findEntityInfosByNamePrefix(TenantId tenantId, String name) {
+        return customerRepository.findEntityInfosByNamePrefix(tenantId.getId(), name);
     }
 
     @Override

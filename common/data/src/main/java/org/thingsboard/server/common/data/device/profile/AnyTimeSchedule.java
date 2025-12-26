@@ -32,6 +32,7 @@ package org.thingsboard.server.common.data.device.profile;
 
 import org.thingsboard.server.common.data.query.DynamicValue;
 
+@Deprecated
 public class AnyTimeSchedule implements AlarmSchedule {
 
     @Override

@@ -395,6 +395,7 @@ interface NotificationButtonConfig {
   dashboardId?: string;
   dashboardState?: string;
   setEntityIdInState?: boolean;
+  entityType?: EntityType;
 }
 
 interface EmailDeliveryMethodNotificationTemplate {
@@ -575,6 +576,7 @@ export enum NotificationType {
   ALARM_ASSIGNMENT = 'ALARM_ASSIGNMENT',
   RULE_ENGINE_COMPONENT_LIFECYCLE_EVENT = 'RULE_ENGINE_COMPONENT_LIFECYCLE_EVENT',
   ENTITIES_LIMIT = 'ENTITIES_LIMIT',
+  ENTITIES_LIMIT_INCREASE_REQUEST = 'ENTITIES_LIMIT_INCREASE_REQUEST',
   API_USAGE_LIMIT = 'API_USAGE_LIMIT',
   NEW_PLATFORM_VERSION = 'NEW_PLATFORM_VERSION',
   RULE_NODE = 'RULE_NODE',
@@ -597,22 +599,13 @@ export const NotificationTypeIcons = new Map<NotificationType, string | null>([
   [NotificationType.ALARM_ASSIGNMENT, 'assignment_turned_in'],
   [NotificationType.RULE_ENGINE_COMPONENT_LIFECYCLE_EVENT, 'settings_ethernet'],
   [NotificationType.ENTITIES_LIMIT, 'data_thresholding'],
+  [NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST, 'mdi:file-cog'],
   [NotificationType.API_USAGE_LIMIT, 'insert_chart'],
   [NotificationType.INTEGRATION_LIFECYCLE_EVENT, 'integration_instructions'],
   [NotificationType.TASK_PROCESSING_FAILURE, 'warning'],
   [NotificationType.RESOURCES_SHORTAGE, 'warning'],
   [NotificationType.REPORT_GENERATED, 'description']
 ]);
-
-export const AlarmSeverityNotificationColors = new Map<AlarmSeverity, string>(
-  [
-    [AlarmSeverity.CRITICAL, '#D12730'],
-    [AlarmSeverity.MAJOR, '#FEAC0C'],
-    [AlarmSeverity.MINOR, '#F2DA05'],
-    [AlarmSeverity.WARNING, '#F66716'],
-    [AlarmSeverity.INDETERMINATE, '#00000061']
-  ]
-);
 
 export enum ActionButtonLinkType {
   LINK = 'LINK',
@@ -676,6 +669,12 @@ export const NotificationTemplateTypeTranslateMap = new Map<NotificationType, No
     {
       name: 'notification.template-type.entities-limit',
       helpId: 'notification/entities_limit'
+    }
+  ],
+  [NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST,
+    {
+      name: 'notification.template-type.entities-limit-increase-request',
+      helpId: 'notification/entities_limit_increase_request'
     }
   ],
   [NotificationType.API_USAGE_LIMIT,
@@ -798,5 +797,7 @@ export interface NotificationUserSetting {
 }
 
 export const singleNotificationTypeTemplate = (type: NotificationType) => {
-  return type === NotificationType.USER_ACTIVATED || type === NotificationType.USER_REGISTERED;
+  return type === NotificationType.USER_ACTIVATED ||
+         type === NotificationType.USER_REGISTERED ||
+         type === NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST;
 }

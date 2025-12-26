@@ -42,6 +42,7 @@ import { UserModule } from '@modules/home/pages/user/user.module';
 import { DeviceModule } from '@modules/home/pages/device/device.module';
 import { AssetModule } from '@modules/home/pages/asset/asset.module';
 import { EntityViewModule } from '@modules/home/pages/entity-view/entity-view.module';
+import { CalculatedFieldPageModule } from '@home/pages/calculated-fields/calculated-field-page.module';
 import { RuleChainModule } from '@modules/home/pages/rulechain/rulechain.module';
 import { WidgetLibraryModule } from '@modules/home/pages/widget/widget-library.module';
 import { DashboardModule } from '@modules/home/pages/dashboard/dashboard.module';
@@ -75,6 +76,8 @@ import { CustomMenuModule } from '@home/pages/custom-menu/custom-menu.module';
 import { SecretStorageModule } from '@home/pages/secret-storage/secret-storage.module';
 import { AiModelModule } from '@home/pages/ai-model/ai-model.module';
 import { ReportingModule } from '@home/pages/reporting/reporting.module';
+import { TrendzAnalyticsModule } from '@home/pages/trendz-analytics/trendz-analytics.module';
+import { TrendzSettingsModule } from '@home/pages/trendz-settings/trendz-settings.module';
 
 @NgModule({
   exports: [
@@ -97,6 +100,7 @@ import { ReportingModule } from '@home/pages/reporting/reporting.module';
     EdgeModule,
     EntityViewModule,
     CustomerModule,
+    CalculatedFieldPageModule,
     RuleChainModule,
     WidgetLibraryModule,
     DashboardModule,
@@ -123,7 +127,9 @@ import { ReportingModule } from '@home/pages/reporting/reporting.module';
     CustomTranslationModule,
     CustomMenuModule,
     AiModelModule,
-    ReportingModule
+    ReportingModule,
+    TrendzAnalyticsModule,
+    TrendzSettingsModule
   ]
 })
 export class HomePagesModule { }

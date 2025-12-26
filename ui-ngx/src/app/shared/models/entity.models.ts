@@ -36,6 +36,7 @@ import { DeviceCredentialMQTTBasic } from '@shared/models/device.models';
 import { Lwm2mSecurityConfigModels } from '@shared/models/lwm2m-security-config.models';
 import { TenantId } from '@shared/models/id/tenant-id';
 import { RuleChainMetaData } from '@shared/models/rule-chain.models';
+import { isLiteralObject } from '@core/utils';
 
 export interface EntityInfo {
   name?: string;
@@ -180,6 +181,11 @@ export const entityFields: {[fieldName: string]: EntityField} = {
     name: 'entity-field.label',
     value: 'label'
   },
+  displayName: {
+    keyName: 'displayName',
+    name: 'entity-field.name',
+    value: 'name'
+  },
   configuration: {
     keyName: 'configuration',
     name: 'entity-field.configuration',
@@ -256,3 +262,37 @@ export interface EntityTestScriptResult {
 }
 
 export type VersionedEntity = EntityInfoData & HasVersion | RuleChainMetaData;
+
+export enum NameConflictPolicy {
+  FAIL = 'FAIL',
+  UNIQUIFY = 'UNIQUIFY',
+}
+
+export enum UniquifyStrategy {
+  RANDOM = 'RANDOM',
+  INCREMENTAL = 'INCREMENTAL'
+}
+
+export interface SaveEntityParams {
+  nameConflictPolicy?: NameConflictPolicy;
+  uniquifyStrategy?: UniquifyStrategy;
+  uniquifySeparator?: string;
+}
+
+export interface SaveEntityWithGroupParams extends SaveEntityParams {
+  entityGroupId?: string;
+  entityGroupIds?: string[];
+}
+
+export function toSaveParams<T extends SaveEntityWithGroupParams>(params: string | string[] | T ): T {
+  if (!params) {
+    return undefined;
+  }
+  if (isLiteralObject(params) && !Array.isArray(params)) {
+    return params as T;
+  }
+  if (Array.isArray(params)) {
+    return { entityGroupIds: params } as T;
+  }
+  return { entityGroupId: params } as T;
+}

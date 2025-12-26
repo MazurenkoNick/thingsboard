@@ -32,8 +32,10 @@ package org.thingsboard.server.dao.user;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.UserAuthDetails;
 import org.thingsboard.server.common.data.id.CustomMenuId;
 import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.TenantProfileId;
@@ -130,6 +132,8 @@ public interface UserDao extends Dao<User>, TenantEntityDao<User> {
      */
     ListenableFuture<List<User>> findUsersByTenantIdAndIdsAsync(UUID tenantId, List<UUID> userIds);
 
+    List<User> findUsersByTenantIdAndIds(UUID tenantId, List<UUID> userIds);
+
     PageData<User> findUsersByEntityGroupId(UUID groupId, PageLink pageLink);
 
     PageData<User> findUsersByEntityGroupIds(List<UUID> groupIds, PageLink pageLink);
@@ -138,9 +142,15 @@ public interface UserDao extends Dao<User>, TenantEntityDao<User> {
 
     PageData<User> findUsersByTenantsIdsAndRoleId(List<TenantId> tenantsIds, RoleId roleId, PageLink pageLink);
 
+    boolean existsByTenantsIdsAndRoleIdAndUserId(List<TenantId> tenantsIds, RoleId roleId, UserId userId);
+
     PageData<User> findUsersByTenantProfilesIdsAndRoleId(List<TenantProfileId> tenantProfilesIds, RoleId roleId, PageLink pageLink);
 
+    boolean existsByTenantProfilesIdsAndRoleIdAndUserId(List<TenantProfileId> tenantProfilesIds, RoleId roleId, UserId userId);
+
     PageData<User> findAllUsersByRoleId(RoleId roleId, PageLink pageLink);
+
+    boolean existsByRoleIdAndUserId(RoleId roleId, UserId userId);
 
     int countUsersByTenantIdAndRoleIdAndIdNotIn(TenantId tenantId, RoleId roleId, List<UserId> userIds);
 
@@ -155,5 +165,9 @@ public interface UserDao extends Dao<User>, TenantEntityDao<User> {
     List<User> findUsersByCustomMenuId(CustomMenuId id);
 
     void updateUsersCustomMenuId(List<UserId> ids, CustomMenuId customMenuId);
+
+    boolean existsInEntityGroup(UserId id, EntityGroupId entityGroupId);
+
+    UserAuthDetails findUserAuthDetailsByUserId(UUID tenantId, UUID userId);
 
 }

@@ -45,6 +45,7 @@ import { SignupModule } from '@modules/signup/signup.module';
 import { EmptyPageModule } from '@modules/empty-page/empty-page.module';
 
 import { DefaultUrlSerializer, UrlSerializer, UrlTree } from '@angular/router';
+import { ActionModule } from '@modules/action/action.module';
 
 export default class TbUrlSerializer implements UrlSerializer {
   private _defaultUrlSerializer: DefaultUrlSerializer = new DefaultUrlSerializer();
@@ -89,6 +90,7 @@ export class PageNotFoundRoutingModule { }
     HomeModule,
     DashboardRoutingModule,
     EmptyPageModule,
+    ActionModule,
     PageNotFoundRoutingModule
   ],
   providers: [

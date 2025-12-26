@@ -52,6 +52,8 @@ import { EntityDebugSettingsService } from '@home/components/entity/debug/entity
 import { DatePipe } from '@angular/common';
 import { TbPopoverService } from '@shared/components/popover.service';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
+import { UtilsService } from "@core/services/utils.service";
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'tb-calculated-fields-table',
@@ -73,6 +75,8 @@ export class CalculatedFieldsTableComponent {
 
   calculatedFieldsTableConfig: CalculatedFieldsTableConfig;
 
+  pageMode: boolean = false;
+
   constructor(private calculatedFieldsService: CalculatedFieldsService,
               private translate: TranslateService,
               private dialog: MatDialog,
@@ -82,12 +86,16 @@ export class CalculatedFieldsTableComponent {
               private renderer: Renderer2,
               private importExportService: ImportExportService,
               private entityDebugSettingsService: EntityDebugSettingsService,
+              private utilsService: UtilsService,
               private destroyRef: DestroyRef,
+              private route: ActivatedRoute,
+              private router: Router,
               private popoverService: TbPopoverService,
-              private userPermissionsService: UserPermissionsService,) {
-
+              private userPermissionsService: UserPermissionsService
+  ) {
+    this.pageMode = !!this.route.snapshot.data.isPage;
     effect(() => {
-      if (this.active()) {
+      if (this.active() || this.pageMode) {
         this.calculatedFieldsTableConfig = new CalculatedFieldsTableConfig(
           this.calculatedFieldsService,
           this.translate,
@@ -101,10 +109,13 @@ export class CalculatedFieldsTableComponent {
           this.ownerId(),
           this.importExportService,
           this.entityDebugSettingsService,
+          this.utilsService,
+          this.router,
           this.readonly(),
           this.hideClearEventAction(),
           this.popoverService,
           this.userPermissionsService,
+          this.pageMode,
         );
         this.cd.markForCheck();
       }

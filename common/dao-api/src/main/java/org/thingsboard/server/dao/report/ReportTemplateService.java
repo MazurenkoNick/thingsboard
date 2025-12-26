@@ -51,6 +51,8 @@ public interface ReportTemplateService extends EntityDaoService {
 
     ReportTemplate saveReportTemplate(ReportTemplate reportTemplate);
 
+    ReportTemplate saveReportTemplate(ReportTemplate reportTemplate, boolean doValidate);
+
     void deleteReportTemplate(TenantId tenantId, ReportTemplateId reportTemplateId);
 
     List<ReportTemplateInfo> findReportTemplateInfoByIds(TenantId tenantId, List<ReportTemplateId> reportTemplateIds);

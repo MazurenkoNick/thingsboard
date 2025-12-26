@@ -534,7 +534,7 @@ export class EntitiesTableWidgetComponent extends PageComponent implements OnIni
         }
         dataKeys.push(dataKey);
 
-        const keySettings: TableWidgetDataKeySettings = dataKey.settings;
+        const keySettings: TableWidgetDataKeySettings = dataKey.settings ?? {};
         dataKey.label = this.utils.customTranslation(dataKey.label, dataKey.label);
         dataKey.title = getHeaderTitle(dataKey, keySettings, this.utils);
         dataKey.def = 'def' + this.columns.length;
@@ -918,7 +918,7 @@ export class EntitiesTableWidgetComponent extends PageComponent implements OnIni
     this.ctx.actionsApi.handleWidgetAction($event, actionDescriptor, entityId, entityName, {entity}, entityLabel);
   }
 
-  customDataExport(): Observable<{[key: string]: any}[]> {
+  customDataExport(): Observable<Map<string, any>[]> {
     const datasource = this.subscription.datasources[0];
     if (datasource && datasource.type === DatasourceType.entity && datasource.entityFilter) {
       const pageLink = deepClone(this.pageLink);
@@ -959,28 +959,42 @@ export class EntitiesTableWidgetComponent extends PageComponent implements OnIni
           forkJoin(data.data.map((e, index) =>
             from(this.queryEntityDataToExportedData(e, index, allColumns, exportedColumns)))) : of(data.data)),
         concatMap((data) => data),
-        toArray()
+        toArray(),
+        map(rows => rows.map(rowObject => new Map(Object.entries(rowObject))))
       );
     } else {
-      const exportedData: Observable<{[key: string]: any}>[] = [];
+      const exportedData: Observable<Map<string, any>>[] = [];;
       const entitiesToExport = this.entityDatasource.entities;
       entitiesToExport.forEach((entity, index) => {
-        const dataObj: {[key: string]: Observable<any>} = {};
+        const dataMap = new Map<string, Observable<any>>();
         this.columns.forEach((column) => {
           if (this.includeColumnInExport(column)) {
-            dataObj[column.title] = this.cellContent(entity, column, index, false, true);
+            dataMap.set(column.title, this.cellContent(entity, column, index, false, true));
           }
         });
-        if (Object.keys(dataObj).length) {
-          exportedData.push(forkJoin(dataObj));
+        if (dataMap.size > 0) {
+          const orderedKeys = Array.from(dataMap.keys());
+          const orderedObservables = Array.from(dataMap.values());
+
+          exportedData.push(
+            forkJoin(orderedObservables).pipe(
+              map(resolvedValues => {
+                const orderedRow = new Map<string, any>();
+                orderedKeys.forEach((key, i) => {
+                  orderedRow.set(key, resolvedValues[i]);
+                });
+                return orderedRow;
+              })
+            )
+          );
         } else {
-          exportedData.push(of(dataObj));
+          exportedData.push(of(new Map<string, any>()))
         }
       });
       if (exportedData.length) {
         return forkJoin(exportedData);
       } else {
-        return of(exportedData);
+        return of([]);
       }
     }
   }

@@ -68,21 +68,34 @@
         </mat-option>
       </mat-select>
     </mat-form-field>
-    <tb-entity-list *ngIf="customMenuFormGroup.get('assigneeType').value === CMAssigneeType.USERS"
-                    formControlName="assignToList"
-                    appearance="outline"
-                    [entityType]="EntityType.USER"
-                    [fetchEntitiesFunction]="fetchUsersFunction"
-                    labelText="{{ 'custom-menu.assign-to' | translate }}"
-                    placeholderText="{{ 'user.user' | translate }}">
-    </tb-entity-list>
-    <tb-entity-list *ngIf="customMenuFormGroup.get('assigneeType').value === CMAssigneeType.CUSTOMERS"
-                    formControlName="assignToList"
-                    appearance="outline"
-                    [entityType]="EntityType.CUSTOMER"
-                    labelText="{{ 'custom-menu.assign-to' | translate }}"
-                    placeholderText="{{ 'customer.customer' | translate }}">
-    </tb-entity-list>
+    @switch (customMenuFormGroup.get('assigneeType').value) {
+      @case (CMAssigneeType.USERS) {
+        <tb-entity-list formControlName="assignToList"
+                        appearance="outline"
+                        [entityType]="EntityType.USER"
+                        [fetchEntitiesFunction]="fetchUsersFunction"
+                        labelText="{{ 'custom-menu.assign-to' | translate }}"
+                        placeholderText="{{ 'user.user' | translate }}">
+        </tb-entity-list>
+      }
+      @case (CMAssigneeType.CUSTOMERS) {
+        <tb-entity-list formControlName="assignToList"
+                        appearance="outline"
+                        [entityType]="EntityType.CUSTOMER"
+                        labelText="{{ 'custom-menu.assign-to' | translate }}"
+                        placeholderText="{{ 'customer.customer' | translate }}">
+        </tb-entity-list>
+      }
+      @case (CMAssigneeType.USER_GROUPS) {
+        <tb-string-items-list formControlName="userGroupNames"
+                              appearance="outline"
+                              label="{{ 'custom-menu.assign-to' | translate }}"
+                              placeholder="{{ 'custom-menu.user-group-name' | translate }}"
+                              [fetchOptionsFn]="fetchGroupsFunction"
+                              allowUserValue>
+        </tb-string-items-list>
+      }
+    }
   </div>
   <div mat-dialog-actions class="flex items-center justify-end">
     <button mat-button color="primary"

@@ -32,7 +32,8 @@
 import {
   IWidgetSubscription,
   SubscriptionEntityInfo,
-  SubscriptionMessage, WidgetDataGenerationOptions,
+  SubscriptionMessage,
+  WidgetDataGenerationOptions,
   WidgetSubscriptionCallbacks,
   WidgetSubscriptionContext,
   WidgetSubscriptionOptions
@@ -68,6 +69,7 @@ import {
   Timewindow,
   timewindowTypeChanged,
   toHistoryTimewindow,
+  toUtcDate,
   WidgetTimewindow
 } from '@app/shared/models/time/time.models';
 import { forkJoin, Observable, of, ReplaySubject, Subject, throwError, timer } from 'rxjs';
@@ -1285,6 +1287,7 @@ export class WidgetSubscription implements IWidgetSubscription {
   }
 
   exportData(): {[key: string]: any}[] {
+    const timestampColumnTitle = this.ctx.translate.instant('widgets.table.timestamp-column-name');
     const exportedData: {[key: string]: any}[] = [];
     if (this.type === widgetType.timeseries || this.type === widgetType.latest) {
       if (this.data.length) {
@@ -1314,7 +1317,7 @@ export class WidgetSubscription implements IWidgetSubscription {
             let tsRow = tsRows[tsKey];
             if (!tsRow) {
               tsRow = (this.latestData.length && latest[datasourceData.datasource.name]) ? deepClone(latest[datasourceData.datasource.name]) : {};
-              tsRow.Timestamp = this.ctx.datePipe.transform(ts, 'yyyy-MM-dd HH:mm:ss');
+              tsRow[timestampColumnTitle] = toUtcDate(ts);
               tsRow['Entity Name'] = datasourceData.datasource.entityName;
               tsRows[tsKey] = tsRow;
             }
@@ -1332,7 +1335,7 @@ export class WidgetSubscription implements IWidgetSubscription {
         timestamps.forEach((timestamp) => {
           const tsRow = tsRows[timestamp];
           const dataObj: {[key: string]: any} = {};
-          dataObj.Timestamp = tsRow.Timestamp;
+          dataObj[timestampColumnTitle] = tsRow[timestampColumnTitle];
           if (this.type === widgetType.timeseries && this.datasources.length > 1) {
             dataObj['Entity Name'] = tsRow['Entity Name'];
           }
@@ -1347,7 +1350,7 @@ export class WidgetSubscription implements IWidgetSubscription {
         });
         if (!exportedData.length) {
           const dataObj: {[key: string]: any} = {};
-          dataObj.Timestamp = null;
+          dataObj[timestampColumnTitle] = null;
           this.data.forEach((datasourceData) => {
             const key = datasourceData.dataKey.label;
             dataObj[this.checkProperty(dataObj, key)] = null;
@@ -1598,20 +1601,18 @@ export class WidgetSubscription implements IWidgetSubscription {
     this.datasources.forEach((datasource) => {
       datasource.dataKeys.forEach((dataKey) => {
         if (datasource.generated || datasource.isAdditional) {
-          dataKey._hash = Math.random();
           dataKey.color = this.ctx.utils.getMaterialColor(index);
         }
         index++;
       });
-      if (datasource.latestDataKeys) {
-        datasource.latestDataKeys.forEach((dataKey) => {
-          if (datasource.generated || datasource.isAdditional) {
-            dataKey._hash = Math.random();
-            // dataKey.color = this.ctx.utils.getMaterialColor(index);
-          }
-          // index++;
-        });
-      }
+      // if (datasource.latestDataKeys) {
+      //   datasource.latestDataKeys.forEach((dataKey) => {
+      //     if (datasource.generated || datasource.isAdditional) {
+      //       // dataKey.color = this.ctx.utils.getMaterialColor(index);
+      //     }
+      //     // index++;
+      //   });
+      // }
     });
     if (this.comparisonEnabled) {
       this.datasourcePages.forEach(datasourcePage => {
@@ -1641,9 +1642,9 @@ export class WidgetSubscription implements IWidgetSubscription {
   private entityDataToDatasourceData(datasource: Datasource, data: Array<DataSetHolder>): Array<DatasourceData> {
     let datasourceDataArray: Array<DatasourceData> = [];
     datasourceDataArray = datasourceDataArray.concat(datasource.dataKeys.map((dataKey, keyIndex) => {
-      dataKey.hidden = !!dataKey.settings.hideDataByDefault;
-      dataKey.inLegend = dataKey.settings.showInLegend ||
-        (isUndefined(dataKey.settings.showInLegend) && !dataKey.settings.removeFromLegend);
+      dataKey.hidden = !!dataKey.settings?.hideDataByDefault;
+      dataKey.inLegend = dataKey.settings?.showInLegend ||
+        (isUndefined(dataKey.settings?.showInLegend) && !dataKey.settings?.removeFromLegend);
       dataKey.label = this.ctx.utils.customTranslation(dataKey.label, dataKey.label);
       dataKey.color = plainColorFromVariable(dataKey.color);
       const datasourceData: DatasourceData = {

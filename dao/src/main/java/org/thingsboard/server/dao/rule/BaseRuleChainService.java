@@ -144,6 +144,10 @@ public class BaseRuleChainService extends AbstractEntityService implements RuleC
     @Override
     @Transactional
     public RuleChain saveRuleChain(RuleChain ruleChain, boolean publishSaveEvent, boolean doValidate) {
+        return saveEntity(ruleChain, () -> doSaveRuleChain(ruleChain, publishSaveEvent, doValidate));
+    }
+
+    private RuleChain doSaveRuleChain(RuleChain ruleChain, boolean publishSaveEvent, boolean doValidate) {
         log.trace("Executing doSaveRuleChain [{}]", ruleChain);
         if (doValidate) {
             ruleChainValidator.validate(ruleChain, RuleChain::getTenantId);
@@ -415,6 +419,12 @@ public class BaseRuleChainService extends AbstractEntityService implements RuleC
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validateIds(ruleChainIds, ids -> "Incorrect ruleChainIds " + ids);
         return ruleChainDao.findRuleChainsByTenantIdAndIdsAsync(tenantId.getId(), toUUIDs(ruleChainIds));
+    }
+
+    @Override
+    public List<RuleChain> findRuleChainsByIds(TenantId tenantId, List<RuleChainId> ruleChainIds) {
+        log.trace("Executing findRuleChainsByIds, tenantId [{}], ruleChainIds [{}]", tenantId, ruleChainIds);
+        return ruleChainDao.findRuleChainsByTenantIdAndIds(tenantId.getId(), toUUIDs(ruleChainIds));
     }
 
     @Override
@@ -893,7 +903,6 @@ public class BaseRuleChainService extends AbstractEntityService implements RuleC
             deleteRuleNode(tenantId, relation.getTo());
         }
     }
-
 
     @Override
     public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {

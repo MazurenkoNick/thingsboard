@@ -70,6 +70,8 @@ public class WhiteLabelingParams {
     protected String customCss;
     @Schema(description = "Hide device connectivity dialog")
     protected Boolean hideConnectivityDialog;
+    @Schema(description = "Override Trendz Add-on name")
+    protected Boolean overrideTrendzName;
 
     public WhiteLabelingParams merge(WhiteLabelingParams otherWlParams) {
         if (StringUtils.isEmpty(this.logoImageUrl)) {
@@ -112,6 +114,9 @@ public class WhiteLabelingParams {
         }
         if (this.hideConnectivityDialog == null) {
             this.hideConnectivityDialog = false;
+        }
+        if (this.overrideTrendzName == null) {
+            this.overrideTrendzName = otherWlParams.overrideTrendzName;
         }
         return this;
     }

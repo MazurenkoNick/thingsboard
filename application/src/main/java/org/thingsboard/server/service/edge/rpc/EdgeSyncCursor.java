@@ -38,6 +38,7 @@ import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.service.edge.EdgeContextComponent;
 import org.thingsboard.server.service.edge.rpc.fetch.AdminSettingsEdgeEventFetcher;
+import org.thingsboard.server.service.edge.rpc.fetch.AiModelEdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.AssetProfilesEdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.CustomMenuEdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.CustomTranslationEdgeEventFetcher;
@@ -57,6 +58,7 @@ import org.thingsboard.server.service.edge.rpc.fetch.OAuth2EdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.OtaPackagesEdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.PublicCustomerUserGroupEdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.QueuesEdgeEventFetcher;
+import org.thingsboard.server.service.edge.rpc.fetch.ReportTemplateEdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.RuleChainsEdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.SchedulerEventsEdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.SecretEdgeEventFetcher;
@@ -100,6 +102,7 @@ public class EdgeSyncCursor {
             fetchers.add(new TenantWidgetTypesEdgeEventFetcher(ctx.getWidgetTypeService()));
             fetchers.add(new SystemWidgetsBundlesEdgeEventFetcher(ctx.getWidgetsBundleService()));
             fetchers.add(new TenantWidgetsBundlesEdgeEventFetcher(ctx.getWidgetsBundleService()));
+            fetchers.add(new AiModelEdgeEventFetcher(ctx.getAiModelService()));
         }
         Customer publicCustomer = ctx.getCustomerService().findPublicCustomer(edge.getTenantId(), edge.getTenantId());
         if (publicCustomer != null) {
@@ -127,6 +130,7 @@ public class EdgeSyncCursor {
             fetchers.add(new NotificationRuleEdgeEventFetcher(ctx.getNotificationRuleService()));
             fetchers.add(new IntegrationsEdgeEventFetcher(ctx.getIntegrationService()));
             fetchers.add(new OtaPackagesEdgeEventFetcher(ctx.getOtaPackageService()));
+            // sync device profiles twice to update software and hardware fields
             fetchers.add(new DeviceProfilesEdgeEventFetcher(ctx.getDeviceProfileService()));
             fetchers.add(new TenantResourcesEdgeEventFetcher(ctx.getResourceService()));
             fetchers.add(new DeviceGroupOtaPackageEdgeEventFetcher(ctx.getDeviceGroupOtaPackageService(), ctx.getEntityGroupService()));
@@ -135,6 +139,10 @@ public class EdgeSyncCursor {
             fetchers.add(new CustomMenuEdgeEventFetcher(ctx.getCustomMenuService()));
             fetchers.add(new EncryptionKeyEdgeEventFetcher(ctx.getEncryptionService()));
             fetchers.add(new SecretEdgeEventFetcher(ctx.getSecretService()));
+            fetchers.add(new ReportTemplateEdgeEventFetcher(ctx.getReportTemplateService(), null));
+            if (EntityType.CUSTOMER.equals(edge.getOwnerId().getEntityType())) {
+                fetchers.add(new ReportTemplateEdgeEventFetcher(ctx.getReportTemplateService(), new CustomerId(edge.getOwnerId().getId())));
+            }
         }
     }
 

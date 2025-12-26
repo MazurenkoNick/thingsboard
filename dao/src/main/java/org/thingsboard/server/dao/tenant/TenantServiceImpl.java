@@ -100,6 +100,7 @@ public class TenantServiceImpl extends AbstractCachedEntityService<TenantId, Ten
     @Autowired
     private WhiteLabelingService whiteLabelingService;
     @Autowired
+    @Lazy
     private NotificationSettingsService notificationSettingsService;
     @Autowired
     private QrCodeSettingService qrCodeSettingService;
@@ -153,6 +154,12 @@ public class TenantServiceImpl extends AbstractCachedEntityService<TenantId, Ten
         log.trace("Executing findTenantsByIdsAsync, callerId [{}], tenantIds [{}]", callerId, tenantIds);
         validateIds(tenantIds, ids -> "Incorrect tenantIds " + ids);
         return tenantDao.findTenantsByIdsAsync(callerId.getId(), toUUIDs(tenantIds));
+    }
+
+    @Override
+    public List<Tenant> findTenantsByIds(TenantId callerId, List<TenantId> tenantIds) {
+        log.trace("Executing findTenantsByIds, callerId [{}], tenantIds [{}]", callerId, tenantIds);
+        return tenantDao.findTenantsByIds(callerId.getId(), toUUIDs(tenantIds));
     }
 
     @Override
@@ -218,7 +225,7 @@ public class TenantServiceImpl extends AbstractCachedEntityService<TenantId, Ten
         publishEvictEvent(new TenantEvictEvent(tenantId, true));
         eventPublisher.publishEvent(DeleteEntityEvent.builder().tenantId(tenantId).entityId(tenantId).entity(tenant).build());
 
-        cleanUpService.removeTenantEntities(tenantId, // don't forget to implement deleteEntity from EntityDaoService when adding entity type to this list
+        cleanUpService.removeTenantEntities(tenantId, // remember to implement deleteEntity from EntityDaoService when adding an entity type to this list
                 EntityType.ADMIN_SETTINGS, EntityType.JOB, EntityType.ENTITY_VIEW, EntityType.WIDGETS_BUNDLE, EntityType.WIDGET_TYPE,
                 EntityType.ASSET, EntityType.ASSET_PROFILE, EntityType.DEVICE, EntityType.DEVICE_PROFILE,
                 EntityType.DASHBOARD, EntityType.EDGE, EntityType.RULE_CHAIN, EntityType.INTEGRATION,

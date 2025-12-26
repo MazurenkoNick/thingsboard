@@ -106,6 +106,7 @@ import org.thingsboard.server.common.data.group.EntityGroupInfo;
 import org.thingsboard.server.common.data.id.AiModelId;
 import org.thingsboard.server.common.data.id.AlarmCommentId;
 import org.thingsboard.server.common.data.id.AlarmId;
+import org.thingsboard.server.common.data.id.ApiKeyId;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.AssetProfileId;
 import org.thingsboard.server.common.data.id.BlobEntityId;
@@ -159,6 +160,7 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.page.TimePageLink;
+import org.thingsboard.server.common.data.pat.ApiKey;
 import org.thingsboard.server.common.data.permission.GroupPermission;
 import org.thingsboard.server.common.data.permission.GroupPermissionInfo;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
@@ -220,6 +222,7 @@ import org.thingsboard.server.dao.oauth2.OAuth2ClientService;
 import org.thingsboard.server.dao.oauth2.OAuth2ConfigTemplateService;
 import org.thingsboard.server.dao.ota.DeviceGroupOtaPackageService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
+import org.thingsboard.server.dao.pat.ApiKeyService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.report.ReportService;
@@ -240,6 +243,7 @@ import org.thingsboard.server.dao.widget.WidgetTypeService;
 import org.thingsboard.server.dao.widget.WidgetsBundleService;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
 import org.thingsboard.server.exception.DataValidationException;
+import org.thingsboard.server.exception.EntitiesLimitExceededException;
 import org.thingsboard.server.exception.ThingsboardErrorResponseHandler;
 import org.thingsboard.server.queue.discovery.PartitionService;
 import org.thingsboard.server.queue.discovery.TbServiceInfoProvider;
@@ -297,7 +301,6 @@ import static org.thingsboard.server.dao.service.Validator.validateId;
 @TbCoreComponent
 public abstract class BaseController {
 
-    protected static final String DASHBOARD_ID = "dashboardId";
     protected static final String HOME_DASHBOARD_ID = "homeDashboardId";
     protected static final String HOME_DASHBOARD_HIDE_TOOLBAR = "homeDashboardHideToolbar";
 
@@ -524,6 +527,9 @@ public abstract class BaseController {
     @Autowired
     protected TbAiModelService tbAiModelService;
 
+    @Autowired
+    protected ApiKeyService apiKeyService;
+
     @Value("${server.log_controller_error_stack_trace}")
     @Getter
     private boolean logControllerErrorStackTrace;
@@ -583,6 +589,8 @@ public abstract class BaseController {
         }
         if (exception instanceof ThingsboardException) {
             return (ThingsboardException) exception;
+        } else if (exception instanceof EntitiesLimitExceededException) {
+            return new ThingsboardException(exception, ThingsboardErrorCode.ENTITIES_LIMIT_EXCEEDED);
         } else if (exception instanceof IllegalArgumentException || exception instanceof IncorrectParameterException
                 || exception instanceof DataValidationException || cause instanceof IncorrectParameterException) {
             return new ThingsboardException(exception.getMessage(), ThingsboardErrorCode.BAD_REQUEST_PARAMS);
@@ -644,8 +652,8 @@ public abstract class BaseController {
         }
     }
 
-    void checkParameter(String name, String param) throws ThingsboardException {
-        if (StringUtils.isEmpty(param.trim())) {
+    static void checkParameter(String name, String param) throws ThingsboardException {
+        if (StringUtils.isBlank(param)) {
             throw new ThingsboardException("Parameter '" + name + "' can't be empty!", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
     }
@@ -912,7 +920,7 @@ public abstract class BaseController {
                 checkEntity(entityId, entity, resource, entityGroupId);
             }
         } else {
-            checkEntity(entityId, entity, resource, null);
+            checkEntity(entityId, entity, resource);
         }
     }
 
@@ -975,6 +983,7 @@ public abstract class BaseController {
                 case SECRET -> checkSecretId(new SecretId(entityId.getId()), operation);
                 case REPORT_TEMPLATE -> checkReportTemplateInfoId(new ReportTemplateId(entityId.getId()), operation);
                 case AI_MODEL -> checkAiModelId(new AiModelId(entityId.getId()), operation);
+                case API_KEY -> checkApiKeyId(new ApiKeyId(entityId.getId()), operation);
                 default -> (HasId<? extends EntityId>) checkEntityId(entityId, entitiesService::findEntityByTenantIdAndId, operation);
             };
         } catch (Exception e) {
@@ -984,7 +993,7 @@ public abstract class BaseController {
 
     protected <E extends HasId<I> & TenantEntity, I extends EntityId> E checkEntityId(I entityId, ThrowingBiFunction<TenantId, I, E> findingFunction, Operation operation) throws ThingsboardException {
         try {
-            validateId((UUIDBased) entityId, "Invalid entity id");
+            validateId((UUIDBased) entityId, id -> "Invalid entity id");
             SecurityUser user = getCurrentUser();
             E entity = findingFunction.apply(user.getTenantId(), entityId);
             checkNotNull(entity, entityId.getEntityType().getNormalName() + " with id [" + entityId + "] is not found");
@@ -1261,12 +1270,16 @@ public abstract class BaseController {
         return checkEntityId(modelId, (tenantId, id) -> aiModelService.findAiModelByTenantIdAndId(tenantId, id).orElse(null), operation);
     }
 
+    ApiKey checkApiKeyId(ApiKeyId apiKeyId, Operation operation) throws ThingsboardException {
+        return checkEntityId(apiKeyId, apiKeyService::findApiKeyById, operation);
+    }
+
     protected <I extends EntityId> I emptyId(EntityType entityType) {
         return (I) EntityIdFactory.getByTypeAndUuid(entityType, ModelConstants.NULL_UUID);
     }
 
     public static Exception toException(Throwable error) {
-        return error != null ? (Exception.class.isInstance(error) ? (Exception) error : new Exception(error)) : null;
+        return error != null ? (error instanceof Exception ? (Exception) error : new Exception(error)) : null;
     }
 
     protected <E extends HasName & HasId<? extends EntityId>> void logEntityAction(SecurityUser user, EntityType entityType, E savedEntity, ActionType actionType) {
@@ -1404,7 +1417,7 @@ public abstract class BaseController {
     }
 
     private CalculatedField checkCalculatedFieldId(CalculatedFieldId calculatedFieldId, Operation operation) throws ThingsboardException {
-        validateId(calculatedFieldId, "Invalid entity id");
+        validateId(calculatedFieldId, id -> "Invalid entity id");
         SecurityUser user = getCurrentUser();
         CalculatedField cf = calculatedFieldService.findById(user.getTenantId(), calculatedFieldId);
         checkNotNull(cf, calculatedFieldId.getEntityType().getNormalName() + " with id [" + calculatedFieldId + "] is not found");

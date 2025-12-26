@@ -35,4 +35,5 @@ import org.thingsboard.server.common.data.security.model.JwtSettings;
 public interface JwtSettingsValidator {
 
     void validate(JwtSettings jwtSettings);
+
 }

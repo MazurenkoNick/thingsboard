@@ -42,40 +42,41 @@ import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.service.security.model.SecurityUser;
 
-@Component(value = "sysAdminPermissions")
+@Component
 public class SysAdminPermissions extends AbstractPermissions {
 
     public SysAdminPermissions() {
         super();
-        put(Resource.PROFILE, PermissionChecker.allowAllPermissionChecker);
-        put(Resource.ADMIN_SETTINGS, PermissionChecker.allowAllPermissionChecker);
-        put(Resource.DASHBOARD, new PermissionChecker.GenericPermissionChecker(Operation.READ));
-        put(Resource.ALARM, new PermissionChecker.GenericPermissionChecker(Operation.READ));
-        put(Resource.TENANT, PermissionChecker.allowAllPermissionChecker);
+        put(Resource.PROFILE, genericPermissionChecker);
+        put(Resource.ADMIN_SETTINGS, genericPermissionChecker);
+        put(Resource.DASHBOARD, systemGenericReadPermissionChecker);
+        put(Resource.ALARM, systemGenericReadPermissionChecker);
+        put(Resource.TENANT, genericPermissionChecker);
         put(Resource.RULE_CHAIN, systemEntityPermissionChecker);
         put(Resource.USER, userPermissionChecker);
         put(Resource.WIDGETS_BUNDLE, systemEntityPermissionChecker);
         put(Resource.WIDGET_TYPE, systemEntityPermissionChecker);
-        put(Resource.WHITE_LABELING, PermissionChecker.allowAllPermissionChecker);
+        put(Resource.WHITE_LABELING, genericPermissionChecker);
         put(Resource.OAUTH2_CLIENT, systemEntityPermissionChecker);
         put(Resource.MOBILE_APP, systemEntityPermissionChecker);
         put(Resource.MOBILE_APP_BUNDLE, systemEntityPermissionChecker);
         put(Resource.DOMAIN, systemEntityPermissionChecker);
-        put(Resource.OAUTH2_CONFIGURATION_TEMPLATE, PermissionChecker.allowAllPermissionChecker);
-        put(Resource.TENANT_PROFILE, PermissionChecker.allowAllPermissionChecker);
+        put(Resource.OAUTH2_CONFIGURATION_TEMPLATE, genericPermissionChecker);
+        put(Resource.TENANT_PROFILE, genericPermissionChecker);
         put(Resource.TB_RESOURCE, systemEntityPermissionChecker);
         put(Resource.QUEUE, systemEntityPermissionChecker);
         put(Resource.NOTIFICATION, systemEntityPermissionChecker);
-        put(Resource.MOBILE_APP_SETTINGS, PermissionChecker.allowAllPermissionChecker);
+        put(Resource.MOBILE_APP_SETTINGS, genericPermissionChecker);
         put(Resource.CUSTOM_MENU, customMenuPermissionChecker);
         put(Resource.SECRET, systemEntityPermissionChecker);
+        put(Resource.API_KEY, genericPermissionChecker);
     }
 
     private static final PermissionChecker systemEntityPermissionChecker = new PermissionChecker() {
 
         @Override
         public boolean hasPermission(SecurityUser user, Resource resource, Operation operation) {
-            return true;
+            return user.getUserPermissions().hasGenericPermission(resource, operation);
         }
 
         @Override
@@ -84,11 +85,38 @@ public class SysAdminPermissions extends AbstractPermissions {
             if (entity.getTenantId() != null && !entity.getTenantId().isNullUid()) {
                 return false;
             }
-            return true;
+            Resource resource = Resource.resourceFromEntityType(entity.getEntityType());
+            return user.getUserPermissions().hasGenericPermission(resource, operation);
+        }
+    };
+
+    private static final PermissionChecker systemGenericReadPermissionChecker = new PermissionChecker.GenericPermissionChecker(Operation.READ) {
+
+        @Override
+        public boolean hasPermission(SecurityUser user, Resource resource, Operation operation) {
+            if (!super.hasPermission(user, resource, operation)) {
+                return false;
+            }
+            return user.getUserPermissions().hasGenericPermission(resource, operation);
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public boolean hasPermission(SecurityUser user, Operation operation, EntityId entityId, TenantEntity entity) {
+            if (!super.hasPermission(user, operation, entityId, entity)) {
+                return false;
+            }
+            Resource resource = Resource.resourceFromEntityType(entity.getEntityType());
+            return user.getUserPermissions().hasGenericPermission(resource, operation);
         }
     };
 
     private static final PermissionChecker userPermissionChecker = new PermissionChecker<UserId, User>() {
+
+        @Override
+        public boolean hasPermission(SecurityUser user, Resource resource, Operation operation) {
+            return user.getUserPermissions().hasGenericPermission(Resource.USER, operation);
+        }
 
         @Override
         public boolean hasPermission(SecurityUser user, Operation operation, UserId userId, User userEntity) {
@@ -100,7 +128,7 @@ public class SysAdminPermissions extends AbstractPermissions {
             if (Authority.CUSTOMER_USER.equals(userEntity.getAuthority())) {
                 return false;
             }
-            return true;
+            return user.getUserPermissions().hasGenericPermission(Resource.USER, operation);
         }
 
     };
@@ -108,7 +136,7 @@ public class SysAdminPermissions extends AbstractPermissions {
     private static final PermissionChecker customMenuPermissionChecker = new PermissionChecker() {
         @Override
         public boolean hasCustomMenuPermission(SecurityUser user, Operation operation, CustomMenuInfo customMenu) {
-            return customMenu.getTenantId().isSysTenantId();
+            return customMenu.getTenantId().isSysTenantId() && user.getUserPermissions().hasGenericPermission(Resource.CUSTOM_MENU, operation);
         }
     };
 

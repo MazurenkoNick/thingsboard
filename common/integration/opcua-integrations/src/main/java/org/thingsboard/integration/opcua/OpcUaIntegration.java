@@ -145,6 +145,7 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
     private final AtomicInteger delayBetweenReconnects = new AtomicInteger(10);
     private final BlockingQueue<OpcUaIntegrationTask> taskQueue = new LinkedBlockingQueue<>();
     private final Lock taskLock = new ReentrantLock();
+    private static final String OPC_TCP_SCHEME = "opc.tcp://";
 
 
     @Override
@@ -227,15 +228,15 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
         Map<String, String> mdMap = new HashMap<>(metadataTemplate.getKvMap());
         List<DownlinkData> result = downlinkConverter.convertDownLink(context.getDownlinkConverterContext(), Collections.singletonList(msg), new IntegrationMetaData(mdMap));
         List<WriteValue> writeValues = prepareWriteValues(result);
-        List<CallMethodRequest> callMethods =  prepareCallMethods(result);
+        List<CallMethodRequest> callMethods = prepareCallMethods(result);
 
         if (writeValues.isEmpty() && callMethods.isEmpty()) {
             return;
         }
 
         DonAsynchron.withCallback(doProcessDownLinkMsg(writeValues, callMethods), processResult -> {
-                integrationStatistics.incMessagesProcessed();
-                logOpcUaDownlink(context, writeValues, callMethods);
+            integrationStatistics.incMessagesProcessed();
+            logOpcUaDownlink(context, writeValues, callMethods);
         }, ex -> reportDownlinkError(context, msg, "ERROR", ex), MoreExecutors.directExecutor());
     }
 
@@ -357,28 +358,29 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
 
     private void initClient(OpcUaServerConfiguration configuration) throws OpcUaIntegrationException {
         try {
-            log.info("[{}] Initializing OPC-UA server connection to [{}:{}]!", getConfigurationId(), configuration.getHost(), configuration.getPort());
+            String effectiveEndpoint = buildEffectiveEndpoint(configuration);
+            log.info("[{}] Initializing OPC-UA connection to [{}] (host={}, port={})", getConfigurationId(), effectiveEndpoint, configuration.getHost(), configuration.getPort());
 
             SecurityPolicy securityPolicy = SecurityPolicy.valueOf(configuration.getSecurity());
             IdentityProvider identityProvider = configuration.getIdentity().toProvider();
 
             List<EndpointDescription> endpoints;
-            String endpointUrl = "opc.tcp://" + configuration.getHost() + ":" + configuration.getPort(); //TODO add scheme to configuration TODO Add Path to configuration
             try {
-                endpoints = DiscoveryClient.getEndpoints(endpointUrl).get(10, TimeUnit.SECONDS);
+                endpoints = DiscoveryClient.getEndpoints(effectiveEndpoint).get(10, TimeUnit.SECONDS);
             } catch (Exception e) {
                 log.error("[{}] Failed to connect to provided endpoint! With error: [{}]", getConfigurationId(), e.getMessage());
-                throw new OpcUaIntegrationException("Failed to connect to provided endpoint: " + endpointUrl, e);
+                throw new OpcUaIntegrationException("Failed to connect to provided endpoint: " + effectiveEndpoint, e);
             }
             log.info("Endpoints processing finished. Processed endpoints count: {}", endpoints.size());
 
             EndpointDescription endpoint = endpoints.stream()
                     .filter(e -> e.getSecurityPolicyUri().equals(securityPolicy.getUri()))
-                    .findFirst().orElseThrow(() -> new Exception("no desired endpoints returned"));
+                    .findFirst()
+                    .orElseThrow(() -> new Exception("no desired endpoints returned"));
 
-            if (!endpoint.getEndpointUrl().equals(endpointUrl)) {
+            if (!endpoint.getEndpointUrl().equals(effectiveEndpoint)) {
                 endpoint = new EndpointDescription(
-                        endpointUrl,
+                        effectiveEndpoint,
                         endpoint.getServer(),
                         endpoint.getServerCertificate(),
                         endpoint.getSecurityMode(),
@@ -419,6 +421,14 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
         }
     }
 
+    private String buildEffectiveEndpoint(OpcUaServerConfiguration cfg) {
+        String url = OPC_TCP_SCHEME + cfg.getHost() + ":" + cfg.getPort();
+        if (StringUtils.isNotBlank(cfg.getEndpoint())) {
+            url += "/" + StringUtils.removeStart(cfg.getEndpoint().trim(), "/");
+        }
+        return url;
+    }
+
     private void sendConnectionSucceededMessageToRuleEngine() {
         log.info("[{}] Sending OPC-UA integration succeeded message to Rule Engine", getConfigurationId());
         TbMsg tbMsg = sendAlertToRuleEngine(TbMsgType.OPC_UA_INT_SUCCESS);
@@ -453,7 +463,7 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
 
     @Override
     public void destroy() {
-        submit(OpcUaIntegrationTask.DISCONNECT);
+        submit(DISCONNECT);
     }
 
     private void doDisconnect() {
@@ -521,7 +531,7 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
                 if (uaException != null) {
                     e.getNode().ifPresent(node -> log.error(String.format("[%s] Browsing nodeId=%s failed: %s", this.configuration.getName(), node.getNodeId(), uaException.getMessage()), uaException));
                     sendConnectionFailedMessageToRuleEngine(e);
-                    submit(OpcUaIntegrationTask.DISCONNECT);
+                    submit(DISCONNECT);
                     submit(CONNECT, MIN_DELAY_BETWEEN_RECONNECTS_IN_SEC);
                     requiresReconnect = true;
                 }
@@ -556,7 +566,7 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
     private boolean scanById(OpcUaNode node, Map.Entry<Pattern, DeviceMapping> mappingEntry) {
         if (mappingEntry.getValue().getNamespace() != null) {
             return node.getNodeId().getNamespaceIndex().intValue() == mappingEntry.getValue().getNamespace().intValue()
-                    && mappingEntry.getKey().matcher(node.getNodeId().getIdentifier().toString()).matches();
+                   && mappingEntry.getKey().matcher(node.getNodeId().getIdentifier().toString()).matches();
         } else {
             return mappingEntry.getKey().matcher(node.getNodeId().getIdentifier().toString()).matches();
         }

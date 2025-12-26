@@ -201,11 +201,11 @@ public class SecretServiceTest extends AbstractServiceTest {
 
     @Test
     public void testSaveSecretWithExceededTextSizeLimit_thenReceiveDataValidationException() {
-        String value = "a".repeat(256);
+        String value = "a".repeat(2049);
         Secret secret = constructSecret(tenantId, "Test Secret With Long Value", value, SecretType.TEXT);
 
         DataValidationException exception = Assertions.assertThrows(DataValidationException.class, () -> secretService.saveSecret(tenantId, secret));
-        assertThat(exception.getMessage()).contains("Secret value is 256 characters; exceeds maximum of 255 characters");
+        assertThat(exception.getMessage()).contains("Secret value is 2049 characters; exceeds maximum of 2048 characters");
     }
 
     @Test

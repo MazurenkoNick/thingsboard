@@ -32,6 +32,7 @@ package org.thingsboard.server.controller;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,14 +51,20 @@ import org.thingsboard.rule.engine.api.NotificationCenter;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.NotificationId;
 import org.thingsboard.server.common.data.id.NotificationRequestId;
 import org.thingsboard.server.common.data.id.NotificationTargetId;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.notification.Notification;
 import org.thingsboard.server.common.data.notification.NotificationDeliveryMethod;
 import org.thingsboard.server.common.data.notification.NotificationRequest;
 import org.thingsboard.server.common.data.notification.NotificationRequestInfo;
 import org.thingsboard.server.common.data.notification.NotificationRequestPreview;
+import org.thingsboard.server.common.data.notification.NotificationType;
+import org.thingsboard.server.common.data.notification.info.EntitiesLimitIncreaseRequestNotificationInfo;
+import org.thingsboard.server.common.data.notification.info.NotificationInfo;
 import org.thingsboard.server.common.data.notification.settings.NotificationSettings;
 import org.thingsboard.server.common.data.notification.settings.UserNotificationSettings;
 import org.thingsboard.server.common.data.notification.targets.MicrosoftTeamsNotificationTargetConfig;
@@ -65,6 +72,7 @@ import org.thingsboard.server.common.data.notification.targets.NotificationRecip
 import org.thingsboard.server.common.data.notification.targets.NotificationTarget;
 import org.thingsboard.server.common.data.notification.targets.NotificationTargetType;
 import org.thingsboard.server.common.data.notification.targets.platform.PlatformUsersNotificationTargetConfig;
+import org.thingsboard.server.common.data.notification.targets.platform.UsersFilterType;
 import org.thingsboard.server.common.data.notification.targets.slack.SlackConversation;
 import org.thingsboard.server.common.data.notification.targets.slack.SlackNotificationTargetConfig;
 import org.thingsboard.server.common.data.notification.template.DeliveryMethodNotificationTemplate;
@@ -83,6 +91,7 @@ import org.thingsboard.server.dao.notification.NotificationTemplateService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.notification.NotificationProcessingContext;
 import org.thingsboard.server.service.security.model.SecurityUser;
+import org.thingsboard.server.service.security.system.SystemSecurityService;
 import org.thingsboard.server.service.translation.TranslationService;
 
 import java.util.Comparator;
@@ -91,6 +100,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -106,6 +116,7 @@ import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DE
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH;
+import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 
 @RestController
 @TbCoreComponent
@@ -121,6 +132,7 @@ public class NotificationController extends BaseController {
     private final NotificationCenter notificationCenter;
     private final NotificationSettingsService notificationSettingsService;
     private final TranslationService translationService;
+    private final SystemSecurityService systemSecurityService;
 
     @ApiOperation(value = "Get notifications (getNotifications)",
             notes = "Returns the page of notifications for current user." + NEW_LINE +
@@ -296,6 +308,53 @@ public class NotificationController extends BaseController {
         notificationRequest.setStats(null);
 
         return doSaveAndLog(EntityType.NOTIFICATION_REQUEST, notificationRequest, (tenantId, request) -> notificationCenter.processNotificationRequest(tenantId, request, null));
+    }
+
+    @ApiOperation(value = "Send entity limit increase request notification to System/Tenant administrators (sendEntitiesLimitIncreaseRequest)",
+                  notes = "Send entity limit increase request notification by Tenant Administrator or Customer User to System/Tenant administrators." +
+                  TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PostMapping("/notification/entitiesLimitIncreaseRequest/{entityType}")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    public void sendEntitiesLimitIncreaseRequest(@Parameter(description = "Entity type", required = true, schema = @Schema(allowableValues = {"DEVICE", "ASSET", "CUSTOMER", "USER", "DASHBOARD", "RULE_CHAIN", "EDGE", "INTEGRATION", "CONVERTER", "SCHEDULER_EVENT"}))
+                                                 @PathVariable("entityType") String strEntityType,
+                                                 @AuthenticationPrincipal SecurityUser user,
+                                                 HttpServletRequest request) throws Exception {
+        EntityType entityType = checkEnumParameter("entityType", strEntityType, EntityType::valueOf);
+        if (user.isTenantAdmin()) {
+            Optional<NotificationTarget> sysAdmins = notificationTargetService.findNotificationTargetsByTenantIdAndUsersFilterType(TenantId.SYS_TENANT_ID, UsersFilterType.SYSTEM_ADMINISTRATORS)
+                    .stream().findFirst();
+            if (sysAdmins.isPresent()) {
+                NotificationTargetId notificationTargetId = sysAdmins.get().getId();
+                String baseUrl = systemSecurityService.getBaseUrl(TenantId.SYS_TENANT_ID, new CustomerId(EntityId.NULL_UUID), request);
+                NotificationInfo info = EntitiesLimitIncreaseRequestNotificationInfo.builder()
+                        .entityType(entityType)
+                        .userEmail(user.getEmail())
+                        .increaseLimitActionLabel("Set new limit")
+                        .increaseLimitLink("/tenants/"+user.getTenantId().toString())
+                        .baseUrl(baseUrl)
+                        .build();
+                notificationCenter.sendSystemNotification(TenantId.SYS_TENANT_ID, notificationTargetId, NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST, info);
+            } else {
+                throw new IllegalArgumentException("Notification target for 'System administrators' not found");
+            }
+        } else {
+            Optional<NotificationTarget> tenantAdmins = notificationTargetService.findNotificationTargetsByTenantIdAndUsersFilterType(user.getTenantId(), UsersFilterType.TENANT_ADMINISTRATORS)
+                    .stream().findFirst();
+            if (tenantAdmins.isPresent()) {
+                NotificationTargetId notificationTargetId = tenantAdmins.get().getId();
+                String baseUrl = systemSecurityService.getBaseUrl(user.getTenantId(), new CustomerId(EntityId.NULL_UUID), request);
+                NotificationInfo info = EntitiesLimitIncreaseRequestNotificationInfo.builder()
+                        .entityType(entityType)
+                        .userEmail(user.getEmail())
+                        .increaseLimitActionLabel("Request limit increase")
+                        .increaseLimitLink("/action/entitiesLimitIncreaseRequest?entityType=" + entityType.name())
+                        .baseUrl(baseUrl)
+                        .build();
+                notificationCenter.sendSystemNotification(user.getTenantId(), notificationTargetId, NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST, info);
+            } else {
+                throw new IllegalArgumentException("Notification target for 'Tenant administrators' not found");
+            }
+        }
     }
 
     @ApiOperation(value = "Get notification request preview (getNotificationRequestPreview)",

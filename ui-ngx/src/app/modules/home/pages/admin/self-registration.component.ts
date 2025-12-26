@@ -232,10 +232,13 @@ export class SelfRegistrationComponent extends PageComponent implements OnInit, 
     }
   }
 
-  createDomain() {
-    this.dialog.open<DomainDialogComponent, any, Domain>(DomainDialogComponent, {
+  createDomain(name: string) {
+    this.dialog.open<DomainDialogComponent, {name?: string}, Domain>(DomainDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        name
+      }
     }).afterClosed()
       .subscribe((domain) => {
         if (domain) {
@@ -245,12 +248,14 @@ export class SelfRegistrationComponent extends PageComponent implements OnInit, 
       });
   }
 
-  createTarget() {
+  createTarget(name: string) {
     this.dialog.open<RecipientNotificationDialogComponent, RecipientNotificationDialogData,
       NotificationTarget>(RecipientNotificationDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
-      data: {}
+      data: {
+        name
+      }
     }).afterClosed()
       .subscribe((res) => {
         if (res) {

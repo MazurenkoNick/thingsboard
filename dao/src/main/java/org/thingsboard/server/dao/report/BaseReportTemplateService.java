@@ -96,7 +96,17 @@ public class BaseReportTemplateService extends AbstractEntityService implements 
 
     @Override
     public ReportTemplate saveReportTemplate(ReportTemplate reportTemplate) {
-        ReportTemplate oldReportTemplate = reportTemplateDataValidator.validate(reportTemplate, BaseReportTemplate::getTenantId);
+        return saveReportTemplate(reportTemplate, true);
+    }
+
+    @Override
+    public ReportTemplate saveReportTemplate(ReportTemplate reportTemplate, boolean doValidate) {
+        ReportTemplate oldReportTemplate = null;
+        if (doValidate) {
+            oldReportTemplate = reportTemplateDataValidator.validate(reportTemplate, BaseReportTemplate::getTenantId);
+        } else if (reportTemplate.getId() != null) {
+            oldReportTemplate = findReportTemplateById(reportTemplate.getTenantId(), reportTemplate.getId());
+        }
         try {
             TenantId tenantId = reportTemplate.getTenantId();
             log.trace("Executing saveReportTemplate [{}]", reportTemplate);

@@ -54,7 +54,7 @@
             formControlName="domainId"
             [allowCreateNew]="resource.DOMAIN | hasGenericPermission: operation.CREATE"
             (entityChanged)="domainChange($event)"
-            (createNew)="createDomain()"
+            (createNew)="createDomain($event)"
           >
           </tb-entity-autocomplete>
           <div *ngIf="isLoginWl">
@@ -137,6 +137,13 @@
                         *ngIf="!isLoginWl && isTenant">
             {{ 'white-labeling.hide-connectivity-dialog' | translate }}
           </mat-checkbox>
+          @if (!isLoginWl) {
+            <mat-checkbox formControlName="overrideTrendzName" style="display: block;">
+              <span tb-hint-tooltip-icon="{{ 'white-labeling.override-trendz-add-on-name-hint' | translate }}">
+                {{ 'white-labeling.override-trendz-add-on-name' | translate }}
+              </span>
+            </mat-checkbox>
+          }
           <mat-checkbox formControlName="showNameVersion" class="block" [class.mb-4]="!wlSettings.get('showNameVersion').value">
             {{ 'white-labeling.show-platform-name-version' | translate }}
           </mat-checkbox>

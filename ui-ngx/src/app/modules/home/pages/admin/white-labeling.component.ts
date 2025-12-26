@@ -153,6 +153,8 @@ export class WhiteLabelingComponent extends PageComponent implements OnInit, Has
       this.wlSettings.addControl('prohibitDifferentUrl',
         this.fb.control('', [])
       );
+    } else {
+      this.wlSettings.addControl('overrideTrendzName', this.fb.control(false, []));
     }
 
     if (this.isLoginWl && !this.isSysAdmin) {
@@ -299,10 +301,13 @@ export class WhiteLabelingComponent extends PageComponent implements OnInit, Has
     }
   }
 
-  createDomain() {
-    this.dialog.open<DomainDialogComponent, any, Domain>(DomainDialogComponent, {
+  createDomain(name?: string) {
+    this.dialog.open<DomainDialogComponent, {name?: string}, Domain>(DomainDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        name
+      }
     }).afterClosed()
       .subscribe((domain) => {
         if (domain) {

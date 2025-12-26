@@ -31,22 +31,24 @@
 package org.thingsboard.server.service.install.update;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.ResourceType;
 import org.thingsboard.server.common.data.ShortCustomerInfo;
+import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
-import org.thingsboard.server.common.data.alarm.AlarmSeverity;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DashboardId;
@@ -60,26 +62,23 @@ import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.query.DynamicValue;
-import org.thingsboard.server.common.data.query.FilterPredicateValue;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.security.Authority;
+import org.thingsboard.server.common.data.trendz.TrendzSettings;
 import org.thingsboard.server.dao.asset.AssetService;
-import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.edge.EdgeService;
-import org.thingsboard.server.dao.encryptionkey.EncryptionService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.relation.RelationService;
+import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.dao.rule.RuleChainService;
-import org.thingsboard.server.dao.secret.SecretService;
-import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.tenant.TenantService;
+import org.thingsboard.server.dao.trendz.TrendzSettingsService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
 import org.thingsboard.server.service.component.ComponentDiscoveryService;
@@ -95,6 +94,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -124,6 +124,9 @@ public class DefaultDataUpdateService implements DataUpdateService {
     private final SystemDataLoaderService systemDataLoaderService;
     private final ComponentDiscoveryService componentDiscoveryService;
     private final DbUpgradeExecutorService executorService;
+    private final ResourceService resourceService;
+    private final TrendzUpdater trendzUpdater;
+    private final TrendzSettingsService trendzSettingsService;
 
     @Override
     public void updateData(boolean fromCe) throws Exception {
@@ -135,6 +138,14 @@ public class DefaultDataUpdateService implements DataUpdateService {
 
         }
         log.info("Data updated.");
+    }
+
+    @Override
+    @Transactional
+    public void postUpdateData() throws Exception {
+        //TODO: should be cleaned after each release
+        migrateTenantTrendzWidgetBundleToSysadminLevel();
+        migrateTenantTrendzJsModuleToSysadminLevel();
     }
 
     private void updateDataFromCe() throws Exception {
@@ -178,6 +189,64 @@ public class DefaultDataUpdateService implements DataUpdateService {
         log.info("Finished rule nodes upgrade. Upgraded rule nodes count: {}", totalRuleNodesUpgraded);
     }
 
+
+    // Replacing old if safe
+    private void migrateTenantTrendzWidgetBundleToSysadminLevel() throws Exception {
+        log.info("Starting Trendz widget bundle migration ...");
+
+        String bundleAlias = "trendz_bundle";
+        Set<String> fqns = Set.of(
+                "trendz_builder",
+                "trendz_view_latest",
+                "trendz_view_static",
+                "trendz_view_latest_chat"
+        );
+        Set<String> fullFqns = fqns.stream()
+                .map(fqn -> bundleAlias + "." + fqn)
+                .collect(Collectors.toSet());
+
+        this.trendzUpdater.labelWidgetTypesAsDeprecatedByFqns(fullFqns);
+        this.trendzUpdater.findUniqueTrendzBaseUrlFromWidgetTypes(fullFqns)
+                .ifPresentOrElse(baseUrl -> {
+                    String urlString = baseUrl.toString();
+                    log.info("Found unique Trendz URL '{}'. Migrating dashboards to use system Trendz widgets", urlString);
+
+                    TrendzSettings settings = this.trendzUpdater.createSettings(urlString, null);
+                    this.trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
+
+                    for (String fqn : fullFqns) {
+                        String fqnSuffix = StringUtils.substringAfterLast(fqn, ".");
+                        String tenantFqnOld = "tenant." + fqn;
+                        String tenantFqnNew = "tenant." + fqnSuffix;
+                        String systemFqn = "system." + fqnSuffix;
+                        this.trendzUpdater.replacePatternInAllDashboardsConfigurations(tenantFqnNew, systemFqn);
+                        this.trendzUpdater.replacePatternInAllDashboardsConfigurations(tenantFqnOld, systemFqn);
+                    }
+                }, () -> {
+                    log.info("Couldn't find unique Trendz URL, skipping migration of dashboards to system Trendz widgets");
+                });
+        log.debug("Finished trendz widget bundle upgrade.");
+    }
+
+    // Replacing all without old (it is appropriate)
+    private void migrateTenantTrendzJsModuleToSysadminLevel() {
+        String resourceKey = "ai-summary-module.js";
+        TbResource system = this.resourceService.findResourceByTenantIdAndKey(TenantId.SYS_TENANT_ID, ResourceType.JS_MODULE, resourceKey);
+        if (system == null) {
+            throw new RuntimeException("Can not find trendz js module as resource with key: " + resourceKey);
+        }
+
+        String systemLink = system.getLink();
+        log.info("Migrating dashboards to use system ai-summary-module.js");
+        this.trendzUpdater.replacePatternInAllDashboardsConfigurations(
+                "/api/resource/js_module/tenant/ai-summary-module.js",
+                systemLink
+        );
+
+        this.trendzUpdater.deleteAllTenantResourcesByResourceKey(system.getResourceKey());
+    }
+
+
     private int processRuleNodePack(List<RuleNodeId> ruleNodeIdsBatch, RuleNodeClassInfo ruleNodeClassInfo) {
         var saveFutures = new ArrayList<ListenableFuture<?>>(MAX_PENDING_SAVE_RULE_NODE_FUTURES);
         String ruleNodeType = ruleNodeClassInfo.getSimpleName();
@@ -216,33 +285,6 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 ruleChainService.findAllRuleNodeIdsByTypeAndVersionLessThan(type, toVersion, pageLink), DEFAULT_PAGE_SIZE
         ).forEach(ruleNodeIds::add);
         return ruleNodeIds;
-    }
-
-    boolean convertDeviceProfileForVersion330(JsonNode profileData) {
-        boolean isUpdated = false;
-        if (profileData.has("alarms") && !profileData.get("alarms").isNull()) {
-            JsonNode alarms = profileData.get("alarms");
-            for (JsonNode alarm : alarms) {
-                if (alarm.has("createRules")) {
-                    JsonNode createRules = alarm.get("createRules");
-                    for (AlarmSeverity severity : AlarmSeverity.values()) {
-                        if (createRules.has(severity.name())) {
-                            JsonNode spec = createRules.get(severity.name()).get("condition").get("spec");
-                            if (convertDeviceProfileAlarmRulesForVersion330(spec)) {
-                                isUpdated = true;
-                            }
-                        }
-                    }
-                }
-                if (alarm.has("clearRule") && !alarm.get("clearRule").isNull()) {
-                    JsonNode spec = alarm.get("clearRule").get("condition").get("spec");
-                    if (convertDeviceProfileAlarmRulesForVersion330(spec)) {
-                        isUpdated = true;
-                    }
-                }
-            }
-        }
-        return isUpdated;
     }
 
     private PaginatedUpdater<String, Tenant> tenantsCustomersGroupAllUpdater =
@@ -407,7 +449,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 List<UserId> userIds = entityIds.stream().map(entityId -> new UserId(entityId.getId())).collect(Collectors.toList());
                 List<User> users;
                 if (!userIds.isEmpty()) {
-                    users = userService.findUsersByTenantIdAndIdsAsync(id, userIds).get();
+                    users = userService.findUsersByTenantIdAndIds(id, userIds);
                 } else {
                     users = Collections.emptyList();
                 }
@@ -539,7 +581,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
                     List<DashboardId> dashboardIds = entityIds.stream().map(entityId -> new DashboardId(entityId.getId())).collect(Collectors.toList());
                     List<DashboardInfo> dashboards;
                     if (!dashboardIds.isEmpty()) {
-                        dashboards = dashboardService.findDashboardInfoByIdsAsync(TenantId.SYS_TENANT_ID, dashboardIds).get();
+                        dashboards = dashboardService.findDashboardInfoByIds(TenantId.SYS_TENANT_ID, dashboardIds);
                     } else {
                         dashboards = Collections.emptyList();
                     }
@@ -623,33 +665,6 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 hasNext = false;
             }
         }
-    }
-
-    boolean convertDeviceProfileAlarmRulesForVersion330(JsonNode spec) {
-        if (spec != null) {
-            if (spec.has("type") && spec.get("type").asText().equals("DURATION")) {
-                if (spec.has("value")) {
-                    long value = spec.get("value").asLong();
-                    var predicate = new FilterPredicateValue<>(
-                            value, null, new DynamicValue<>(null, null, false)
-                    );
-                    ((ObjectNode) spec).remove("value");
-                    ((ObjectNode) spec).putPOJO("predicate", predicate);
-                    return true;
-                }
-            } else if (spec.has("type") && spec.get("type").asText().equals("REPEATING")) {
-                if (spec.has("count")) {
-                    int count = spec.get("count").asInt();
-                    var predicate = new FilterPredicateValue<>(
-                            count, null, new DynamicValue<>(null, null, false)
-                    );
-                    ((ObjectNode) spec).remove("count");
-                    ((ObjectNode) spec).putPOJO("predicate", predicate);
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     public static boolean getEnv(String name, boolean defaultValue) {

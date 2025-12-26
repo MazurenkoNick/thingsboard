@@ -729,7 +729,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     };
   }
 
-  private eventInfo(event: SchedulerEventWithCustomerInfo, startTime: _moment.Moment): string {
+  eventInfo(event: SchedulerEventWithCustomerInfo, startTime?: _moment.Moment): string {
     return scheduleInfo(event.schedule, this.translate, startTime);
   }
 
@@ -901,6 +901,9 @@ class WidgetSchedulerModeHandler extends SchedulerModeHandler {
     if (displayCustomer) {
       this._displayedColumns.push('customerTitle');
     }
+    if (this.settings.displaySchedule ?? false) {
+      this._displayedColumns.push('schedule');
+    }
     this._displayedColumns.push('actions');
     this.component.displayedColumns = this._displayedColumns;
 
@@ -1022,7 +1025,7 @@ class WidgetSchedulerModeHandler extends SchedulerModeHandler {
 class StandaloneSchedulerModeHandler extends SchedulerModeHandler {
 
   initialize(schedulerEventService: SchedulerEventService, _userPermissionsService: UserPermissionsService): void {
-    this._displayedColumns = ['createdTime', 'name', 'type', 'customerTitle', 'actions'];
+    this._displayedColumns = ['createdTime', 'name', 'type', 'customerTitle', 'schedule', 'actions'];
     if (this.component.deleteEnabled) {
       this._displayedColumns.unshift('select');
     }

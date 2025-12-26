@@ -45,6 +45,8 @@ import org.thingsboard.server.common.data.EntitySubtype;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EntityView;
 import org.thingsboard.server.common.data.EntityViewInfo;
+import org.thingsboard.server.common.data.NameConflictPolicy;
+import org.thingsboard.server.common.data.NameConflictStrategy;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.entityview.EntityViewSearchQuery;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -124,13 +126,23 @@ public class EntityViewServiceImpl extends CachedVersionedEntityService<EntityVi
     }
 
     @Override
+    public EntityView saveEntityView(EntityView entityView, NameConflictStrategy nameConflictStrategy) {
+        return saveEntityView(entityView, true, nameConflictStrategy);
+    }
+
+    @Override
     public EntityView saveEntityView(EntityView entityView, boolean doValidate) {
+        return saveEntityView(entityView, doValidate, NameConflictStrategy.DEFAULT);
+    }
+
+    private EntityView saveEntityView(EntityView entityView, boolean doValidate, NameConflictStrategy nameConflictStrategy) {
         log.trace("Executing save entity view [{}]", entityView);
-        EntityView old = null;
+        EntityView old = (entityView.getId() != null) ? entityViewDao.findById(entityView.getTenantId(), entityView.getId().getId()) : null;
+        if (nameConflictStrategy.policy() == NameConflictPolicy.UNIQUIFY && (old == null || !entityView.getName().equals(old.getName()))) {
+            uniquifyEntityName(entityView, old, entityView::setName, EntityType.ENTITY_VIEW, nameConflictStrategy);
+        }
         if (doValidate) {
-            old = entityViewValidator.validate(entityView, EntityView::getTenantId);
-        } else if (entityView.getId() != null) {
-            old = findEntityViewById(entityView.getTenantId(), entityView.getId(), false);
+            entityViewValidator.validate(entityView, EntityView::getTenantId);
         }
         try {
             EntityView saved = entityViewDao.save(entityView.getTenantId(), entityView);
@@ -221,6 +233,12 @@ public class EntityViewServiceImpl extends CachedVersionedEntityService<EntityVi
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validateIds(entityViewIds, ids -> "Incorrect entityViewIds " + ids);
         return entityViewDao.findEntityViewsByTenantIdAndIdsAsync(tenantId.getId(), toUUIDs(entityViewIds));
+    }
+
+    @Override
+    public List<EntityView> findEntityViewsByTenantIdAndIds(TenantId tenantId, List<EntityViewId> entityViewIds) {
+        log.trace("Executing findEntityViewsByTenantIdAndIds, tenantId [{}], entityViewIds [{}]", tenantId, entityViewIds);
+        return entityViewDao.findEntityViewsByTenantIdAndIds(tenantId.getId(), toUUIDs(entityViewIds));
     }
 
     @Override

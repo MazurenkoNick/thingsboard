@@ -94,6 +94,8 @@ public interface CustomerDao extends Dao<Customer>, TenantEntityDao<Customer>, E
      */
     ListenableFuture<List<Customer>> findCustomersByTenantIdAndIdsAsync(UUID tenantId, List<UUID> customerIds);
 
+    List<Customer> findCustomersByTenantIdAndIds(UUID tenantId, List<UUID> customerIds);
+
     PageData<Customer> findCustomersByEntityGroupId(UUID groupId, PageLink pageLink);
 
     PageData<Customer> findCustomersByEntityGroupIds(List<UUID> groupIds, List<UUID> additionalCustomerIds, PageLink pageLink);
@@ -113,5 +115,7 @@ public interface CustomerDao extends Dao<Customer>, TenantEntityDao<Customer>, E
     List<Customer> findCustomersByCustomMenuId(CustomMenuId id);
 
     void updateCustomersCustomMenuId(List<CustomerId> customerIds, CustomMenuId customMenuId);
+
+    PageData<Customer> findByTenantIdAndParentCustomerId(TenantId tenantId, CustomerId parentCustomerId, PageLink pageLink);
 
 }

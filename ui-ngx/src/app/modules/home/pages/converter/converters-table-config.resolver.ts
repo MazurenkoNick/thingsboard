@@ -206,7 +206,7 @@ export class ConvertersTableConfigResolver  {
     }
 
     const additionalActionConfig = {
-      title: this.translate.instant('converter.see-debug-events'),
+      title: this.translate.instant('action.see-debug-events'),
       action: () => this.openDebugEventDetails($event, converter)
     };
 

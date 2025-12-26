@@ -1,0 +1,119 @@
+{
+  "fqn": "trendz_view_latest",
+  "name": "Advanced analytics views",
+  "deprecated": false,
+  "image": "tb-image;/api/images/system/advanced_analytics_views_system_widget_image.png",
+  "description": "Displays saved Advanced analytics visualizations that should use a dashboard alias to filter data in the view.",
+  "descriptor": {
+    "type": "latest",
+    "sizeX": 7.5,
+    "sizeY": 3,
+    "resources": [
+      {
+        "url": "/trendz/bundle/trendz-tb-lib.js",
+        "isModule": true
+      }
+    ],
+    "templateHtml": "<div *ngIf=\"!inited\" class=\"center-scree\">Advanced analytics view with filter alias</div>\n<div *ngIf=\"inited && jwt\" (click)=\"onClick($event)\">\n  <tb-example\n    [jwt]=\"getJwtToken()\"\n    [jwtRefresh]=\"getRefreshToken()\"\n    [ctx]=\"ctx\"\n    [isInEditMode]=\"ctx.isEdit\"\n    [isViewMode]=\"true\"\n    [filterValues]=\"filterValue\"\n    [resourceURL]=\"resourceURL\"\n    (dataChannel)=\"onDataChannleInit($event)\"\n  ></tb-example>\n</div>\n",
+    "templateCss": ".center-scree {\n    width: 100%; \n    height: 100%;\n    border: 0; \n    text-align: center;\n    font-size: 40px;\n}",
+    "controllerScript": "let $scope;\nlet settings;\nlet prevFilterValue;\nlet utils;\n\n\nself.actionSources = function() {\n    return {\n        'rowClick': {\n            name: 'widget-action.row-click',\n            multiple: false\n        },\n        'dateSelected': {\n            name: 'date-selected',\n            multiple: false\n        },\n        'changedRadioButton': {\n            name: 'changed-radio-button',\n            multiple: false\n        },\n        'elementClick': {\n            name: 'widget-action.element-click',\n            multiple: true\n        }\n    };\n}\n\nself.onInit = function() {\n    $scope = self.ctx.$scope;\n    $scope.ctx = self.ctx;\n    $scope.jwt = self.getJwtToken();\n    $scope.jwtRefresh = self.getRefreshToken();\n    $scope.inited = false;\n\n    settings = JSON.parse(JSON.stringify($scope.ctx\n        .settings)) || {};\n    utils = self.ctx.$scope.$injector.get(self.ctx\n        .servicesMap.get('utils'));\n        \n    let widgetService = self.ctx.entityService.widgetService;\n    let resourceURL = '';\n    \n    if(widgetService.widgetsInfoInMemoryCache) {\n        let widgetInfo = widgetService.widgetsInfoInMemoryCache.get(self.ctx.widget.typeFullFqn)\n        if(widgetInfo && widgetInfo.resources.length && isResourceHasDomain(widgetInfo.resources[0].url)) {\n            resourceURL = widgetInfo.resources[0].url;\n        } else {\n            resourceURL = settings.viewUrl;\n        }\n    }\n\n    $scope.resourceURL = resourceURL;\n    $scope.getJwtToken = self.getJwtToken;\n    $scope.ctx.getJwtToken = self.getJwtToken;\n\n    $scope.getRefreshToken = self.getRefreshToken;\n    $scope.ctx.getRefreshToken = self.getRefreshToken;\n\n    $scope.onDataChannleInit = self.onDataChannleInit;\n    $scope.ctx.onDataChannleInit = self\n        .onDataChannleInit;\n\n    self.ctx.jwt = $scope.jwt;\n    if (!settings.viewUrl && !settings.view) {\n        $scope.inited = false;\n    } else {\n        $scope.inited = true;\n    }\n\n    if (settings.widgetTitle && settings.widgetTitle.length) {\n        let titlePattern = utils.customTranslation(settings.widgetTitle, settings.widgetTitle);\n        \n        let newTitle;\n        if(self.ctx.datasources.length !== 1) {\n            newTitle = titlePattern.replace(/\\${.*?}/g, \"\");\n        } else {\n            let datasource = self.ctx.datasources[0];\n            newTitle = utils.createLabelFromDatasource(datasource, titlePattern);\n        }\n\n        if (self.ctx.widgeTitle !== newTitle) {\n            self.ctx.widgetTitle = newTitle;\n            self.ctx.updateWidgetParams();\n        }\n    }\n\n    self.ctx.$scope.onClick = function(e) {\n        if ((e && e.target && e.target.className\n                .includes('mat-menu-trigger')) ||\n            (e && e.target && e.target.className\n                .includes('mat-button-wrapper'))\n        ) {\n            return;\n        }\n\n        let descriptors = self.ctx.$scope.ctx\n            .actionsApi.getActionDescriptors(\n                'elementClick');\n        let actionEvent;\n        if (descriptors.length) {\n            actionEvent = descriptors[0];\n\n            setTimeout(() => {\n                self.ctx.$scope.ctx\n                    .actionsApi\n                    .handleWidgetAction(\n                        null,\n                        actionEvent);\n            }, 0);\n        }\n\n    }\n}\n\nself.onDataUpdated = function() {\n\n    let newFilters = readFilterValues();\n\n    if (prevFilterValue === newFilters) {\n        return;\n    }\n\n    $scope.filterValue = newFilters;\n    prevFilterValue = $scope.filterValue;\n}\n\nself.onDestroy = function() {\n}\n\nself.onEditModeChanged = function(e) {\n}\n\nself.onResize = function() {\n    if ($scope.subscriptionService) {\n        $scope.subscriptionService.emit('parentResize',\n            'tb_dashboard', 'onResizeEvent');\n    }\n}\n\nself.onDataChannleInit = function(subscriptionService) {\n    $scope.subscriptionService = subscriptionService;\n}\n\nfunction readFilterValues() {\n    if (self.ctx && self.ctx.defaultSubscription && self.ctx\n        .defaultSubscription.data && self.ctx\n        .defaultSubscription.data.length > 0) {\n        let filterValues = [];\n        for (let i = 0; i < self.ctx.defaultSubscription\n            .data.length; i++) {\n            let value = getDescendantProp(self.ctx\n                .defaultSubscription.data[i], 'data.0.1'\n                );\n            if (value && value !== 'Unresolved') {\n                filterValues.push(value);\n            }\n        }\n        let fitlerObject = {};\n        fitlerObject[settings.filterName] = filterValues;\n        return fitlerObject;\n    } else {\n        usePostMessage = false;\n        return null;\n    }\n}\n\nfunction getDescendantProp(obj, path) {\n    return path.split('.').reduce((acc, part) => acc && acc[\n        part], obj)\n}\n\nself.getRefreshToken = function() {\n    let jwtToken = localStorage.getItem(\n    'refresh_token');\n    if (jwtToken) {\n        jwtToken = jwtToken.replaceAll('\"', \"\");\n        return jwtToken;\n    }\n\n    return 'unknwown';\n}\n\nself.getJwtToken = function() {\n    let jwtToken = localStorage.getItem('jwt_token');\n    if (jwtToken) {\n        jwtToken = jwtToken.replaceAll('\"', \"\");\n        return jwtToken;\n    }\n\n    return 'unknwown';\n}\n\nself.useCustomDatasources = function() {\n    return false;\n};\n\nself.typeParameters = function() {\n    return {\n        maxDatasources: 1,\n        maxDataKeys: 1,\n        singleEntity: false,\n        useCustomDatasources: true\n    };\n};\n\nfunction isResourceHasDomain(url) {\n    return url.startsWith('http://') || url.startsWith('https://')\n}",
+    "settingsForm": [
+      {
+        "id": "viewUrl",
+        "name": "View URL",
+        "type": "text",
+        "required": true,
+        "fieldClass": "flex"
+      },
+      {
+        "id": "filterName",
+        "name": "Filter name",
+        "type": "text",
+        "required": false,
+        "fieldClass": "flex"
+      },
+      {
+        "id": "useDashboardTimeWindow",
+        "name": "Use Dashboard Time Window",
+        "type": "switch",
+        "required": false
+      },
+      {
+        "id": "enableViewCaching",
+        "name": "Enable view caching",
+        "type": "switch",
+        "default": true,
+        "required": false
+      },
+      {
+        "id": "widgetTitle",
+        "name": "Widget title",
+        "type": "text",
+        "required": false,
+        "fieldClass": "flex"
+      },
+      {
+        "id": "updateInRealTime",
+        "name": "Update data in real time",
+        "type": "switch",
+        "required": false
+      },
+      {
+        "id": "updateInRealTimeInterval",
+        "name": "Interval for updating data in real time (minutes)",
+        "type": "number",
+        "default": 1,
+        "required": false
+      },
+      {
+        "id": "canCancelViewLoading",
+        "name": "Show button for cancel view loading",
+        "type": "switch",
+        "required": false
+      },
+      {
+        "id": "isFiltersBroadcasting",
+        "name": "Broadcast filter change event",
+        "type": "switch",
+        "required": false
+      },
+      {
+        "id": "isFiltersListen",
+        "name": "Listen filter change event",
+        "type": "switch",
+        "required": false
+      },
+      {
+        "id": "channelName",
+        "name": "Filter change event name",
+        "type": "text",
+        "default": "trendz-filter",
+        "required": false,
+        "fieldClass": "flex"
+      },
+      {
+        "id": "isSaveFilters",
+        "name": "Save filters selection",
+        "type": "switch",
+        "required": false
+      }
+    ],
+    "settingsDirective": "",
+    "defaultConfig": "{\"datasources\":[{\"type\":\"function\",\"name\":\"function\",\"dataKeys\":[{\"name\":\"f(x)\",\"type\":\"function\",\"label\":\"Random\",\"color\":\"#2196f3\",\"settings\":{},\"_hash\":0.15479322438769105,\"funcBody\":\"var value = prevValue + Math.random() * 100 - 50;\\nvar multiplier = Math.pow(10, 2 || 0);\\nvar value = Math.round(value * multiplier) / multiplier;\\nif (value < -1000) {\\n\\tvalue = -1000;\\n} else if (value > 1000) {\\n\\tvalue = 1000;\\n}\\nreturn value;\"}]}],\"timewindow\":{\"realtime\":{\"timewindowMs\":60000}},\"showTitle\":true,\"backgroundColor\":\"#fff\",\"color\":\"rgba(0, 0, 0, 0.87)\",\"padding\":\"8px\",\"settings\":{},\"title\":\"Advanced analytics views\"}"
+  },
+  "resources": [
+    {
+      "link": "/api/images/system/advanced_analytics_views_system_widget_image.png",
+      "title": "\"Advanced analytics views\" system widget image",
+      "type": "IMAGE",
+      "subType": "IMAGE",
+      "fileName": "advanced_analytics_views_system_widget_image.png",
+      "publicResourceKey": "4kn6i8O7wLQkNs0NfKu2iPMibtZtT6FB",
+      "mediaType": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAMgAAACgCAMAAAB+IdObAAABelBMVEUAAADf3997htV8hdN7hdV8h9NwvbSxu+Wlsudwv69vvLNvvLJwu7Nuu7F7htR8htR7htJ7hdR8h9N8g9NvvLJwvbJ2dnZtvLJvvbF4eHhtvbJwurN4eHiAgNpuvLJ2dnZvvLJ6hdR4eHhuvLF7hdR4eHhuvLJ8h9V7htR7htRvvLN7hdRwv7V8hdR7hdR3d3d3d3eDjNRuvLJvvbKKktZ3d3eepNhuvbOTm9ipr9ozMzMzMzOAwrkzMzN4eHjKzN0zMzPR29pwv7MzMzOAh9d1v7WTyMKy0s0yMjIyMjIzMzOgzMczMzO4vdzG2NR7hNQ0NDQzMzOo0Mqv0c13d3fS2dq81NE8PDyezMaJxbx3d3fA1tOttNq9wdy609F8wbmRmNd2m8d/nsuAwbmDwrt3nMd4k8yYxceFw7t3d3eLk9aRxsCUnNd4urx2dnbCxdy4vNx6hdV9hdSsz8qHvcN2lss0NDRuvLR5eXlwvK9su7N7hdRuvLJ3k8zeLKNpAAAAe3RSTlMAgN+AYCAggGAQoL9AgL+/oJ9AQFBgcHDfgGAwYBDfUM9QIJDPQO8wsHCvkDDv7zAQ77CP35C/f8+vgJDfr5+QUJNAQCDvv59wYL+voJ+QcDAgy6+fgIAQ78+1r5+QkPff38/Pr5+AgO/fz8+/v6Cfn5+fkJBwcF9fUEAQI6SYAAARHElEQVR42uzZwWvbMBTH8V8vb3t60k2KZDs4JmY+GENLy8hllxV63aFjY2PQ6wZjp+2oP36JLZplS7tjFdMPAYvcvpFAeRjPnj07RBbz4BTmwXrMBGEejOC4i+VivVitF2ucBlXjIcWr82KBAnh5Cn5090scWp0v11PIi1Pw6+v9EocKXBSvXy1WOA3UYx4kYh6auYSEuRwtWyF7nvCYlnkD6JD/1S4ajwkVRYvY5L8l/9mRjeW25k40clfhHxaJY7gOrqGakb2mxF90RCIeMe4qKp//joTy4Wu8tYgy1EKlKpG74JEwYSQWCXfcYQi1lhMIcYTEKIxiRCJRoyHqtJzA0bKExLUYyT4k2O1HWW04/3skGiQsenruQyzVwckVszHIXVRITPTYolojcb2vnZZolW9x3GqJPEZd+jPETCEt70NKN/jolFM46mKxTKPuk9OMpJ0CtATCJIi1oaLetWActS6WRRp1z57W20+3Z8nH97fT8+Zd+ubm593Nm++fv5x9uPt2luBQsVjnMeoOUZA4pbBFXhiToK5ElAqmpBqZ0/sQdXk5HS1GwtsQdioowx0yN3T7kCs1bUxDmPTGYEO8DUH+FyIzEkfjsioDYRIrdynGc0VQuf//rYxCMgwNtohEYxLtRkSpxlfIfkR0UiMRNy6NuU5h1BsR3yoJJbKfrI6FOMaOKtm0JVu7C3G574hteyS9tmOIT7++t531Vnm6NhpD7iEHNEYpxFGkjVK18ZrR5v6qx/kGiVQdj2NhP4VI27m4C5Go4XJ/i/ibWjPtbRqGw/jTprPka1BwSBRrIVMgoyUD0XJf4hL3fQqBBBIv+AhI1B8e2wkJgcIAhQK/rXHj7kV+i/+xnyZSmkak+vaqCYOxTMIiV0xOzb9e6V6koKjItBfhgik4mFSKoRQ0iv8DkVBJiooroL4h9TmJyhSRzLkm/0OhU/tTE9G59k0tYvJUGClNxMy//z0jWJI16aOa0jOtiFc0PPMiyX8gEiVWRDciLPGNqEQ4oyItIQUzBPi3o+5UctEsPhiNhOvzQ4sSEsk5Qq0ioMR3ebq/x6g7wm9CZKnIFYoKDVo1TiRnIp1zmrqhVSWt5Rzcf6K/qLsY/CaP31x+dfnxq3rPDK5fr5obg8vFyxvGnL9v7lx3v/cHDV9/+bDvaH9Rd7EGx+Z4A5bDW/jMnjF+iIwZF80EaCClb3y6gmaFJEaFcSINxSrYqEVG28NrANbbkba5Cz9ETFlMWhFEedUk1oK77E4TQBAisRLWPouMdwdOZNIWzw4i5Skr0izQCUjpGylBwlRKMQNXKqXqFFaAE9mqRQIvErQiQ/wQt0RvF+gcRAGUOxHJUpkXnJokNCIyWAlbi721yOSwExn/vMgpFULKZmipGUBSaGE7RRSaGbxIuCKRPbVIEIzGO4pQ2p1GTCNCCwgO9yIEYTInZSHACeHadq0AJ7LZEdnViizwFd2ARIUVCT/3JCg5QBOnRmmRiVAhpESBaqwAJzL6UmQ4/GkRFloRShsRB1EIGVgSF5ozGKGMDlOshNEPRDbwFRRoiYm1UAwekoJyuDoJcysyLahhKIQw4m+JtKdhUl+YkQmAZtWFCi2xZnOEjYj79bsUTFHA5IhFaYjIsAKcyKQj0p6G4LNILP2BWphEiyQmhZrVIhwwgJJQESh4Cu7DSujEVsJkEXRF1lqRLXiUSgD9jYigVgS0HXW534YMXLMUHxJkhEypmGElBI3I5iEnsr3VfrIXQCSQ6ALEz89aoMUgy6BZbcW9q5ReRDCOWLpwYkjJsRKC7cO1yJ5dTuTAZleEJTDuiFJY5qojYimzViQmTkQnyDTRToTCiqxqaAXDMRy7R15k+9CoFXFvCaUFFISBhTM0kAwZA0m/FqEEV6Ci6qEIGlOsiN27OiKLw5OuyDQhGaa6zBqRlpiDJqggXoRQp8SozEHgWO7x8OqLOlk1Ubd3kSDoisQMFFzAEzE00CniGXCq9qgybSicSExIiWnkugss49zNu1Vmv9hf1N196FBHZDRuRI4EXoREYIkq6ieXGgT3qdY0e4iI6xG86uPSiZjlIhduVnd1n+7rLeoeP3nct6fP3HNvFq/fDmpOHztpt++f3zg/eP7sjvE3as8PGmz35csu23qevBsM3j0ZnL8xGDwb5K7n/B27uW8GHVDx4tYteJMT/d3VXQ92dc6I31Y9Bw4DyJiaIUpCQ6uiaKCRL5kpPDoBmL8RQuZQ7fM2Ess4e+s2+mZ9cqAW2TrgE/ywUz3EpEpCSi1h4RwNRIDngKj3CFzWVa7YaQGgjlxqucjNC/2LjIa1iFdYbBxpRbYnTgTuEImCRSRoCJkvg1gQWl8GSIlMo8zq5Yz/W4MlXHp49ir6Zri3Ejm06USsxqIRGT0YA1qHCQiRhgAwCg3u/y+AaRYXgCpkvSIGnZPMfy5g4VjCo1vnLvwxkfW9TsS+hmuNyGgMzbiUULIWydAgpfWDIwZUDssUBsDOc/nV2+fuom+21xZLRDaCWkTNChZB8Fok7cReFqFDrCOApDuH24cPex9a14boitg3ADaHTsQuI0MW5wIlp6ReltSImZs1FBxG8ypfTZWfA6MdRc4+uo2emYyXioyPuB57KSalogC04s6knadVmmnUxGEWeZFw6vrytMQO3Lzba41sBcHG+uYSEZ+v9niRMGGFBuW5EQBta4TaMNtmXi1l+9ApjXb0uHSr16G1PraVvobtjUpk40gjsnZkseeAF8mrm5mGuS1pa+Rj1DiBaEZoJSLwMzy8dOlcryJ71/daC+vid7BoRYaLPUMvwhIiAJjIj5qwEYk4wWfmUaoSOCh+iqsXbt/uW2SBjog99N2jRsRqCQKHohQAbYOVNG2C5ayQEr/CuU/M3OuvkzAUAPDa0iUwNtjER6Y1Q8kFRPAZ38Z3olFjjDE+4iMa9YNf9Ismpvi/y2nPKNtwboapJwSluze3v5WWe9rePbrYLcS3akgUz0HyUEP2HMCNluUERtaJ2YXSN5DTzoaQR5e2BoGzgcQRZRriTDCFAohrdifbx8zQFBwIoOE2iItXOoVQ7qdFCwT+oaxQkL6rIfshc7XNzLoCYrhO6W42L/rt0pWOIYxCw7RCZBRDi+gaHj0S9GBCdNoGcXZKuNwgrl3Tw+/BblJdypm/DGEMIZSLgtS7kd2eSgPNrqYGpNwUcvH+NQJxfC+mut1CctGAZFLR+tgiO/0BQKYzmH5wIHIAS9Ob9PWL1+7iamgnqa58cvbMmSrZ/QIXJ6/CUaW7Z6sE98KnM2dkdSkhd4V4Xl6u1mxfv693Jz+73tzG/Obxmj8SR99rlzpd1ZUkjTzIRHSLwBEmqkWs0dCTEloEt1U6JbSI3cNLAhlUHYOy3GwH0P07V56SDkMSi1YQ3zIQa7QAwUFWj0qBExAMJcLYtynk6c2Lm4xaaWupsNohkmgIHDUkF46tIf19E8hu6/mgI80+Mt0HfX9rIUVbKadNSJ78CkIBQjm+84PyyBGAwOXy3+25291FKvncZRIjpEEK5agVwpgvpRRVyY6NkIFj/mxnYVIhKPeXW5HcEqqeNUTcgnOk76lxEzJeCYGSAda178KtNTl6oAXiltPtQHxLQ2K8Zhmc8/QXEMZWQNzZrQS5rvnV0N6ZgzjbgQwts4CuICNVU+BA8RyENSDD3aAIkyaknN09exxY1O0faOkjtmvjaLYlSIjXmacaaLQAiSPCFyDw/7GHEFWCEFdBgnoHv+00IY6DT/yuIcwsoEP4FC7zaAEy9n4J8S0mqSo5NIMEp6AZjgZm8h0D0hSn3AqEqppZBlKovkFXQUTRDiE67MA+Rsi0dwP7gnOk2SITBxtuS5B01kJSwKNBtkEseEV1mFZI2Me6nutNCNmxMWG0v8+3QA9c3UfOcN25hnB43ynXPmEgpAXCqYEkXw/N7h73UM8udRriBtOFzr2lPVlawGQ2g8D4laVRrCEci8Pkl5AkZHIIoI8IsU9XE1nEJQMHplIch8zHYDu3lhyZ5VoIOrSgbknYhGiADBuQJASIJllyBJB00qitE8BHg0wHyx17sNM5wgy0vldDklTNNKQtkN0NiG8tQT4GjT4Na5891yXLERwlfxQHcQPzakiS1H0mg+kexpYhdLfuKwiBYw7yoTnM7vvlnM8fbuQ/cfzgwRWpbqwhSeZhgYQq5wLOa0BEoSEZQtaJP93KVEFWpLoP5Hm1XHvhJBZIWK+Vu16q5duz8jMWQ0578lX19VB+9SQs7MKxS0LxBQnffvbd+13rxL3bG6S6Jg6/OLhqVXcsvebiIBEFp0QfuMNEB9xqTKgWgRO2CP76GEr4dsbs9VpkSrYQYa4gUYgQTkUBFRXFEgSiHTLWkHfOv/u4PJ2/Ck7jggsNIbmAiuaiAREKgq+LNkhVwt6uB3Ed0n3oqZGIRiKiFN9xylXP5g0IYwYypjPIMAQvQChA0h9rQvqkkxDpLWKCDT2sNJ9Bhruh1lHcgPjMt2aQECBgE1LgnOOYhlUJl+vdM119zMZDOmxCfIoQIhHiW5l6JiqItQRhEiFQeQ3hFErI2wn5mxGNc6HHK8kIyTKKBCLxeZFJGSLEn0FGNaRIECLVa1TKChLFADkyIH8zKKdcVxm6gs+WIBALkOEoCbE8yiUHSEscOEb+ZlBBudlgmaQGIqDzZ2ZSogmpsyYmc4D8ByGxS2Tp2NNPQlFgUyleKySpIburNZ2q2f6DkJiTJmEcQVoHffV3kMirISROwv8Lohf9o3gekqVzEKpd1IMX61f+CwinCKGcUzhLEkcGgqMTNs3QQ0g0B0kz8u+D03raUxQagn1X+dohOdVDtnnM//v4ycwZrEYMAmHYjuaabchZSiBgQoh0oYftqZe97wu00Afopb368vV3aKJNFloo1Z9d2biX+aKjzmhiejYWFA6fFATFFgTJhUXjVARImLoZiEGo2gUZp2sgqvGOlEH3d3GoC5AJ1vEKV1teI/IwFoOEynqYOEixEUg3+DuRQXfJa6l4K5YNZX9nEHYPVCUgHw37laO4TfOAiDTUfTz5sBWx6xs2Z5+OvvBVfCqZ92tZofLh5EuEtu54s+jl+Pp88x/agCRvYFYNd3/0896E8EPKtUXmOLUoSDY8QMx9PO7VrcivcQILPILP7y2pH6DB+Tcg+E3R6krbIkCkBAggANMNHEfxPz8DEa43Ir8AMvCRK15s4PzSAqLtOt8AZBw2IPxoVX5NI9/sWW9B0m1cmKwO7Fd9UxzIrQog2gYoKVcQ1VwHqWOQ3mmRV1IBJPQaQ7iWk/SOUrcLCBgjkLn7ApnEqtqJvJI9td5u2GjoggrC0RiiDQjk8MU1gAcZN2puEKraGqNVRWe2fexDHmgBQX4qBTH2jGSEvE1ArMgqdJO5CiCD2l1ONgfXpCBIHg0YFsa4ZUlkVdvBveEQjsQeCFndrYSzDjCGN0ragkCgtsb84dpdEDTHKjIA2ZMqIYkyY+g0Yk8m5VO2Kxnkct2I6vANjN5pn7iE3MPvwvsCnOFPpJUoTZ/t3TFqBDEMBdB/CsGHDwKBarmZ1qdItTdIkzrHz9bWZNmwG7IBv1I2wn9mwJ3m78dSPclLTGB+hleYwPxjOPEKE5i3bft9wzwsSuFaVpIEUFhkwXDCBrp0GE45TiUwsne+Q4QZmGBx2a9AmNNiKWu8X+stN1VqVU18hHkisaAjrR9RWan2k8AaFea4TTJwWAzlsmB+iALb/iOdtrbhzDK2qnPoLdWDEFLGcmZIKfXOIcFwU02l+ZvVZLQ3IhPbQx4H5VPtXk3yaEFqyj8vuLTP1skexM0n1yC8lnnIiTsNPCgT3yjHo9L3vb1t2//2BRhYP0rBhY67AAAAAElFTkSuQmCC",
+      "public": true
+    }
+  ],
+  "scada": false,
+  "tags": null
+}

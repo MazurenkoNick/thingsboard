@@ -36,6 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.RegexUtils;
 import org.thingsboard.monitoring.client.TbClient;
@@ -47,20 +49,25 @@ import org.thingsboard.monitoring.config.transport.TransportMonitoringTarget;
 import org.thingsboard.monitoring.config.transport.TransportType;
 import org.thingsboard.monitoring.util.ResourceUtils;
 import org.thingsboard.server.common.data.DataConstants;
+import org.thingsboard.server.common.data.Dashboard;
+import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.DeviceProfile;
 import org.thingsboard.server.common.data.DeviceProfileType;
 import org.thingsboard.server.common.data.DeviceTransportType;
+import org.thingsboard.server.common.data.ShortCustomerInfo;
 import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.cf.CalculatedField;
+import org.thingsboard.server.common.data.id.DashboardId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
 import org.thingsboard.server.common.data.cf.configuration.ArgumentType;
-import org.thingsboard.server.common.data.cf.configuration.Output;
-import org.thingsboard.server.common.data.cf.configuration.OutputType;
 import org.thingsboard.server.common.data.cf.configuration.ReferencedEntityKey;
 import org.thingsboard.server.common.data.cf.configuration.ScriptCalculatedFieldConfiguration;
+import org.thingsboard.server.common.data.cf.configuration.TimeSeriesOutput;
 import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.device.credentials.lwm2m.LwM2MBootstrapClientCredentials;
 import org.thingsboard.server.common.data.device.credentials.lwm2m.LwM2MDeviceCredentials;
@@ -77,16 +84,22 @@ import org.thingsboard.server.common.data.id.ConverterId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.kv.KvEntry;
-import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleChainType;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.server.common.data.security.DeviceCredentialsType;
+import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.group.EntityGroupInfo;
+import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.User;
 
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -98,10 +111,17 @@ import static org.thingsboard.monitoring.service.BaseHealthChecker.TEST_TELEMETR
 @RequiredArgsConstructor
 public class MonitoringEntityService {
 
+    private static final String DASHBOARD_TITLE = "[Monitoring] Cloud monitoring";
+    private static final String DASHBOARD_RESOURCE_PATH = "dashboard_cloud_monitoring.json";
+    private static final String ENTITY_GROUP_PUBLIC_DASHBOARDS_NAME = "[Monitoring] Public dashboards";
+    private static final String ENTITY_GROUP_PUBLIC_ASSETS_NAME = "[Monitoring] Public assets";
+
     private final TbClient tbClient;
 
     @Value("${monitoring.calculated_fields.enabled:true}")
     private boolean calculatedFieldsMonitoringEnabled;
+
+    DashboardId dashboardId = null;
 
     public void checkEntities() {
         RuleChain ruleChain = tbClient.getRuleChains(RuleChainType.CORE, new PageLink(10)).getData().stream()
@@ -117,27 +137,38 @@ public class MonitoringEntityService {
         int currentVersion = Integer.parseInt(attributes.getOrDefault("version", "0"));
         int newVersion = ruleChainDescriptor.get("version").asInt();
         if (currentVersion == newVersion) {
-            log.info("Not updating rule chain, version is the same ({})", currentVersion);
-            return;
+            log.debug("Not updating rule chain, version is the same ({})", currentVersion);
         } else {
             log.info("Updating rule chain '{}' from version {} to {}", ruleChain.getName(), currentVersion, newVersion);
+
+            String metadataJson = RegexUtils.replace(ruleChainDescriptor.get("metadata").toString(),
+                    "\\$\\{MONITORING:(.+?)}", matchResult -> {
+                        String key = matchResult.group(1);
+                        String value = attributes.get(key);
+                        if (value == null) {
+                            throw new IllegalArgumentException("No attribute found for key " + key);
+                        }
+                        log.info("Using {}: {}", key, value);
+                        return value;
+                    });
+            RuleChainMetaData metaData = JacksonUtil.fromString(metadataJson, RuleChainMetaData.class);
+            metaData.setRuleChainId(ruleChainId);
+            tbClient.saveRuleChainMetaData(metaData);
+            tbClient.saveEntityAttributesV2(ruleChainId, DataConstants.SERVER_SCOPE, JacksonUtil.newObjectNode()
+                    .put("version", newVersion));
         }
 
-        String metadataJson = RegexUtils.replace(ruleChainDescriptor.get("metadata").toString(),
-                "\\$\\{MONITORING:(.+?)}", matchResult -> {
-                    String key = matchResult.group(1);
-                    String value = attributes.get(key);
-                    if (value == null) {
-                        throw new IllegalArgumentException("No attribute found for key " + key);
-                    }
-                    log.info("Using {}: {}", key, value);
-                    return value;
-                });
-        RuleChainMetaData metaData = JacksonUtil.fromString(metadataJson, RuleChainMetaData.class);
-        metaData.setRuleChainId(ruleChainId);
-        tbClient.saveRuleChainMetaData(metaData);
-        tbClient.saveEntityAttributesV2(ruleChainId, DataConstants.SERVER_SCOPE, JacksonUtil.newObjectNode()
-                .put("version", newVersion));
+        Asset asset = getOrCreateMonitoringAsset();
+        Dashboard dashboard = getOrCreateMonitoringDashboard();
+        this.dashboardId = Optional.ofNullable(dashboard).map(Dashboard::getId).orElse(null);
+
+        // In PE, use public entity groups instead of CE public customer assignment
+        EntityGroupInfo publicAssetsGroup = getOrCreatePublicGroup(ENTITY_GROUP_PUBLIC_ASSETS_NAME, EntityType.ASSET);
+        addEntityToGroupIfMissing(publicAssetsGroup, asset.getId());
+
+        EntityGroupInfo publicDashboardsGroup = getOrCreatePublicGroup(ENTITY_GROUP_PUBLIC_DASHBOARDS_NAME, EntityType.DASHBOARD);
+        addEntityToGroupIfMissing(publicDashboardsGroup, dashboard.getId());
+
     }
 
     public Asset getOrCreateMonitoringAsset() {
@@ -263,12 +294,166 @@ public class MonitoringEntityService {
                 TEST_TELEMETRY_KEY, testDataArgument
         ));
         configuration.setExpression("return { \"" + TEST_CF_TELEMETRY_KEY + "\": " + TEST_TELEMETRY_KEY + " + \"-cf\" };");
-        Output output = new Output();
-        output.setType(OutputType.TIME_SERIES);
-        configuration.setOutput(output);
+        configuration.setOutput(new TimeSeriesOutput());
         calculatedField.setConfiguration(configuration);
         calculatedField.setDebugMode(true);
         tbClient.saveCalculatedField(calculatedField);
+    }
+
+    @Deprecated // this method stays here for easy merge with CE
+    public String getDashboardPublicLink() {
+        String link = "";
+        try {
+            Optional<DashboardInfo> infoOpt = tbClient.getDashboardInfoById(dashboardId);
+            if (infoOpt.isPresent()) {
+                String publicCustomerId = null;
+                Set<ShortCustomerInfo> customers = infoOpt.get().getAssignedCustomers();
+                if (customers != null) {
+                    publicCustomerId = customers.stream()
+                            .filter(ShortCustomerInfo::isPublic)
+                            .map(c -> c.getCustomerId().getId().toString())
+                            .findFirst().orElse(null);
+                }
+                if (publicCustomerId != null) {
+                    link = buildPublicDashboardLink(dashboardId, publicCustomerId);
+                    log.info("Public Monitoring dashboard link: {}", link);
+                } else {
+                    log.warn("Dashboard is not assigned to public customer. Public link can't be generated.");
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to get a public link to Monitoring dashboard ", e);
+        }
+        return link;
+    }
+
+    public String getDashboardPublicLinkPE() {
+        String link = "";
+        try {
+            if (dashboardId == null) {
+                return link;
+            }
+            Optional<DashboardInfo> infoOpt = tbClient.getDashboardInfoById(dashboardId);
+            if (infoOpt.isPresent()) {
+                // In PE, public link is based on public entity group that contains this dashboard
+                EntityGroupInfo publicDashboardsGroup = getOrCreatePublicGroup(ENTITY_GROUP_PUBLIC_DASHBOARDS_NAME, EntityType.DASHBOARD);
+                JsonNode additionalInfo = publicDashboardsGroup.getAdditionalInfo();
+                String publicCustomerId = null;
+                if (additionalInfo != null && additionalInfo.has("publicCustomerId")) {
+                    publicCustomerId = additionalInfo.get("publicCustomerId").asText();
+                }
+                if (publicCustomerId != null && !publicCustomerId.isEmpty()) {
+                    link = buildPublicDashboardLink(dashboardId, publicCustomerId);
+                    log.info("Public Monitoring dashboard link: {}", link);
+                } else {
+                    log.warn("Public dashboards group doesn't contain publicCustomerId. Public link can't be generated.");
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to get a public link to Monitoring dashboard ", e);
+        }
+        return link;
+    }
+
+    private Dashboard getOrCreateMonitoringDashboard() {
+        Dashboard existing = findDashboardByTitle(DASHBOARD_TITLE).orElse(null);
+        if (existing != null) {
+            log.debug("Found Monitoring dashboard '{}' with id {}", existing.getTitle(), existing.getId());
+            return existing;
+        }
+
+        Dashboard dashboardFromResource = ResourceUtils.getResource(DASHBOARD_RESOURCE_PATH, Dashboard.class);
+        dashboardFromResource.setTitle(DASHBOARD_TITLE);
+        //Optional.ofNullable(existing).map(Dashboard::getId).ifPresent(dashboardFromResource::setId);
+        Dashboard saved = tbClient.saveDashboard(dashboardFromResource);
+        log.info("Created Monitoring dashboard '{}' with id {}", saved.getTitle(), saved.getId());
+        return saved;
+    }
+
+    private Optional<Dashboard> findDashboardByTitle(String title) {
+        // Use text search first and then filter by exact title
+        PageData<DashboardInfo> page = tbClient.getTenantDashboards(new PageLink(10, 0, title));
+        return page.getData().stream()
+                .filter(info -> title.equals(info.getTitle()))
+                .findFirst()
+                .flatMap(info -> tbClient.getDashboardById(info.getId()));
+    }
+
+    private String buildPublicDashboardLink(DashboardId dashboardId, String publicCustomerId) {
+        String base = getBaseUrl();
+        return String.format("%s/dashboard/%s?publicId=%s", base, dashboardId.getId().toString(), publicCustomerId);
+    }
+
+    private EntityGroupInfo getOrCreatePublicGroup(String groupName, EntityType type) {
+        // Owner is the current tenant
+        EntityId ownerId = tbClient.getUser().map(User::getOwnerId).orElseThrow();
+        // Try to find existing group by owner and name
+        EntityGroupInfo group = tbClient.getEntityGroupInfoByOwnerAndNameAndType(ownerId, type, groupName)
+                .orElse(null);
+        if (group == null) {
+            EntityGroup newGroup = new EntityGroup();
+            newGroup.setName(groupName);
+            newGroup.setType(type);
+            newGroup.setOwnerId(ownerId);
+            EntityGroupInfo saved = tbClient.saveEntityGroup(newGroup);
+            // Make group public (idempotent)
+            try {
+                tbClient.makeEntityGroupPublic(saved.getId());
+            } catch (HttpClientErrorException e) {
+                if (!(e.getStatusCode() == HttpStatus.BAD_REQUEST &&
+                        e.getResponseBodyAsString() != null &&
+                        e.getResponseBodyAsString().contains("already public"))) {
+                    throw e;
+                }
+            }
+            // Refetch to ensure updated additionalInfo (isPublic, publicCustomerId)
+            return tbClient.getEntityGroupById(saved.getId()).orElse(saved);
+        } else {
+            if (!group.isPublic()) {
+                try {
+                    tbClient.makeEntityGroupPublic(group.getId());
+                } catch (HttpClientErrorException e) {
+                    if (!(e.getStatusCode() == HttpStatus.BAD_REQUEST &&
+                            e.getResponseBodyAsString() != null &&
+                            e.getResponseBodyAsString().contains("already public"))) {
+                        throw e;
+                    }
+                }
+                group = tbClient.getEntityGroupById(group.getId()).orElse(group);
+            }
+            return group;
+        }
+    }
+
+    private void addEntityToGroupIfMissing(EntityGroupInfo group, EntityId entityId) {
+        boolean present = false;
+        try {
+            // Check presence using REST call
+            present = tbClient.getGroupEntity(group.getId(), entityId).isPresent();
+        } catch (HttpClientErrorException e) {
+            String body = e.getResponseBodyAsString();
+            if (e.getStatusCode() == HttpStatus.BAD_REQUEST && body != null && body.contains("not present in entity group")) {
+                // Treat as not present; we'll add it below
+                present = false;
+            } else {
+                throw e;
+            }
+        }
+        if (!present) {
+            tbClient.addEntitiesToEntityGroup(group.getId(), List.of(entityId));
+        }
+    }
+
+    private String getBaseUrl() {
+        // TbClient.baseURL contains the root url, without trailing slash
+        try {
+            var baseUrlField = tbClient.getClass().getSuperclass().getDeclaredField("baseURL");
+            baseUrlField.setAccessible(true);
+            return (String) baseUrlField.get(tbClient);
+        } catch (Exception e) {
+            log.warn("Unable to access baseURL from RestClient. Falling back to http://localhost:8080");
+            return "http://localhost:8080";
+        }
     }
 
     public void checkEntities(IntegrationMonitoringConfig config, IntegrationMonitoringTarget target) {

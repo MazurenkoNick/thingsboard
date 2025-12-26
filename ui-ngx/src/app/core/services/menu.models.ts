@@ -46,6 +46,8 @@ import {
   isHomeMenuItem,
   MenuItem
 } from '@shared/models/custom-menu.models';
+import { calculatedFieldsEntityTypeList } from '@shared/models/calculated-field.models';
+import { alarmRuleEntityTypeList } from "@shared/models/alarm-rule.models";
 
 export declare type MenuSectionType = 'link' | 'toggle';
 
@@ -133,7 +135,9 @@ export enum MenuId {
   domains = 'domains',
   clients = 'clients',
   audit_log = 'audit_log',
+  alarms_center = 'alarms_center',
   alarms = 'alarms',
+  alarm_rules = 'alarm_rules',
   dashboards = 'dashboards',
   entities = 'entities',
   devices = 'devices',
@@ -144,6 +148,7 @@ export enum MenuId {
   device_profiles = 'device_profiles',
   asset_profiles = 'asset_profiles',
   customers = 'customers',
+  calculated_fields = 'calculated_fields',
   rule_chains = 'rule_chains',
   edge_management = 'edge_management',
   edges = 'edges',
@@ -197,7 +202,8 @@ export enum MenuId {
   reporting = 'reporting',
   report_templates = 'report_templates',
   report_scheduling = 'report_scheduling',
-  reports = 'reports'
+  reports = 'reports',
+  trendz_analytics = 'trendz_analytics'
 }
 
 declare type MenuFilter = (_authState: AuthState, userPermissionsService: UserPermissionsService) => boolean;
@@ -586,13 +592,33 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
     }
   ],
   [
-    MenuId.alarms,
+    MenuId.alarms_center,
     {
-      id: MenuId.alarms,
+      id: MenuId.alarms_center,
       name: 'alarm.alarms',
       type: 'link',
       path: '/alarms',
       icon: 'mdi:alert-outline'
+    }
+  ],
+  [
+    MenuId.alarms,
+    {
+      id: MenuId.alarms,
+      name: 'alarm.alarm-list',
+      type: 'link',
+      path: '/alarms/alarms',
+      icon: 'mdi:alert-outline'
+    }
+  ],
+  [
+    MenuId.alarm_rules,
+    {
+      id: MenuId.alarm_rules,
+      name: 'alarm-rule.alarm-rules',
+      type: 'link',
+      path: '/alarms/alarm-rules',
+      icon: 'tune'
     }
   ],
   [
@@ -693,6 +719,16 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       type: 'link',
       path: '/customers',
       icon: 'supervisor_account'
+    }
+  ],
+  [
+    MenuId.calculated_fields,
+    {
+      id: MenuId.calculated_fields,
+      name: 'entity.type-calculated-fields',
+      type: 'link',
+      path: '/calculatedFields',
+      icon: 'mdi:function-variant',
     }
   ],
   [
@@ -1252,14 +1288,24 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
     }
   ],
   [
+    MenuId.trendz_analytics,
+    {
+      id: MenuId.trendz_analytics,
+      name: 'trendz-analytics.trendz-analytics',
+      type: 'link',
+      path: '/analytics',
+      icon: 'trendz',
+      isNew: true
+    }
+  ],
+  [
     MenuId.trendz_settings,
     {
       id: MenuId.trendz_settings,
-      name: 'admin.trendz',
-      fullName: 'admin.trendz-settings',
+      name: 'trendz-analytics.trendz-settings',
       type: 'link',
-      path: '/settings/trendz',
-      icon: 'trendz-settings'
+      path: '/trendzSettings',
+      icon: 'trendz'
     }
   ]
 ]);
@@ -1268,6 +1314,11 @@ const menuFilters = new Map<MenuId, MenuFilter>([
   [
     MenuId.alarms, (_authState, userPermissionsService) =>
           userPermissionsService.hasReadGenericPermission(Resource.ALARM)
+  ],
+  [
+    MenuId.alarm_rules, (authState, userPermissionsService) =>
+          authState.authUser.authority === Authority.TENANT_ADMIN &&
+          alarmRuleEntityTypeList.some(entityType => userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.READ_CALCULATED_FIELD, entityType))
   ],
   [
     MenuId.dashboard_all, (_authState, userPermissionsService) =>
@@ -1369,6 +1420,11 @@ const menuFilters = new Map<MenuId, MenuFilter>([
   [
     MenuId.converters, (authState, userPermissionsService) =>
           authState.authUser.authority === Authority.TENANT_ADMIN && userPermissionsService.hasReadGenericPermission(Resource.CONVERTER)
+  ],
+  [
+    MenuId.calculated_fields, (authState, userPermissionsService) =>
+          authState.authUser.authority === Authority.TENANT_ADMIN
+          && calculatedFieldsEntityTypeList.some(entityType => userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.READ_CALCULATED_FIELD, entityType))
   ],
   [
     MenuId.rule_chains, (authState, userPermissionsService) =>
@@ -1575,14 +1631,13 @@ const menuFilters = new Map<MenuId, MenuFilter>([
             userPermissionsService.hasReadGenericPermission(Resource.REPORT)
   ],
   [
-    MenuId.trendz_settings, (authState, userPermissionsService) =>
-            authState.authUser.authority === Authority.TENANT_ADMIN &&
-            userPermissionsService.hasReadGenericPermission(Resource.ADMIN_SETTINGS)
-  ],
-  [
     MenuId.ai_models, (authState, userPermissionsService) =>
             authState.authUser.authority === Authority.TENANT_ADMIN &&
             userPermissionsService.hasReadGenericPermission(Resource.AI_MODEL)
+  ],
+  [
+    MenuId.trendz_settings, (authState) =>
+            authState.authUser.authority === Authority.SYS_ADMIN
   ]
 ]);
 
@@ -1637,6 +1692,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.custom_menu}
         ]
       },
+      {id: MenuId.trendz_settings},
       {
         id: MenuId.settings,
         pages: [
@@ -1667,7 +1723,13 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
     Authority.TENANT_ADMIN,
     [
       {id: MenuId.home},
-      {id: MenuId.alarms},
+      {
+        id: MenuId.alarms_center,
+        pages: [
+          {id: MenuId.alarms},
+          {id: MenuId.alarm_rules}
+        ]
+      },
       {
         id: MenuId.dashboards,
         pages: [
@@ -1745,6 +1807,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.converters}
         ]
       },
+      {id: MenuId.calculated_fields},
       {id: MenuId.rule_chains},
       {
         id: MenuId.edge_management,
@@ -1762,6 +1825,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.converter_templates}
         ]
       },
+      {id: MenuId.trendz_analytics},
       {
         id: MenuId.features,
         pages: [
@@ -1824,7 +1888,6 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.notification_settings},
           {id: MenuId.repository_settings},
           {id: MenuId.auto_commit_settings},
-          {id: MenuId.trendz_settings},
           {id: MenuId.ai_models}
         ]
       },
@@ -1913,6 +1976,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.edge_shared},
         ]
       },
+      {id: MenuId.trendz_analytics},
       {
         id: MenuId.resources,
         pages: [
@@ -1976,7 +2040,7 @@ const defaultHomeSectionMap = new Map<Authority, HomeSectionReference[]>([
         name: 'admin.system-settings',
         places: [MenuId.general, MenuId.mail_server,
           MenuId.notification_settings, MenuId.security_settings, MenuId.oauth2, MenuId.domains, MenuId.mobile_apps,
-          MenuId.clients, MenuId.two_fa, MenuId.resources_library, MenuId.queues]
+          MenuId.clients, MenuId.two_fa, MenuId.resources_library, MenuId.queues, MenuId.trendz_settings]
       },
       {
         name: 'white-labeling.white-labeling',
@@ -2070,7 +2134,7 @@ const defaultHomeSectionMap = new Map<Authority, HomeSectionReference[]>([
       {
         name: 'admin.system-settings',
         places: [MenuId.home_settings, MenuId.mail_server, MenuId.notification_settings, MenuId.self_registration,
-          MenuId.two_fa, MenuId.resources_library, MenuId.repository_settings, MenuId.auto_commit_settings, MenuId.trendz_settings]
+          MenuId.two_fa, MenuId.resources_library, MenuId.repository_settings, MenuId.auto_commit_settings]
       }
     ]
   ],

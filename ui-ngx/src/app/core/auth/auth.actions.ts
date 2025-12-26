@@ -33,7 +33,6 @@ import { Action } from '@ngrx/store';
 import { AuthUser, User } from '@shared/models/user.model';
 import { AuthPayload } from '@core/auth/auth.models';
 import { UserSettings } from '@shared/models/user-settings.models';
-import { TrendzSettings } from "@shared/models/trendz-settings.models";
 
 export enum AuthActionTypes {
   AUTHENTICATED = '[Auth] Authenticated',
@@ -47,7 +46,6 @@ export enum AuthActionTypes {
   UPDATE_OPENED_MENU_SECTION = '[Preferences] Update Opened Menu Section',
   PUT_USER_SETTINGS = '[Preferences] Put user settings',
   DELETE_USER_SETTINGS = '[Preferences] Delete user settings',
-  UPDATE_TRENDZ_SETTINGS = '[Auth] Update Trendz Settings',
 }
 
 export class ActionAuthAuthenticated implements Action {
@@ -114,13 +112,7 @@ export class ActionPreferencesDeleteUserSettings implements Action {
   constructor(readonly payload: Array<NestedKeyOf<UserSettings>>) {}
 }
 
-export class ActionAuthUpdateTrendzSettings implements Action {
-  readonly type = AuthActionTypes.UPDATE_TRENDZ_SETTINGS;
-
-  constructor(readonly payload: TrendzSettings) {}
-}
-
 export type AuthActions = ActionAuthAuthenticated | ActionAuthUnauthenticated |
   ActionAuthLoadUser | ActionAuthUpdateUserDetails | ActionAuthUpdateLastPublicDashboardId | ActionAuthUpdateHasRepository |
   ActionPreferencesUpdateOpenedMenuSection | ActionPreferencesPutUserSettings | ActionPreferencesDeleteUserSettings |
-  ActionAuthUpdateAuthUser | ActionUpdateMobileQrCodeEnabled | ActionAuthUpdateTrendzSettings;
+  ActionAuthUpdateAuthUser | ActionUpdateMobileQrCodeEnabled;

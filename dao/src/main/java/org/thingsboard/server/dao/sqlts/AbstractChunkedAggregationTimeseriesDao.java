@@ -220,5 +220,5 @@ public abstract class AbstractChunkedAggregationTimeseriesDao extends AbstractSq
                 throw new IllegalArgumentException("Not supported aggregation type: " + aggregation);
         }
     }
-}
 
+}

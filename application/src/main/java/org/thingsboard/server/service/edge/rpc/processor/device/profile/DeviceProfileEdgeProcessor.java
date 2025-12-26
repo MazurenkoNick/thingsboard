@@ -117,7 +117,7 @@ public class DeviceProfileEdgeProcessor extends BaseDeviceProfileProcessor imple
                 DeviceProfile deviceProfile = edgeCtx.getDeviceProfileService().findDeviceProfileById(edgeEvent.getTenantId(), deviceProfileId);
                 if (deviceProfile != null) {
                     UpdateMsgType msgType = getUpdateMsgType(edgeEvent.getAction());
-                    DeviceProfileUpdateMsg deviceProfileUpdateMsg = EdgeMsgConstructorUtils.constructDeviceProfileUpdatedMsg(msgType, deviceProfile);
+                    DeviceProfileUpdateMsg deviceProfileUpdateMsg = EdgeMsgConstructorUtils.constructDeviceProfileUpdatedMsg(msgType, deviceProfile, edgeVersion);
                     return DownlinkMsg.newBuilder()
                             .setDownlinkMsgId(EdgeUtils.nextPositiveInt())
                             .addDeviceProfileUpdateMsg(deviceProfileUpdateMsg)
@@ -156,5 +156,4 @@ public class DeviceProfileEdgeProcessor extends BaseDeviceProfileProcessor imple
     public EdgeEventType getEdgeEventType() {
         return EdgeEventType.DEVICE_PROFILE;
     }
-
 }

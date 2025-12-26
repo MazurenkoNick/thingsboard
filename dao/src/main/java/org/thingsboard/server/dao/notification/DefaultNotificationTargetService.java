@@ -37,36 +37,25 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.NotificationTargetId;
-import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.TenantProfileId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.notification.NotificationRequestStatus;
 import org.thingsboard.server.common.data.notification.NotificationType;
 import org.thingsboard.server.common.data.notification.info.RuleOriginatedNotificationInfo;
 import org.thingsboard.server.common.data.notification.targets.NotificationTarget;
 import org.thingsboard.server.common.data.notification.targets.NotificationTargetConfig;
-import org.thingsboard.server.common.data.notification.targets.platform.CustomerUsersFilter;
 import org.thingsboard.server.common.data.notification.targets.platform.PlatformUsersNotificationTargetConfig;
-import org.thingsboard.server.common.data.notification.targets.platform.TenantAdministratorsFilter;
-import org.thingsboard.server.common.data.notification.targets.platform.UserGroupListFilter;
-import org.thingsboard.server.common.data.notification.targets.platform.UserListFilter;
-import org.thingsboard.server.common.data.notification.targets.platform.UserRoleFilter;
 import org.thingsboard.server.common.data.notification.targets.platform.UsersFilter;
 import org.thingsboard.server.common.data.notification.targets.platform.UsersFilterType;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.role.Role;
-import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.entity.AbstractEntityService;
 import org.thingsboard.server.dao.entity.EntityDaoService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
-import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.user.UserService;
 
 import java.util.List;
@@ -86,7 +75,6 @@ public class DefaultNotificationTargetService extends AbstractEntityService impl
     private final NotificationRequestDao notificationRequestDao;
     private final NotificationRuleDao notificationRuleDao;
     private final UserService userService;
-    private final RoleService roleService;
 
     @Override
     public NotificationTarget saveNotificationTarget(TenantId tenantId, NotificationTarget notificationTarget) {
@@ -137,60 +125,7 @@ public class DefaultNotificationTargetService extends AbstractEntityService impl
     @Override
     public PageData<User> findRecipientsForNotificationTargetConfig(TenantId tenantId, PlatformUsersNotificationTargetConfig targetConfig, PageLink pageLink) {
         UsersFilter usersFilter = targetConfig.getUsersFilter();
-        switch (usersFilter.getType()) {
-            case USER_LIST: {
-                List<User> users = ((UserListFilter) usersFilter).getUsersIds().stream()
-                        .limit(pageLink.getPageSize())
-                        .map(UserId::new).map(userId -> userService.findUserById(tenantId, userId))
-                        .filter(Objects::nonNull).collect(Collectors.toList());
-                return new PageData<>(users, 1, users.size(), false);
-            }
-            case USER_GROUP_LIST: {
-                List<EntityGroupId> groups = DaoUtil.fromUUIDs(((UserGroupListFilter) usersFilter).getGroupsIds(), EntityGroupId::new);
-                return userService.findUsersByEntityGroupIds(groups, pageLink);
-            }
-            case USER_ROLE: {
-                List<RoleId> roles = DaoUtil.fromUUIDs(((UserRoleFilter) usersFilter).getRolesIds(), RoleId::new);
-                return userService.findUsersByTenantIdAndRoles(tenantId, roles, pageLink);
-            }
-            case CUSTOMER_USERS: {
-                if (tenantId.equals(TenantId.SYS_TENANT_ID)) {
-                    throw new IllegalArgumentException("Customer users target is not supported for system administrator");
-                }
-                CustomerUsersFilter filter = (CustomerUsersFilter) usersFilter;
-                return userService.findCustomerUsers(tenantId, new CustomerId(filter.getCustomerId()), pageLink);
-            }
-            case TENANT_ADMINISTRATORS: {
-                TenantAdministratorsFilter filter = (TenantAdministratorsFilter) usersFilter;
-                Role tenantAdminsRole = roleService.findOrCreateTenantAdminRole();
-                if (!tenantId.equals(TenantId.SYS_TENANT_ID)) {
-                    return userService.findUsersByTenantsIdsAndRoleId(List.of(tenantId), tenantAdminsRole.getId(), pageLink);
-                } else {
-                    if (isNotEmpty(filter.getTenantsIds())) {
-                        return userService.findUsersByTenantsIdsAndRoleId(filter.getTenantsIds().stream()
-                                        .map(TenantId::fromUUID).collect(Collectors.toList()),
-                                tenantAdminsRole.getId(), pageLink);
-                    } else if (isNotEmpty(filter.getTenantProfilesIds())) {
-                        return userService.findUsersByTenantProfilesIdsAndRoleId(filter.getTenantProfilesIds().stream()
-                                        .map(TenantProfileId::new).collect(Collectors.toList()),
-                                tenantAdminsRole.getId(), pageLink);
-                    } else {
-                        return userService.findAllUsersByRoleId(tenantAdminsRole.getId(), pageLink);
-                    }
-                }
-            }
-            case SYSTEM_ADMINISTRATORS:
-                return userService.findSysAdmins(pageLink);
-            case ALL_USERS: {
-                if (!tenantId.equals(TenantId.SYS_TENANT_ID)) {
-                    return userService.findUsersByTenantId(tenantId, pageLink);
-                } else {
-                    return userService.findAllUsers(pageLink);
-                }
-            }
-            default:
-                throw new IllegalArgumentException("Recipient type not supported");
-        }
+        return userService.findUsersByFilter(tenantId, usersFilter, pageLink);
     }
 
     @Override

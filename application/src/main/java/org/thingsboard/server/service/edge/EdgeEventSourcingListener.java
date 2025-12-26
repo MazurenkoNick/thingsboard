@@ -48,8 +48,8 @@ import org.thingsboard.server.common.data.alarm.AlarmApiCallResult;
 import org.thingsboard.server.common.data.alarm.AlarmComment;
 import org.thingsboard.server.common.data.alarm.EntityAlarm;
 import org.thingsboard.server.common.data.audit.ActionType;
-import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.cf.CalculatedField;
+import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.domain.Domain;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.edge.EdgeEventActionType;
@@ -103,11 +103,6 @@ public class EdgeEventSourcingListener {
 
     @TransactionalEventListener(fallbackExecution = true)
     public void handleEvent(SaveEntityEvent<?> event) {
-        if (Boolean.FALSE.equals(event.getBroadcastEvent())) {
-            log.trace("Ignoring event {}", event);
-            return;
-        }
-
         try {
             if (!isValidSaveEntityEventForEdgeProcessing(event)) {
                 return;
@@ -133,7 +128,7 @@ public class EdgeEventSourcingListener {
         }
         try {
             EntityType entityType = event.getEntityId().getEntityType();
-            if (EntityType.TENANT == entityType || EntityType.EDGE == entityType || EntityType.AI_MODEL == entityType) {
+            if (EntityType.TENANT == entityType || EntityType.EDGE == entityType) {
                 return;
             }
             log.trace("[{}] DeleteEntityEvent called: {}", tenantId, event);
@@ -278,7 +273,7 @@ public class EdgeEventSourcingListener {
                         return !event.getCreated();
                     }
                     break;
-                case API_USAGE_STATE, EDGE, AI_MODEL:
+                case API_USAGE_STATE, EDGE:
                     return false;
                 case DOMAIN:
                     if (entity instanceof Domain domain) {

@@ -67,8 +67,8 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 import static org.thingsboard.server.controller.ControllerConstants.DEVICE_PROFILE_DATA;
 import static org.thingsboard.server.controller.ControllerConstants.DEVICE_PROFILE_ID;
@@ -146,6 +146,7 @@ public class DeviceProfileController extends BaseController {
     @RequestMapping(value = "/deviceProfileInfo/default", method = RequestMethod.GET)
     @ResponseBody
     public DeviceProfileInfo getDefaultDeviceProfileInfo() throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.DEVICE_PROFILE, Operation.READ);
         return checkNotNull(deviceProfileService.findDefaultDeviceProfileInfo(getTenantId()));
     }
 
@@ -214,7 +215,7 @@ public class DeviceProfileController extends BaseController {
             @Parameter(description = "A JSON value representing the device profile.")
             @RequestBody DeviceProfile deviceProfile) throws Exception {
         deviceProfile.setTenantId(getTenantId());
-        checkEntity(deviceProfile.getId(), deviceProfile, Resource.DEVICE_PROFILE, null);
+        checkEntity(deviceProfile.getId(), deviceProfile, Resource.DEVICE_PROFILE);
         return tbDeviceProfileService.save(deviceProfile, getCurrentUser());
     }
 
@@ -302,18 +303,17 @@ public class DeviceProfileController extends BaseController {
     @ResponseBody
     public List<DeviceProfileInfo> getDeviceProfilesByIds(
             @Parameter(description = "A list of device profile ids, separated by comma ','",  array = @ArraySchema(schema = @Schema(type = "string")), required = true)
-            @RequestParam("deviceProfileIds") String[] strDeviceProfileIds) throws ThingsboardException, ExecutionException, InterruptedException {
-        checkArrayParameter("deviceProfileIds", strDeviceProfileIds);
+            @RequestParam("deviceProfileIds") Set<UUID> deviceProfileUUIDs) throws ThingsboardException {
         if (!accessControlService.hasPermission(getCurrentUser(), Resource.DEVICE_PROFILE, Operation.READ)) {
             return Collections.emptyList();
         }
         SecurityUser user = getCurrentUser();
         TenantId tenantId = user.getTenantId();
         List<DeviceProfileId> deviceProfileIds = new ArrayList<>();
-        for (String strDeviceProfileId : strDeviceProfileIds) {
-            deviceProfileIds.add(new DeviceProfileId(toUUID(strDeviceProfileId)));
+        for (UUID deviceProfileUUID : deviceProfileUUIDs) {
+            deviceProfileIds.add(new DeviceProfileId(deviceProfileUUID));
         }
-        return checkNotNull(deviceProfileService.findDeviceProfilesByIdsAsync(tenantId, deviceProfileIds).get());
+        return deviceProfileService.findDeviceProfilesByIds(tenantId, deviceProfileIds);
     }
 
     @ApiOperation(value = "Get Device Profile names (getDeviceProfileNames)",
@@ -326,6 +326,7 @@ public class DeviceProfileController extends BaseController {
             @Parameter(description = "Flag indicating whether to retrieve exclusively the names of device profiles that are referenced by tenant's devices.")
             @RequestParam(value = "activeOnly", required = false, defaultValue = "false") boolean activeOnly) throws ThingsboardException {
         SecurityUser user = getCurrentUser();
+        accessControlService.checkPermission(user, Resource.DEVICE_PROFILE, Operation.READ);
         TenantId tenantId = user.getTenantId();
         return checkNotNull(deviceProfileService.findDeviceProfileNamesByTenantId(tenantId, activeOnly));
     }

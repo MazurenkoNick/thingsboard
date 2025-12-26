@@ -283,6 +283,10 @@ public class EntityGroupController extends AutoCommitController {
             if (entityGroupService.containsLastTenantAdmin(getTenantId(), entityGroupUsers)) {
                 throw new ThingsboardException("At least one tenant administrator must remain!", ThingsboardErrorCode.INVALID_ARGUMENTS);
             }
+        } else {
+            if (EntityType.USER.equals(entityGroup.getType()) && userService.existsInEntityGroup(getCurrentUser().getId(), entityGroupId)) {
+                throw new ThingsboardException("Unable to remove the user group associated with the current user.", ThingsboardErrorCode.INVALID_ARGUMENTS);
+            }
         }
 
         List<GroupPermissionInfo> groupPermissions = new ArrayList<>(
@@ -993,7 +997,7 @@ public class EntityGroupController extends AutoCommitController {
                     for (EntityId ownerId : ownerIds) {
                         customerIds.add(new CustomerId(ownerId.getId()));
                     }
-                    owners.addAll(customerService.findCustomersByTenantIdAndIdsAsync(getTenantId(), customerIds).get()
+                    owners.addAll(customerService.findCustomersByTenantIdAndIds(getTenantId(), customerIds)
                             .stream().filter(customer -> !customer.isPublic()).toList());
                 }
             }

@@ -134,6 +134,7 @@ public class BaseEntityService extends AbstractEntityService implements EntitySe
     private CustomerService customerService;
 
     @Autowired
+    @Lazy
     private UserService userService;
 
     @Autowired
@@ -194,25 +195,25 @@ public class BaseEntityService extends AbstractEntityService implements EntitySe
     private <T extends GroupEntity<? extends EntityId>> PageData<T> getEntityPageDataByTenantId(EntityType entityType, String type, TenantId tenantId, PageLink pageLink, boolean mobile) {
         switch (entityType) {
             case DEVICE:
-                if (type != null && type.trim().length() > 0) {
+                if (type != null && !type.trim().isEmpty()) {
                     return (PageData<T>) deviceService.findDevicesByTenantIdAndType(tenantId, type, pageLink);
                 } else {
                     return (PageData<T>) deviceService.findDevicesByTenantId(tenantId, pageLink);
                 }
             case ASSET:
-                if (type != null && type.trim().length() > 0) {
+                if (type != null && !type.trim().isEmpty()) {
                     return (PageData<T>) assetService.findAssetsByTenantIdAndType(tenantId, type, pageLink);
                 } else {
                     return (PageData<T>) assetService.findAssetsByTenantId(tenantId, pageLink);
                 }
             case ENTITY_VIEW:
-                if (type != null && type.trim().length() > 0) {
+                if (type != null && !type.trim().isEmpty()) {
                     return (PageData<T>) entityViewService.findEntityViewByTenantIdAndType(tenantId, pageLink, type);
                 } else {
                     return (PageData<T>) entityViewService.findEntityViewByTenantId(tenantId, pageLink);
                 }
             case EDGE:
-                if (type != null && type.trim().length() > 0) {
+                if (type != null && !type.trim().isEmpty()) {
                     return (PageData<T>) edgeService.findEdgesByTenantIdAndType(tenantId, type, pageLink);
                 } else {
                     return (PageData<T>) edgeService.findEdgesByTenantId(tenantId, pageLink);
@@ -256,25 +257,25 @@ public class BaseEntityService extends AbstractEntityService implements EntitySe
         if (!groupIds.isEmpty()) {
             switch (entityType) {
                 case DEVICE:
-                    if (type != null && type.trim().length() > 0) {
+                    if (type != null && !type.trim().isEmpty()) {
                         return (PageData<T>) deviceService.findDevicesByEntityGroupIdsAndType(groupIds, type, pageLink);
                     } else {
                         return (PageData<T>) deviceService.findDevicesByEntityGroupIds(groupIds, pageLink);
                     }
                 case ASSET:
-                    if (type != null && type.trim().length() > 0) {
+                    if (type != null && !type.trim().isEmpty()) {
                         return (PageData<T>) assetService.findAssetsByEntityGroupIdsAndType(groupIds, type, pageLink);
                     } else {
                         return (PageData<T>) assetService.findAssetsByEntityGroupIds(groupIds, pageLink);
                     }
                 case ENTITY_VIEW:
-                    if (type != null && type.trim().length() > 0) {
+                    if (type != null && !type.trim().isEmpty()) {
                         return (PageData<T>) entityViewService.findEntityViewsByEntityGroupIdsAndType(groupIds, type, pageLink);
                     } else {
                         return (PageData<T>) entityViewService.findEntityViewsByEntityGroupIds(groupIds, pageLink);
                     }
                 case EDGE:
-                    if (type != null && type.trim().length() > 0) {
+                    if (type != null && !type.trim().isEmpty()) {
                         return (PageData<T>) edgeService.findEdgesByEntityGroupIdsAndType(groupIds, type, pageLink);
                     } else {
                         return (PageData<T>) edgeService.findEdgesByEntityGroupIds(groupIds, pageLink);

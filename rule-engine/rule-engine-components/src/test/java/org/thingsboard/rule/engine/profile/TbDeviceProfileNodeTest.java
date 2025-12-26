@@ -279,7 +279,6 @@ public class TbDeviceProfileNodeTest extends AbstractRuleNodeUpgradeTest {
         node.onMsg(ctx, msg2);
         verify(ctx).tellSuccess(msg2);
         verify(ctx).enqueueForTellNext(theMsg2, "Alarm Updated");
-
     }
 
     @Test

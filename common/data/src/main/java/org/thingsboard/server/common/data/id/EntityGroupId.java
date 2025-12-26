@@ -35,10 +35,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.thingsboard.server.common.data.EntityType;
 
+import java.io.Serial;
 import java.util.UUID;
 
 public class EntityGroupId extends UUIDBased implements EntityId {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @JsonCreator
@@ -55,4 +57,5 @@ public class EntityGroupId extends UUIDBased implements EntityId {
     public EntityType getEntityType() {
         return EntityType.ENTITY_GROUP;
     }
+
 }

@@ -136,6 +136,7 @@ public class ThingsboardInstallService {
                     entityDatabaseSchemaService.createDatabaseIndexes();
 
                     // TODO: cleanup update code after each release
+                    systemDataLoaderService.updateDefaultNotificationConfigs(false);
 
                     // Runs upgrade scripts that are not possible in plain SQL.
                     dataUpdateService.updateData(updateFromCE);
@@ -147,6 +148,9 @@ public class ThingsboardInstallService {
                     systemDataLoaderService.createDefaultCustomMenu();
                     installScripts.updateSystemNotificationTemplates();
                     databaseSchemaVersionService.updateSchemaVersion();
+
+                    // is needed as separate of dataUpdateService.updateData because needs to process some data made by systemDataLoaderService.loadSystemWidgets
+                    dataUpdateService.postUpdateData();
                 }
                 log.info("Upgrade finished successfully!");
 

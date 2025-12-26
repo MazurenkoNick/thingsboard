@@ -33,7 +33,6 @@ import { AuthPayload, AuthState } from './auth.models';
 import { AuthActions, AuthActionTypes } from './auth.actions';
 import { initialUserSettings, UserSettings } from '@shared/models/user-settings.models';
 import { environment as env } from '@env/environment';
-import { initialTrendzSettings } from '@shared/models/trendz-settings.models';
 import { unset } from '@core/utils';
 
 const emptyUserAuthState: AuthPayload = {
@@ -50,12 +49,16 @@ const emptyUserAuthState: AuthPayload = {
   mobileQrEnabled: false,
   maxResourceSize: 0,
   maxArgumentsPerCF: 0,
+  minAllowedDeduplicationIntervalInSecForCF: 0,
+  minAllowedAggregationIntervalInSecForCF: 0,
+  minAllowedScheduledUpdateIntervalInSecForCF: 0,
+  maxRelationLevelPerCfArgument: 0,
   maxDataPointsPerRollingArg: 0,
   maxDebugModeDurationMinutes: 0,
+  intermediateAggregationIntervalInSecForCF: 0,
   userSettings: initialUserSettings,
   allowedDashboardIds: [],
   availableLocales: env.supportedLangs,
-  trendzSettings: initialTrendzSettings
 };
 
 export const initialState: AuthState = {
@@ -117,9 +120,6 @@ export const authReducer = (
       userSettings = {...state.userSettings};
       action.payload.forEach(path => unset(userSettings, path));
       return { ...state, ...{ userSettings }};
-
-    case AuthActionTypes.UPDATE_TRENDZ_SETTINGS:
-      return { ...state, trendzSettings: action.payload };
 
     default:
       return state;

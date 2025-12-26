@@ -81,7 +81,7 @@ export class TaskFilterConfigComponent implements ControlValueAccessor, OnDestro
     value: type
   }))
 
-  buttonDisplayValue = this.translate.instant('task.tasks-filter');
+  buttonDisplayValue = this.translate.instant('task.task-filter');
 
   filteredEntityType = [EntityType.DEVICE, EntityType.ASSET, EntityType.DEVICE_PROFILE, EntityType.ASSET_PROFILE];
 
@@ -206,7 +206,7 @@ export class TaskFilterConfigComponent implements ControlValueAccessor, OnDestro
       filterTextParts.push(this.translate.instant('entity.entities'));
     }
     this.buttonDisplayValue = filterTextParts.length
-      ? this.translate.instant('task.tasks-filter-params', { filterParams: filterTextParts.join(', ') })
-      : this.translate.instant('task.tasks-filter');
+      ? this.translate.instant('task.task-filter-params', { filterParams: filterTextParts.join(', ') })
+      : this.translate.instant('task.task-filter');
   }
 }

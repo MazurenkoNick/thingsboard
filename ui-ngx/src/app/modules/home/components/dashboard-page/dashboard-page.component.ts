@@ -53,7 +53,7 @@ import {
 import { PageComponent } from '@shared/components/page.component';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, UrlTree } from '@angular/router';
 import { UtilsService } from '@core/services/utils.service';
 import {
   BreakpointId,
@@ -302,6 +302,8 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
   mainLayoutSize: {width: string; height: string; maxWidth: string; minWidth: string} =
     {width: '100%', height: '100%', maxWidth: '100%', minWidth: '100%'};
   rightLayoutSize: {width: string; height: string} = {width: '100%', height: '100%'};
+
+  dashboardLogoLink = this.getDashboardLogoLink();
 
   private dashboardLogoCache: SafeUrl;
   private defaultDashboardLogo = this.wl.logoImageUrl();
@@ -1331,7 +1333,11 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
             widgetEditMode: this.widgetEditMode,
             singlePageMode: this.singlePageMode
           };
+          const needReInitState = !this.isEdit;
           this.init(dashboardPageInitData);
+          if (needReInitState) {
+            this.dashboardCtx.stateController.reInit();
+          }
         } else {
           this.dashboard.version = dashboard.version;
           this.setEditMode(false, false);
@@ -1412,6 +1418,7 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
   }
 
   private addWidgetToDashboard(widget: Widget) {
+    this.dashboardUtils.prepareWidgetForSaving(widget);
     if (this.addingLayoutCtx) {
       this.addWidgetToLayout(widget, this.addingLayoutCtx.id);
       this.addingLayoutCtx = null;
@@ -1499,7 +1506,7 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
 
   saveWidget() {
     this.editWidgetComponent.widgetFormGroup.markAsPristine();
-    const widget = deepClone(this.editingWidget);
+    const widget = this.dashboardUtils.prepareWidgetForSaving(deepClone(this.editingWidget));
     const widgetLayout = deepClone(this.editingWidgetLayout);
     const id = this.editingWidgetOriginal.id;
     this.dashboardConfiguration.widgets[id] = widget;
@@ -1914,5 +1921,9 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
       return breakpoint.maxWidth < 960;
     }
     return false;
+  }
+
+  private getDashboardLogoLink(): UrlTree {
+    return this.forceFullscreen ? null : this.router.createUrlTree([], {relativeTo: this.route});
   }
 }

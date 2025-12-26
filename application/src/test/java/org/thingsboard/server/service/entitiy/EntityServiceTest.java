@@ -122,7 +122,6 @@ import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.query.StateEntityOwnerFilter;
 import org.thingsboard.server.common.data.query.StringFilterPredicate;
 import org.thingsboard.server.common.data.query.StringFilterPredicate.StringOperation;
-import org.thingsboard.server.common.data.query.TsValue;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.EntitySearchDirection;
 import org.thingsboard.server.common.data.relation.RelationEntityTypeFilter;
@@ -178,12 +177,11 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.thingsboard.server.common.data.AttributeScope.SERVER_SCOPE;
 import static org.thingsboard.server.common.data.permission.Resource.ALL;
 import static org.thingsboard.server.common.data.permission.Resource.CUSTOMER;
-import static org.thingsboard.server.common.data.AttributeScope.SERVER_SCOPE;
 import static org.thingsboard.server.common.data.query.EntityKeyType.ATTRIBUTE;
 import static org.thingsboard.server.common.data.query.EntityKeyType.ENTITY_FIELD;
-import static org.thingsboard.server.common.data.query.EntityKeyType.SERVER_ATTRIBUTE;
 
 @Slf4j
 @DaoSqlTest
@@ -2381,8 +2379,8 @@ public class EntityServiceTest extends AbstractControllerTest {
             findByQueryAndCheck(customer.getId(), mergedUserPermissions, query, relationsCnt);
             countByQueryAndCheck(customer.getId(), mergedUserPermissions, query, relationsCnt);
             /*
-            In order to be careful with updating Relation Query while adding new Entity Type,
-            this checkup will help to find place, where you could check the correctness of building query
+            To be careful with updating Relation Query while adding new Entity Type,
+            this checkup will help to find a place where you could check the correctness of building query
              */
             Assert.assertEquals(46, EntityType.values().length);
         }
@@ -2765,7 +2763,7 @@ public class EntityServiceTest extends AbstractControllerTest {
         List<EntityKey> entityFields = List.of(
                 new EntityKey(ENTITY_FIELD, "name")
         );
-        List<EntityKey> latestValues =  List.of(
+        List<EntityKey> latestValues = List.of(
                 new EntityKey(EntityKeyType.TIME_SERIES, "temperature"),
                 new EntityKey(EntityKeyType.SERVER_ATTRIBUTE, "attr")
         );

@@ -49,7 +49,7 @@ public class SecretDataValidator extends DataValidator<Secret> {
     private static final Pattern VALID_NAME_PATTERN = Pattern.compile("^[^{};\\p{Cntrl}]+$");
 
     private static final int MAX_FILE_SIZE_BYTES = 512 * 1024; // 0.5 MB
-    private static final int MAX_TEXT_SIZE_LENGTH = 255;
+    private static final int MAX_TEXT_SIZE_LENGTH = 2048;
 
     @Lazy
     private final SecretService secretService;

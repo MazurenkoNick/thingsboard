@@ -716,12 +716,11 @@ public class EdgeGrpcService extends EdgeRpcServiceGrpc.EdgeRpcServiceImplBase i
                     kafkaSession.isConnected(),
                     kafkaSession.getConsumer() != null ? kafkaSession.getConsumer().getConsumer() != null ? kafkaSession.getConsumer().getConsumer().isStopped() : null : null);
             return !kafkaSession.isConnected() &&
-                    kafkaSession.getConsumer() != null &&
-                    kafkaSession.getConsumer().getConsumer() != null &&
-                    !kafkaSession.getConsumer().getConsumer().isStopped();
+                   kafkaSession.getConsumer() != null &&
+                   kafkaSession.getConsumer().getConsumer() != null &&
+                   !kafkaSession.getConsumer().getConsumer().isStopped();
         }
         return false;
-
     }
 
 }

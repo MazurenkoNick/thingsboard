@@ -45,6 +45,8 @@ import org.thingsboard.server.cache.customer.CustomerCacheKey;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.CustomerInfo;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.NameConflictPolicy;
+import org.thingsboard.server.common.data.NameConflictStrategy;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.group.EntityGroup;
@@ -223,21 +225,37 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
     }
 
     @Override
+    public List<Customer> findCustomersByTenantIdAndIds(TenantId tenantId, List<CustomerId> customerIds) {
+        log.trace("Executing findCustomersByTenantIdAndIds, tenantId [{}], customerIds [{}]", tenantId, customerIds);
+        return customerDao.findCustomersByTenantIdAndIds(tenantId.getId(), customerIds.stream().map(CustomerId::getId).collect(Collectors.toList()));
+    }
+
+    @Override
     @Transactional
     public Customer saveCustomer(Customer customer) {
-        return saveCustomer(customer, true);
+        return saveCustomer(customer, NameConflictStrategy.DEFAULT);
+    }
+
+    @Override
+    @Transactional
+    public Customer saveCustomer(Customer customer, NameConflictStrategy nameConflictStrategy) {
+        return saveEntity(customer, () -> saveCustomer(customer, true, nameConflictStrategy));
     }
 
     private Customer saveCustomer(Customer customer, boolean doValidate) {
+        return saveCustomer(customer, doValidate, NameConflictStrategy.DEFAULT);
+    }
+
+    private Customer saveCustomer(Customer customer, boolean doValidate, NameConflictStrategy nameConflictStrategy) {
         log.trace("Executing saveCustomer [{}]", customer);
-        String oldCustomerTitle = null;
-        Customer oldCustomer = null;
-        if (doValidate) {
-            oldCustomer = customerValidator.validate(customer, Customer::getTenantId);
-            if (oldCustomer != null) {
-                oldCustomerTitle = oldCustomer.getTitle();
-            }
+        Customer oldCustomer = (customer.getId() != null) ? customerDao.findById(customer.getTenantId(), customer.getId().getId()) : null;
+        if (nameConflictStrategy.policy() == NameConflictPolicy.UNIQUIFY && (oldCustomer == null || !oldCustomer.getTitle().equals(customer.getTitle()))) {
+            uniquifyEntityName(customer, oldCustomer, customer::setTitle, EntityType.CUSTOMER, nameConflictStrategy);
         }
+        if (doValidate) {
+            customerValidator.validate(customer, Customer::getTenantId);
+        }
+        String oldCustomerTitle = oldCustomer != null ? oldCustomer.getTitle() : null;
         var evictEvent = new CustomerCacheEvictEvent(customer.getTenantId(), customer.getTitle(), oldCustomerTitle);
         try {
             Customer savedCustomer = customerDao.saveAndFlush(customer.getTenantId(), customer);
@@ -269,8 +287,13 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
                 }
             }
             publishEvictEvent(evictEvent);
-            eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(savedCustomer.getTenantId())
-                    .entityId(savedCustomer.getId()).entity(savedCustomer).created(customer.getId() == null).oldEntity(oldCustomer).build());
+            eventPublisher.publishEvent(SaveEntityEvent.builder()
+                    .tenantId(savedCustomer.getTenantId())
+                    .entityId(savedCustomer.getId())
+                    .entity(savedCustomer)
+                    .oldEntity(oldCustomer)
+                    .created(customer.getId() == null)
+                    .build());
             return savedCustomer;
         } catch (Exception e) {
             handleEvictEvent(evictEvent);
@@ -489,6 +512,11 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
         validateId(customerId, id -> INCORRECT_CUSTOMER_ID + id);
         validatePageLink(pageLink);
         return customerInfoDao.findCustomersByTenantIdAndCustomerId(tenantId.getId(), customerId.getId(), pageLink);
+    }
+
+    @Override
+    public PageData<Customer> findCustomersByTenantIdAndParentCustomerId(TenantId tenantId, CustomerId parentCustomerId, PageLink pageLink) {
+        return customerDao.findByTenantIdAndParentCustomerId(tenantId, parentCustomerId, pageLink);
     }
 
     @Override

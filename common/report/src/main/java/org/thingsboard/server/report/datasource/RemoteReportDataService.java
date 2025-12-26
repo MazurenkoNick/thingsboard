@@ -62,6 +62,9 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
+import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getIntervalTs;
+import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getIntervalType;
+
 @ConditionalOnExpression("'${service.type:null}' == 'tb-report'")
 @Service
 public class RemoteReportDataService implements ReportDataService {
@@ -148,7 +151,7 @@ public class RemoteReportDataService implements ReportDataService {
     public List<TsKvEntry> getTimeseries(EntityId entityId, List<String> keys, Long startTs, Long endTs, Interval interval, String timeZone, Aggregation agg, SortOrder.Direction sortOrder,
                                          Integer limit, boolean useStrictDataTypes, TbReportCtx ctx) {
         try {
-            return getRestClient(ctx).getTimeseries(entityId, keys, interval.getInterval(), interval.getIntervalType(), timeZone, agg, sortOrder, startTs, endTs, limit, useStrictDataTypes);
+            return getRestClient(ctx).getTimeseries(entityId, keys, getIntervalTs(interval), getIntervalType(interval), timeZone, agg, sortOrder, startTs, endTs, limit, useStrictDataTypes);
         } catch (RestClientResponseException e) {
             throw handleRestClientException(e);
         }

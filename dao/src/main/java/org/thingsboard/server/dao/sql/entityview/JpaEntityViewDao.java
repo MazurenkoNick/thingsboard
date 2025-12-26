@@ -37,6 +37,7 @@ import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.EntitySubtype;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EntityView;
@@ -141,10 +142,14 @@ public class JpaEntityViewDao extends JpaAbstractDao<EntityViewEntity, EntityVie
         return entityViewRepository.existsByTenantIdAndEntityId(tenantId, entityId);
     }
 
-    @Override
     public ListenableFuture<List<EntityView>> findEntityViewsByTenantIdAndIdsAsync(UUID tenantId, List<UUID> entityViewIds) {
         return DaoUtil.getEntitiesByTenantIdAndIdIn(entityViewIds, ids ->
                 entityViewRepository.findEntityViewsByTenantIdAndIdIn(tenantId, ids), service);
+    }
+
+    @Override
+    public List<EntityView> findEntityViewsByTenantIdAndIds(UUID tenantId, List<UUID> entityViewIds) {
+        return DaoUtil.convertDataList(entityViewRepository.findEntityViewsByTenantIdAndIdIn(tenantId, entityViewIds));
     }
 
     @Override
@@ -220,6 +225,11 @@ public class JpaEntityViewDao extends JpaAbstractDao<EntityViewEntity, EntityVie
     @Override
     public List<EntityViewFields> findNextBatch(UUID id, int batchSize) {
         return entityViewRepository.findNextBatch(id, Limit.of(batchSize));
+    }
+
+    @Override
+    public List<EntityInfo> findEntityInfosByNamePrefix(TenantId tenantId, String name) {
+        return entityViewRepository.findEntityInfosByNamePrefix(tenantId.getId(), name);
     }
 
     @Override
