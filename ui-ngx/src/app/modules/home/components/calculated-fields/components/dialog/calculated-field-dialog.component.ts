@@ -68,6 +68,7 @@ export interface CalculatedFieldDialogData {
   additionalDebugActionConfig: AdditionalDebugActionConfig<(calculatedField: CalculatedField) => void>;
   getTestScriptDialogFn: CalculatedFieldTestScriptFn;
   isDirty?: boolean;
+  disabledSelectType?: boolean;
   readonly: boolean;
 }
 
@@ -135,6 +136,10 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
       }
     }
 
+    if (this.data.disabledSelectType) {
+      this.fieldFormGroup.get('type').disable({emitEvent: false});
+    }
+
     if (this.data.readonly) {
       this.fieldFormGroup.disable();
       this.disabledConfiguration = true;
@@ -142,7 +147,7 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
   }
 
   get fromGroupValue(): CalculatedField {
-    return deepTrim(this.fieldFormGroup.value as CalculatedField);
+    return deepTrim(this.fieldFormGroup.getRawValue() as CalculatedField);
   }
 
   cancel(): void {

@@ -136,7 +136,7 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
       this.entityTabsComponent = CalculatedFieldsTabsComponent;
       this.rowPointer = true;
     }
-    this.tableTitle = this.pageMode ? '' : this.translate.instant('entity.type-calculated-fields');
+    this.tableTitle = this.translate.instant('entity.type-calculated-fields');
     this.detailsPanelEnabled = this.pageMode;
     this.entityType = EntityType.CALCULATED_FIELD;
     this.entityTranslations = entityTypeTranslations.get(EntityType.CALCULATED_FIELD);
@@ -299,7 +299,7 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
       });
   }
 
-  private getCalculatedFieldDialog(value?: CalculatedFieldsTableEntity, buttonTitle = 'action.add', isDirty = false): Observable<CalculatedField> {
+  private getCalculatedFieldDialog(value?: CalculatedFieldsTableEntity, buttonTitle = 'action.add', isDirty = false, disabledSelectType = false): Observable<CalculatedField> {
     const entityId = this.entityId || value?.entityId;
     const entityName = this.entityName || (value as CalculatedFieldInfo)?.entityName;
     return this.dialog.open<CalculatedFieldDialogComponent, CalculatedFieldDialogData, CalculatedField>(CalculatedFieldDialogComponent, {
@@ -315,6 +315,7 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
         additionalDebugActionConfig: this.additionalDebugActionConfig,
         getTestScriptDialogFn: this.getTestScriptDialog.bind(this),
         isDirty,
+        disabledSelectType,
         readonly: this.readonly || entityId?.entityType && !this.userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.WRITE_CALCULATED_FIELD, entityId.entityType as EntityType),
       },
       enterAnimationDuration: isDirty ? 0 : null,
@@ -396,7 +397,7 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
           }
           return of(calculatedField);
         }),
-        switchMap(calculatedField => this.getCalculatedFieldDialog(this.updateImportedCalculatedField(calculatedField), 'action.add', true)),
+        switchMap(calculatedField => this.getCalculatedFieldDialog(this.updateImportedCalculatedField(calculatedField), 'action.add', true, true)),
         filter(Boolean),
         switchMap(calculatedField => this.calculatedFieldsService.saveCalculatedField(calculatedField)),
         filter(Boolean),
