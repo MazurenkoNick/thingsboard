@@ -81,6 +81,21 @@ export class EventTableComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input()
   hideClearEventAction: boolean = false;
 
+  private disableDebugEventActionValue = false;
+
+  get disableDebugEventAction() {
+    return this.disableDebugEventActionValue;
+  }
+
+  @Input()
+  set disableDebugEventAction(value) {
+    this.disableDebugEventActionValue = value;
+    if (this.eventTableConfig) {
+      this.eventTableConfig.disableDebugEventAction = this.disableDebugEventAction;
+      this.eventTableConfig.updateCellAction();
+    }
+  };
+
   activeValue = false;
   dirtyValue = false;
   entityIdValue: EntityId;
@@ -172,7 +187,8 @@ export class EventTableComponent implements OnInit, AfterViewInit, OnDestroy {
       this.isReadOnly,
       this.functionTestButtonLabel,
       this.debugEventSelected,
-      this.hideClearEventAction
+      this.hideClearEventAction,
+      this.disableDebugEventAction
     );
   }
 
