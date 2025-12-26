@@ -1182,7 +1182,7 @@
         "filter-types": "Audit log types"
     },
     "debug-settings": {
-        "label": "Debug Configuration",
+        "label": "Debug configuration",
         "on-failure": "Failures only (24/7)",
         "all-messages": "All messages ({{time}})",
         "failures": "Failures",
@@ -1211,6 +1211,7 @@
         "arguments": "Arguments",
         "decimals-by-default": "Decimals by default",
         "debugging": "Calculated field debugging",
+        "calculated-field-details": "Calculated field details",
         "argument-name": "Argument name",
         "name": "Name",
         "datasource": "Datasource",
@@ -1329,6 +1330,7 @@
         "calculated-field-filter-title": "Calculated field filter",
         "filter-title": "Filter",
         "calculated-field-types": "Calculated field types",
+        "events": "Events",
         "any-type": "Any type",
         "metrics": {
             "metrics": "Metrics",

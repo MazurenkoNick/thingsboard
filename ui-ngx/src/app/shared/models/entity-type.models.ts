@@ -681,7 +681,7 @@ export const entityTypeTranslations = new Map<EntityType | AliasEntityType, Enti
         type: 'entity.type-calculated-field',
         typePlural: 'entity.type-calculated-fields',
         list: 'calculated-fields.list',
-        add: 'action.add',
+        details: 'calculated-fields.calculated-field-details',
         noEntities: 'calculated-fields.no-found',
         search: 'action.search',
         selectedEntities: 'calculated-fields.selected-fields'
@@ -888,6 +888,12 @@ export const entityTypeResources = new Map<EntityType, EntityTypeResource<BaseDa
       EntityType.AI_MODEL,
       {
         helpLinkId: 'aiModels'
+      }
+    ],
+    [
+      EntityType.CALCULATED_FIELD,
+      {
+        helpLinkId: 'calculatedField'
       }
     ],
     [

@@ -255,7 +255,7 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
   }
 
   writeValue(argumentsObj: Record<string, CalculatedFieldArgument>): void {
-    this.argumentsFormArray.clear();
+    this.argumentsFormArray.clear({emitEvent: false});
     this.populateArgumentsFormArray(argumentsObj);
     this.updateEntityNameMap(this.argumentsFormArray.value);
   }
@@ -280,7 +280,8 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
       };
       this.argumentsFormArray.push(this.fb.control(value), { emitEvent: false });
     });
-    this.argumentsFormArray.updateValueAndValidity();
+    this.updateDataSource(this.argumentsFormArray.value);
+    // this.argumentsFormArray.updateValueAndValidity({emitEvent: false});
   }
 
   private updateEntityNameMap(values: CalculatedFieldArgumentValue[]): void {
