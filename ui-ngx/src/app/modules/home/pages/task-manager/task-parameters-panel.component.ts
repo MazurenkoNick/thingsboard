@@ -42,7 +42,7 @@ import {
 import { Job, JobStatus } from '@app/shared/models/job.models';
 import { TbPopoverComponent } from '@shared/components/popover.component';
 import { Ace } from 'ace-builds';
-import { getAce } from '@shared/models/ace/ace.models';
+import { getAce, updateEditorSize } from '@shared/models/ace/ace.models';
 import { deepClone } from '@core/utils';
 
 @Component({
@@ -84,21 +84,19 @@ export class TaskParametersPanelComponent implements OnInit, OnDestroy {
 
   private createEditor() {
     const editorElement = this.taskContainerElmRef.nativeElement;
-    let editorOptions: Partial<Ace.EditorOptions> = {
+    const editorOptions: Partial<Ace.EditorOptions> = {
       mode: `ace/mode/json`,
       theme: 'ace/theme/github',
-      showGutter: false,
+      showFoldWidgets: true,
+      foldStyle: 'markbeginend',
+      showGutter: true,
       showPrintMargin: false,
-      readOnly: true
-    };
-
-    const advancedOptions = {
+      readOnly: true,
       enableSnippets: false,
       enableBasicAutocompletion: false,
       enableLiveAutocompletion: false
     };
 
-    editorOptions = {...editorOptions, ...advancedOptions};
     getAce().subscribe(
       (ace) => {
         this.aceEditor = ace.edit(editorElement, editorOptions);
@@ -109,28 +107,9 @@ export class TaskParametersPanelComponent implements OnInit, OnDestroy {
         delete cloneConfig.type;
         const value = JSON.stringify(cloneConfig, null, 2);
         this.aceEditor.setValue(value, -1);
-        this.updateEditorSize(editorElement, value, this.aceEditor);
+        updateEditorSize(editorElement, value, this.aceEditor, this.renderer, {showGutter: true});
+        this.popover.updatePosition();
       }
     );
-  }
-
-  private updateEditorSize(editorElement: any, content: string, editor: Ace.Editor) {
-    let newHeight = 400;
-    let newWidth = 200;
-    if (content && content.length > 0) {
-      const lines = content.split('\n');
-      newHeight = 19 * lines.length + 16;
-      let maxLineLength = 0;
-      lines.forEach((row) => {
-        const line = row.replace(/\t/g, '    ').replace(/\n/g, '');
-        const lineLength = line.length;
-        maxLineLength = Math.max(maxLineLength, lineLength);
-      });
-      newWidth = Math.max(10 * maxLineLength + 16, 200);
-    }
-    this.renderer.setStyle(editorElement, 'height', newHeight.toString() + 'px');
-    this.renderer.setStyle(this.taskPanelElmRef.nativeElement, 'width', newWidth.toString() + 'px');
-    editor.resize();
-    this.popover.updatePosition();
   }
 }

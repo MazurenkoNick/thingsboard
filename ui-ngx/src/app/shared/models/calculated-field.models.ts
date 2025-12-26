@@ -95,6 +95,8 @@ export type CalculatedField =
   | CalculatedFieldRelatedEntityAggregation
   | CalculatedFieldAlarmRule;
 
+export type CalculatedFieldInfo = CalculatedField & {entityName: string};
+
 export enum CalculatedFieldType {
   SIMPLE = 'SIMPLE',
   SCRIPT = 'SCRIPT',
@@ -553,6 +555,12 @@ export const getCalculatedFieldCurrentEntityFilter = (entityName: string, entity
         singleEntity: entityId,
       };
   }
+}
+
+export const debugCfActionEnabled = (cf: CalculatedField) => {
+  return (cf.type === CalculatedFieldType.SCRIPT ||
+    (cf.type === CalculatedFieldType.PROPAGATION && cf.configuration.applyExpressionToResolvedArguments)
+  );
 }
 
 export interface CalculatedFieldArgumentValueBase {

@@ -147,7 +147,7 @@ export class ReportTemplatesTableConfigResolver  {
 
     config.loadEntity = id => this.reportTemplateService.getReportTemplate(id.id);
     config.saveEntity = reportTemplate => this.reportTemplateService.saveReportTemplate(reportTemplate as ReportTemplate).pipe(
-      mergeMap((savedReportTemplate) => this.reportTemplateService.getReportTemplateInfo(savedReportTemplate.id.id))
+      mergeMap((savedReportTemplate) => this.reportTemplateService.getReportTemplate(savedReportTemplate.id.id))
     );
     config.onEntityAction = action => this.onReportTemplateAction(action, config);
     config.headerComponent = ReportTemplateTableHeaderComponent;

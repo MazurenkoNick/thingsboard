@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { AfterViewInit, Component, ElementRef, forwardRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, forwardRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ControlValueAccessor, FormBuilder, FormGroup, NG_VALUE_ACCESSOR, Validators } from '@angular/forms';
 import { Observable, ReplaySubject, Subscription, throwError } from 'rxjs';
 import { debounceTime, map, mergeMap, share } from 'rxjs/operators';
@@ -61,7 +61,7 @@ import { CalculatedFieldsService } from "@core/http/calculated-fields.service";
     }
   ]
 })
-export class EntitySubTypeListComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy {
+export class EntitySubTypeListComponent implements ControlValueAccessor, OnInit, OnDestroy {
 
   entitySubtypeListFormGroup: FormGroup;
 
@@ -134,7 +134,7 @@ export class EntitySubTypeListComponent implements ControlValueAccessor, OnInit,
 
   private dirty = false;
 
-  private propagateChange = (v: any) => { };
+  private propagateChange = (_v: any) => { };
 
   private hasPageDataEntitySubTypes = new Set<EntityType>([
     EntityType.ALARM,
@@ -238,9 +238,6 @@ export class EntitySubTypeListComponent implements ControlValueAccessor, OnInit,
       mergeMap(name => this.fetchEntitySubtypes(name)),
       share()
     );
-  }
-
-  ngAfterViewInit(): void {
   }
 
   ngOnDestroy(): void {
@@ -350,7 +347,7 @@ export class EntitySubTypeListComponent implements ControlValueAccessor, OnInit,
           subTypesPagesObservable = this.alarmService.getAlarmTypes(pageLink, {ignoreLoading: true});
           break;
         case EntityType.CALCULATED_FIELD:
-          subTypesCfPagesObservable = this.calculatedFieldsService.getAlarmRuleNames(pageLink, CalculatedFieldType.ALARM, {ignoreLoading: true});
+          subTypesCfPagesObservable = this.calculatedFieldsService.getCalculatedFieldNames(pageLink, CalculatedFieldType.ALARM, {ignoreLoading: true});
       }
       if (subTypesPagesObservable) {
         this.entitySubtypes = subTypesPagesObservable.pipe(
