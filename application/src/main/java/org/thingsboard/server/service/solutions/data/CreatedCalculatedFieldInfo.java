@@ -33,11 +33,17 @@ package org.thingsboard.server.service.solutions.data;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.id.EntityId;
 
-public record CreatedCalculatedFieldInfo(EntityId profileId, String profileName, String type,
-                                         String name) implements HasEntityProfile {
+import java.util.UUID;
 
-    public static CreatedCalculatedFieldInfo from(EntityId profileId, String profileName, CalculatedField calculatedField) {
-        return new CreatedCalculatedFieldInfo(profileId, profileName, calculatedField.getType().getDisplayName(), calculatedField.getName());
+public record CreatedCalculatedFieldInfo(EntityId entityId, String entityName, String type,
+                                         String name) implements HasAppliedToEntity {
+
+    public static CreatedCalculatedFieldInfo from(EntityId entityId, String entityName, CalculatedField calculatedField) {
+        return new CreatedCalculatedFieldInfo(entityId, entityName, calculatedField.getType().getDisplayName(), calculatedField.getName());
     }
 
+    @Override
+    public String getCfPageLink(UUID key) {
+        return "/calculatedFields/" + key.toString();
+    }
 }

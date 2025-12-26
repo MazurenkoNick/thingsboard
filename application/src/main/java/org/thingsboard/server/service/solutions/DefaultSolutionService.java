@@ -690,16 +690,20 @@ public class DefaultSolutionService implements SolutionService {
         alarmRules.append("| Entity Profile Name | Alarm Type | Severities |").append(System.lineSeparator());
         alarmRules.append("| :--- | :--- | :--- |").append(System.lineSeparator());
 
-        ctx.getCreatedAlarmRules().values().stream()
-                .sorted(Comparator.comparing(CreatedAlarmRuleInfo::profileName, String.CASE_INSENSITIVE_ORDER)
-                        .thenComparing(CreatedAlarmRuleInfo::alarmType, String.CASE_INSENSITIVE_ORDER))
-                .forEach(alarmRuleInfo -> {
-                    // TODO: add details page for Alarm Rule so we can link to it.
-                    String profileName = alarmRuleInfo.profileId() != null ?
-                            "[" + alarmRuleInfo.profileName() + "](" + alarmRuleInfo.getProfileLink() + ")" : alarmRuleInfo.profileName();
+        ctx.getCreatedAlarmRules().entrySet().stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.comparing(CreatedAlarmRuleInfo::entityName, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(CreatedAlarmRuleInfo::alarmType, String.CASE_INSENSITIVE_ORDER)))
+                .forEach(entry -> {
+                    UUID key = entry.getKey();
+                    var alarmRuleInfo = entry.getValue();
+                    String alarmType = alarmRuleInfo.alarmType();
+                    String link = alarmRuleInfo.getCfPageLink(key);
+                    String alarmTypeWithLink = "[" + alarmType + "](" + link + ")";
+                    String profileName = alarmRuleInfo.entityId() != null ?
+                            "[" + alarmRuleInfo.entityName() + "](" + alarmRuleInfo.getEntityPageLink() + ")" : alarmRuleInfo.entityName();
                     alarmRules.append("|")
                             .append(profileName).append("|")
-                            .append(alarmRuleInfo.alarmType()).append("|")
+                            .append(alarmTypeWithLink).append("|")
                             .append(alarmRuleInfo.severities()).append("|")
                             .append(System.lineSeparator());
                 });
@@ -713,16 +717,22 @@ public class DefaultSolutionService implements SolutionService {
         calculatedFields.append("| Entity Profile Name | Field Name | Field Type |").append(System.lineSeparator());
         calculatedFields.append("| :--- | :--- | :--- |").append(System.lineSeparator());
 
-        ctx.getCreatedCalculatedFields().values().stream()
-                .sorted(Comparator.comparing(CreatedCalculatedFieldInfo::profileName, String.CASE_INSENSITIVE_ORDER)
-                        .thenComparing(CreatedCalculatedFieldInfo::name, String.CASE_INSENSITIVE_ORDER))
-                .forEach(cfInfo -> {
-                    // TODO: add details page for CFs so we can link to it.
-                    String profileName = cfInfo.profileId() != null ?
-                            "[" + cfInfo.profileName() + "](" + cfInfo.getProfileLink() + ")" : cfInfo.profileName();
+        ctx.getCreatedCalculatedFields().entrySet().stream()
+                .sorted(Map.Entry.comparingByValue(
+                        Comparator.comparing(CreatedCalculatedFieldInfo::entityName, String.CASE_INSENSITIVE_ORDER)
+                                .thenComparing(CreatedCalculatedFieldInfo::name, String.CASE_INSENSITIVE_ORDER)
+                ))
+                .forEach(entry -> {
+                    UUID key = entry.getKey();
+                    var cfInfo = entry.getValue();
+                    String cfTitle = cfInfo.name();
+                    String link = cfInfo.getCfPageLink(key);
+                    String cfTitleWithLink = "[" + cfTitle + "](" + link + ")";
+                    String profileName = cfInfo.entityId() != null ?
+                            "[" + cfInfo.entityName() + "](" + cfInfo.getEntityPageLink() + ")" : cfInfo.entityName();
                     calculatedFields.append("|")
                             .append(profileName).append("|")
-                            .append(cfInfo.name()).append("|")
+                            .append(cfTitleWithLink).append("|")
                             .append(cfInfo.type()).append("|")
                             .append(System.lineSeparator());
                 });
@@ -739,7 +749,7 @@ public class DefaultSolutionService implements SolutionService {
         for (Map.Entry<UUID, CreatedEntityInfo> entry : ctx.getCreatedEntities().entrySet()) {
             UUID key = entry.getKey();
             var entityInfo = entry.getValue();
-            String link = entityInfo.getLink(key);
+            String link = entityInfo.getEntityPageLink(key);
             String entityName = entityInfo.getName();
             String name = link != null ? "[" + entityName + "](" + link + ")" : entityName;
             entityList.append("|")

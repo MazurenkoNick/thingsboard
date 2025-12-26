@@ -32,19 +32,25 @@ package org.thingsboard.server.service.solutions.data;
 
 import org.thingsboard.server.common.data.id.EntityId;
 
-public interface HasEntityProfile {
+import java.util.UUID;
 
-    EntityId profileId();
+public interface HasAppliedToEntity {
 
-    default String getProfileLink() {
-        EntityId profileId = profileId();
-        if (profileId == null) {
+    EntityId entityId();
+
+    String getCfPageLink(UUID key);
+
+    default String getEntityPageLink() {
+        EntityId id = entityId();
+        if (id == null) {
             return null;
         }
-        String profileIdStr = profileId.getId().toString();
-        return switch (profileId.getEntityType()) {
-            case DEVICE_PROFILE -> "/profiles/deviceProfiles/" + profileIdStr;
-            case ASSET_PROFILE -> "/profiles/assetProfiles/" + profileIdStr;
+        String idStr = id.getId().toString();
+        return switch (id.getEntityType()) {
+            case DEVICE_PROFILE -> "/profiles/deviceProfiles/" + idStr;
+            case ASSET_PROFILE -> "/profiles/assetProfiles/" + idStr;
+            case DEVICE -> "/entities/devices/all/" + idStr;
+            case ASSET -> "/entities/assets/all/" + idStr;
             default -> null;
         };
     }

@@ -179,18 +179,19 @@ public class SolutionInstallContext {
 
     public void register(CalculatedField calculatedField) {
         register(calculatedField.getId());
-        EntityId profileId = calculatedField.getEntityId();
-        CreatedEntityInfo entityProfileInfo = createdEntities.get(profileId.getId());
+        EntityId entityId = calculatedField.getEntityId();
+        CreatedEntityInfo entityInfo = createdEntities.get(entityId.getId());
         boolean alarmRule = calculatedField.getType() == CalculatedFieldType.ALARM;
-        if (entityProfileInfo == null) {
-            String entityToRegister = alarmRule ? "Alarm rule" : "Calculated field";
-            throw new IllegalStateException("Failed to register " + entityToRegister + " for non-existing entity profile: " + calculatedField.getName());
+        if (entityInfo == null) {
+            String target = alarmRule ? "Alarm rule" : "Calculated field";
+            throw new IllegalStateException("Failed to register " + target + " with name: " +
+                                            calculatedField.getName() + " for non-existing entity with id: " + entityId);
         }
         if (alarmRule) {
-            createdAlarmRules.put(calculatedField.getUuidId(), CreatedAlarmRuleInfo.from(profileId, entityProfileInfo.getName(), calculatedField));
+            createdAlarmRules.put(calculatedField.getUuidId(), CreatedAlarmRuleInfo.from(entityId, entityInfo.getName(), calculatedField));
             return;
         }
-        createdCalculatedFields.put(calculatedField.getUuidId(), CreatedCalculatedFieldInfo.from(profileId, entityProfileInfo.getName(), calculatedField));
+        createdCalculatedFields.put(calculatedField.getUuidId(), CreatedCalculatedFieldInfo.from(entityId, entityInfo.getName(), calculatedField));
     }
 
     public void put(EntitySearchKey entitySearchKey, EntityId entityId) {

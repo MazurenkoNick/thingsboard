@@ -44,7 +44,7 @@ public class CreatedEntityInfo {
     private EntityType type;
     private String owner;
 
-    public String getLink(UUID key) {
+    public String getEntityPageLink(UUID key) {
         return switch (type) {
             case DEVICE -> "/entities/devices/all/" + key.toString();
             case ASSET -> "/entities/assets/all/" + key.toString();

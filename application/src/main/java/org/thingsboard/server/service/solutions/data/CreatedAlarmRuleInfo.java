@@ -36,12 +36,13 @@ import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.cf.configuration.AlarmCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.id.EntityId;
 
+import java.util.UUID;
 import java.util.stream.Collectors;
 
-public record CreatedAlarmRuleInfo(EntityId profileId, String profileName, String alarmType,
-                                   String severities) implements HasEntityProfile {
+public record CreatedAlarmRuleInfo(EntityId entityId, String entityName, String alarmType,
+                                   String severities) implements HasAppliedToEntity {
 
-    public static CreatedAlarmRuleInfo from(EntityId profileId, String profileName, CalculatedField calculatedField) {
+    public static CreatedAlarmRuleInfo from(EntityId entityId, String entityName, CalculatedField calculatedField) {
         if (calculatedField.getType() != CalculatedFieldType.ALARM) {
             throw new UnsupportedOperationException("Only alarm calculated fields are supported");
         }
@@ -50,7 +51,11 @@ public record CreatedAlarmRuleInfo(EntityId profileId, String profileName, Strin
                 .map(AlarmSeverity::getDisplayName)
                 .sorted()
                 .collect(Collectors.joining(", "));
-        return new CreatedAlarmRuleInfo(profileId, profileName, calculatedField.getName(), severities);
+        return new CreatedAlarmRuleInfo(entityId, entityName, calculatedField.getName(), severities);
     }
 
+    @Override
+    public String getCfPageLink(UUID key) {
+        return "/alarms/alarm-rules/" + key.toString();
+    }
 }
