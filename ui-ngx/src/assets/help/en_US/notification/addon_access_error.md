@@ -1,4 +1,4 @@
-#### Add-on/Feature access request notification templatization
+#### Add-on/Feature access error notification templatization
 
 <div class="divider"></div>
 <br/>
@@ -11,9 +11,13 @@ Available template parameters:
 
 * `addon` - one of: 'Edge Computing add-on', 'Trendz Analytics add-on', 'White labeling';
 * `userEmail` - email of the user who sends the request;
-* `enableAddonActionLabel` - label of the button used to open License Management page or to send add-on request notification, for ex: 'Add to plan';
-* `enableAddonLink` - link to the License Management page or link to trigger send add-on request action;
-* `baseUrl` - used to construct the full URL for the License Management page or add-on request action in email notifications; 
+* `checkConfigurationActionLabel` - label of the button used to open Addon Management page or to send add-on error notification, for ex: 'Check configuration';
+* `checkConfigurationLink` - link to the Addon Management page or link to trigger send add-on error action;
+* `baseUrl` - used to construct the full URL for the Addon Management page or add-on error action in email notifications;
+* `recipientTitle` - title of the recipient (first and last name if specified, email otherwise);
+* `recipientEmail` - email of the recipient;
+* `recipientFirstName` - first name of the recipient;
+* `recipientLastName` - last name of the recipient;
 
 Parameter names must be wrapped using `${...}`. For example: `${userEmail}`.
 You may also modify the value of the parameter with one of the suffixes:
@@ -32,18 +36,18 @@ The needed locale is taken from recipient's profile settings, using English by d
 
 ##### Examples
 
-Let's assume the notification requesting access to the Edge Computing add-on.
+Let's assume the notification is reporting an error with access to the Trendz Analytics add-on.
 The following template:
 
 ```text
-${userEmail} is requesting access to the ${addon}.
+${userEmail} was unable to access ${addon}.
 {:copy-code}
 ```
 
 will be transformed to:
 
 ```text
-johndoe@company.com is requesting access to the Edge Computing add-on.
+johndoe@company.com was unable to access Trendz Analytics.
 ```
 
 <br/>

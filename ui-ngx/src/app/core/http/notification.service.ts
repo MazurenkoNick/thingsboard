@@ -208,4 +208,8 @@ export class NotificationService {
   public saveNotificationUserSettings(settings: NotificationUserSettings, config?: RequestConfig): Observable<NotificationUserSettings> {
     return this.http.post<NotificationUserSettings>('/api/notification/settings/user', settings, defaultHttpOptionsFromConfig(config));
   }
+
+  public sendAddonAccessError(addonType: AddonType, config?: RequestConfig): Observable<void> {
+    return this.http.post<void>(`/api/notification/sendAddonAccessError/${addonType}`, defaultHttpOptionsFromConfig(config));
+  }
 }

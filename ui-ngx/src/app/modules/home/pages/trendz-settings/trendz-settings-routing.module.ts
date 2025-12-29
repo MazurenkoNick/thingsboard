@@ -70,7 +70,7 @@ export const TrendzSyncResolver: ResolveFn<TrendzStatus> = (
             );
           }
           return of(trendzStatus);
-        })
+        }),
       )
     } else {
       return of({

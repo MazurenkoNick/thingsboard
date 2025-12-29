@@ -41,7 +41,6 @@ import {
   TrendzSynchronizationStatus
 } from '@shared/models/trendz-analytics.models';
 import { ActivatedRoute } from '@angular/router';
-import { map, Observable, of, switchMap } from 'rxjs';
 import { getCurrentAuthState } from '@core/auth/auth.selectors';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
@@ -53,6 +52,7 @@ import { DynamicMatDialog } from '@shared/components/dialog/dynamic/dynamic-dial
 import { TranslateService } from '@ngx-translate/core';
 import { createManageSubscriptionUrl, SubscriptionInfo } from '@shared/models/subscription.models';
 import { AdminService } from '@core/http/admin.service';
+import { map, Observable, of, switchMap } from 'rxjs';
 
 @Component({
   selector: 'tb-trendz-settings',

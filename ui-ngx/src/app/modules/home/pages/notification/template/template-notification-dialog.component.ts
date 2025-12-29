@@ -208,6 +208,7 @@ export class TemplateNotificationDialogComponent
       NotificationType.ENTITIES_LIMIT,
       NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST,
       NotificationType.ADDON_ACCESS_REQUEST,
+      NotificationType.ADDON_ACCESS_ERROR,
       NotificationType.API_USAGE_LIMIT,
       NotificationType.NEW_PLATFORM_VERSION,
       NotificationType.RATE_LIMITS,

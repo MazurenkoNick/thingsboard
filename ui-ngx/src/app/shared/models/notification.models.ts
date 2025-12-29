@@ -578,6 +578,7 @@ export enum NotificationType {
   ENTITIES_LIMIT = 'ENTITIES_LIMIT',
   ENTITIES_LIMIT_INCREASE_REQUEST = 'ENTITIES_LIMIT_INCREASE_REQUEST',
   ADDON_ACCESS_REQUEST = 'ADDON_ACCESS_REQUEST',
+  ADDON_ACCESS_ERROR = 'ADDON_ACCESS_ERROR',
   API_USAGE_LIMIT = 'API_USAGE_LIMIT',
   NEW_PLATFORM_VERSION = 'NEW_PLATFORM_VERSION',
   RULE_NODE = 'RULE_NODE',
@@ -602,6 +603,7 @@ export const NotificationTypeIcons = new Map<NotificationType, string | null>([
   [NotificationType.ENTITIES_LIMIT, 'data_thresholding'],
   [NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST, 'mdi:file-cog'],
   [NotificationType.ADDON_ACCESS_REQUEST, 'pending_actions'],
+  [NotificationType.ADDON_ACCESS_ERROR, 'warning'],
   [NotificationType.API_USAGE_LIMIT, 'insert_chart'],
   [NotificationType.INTEGRATION_LIFECYCLE_EVENT, 'integration_instructions'],
   [NotificationType.TASK_PROCESSING_FAILURE, 'warning'],
@@ -683,6 +685,12 @@ export const NotificationTemplateTypeTranslateMap = new Map<NotificationType, No
     {
       name: 'notification.template-type.addon-access-request',
       helpId: 'notification/addon_access_request'
+    }
+  ],
+  [NotificationType.ADDON_ACCESS_ERROR,
+    {
+      name: 'notification.template-type.addon-access-error',
+      helpId: 'notification/addon_access_error'
     }
   ],
   [NotificationType.API_USAGE_LIMIT,
