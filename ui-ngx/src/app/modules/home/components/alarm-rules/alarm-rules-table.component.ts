@@ -51,7 +51,7 @@ import { EntityDebugSettingsService } from '@home/components/entity/debug/entity
 import { DatePipe } from '@angular/common';
 import { AlarmRulesTableConfig } from "@home/components/alarm-rules/alarm-rules-table-config";
 import { UtilsService } from "@core/services/utils.service";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { UserPermissionsService } from "@core/http/user-permissions.service";
 
 @Component({
@@ -88,6 +88,7 @@ export class AlarmRulesTableComponent {
               private utilsService: UtilsService,
               private destroyRef: DestroyRef,
               private route: ActivatedRoute,
+              private router: Router,
               private userPermissionsService: UserPermissionsService,
   ) {
     this.pageMode = !!this.route.snapshot.data.isPage;
@@ -107,6 +108,7 @@ export class AlarmRulesTableComponent {
           this.importExportService,
           this.entityDebugSettingsService,
           this.utilsService,
+          this.router,
           this.readonly(),
           this.hideClearEventAction(),
           this.userPermissionsService,

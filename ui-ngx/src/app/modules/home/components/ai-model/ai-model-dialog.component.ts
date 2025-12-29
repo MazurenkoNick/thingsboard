@@ -130,7 +130,7 @@ export class AIModelDialogComponent extends DialogComponent<AIModelDialogCompone
           fileName: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.fileName : ''],
           region: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.region : '', [Validators.required, Validators.pattern(/.*\S.*/)]],
           accessKeyId: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.accessKeyId : '', [Validators.required, Validators.pattern(/.*\S.*/)]],
-          secretAccessKey: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.secretAccessKey : '', [Validators.required]],
+          secretAccessKey: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.secretAccessKey : '', [Validators.required, Validators.pattern(/.*\S.*/)]],
           baseUrl: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.baseUrl : this.openAiDefaultBaseUrl, [Validators.required, Validators.pattern(/.*\S.*/)]],
           auth: this.fb.group({
             type: [this.data.AIModel?.configuration?.providerConfig?.auth?.type ?? AuthenticationType.NONE],

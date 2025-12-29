@@ -34,12 +34,14 @@
   <tb-entity-type-select
     *ngIf="displayEntityTypeSelect"
     class="flex-1"
+    [label]="entityTypeLabel ?? null"
     [appearance]="appearance"
     [showLabel]="true"
     [required]="required"
     [useAliasEntityTypes]="useAliasEntityTypes"
     [allowedEntityTypes]="allowedEntityTypes"
     [additionEntityTypes]="additionEntityTypes"
+    [filterAllowedEntityTypes]="filterAllowedEntityTypes"
     [operation]="operation"
     formControlName="entityType">
   </tb-entity-type-select>
@@ -50,6 +52,7 @@
     [required]="required"
     [entityType]="modelValue.entityType"
     [useEntityDisplayName]="useEntityDisplayName"
+    (entityChanged)="changeEntity($event)"
     formControlName="entityId">
   </tb-entity-autocomplete>
 </div>

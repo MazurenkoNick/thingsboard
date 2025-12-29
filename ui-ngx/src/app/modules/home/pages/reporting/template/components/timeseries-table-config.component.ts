@@ -42,7 +42,7 @@ import {
   DynamicFormDialogData
 } from '@home/components/widget/lib/settings/common/dynamic-form/dynamic-form-dialog.component';
 import { TranslateService } from '@ngx-translate/core';
-import { merge } from 'rxjs';
+import { merge, pairwise, startWith } from 'rxjs';
 import {
   ReportDataKeySettingsType,
   TableReportColumnSettings,
@@ -106,6 +106,42 @@ export class TimeseriesTableConfigComponent extends AbstractReportComponentConfi
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
       this.updateValidators(form);
+    });
+    form.get('columns').valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef),
+      startWith(this.getColumns(reportComponentConfig.dataSources)),
+      pairwise()
+    ).subscribe(([prev, current]) => {
+      const tableSortOrder = form.get("tableSortOrder").value;
+      if (tableSortOrder && tableSortOrder.column) {
+        const oldColumn = prev.find(c => c.label === tableSortOrder.column);
+        if (oldColumn) {
+          const newColumn = current.find(c => c.name === oldColumn.name);
+          if (newColumn && newColumn.label !== tableSortOrder.column) {
+            setTimeout(() => {
+              form.get('tableSortOrder').patchValue({
+                column: newColumn.label,
+                direction: tableSortOrder.direction
+              });
+            }, 0);
+          }
+        }
+      }
+    });
+    form.get('timestampLabel').valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef),
+      startWith(reportComponentConfig.timestampLabel),
+      pairwise()
+    ).subscribe(([prevLabel, currentLabel]) => {
+      const tableSortOrder = form.get("tableSortOrder").value;
+      if (tableSortOrder && tableSortOrder.column === prevLabel) {
+        setTimeout(() => {
+          form.get('tableSortOrder').patchValue({
+            column: currentLabel,
+            direction: tableSortOrder.direction
+          });
+        }, 0);
+      }
     });
     this.updateValidators(form);
     return form;

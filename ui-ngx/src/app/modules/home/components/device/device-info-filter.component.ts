@@ -211,6 +211,7 @@ export class DeviceInfoFilterComponent implements OnInit, ControlValueAccessor {
 
   cancel() {
     this.updateDeviceInfoFilterForm(this.deviceInfoFilter);
+    this.deviceInfoFilterForm.markAsPristine();
     if (this.overlayRef) {
       this.overlayRef.dispose();
     } else {

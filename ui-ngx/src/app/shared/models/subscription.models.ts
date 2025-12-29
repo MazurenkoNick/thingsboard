@@ -29,21 +29,8 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SharedModule } from '@shared/shared.module';
-import { HomeDialogsModule } from '../../dialogs/home-dialogs.module';
-import { HomeComponentsModule } from '@modules/home/components/home-components.module';
-import { CalculatedFieldsRoutingModule } from '@home/pages/calculated-fields/calculated-fields-routing.module';
-
-@NgModule({
-  declarations: [],
-  imports: [
-    CommonModule,
-    SharedModule,
-    HomeComponentsModule,
-    HomeDialogsModule,
-    CalculatedFieldsRoutingModule
-  ]
-})
-export class CalculatedFieldsModule { }
+export enum AddonType {
+  EDGE = 'EDGE',
+  TRENDZ = 'TRENDZ',
+  WHITE_LABELING = 'WHITE_LABELING'
+}

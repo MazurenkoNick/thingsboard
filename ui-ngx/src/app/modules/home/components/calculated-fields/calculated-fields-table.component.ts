@@ -53,7 +53,7 @@ import { DatePipe } from '@angular/common';
 import { TbPopoverService } from '@shared/components/popover.service';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { UtilsService } from "@core/services/utils.service";
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'tb-calculated-fields-table',
@@ -89,6 +89,7 @@ export class CalculatedFieldsTableComponent {
               private utilsService: UtilsService,
               private destroyRef: DestroyRef,
               private route: ActivatedRoute,
+              private router: Router,
               private popoverService: TbPopoverService,
               private userPermissionsService: UserPermissionsService
   ) {
@@ -109,6 +110,7 @@ export class CalculatedFieldsTableComponent {
           this.importExportService,
           this.entityDebugSettingsService,
           this.utilsService,
+          this.router,
           this.readonly(),
           this.hideClearEventAction(),
           this.popoverService,

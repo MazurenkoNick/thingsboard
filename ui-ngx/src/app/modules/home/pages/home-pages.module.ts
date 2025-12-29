@@ -42,7 +42,7 @@ import { UserModule } from '@modules/home/pages/user/user.module';
 import { DeviceModule } from '@modules/home/pages/device/device.module';
 import { AssetModule } from '@modules/home/pages/asset/asset.module';
 import { EntityViewModule } from '@modules/home/pages/entity-view/entity-view.module';
-import { CalculatedFieldsModule } from '@home/pages/calculated-fields/calculated-fields.module';
+import { CalculatedFieldPageModule } from '@home/pages/calculated-fields/calculated-field-page.module';
 import { RuleChainModule } from '@modules/home/pages/rulechain/rulechain.module';
 import { WidgetLibraryModule } from '@modules/home/pages/widget/widget-library.module';
 import { DashboardModule } from '@modules/home/pages/dashboard/dashboard.module';
@@ -100,7 +100,7 @@ import { TrendzSettingsModule } from '@home/pages/trendz-settings/trendz-setting
     EdgeModule,
     EntityViewModule,
     CustomerModule,
-    CalculatedFieldsModule,
+    CalculatedFieldPageModule,
     RuleChainModule,
     WidgetLibraryModule,
     DashboardModule,

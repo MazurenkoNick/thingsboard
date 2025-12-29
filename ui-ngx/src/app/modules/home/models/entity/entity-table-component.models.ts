@@ -41,13 +41,16 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { EntityAction } from '@home/models/entity/entity-component.models';
 import {
-  CellActionDescriptor, EntityActionTableColumn, EntityColumn, EntityTableColumn,
+  CellActionDescriptor,
+  EntityActionTableColumn,
+  EntityColumn,
+  EntityTableColumn,
   EntityTableConfig,
   GroupActionDescriptor,
   HeaderActionDescriptor
 } from '@home/models/entity/entities-table-config.models';
 import { ActivatedRoute } from '@angular/router';
-import { EntityDetailsPanelComponent } from '@home/components/entity/entity-details-panel.component';
+import type { EntityDetailsPanelComponent } from '@home/components/entity/entity-details-panel.component';
 
 export type EntitiesTableAction = 'add';
 
