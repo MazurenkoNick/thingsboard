@@ -42,13 +42,15 @@ import { mergeMap, share } from 'rxjs/operators';
 import { SelfRegistrationService } from '@core/http/self-register.service';
 import { OAuth2ClientLoginInfo } from '@shared/models/oauth2.models';
 import { validateEmail } from '@app/core/utils';
+import { PageComponent } from '@shared/components/page.component';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'tb-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent extends PageComponent implements OnInit {
 
   passwordViolation = false;
   isLoading = false;
@@ -67,6 +69,7 @@ export class LoginComponent implements OnInit {
               private translateService: TranslateService,
               public fb: UntypedFormBuilder,
               private router: Router) {
+    super();
   }
 
   ngOnInit() {
@@ -76,10 +79,10 @@ export class LoginComponent implements OnInit {
   login(): void {
     if (this.loginFormGroup.valid) {
       this.isLoading = true;
-      this.authService.login(this.loginFormGroup.value).subscribe({
-        next: () => {},
+      this.authService.login(this.loginFormGroup.value).pipe(
+        finalize(() => {this.isLoading = false;})
+      ).subscribe({
         error: (error: HttpErrorResponse) => {
-          this.isLoading = false;
           if (error && error.error && error.error.errorCode) {
             if (error.error.errorCode === Constants.serverErrorCode.credentialsExpired) {
               this.router.navigateByUrl(`login/resetExpiredPassword?resetToken=${error.error.resetToken}`);
