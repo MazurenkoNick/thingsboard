@@ -611,16 +611,6 @@ export const NotificationTypeIcons = new Map<NotificationType, string | null>([
   [NotificationType.REPORT_GENERATED, 'description']
 ]);
 
-export const AlarmSeverityNotificationColors = new Map<AlarmSeverity, string>(
-  [
-    [AlarmSeverity.CRITICAL, '#D12730'],
-    [AlarmSeverity.MAJOR, '#FEAC0C'],
-    [AlarmSeverity.MINOR, '#F2DA05'],
-    [AlarmSeverity.WARNING, '#F66716'],
-    [AlarmSeverity.INDETERMINATE, '#00000061']
-  ]
-);
-
 export enum ActionButtonLinkType {
   LINK = 'LINK',
   DASHBOARD  = 'DASHBOARD'

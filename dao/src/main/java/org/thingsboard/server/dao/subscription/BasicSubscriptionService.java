@@ -284,14 +284,20 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
 
     @Override
     public void createEdgeAllowed(TenantId tenantId) throws SubscriptionException {
-        if (this.licenseVersion > 1) {
-            long actualCount = countEdges();
-            if (limitReached(actualCount, PlanDataConstants.MAX_EDGES_KEY)) {
-                log.error("Maximum allowed edges limit reached!");
-                throw new SubscriptionException("Maximum allowed edges limit reached!",
-                        SubscriptionErrorCode.LIMIT_REACHED, SubscriptionEntry.EDGE_COUNT, this.tbLicenseClient.getPlanLongValue(PlanDataConstants.MAX_EDGES_KEY));
-            }
+        if (!isCreateEdgeAllowed(tenantId)) {
+            log.error("Maximum allowed edges limit reached!");
+            throw new SubscriptionException("Maximum allowed edges limit reached!",
+                    SubscriptionErrorCode.LIMIT_REACHED, SubscriptionEntry.EDGE_COUNT, 0);
         }
+    }
+
+    @Override
+    public boolean isCreateEdgeAllowed(TenantId tenantId) {
+        if (this.licenseVersion < 2) {
+            return true;
+        }
+        long actualCount = countEdges();
+        return !limitReached(actualCount, PlanDataConstants.MAX_EDGES_KEY);
     }
 
     @Override

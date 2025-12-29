@@ -59,7 +59,7 @@
                         {{ 'trendz-analytics.retry-discovery' | translate }}
                     </button>
                     @if(trendzSyncInfo.syncStatus === TrendzSynchronizationStatus.SYNCED) {
-                        <button mat-stroked-button color="primary" type="button" [disabled]="(isLoading$ | async)" (click)="retryHealthcheck()">
+                        <button mat-stroked-button color="primary" type="button" [disabled]="(isLoading$ | async) || !this.trendzEnabled" (click)="retryHealthcheck()">
                             {{ 'trendz-analytics.retry-healthcheck' | translate }}
                         </button>
                     }

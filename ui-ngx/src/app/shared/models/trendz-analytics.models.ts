@@ -100,7 +100,7 @@ export interface TrendzSummaryItemParam {
 export interface BaseTrendzSyncInfo {
     type: TrendzSynchronizationResultType,
     status: TrendzSynchronizationStatus,
-    version: string,
+    version?: string,
 }
 
 export interface TrendzSynchronization extends BaseTrendzSyncInfo {
@@ -108,7 +108,7 @@ export interface TrendzSynchronization extends BaseTrendzSyncInfo {
 }
 
 export interface TrendzHealthcheckResult extends BaseTrendzSyncInfo {
-    message: string;
+    message?: string;
 }
 
 export interface TrendzStatus {

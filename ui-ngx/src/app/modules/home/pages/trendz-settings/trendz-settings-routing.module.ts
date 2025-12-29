@@ -34,7 +34,6 @@ import { ActivatedRouteSnapshot, ResolveFn, RouterModule, RouterStateSnapshot, R
 import { TrendzSettingsComponent } from "@home/pages/trendz-settings/trendz-settings.component";
 import { Authority } from "@app/shared/models/authority.enum";
 import { MenuId } from "@app/core/services/menu.models";
-import { map, of, switchMap } from "rxjs";
 import {
   TrendzStatus,
   TrendzSynchronizationResultType,
@@ -45,6 +44,7 @@ import { subscriptionInfoResolver } from '@home/pages/admin/admin-routing.module
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { getCurrentAuthState } from '@core/auth/auth.selectors';
+import { map, of, switchMap } from "rxjs";
 
 export const TrendzSyncResolver: ResolveFn<TrendzStatus> = (
   route: ActivatedRouteSnapshot,
@@ -73,7 +73,11 @@ export const TrendzSyncResolver: ResolveFn<TrendzStatus> = (
         }),
       )
     } else {
-      return of({syncStatus: TrendzSynchronizationStatus.NOT_AVAILABLE, healthcheckStatus: TrendzSynchronizationStatus.NOT_AVAILABLE, type: TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED});
+      return of({
+        type: TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED,
+        syncStatus: TrendzSynchronizationStatus.NOT_AVAILABLE,
+        healthcheckStatus: TrendzSynchronizationStatus.NOT_AVAILABLE
+      });
     }
 }
 
