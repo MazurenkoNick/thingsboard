@@ -446,11 +446,9 @@ public class NotificationController extends BaseController {
                 NotificationTargetId notificationTargetId = sysAdmins.get().getId();
                 String baseUrl = systemSecurityService.getBaseUrl(TenantId.SYS_TENANT_ID, new CustomerId(EntityId.NULL_UUID), request);
                 String checkConfigurationActionLabel = "Check configuration";
-                String checkConfigurationLink;
-                if (addonType == AddonType.TRENDZ && subscriptionService.getLicenseVersion() < 2) {
+                String checkConfigurationLink = null;
+                if (addonType == AddonType.TRENDZ) {
                     checkConfigurationLink = "/trendzSettings";
-                } else {
-                    checkConfigurationLink = "/license";
                 }
 
                 NotificationInfo info = AddonAccessErrorNotificationInfo.builder()
