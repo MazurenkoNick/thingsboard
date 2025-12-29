@@ -30,7 +30,7 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="tb-form-panel no-border no-padding" [formGroup]="alarmRuleFormGroup">
+<div class="tb-form-panel no-border no-padding" [class.disabled]="disabled" [formGroup]="alarmRuleFormGroup">
   <tb-cf-alarm-rule-condition formControlName="condition" [arguments]="arguments" [required]="required" [testScript]="testScript" [isClearCondition]="isClearCondition">
   </tb-cf-alarm-rule-condition>
   <div class="tb-form-row space-between column-xs">

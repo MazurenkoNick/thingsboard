@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.sql.dashboard;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
@@ -55,6 +56,7 @@ import java.util.UUID;
 /**
  * Created by Valerii Sosliuk on 5/6/2017.
  */
+@Slf4j
 @Component
 @SqlDao
 public class JpaDashboardDao extends JpaAbstractDao<DashboardEntity, Dashboard> implements DashboardDao {
@@ -146,6 +148,19 @@ public class JpaDashboardDao extends JpaAbstractDao<DashboardEntity, Dashboard> 
 
     @Override
     public void replacePatternInAllDashboardsConfigurations(String pattern, String replacement) {
-        dashboardRepository.replaceStringInAllDashboardConfigs(pattern, replacement);
+        int rowCount = dashboardRepository.replaceStringInAllDashboardConfigs(pattern, replacement);
+        log.trace("replacePatternInAllDashboardsConfigurations: Affected row count: {}", rowCount);
+    }
+
+    @Override
+    public void replaceWidgetTypeFullFqn(String oldLink, String newLink) {
+        int rowCount = dashboardRepository.replaceWidgetTypeFullFqn(oldLink, newLink);
+        log.trace("replaceWidgetTypeFullFqn: Affected row count: {}", rowCount);
+    }
+
+    @Override
+    public void setTrendzWidgetsTypeLatestBySystemFqn(String systemFqn) {
+        int rowCount = dashboardRepository.setTrendzWidgetsTypeLatestBySystemFqn(systemFqn);
+        log.trace("setTrendzWidgetsTypeLatestBySystemFqn: Affected row count: {}", rowCount);
     }
 }

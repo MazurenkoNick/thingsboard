@@ -35,6 +35,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { UserPasswordPolicy } from '@shared/models/settings.models';
 import { passwordsMatchValidator, passwordStrengthValidator } from '@shared/models/password.models';
+import { finalize } from 'rxjs/operators';
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 @Component({
@@ -79,11 +80,10 @@ export class CreatePasswordComponent {
     if (this.createPassword.invalid) {
       this.createPassword.markAllAsTouched();
     } else {
-      this.isLoading = true
-      this.authService.activate(this.activateToken, this.createPassword.get('newPassword').value, true)
-        .subscribe({
-          error: () => {this.isLoading = false;}
-        });
+      this.isLoading = true;
+      this.authService.activate(this.activateToken, this.createPassword.get('newPassword').value, true).pipe(
+        finalize(() => {this.isLoading = false;})
+      ).subscribe(() => {});
     }
   }
 }

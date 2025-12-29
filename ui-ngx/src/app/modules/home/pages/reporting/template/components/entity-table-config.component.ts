@@ -46,6 +46,7 @@ import {
   DataKeySettingsFormFunction
 } from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
 import { FormProperty } from '@shared/models/dynamic-form.models';
+import { pairwise, startWith } from 'rxjs';
 
 @Component({
   selector: 'tb-entity-table-config',
@@ -85,6 +86,27 @@ export class EntityTableConfigComponent extends AbstractReportComponentConfig<En
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
       this.updateValidators(form);
+    });
+    form.get('columns').valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef),
+      startWith(this.getColumns(reportComponentConfig.dataSources)),
+      pairwise()
+    ).subscribe(([prev, current]) => {
+      const tableSortOrder = form.get("tableSortOrder").value;
+      if (tableSortOrder && tableSortOrder.column) {
+        const oldColumn = prev.find(c => c.label === tableSortOrder.column);
+        if (oldColumn) {
+          const newColumn = current.find(c => c.name === oldColumn.name);
+          if (newColumn && newColumn.label !== tableSortOrder.column) {
+            setTimeout(() => {
+              form.get('tableSortOrder').patchValue({
+                column: newColumn.label,
+                direction: tableSortOrder.direction
+              });
+            }, 0);
+          }
+        }
+      }
     });
     this.updateValidators(form);
     return form;

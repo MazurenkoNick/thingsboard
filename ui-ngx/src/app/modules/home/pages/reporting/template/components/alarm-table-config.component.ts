@@ -48,6 +48,7 @@ import {
 } from '@shared/models/report-component.models';
 import { DataKey, Datasource, WidgetConfigMode } from '@shared/models/widget.models';
 import { alarmFields } from '@shared/models/alarm.models';
+import { pairwise, startWith } from 'rxjs';
 
 @Component({
   selector: 'tb-alarm-table-config',
@@ -92,6 +93,27 @@ export class AlarmTableConfigComponent extends AbstractReportComponentConfig<Ala
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
       this.updateValidators(form);
+    });
+    form.get('columns').valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef),
+      startWith(this.getColumns(reportComponentConfig.alarmSource)),
+      pairwise()
+    ).subscribe(([prev, current]) => {
+      const tableSortOrder = form.get("tableSortOrder").value;
+      if (tableSortOrder && tableSortOrder.column) {
+        const oldColumn = prev.find(c => c.label === tableSortOrder.column);
+        if (oldColumn) {
+          const newColumn = current.find(c => c.name === oldColumn.name);
+          if (newColumn && newColumn.label !== tableSortOrder.column) {
+            setTimeout(() => {
+              form.get('tableSortOrder').patchValue({
+                column: newColumn.label,
+                direction: tableSortOrder.direction
+              });
+            }, 0);
+          }
+        }
+      }
     });
     this.updateValidators(form);
     return form;

@@ -36,7 +36,7 @@ import {
   EntityTableColumn,
   EntityTableConfig
 } from '@home/models/entity/entities-table-config.models';
-import { EntityType, entityTypeTranslations } from '@shared/models/entity-type.models';
+import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared/models/entity-type.models';
 import { TranslateService } from '@ngx-translate/core';
 import { Direction } from '@shared/models/page/sort-order';
 import { MatDialog } from '@angular/material/dialog';
@@ -51,7 +51,7 @@ import { DestroyRef, Renderer2 } from '@angular/core';
 import { EntityDebugSettings } from '@shared/models/entity.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CalculatedFieldsService } from '@core/http/calculated-fields.service';
-import { catchError, filter, switchMap, tap } from 'rxjs/operators';
+import { catchError, filter, first, switchMap, tap } from 'rxjs/operators';
 import {
   ArgumentEntityType,
   ArgumentType,
@@ -82,6 +82,10 @@ import {
   CalculatedFieldScriptTestDialogComponent,
   CalculatedFieldTestScriptDialogData
 } from "@home/components/calculated-fields/components/test-dialog/calculated-field-script-test-dialog.component";
+import { AlarmRulesTabsComponent } from '@home/pages/alarm/alarm-rules-tabs.component';
+import { Router } from '@angular/router';
+import { EntityAction } from '@home/models/entity/entity-component.models';
+import { AlarmRulesComponent } from '@home/components/alarm-rules/alarm-rules.component';
 import { Operation } from "@shared/models/security.models";
 import { alarmRuleEntityTypeList } from "@shared/models/alarm-rule.models";
 import { UserPermissionsService } from "@core/http/user-permissions.service";
@@ -111,6 +115,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
               private importExportService: ImportExportService,
               private entityDebugSettingsService: EntityDebugSettingsService,
               private utilsService: UtilsService,
+              private router: Router,
               private readonly: boolean = false,
               private hideClearEventAction: boolean = false,
               private userPermissionsService: UserPermissionsService,
@@ -119,24 +124,22 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
     super();
     if (this.pageMode) {
       this.headerComponent = AlarmRuleTableHeaderComponent;
-
+      this.entityComponent = AlarmRulesComponent;
+      this.entityTabsComponent = AlarmRulesTabsComponent;
       this.rowPointer = true;
 
       this.readonly = !alarmRuleEntityTypeList.some(entityType => this.userPermissionsService.hasGenericPermissionByEntityGroupType(Operation.WRITE_CALCULATED_FIELD, entityType));
-
-      this.handleRowClick = ($event, model) => {
-        this.editCalculatedField($event, model);
-        return true;
-      };
     }
     this.tableTitle = this.pageMode ? '' : this.translate.instant('alarm-rule.alarm-rules');
-    this.detailsPanelEnabled = false;
+    this.detailsPanelEnabled = this.pageMode;
+    this.entityResources = entityTypeResources.get(EntityType.CALCULATED_FIELD);
     this.entityType = EntityType.CALCULATED_FIELD;
     this.entityTranslations = {
       type: 'alarm-rule.alarm-rule',
       typePlural: 'alarm-rule.alarm-rules',
       list: 'alarm-rule.list',
       add: 'action.add',
+      details: 'alarm-rule.details',
       noEntities: 'alarm-rule.no-found',
       search: 'action.search',
       selectedEntities: 'alarm-rule.selected-fields'
@@ -144,14 +147,20 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
 
     this.entitiesFetchFunction = (pageLink: PageLink) => this.fetchCalculatedFields(pageLink);
     this.addEntity = this.getCalculatedAlarmDialog.bind(this);
+    this.loadEntity = id => this.calculatedFieldsService.getCalculatedFieldById(id.id);
+    this.saveEntity = (alarmRule) => this.calculatedFieldsService.saveCalculatedField(alarmRule);
     this.addEnabled = !this.readonly;
     this.entitiesDeleteEnabled = !this.readonly;
+    this.detailsReadonly = (field) => this.readonly || !this.allowWritePermission(field);
     this.deleteEntityTitle = (field) => this.translate.instant('alarm-rule.delete-title', {title: field.name});
     this.deleteEntityContent = () => this.translate.instant('alarm-rule.delete-text');
     this.deleteEntitiesTitle = count => this.translate.instant('alarm-rule.delete-multiple-title', {count});
     this.deleteEntitiesContent = () => this.translate.instant('alarm-rule.delete-multiple-text');
     this.deleteEnabled = (field: CalculatedField) => this.allowWritePermission(field);
     this.deleteEntity = id => this.calculatedFieldsService.deleteCalculatedField(id.id);
+
+    this.onEntityAction = action => this.onCFAction(action);
+
     this.addActionDescriptors = [
       {
         name: this.translate.instant('alarm-rule.create'),
@@ -205,7 +214,8 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
         name: this.translate.instant('entity-view.events'),
         icon: 'mdi:clipboard-text-clock',
         isEnabled: () => true,
-        onAction: ($event, entity) => this.openDebugEventsDialog($event, entity),
+        onAction: ($event, entity) =>
+          this.pageMode ? this.openDebugTab($event, entity) : this.openDebugEventsDialog($event, entity),
       },
     );
     if (!this.readonly) {
@@ -218,14 +228,16 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
         onAction: ($event, entity) => this.onOpenDebugConfig($event, entity),
       });
     }
-    this.cellActionDescriptors.push({
-      name: this.translate.instant('action.edit'),
-      nameFunction: entity => this.translate.instant((this.readonly || !this.allowWritePermission(entity)) ? 'action.view' : 'action.edit'),
-      icon: 'edit',
-      iconFunction: entity => (this.readonly || !this.allowWritePermission(entity)) ? 'visibility' : 'edit',
-      isEnabled: () => true,
-      onAction: ($event, entity) => this.editCalculatedField($event, entity),
-    });
+    if (!this.pageMode) {
+      this.cellActionDescriptors.push({
+        name: this.translate.instant('action.edit'),
+        nameFunction: entity => this.translate.instant((this.readonly || !this.allowWritePermission(entity)) ? 'action.view' : 'action.edit'),
+        icon: 'edit',
+        iconFunction: entity => (this.readonly || !this.allowWritePermission(entity)) ? 'visibility' : 'edit',
+        isEnabled: () => true,
+        onAction: ($event, entity) => this.editCalculatedField($event, entity),
+      });
+    }
   }
 
   fetchCalculatedFields(pageLink: PageLink): Observable<PageData<AlarmRuleTableEntity>> {
@@ -325,12 +337,28 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
         debugEventTypes:[DebugEventType.DEBUG_CALCULATED_FIELD],
         disabledEventTypes:[EventType.LC_EVENT, EventType.ERROR, EventType.STATS],
         defaultEventType: DebugEventType.DEBUG_CALCULATED_FIELD,
-        debugActionEnabledFn: () => false,
+        debugActionDisabled: true,
         hideClearEventAction: this.hideClearEventAction
       }
     })
       .afterClosed()
       .subscribe();
+  }
+
+  private openDebugTab($event: Event, calculatedField: AlarmRuleTableEntity) {
+    const table = this.getTable();
+    if (!table.isDetailsOpen) {
+      table.toggleEntityDetails($event, calculatedField);
+      if (table.entityDetailsPanel.matTabGroup._tabs.length > 1) {
+        table.entityDetailsPanel.matTabGroup.selectedIndex = 1;
+      } else {
+        table.entityDetailsPanel.matTabGroup._tabs.changes.pipe(
+          first()
+        ).subscribe(() => {
+          table.entityDetailsPanel.matTabGroup.selectedIndex = 1;
+        })
+      }
+    }
   }
 
   private exportAlarmRule($event: Event, calculatedField: AlarmRuleTableEntity): void {
@@ -386,7 +414,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
     ).subscribe(() => this.updateData());
   }
 
-  private getTestScriptDialog(calculatedField: AlarmRuleTableEntity, expression: string, argumentsObj?: CalculatedFieldEventArguments, openCalculatedFieldEdit = true): Observable<string> {
+  private getTestScriptDialog(calculatedField: AlarmRuleTableEntity, argumentsObj?: CalculatedFieldEventArguments, openCalculatedFieldEdit = true, expression?: string): Observable<string> {
     if (calculatedField.type === CalculatedFieldType.ALARM) {
       const resultArguments = Object.keys(calculatedField.configuration.arguments).reduce((acc, key) => {
         const type = calculatedField.configuration.arguments[key].refEntityKey.type;
@@ -422,5 +450,23 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
     } else {
       return of(null);
     }
+  }
+
+  private openCalculatedField($event: Event, entity: AlarmRuleTableEntity) {
+    $event?.stopPropagation();
+    const url = this.router.createUrlTree(['alarms', 'alarm-rules', entity.id.id]);
+    this.router.navigateByUrl(url);
+  }
+
+  private onCFAction(action: EntityAction<AlarmRuleTableEntity>): boolean {
+    switch (action.action) {
+      case 'open':
+        this.openCalculatedField(action.event, action.entity);
+        return true;
+      case 'export':
+        this.exportAlarmRule(action.event, action.entity);
+        return true;
+    }
+    return false;
   }
 }
