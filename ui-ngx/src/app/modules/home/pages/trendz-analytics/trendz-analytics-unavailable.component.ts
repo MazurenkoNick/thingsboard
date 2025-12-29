@@ -39,7 +39,7 @@ import { WhiteLabelingService } from '@core/http/white-labeling.service';
 import { TranslateService } from '@ngx-translate/core';
 import { DialogService } from '@core/services/dialog.service';
 import { NotificationService } from '@core/http/notification.service';
-import { AddonType } from '@shared/models/notification.models';
+import { AddonType } from '@shared/models/subscription.models';
 
 @Component({
   selector: 'tb-trendz-analytics-unavailable',
