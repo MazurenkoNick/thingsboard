@@ -82,6 +82,14 @@ public class TrendzUpdater {
         return Optional.of(url);
     }
 
+    public void replaceWidgetTypeFullFqn(String pattern, String replacement) {
+        this.dashboardDao.replaceWidgetTypeFullFqn(pattern, replacement);
+    }
+
+    public void setTrendzWidgetsTypeLatestBySystemFqn(String systemFqn) {
+        this.dashboardDao.setTrendzWidgetsTypeLatestBySystemFqn(systemFqn);
+    }
+
     public void replacePatternInAllDashboardsConfigurations(String pattern, String replacement) {
         this.dashboardDao.replacePatternInAllDashboardsConfigurations(pattern, replacement);
     }

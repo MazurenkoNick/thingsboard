@@ -64,4 +64,8 @@ public interface DashboardDao extends Dao<Dashboard>, TenantEntityDao<Dashboard>
     PageData<DashboardId> findAllIds(PageLink pageLink);
 
     void replacePatternInAllDashboardsConfigurations(String pattern, String replacement);
+
+    void replaceWidgetTypeFullFqn(String oldLink, String newLink);
+
+    void setTrendzWidgetsTypeLatestBySystemFqn(String systemFqn);
 }
