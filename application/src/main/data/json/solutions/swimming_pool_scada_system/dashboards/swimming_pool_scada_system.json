@@ -9524,7 +9524,7 @@
             "displayActivity": false,
             "displayPagination": false,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-startTime",
+            "defaultSortOrder": "-createdTime",
             "useRowStyleFunction": false,
             "rowStyleFunction": ""
           },
@@ -9545,7 +9545,7 @@
             "entityAliasId": "920bd2af-f36c-1618-10af-efd0132fe3e3",
             "dataKeys": [
               {
-                "name": "startTime",
+                "name": "createdTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -13333,7 +13333,7 @@
             "displayActivity": true,
             "displayPagination": false,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-startTime",
+            "defaultSortOrder": "-createdTime",
             "useRowStyleFunction": false,
             "rowStyleFunction": ""
           },
@@ -13354,7 +13354,7 @@
             "entityAliasId": "920bd2af-f36c-1618-10af-efd0132fe3e3",
             "dataKeys": [
               {
-                "name": "startTime",
+                "name": "createdTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -25887,7 +25887,7 @@
             "displayActivity": false,
             "displayPagination": false,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-startTime",
+            "defaultSortOrder": "-createdTime",
             "useRowStyleFunction": false,
             "rowStyleFunction": ""
           },
@@ -25908,7 +25908,7 @@
             "entityAliasId": "ae4e3998-8c04-4464-f389-846e5e0cd200",
             "dataKeys": [
               {
-                "name": "startTime",
+                "name": "createdTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -32475,7 +32475,7 @@
             "displayActivity": true,
             "displayPagination": false,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-startTime",
+            "defaultSortOrder": "-createdTime",
             "useRowStyleFunction": false,
             "rowStyleFunction": ""
           },
@@ -32496,7 +32496,7 @@
             "entityAliasId": "e22e926a-ad0f-b876-4f01-feaf0db08b85",
             "dataKeys": [
               {
-                "name": "startTime",
+                "name": "createdTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -40756,7 +40756,7 @@
             "displayActivity": false,
             "displayPagination": true,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-startTime",
+            "defaultSortOrder": "-createdTime",
             "enableSelectColumnDisplay": true,
             "enableStickyAction": false,
             "enableFilter": true,
@@ -40780,7 +40780,7 @@
             "entityAliasId": "b26d354a-0f6a-b0a6-1bfe-ad5d64a2f1e1",
             "dataKeys": [
               {
-                "name": "startTime",
+                "name": "createdTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -44736,7 +44736,7 @@
             "displayActivity": false,
             "displayPagination": true,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-startTime",
+            "defaultSortOrder": "-createdTime",
             "useRowStyleFunction": false,
             "rowStyleFunction": ""
           },
@@ -44757,7 +44757,7 @@
             "entityAliasId": "b26d354a-0f6a-b0a6-1bfe-ad5d64a2f1e1",
             "dataKeys": [
               {
-                "name": "startTime",
+                "name": "createdTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",

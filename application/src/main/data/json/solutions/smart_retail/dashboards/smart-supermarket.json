@@ -595,7 +595,7 @@
             "allowClear": true,
             "displayPagination": false,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-startTime",
+            "defaultSortOrder": "-createdTime",
             "enableSelectColumnDisplay": true,
             "enableStickyAction": false,
             "enableFilter": false,
@@ -621,7 +621,7 @@
             "filterId": null,
             "dataKeys": [
               {
-                "name": "startTime",
+                "name": "createdTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -752,7 +752,7 @@
             "allowClear": true,
             "displayPagination": false,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-startTime",
+            "defaultSortOrder": "-createdTime",
             "enableSelectColumnDisplay": true,
             "enableStickyAction": false,
             "enableFilter": false,
@@ -778,7 +778,7 @@
             "filterId": null,
             "dataKeys": [
               {
-                "name": "startTime",
+                "name": "createdTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -4681,7 +4681,7 @@
             "allowClear": true,
             "displayPagination": false,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-startTime",
+            "defaultSortOrder": "-createdTime",
             "enableSelectColumnDisplay": true,
             "enableStickyAction": false,
             "enableFilter": false,
@@ -4707,7 +4707,7 @@
             "filterId": null,
             "dataKeys": [
               {
-                "name": "startTime",
+                "name": "createdTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
@@ -4838,7 +4838,7 @@
             "allowClear": true,
             "displayPagination": false,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-startTime",
+            "defaultSortOrder": "-createdTime",
             "enableSelectColumnDisplay": true,
             "enableStickyAction": false,
             "enableFilter": false,
@@ -4864,7 +4864,7 @@
             "filterId": null,
             "dataKeys": [
               {
-                "name": "startTime",
+                "name": "createdTime",
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
