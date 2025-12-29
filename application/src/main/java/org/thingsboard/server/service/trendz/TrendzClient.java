@@ -68,6 +68,7 @@ import org.thingsboard.server.common.data.trendz.TrendzViewConfigLite;
 import org.thingsboard.server.dao.pat.ApiKeyService;
 import org.thingsboard.server.dao.trendz.TrendzSettingsService;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
@@ -177,27 +178,35 @@ public class TrendzClient {
                 }, user, "Get Trendz usage");
     }
 
-    public ResponseEntity<byte[]> sendTrendzProxyRequest(String uriPath, HttpMethod method, byte[] body, HttpHeaders headers) throws ThingsboardException {
+    public ResponseEntity<byte[]> sendTrendzProxyRequest(String uriPath, Map<String, String[]> params, HttpMethod method, byte[] body, HttpHeaders headers) throws ThingsboardException {
 
         String trendzUrl = getBaseTrendzUrl();
 
         try {
-            String url = trendzUrl + uriPath;
-            log.debug("Trendz proxy request at: {}", url);
+            UriComponentsBuilder uriBuilder = UriComponentsBuilder
+                    .fromUriString(trendzUrl)
+                    .path(uriPath);
+            params.forEach(uriBuilder::queryParam);
+            URI uri = uriBuilder.build(false)
+                    .toUri();
+
+            headers.set(HttpHeaders.HOST, uri.getHost());
+
+            log.debug("Trendz proxy request at: {}", uri);
 
             ResponseEntity<byte[]> response = restTemplate.exchange(
-                    url, method, new HttpEntity<>(body, headers), byte[].class
+                    uri, method, new HttpEntity<>(body, headers), byte[].class
             );
 
             log.debug("Trendz proxy request completed successfully");
             return response;
         } catch (RestClientResponseException e) {
-            log.warn("Trendz proxy request received non-successful response: {}", e.getStatusCode());
+            log.debug("Trendz proxy request received non-successful response: {}", e.getStatusCode());
             return ResponseEntity.status(e.getStatusCode())
                     .headers(e.getResponseHeaders())
                     .body(e.getResponseBodyAsByteArray());
         } catch (Exception e) {
-            log.error("Trendz proxy request failed at {} [{}]: {}", trendzUrl, uriPath, e.getMessage(), e);
+            log.debug("Trendz proxy request failed at {} [{}]: {}", trendzUrl, uriPath, e.getMessage(), e);
             throw new ThingsboardException("Unexpected error during Trendz proxy request", e, ThingsboardErrorCode.GENERAL);
         }
     }
@@ -215,7 +224,7 @@ public class TrendzClient {
             ResponseEntity<T> response = restTemplate.exchange(url, method, request, responseType);
             return fetchContent(response, operationName);
         } catch (Exception e) {
-            log.error("{} failed at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
+            log.debug("{} failed at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
             return null;
         }
     }
@@ -236,13 +245,13 @@ public class TrendzClient {
             ResponseEntity<T> response = restTemplate.exchange(trendzUrl + urlWithParams, method, entity, typeReference);
             return fetchContent(response, operationName);
         } catch (HttpClientErrorException.NotFound e) {
-            log.warn("{} not found at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
+            log.debug("{} not found at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
             throw new ThingsboardException("%s. Item wasn't found".formatted(operationName), ThingsboardErrorCode.ITEM_NOT_FOUND);
         } catch (HttpClientErrorException.BadRequest e) {
-            log.warn("{} bad request at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
+            log.debug("{} bad request at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
             throw new ThingsboardException("%s. Bad request.".formatted(operationName), ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         } catch (Exception e) {
-            log.error("{} failed at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
+            log.warn("{} failed at {} [{}]: {}", operationName, trendzUrl, uriPath, e.getMessage(), e);
             throw new ThingsboardException("%s. Unexpected error during Trendz request.".formatted(operationName), ThingsboardErrorCode.GENERAL);
         }
     }
@@ -252,7 +261,7 @@ public class TrendzClient {
             log.debug("{} completed successfully", operationName);
             return response.getBody();
         }
-        log.warn("{} received non-successful response: {}", operationName, response.getStatusCode());
+        log.debug("{} received non-successful response: {}", operationName, response.getStatusCode());
         return null;
     }
 
@@ -280,7 +289,6 @@ public class TrendzClient {
         Optional<TrendzSettings> trendzSettings = Optional.ofNullable(trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID));
         trendzSettings.map(TrendzSettings::synchronizationResult)
                 .map(TrendzSynchronizationResult::status)
-                .filter(status -> status != TrendzSynchronizationStatus.NOT_AVAILABLE)
                 .orElseThrow(() -> new ThingsboardException(
                         "Trendz is not synced. Please sync before using it.", ThingsboardErrorCode.GENERAL
                 ));

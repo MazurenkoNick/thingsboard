@@ -82,6 +82,8 @@ export class ActionGuard {
             actionObservable = this.performEntitiesLimitIncreaseRequest(authState, lastChild);
           } else if (path === 'action.addonAccessRequest') {
             actionObservable = this.performAddonAccessRequest(authState, lastChild);
+          } else if (path === 'action.addonAccessError') {
+            actionObservable = this.performAddonAccessError(authState, lastChild);
           }
           return actionObservable.pipe(
             mergeMap(() => {
@@ -126,6 +128,23 @@ export class ActionGuard {
           mergeMap(() => this.dialogs.alert(
             this.translate.instant('subscription.feature-request-sent-title', {addonName: this.translate.instant(addonTypeTranslationMap.get(addonType))}),
             this.translate.instant('subscription.feature-request-sent-text'),
+            this.translate.instant('action.close')
+          ))
+        );
+      }
+    }
+    return of(null);
+  }
+
+  performAddonAccessError(authState: AuthState, route: ActivatedRouteSnapshot): Observable<any> {
+    if (authState.authUser.authority === Authority.TENANT_ADMIN) {
+      const addonType = route.queryParams.addonType;
+      if (addonType) {
+        return this.notificationService.sendAddonAccessError(addonType).pipe(
+          mergeMap(() => this.dialogs.alert(
+            this.translate.instant('trendz-analytics.service-unavailable-request-sent-title'),
+            this.translate.instant('trendz-analytics.service-unavailable-request-sent-message'),
+
             this.translate.instant('action.close')
           ))
         );

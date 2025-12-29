@@ -36,6 +36,7 @@ import { Observable } from 'rxjs';
 import { PageLink } from '@shared/models/page/page-link';
 import { PageData } from '@shared/models/page/page-data';
 import {
+  AddonType,
   Notification,
   NotificationDeliveryMethod,
   NotificationRequest,
@@ -53,7 +54,6 @@ import {
 import { User } from '@shared/models/user.model';
 import { isNotEmptyStr } from '@core/utils';
 import { EntityType } from '@shared/models/entity-type.models';
-import { AddonType } from '@shared/models/subscription.models';
 
 @Injectable({
   providedIn: 'root'
@@ -207,5 +207,9 @@ export class NotificationService {
 
   public saveNotificationUserSettings(settings: NotificationUserSettings, config?: RequestConfig): Observable<NotificationUserSettings> {
     return this.http.post<NotificationUserSettings>('/api/notification/settings/user', settings, defaultHttpOptionsFromConfig(config));
+  }
+
+  public sendAddonAccessError(addonType: AddonType, config?: RequestConfig): Observable<void> {
+    return this.http.post<void>(`/api/notification/sendAddonAccessError/${addonType}`, defaultHttpOptionsFromConfig(config));
   }
 }

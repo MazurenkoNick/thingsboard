@@ -445,16 +445,17 @@ public class NotificationController extends BaseController {
             if (sysAdmins.isPresent()) {
                 NotificationTargetId notificationTargetId = sysAdmins.get().getId();
                 String baseUrl = systemSecurityService.getBaseUrl(TenantId.SYS_TENANT_ID, new CustomerId(EntityId.NULL_UUID), request);
-                String actionLabel = "Check configuration";
-                String actionLink = null;
+                String checkConfigurationActionLabel = "Check configuration";
+                String checkConfigurationLink = null;
                 if (addonType == AddonType.TRENDZ && subscriptionService.getLicenseVersion() < 2) {
-                    actionLink = "/trendzSettings";
+                    checkConfigurationLink = "/trendzSettings";
                 }
+
                 NotificationInfo info = AddonAccessErrorNotificationInfo.builder()
                         .addonType(addonType)
                         .userEmail(user.getEmail())
-                        .checkConfigurationActionLabel(actionLabel)
-                        .checkConfigurationLink(actionLink)
+                        .checkConfigurationActionLabel(checkConfigurationActionLabel)
+                        .checkConfigurationLink(checkConfigurationLink)
                         .baseUrl(baseUrl)
                         .build();
                 notificationCenter.sendSystemNotification(TenantId.SYS_TENANT_ID, notificationTargetId, NotificationType.ADDON_ACCESS_ERROR, info);

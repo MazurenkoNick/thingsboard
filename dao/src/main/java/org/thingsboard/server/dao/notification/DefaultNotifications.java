@@ -194,7 +194,7 @@ public class DefaultNotifications {
             .type(NotificationType.ADDON_ACCESS_ERROR)
             .subject("${addon} access error")
             .text("${userEmail} was unable to access ${addon}.")
-            .button("${checkConfigurationActionLabel}").link("${checkConfiguration}")
+            .button("${checkConfigurationActionLabel}").link("${checkConfigurationLink}")
             .emailTemplate(DefaultEmailTemplate.builder()
                     .subject("${addon} access error")
                     .body("""
@@ -212,7 +212,7 @@ public class DefaultNotifications {
                             </tr>
                             <tr style="box-sizing: border-box; margin: 0px;">
                             <td style="box-sizing: border-box; vertical-align: top; margin: 0px; padding: 0 24px 16px 24px; color: #212121; font-family: Arial; font-size: 16px; line-height: 24px; font-weight: 400;" valign="top">
-                            <a style="display: inline-block; padding: 10px 16px; border-radius: 4px; background: #106CC8; color: #fff; font-family: Arial; font-size: 14px; line-height: 20px; font-weight: bold; text-decoration: none;" href="${baseUrl}${checkConfiguration}">${checkConfigurationActionLabel}</a>
+                            <a style="display: inline-block; padding: 10px 16px; border-radius: 4px; background: #106CC8; color: #fff; font-family: Arial; font-size: 14px; line-height: 20px; font-weight: bold; text-decoration: none;" href="${baseUrl}${checkConfigurationLink}">${checkConfigurationActionLabel}</a>
                             </td>
                             </tr>
                             </tbody>
@@ -641,6 +641,7 @@ public class DefaultNotifications {
     public static class DefaultEmailTemplate {
         private final String subject;
         private final String body;
+
     }
 
     @Data

@@ -34,6 +34,7 @@ import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.thingsboard.server.common.data.edqs.fields.DashboardFields;
@@ -75,6 +76,18 @@ public interface DashboardRepository extends JpaRepository<DashboardEntity, UUID
             "d.customerId, d.title, d.version) FROM DashboardEntity d WHERE d.id > :id ORDER BY d.id")
     List<DashboardFields> findNextBatch(@Param("id") UUID id, Limit limit);
 
+    @Modifying
+    @Query(nativeQuery = true,
+            value = """
+                    UPDATE dashboard
+                    SET configuration = REPLACE(configuration, :pattern, :replacement)
+                    WHERE configuration LIKE CONCAT('%', :pattern, '%')
+                    """
+    )
+    void replaceStringInAllDashboardConfigs(
+            @Param("pattern") String pattern, @Param("replacement") String replacement
+    );
+
     @Query(
             value = "SELECT COUNT(*) " +
                     "FROM dashboard d " +
@@ -82,4 +95,5 @@ public interface DashboardRepository extends JpaRepository<DashboardEntity, UUID
             nativeQuery = true
     )
     long countAllDashboardsByLayoutType(@Param("layoutType") String layoutType);
+
 }

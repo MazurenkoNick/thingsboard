@@ -13,7 +13,11 @@ Available template parameters:
 * `userEmail` - email of the user who sends the request;
 * `checkConfigurationActionLabel` - label of the button used to open Addon Management page or to send add-on error notification, for ex: 'Check configuration';
 * `checkConfigurationLink` - link to the Addon Management page or link to trigger send add-on error action;
-* `baseUrl` - used to construct the full URL for the Addon Management page or add-on error action in email notifications; 
+* `baseUrl` - used to construct the full URL for the Addon Management page or add-on error action in email notifications;
+* `recipientTitle` - title of the recipient (first and last name if specified, email otherwise);
+* `recipientEmail` - email of the recipient;
+* `recipientFirstName` - first name of the recipient;
+* `recipientLastName` - last name of the recipient;
 
 Parameter names must be wrapped using `${...}`. For example: `${userEmail}`.
 You may also modify the value of the parameter with one of the suffixes:
@@ -21,6 +25,12 @@ You may also modify the value of the parameter with one of the suffixes:
 * `upperCase`, for example - `${userEmail:upperCase}`
 * `lowerCase`, for example - `${userEmail:lowerCase}`
 * `capitalize`, for example - `${userEmail:capitalize}`
+
+To localize the notification, use `translate` suffix: `${some.translation.key:translate}`
+
+For example, if you have a custom translation key `custom.notifications.greetings` with value `Hello, ${recipientFirstName}!`, the template
+`${custom.notifications.greetings:translate}` will be transformed to `Hello, John!`.
+The needed locale is taken from recipient's profile settings, using English by default.
 
 <div class="divider"></div>
 

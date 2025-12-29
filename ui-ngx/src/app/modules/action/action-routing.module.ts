@@ -47,6 +47,12 @@ const routes: Routes = [
     loadComponent: () => of(null),
     data: {},
     canActivate: [ActionGuard],
+  },
+  {
+    path: 'action/addonAccessError',
+    loadComponent: () => of(null),
+    data: {},
+    canActivate: [ActionGuard],
   }
 ];
 

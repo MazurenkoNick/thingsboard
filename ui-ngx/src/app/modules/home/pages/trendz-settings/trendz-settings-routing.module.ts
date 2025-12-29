@@ -34,8 +34,9 @@ import { ActivatedRouteSnapshot, ResolveFn, RouterModule, RouterStateSnapshot, R
 import { TrendzSettingsComponent } from "@home/pages/trendz-settings/trendz-settings.component";
 import { Authority } from "@app/shared/models/authority.enum";
 import { MenuId } from "@app/core/services/menu.models";
+import { map, of, switchMap } from "rxjs";
 import {
-  TrendzSynchronization,
+  TrendzStatus,
   TrendzSynchronizationResultType,
   TrendzSynchronizationStatus
 } from "@app/shared/models/trendz-analytics.models";
@@ -44,18 +45,35 @@ import { subscriptionInfoResolver } from '@home/pages/admin/admin-routing.module
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { getCurrentAuthState } from '@core/auth/auth.selectors';
-import { of } from 'rxjs';
 
-export const TrendzSyncResolver: ResolveFn<TrendzSynchronization> = (
+export const TrendzSyncResolver: ResolveFn<TrendzStatus> = (
   route: ActivatedRouteSnapshot,
   state: RouterStateSnapshot,
   store: Store<AppState> = inject(Store<AppState>),
   trendzService = inject(TrendzService)) => {
     const authState = getCurrentAuthState(store);
     if (authState.licenseVersion < 2 || authState.trendzEnabled) {
-      return trendzService.getTrendzSyncResult()
+      return trendzService.getTrendzSyncResult().pipe(
+        switchMap(result => {
+          const trendzStatus: TrendzStatus = {
+            type: result.type,
+            syncStatus: result.status,
+            healthcheckStatus: result.status,
+          }
+          if (result.status === TrendzSynchronizationStatus.SYNCED) {
+            return trendzService.performTrendzHealthcheck().pipe(
+              map(healthcheckResult => {
+                trendzStatus.healthcheckStatus = healthcheckResult.status;
+                trendzStatus.type = healthcheckResult.type;
+                return trendzStatus;
+              })
+            );
+          }
+          return of(trendzStatus);
+        }),
+      )
     } else {
-      return of({status: TrendzSynchronizationStatus.NOT_AVAILABLE, type: TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED});
+      return of({syncStatus: TrendzSynchronizationStatus.NOT_AVAILABLE, healthcheckStatus: TrendzSynchronizationStatus.NOT_AVAILABLE, type: TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED});
     }
 }
 

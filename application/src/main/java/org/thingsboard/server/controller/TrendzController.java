@@ -38,8 +38,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.thingsboard.server.cache.limits.RateLimitService;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.limit.LimitedApi;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.trendz.TrendzConfiguration;
@@ -65,8 +67,12 @@ import static org.thingsboard.server.controller.ControllerConstants.SYSTEM_AUTHO
 @RequestMapping("/api/trendz")
 public class TrendzController extends BaseController {
 
+    private static final String TRENDZ_PUBLIC_SYNC_ENDPOINT_RATE_LIMIT = "1:60";
+
     private final TrendzSyncService trendzSyncService;
     private final TrendzSettingsService trendzSettingsService;
+
+    private final RateLimitService rateLimitService;
 
     @ApiOperation(value = "Get Trendz configuration (getTrendzConfig)",
             notes = "Retrieves Trendz configuration (URLs). Returns trendzUrl and tbUrl." + SYSTEM_AUTHORITY_PARAGRAPH)
@@ -146,7 +152,11 @@ public class TrendzController extends BaseController {
     @PostMapping("/public/connect")
     public void publicConnectToTrendz() {
         try {
-            trendzSyncService.performSyncIfNeeded();
+            if (rateLimitService.checkRateLimit(LimitedApi.TRENDZ_PUBLIC_SYNC, (Object) TenantId.SYS_TENANT_ID, TRENDZ_PUBLIC_SYNC_ENDPOINT_RATE_LIMIT)) {
+                trendzSyncService.performSyncIfNeeded();
+            } else {
+                log.warn("Failed to perform Trendz public synchronization: rate limit");
+            }
         } catch (Exception e) {
             log.error("Failed to perform Trendz public synchronization.", e);
         }

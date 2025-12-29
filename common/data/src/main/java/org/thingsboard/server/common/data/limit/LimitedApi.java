@@ -78,7 +78,8 @@ public enum LimitedApi {
     TRANSPORT_MESSAGES_PER_GATEWAY_DEVICE("transport messages per gateway device", false),
     EMAILS("emails sending", true),
     WS_SUBSCRIPTIONS("WS subscriptions", false),
-    CALCULATED_FIELD_DEBUG_EVENTS("calculated field debug events", true);
+    CALCULATED_FIELD_DEBUG_EVENTS("calculated field debug events", true),
+    TRENDZ_PUBLIC_SYNC("Trendz sync from public endpoint", false);
 
     private final Function<DefaultTenantProfileConfiguration, String> configExtractor;
     private final boolean perTenant;

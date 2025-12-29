@@ -13,7 +13,11 @@ Available template parameters:
 * `userEmail` - email of the user who sends the request;
 * `increaseLimitActionLabel` - label of the button used to open Limits Management page, for ex: 'Set new limit';
 * `increaseLimitLink` - link to the Limits Management page;
-* `baseUrl` - used to construct the full URL for the Limits Management page in email notifications; 
+* `baseUrl` - used to construct the full URL for the Limits Management page in email notifications;
+* `recipientTitle` - title of the recipient (first and last name if specified, email otherwise);
+* `recipientEmail` - email of the recipient;
+* `recipientFirstName` - first name of the recipient;
+* `recipientLastName` - last name of the recipient;
 
 Parameter names must be wrapped using `${...}`. For example: `${userEmail}`.
 You may also modify the value of the parameter with one of the suffixes:
