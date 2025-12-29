@@ -54,7 +54,7 @@
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <button mat-button mat-raised-button color="primary" type="button" [disabled]="(isLoading$ | async)" (click)="retryDiscovery()">
+                  <button mat-button mat-raised-button color="primary" type="button" [disabled]="(isLoading$ | async) || !this.trendzEnabled" (click)="retryDiscovery()">
                         <tb-icon matButtonIcon>refresh</tb-icon>
                         {{ 'trendz-analytics.retry-discovery' | translate }}
                     </button>
