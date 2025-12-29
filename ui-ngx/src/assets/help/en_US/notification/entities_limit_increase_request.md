@@ -26,6 +26,12 @@ You may also modify the value of the parameter with one of the suffixes:
 * `lowerCase`, for example - `${userEmail:lowerCase}`
 * `capitalize`, for example - `${userEmail:capitalize}`
 
+To localize the notification, use `translate` suffix: `${some.translation.key:translate}`
+
+For example, if you have a custom translation key `custom.notifications.greetings` with value `Hello, ${recipientFirstName}!`, the template
+`${custom.notifications.greetings:translate}` will be transformed to `Hello, John!`.
+The needed locale is taken from recipient's profile settings, using English by default.
+
 <div class="divider"></div>
 
 ##### Examples
