@@ -157,6 +157,9 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         cfCtx.setUseLatestTs(false);
         cfCtx.init();
         CalculatedFieldState state = initState(tenantId, entityId, cfCtx, startTs);
+        if (!state.isReady()) {
+            throw new IllegalStateException(state.getReadinessStatus().errorMsg());
+        }
         CFReprocessingCtx ctx = buildCtx(tenantId, entityId, cfCtx, state);
 
         try (ctx) {
@@ -359,10 +362,12 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             this.ctxId = new CalculatedFieldEntityCtxId(tenantId, cfId, entityId);
         }
 
+        @Override
         public void processInitialState(long startTs) throws Exception {
             processStateIfReady(this, startTs).get();
         }
 
+        @Override
         public void checkStateSize() {
             state.checkStateSize(ctxId, cfCtx.getMaxStateSize());
             if (!state.isSizeOk()) {
@@ -377,6 +382,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             }
         }
 
+        @Override
         public void awaitResults() throws InterruptedException {
             for (Future<Void> resultFuture : resultFutures) {
                 if (Thread.interrupted()) {
@@ -411,6 +417,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             super(tenantId, entityId, cfCtx, state);
         }
 
+        @Override
         public void processInitialState(long startTs) {}
 
         @Override
@@ -459,6 +466,14 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         public void close() {
             super.close();
             intervals.clear();
+        }
+
+        @Override
+        public void awaitResults() throws InterruptedException {
+            super.awaitResults();
+            if (getLatestResult() == null) {
+                throw new RuntimeException("Time series data aggregation for selected reprocessing time window has no results!");
+            }
         }
 
     }
