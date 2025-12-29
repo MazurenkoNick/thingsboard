@@ -120,7 +120,7 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
     public void testCreateCfAndNoTelemetryDuringInterval_checkAggregation() throws Exception {
         Device device = createDevice("Device", "1234567890111");
 
-        CustomInterval customInterval = new CustomInterval("Europe/Kyiv", 0L, 5L);
+        CustomInterval customInterval = new CustomInterval(TZ, 0L, 5L);
         createConsumptionCF(device.getId(), customInterval, null);
 
         long interval = customInterval.getCurrentIntervalDurationMillis();
@@ -140,7 +140,7 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
     public void testCreateCfWithoutWatermark_checkAggregation() throws Exception {
         Device device = createDevice("Device", "1234567890111");
 
-        CustomInterval customInterval = new CustomInterval("Europe/Kyiv", 0L, 5L);
+        CustomInterval customInterval = new CustomInterval(TZ, 0L, 5L);
         createConsumptionCF(device.getId(), customInterval, null);
 
         long currentIntervalStartTs = customInterval.getCurrentIntervalStartTs();
@@ -183,7 +183,7 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
     public void testCreateCfWithWatermark_checkAggregationDuringWatermark() throws Exception {
         Device device = createDevice("Device", "1234567890111");
 
-        CustomInterval customInterval = new CustomInterval("Europe/Kyiv", 0L, 5L);
+        CustomInterval customInterval = new CustomInterval(TZ, 0L, 5L);
         Watermark watermark = new Watermark(10);
         createConsumptionCF(device.getId(), customInterval, watermark);
 
@@ -331,6 +331,51 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
             assertThat(cfReprocessingJob.getEntityId()).isEqualTo(device.getId());
             assertThat(cfReprocessingJob.getEntityName()).isEqualTo(device.getName());
         });
+    }
+
+    @Test
+    public void testSendFutureTelemetry_checkAggregation() throws Exception {
+        Device device = createDevice("Device", "1234567890111");
+
+        CustomInterval customInterval = new CustomInterval(TZ, 0L, 2L);
+        createConsumptionCF(device.getId(), customInterval, null);
+
+        long currentIntervalStartTs = customInterval.getCurrentIntervalStartTs();
+
+        long tsBeforeInterval = currentIntervalStartTs - 1000;
+        long tsInInterval_1 = currentIntervalStartTs + 1000;
+        long tsInInterval_2 = currentIntervalStartTs + 500;
+        long tsInInterval_3 = currentIntervalStartTs + 200;
+        postTelemetry(device.getId(), String.format("{\"ts\": \"%s\", \"values\": {\"energy\":120}}", tsBeforeInterval));
+        postTelemetry(device.getId(), String.format("{\"ts\": \"%s\", \"values\": {\"energy\":100}}", tsInInterval_1));
+        postTelemetry(device.getId(), String.format("{\"ts\": \"%s\", \"values\": {\"energy\":180}}", tsInInterval_2));
+        postTelemetry(device.getId(), String.format("{\"ts\": \"%s\", \"values\": {\"energy\":120}}", tsInInterval_3));
+
+        long interval = customInterval.getCurrentIntervalDurationMillis();
+
+        await().alias("create CF -> perform aggregation after interval end")
+                .atMost(2 * interval, TimeUnit.MILLISECONDS)
+                .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    ObjectNode result = getLatestTelemetry(device.getId(), "consumption", "avgConsumption");
+                    assertThat(result).isNotNull();
+                    assertThat(result.get("consumption").get(0).get("value").asText()).isEqualTo("400");
+                    assertThat(result.get("avgConsumption").get(0).get("value").asText()).isEqualTo("133");
+                });
+
+        postTelemetry(device.getId(), String.format("{\"ts\": \"%s\", \"values\": {\"energy\":500}}", currentIntervalStartTs + 4500L));
+
+        await().alias("update telemetry that belongs to future interval -> check aggregation ")
+                .atMost(3 * interval, TimeUnit.MILLISECONDS)
+                .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    ObjectNode result = getLatestTelemetry(device.getId(), "consumption", "avgConsumption");
+                    assertThat(result).isNotNull();
+                    assertThat(result.get("consumption").get(0).get("value").asText()).isEqualTo("500");
+                    assertThat(result.get("consumption").get(0).get("ts").asLong()).isEqualTo(currentIntervalStartTs + 4000L);
+                    assertThat(result.get("avgConsumption").get(0).get("value").asText()).isEqualTo("500");
+                    assertThat(result.get("avgConsumption").get(0).get("ts").asLong()).isEqualTo(currentIntervalStartTs + 4000L);
+                });
     }
 
     private long ts(LocalDate date, int hour, int minute, int second) {

@@ -90,7 +90,7 @@ public class CalculatedFieldArgumentUtils {
         return new SingleValueArgumentEntry();
     }
 
-    public static ArgumentEntry transformAggregationArgument(List<TsKvEntry> timeSeries, long startIntervalTs, long endIntervalTs) {
+    public static ArgumentEntry transformAggregationArgument(List<TsKvEntry> timeSeries, long startIntervalTs, long endIntervalTs, CalculatedFieldCtx ctx) {
         Map<AggIntervalEntry, AggIntervalEntryStatus> aggIntervals = new HashMap<>();
         AggIntervalEntry aggIntervalEntry = new AggIntervalEntry(startIntervalTs, endIntervalTs);
         if (timeSeries == null || timeSeries.isEmpty()) {
@@ -98,7 +98,7 @@ public class CalculatedFieldArgumentUtils {
         } else {
             aggIntervals.put(aggIntervalEntry, new AggIntervalEntryStatus(System.currentTimeMillis()));
         }
-        return new EntityAggregationArgumentEntry(aggIntervals);
+        return new EntityAggregationArgumentEntry(aggIntervals, ctx);
     }
 
     private static KvEntry createDefaultKvEntry(Argument argument) {
