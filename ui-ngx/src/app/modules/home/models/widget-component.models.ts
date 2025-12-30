@@ -331,6 +331,8 @@ export class WidgetContext {
   widgetNamespace?: string;
   subscriptionApi?: WidgetSubscriptionApi;
 
+  widgetCssClass?: string;
+
   actionsApi?: WidgetActionsApi;
   activeEntityInfo?: SubscriptionEntityInfo;
 

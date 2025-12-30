@@ -39,7 +39,11 @@ import {
 } from '@shared/models/notification.models';
 import { UtilsService } from '@core/services/utils.service';
 import { Router } from '@angular/router';
-import { alarmSeverityColors, alarmSeverityTranslations } from '@shared/models/alarm.models';
+import {
+  alarmSeverityBackgroundColors,
+  alarmSeverityColors,
+  alarmSeverityTranslations
+} from '@shared/models/alarm.models';
 import tinycolor from 'tinycolor2';
 import { StateObject } from '@core/api/widget-api.models';
 import { objToBase64URI } from '@core/utils';
@@ -148,8 +152,8 @@ export class NotificationComponent implements OnInit {
     }
   }
 
-  alarmColorSeverity(alpha: number) {
-    return tinycolor(alarmSeverityColors.get(this.notification.info.alarmSeverity)).setAlpha(alpha).toRgbString();
+  alarmColorSeverityBackground() {
+    return alarmSeverityBackgroundColors.get(this.notification.info.alarmSeverity);
   }
 
   notificationColor(): string {
