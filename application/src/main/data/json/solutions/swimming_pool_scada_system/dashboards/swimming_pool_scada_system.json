@@ -8594,7 +8594,7 @@
           "widgetCss": "",
           "pageSize": 1024,
           "units": null,
-          "decimals": 0,
+          "decimals": 1,
           "noDataDisplayMessage": "",
           "timewindowStyle": {
             "showIcon": false,
@@ -26847,11 +26847,11 @@
                     "persistentPollingInterval": 1000
                   },
                   "getAttribute": {
-                    "key": "state",
-                    "scope": null
+                    "scope": null,
+                    "key": "state"
                   },
                   "getTimeSeries": {
-                    "key": "temperature"
+                    "key": "compressorTemperature"
                   },
                   "getAlarmStatus": {
                     "severityList": null,
@@ -26859,13 +26859,12 @@
                   },
                   "dataToValue": {
                     "type": "NONE",
-                    "compareToValue": true,
                     "dataToValueFunction": "/* Should return boolean value */\nreturn data;"
                   }
                 },
                 "targetValue": {
-                  "action": "GET_ATTRIBUTE",
-                  "defaultValue": null,
+                  "action": "DO_NOTHING",
+                  "defaultValue": 200,
                   "executeRpc": {
                     "method": "getState",
                     "requestTimeout": 5000,
@@ -26873,8 +26872,8 @@
                     "persistentPollingInterval": 1000
                   },
                   "getAttribute": {
-                    "key": "target",
-                    "scope": "SERVER_SCOPE"
+                    "scope": "SERVER_SCOPE",
+                    "key": "target"
                   },
                   "getTimeSeries": {
                     "key": "state"
@@ -26885,7 +26884,6 @@
                   },
                   "dataToValue": {
                     "type": "NONE",
-                    "compareToValue": true,
                     "dataToValueFunction": "/* Should return boolean value */\nreturn data;"
                   }
                 },
@@ -27898,7 +27896,7 @@
             "IMPERIAL": "psi",
             "HYBRID": "bar"
           },
-          "decimals": 0,
+          "decimals": 1,
           "noDataDisplayMessage": "",
           "timewindowStyle": {
             "showIcon": false,
@@ -31266,17 +31264,6 @@
           "color": "rgba(0, 0, 0, 0.87)",
           "padding": "0",
           "settings": {
-            "background": {
-              "type": "color",
-              "imageUrl": null,
-              "color": "rgba(0,0,0,0)",
-              "overlay": {
-                "enabled": false,
-                "color": "rgba(255,255,255,0.72)",
-                "blur": 3
-              }
-            },
-            "padding": "0",
             "scadaSymbolUrl": "tb-image;/api/images/system/simple-vertical-scale-hp.svg",
             "scadaSymbolObjectSettings": {
               "behavior": {
@@ -31396,7 +31383,18 @@
                 "defaultCriticalScaleColor": "#666666",
                 "activeCriticalScaleColor": "#D12730"
               }
-            }
+            },
+            "background": {
+              "type": "color",
+              "color": "rgba(0,0,0,0)",
+              "overlay": {
+                "enabled": false,
+                "color": "rgba(255,255,255,0.72)",
+                "blur": 3
+              },
+              "imageUrl": null
+            },
+            "padding": "0"
           },
           "title": "HP Simple vertical scale",
           "dropShadow": false,
@@ -31420,7 +31418,7 @@
           "titleIcon": "mdi:lightbulb-outline",
           "iconColor": "rgba(0, 0, 0, 0.87)",
           "iconSize": "24px",
-          "configMode": "basic",
+          "configMode": "advanced",
           "targetDevice": {
             "type": "entity",
             "entityAliasId": "ac95a594-1b71-5fe3-81dd-103c726211d6"
@@ -31720,7 +31718,7 @@
             "IMPERIAL": "psi",
             "HYBRID": "bar"
           },
-          "decimals": 0,
+          "decimals": 1,
           "noDataDisplayMessage": "",
           "timewindowStyle": {
             "showIcon": false,
@@ -44114,60 +44112,9 @@
               }
             ],
             "outOfRangeColor": "#ccc",
-            "fillArea": false,
-            "showLegend": true,
-            "legendPosition": "top",
-            "legendLabelFont": {
-              "family": "Roboto",
-              "size": 12,
-              "sizeUnit": "px",
-              "style": "normal",
-              "weight": "400",
-              "lineHeight": "16px"
-            },
-            "legendLabelColor": "rgba(0, 0, 0, 0.76)",
-            "showTooltip": true,
-            "tooltipValueFont": {
-              "family": "Roboto",
-              "size": 12,
-              "sizeUnit": "px",
-              "style": "normal",
-              "weight": "500",
-              "lineHeight": "16px"
-            },
-            "tooltipValueColor": "rgba(0, 0, 0, 0.76)",
-            "tooltipShowDate": true,
-            "tooltipDateFormat": {
-              "format": null,
-              "lastUpdateAgo": false,
-              "custom": false,
-              "auto": true,
-              "autoDateFormatSettings": {}
-            },
-            "tooltipDateFont": {
-              "family": "Roboto",
-              "size": 11,
-              "sizeUnit": "px",
-              "style": "normal",
-              "weight": "400",
-              "lineHeight": "16px"
-            },
-            "tooltipDateColor": "rgba(0, 0, 0, 0.76)",
-            "tooltipBackgroundColor": "rgba(255, 255, 255, 0.76)",
-            "tooltipBackgroundBlur": 4,
-            "background": {
-              "type": "color",
-              "color": "#FFFFFFE6",
-              "overlay": {
-                "enabled": false,
-                "color": "rgba(255,255,255,0.72)",
-                "blur": 3
-              },
-              "imageUrl": null
-            },
-            "tooltipDateInterval": true,
             "showRangeThresholds": true,
             "rangeThreshold": {
+              "type": "constant",
               "yAxisId": "default",
               "units": {
                 "from": "bar",
@@ -44197,6 +44144,7 @@
               "enableLabelBackground": true,
               "labelBackground": "rgba(255,255,255,0.56)"
             },
+            "fillArea": false,
             "fillAreaOpacity": 0.7,
             "showLine": true,
             "step": false,
@@ -44303,6 +44251,18 @@
               "animationEasingUpdate": "cubicOut",
               "animationDelayUpdate": 0
             },
+            "showLegend": true,
+            "legendPosition": "top",
+            "legendLabelFont": {
+              "family": "Roboto",
+              "size": 12,
+              "sizeUnit": "px",
+              "style": "normal",
+              "weight": "400",
+              "lineHeight": "16px"
+            },
+            "legendLabelColor": "rgba(0, 0, 0, 0.76)",
+            "showTooltip": true,
             "tooltipLabelFont": {
               "family": "Roboto",
               "size": 12,
@@ -44312,6 +44272,45 @@
               "lineHeight": "16px"
             },
             "tooltipLabelColor": "rgba(0, 0, 0, 0.76)",
+            "tooltipValueFont": {
+              "family": "Roboto",
+              "size": 12,
+              "sizeUnit": "px",
+              "style": "normal",
+              "weight": "500",
+              "lineHeight": "16px"
+            },
+            "tooltipValueColor": "rgba(0, 0, 0, 0.76)",
+            "tooltipShowDate": true,
+            "tooltipDateFormat": {
+              "format": null,
+              "lastUpdateAgo": false,
+              "custom": false,
+              "auto": true,
+              "autoDateFormatSettings": {}
+            },
+            "tooltipDateFont": {
+              "family": "Roboto",
+              "size": 11,
+              "sizeUnit": "px",
+              "style": "normal",
+              "weight": "400",
+              "lineHeight": "16px"
+            },
+            "tooltipDateColor": "rgba(0, 0, 0, 0.76)",
+            "tooltipDateInterval": true,
+            "tooltipBackgroundColor": "rgba(255, 255, 255, 0.76)",
+            "tooltipBackgroundBlur": 4,
+            "background": {
+              "type": "color",
+              "color": "#FFFFFFE6",
+              "overlay": {
+                "enabled": false,
+                "color": "rgba(255,255,255,0.72)",
+                "blur": 3
+              },
+              "imageUrl": null
+            },
             "padding": "12px"
           },
           "title": "Pressure",
@@ -44319,7 +44318,7 @@
           "enableFullscreen": false,
           "titleStyle": null,
           "mobileHeight": null,
-          "configMode": "basic",
+          "configMode": "advanced",
           "actions": {},
           "showTitleIcon": false,
           "titleIcon": "thermostat",
@@ -44344,7 +44343,7 @@
             "IMPERIAL": "psi",
             "HYBRID": "bar"
           },
-          "decimals": 0,
+          "decimals": 1,
           "noDataDisplayMessage": "",
           "timewindowStyle": {
             "showIcon": false,
@@ -45724,7 +45723,7 @@
             "IMPERIAL": "psi",
             "HYBRID": "bar"
           },
-          "decimals": 0,
+          "decimals": 1,
           "noDataDisplayMessage": "",
           "timewindowStyle": {
             "showIcon": false,
@@ -52923,7 +52922,7 @@
           "widgetCss": "",
           "pageSize": 1024,
           "units": null,
-          "decimals": 0,
+          "decimals": 1,
           "noDataDisplayMessage": "",
           "timewindowStyle": {
             "showIcon": false,
