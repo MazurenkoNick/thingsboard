@@ -38,7 +38,7 @@
          required
          placeholder="{{ 'integration.select-model' | translate }}"
          (focus)="onFocus()"
-         (blur)="validateSelectedModel()"
+         (blur)="onBlur()"
          [matAutocomplete]="modelsAutocomplete">
   <button *ngIf="modelFormGroup.get('model').value"
           type="button"

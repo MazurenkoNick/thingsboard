@@ -37,7 +37,7 @@
          formControlName="vendor"
          required
          (focusin)="onFocus()"
-         (blur)="validateSelectedVendor()"
+         (blur)="onBlur()"
          placeholder="{{ 'integration.select-vendor' | translate }}"
          [matAutocomplete]="vendorsAutocomplete">
   <button *ngIf="vendorFormGroup.get('vendor').value"

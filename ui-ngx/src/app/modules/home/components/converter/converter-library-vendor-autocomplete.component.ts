@@ -191,7 +191,7 @@ export class ConverterLibraryVendorAutocompleteComponent implements OnInit, Cont
     return vendors.filter(v => v.name.toLowerCase().includes(search));
   }
 
-  validateSelectedVendor() {
+  onBlur() {
     const control = this.vendorFormGroup.get('vendor');
     const currentErrors = control.errors || {};
     const isInvalidSelection = typeof control.value === 'string'  && control.value.length > 0;

@@ -208,7 +208,7 @@ export class ConverterLibraryModelAutocompleteComponent implements OnInit, Contr
     return models.filter(v => (v.info.label.toLowerCase() + v.info.description.toLowerCase()).includes(search));
   }
 
-  validateSelectedModel() {
+  onBlur() {
     const control = this.modelFormGroup.get('model');
     const currentErrors = control.errors || {};
     const isInvalidSelection = typeof control.value === 'string'  && control.value.length > 0;
