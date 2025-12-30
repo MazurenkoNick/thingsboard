@@ -554,7 +554,7 @@
             "allowClear": true,
             "displayPagination": true,
             "defaultPageSize": 10,
-            "defaultSortOrder": "-startTime",
+            "defaultSortOrder": "-createdTime",
             "enableSelectColumnDisplay": true,
             "enableStickyAction": false,
             "enableFilter": true,
@@ -577,7 +577,7 @@
             "filterId": null,
             "dataKeys": [
               {
-                "name": "startTime",
+                "name": "createdTime",
                 "type": "alarm",
                 "label": "Time",
                 "color": "#2196f3",
@@ -721,7 +721,7 @@
             "allowClear": true,
             "displayPagination": true,
             "defaultPageSize": 5,
-            "defaultSortOrder": "-startTime",
+            "defaultSortOrder": "-createdTime",
             "enableSelectColumnDisplay": true,
             "enableStickyAction": false,
             "enableFilter": true,
@@ -744,7 +744,7 @@
             "filterId": null,
             "dataKeys": [
               {
-                "name": "startTime",
+                "name": "createdTime",
                 "type": "alarm",
                 "label": "Time",
                 "color": "#2196f3",

@@ -810,7 +810,7 @@
             "defaultPageSize": 10,
             "pageStepCount": 3,
             "pageStepIncrement": 10,
-            "defaultSortOrder": "-startTime",
+            "defaultSortOrder": "-createdTime",
             "useRowStyleFunction": false,
             "rowStyleFunction": ""
           },
@@ -830,9 +830,9 @@
             "entityAliasId": "80f96c31-13dc-5425-0595-547501dc4e0d",
             "dataKeys": [
               {
-                "name": "startTime",
+                "name": "createdTime",
                 "type": "alarm",
-                "label": "Time",
+                "label": "Created time",
                 "color": "#2196f3",
                 "settings": {
                   "useCellStyleFunction": false,
@@ -2609,7 +2609,7 @@
             "defaultPageSize": 10,
             "pageStepCount": 3,
             "pageStepIncrement": 10,
-            "defaultSortOrder": "-startTime",
+            "defaultSortOrder": "-createdTime",
             "useRowStyleFunction": false,
             "rowStyleFunction": ""
           },
@@ -2629,9 +2629,9 @@
             "entityAliasId": "1c770287-a30e-5426-fcc7-4cb4df4cc037",
             "dataKeys": [
               {
-                "name": "startTime",
+                "name": "createdTime",
                 "type": "alarm",
-                "label": "Time",
+                "label": "Created time",
                 "color": "#2196f3",
                 "settings": {
                   "useCellStyleFunction": false,
@@ -3615,7 +3615,7 @@
             "defaultPageSize": 10,
             "pageStepCount": 3,
             "pageStepIncrement": 10,
-            "defaultSortOrder": "-startTime",
+            "defaultSortOrder": "-createdTime",
             "useRowStyleFunction": false,
             "rowStyleFunction": ""
           },
@@ -3635,9 +3635,9 @@
             "entityAliasId": "1c770287-a30e-5426-fcc7-4cb4df4cc037",
             "dataKeys": [
               {
-                "name": "startTime",
+                "name": "createdTime",
                 "type": "alarm",
-                "label": "Time",
+                "label": "Created time",
                 "color": "#2196f3",
                 "settings": {
                   "useCellStyleFunction": false,
@@ -5110,7 +5110,7 @@
             "defaultPageSize": 10,
             "pageStepCount": 3,
             "pageStepIncrement": 10,
-            "defaultSortOrder": "-startTime",
+            "defaultSortOrder": "-createdTime",
             "useRowStyleFunction": false,
             "rowStyleFunction": ""
           },
@@ -5130,9 +5130,9 @@
             "entityAliasId": "d38e5427-ad3a-6ab5-1488-4afa9232c816",
             "dataKeys": [
               {
-                "name": "startTime",
+                "name": "createdTime",
                 "type": "alarm",
-                "label": "Time",
+                "label": "Created time",
                 "color": "#2196f3",
                 "settings": {
                   "useCellStyleFunction": false,
