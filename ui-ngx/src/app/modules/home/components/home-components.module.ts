@@ -292,6 +292,12 @@ import { ApiKeyGeneratedDialogComponent } from '@home/components/api-key/api-key
 import { ApiKeysTableDialogComponent } from '@home/components/api-key/api-keys-table-dialog.component';
 import { AuditLogFilterComponent } from "@home/components/audit-log/audit-log-filter.component";
 import { EventsDialogComponent } from '@home/dialogs/events-dialog.component';
+import {
+  ConverterLibraryVendorAutocompleteComponent
+} from '@home/components/converter/converter-library-vendor-autocomplete.component';
+import {
+  ConverterLibraryModelAutocompleteComponent
+} from '@home/components/converter/converter-library-model-autocomplete.component';
 
 @NgModule({
   declarations:
@@ -482,7 +488,9 @@ import { EventsDialogComponent } from '@home/dialogs/events-dialog.component';
       ApiKeyGeneratedDialogComponent,
       AuditLogHeaderComponent,
       AuditLogFilterComponent,
-      EventsDialogComponent
+      EventsDialogComponent,
+      ConverterLibraryVendorAutocompleteComponent,
+      ConverterLibraryModelAutocompleteComponent
     ],
   imports: [
     CommonModule,
@@ -661,7 +669,9 @@ import { EventsDialogComponent } from '@home/dialogs/events-dialog.component';
     ResourcesLibraryComponent,
     ApiKeysTableComponent,
     ApiKeysTableDialogComponent,
-    EventsDialogComponent
+    EventsDialogComponent,
+    ConverterLibraryVendorAutocompleteComponent,
+    ConverterLibraryModelAutocompleteComponent
   ],
   providers: [
     WidgetComponentService,
