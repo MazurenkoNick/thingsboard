@@ -84,7 +84,62 @@ public interface DashboardRepository extends JpaRepository<DashboardEntity, UUID
                     WHERE configuration LIKE CONCAT('%', :pattern, '%')
                     """
     )
-    void replaceStringInAllDashboardConfigs(
+    int replaceStringInAllDashboardConfigs(
             @Param("pattern") String pattern, @Param("replacement") String replacement
     );
+
+    @Modifying
+    @Query(nativeQuery = true,
+            value = """
+            UPDATE dashboard
+            SET configuration = CAST(jsonb_set(
+              CAST(configuration AS jsonb),
+              '{widgets}',
+              (
+                SELECT jsonb_object_agg(e.key,
+                  CASE
+                    WHEN e.value->>'typeFullFqn' = :oldFqn
+                    THEN jsonb_set(e.value, '{typeFullFqn}', to_jsonb(CAST(:newFqn AS text)), true)
+                    ELSE e.value
+                  END
+                )
+                FROM jsonb_each((CAST(configuration AS jsonb))->'widgets') e
+              ),
+              true
+            ) AS text)
+            WHERE configuration IS NOT NULL
+              AND configuration LIKE CONCAT('%', :oldFqn, '%')
+              AND (CAST(configuration AS jsonb)->'widgets') IS NOT NULL
+            """
+    )
+    int replaceWidgetTypeFullFqn(@Param("oldFqn") String oldFqn, @Param("newFqn") String newFqn);
+
+    @Modifying
+    @Query(nativeQuery = true,
+            value = """
+            UPDATE dashboard
+            SET configuration = CAST(
+                (CAST(configuration AS jsonb) - 'widgets') || 
+                jsonb_build_object('widgets', (
+                    SELECT jsonb_object_agg(k,
+                        CASE
+                            WHEN (v->>'typeFullFqn') = :systemFqn
+                            THEN v || '{"type": "latest"}'::jsonb
+                            ELSE v
+                        END
+                    )
+                    FROM jsonb_each(CAST(configuration AS jsonb)->'widgets') AS e(k, v)
+                ))
+            AS text)
+            WHERE configuration IS NOT NULL
+              AND configuration LIKE CONCAT('%', :systemFqn, '%')
+              AND (CAST(configuration AS jsonb)->'widgets') IS NOT NULL
+              AND EXISTS (
+                  SELECT 1 
+                  FROM jsonb_each(CAST(configuration AS jsonb)->'widgets') AS e2(k, v2)
+                  WHERE v2->>'typeFullFqn' = :systemFqn 
+                    AND (v2->>'type') IS DISTINCT FROM 'latest'
+              )
+            """)
+    int setTrendzWidgetsTypeLatestBySystemFqn(@Param("systemFqn") String systemFqn);
 }

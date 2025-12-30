@@ -205,6 +205,14 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 .map(fqn -> bundleAlias + "." + fqn)
                 .collect(Collectors.toSet());
 
+        Map<String, String> oldToNew = Map.of(
+                "trendz_bundle", "advanced_analytics",
+                "trendz_builder", "advanced_analytics_builder",
+                "trendz_view_latest", "advanced_analytics_view",
+                "trendz_view_static", "advanced_analytics_view",
+                "trendz_view_latest_chat", "advanced_analytics_chat_assistant"
+        );
+
         this.trendzUpdater.labelWidgetTypesAsDeprecatedByFqns(fullFqns);
         this.trendzUpdater.findUniqueTrendzBaseUrlFromWidgetTypes(fullFqns)
                 .ifPresentOrElse(baseUrl -> {
@@ -214,13 +222,14 @@ public class DefaultDataUpdateService implements DataUpdateService {
                     TrendzSettings settings = this.trendzUpdater.createSettings(urlString, null);
                     this.trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
 
-                    for (String fqn : fullFqns) {
-                        String fqnSuffix = StringUtils.substringAfterLast(fqn, ".");
-                        String tenantFqnOld = "tenant." + fqn;
-                        String tenantFqnNew = "tenant." + fqnSuffix;
-                        String systemFqn = "system." + fqnSuffix;
-                        this.trendzUpdater.replacePatternInAllDashboardsConfigurations(tenantFqnNew, systemFqn);
-                        this.trendzUpdater.replacePatternInAllDashboardsConfigurations(tenantFqnOld, systemFqn);
+                    for (String fullFqn : fullFqns) {
+                        String fqn = StringUtils.substringAfterLast(fullFqn, ".");
+                        String tenantFqnOld = "tenant." + fullFqn;
+                        String tenantFqnNew = "tenant." + fqn;
+                        String systemFqn = "system." + oldToNew.getOrDefault(fqn, fqn);
+                        this.trendzUpdater.replaceWidgetTypeFullFqn(tenantFqnNew, systemFqn);
+                        this.trendzUpdater.replaceWidgetTypeFullFqn(tenantFqnOld, systemFqn);
+                        this.trendzUpdater.setTrendzWidgetsTypeLatestBySystemFqn(systemFqn);
                     }
                 }, () -> {
                     log.info("Couldn't find unique Trendz URL, skipping migration of dashboards to system Trendz widgets");
