@@ -157,9 +157,6 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         cfCtx.setUseLatestTs(false);
         cfCtx.init();
         CalculatedFieldState state = initState(tenantId, entityId, cfCtx, startTs);
-        if (!state.isReady()) {
-            throw new IllegalStateException(state.getReadinessStatus().errorMsg());
-        }
         CFReprocessingCtx ctx = buildCtx(tenantId, entityId, cfCtx, state);
 
         try (ctx) {
@@ -396,6 +393,13 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             }
             log.debug("[{}][{}] Saved {} CF results", tenantId, entityId, resultFutures.size());
             resultFutures.clear();
+            checkResults();
+        }
+
+        protected void checkResults() {
+            if (!state.isReady()) {
+                throw new IllegalStateException(state.getReadinessStatus().errorMsg());
+            }
         }
 
         @Override
@@ -469,8 +473,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         }
 
         @Override
-        public void awaitResults() throws InterruptedException {
-            super.awaitResults();
+        protected void checkResults() {
             if (getLatestResult() == null) {
                 throw new RuntimeException("Time series data aggregation for selected reprocessing time window has no results!");
             }
