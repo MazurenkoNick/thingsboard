@@ -76,6 +76,7 @@ import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
 import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.task.CfReprocessingTaskResult;
+import org.thingsboard.server.common.data.job.task.TaskResult;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.EntitySearchDirection;
 import org.thingsboard.server.common.data.relation.RelationPathLevel;
@@ -804,7 +805,6 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
                 .untilAsserted(() -> {
                     ObjectNode z = getTimeSeries(testDevice.getId(), startTs, endTs, "z");
                     assertThat(z).isNotNull();
-
                     assertThat(z.get("z").get(0).get("ts").asText()).isEqualTo(Long.toString(x4Ts));
                     assertThat(z.get("z").get(0).get("value").asText()).isEqualTo("14");
 
@@ -2130,6 +2130,39 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
                     assertThat(result.get("latestA").get(0).get("value").asText()).isEqualTo("7");
                     assertThat(result.get("avgB").get(0).get("value").asText()).isEqualTo("126.0");
                 });
+    }
+
+    @Test
+    public void testReprocessCalculatedFieldWhenNoTimeseriesDataAvailableForTimewindow() throws Exception {
+        Device testDevice = createDevice("Test device", "1234567890");
+
+        long currentTime = System.currentTimeMillis();
+        // reprocessing time window(TW)
+        long startTs = currentTime - TimeUnit.SECONDS.toMillis(120);
+        long endTs = currentTime - TimeUnit.SECONDS.toMillis(45);
+
+        postAttributes(testDevice.getId(), AttributeScope.SERVER_SCOPE, "{\"y\":10}");
+
+        CalculatedField savedCalculatedField = createCalculatedFieldWhenUseLatestTs(testDevice.getId());
+
+        reprocessCalculatedField(savedCalculatedField, startTs, endTs);
+
+        await().atMost(AbstractWebTest.TIMEOUT, TimeUnit.SECONDS).untilAsserted(() -> {
+            Job cfReprocessingJob = findJobs(List.of(JobType.CF_REPROCESSING), List.of(testDevice.getUuidId())).stream().findFirst().orElseThrow();
+            assertThat(cfReprocessingJob.getStatus()).isEqualTo(JobStatus.FAILED);
+            assertThat(cfReprocessingJob.getResult().getSuccessfulCount()).isEqualTo(0);
+            assertThat(cfReprocessingJob.getResult().getTotalCount()).isEqualTo(1);
+            assertThat(cfReprocessingJob.getResult().getFailedCount()).isEqualTo(1);
+            assertThat(cfReprocessingJob.getResult().getResults()).isNotNull().hasSize(1);
+            TaskResult taskResult = cfReprocessingJob.getResult().getResults().get(0);
+            assertThat(taskResult).isInstanceOf(CfReprocessingTaskResult.class);
+            CfReprocessingTaskResult cfReprocessingTaskResult = (CfReprocessingTaskResult) taskResult;
+            assertThat(cfReprocessingTaskResult.getFailure()).isNotNull()
+                    .extracting(CfReprocessingTaskResult.CfReprocessingTaskFailure::getError)
+                    .isEqualTo("Required arguments are missing: x");
+            assertThat(cfReprocessingJob.getEntityId()).isEqualTo(testDevice.getId());
+            assertThat(cfReprocessingJob.getEntityName()).isEqualTo(testDevice.getName());
+        });
     }
 
     private CalculatedField createCalculatedFieldWhenUseLatestTs(EntityId entityId) {
