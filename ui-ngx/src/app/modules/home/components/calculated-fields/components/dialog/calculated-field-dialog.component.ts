@@ -57,6 +57,9 @@ import { FormGroup } from '@angular/forms';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { Operation } from '@shared/models/security.models';
 import { TenantId } from '@shared/models/id/tenant-id';
+import { AssetInfo } from '@shared/models/asset.models';
+import { DeviceInfo } from '@shared/models/device.models';
+import { NULL_UUID } from '@shared/models/id/has-uuid';
 
 export interface CalculatedFieldDialogData {
   value?: CalculatedField;
@@ -127,6 +130,7 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
           this.fieldFormGroup.get('configuration').disable({emitEvent: false});
         } else {
           this.fieldFormGroup.get('configuration').enable({emitEvent: false});
+          this.fieldFormGroup.get('configuration').updateValueAndValidity({emitEvent: false});
         }
       });
       if (this.calculatedFieldsEntityTypeList.includes(EntityType.DEVICE_PROFILE)) {

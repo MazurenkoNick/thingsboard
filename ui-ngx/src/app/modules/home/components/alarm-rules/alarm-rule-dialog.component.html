@@ -74,6 +74,7 @@
         </div>
         @if (!data.entityId) {
           <tb-entity-select formControlName="entityId"
+                            #entitySelect
                             appearance="outline"
                             required
                             entityTypeLabel="{{ 'entity.entity-type' | translate }}"
@@ -154,6 +155,7 @@
                                         placeholder="{{ 'alarm-rule.alarm-rule-relation-types-list' | translate }}"
                                         hint="{{ 'alarm-rule.alarm-rule-relation-types-list-hint' | translate }}"
                                         [predefinedValues]="predefinedTypeValues"
+                                        allowUserValue
                                         formControlName="propagateRelationTypes">
                   </tb-string-items-list>
                 }
