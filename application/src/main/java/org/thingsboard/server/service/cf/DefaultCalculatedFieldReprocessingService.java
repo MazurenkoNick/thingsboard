@@ -165,6 +165,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             ctx.prepareCtx(startTs, endTs);
             ctx.processData(startTs, endTs);
             ctx.awaitResults();
+            ctx.validateTaskResult();
         }
     }
 
@@ -332,6 +333,8 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
 
         Future<CalculatedFieldResult> performCalculation(CalculatedFieldState state) throws Exception;
 
+        void validateTaskResult();
+
         void close();
 
     }
@@ -393,10 +396,10 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             }
             log.debug("[{}][{}] Saved {} CF results", tenantId, entityId, resultFutures.size());
             resultFutures.clear();
-            checkResults();
         }
 
-        protected void checkResults() {
+        @Override
+        public void validateTaskResult() {
             if (!state.isReady()) {
                 throw new IllegalStateException(state.getReadinessStatus().errorMsg());
             }
@@ -473,9 +476,9 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         }
 
         @Override
-        protected void checkResults() {
-            if (getLatestResult() == null) {
-                throw new RuntimeException("Time series data aggregation for selected reprocessing time window has no results!");
+        public void validateTaskResult() {
+            if (latestResult == null) {
+                throw new IllegalStateException("Time series data aggregation for selected reprocessing time window has no results!");
             }
         }
 
