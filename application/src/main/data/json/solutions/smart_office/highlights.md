@@ -11,4 +11,5 @@ Press the install button and you will have a customer-oriented application with 
 * "energy-meter" device and corresponding device profile;  
 * "water-meter" device and corresponding device profile;
 * "hvac" device and corresponding device profile;
+* "High Temperature" alarm rule configured in the "smart-sensor" device profile;
 * Edge instance - optionally, add edge computing to your solution.

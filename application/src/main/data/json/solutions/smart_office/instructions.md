@@ -96,7 +96,13 @@ The commands are sent using the platform <a href="${DOCS_BASE_URL}/user-guide/rp
 ### Alarms
 
 Alarms are generated using <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> in the
-"smart-sensor" <a href="/profiles/deviceProfiles" target="_blank">device profile</a>.
+"smart-sensor" <a href="/profiles/deviceProfiles" target="_blank">device profile</a>:
+
+<div class="tb-markdown-view table-wrapper">
+
+${alarm_rules}
+
+</div>
 
 ### Solution entities
 
