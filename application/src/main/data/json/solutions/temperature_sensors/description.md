@@ -16,5 +16,5 @@ Both the Administrator and the End User benefit from real-time access to the act
 #### How to use?
 
 - As is. For PoCs and small projects with straightforward requirements.
-- As a part of the Smart Home / the Smart Office use case. It is obvious that optimal climate conditions drive people’s well-being, the ability to concentrate and a mood in general. With this sensor solution, temperature and humidity can be measured, monitored and controlled.
-- As a part of the Smart Retail use case. Using Temperature and Humidity sensors to assist in environmental or products protection by monitoring local atmospheric conditions is one of the ways to comply with certain regulations, especially for cold chains. Temperature violations and corresponding alarms prevent the spoil of products or may save the inventory against fire. 
+- As a part of the Smart Home / the Smart Office use case. It is obvious that optimal climate conditions drive people’s well-being, ensure comfort, and productivity. This solution allows you to measure and control temperature and humidity to maintain optimal living or working standards.
+- As a part of the Smart Retail use case. Using Temperature and Humidity sensors to assist in environmental or product protection by monitoring local atmospheric conditions is one of the ways to comply with certain regulations, especially for cold chains. Real-time monitoring and alarms help prevent product spoilage and mitigate risks (e.g., fire or freezing) by detecting temperature violations immediately.

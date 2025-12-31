@@ -52,8 +52,7 @@ See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_bla
 ### Alarms
 
 Alarms are generated using <a href="${DOCS_BASE_URL}/user-guide/alarm-rules" target="_blank">Alarm rules</a>
-configured in the "Excavator" and "Haul truck" <a href="/profiles/deviceProfiles" target="_blank">device profiles</a>. 
-The alarm rules configured for these device profiles are listed below:
+configured in the "Excavator" and "Haul truck" <a href="/profiles/deviceProfiles" target="_blank">device profiles</a>:
 
 <div class="tb-markdown-view table-wrapper">
 
