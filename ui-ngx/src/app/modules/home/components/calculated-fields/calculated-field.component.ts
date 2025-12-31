@@ -169,15 +169,11 @@ export class CalculatedFieldComponent extends EntityComponent<CalculatedFieldsTa
     if (entityId?.entityType === EntityType.DEVICE || entityId?.entityType === EntityType.ASSET) {
       this.entityService.getEntity(entityId.entityType, entityId.id, { ignoreLoading: true, ignoreErrors: true }).subscribe(
         (entity: AssetInfo | DeviceInfo) => {
-          if (this.isAssignedToCustomer(entity)) {
-            this.ownerId = entity.customerId;
+          if (entity.ownerId) {
+            this.ownerId = entity.ownerId;
           }
         }
       );
     }
-  }
-
-  private isAssignedToCustomer(entity: AssetInfo | DeviceInfo): boolean {
-    return entity && entity.customerId && entity.customerId.id !== NULL_UUID;
   }
 }
