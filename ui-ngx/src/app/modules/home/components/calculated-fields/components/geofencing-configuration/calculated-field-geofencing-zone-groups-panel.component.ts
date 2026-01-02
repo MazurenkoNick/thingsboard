@@ -320,6 +320,7 @@ export class CalculatedFieldGeofencingZoneGroupsPanelComponent implements OnInit
 
   removeKey(index: number) {
     this.levelsFormArray().removeAt(index);
+    this.levelsFormArray().markAsDirty();
   }
 
   addKey() {
