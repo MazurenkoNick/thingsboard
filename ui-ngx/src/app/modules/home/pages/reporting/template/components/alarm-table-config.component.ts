@@ -63,6 +63,8 @@ export class AlarmTableConfigComponent extends AbstractReportComponentConfig<Ala
     return (columns || []).map(key => key.label);
   }
 
+  columnNameChanged: [string, string];
+
   settingsTab: 'data' | 'layout' = 'data';
 
   basicMode = WidgetConfigMode.basic;
@@ -105,12 +107,7 @@ export class AlarmTableConfigComponent extends AbstractReportComponentConfig<Ala
         if (oldColumn) {
           const newColumn = current.find(c => c.name === oldColumn.name);
           if (newColumn && newColumn.label !== tableSortOrder.column) {
-            setTimeout(() => {
-              form.get('tableSortOrder').patchValue({
-                column: newColumn.label,
-                direction: tableSortOrder.direction
-              });
-            }, 0);
+            this.columnNameChanged = [oldColumn.label, newColumn.label];
           }
         }
       }

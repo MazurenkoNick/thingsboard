@@ -61,6 +61,8 @@ export class EntityTableConfigComponent extends AbstractReportComponentConfig<En
     return (columns || []).map(key => key.label);
   }
 
+  columnNameChanged: [string, string];
+
   settingsTab: 'data' | 'layout' = 'data';
 
   basicMode = WidgetConfigMode.basic;
@@ -98,12 +100,7 @@ export class EntityTableConfigComponent extends AbstractReportComponentConfig<En
         if (oldColumn) {
           const newColumn = current.find(c => c.name === oldColumn.name);
           if (newColumn && newColumn.label !== tableSortOrder.column) {
-            setTimeout(() => {
-              form.get('tableSortOrder').patchValue({
-                column: newColumn.label,
-                direction: tableSortOrder.direction
-              });
-            }, 0);
+            this.columnNameChanged = [oldColumn.label, newColumn.label];
           }
         }
       }

@@ -108,7 +108,7 @@
       [entityAliasId]="datasource?.entityAliasId"
       [aliasController]="context.aliasController"
       formControlName="columns">
-      <tb-table-sort-order formControlName="tableSortOrder" [columns]="columnLabels"></tb-table-sort-order>
+      <tb-table-sort-order formControlName="tableSortOrder" [columns]="columnLabels" [columnNameChange]="columnNameChanged"></tb-table-sort-order>
       <div class="tb-form-row">
         <mat-slide-toggle class="mat-slide fixed-title-width" formControlName="showTimestamp">
           {{ 'report-template.component.timeseries-table.display-timestamp' | translate }}
