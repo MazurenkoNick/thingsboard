@@ -1,21 +1,22 @@
 ## Solution instructions
 
-As part of this solution, we have created the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Fleet Tracking"</a> dashboard that displays
-data from multiple buses. You may use the dashboard to:
+Welcome to your new **Fleet Tracking** solution 👋 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Fleet Tracking"</a> dashboard for you. Use it to:
 
-* observe location and status of the buses;
-* monitor bus tracking events (alarms);  
-* browse individual bus route, speed and fuel level history;
+* 📍 **Observe** real-time bus locations and status;
+* 🔔 **Monitor** tracking events (alarms);
+* 📈 **Browse** route history, speed, and fuel levels.
 
-The dashboard has two states. The main state displays the list of the buses, their location on the map as well as the list of their alarms.
-You may browse bus location history popup by clicking on the "Route history" icon located on the right side of the bus table row.  
-You may drill down to the bus details state by clicking on the table row. The bus details state allows to browse alarms, location, speed, and fuel level history.
+**Mastering the Dashboard** 🖥️
 
-You may always customize the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Fleet Tracking"</a> dashboard using dashboard development <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">guide</a>.
+The dashboard has two states. The **Main** state displays the list of the buses, their location on the map as well as the list of their alarms.
+* **Route History:** Click the "Route history" icon on any table row to see a popup of where the bus has been.
+* **Bus Details:** Click the table row itself to drill down into the details view to inspect alarms, speed, and fuel history.
 
-### Devices
+You can always customize this dashboard using our <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">dashboard development guide</a>.
 
-We have already created four bus tracking devices and loaded some demo data for them. See device info and credentials below:
+### Connecting your first device 🔌
+
+We have pre-provisioned four bus tracking devices with demo data. You can find their credentials below:
 
 <div class="tb-markdown-view table-wrapper">
 
@@ -23,7 +24,11 @@ ${device_list_and_credentials}
 
 </div>
 
-Solution expects that the bus tracking device will upload "latitude", "longitude", "speed", "fuel" and "status" values.
+#### ⚡ Test it now
+
+Want to see the dashboard come alive? You can simulate a real bus right now.
+The solution expects the device to upload `latitude`, `longitude`, `speed`, `fuel`, and `status`.
+
 The most simple example of the expected payload is in JSON format:
 
 ```json
@@ -39,9 +44,11 @@ curl -v -X POST -d "{\"latitude\":  37.764702, \"longitude\":  -122.476071, \"sp
 The example above uses <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a>.
 See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_blank">connecting devices</a> for other connectivity options.
 
-### Alarms
+Go check your dashboard — you should see the values update instantly 🚀
 
-Alarms are generated using <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> configured in the "bus" <a href="/profiles/deviceProfiles" target="_blank">device profile</a>:
+### Configuring Alarms 🚨
+
+Your solution monitors data based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> configured in the "bus" device profile:
 
 <div class="tb-markdown-view table-wrapper">
 
@@ -49,9 +56,9 @@ ${alarm_rules}
 
 </div>
 
-### Solution entities
+### Solution entities 📦
 
-As part of this solution, the following entities were created:
+The following entities were automatically created to power this solution:
 
 <div class="tb-markdown-view table-wrapper">
 
@@ -59,7 +66,7 @@ ${all_entities}
 
 </div>
 
-### Edge computing
+### Edge computing 📡
 
 **Optionally**, this solution can be extended to use edge computing.
 
@@ -83,7 +90,7 @@ To install ThingsBoard Edge and connect to the cloud, please navigate to <a href
 
 Once the edge is installed and connected to the cloud, you will be able to log in into edge using your tenant credentials.
 
-#### Push data to device on edge
+#### Push data to device on edge 🔄
 
 **"Bus devices"** *DEVICE* group was assigned to the edge entity "Remote Bus Station R1".
 This means that all devices from this group will be automatically provisioned to the edge.

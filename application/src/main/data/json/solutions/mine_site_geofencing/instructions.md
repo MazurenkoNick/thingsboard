@@ -1,22 +1,34 @@
 ## Solution instructions
 
-As part of this solution, we have created the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Mine site monitoring"</a> dashboard that displays
-data from multiple heavy machines. You may use the dashboard to:
+Welcome to your new **Mine Site Monitoring** solution 👋
+We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Mine site monitoring"</a> dashboard for you. Use it to:
 
-* observe the location of excavators and haul trucks;
-* monitor zone-related events and alarms;
-* browse individual machine movement and fuel level history;
+* 📍 **Observe** real-time positions of excavators and haul trucks;
+* 🚧 **Monitor** geofencing events and alarms;
+* ⛽ **Browse** movement history and fuel levels.
 
-The main state displays the list of machines, their current positions on the map, and recent alarms related to geofencing and operational conditions.
-You may browse a machine’s location history popup by clicking the "Location history" icon located on the right side of the machine row.
-You may also drill down to the machine details state by clicking on a table row.
-The details state allows you to view machine-specific alarms, fuel history, movement history, and geofence interactions.
+**Mastering the Dashboard** 🖥️
 
-You may always customize the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Mine site monitoring"</a> dashboard using dashboard development <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">guide</a>.
+The **Main** state provides a complete overview of your mining operations:
+* **KPI Cards:** Monitor real-time counts of machines in Loading, Unloading, or Restricted zones, along with daily fuel consumption.
+* **Map:** Visualize geofenced zones and the live location of your machinery.
+* **Lists:** View detailed tables for **Zones**, **Machines**, and active **Alarms**.
 
-### Devices
+**Drill Down features:**
+* 🚛 **Machine Details:** Click any machine row in the table **or** click the "See Details" button in a map tooltip to inspect specific alarms, hydraulic pressure (for excavators), and load weight (for haul trucks) history.
+* 🏗️ **Zone Details:** Click any zone row in the table to view a list of all machines currently inside that zone, along with their alarms.
 
-We have already created two excavators and three haul trucks with loaded demo telemetry for them. See the device info and credentials below:
+**🎮 Interactive Simulation:** 
+
+The map markers are **movable**! You can drag and drop a machine from one zone to another directly on the map.
+This simulates a real-time coordinate change (`latitude`/`longitude`), automatically triggering the corresponding 
+**Geofencing** calculated fields logic to update the machine's status and generate alarms.
+
+You can always customize this dashboard using our <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">dashboard development guide</a>.
+
+### Connecting your first device 🔌
+
+We have pre-provisioned two excavators and three haul trucks with demo data. You can find their credentials below:
 
 <div class="tb-markdown-view table-wrapper">
 
@@ -24,9 +36,10 @@ ${device_list_and_credentials}
 
 </div>
 
-The solution expects that machinery devices will upload "latitude", "longitude", "speed",
-"fuelLevel", and machine-specific telemetry such as "hydraulicPressure" for excavators and "loadWeight"
-for haul trucks.
+#### Test it now ⚡
+
+Want to see the dashboard come alive? You can simulate a machine right now.
+The solution expects telemetry like `latitude`, `longitude`, `speed`, `fuelLevel`, and machine-specific data (`loadWeight` for haul trucks and `hydraulicPressure` for excavators).
 
 The most simple example of the expected payload is in JSON format:
 
@@ -49,10 +62,11 @@ curl -v -X POST -d "{\"latitude\": 36.215322,\"longitude\": -88.665637,\"speed\"
 The example above uses <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a>.
 See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_blank">connecting devices</a> for other connectivity options.
 
-### Alarms
+Go check your dashboard—you should see the values update instantly! 🚀
 
-Alarms are generated using <a href="${DOCS_BASE_URL}/user-guide/alarm-rules" target="_blank">Alarm rules</a>
-configured in the "Excavator" and "Haul truck" <a href="/profiles/deviceProfiles" target="_blank">device profiles</a>:
+### Configuring Alarms 🚨
+
+Your solution monitors data based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules" target="_blank">Alarm rules</a> configured in the "Excavator" and "Haul truck" device profiles:
 
 <div class="tb-markdown-view table-wrapper">
 
@@ -60,11 +74,10 @@ ${alarm_rules}
 
 </div>
 
-### Calculated fields
+### Calculated fields 🧮
 
 Calculated fields are used to derive new telemetry values and events based on incoming data. They are configured in the "Excavator" and "Haul truck"
-<a href="/profiles/deviceProfiles" target="_blank">device profiles</a> and in the Mine site <a href="/profiles/assetProfiles" target="_blank">asset profile</a>.
-The configured calculated fields are listed below:
+device profiles and in the "Mine site" asset profile. The configured calculated fields are listed below:
 
 <div class="tb-markdown-view table-wrapper">
 
@@ -72,9 +85,9 @@ ${calculated_fields}
 
 </div>
 
-### Solution entities
+### Solution entities 📦
 
-As part of this solution, the following entities were created:
+The following entities were automatically created to power this solution:
 
 <div class="tb-markdown-view table-wrapper">
 
