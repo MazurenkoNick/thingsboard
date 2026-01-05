@@ -46,7 +46,7 @@ See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_bla
 
 Go check your dashboard — you should see the values update instantly 🚀
 
-### Alarms 🚨
+### 🚨 Alarms
 
 Your solution monitors data based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> configured in the "bus" device profile:
 
@@ -56,7 +56,7 @@ ${alarm_rules}
 
 </div>
 
-### Solution entities 📦
+### 📦 Solution entities
 
 The following entities were automatically created to power this solution:
 
@@ -66,7 +66,7 @@ ${all_entities}
 
 </div>
 
-### Edge computing 📡
+### 📡 Edge computing
 
 **Optionally**, this solution can be extended to use edge computing.
 
@@ -90,7 +90,7 @@ To install ThingsBoard Edge and connect to the cloud, please navigate to <a href
 
 Once the edge is installed and connected to the cloud, you will be able to log in into edge using your tenant credentials.
 
-#### Push data to device on edge 🔄
+#### 🔄 Push data to device on edge
 
 **"Bus devices"** *DEVICE* group was assigned to the edge entity "Remote Bus Station R1".
 This means that all devices from this group will be automatically provisioned to the edge.

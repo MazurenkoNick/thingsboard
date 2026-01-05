@@ -23,7 +23,7 @@ ${device_list_and_credentials}
 
 </div>
 
-#### Test it now ⚡
+#### ⚡ Test it now
 
 Want to see the dashboard come alive? You can simulate a real device right now.
 The solution expects the device to upload `temperature` and `humidity` values in JSON format:
@@ -44,7 +44,7 @@ See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_bla
 
 Go check your dashboard — you should see the values update instantly 🚀
 
-### Alarms 🚨
+### 🚨 Alarms 
 
 Your solution monitors data based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> 
 configured in the "Temperature Sensor" device profile:
@@ -57,7 +57,7 @@ ${alarm_rules}
 
 **💡 Tip:** You can enable/disable alarms and configure their thresholds anytime directly from the <a href="${MAIN_DASHBOARD_URL}" target="_blank">dashboard</a> using the "Edit Sensor" button.
 
-### Managing Users & Access 🔐
+### 🔐 Managing Users & Access
 
 We created a sample customer, "Customer D", to demonstrate how you can isolate data for different clients. "Sensor C1" has been explicitly assigned to this customer.
 
@@ -71,7 +71,7 @@ ${user_list}
 
 **💡 Note:** You can create more Customers and Users via the administration UI. You can also change the owner of other sensors (like Sensor T1) to "Customer D" to make them visible to these users.
 
-### Solution entities 📦
+### 📦 Solution entities
 
 As part of this solution, the following entities were created:
 
@@ -81,7 +81,7 @@ ${all_entities}
 
 </div>
 
-### Edge computing 📡
+### 📡 Edge computing
 
 **Optionally**, this solution can be extended to use edge computing.
 
@@ -106,7 +106,7 @@ To install ThingsBoard Edge and connect to the cloud, please navigate to <a href
 
 Once the edge is installed and connected to the cloud, you will be able to log in into edge using your tenant or users of customer "Customer D" credentials.
 
-#### Push data to device on edge 🔄
+#### 🔄 Push data to device on edge
 
 **"Temperature & Humidity sensors"** *DEVICE* group of customer "Customer D" was assigned to the edge entity "Remote Facility R1".
 This means that all devices from this group will be automatically provisioned to the edge.

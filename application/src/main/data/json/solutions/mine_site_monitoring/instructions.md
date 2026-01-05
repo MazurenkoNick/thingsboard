@@ -36,7 +36,7 @@ ${device_list_and_credentials}
 
 </div>
 
-#### Test it now ⚡
+#### ⚡ Test it now
 
 Want to see the dashboard come alive? You can simulate a machine right now.
 The solution expects telemetry like `latitude`, `longitude`, `speed`, `fuelLevel`, and machine-specific data (`loadWeight` for haul trucks and `hydraulicPressure` for excavators).
@@ -64,7 +64,7 @@ See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_bla
 
 Go check your dashboard—you should see the values update instantly! 🚀
 
-### Alarms 🚨
+### 🚨 Alarms
 
 Your solution monitors data based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules" target="_blank">Alarm rules</a> configured in the "Excavator" and "Haul truck" device profiles:
 
@@ -74,7 +74,7 @@ ${alarm_rules}
 
 </div>
 
-### Calculated fields 🧮
+### 🧮 Calculated fields
 
 Calculated fields are used to derive new telemetry values and events based on incoming data. They are configured in the "Excavator" and "Haul truck"
 device profiles and in the "Mine site" asset profile. The configured calculated fields are listed below:
@@ -85,7 +85,7 @@ ${calculated_fields}
 
 </div>
 
-### Solution entities 📦
+### 📦 Solution entities
 
 The following entities were automatically created to power this solution:
 

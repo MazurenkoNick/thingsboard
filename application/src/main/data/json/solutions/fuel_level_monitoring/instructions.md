@@ -184,7 +184,7 @@ See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_bla
 
 Go check your dashboard—you should see the values update instantly! 🚀
 
-### Solution entities
+### 📦 Solution entities
 
 As part of this solution, the following entities were created:
 

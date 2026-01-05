@@ -23,7 +23,7 @@ ${device_list_and_credentials}
 
 </div>
 
-#### Test it now ⚡
+#### ⚡ Test it now
 
 Want to see the dashboard come alive? You can simulate a real device right now.
 The solution expects specific telemetry based on the device type.  
@@ -31,7 +31,7 @@ You may find payload examples and commands to send the data on behalf of the dev
 The examples below use <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a>.
 See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_blank">connecting devices</a> for other connectivity options.
 
-**Energy meter ⚡**
+**⚡ Energy meter**
 
 Payload example:
 
@@ -45,7 +45,7 @@ To emulate the data upload on behalf of device "Energy meter", one should execut
 curl -v -X POST -d "{\"voltage\":  220, \"frequency\":  60, \"amperage\": 16, \"power\": 3000, \"energy\": 300}" ${BASE_URL}/api/v1/${Energy meterACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
 ```
 
-**Water meter 💧**
+**💧 Water meter**
 
 Payload example:
 
@@ -59,7 +59,7 @@ To emulate the data upload on behalf of device "Water meter", one should execute
 curl -v -X POST -d "{\"water\": 2.3, \"voltage\": 3.9 }" ${BASE_URL}/api/v1/${Water meterACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
 ```
 
-**Smart sensor 🌡️**
+**🌡 Smart sensor**
 
 Payload example:
 
@@ -73,7 +73,7 @@ To emulate the data upload on behalf of device "Smart sensor", one should execut
 curl -v -X POST -d "{\"co2\": 500, \"tvoc\": 0.3, \"temperature\": 22.5, \"humidity\": 50, \"occupancy\": true}" ${BASE_URL}/api/v1/${Smart sensorACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
 ```
 
-**HVAC ❄️**
+**❄️ HVAC**
 
 Payload example:
 
@@ -92,7 +92,7 @@ The commands are sent using the platform <a href="${DOCS_BASE_URL}/user-guide/rp
 
 Go check your dashboard — you should see the values update instantly 🚀
 
-### Alarms 🚨
+### 🚨 Alarms
 
 Your solution monitors data based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> 
 configured in the "smart-sensor" device profile:
@@ -103,7 +103,7 @@ ${alarm_rules}
 
 </div>
 
-### Solution entities 📦
+### 📦 Solution entities
 
 The following entities were automatically created to power this solution:
 
@@ -113,7 +113,7 @@ ${all_entities}
 
 </div>
 
-### Edge computing 📡
+### 📡 Edge computing
 
 **Optionally**, this solution can be extended to use edge computing.
 
@@ -138,7 +138,7 @@ To install ThingsBoard Edge and connect to the cloud, please navigate to <a href
 
 Once the edge is installed and connected to the cloud, you will be able to log in into edge using your tenant credentials.
 
-#### Push data to device on edge 🔄
+#### 🔄 Push data to device on edge
 
 **"Office sensors"** *DEVICE* group was assigned to the edge entity "Remote Office R1".
 This means that all devices from this group will be automatically provisioned to the edge.
