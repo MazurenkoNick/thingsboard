@@ -52,8 +52,8 @@ import {
   Validator,
   Validators
 } from '@angular/forms';
-import { combineLatest, of, Subject, Subscription } from 'rxjs';
-import { catchError, distinctUntilChanged, map, switchMap, takeUntil, } from 'rxjs/operators';
+import { combineLatest, merge, of, Subject, Subscription } from 'rxjs';
+import { catchError, distinctUntilChanged, map, switchMap, takeUntil, tap, } from 'rxjs/operators';
 import { ConverterLibraryService } from '@core/http/converter-library.service';
 import { IntegrationType } from '@shared/models/integration.models';
 import { Converter, ConverterLibraryInfo, ConverterType, Model, Vendor } from '@shared/models/converter.models';
@@ -105,10 +105,19 @@ export class ConverterLibraryComponent implements ControlValueAccessor, Validato
       vendor: [null, Validators.required],
       model: [null, Validators.required],
     });
+    const handleVendorChange$ = this.libraryFormGroup.get('vendor').valueChanges.pipe(
+      tap(() => this.libraryFormGroup.get('model').setValue(null, { emitEvent: false }))
+    );
 
-    this.libraryFormGroup.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => this.updateView(this.libraryFormGroup.getRawValue()));
+    merge(
+      this.libraryFormGroup.valueChanges,
+      handleVendorChange$
+    ).pipe(
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.updateView(this.libraryFormGroup.getRawValue());
+      });
   }
 
   ngOnInit() {
