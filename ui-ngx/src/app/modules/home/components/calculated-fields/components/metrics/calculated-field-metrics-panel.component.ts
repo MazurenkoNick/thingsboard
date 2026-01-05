@@ -57,7 +57,7 @@ interface CalculatedFieldAggMetricValuePanel extends CalculatedFieldAggMetricVal
 @Component({
   selector: 'tb-calculated-field-metrics-panel',
   templateUrl: './calculated-field-metrics-panel.component.html',
-  styleUrl: '../common/calculated-field-panel.scss',
+  styleUrls: ['../common/calculated-field-panel.scss', '../../calculated-field.component.scss'],
 })
 export class CalculatedFieldMetricsPanelComponent implements OnInit {
 
@@ -69,6 +69,7 @@ export class CalculatedFieldMetricsPanelComponent implements OnInit {
   @Input() editorCompleter: TbEditorCompleter;
   @Input() highlightRules: AceHighlightRules;
   @Input({required: true}) testScript: (expression?: string) => Observable<string>;
+  @Input() readonly = false;
 
   metricDataApplied = output<CalculatedFieldAggMetricValue>();
   filterExpanded = false;
@@ -121,6 +122,10 @@ export class CalculatedFieldMetricsPanelComponent implements OnInit {
 
     if (this.simpleMode) {
       this.AggFunctions = this.AggFunctions.filter(aggFunc => aggFunc !== AggFunction.COUNT_UNIQUE);
+    }
+
+    if (this.readonly) {
+      this.metricForm.disable({emitEvent: false});
     }
   }
 

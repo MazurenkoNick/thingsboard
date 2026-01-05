@@ -32,7 +32,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
   EventEmitter,
   forwardRef,
   Input,
@@ -41,7 +40,6 @@ import {
   OnInit,
   Output,
   SimpleChanges,
-  ViewChild,
   ViewEncapsulation
 } from '@angular/core';
 import {
@@ -54,12 +52,12 @@ import {
   Validator,
   Validators
 } from '@angular/forms';
-import { combineLatest, debounce, interval, Observable, of, shareReplay, Subject, Subscription } from 'rxjs';
-import { catchError, distinctUntilChanged, map, startWith, switchMap, takeUntil, } from 'rxjs/operators';
+import { combineLatest, merge, of, Subject, Subscription } from 'rxjs';
+import { catchError, distinctUntilChanged, map, switchMap, takeUntil, tap, } from 'rxjs/operators';
 import { ConverterLibraryService } from '@core/http/converter-library.service';
 import { IntegrationType } from '@shared/models/integration.models';
 import { Converter, ConverterLibraryInfo, ConverterType, Model, Vendor } from '@shared/models/converter.models';
-import { isDefinedAndNotNull, isEmptyStr, isNotEmptyStr } from '@core/utils';
+import { isDefinedAndNotNull } from '@core/utils';
 
 @Component({
   selector: 'tb-converter-library',
@@ -92,17 +90,8 @@ export class ConverterLibraryComponent implements ControlValueAccessor, Validato
 
   @Output() converter = new EventEmitter<Converter>();
 
-  @ViewChild('modelInput') modelInput: ElementRef;
-  @ViewChild('vendorInput', { static: true }) vendorInput: ElementRef;
-
   libraryFormGroup: UntypedFormGroup;
-  vendors$: Observable<Array<Vendor>>;
-  models$: Observable<Model[]>;
   converter$: Subscription;
-  filteredModels$: Observable<Array<Model>>;
-  filteredVendors$: Observable<Array<Vendor>>;
-  vendorInputSubject = new Subject<void>();
-  modelInputSubject = new Subject<void>();
 
   private destroy$ = new Subject<void>();
   private modelValue: ConverterLibraryInfo;
@@ -113,69 +102,28 @@ export class ConverterLibraryComponent implements ControlValueAccessor, Validato
     private converterLibraryService: ConverterLibraryService,
   ) {
     this.libraryFormGroup = this.fb.group({
-      vendor: ['', Validators.required],
-      model: ['', Validators.required],
+      vendor: [null, Validators.required],
+      model: [null, Validators.required],
     });
 
-    this.libraryFormGroup.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => this.updateView(this.libraryFormGroup.getRawValue()));
+    merge(
+      this.libraryFormGroup.get('model').valueChanges,
+      this.libraryFormGroup.get('vendor').valueChanges.pipe(
+        tap(() => this.libraryFormGroup.get('model').setValue(null, { emitEvent: false }))
+      )
+    ).pipe(
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.updateView(this.libraryFormGroup.getRawValue());
+      });
   }
 
   ngOnInit() {
-    this.vendors$ = this.vendorInputSubject.asObservable().pipe(
-      switchMap(() => of(`${this.integrationType};${this.converterType}`)),
-      distinctUntilChanged(),
-      switchMap(() =>
-        this.converterLibraryService.getVendors(this.integrationType, this.converterType)
-      ),
-      shareReplay(1)
-    );
-
-    this.filteredVendors$ = combineLatest([
-      this.vendorValueChanges,
-      this.vendors$
-    ]).pipe(
-      map(([value, vendors]) => {
-        this.libraryFormGroup.get('model').patchValue('');
-        if (isEmptyStr(value)) {
-          return vendors;
-        }
-        const searchValue = ((value as Vendor)?.name ?? (value as string).trim()).toLowerCase();
-        return vendors.filter(vendor => vendor.name.toLowerCase().includes(searchValue));
-      }),
-      shareReplay(1)
-    );
-
-    this.models$ = this.modelInputSubject.asObservable().pipe(
-      switchMap(() => of(this.libraryFormGroup.get('vendor').value)),
-      distinctUntilChanged(),
-      switchMap(() => {
-          if (this.libraryFormGroup.get('vendor').value?.name) {
-            return this.converterLibraryService.getModels(this.integrationType, this.libraryFormGroup.get('vendor').value.name, this.converterType);
-          }
-          return of(null);
-        }
-      ),
-      map((models: Model[]) => models?.map(model => ({ ...model, searchText: (model.info.label + model.info.description).toLowerCase() }))),
-      shareReplay(1)
-    );
-
-    this.filteredModels$ = combineLatest([
-      this.models$,
-      this.modelValueChanges
-    ]).pipe(
-      map(([models, value]) => {
-        if (isEmptyStr(value)) {
-          return models;
-        }
-        const searchValue = ((value as Model)?.name ?? (value as string).trim()).toLowerCase();
-        return models.filter(model => model.searchText.toLowerCase().includes(searchValue));
-      }),
-      shareReplay(1)
-    );
-
-    this.converter$ = combineLatest([this.vendorValueChanges, this.modelValueChanges])
+    this.converter$ = combineLatest([
+      this.libraryFormGroup.get('vendor').valueChanges,
+      this.libraryFormGroup.get('model').valueChanges
+    ])
       .pipe(
         switchMap(([vendor, model]: [Vendor, Model]) =>
           vendor?.name && model?.name
@@ -203,22 +151,6 @@ export class ConverterLibraryComponent implements ControlValueAccessor, Validato
         }),
         takeUntil(this.destroy$)
     ).subscribe(value => this.converter.emit(value));
-  }
-
-  get vendorValueChanges(): Observable<Vendor | string> {
-    return this.libraryFormGroup.get('vendor').valueChanges.pipe(
-      startWith(''),
-      debounce((value) => isNotEmptyStr(value) ? interval(300) : of(0)),
-      distinctUntilChanged(),
-    );
-  }
-
-  get modelValueChanges(): Observable<Model | string> {
-    return this.libraryFormGroup.get('model').valueChanges.pipe(
-      startWith(''),
-      debounce((value) => isNotEmptyStr(value) ? interval(300) : of(0)),
-      distinctUntilChanged(),
-    );
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -275,35 +207,5 @@ export class ConverterLibraryComponent implements ControlValueAccessor, Validato
     return this.libraryFormGroup.valid ? null : {
       converterFormGroup: {valid: false}
     };
-  }
-
-  displayModelFn(model?: Model): string {
-    return model ? model.info.label : '';
-  }
-
-  displayVendorFn(vendor?: Vendor): string {
-    return vendor ? vendor.name : '';
-  }
-
-  onLinkClick(event: MouseEvent, url: string): void {
-    event.stopPropagation();
-    window.open(url, '_blank');
-  }
-
-  clearModel(): void {
-    this.libraryFormGroup.get('model').patchValue('');
-    setTimeout(() => {
-      this.modelInput?.nativeElement.blur();
-      this.modelInput?.nativeElement.focus();
-    }, 0);
-  }
-
-  clearVendor(): void {
-    this.libraryFormGroup.get('vendor').patchValue('');
-    this.modelInputSubject.next();
-    setTimeout(() => {
-      this.vendorInput.nativeElement.blur();
-      this.vendorInput.nativeElement.focus();
-    }, 0);
   }
 }
