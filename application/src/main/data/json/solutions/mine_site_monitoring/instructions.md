@@ -26,9 +26,9 @@ This simulates a real-time coordinate change (`latitude`/`longitude`), automatic
 
 You can always customize this dashboard using our <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">dashboard development guide</a>.
 
-### Connecting your first device 🔌
+### Devices
 
-We have pre-provisioned two excavators and three haul trucks with demo data. You can find their credentials below:
+We have pre-provisioned two excavators and three haul trucks with demo data. You can find their info and credentials below:
 
 <div class="tb-markdown-view table-wrapper">
 
@@ -64,7 +64,7 @@ See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_bla
 
 Go check your dashboard—you should see the values update instantly! 🚀
 
-### Configuring Alarms 🚨
+### Alarms 🚨
 
 Your solution monitors data based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules" target="_blank">Alarm rules</a> configured in the "Excavator" and "Haul truck" device profiles:
 

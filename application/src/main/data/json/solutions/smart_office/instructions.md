@@ -13,9 +13,9 @@ Welcome to your new **Smart Office** monitoring solution 👋 We have generated 
 The dashboard has multiple states. The **Main** state displays the list of devices and their map location. Click on any row to drill down to the **Device Details** state (specific to each device type).
 You can always customize this dashboard using our <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">dashboard development guide</a>.
 
-### Connecting your first device 🔌
+### Devices
 
-We have pre-provisioned an "Office" asset and 4 related devices with demo data. You can find their credentials below:
+We have pre-provisioned an "Office" asset and 4 related devices with demo data. You can find their info and credentials below:
 
 <div class="tb-markdown-view table-wrapper">
 
@@ -92,7 +92,7 @@ The commands are sent using the platform <a href="${DOCS_BASE_URL}/user-guide/rp
 
 Go check your dashboard — you should see the values update instantly 🚀
 
-### Configuring Alarms 🚨
+### Alarms 🚨
 
 Your solution monitors data based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> 
 configured in the "smart-sensor" device profile:
