@@ -88,6 +88,7 @@ export class CalculatedFieldGeofencingZoneGroupsPanelComponent implements OnInit
   @Input() ownerId: EntityId;
   @Input() calculatedFieldType: CalculatedFieldType;
   @Input() usedNames: string[];
+  @Input() readonly = false;
 
   @ViewChild('entityAutocomplete') entityAutocomplete: EntityAutocompleteComponent;
 
@@ -177,6 +178,10 @@ export class CalculatedFieldGeofencingZoneGroupsPanelComponent implements OnInit
 
     this.currentEntityFilter = getCalculatedFieldCurrentEntityFilter(this.entityName, this.entityId);
     this.updateEntityFilter(this.zone.refEntityId?.entityType);
+
+    if (this.readonly) {
+      this.geofencingFormGroup.disable({emitEvent: false});
+    }
   }
 
   fetchOptions(searchText: string): Observable<Array<string>> {

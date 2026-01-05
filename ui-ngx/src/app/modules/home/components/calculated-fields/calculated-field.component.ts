@@ -56,7 +56,6 @@ import { TenantId } from '@shared/models/id/tenant-id';
 import { CalculatedFieldFormService } from '@core/services/calculated-field-form.service';
 import { AssetInfo } from '@shared/models/asset.models';
 import { DeviceInfo } from '@shared/models/device.models';
-import { NULL_UUID } from '@shared/models/id/has-uuid';
 import { EntityService } from '@core/http/entity.service';
 
 @Component({

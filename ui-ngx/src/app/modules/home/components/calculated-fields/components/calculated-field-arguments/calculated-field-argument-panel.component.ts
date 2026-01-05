@@ -103,6 +103,7 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
     maxlength: 'calculated-fields.hint.argument-name-max-length',
     forbidden: 'calculated-fields.hint.argument-name-forbidden'
   };
+  @Input() readonly = false;
 
   @ViewChild('entityAutocomplete') entityAutocomplete: EntityAutocompleteComponent;
 
@@ -191,6 +192,11 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
 
     this.argumentTypes = Object.values(ArgumentType)
       .filter(type => type !== ArgumentType.Rolling || this.isScript);
+
+    if (this.readonly) {
+      this.argumentType.disable({emitEvent: false});
+      this.argumentFormGroup.disable({emitEvent: false});
+    }
   }
 
   ngAfterViewInit(): void {
