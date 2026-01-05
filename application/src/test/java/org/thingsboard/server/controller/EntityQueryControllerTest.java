@@ -43,11 +43,15 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.ResultActions;
 import org.testcontainers.shaded.org.apache.commons.lang3.RandomStringUtils;
 import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.server.common.data.AttributeScope;
+import org.thingsboard.server.common.data.Customer;
+import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.Tenant;
+import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmSeverity;
@@ -91,6 +95,7 @@ import org.thingsboard.server.common.data.query.NumericFilterPredicate;
 import org.thingsboard.server.common.data.query.RelationsQueryFilter;
 import org.thingsboard.server.common.data.query.SchedulerEventFilter;
 import org.thingsboard.server.common.data.query.StateEntityOwnerFilter;
+import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.query.StringFilterPredicate;
 import org.thingsboard.server.common.data.query.TsValue;
 import org.thingsboard.server.common.data.queue.QueueStats;
@@ -110,6 +115,8 @@ import org.thingsboard.server.common.data.scheduler.MonthlyRepeat;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerRepeat;
 import org.thingsboard.server.common.data.security.Authority;
+import org.thingsboard.server.common.data.tenant.profile.DefaultTenantProfileConfiguration;
+import org.thingsboard.server.common.data.tenant.profile.TenantProfileData;
 import org.thingsboard.server.dao.queue.QueueStatsService;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 import org.thingsboard.server.edqs.util.EdqsRocksDb;
@@ -290,6 +297,64 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
         countByQueryAndCheck(countQuery, 97);
 
         countByQueryAndCheck(query, 97);
+    }
+
+    @Test
+    public void testEDQForSysAdmin() throws Exception {
+        loginSysAdmin();
+
+        ObjectNode tenantAttr = JacksonUtil.newObjectNode();
+        tenantAttr.put("attr", "tenantAttrValue");
+        doPost("/api/plugins/telemetry/TENANT/" + tenantId + "/attributes/" + AttributeScope.SERVER_SCOPE, tenantAttr);
+
+        loginTenantAdmin();
+        Device tenantDevice = new Device();
+        tenantDevice.setName("device " + StringUtils.randomAlphanumeric(10));
+        tenantDevice.setType("default");
+        tenantDevice = doPost("/api/device", tenantDevice, Device.class);
+
+        loginSysAdmin();
+        TenantProfile tenantProfile = doPost("/api/tenantProfile", createTenantProfile("Test tenant profile"), TenantProfile.class);
+
+        ObjectNode tenantProfileAttr = JacksonUtil.newObjectNode();
+        tenantProfileAttr.put("attr", "tenantProfileAttrValue");
+        doPost("/api/plugins/telemetry/TENANT_PROFILE/" + tenantProfile.getId() + "/attributes/" + AttributeScope.SERVER_SCOPE, tenantProfileAttr);
+
+        // check tenant telemetry is accessible for sysadmin
+        SingleEntityFilter filter = new SingleEntityFilter();
+        filter.setSingleEntity(AliasEntityId.fromEntityId(tenantId));
+        EntityDataSortOrder sortOrder = new EntityDataSortOrder(new EntityKey(EntityKeyType.ENTITY_FIELD, "createdTime"), EntityDataSortOrder.Direction.ASC);
+        EntityDataPageLink pageLink = new EntityDataPageLink(10, 0, null, sortOrder);
+        List<EntityKey> entityFields = List.of(new EntityKey(EntityKeyType.ENTITY_FIELD, "name"));
+        List<EntityKey> latestValues = List.of(new EntityKey(EntityKeyType.ATTRIBUTE, "attr"));
+        EntityDataQuery dataQuery = new EntityDataQuery(filter, pageLink, entityFields, latestValues, null);
+
+        PageData<EntityData> loadedTenants = findByQueryAndCheck(dataQuery, 1);
+        String retrievedTenantAttr = loadedTenants.getData().get(0).getLatest().get(EntityKeyType.ATTRIBUTE).get("attr").getValue();
+        assertThat(retrievedTenantAttr).isEqualTo("tenantAttrValue");
+
+        // check tenant profile telemetry is accessible for sysadmin
+        filter.setSingleEntity(AliasEntityId.fromEntityId(tenantProfile.getId()));
+
+        PageData<EntityData> loadedTenantProfiles = findByQueryAndCheck(dataQuery, 1);
+        String retrievedProfileAttr = loadedTenantProfiles.getData().get(0).getLatest().get(EntityKeyType.ATTRIBUTE).get("attr").getValue();
+        assertThat(retrievedProfileAttr).isEqualTo("tenantProfileAttrValue");
+
+        // check other tenant entities are prohibited
+        filter.setSingleEntity(AliasEntityId.fromEntityId(tenantDevice.getId()));
+        findByQueryAndCheck(dataQuery, 0);
+    }
+
+    private TenantProfile createTenantProfile(String name) {
+        TenantProfile tenantProfile = new TenantProfile();
+        tenantProfile.setName(name);
+        tenantProfile.setDescription(name + " Test");
+        TenantProfileData tenantProfileData = new TenantProfileData();
+        tenantProfileData.setConfiguration(new DefaultTenantProfileConfiguration());
+        tenantProfile.setProfileData(tenantProfileData);
+        tenantProfile.setDefault(false);
+        tenantProfile.setIsolatedTbRuleEngine(false);
+        return tenantProfile;
     }
 
     @Test
@@ -1718,7 +1783,7 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
         asset.setName("Tenant Asset");
         asset.setType("default");
         asset = doPost("/api/asset", asset, Asset.class);
-        
+
         loginCustomerAdminUser();
         Device device = new Device();
         String name = "Device" + RandomStringUtils.randomAlphabetic(5);
@@ -1743,7 +1808,7 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
 
         StateEntityOwnerFilter assetOwnerFilter = new StateEntityOwnerFilter();
         assetOwnerFilter.setSingleEntity(AliasEntityId.fromEntityId(asset.getId()));
-        
+
         query = new EntityDataQuery(assetOwnerFilter, pageLink, entityFields, null, null);
         PageData<EntityData> assetOwnerQuery = findByQueryAndCheck(query, 1);
         String assetOwner = assetOwnerQuery.getData().get(0).getLatest().get(EntityKeyType.ENTITY_FIELD).get("name").getValue();
