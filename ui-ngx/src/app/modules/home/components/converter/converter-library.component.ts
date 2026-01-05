@@ -105,13 +105,12 @@ export class ConverterLibraryComponent implements ControlValueAccessor, Validato
       vendor: [null, Validators.required],
       model: [null, Validators.required],
     });
-    const handleVendorChange$ = this.libraryFormGroup.get('vendor').valueChanges.pipe(
-      tap(() => this.libraryFormGroup.get('model').setValue(null, { emitEvent: false }))
-    );
 
     merge(
-      this.libraryFormGroup.valueChanges,
-      handleVendorChange$
+      this.libraryFormGroup.get('model').valueChanges,
+      this.libraryFormGroup.get('vendor').valueChanges.pipe(
+        tap(() => this.libraryFormGroup.get('model').setValue(null, { emitEvent: false }))
+      )
     ).pipe(
         takeUntil(this.destroy$)
       )
