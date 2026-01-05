@@ -80,6 +80,7 @@ import org.thingsboard.server.dao.exception.DeviceCredentialsValidationException
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.service.validator.DeviceCredentialsDataValidator;
+import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
 import org.thingsboard.server.dao.tenant.TenantProfileService;
 import org.thingsboard.server.exception.DataValidationException;
 
@@ -110,6 +111,8 @@ public class DeviceServiceTest extends AbstractServiceTest {
     OtaPackageService otaPackageService;
     @Autowired
     TenantProfileService tenantProfileService;
+    @Autowired
+    TbTenantProfileCache tenantProfileCache;
     @Autowired
     private CalculatedFieldService calculatedFieldService;
     @Autowired
@@ -147,6 +150,7 @@ public class DeviceServiceTest extends AbstractServiceTest {
         TenantProfile defaultTenantProfile = tenantProfileService.findDefaultTenantProfile(tenantId);
         defaultTenantProfile.getProfileData().setConfiguration(DefaultTenantProfileConfiguration.builder().maxDevices(Long.MAX_VALUE).build());
         tenantProfileService.saveTenantProfile(tenantId, defaultTenantProfile);
+        tenantProfileCache.evict(defaultTenantProfile.getId());
 
         Device device = this.saveDevice(tenantId, "My device");
         deleteDevice(tenantId, device);
@@ -157,6 +161,7 @@ public class DeviceServiceTest extends AbstractServiceTest {
         TenantProfile defaultTenantProfile = tenantProfileService.findDefaultTenantProfile(tenantId);
         defaultTenantProfile.getProfileData().setConfiguration(DefaultTenantProfileConfiguration.builder().maxDevices(1).build());
         tenantProfileService.saveTenantProfile(tenantId, defaultTenantProfile);
+        tenantProfileCache.evict(defaultTenantProfile.getId());
 
         Assert.assertEquals(0, deviceService.countByTenantId(tenantId));
 
