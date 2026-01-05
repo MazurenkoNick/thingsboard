@@ -73,6 +73,8 @@ export class TimeseriesTableConfigComponent extends AbstractReportComponentConfi
     return [...result, ...(columns || []).map(key => key.label)];
   }
 
+  columnNameChanged: [string, string];
+
   settingsTab: 'data' | 'layout' = 'data';
 
   basicMode = WidgetConfigMode.basic;
@@ -118,12 +120,7 @@ export class TimeseriesTableConfigComponent extends AbstractReportComponentConfi
         if (oldColumn) {
           const newColumn = current.find(c => c.name === oldColumn.name);
           if (newColumn && newColumn.label !== tableSortOrder.column) {
-            setTimeout(() => {
-              form.get('tableSortOrder').patchValue({
-                column: newColumn.label,
-                direction: tableSortOrder.direction
-              });
-            }, 0);
+            this.columnNameChanged = [oldColumn.label, newColumn.label];
           }
         }
       }
@@ -135,12 +132,7 @@ export class TimeseriesTableConfigComponent extends AbstractReportComponentConfi
     ).subscribe(([prevLabel, currentLabel]) => {
       const tableSortOrder = form.get("tableSortOrder").value;
       if (tableSortOrder && tableSortOrder.column === prevLabel) {
-        setTimeout(() => {
-          form.get('tableSortOrder').patchValue({
-            column: currentLabel,
-            direction: tableSortOrder.direction
-          });
-        }, 0);
+        this.columnNameChanged = [prevLabel, currentLabel];
       }
     });
     this.updateValidators(form);
