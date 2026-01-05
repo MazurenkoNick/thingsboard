@@ -146,16 +146,17 @@ public class DefaultDataUpdateService implements DataUpdateService {
             updateDataFromCe();
         } else {
             //TODO: should be cleaned after each release
-            EdqsSyncState state = attributesService.find(TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID, AttributeScope.SERVER_SCOPE, "edqsSyncState").get(30, TimeUnit.SECONDS)
+            EdqsSyncState state = attributesService.find(TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID, AttributeScope.SERVER_SCOPE, "edqsSyncState")
+                    .get(15, TimeUnit.SECONDS)
                     .flatMap(KvEntry::getJsonValue)
                     .map(value -> JacksonUtil.fromString(value, EdqsSyncState.class))
                     .orElse(null);
             if (state != null && state.getStatus() == EdqsSyncStatus.FINISHED) {
                 EdqsSyncState edqsSyncState = new EdqsSyncState(EdqsSyncStatus.REQUESTED, Set.of(ObjectType.REPORT_TEMPLATE, ObjectType.REPORT));
-                attributesService.save(TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID, AttributeScope.SERVER_SCOPE, new BaseAttributeKvEntry(
-                        new JsonDataEntry("edqsSyncState", JacksonUtil.toString(edqsSyncState)), System.currentTimeMillis()));
+                attributesService.save(TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID, AttributeScope.SERVER_SCOPE,
+                                new BaseAttributeKvEntry(new JsonDataEntry("edqsSyncState", JacksonUtil.toString(edqsSyncState)), System.currentTimeMillis()))
+                        .get(15, TimeUnit.SECONDS);
             }
-
         }
         log.info("Data updated.");
     }
