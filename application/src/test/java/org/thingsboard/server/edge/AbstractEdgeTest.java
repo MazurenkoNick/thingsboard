@@ -949,9 +949,19 @@ abstract public class AbstractEdgeTest extends AbstractControllerTest {
         doPost("/api/edge/" + edge.getUuidId()
                 + "/entityGroup/" + savedEntityGroup.getId().toString() + "/" + groupType.name(), EntityGroup.class);
         Assert.assertTrue(edgeImitator.waitForMessages());
-        AbstractMessage latestMessage = edgeImitator.getLatestMessage();
-        Assert.assertTrue(latestMessage instanceof EntityGroupUpdateMsg);
-        EntityGroupUpdateMsg entityGroupUpdateMsg = (EntityGroupUpdateMsg) latestMessage;
+        Awaitility.await() // explicitly wait for EntityGroupUpdateMsg
+                .atMost(TIMEOUT, TimeUnit.SECONDS)
+                .pollInterval(200, TimeUnit.MILLISECONDS)
+                .alias("wait for EntityGroupUpdateMsg")
+                .until(() -> !edgeImitator.findAllMessagesByType(EntityGroupUpdateMsg.class).isEmpty());
+        // message ordering is not guaranteed: multiple downlinks may arrive before we assert.
+        // we only need to verify that the expected EntityGroupUpdateMsg is present.
+        List<EntityGroupUpdateMsg> entityGroupUpdateMsgs = edgeImitator.findAllMessagesByType(EntityGroupUpdateMsg.class);
+        Assert.assertFalse("No EntityGroupUpdateMsg received", entityGroupUpdateMsgs.isEmpty());
+        EntityGroupUpdateMsg entityGroupUpdateMsg = entityGroupUpdateMsgs.stream()
+                .filter(msg -> msg.getMsgType() == UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE)
+                .findAny()
+                .orElse(entityGroupUpdateMsgs.get(0));
         EntityGroup entityGroupMsg = JacksonUtil.fromString(entityGroupUpdateMsg.getEntity(), EntityGroup.class, true);
         Assert.assertNotNull(entityGroupMsg);
         Assert.assertEquals(UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, entityGroupUpdateMsg.getMsgType());
