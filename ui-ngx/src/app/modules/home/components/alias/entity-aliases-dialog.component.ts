@@ -158,12 +158,14 @@ export class EntityAliasesDialogComponent extends DialogComponent<EntityAliasesD
             this.addWidgetTitleToWidgetsMap(alarmSource.entityAliasId, typedComponent.type);
           }
         } else {
-          typedComponent.dataSources.forEach((datasource) => {
-            if ([DatasourceType.entity, DatasourceType.entityCount, DatasourceType.alarmCount].includes(datasource.type)
-              && datasource.entityAliasId) {
-              this.addWidgetTitleToWidgetsMap(datasource.entityAliasId, typedComponent.type);
-            }
-          });
+          if (Array.isArray(typedComponent.dataSources) && typedComponent.dataSources.length) {
+            typedComponent.dataSources.forEach((datasource) => {
+              if ([DatasourceType.entity, DatasourceType.entityCount, DatasourceType.alarmCount].includes(datasource.type)
+                && datasource.entityAliasId) {
+                this.addWidgetTitleToWidgetsMap(datasource.entityAliasId, typedComponent.type);
+              }
+            });
+          }
         }
       });
     }
