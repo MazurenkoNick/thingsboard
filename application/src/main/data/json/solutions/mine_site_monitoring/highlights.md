@@ -1,6 +1,6 @@
 Transform your site management with a powerful **Mine Site Monitoring** digital twin. This template deploys a fully interactive map with real-time tracking for excavators and haul trucks, automated zone detection, and critical safety alarms. 🗺️🚧
 
-Press **Install** to instantly generate a working clay mine simulation—no hardware or complex coding required.
+Press **Install** to instantly generate a working clay mine simulation — no hardware or complex coding required.
 
 #### 📦 What's inside the box?
 

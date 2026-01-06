@@ -139,7 +139,7 @@ ${alarm_rules}
 **💡 Tip:** The alarm rules use dynamic thresholds (attributes). This means you don't need to edit the Device Profile logic to change these limits! 
 You can simply adjust the values using the "Alarm rules" form directly on the <a href="${MAIN_DASHBOARD_URL}" target="_blank">dashboard</a>.
 
-### Devices
+### 🔌 Devices
 
 We have pre-provisioned 4 sensors with demo data. You can find their info and credentials below:
 

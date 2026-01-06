@@ -14,7 +14,7 @@ The dashboard has two states. The **Main** state displays the list of the buses,
 
 You can always customize this dashboard using our <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">dashboard development guide</a>.
 
-### Devices
+### 🔌 Devices
 
 We have pre-provisioned four bus tracking devices with demo data. You can find their info and credentials below:
 

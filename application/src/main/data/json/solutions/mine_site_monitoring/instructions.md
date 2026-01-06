@@ -26,7 +26,7 @@ This simulates a real-time coordinate change (`latitude`/`longitude`), automatic
 
 You can always customize this dashboard using our <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">dashboard development guide</a>.
 
-### Devices
+### 🔌 Devices
 
 We have pre-provisioned two excavators and three haul trucks with demo data. You can find their info and credentials below:
 
@@ -66,7 +66,7 @@ curl -v -X POST -d "{\"latitude\": 36.215322,\"longitude\": -88.665637,\"speed\"
 The example above uses <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a>.
 See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_blank">connecting devices</a> for other connectivity options.
 
-Go check your dashboard—you should see the values update instantly 🚀
+Go check your dashboard — you should see the values update instantly 🚀
 
 ### 🚨 Alarms
 

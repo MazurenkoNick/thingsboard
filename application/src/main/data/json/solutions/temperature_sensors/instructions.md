@@ -13,7 +13,7 @@ The dashboard has two states. The **Main** state displays the list of sensors an
 Click on any row to drill down to the **Sensor Details** state to see history and change settings.
 You can always customize this dashboard using our <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">dashboard development guide</a>.
 
-### Devices
+### 🔌 Devices
 
 We have pre-provisioned two demo sensors for you. You can find their info and credentials below:
 
