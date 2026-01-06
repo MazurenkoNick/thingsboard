@@ -9336,6 +9336,7 @@
         "load-attributes": "Load attributes",
         "load-credentials": "Load credentials",
         "load-calculated-fields": "Load calculated fields and alarm rules",
+        "load-alarm-rules": "Load alarm rules",
         "load-group-entities": "Load group entities",
         "load-roles": "Load roles",
         "compare-with-current": "Compare with current",
