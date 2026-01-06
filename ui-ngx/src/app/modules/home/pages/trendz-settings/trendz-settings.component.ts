@@ -78,20 +78,7 @@ export class TrendzSettingsComponent extends PageComponent implements OnInit{
   }
 
   save(): void {
-    const trendzConfig: TrendzConfiguration = this.trendzSettingsForm.value;
-
-    this.trendzService.saveTrendzConfig(trendzConfig).pipe(
-      switchMap((savedConfig) => {
-        if (savedConfig) {
-          this.trendzSettingsForm.patchValue(savedConfig);
-          this.trendzSettingsForm.markAsPristine();
-          return this.updateTrendzStatus(this.trendzService.getTrendzSyncResult());
-        }
-        return of(this.trendzSyncInfo);
-      })
-    ).subscribe(trendzStatus => {
-      this.trendzSyncInfo = trendzStatus;
-    });
+    this.saveAndSync(this.trendzService.getTrendzSyncResult());
   }
 
   retryDiscovery(): void {
@@ -103,20 +90,7 @@ export class TrendzSettingsComponent extends PageComponent implements OnInit{
         this.translate.instant('action.save')
       ).subscribe(result => {
         if(result) {
-          const trendzConfig: TrendzConfiguration = this.trendzSettingsForm.value;
-
-          this.trendzService.saveTrendzConfig(trendzConfig).pipe(
-            switchMap((savedConfig) => {
-              if (savedConfig) {
-                this.trendzSettingsForm.patchValue(savedConfig);
-                this.trendzSettingsForm.markAsPristine();
-                return this.updateTrendzStatus(this.trendzService.connectToTrendz());
-              }
-              return of(this.trendzSyncInfo);
-            })
-          ).subscribe(trendzStatus => {
-            this.trendzSyncInfo = trendzStatus;
-          });
+          this.saveAndSync(this.trendzService.connectToTrendz());
         } else {
           this.updateTrendzStatus(this.trendzService.connectToTrendz()).subscribe(trendzStatus => {
             this.trendzSyncInfo = trendzStatus;
@@ -128,6 +102,20 @@ export class TrendzSettingsComponent extends PageComponent implements OnInit{
         this.trendzSyncInfo = trendzStatus;
       });
     }
+  }
+
+  private saveAndSync(syncResult$: Observable<TrendzSynchronization>): void {
+    const trendzConfig: TrendzConfiguration = this.trendzSettingsForm.value;
+
+    this.trendzService.saveTrendzConfig(trendzConfig).pipe(
+      switchMap((savedConfig) => {
+        this.trendzSettingsForm.patchValue(savedConfig);
+        this.trendzSettingsForm.markAsPristine();
+        return this.updateTrendzStatus(syncResult$);
+      })
+    ).subscribe(trendzStatus => {
+      this.trendzSyncInfo = trendzStatus;
+    });
   }
 
   private updateTrendzStatus(syncResult$: Observable<TrendzSynchronization>): Observable<TrendzStatus> {
