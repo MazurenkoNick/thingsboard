@@ -219,8 +219,11 @@ public class DefaultDataUpdateService implements DataUpdateService {
                     String urlString = baseUrl.toString();
                     log.info("Found unique Trendz URL '{}'. Migrating dashboards to use system Trendz widgets", urlString);
 
-                    TrendzSettings settings = this.trendzUpdater.createSettings(urlString, null);
-                    this.trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
+                    TrendzSettings trendzSettings = this.trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+                    if (trendzSettings == null) {
+                        TrendzSettings newSettings = this.trendzUpdater.createSettings(urlString, null);
+                        this.trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, newSettings);
+                    }
 
                     for (String fullFqn : fullFqns) {
                         String fqn = StringUtils.substringAfterLast(fullFqn, ".");
