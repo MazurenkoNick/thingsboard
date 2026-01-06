@@ -1,15 +1,13 @@
-Smart Office template represents a basic work space monitoring and management solution. 
-With this layout you get an interactive dashboard with the ability to control HVAC system, and have a high-level report of key metrics necessary for effective and proactive office management.
+Transform your facility into a data-driven ecosystem in seconds. The **Smart Office** template gives you an immediate, interactive command center to monitor environmental conditions, track resource usage, and control building assets remotely. ⚡💧
 
-Press the install button and you will have a customer-oriented application with devices of different types and complexity.
+Press the **Install** button to deploy a fully functional facility management application. No coding required—just instant visibility and control.
 
-#### Solution structure
+#### 📦 What's inside the box?
 
-* "Smart office" dashboard;
-* "Office" asset;
-* "smart-sensor" device and corresponding device profile;
-* "energy-meter" device and corresponding device profile;  
-* "water-meter" device and corresponding device profile;
-* "hvac" device and corresponding device profile;
-* "High Temperature" alarm rule configured in the "smart-sensor" device profile;
-* Edge instance - optionally, add edge computing to your solution.
+We have auto-generated a complete digital twin of a modern office:
+
+* 🖥️ **Command Center Dashboard:** An interactive "Smart Office" dashboard featuring dynamic floor plans and high-level metric reports.
+* 🌡️ **Smart Sensors:** Pre-configured devices monitoring ambient conditions with active "High Temperature" alarms.
+* ❄️ **HVAC Control:** A functional "HVAC" device that lets you adjust setpoints and modes directly from the UI.
+* ⚡ **Resource Metering:** Dedicated "Energy" and "Water" meters to track consumption trends.
+* ☁️ **Edge Ready:** Optional support for Edge computing to bring intelligence closer to your assets.

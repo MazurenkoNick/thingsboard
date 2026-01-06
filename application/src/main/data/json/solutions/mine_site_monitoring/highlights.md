@@ -1,18 +1,13 @@
-The Mine site monitoring template refers to a lightweight heavy-machinery monitoring solution designed for clay mining sites.
-With this template, you get an interactive dashboard with real-time excavator and haul truck tracking, geofencing visualization, and clear indicators of machine presence inside operational zones.
+Transform your site management with a powerful **Mine Site Monitoring** digital twin. This template deploys a fully interactive map with real-time tracking for excavators and haul trucks, automated zone detection, and critical safety alarms. 🗺️🚧
 
-Press the "Install" button to instantly deploy a ready-to-use application that demonstrates the most common requirements of zone-based monitoring in mining operations.
+Press **Install** to instantly generate a working clay mine simulation—no hardware or complex coding required.
 
-#### Solution structure
+#### 📦 What's inside the box?
 
-* "Mine site monitoring" dashboard;
-* "Mine site" asset representing the overall mining area with predefined loading, unloading, and restricted zones;
-* Device profiles for "Excavator" and "Haul truck";
-* One "Excavator" placed inside the loading area;
-* One "Excavator" placed inside the unloading area;
-* One "Haul truck" traveling between the loading and unloading areas to demonstrate zone-to-zone movement;
-* One "Haul truck" positioned in the restricted zone to demonstrate geofence breach detection;
-* One "Haul truck" located outside the Mine site boundary for boundary-related alarm behavior;
-* Generic "Mine site zone" asset profile representing loading, unloading, and restricted areas;
-* Built-in "alarm rules" for geofence, fuel level, speed, hydraulic pressure (Excavator), and overload (Haul truck) conditions;
-* "Telemetry history" that includes location, fuel levels, and machine-specific signals.
+We have auto-generated a complete operational environment for you:
+
+* 🖥️ **Site Command Center:** A main dashboard featuring live maps, KPI cards for machine status, and zone-specific analytics.
+* 🚧 **Smart Geofencing:** Pre-configured **Loading**, **Unloading**, and **Restricted** zones that automatically detect machine presence.
+* 🚜 **Heavy Machinery Fleet:** Demo "Excavator" and "Haul Truck" devices simulating real-world telemetry like hydraulic pressure, load weight, and fuel levels.
+* 🎮 **Interactive Simulation:** Movable map markers allow you to drag-and-drop machines between zones to test geofencing logic instantly.
+* 🧠 **Safety Logic:** Built-in algorithms to trigger alarms for speeding, overloads, or unauthorized entry into restricted areas.
