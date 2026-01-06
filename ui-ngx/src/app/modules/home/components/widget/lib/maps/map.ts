@@ -367,7 +367,7 @@ export abstract class TbMap<S extends BaseMapSettings> {
             const dataLayersSubscriptionOptions: WidgetSubscriptionOptions = {
               datasources,
               hasDataPageLink: true,
-              useDashboardTimewindow: false,
+              useDashboardTimewindow: this.ctx.widgetConfig.useDashboardTimewindow ?? true,
               type: widgetType.latest,
               callbacks: {
                 onDataUpdated: (subscription) => {
@@ -379,6 +379,9 @@ export abstract class TbMap<S extends BaseMapSettings> {
                 }
               }
             };
+            if (!dataLayersSubscriptionOptions.useDashboardTimewindow) {
+              dataLayersSubscriptionOptions.timeWindowConfig = this.ctx.widgetConfig.timewindow;
+            }
             this.ctx.subscriptionApi.createSubscription(dataLayersSubscriptionOptions, false).subscribe(
               (dataLayersSubscription) => {
                 this.dataLayersSubscription = dataLayersSubscription;

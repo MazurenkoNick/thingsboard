@@ -54,10 +54,11 @@ import {
   targetDeviceValid,
   Widget,
   widgetActionTypes,
-  widgetTypeCanHaveTimewindow,
   WidgetConfigMode,
   widgetTitleAutocompleteValues,
-  widgetType
+  widgetType,
+  widgetTypeCanHaveTimewindow,
+  widgetTypeHasTimewindow
 } from '@shared/models/widget.models';
 import {
   AsyncValidator,
@@ -104,6 +105,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { WidgetService } from '@core/http/widget.service';
 import { TimeService } from '@core/services/time.service';
 import { initModelFromDefaultTimewindow } from '@shared/models/time/time.models';
+import { findWidgetModelDefinition } from '@shared/models/widget/widget-model.definition';
 import Timeout = NodeJS.Timeout;
 
 @Component({
@@ -759,11 +761,16 @@ export class WidgetConfigComponent extends PageComponent implements OnInit, OnDe
   }
 
   public get displayTimewindowConfig(): boolean {
-    if (this.widgetType === widgetType.timeseries || this.widgetType === widgetType.alarm) {
+    if (widgetTypeHasTimewindow(this.widgetType)) {
       return true;
     } else if (this.widgetType === widgetType.latest) {
-      const datasources = this.dataSettings.get('datasources').value;
-      return datasourcesHasAggregation(datasources);
+      const widgetDefinition = findWidgetModelDefinition(this.widget);
+      if (widgetDefinition) {
+        return widgetDefinition.datasourcesHasAggregation(this.widget);
+      } else {
+        const datasources = this.dataSettings.get('datasources').value;
+        return datasourcesHasAggregation(datasources);
+      }
     }
   }
 
@@ -786,8 +793,13 @@ export class WidgetConfigComponent extends PageComponent implements OnInit, OnDe
 
   public onlyHistoryTimewindow(): boolean {
     if (this.widgetType === widgetType.latest) {
-      const datasources = this.dataSettings.get('datasources').value;
-      return datasourcesHasOnlyComparisonAggregation(datasources);
+      const widgetDefinition = findWidgetModelDefinition(this.widget);
+      if (widgetDefinition) {
+        return widgetDefinition.datasourcesHasOnlyComparisonAggregation(this.widget);
+      } else {
+        const datasources = this.dataSettings.get('datasources').value;
+        return datasourcesHasOnlyComparisonAggregation(datasources);
+      }
     } else {
       return false;
     }

@@ -164,7 +164,7 @@ export enum TrendzViewType {
 
 export const getMetricLink = (metric: MetricSummaryItem) => {
     const metricId = metric.metricData?.metricId ?? metric.fieldData?.fieldId;
-    return `/trendz/metricExplorer?itemId=${encodeURIComponent(metric.itemId)}&metricId=${encodeURIComponent(metricId)}`;
+    return `/trendz/metric-explorer?itemId=${encodeURIComponent(metric.itemId)}&metricId=${encodeURIComponent(metricId)}`;
 }
 
 export interface TrendzConfiguration {
