@@ -12614,6 +12614,8 @@
         "trendz-analytics": "Trendz analytics",
         "advanced-analytics": "Advanced analytics",
         "trendz-configuration": "Trendz configuration",
+        "trendz-configuration-unsaved-message": "Your Trendz configuration changes have not been saved.<br/>Do you want to save them before running discovery?",
+        "trendz-configuration-unsaved-continue-without-saving": "Continue without saving",
         "trendz-internal-url": "Trendz internal URL",
         "trendz-internal-url-invalid": "Trendz internal URL is invalid",
         "trendz-internal-url-required": "Trendz internal URL is required",
