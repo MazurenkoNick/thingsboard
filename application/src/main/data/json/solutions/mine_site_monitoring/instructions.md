@@ -7,7 +7,7 @@ We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Mine site
 * 🚧 **Monitor** geofencing events and alarms;
 * ⛽ **Browse** movement history and fuel levels.
 
-**Mastering the Dashboard** 🖥️
+### 🖥 Mastering the dashboard
 
 The **Main** state provides a complete overview of your mining operations:
 * **KPI Cards:** Monitor real-time counts of machines in Loading, Unloading, or Restricted zones, along with daily fuel consumption.
@@ -15,7 +15,7 @@ The **Main** state provides a complete overview of your mining operations:
 * **Lists:** View detailed tables for **Zones**, **Machines**, and active **Alarms**.
 
 **Drill Down features:**
-* 🚛 **Machine Details:** Click any machine row in the table **or** click the "See Details" button in a map tooltip to inspect specific alarms, hydraulic pressure (for excavators), and load weight (for haul trucks) history.
+* 🚛 **Machine Details:** Click any machine row in the table or click the "See Details" button in a map tooltip to inspect specific alarms, hydraulic pressure (for excavators), and load weight (for haul trucks) history.
 * 🏗️ **Zone Details:** Click any zone row in the table to view a list of all machines currently inside that zone, along with their alarms.
 
 **🎮 Interactive Simulation:** 
@@ -53,16 +53,20 @@ The most simple example of the expected payload is in JSON format:
 }{:copy-code}
 ```
 
+<br>
+
 To emulate data upload on behalf of device "Haul truck A", execute the following command:
 
 ```bash
 curl -v -X POST -d "{\"latitude\": 36.215322,\"longitude\": -88.665637,\"speed\": 18.5,\"fuelLevel\": 72.3,\"loadWeight\": 56000}" ${BASE_URL}/api/v1/${Haul truck AACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
 ```
 
+<br>
+
 The example above uses <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a>.
 See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_blank">connecting devices</a> for other connectivity options.
 
-Go check your dashboard—you should see the values update instantly! 🚀
+Go check your dashboard—you should see the values update instantly 🚀
 
 ### 🚨 Alarms
 

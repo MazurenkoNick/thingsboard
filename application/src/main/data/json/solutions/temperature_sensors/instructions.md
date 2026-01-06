@@ -7,7 +7,7 @@ Welcome to your new **Temperature & Humidity** monitoring solution 👋 We have 
 * 📈 **Browse** historical data;
 * ⚙️ **Manage** sensor settings.
 
-**Mastering the Dashboard** 🖥️
+### 🖥 Mastering the dashboard
 
 The dashboard has two states. The **Main** state displays the list of sensors and their map location. 
 Click on any row to drill down to the **Sensor Details** state to see history and change settings.
@@ -30,14 +30,18 @@ The solution expects the device to upload `temperature` and `humidity` values in
 
 
 ```json
-{"temperature":  42, "humidity":  73}{:copy-code}
+{"temperature": 42, "humidity": 73}{:copy-code}
 ```
+
+<br>
 
 To emulate the data upload on behalf of device "Sensor T1", one should execute the following command:
 
 ```bash
 curl -v -X POST -d "{\"temperature\": 42, \"humidity\": 73}" ${BASE_URL}/api/v1/${Sensor T1ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
 ```
+
+<br>
 
 The example above uses <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a>.
 See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_blank">connecting devices</a> for other connectivity options.
@@ -119,10 +123,14 @@ To emulate the data upload on behalf of device "Sensor C1" to the edge, one shou
 curl -v -X POST -d "{\"temperature\":  43, \"humidity\":  74}" http://localhost:8080/api/v1/${Sensor C1ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
 ```
 
+<br>
+
 Or please use next command if you updated edge HTTP 8080 bind port to **18080** during edge installation:
 
 ```bash
 curl -v -X POST -d "{\"temperature\":  43, \"humidity\":  74}" http://localhost:18080/api/v1/${Sensor C1ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
 ```
+
+<br>
 
 Once you'll push data to the device "Sensor C1" on edge, you'll be able to see telemetry update on the cloud for this device as well.

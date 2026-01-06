@@ -8,7 +8,7 @@ We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Fuel Leve
 * 🚨 **Manage** alarms for low fuel, temperature limits, or battery issues;
 * ⚙️ **Configure** tank shapes, dimensions, and sensor parameters.
 
-**Mastering the Dashboard** 🖥️
+### 🖥 Mastering the dashboard
 
 This dashboard is designed to monitor remaining fuel, view consumption statistics, manage tanks, and handle alarms.
 
@@ -154,7 +154,7 @@ ${device_list_and_credentials}
 Want to see the dashboard come alive? You can simulate a tank sensor right now.
 The solution expects telemetry for `battery`, `fuelLevel`, `temperature`, and `fuelHeight`.
 
-**Option 1: Send basic status**
+**Option 1: Send basic time series measurements**
 
 ```json
 {"battery": 77, "fuelLevel": 91, "fuelHeight": 125, "temperature": 32 }{:copy-code}
@@ -162,7 +162,7 @@ The solution expects telemetry for `battery`, `fuelLevel`, `temperature`, and `f
 
 <br>
 
-Copy the command below to push time series data reading to tank "001273":
+Run the following command:
 
 ```bash
 curl -v -X POST -d "{\"battery\":  77, \"fuelLevel\":  91, \"temperature\": 32 }" ${BASE_URL}/api/v1/${001273ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
@@ -170,8 +170,9 @@ curl -v -X POST -d "{\"battery\":  77, \"fuelLevel\":  91, \"temperature\": 32 }
 
 <br>
 
-Option 2: Send specific height measurement for tank "001273":
+**Option 2: Send "fuelHeight" measurement**
 
+Run the following command:
 
 ```bash
 curl -v -X POST -d "{\"fuelHeight\":  100}" ${BASE_URL}/api/v1/${001273ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
@@ -182,7 +183,7 @@ curl -v -X POST -d "{\"fuelHeight\":  100}" ${BASE_URL}/api/v1/${001273ACCESS_TO
 The example above uses <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a>.
 See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_blank">connecting devices</a> for other connectivity options.
 
-Go check your dashboard—you should see the values update instantly! 🚀
+Go check your dashboard—you should see the values update instantly 🚀
 
 ### 📦 Solution entities
 
@@ -213,14 +214,14 @@ ${all_entities}
 <img style="border: 1px solid #d7d7d7;" src="https://img.thingsboard.io/solutions/fuel_level_monitoring/ex-1-1.png" alt="Fuel level monitoring">
 </div>
 
+<div class="img-float" style="max-width:60%;margin: 10px auto">
+<img style="border: 1px solid #d7d7d7;" src="https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-2.png" alt="Fuel level monitoring">
+</div>
+
 **The Fix:** we will send a telemetry update with values that fall within the "safe" range defined in the alarm rules:
 * 🌡️ **Temperature:** 25°C
 * 🔋 **Battery:** 100%
 * ⛽ **Fuel Level:** 100%
-
-<div class="img-float" style="max-width:60%;margin: 10px auto">
-<img style="border: 1px solid #d7d7d7;" src="https://img.thingsboard.io/solutions/fuel_level_monitoring/fuel-monitoring-2.png" alt="Fuel level monitoring">
-</div>
 
 Run the following command:
 
