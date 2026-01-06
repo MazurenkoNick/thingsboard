@@ -144,18 +144,20 @@ export class FiltersDialogComponent extends DialogComponent<FiltersDialogCompone
       this.data.reportComponents.forEach((component) => {
         const typedComponent = component as DataReportComponentConfig;
         const datasources = typedComponent.type === ReportComponentType.ALARM_TABLE ? [(typedComponent as AlarmTableReportComponentConfig).alarmSource] : typedComponent.dataSources;
-        datasources.forEach((datasource) => {
-          if (datasource.filterId) {
-            componentsTitleList = this.filterToWidgetsMap[datasource.filterId];
-            if (!componentsTitleList) {
-              componentsTitleList = [];
-              this.filterToWidgetsMap[datasource.filterId] = componentsTitleList;
+        if (Array.isArray(datasources) && datasources.length) {
+          datasources.forEach((datasource) => {
+            if (datasource.filterId) {
+              componentsTitleList = this.filterToWidgetsMap[datasource.filterId];
+              if (!componentsTitleList) {
+                componentsTitleList = [];
+                this.filterToWidgetsMap[datasource.filterId] = componentsTitleList;
+              }
+              if (!componentsTitleList.includes(typedComponent.type)) {
+                componentsTitleList.push(typedComponent.type);
+              }
             }
-            if (!componentsTitleList.includes(typedComponent.type)) {
-              componentsTitleList.push(typedComponent.type);
-            }
-          }
-        });
+          });
+        }
       });
     }
 
