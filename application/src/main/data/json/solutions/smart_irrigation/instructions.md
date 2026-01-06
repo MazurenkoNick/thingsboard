@@ -1,100 +1,126 @@
 ## Solution instructions
 
-As part of this solution, we have created the "Irrigation Management" dashboard, 2 field assets, and 12 devices with simulated data. 
-We will review and describe each solution part below:
+Welcome to your new **Smart Irrigation** solution 👋 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Irrigation Management"</a> dashboard for you. Use it to:
 
-### Dashboards
+* 🚜 **Monitor** field conditions and soil moisture in real-time;
+* 💧 **Manage** irrigation schedules and automate water valves;
+* 🚨 **Track** alarms for critical dryness or low battery levels;
+* ⚙️ **Configure** crop types and moisture thresholds for each zone.
 
-##### Irrigation Management
+### 🖥 Mastering the dashboard
 
-The <a href="${Irrigation ManagementDASHBOARD_URL}" target="_blank">"Irrigation Management"</a> dashboard
-is designed to provision fields and related devices. It has multiple states:
+This solution is designed to simplify farm management by visualizing fields, sensors, and schedules in one centralized interface.
 
-* **Main** state allows you to list the fields and display them on the map. 
-  We assume that you might have multiple fields with various sensors for each field.
-  We have provisioned two "fake" fields with number of devices for demonstration purposes.
-    * Click the "+" button in the top right corner of the fields table to create a new field. 
-      You may input the crop type and soil moisture thresholds;
-    * Click the field polygon on the map to open the field state;
-* **Field** state allows you to manage irrigation schedule and devices.
-  You may provision new schedule items. The schedule dialog will create scheduler events on the background.
-  Click on the "Alarms" button to browse all alarms. You may also add sensors to the field if needed.
+**1. Main State**
+The main page gives you a bird's-eye view of your entire operation, allowing you to compare performance across different zones.
 
-### Device & Asset Profiles
+* **🗺️ Interactive Map:** Displays your defined field polygons overlaid on a satellite map.
+  * **Create:** Click the **"+ Add field"** button (top center) to draw a new polygon, assign a crop type (e.g., Wheat, Corn), and define specific moisture thresholds.
+* **📋 Fields List:** A summary table of all managed fields.
+  * **Data Columns:** Quickly scan key metrics including: "Label", "Crop type", "Average moisture" (visual bar), and current "Irrigation" status (On/Off).
+  * **Actions:** Use the buttons on the right to "Edit" ✏️ field settings or "Delete" 🗑️ it.
+* **📉 Moisture History:** Located at the bottom, this chart compares the historical soil moisture trends of all your fields over the last 7 days, helping you identify drying trends at a glance.
 
-The device & asset profiles listed below use pre-defined values for alarm thresholds. This values are common for all devices that share same device profile.
+**2. Field Details State (Drill Down)**
+To access the detailed management view, click on a "Field Polygon" on the map or click a "Row" in the Fields list.
 
-##### SI Field
+This state allows for precise control and deep analytics:
 
-The field asset profile is configured to forward all incoming events to the "SI Field" rule chain.
+* **🚜 Control & Status:**
+  * **Irrigation status indicator:** View the current state of the water valves (ON/OFF).
+  * **KPI Cards:** View real-time "Avg moisture" and "Daily water consumption".
+  * **Alarms:** A dedicated button showing active alarms (e.g., "3 Major Alarms"). Click to investigate.
+* **🗓️ Scheduling & Tasks:**
+  * **Schedule:** Configure recurring watering windows (e.g., "Morning", "Evening") with specific durations or volume limits.
+  * **Irrigation Tasks:** A log tracking the progress and completion of past and upcoming watering events.
+* **🌡 Sensors List️:** A granular list of every device in this field (Soil Moisture sensors, Valves) showing their individual status and values.
+* **📊 Analytics:** A dual-axis chart correlating "Soil Moisture" levels with "Water Consumption" over time to visualize irrigation efficiency.
 
-##### SI Water Meter
+### 🧬 Device & Asset Profiles
 
-The profile is configured to raise alarms if the value of "battery" telemetry is below a configurable threshold. 
-Warning alarm is raised when the value is below 30.
+We have pre-configured specific profiles to define the behavior and data structure for your farm's hardware. 
+These blueprints determine what telemetry your devices upload, which alarm rules configured for the profile, and which rule chain processes their data.
 
-The device also uploads the "pulseCounter" which is used to calculate water consumption. Sample device payload:
+#### 🌾 SI Field
+
+The field asset profile defines the logical boundary for your irrigation zones. 
+It acts as the central hub, aggregating data from all sensors assigned to that specific field to enable zone-specific decision-making and irrigation control.
+
+* **Default Rule Chain:** "SI Field" – responsible for field-level logic and irrigation control.
+* **Data Processing Logic:** It automatically aggregates data from all connected sensors to calculate field-wide metrics:
+  * **Average Moisture:** Computes the average saturation across all active sensors.
+  * **5-min Average:** Smooths out data spikes by calculating a rolling 5-minute average.
+  * **Irrigation State:** Updates the status (ON/DONE) based on water usage and duration thresholds. 
+  * **Water Consumption:** Tracks the total water used during an active irrigation cycle.
+
+#### 💧 SI Water Meter
+
+This profile is designed for consumption tracking and monitor water meter batter health.
+
+* **Default Rule Chain:** "SI Devices" – Processes telemetry and counts alarms.
+* **Telemetry Upload:** It uploads the `pulseCounter` value (used to calculate total volume) and the current `battery` level.
+* **Data Processing Logic:** It calculates the water consumption delta between pulses and propagates this data to the parent "SI Field" asset.
+* **Alarm Logic:** It automatically raises a "Warning" alarm if the battery level drops below the min threshold (Default: 30).
+
+<br>
+
+**Sample Payload:**
 
 ```json
 {"battery": 99, "pulseCounter": 123000}{:copy-code}
 ```
 
-##### SI Soil Moisture Sensor
+<br>
 
-The profile is configured to raise alarms if the value of "battery" telemetry is below a configurable threshold. 
-Warning alarm is raised when the value is below 30.
+#### 🌵 SI Soil Moisture Sensor
 
-The device also uploads the "moisture" level. Sample device payload:
+* **Default Rule Chain:** "SI Devices" – Processes telemetry and counts alarms.
+* **Telemetry Upload:** It uploads the soil `moisture` saturation level (0-100%) and the `battery` status.
+* **Data Processing Logic:** It propagates the latest moisture reading to the parent "SI Field" asset for aggregation.
+* **Alarm Logic:** It monitors three critical conditions:
+  * **Low Battery:** Warning if `battery` level < Min Threshold (Default: 30).
+  * **High Moisture:** Critical if level > Max Threshold (Default: 100).
+  * **Low Moisture:** Critical if level < Min Threshold (Default: 0).
+
+<br>
+
+**Sample Payload:**
 
 ```json
 {"battery": 99, "moisture": 57}{:copy-code}
 ```
 
-##### SI Smart Valve
+#### 🚰 SI Smart Valve
 
-The profile is configured to raise alarms if the value of "battery" telemetry is below a configurable threshold. 
-Warning alarm is raised when the value is below 30.
-Sample device payload:
+This profile manages water flow control.
+
+* **Default Rule Chain:** "SI Devices" – Processes telemetry and counts alarms.
+* **Telemetry Upload:** It continuously uploads the `battery` status to ensure operational readiness.
+* **RPC Control:** It accepts remote commands (`TURN_ON` / `TURN_OFF`) to physically enable or disable the irrigation line.
+* **Alarm Logic:** It automatically raises a "Warning" alarm if the battery level drops below the min threshold (Default: 30).
+
+<br>
+
+**Sample Telemetry Payload:**
 
 ```json
 {"battery": 99}{:copy-code}
 ```
 
-The device also accepts the RPC command to enable or disable the water flow. Sample RPC command:
+<br>
+
+**Sample RPC command:**
 
 ```json
 {"method": "TURN_ON", "params": {}}{:copy-code}
 ```
 
-### Devices
+### 🚨 Alarms
 
-We have already created 12+ devices and loaded some demo data for them. See device info and credentials below:
+Your solution monitors field health based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/"
+target="_blank">Alarm rules</a> configured in the Device Profiles detailed in the previous section.
 
-<div class="tb-markdown-view table-wrapper">
-
-${device_list_and_credentials}
-
-</div>
-
-Solution expects that the device telemetry will correspond to the samples provided in device profile section of the instruction.
-The most simple example of the moisture sensor payload is in JSON format:
-
-```json
-{"moisture": 57}{:copy-code}
-```
-
-To emulate the data upload on behalf of device "SI Soil Moisture 1" located inside field "Field 1", one should execute the following command to raise the Critical Alarm for Field 1:
-
-```bash
-curl -v -X POST -d "{\"moisture\":  77}" ${BASE_URL}/api/v1/${SI Soil Moisture 1ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
-```
-
-The example above uses <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a> for simplicity of demonstration.
-See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_blank">connecting devices</a> for other connectivity options.
-
-### Alarms
-
-Alarms are generated using <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm Rules</a> configured in the Smart Irrigation device profiles.
+You can review the complete list of configured alarms in the table below:
 
 <div class="tb-markdown-view table-wrapper">
 
@@ -102,9 +128,18 @@ ${alarm_rules}
 
 </div>
 
-### Calculated fields
+### 🧮 Calculated fields
 
 Calculated fields are used to derive irrigation-related metrics and indicators based on incoming device telemetry.
+
+Key logic implemented includes:
+
+* **Smart Aggregation:** The system computes the Average Field Moisture and a 5-minute Rolling Average to prevent erratic triggering from sensor spikes.
+* **Irrigation Controller:** It actively tracks the Irrigation State (ON/DONE) by comparing the duration and water consumption against your defined targets.
+* **Consumption Tracking:** It calculates the delta between water meter pulses to determine exact Water Consumption per session.
+* **Data Propagation:** It automatically pushes configuration changes (like moisture thresholds) from the Dashboard down to individual sensors.
+
+You can view the complete list of calculation scripts below:
 
 <div class="tb-markdown-view table-wrapper">
 
@@ -112,7 +147,7 @@ ${calculated_fields}
 
 </div>
 
-### Rule Chains
+### ⚙️ Rule Chains
 
 * **SI Devices** rule chain processes telemetry from all device types, including soil moisture sensors, water meters, and smart valves.
   This rule chain is responsible for telemetry ingestion and alarm counting.
@@ -122,7 +157,43 @@ ${calculated_fields}
   * controlling smart valve devices via RPC;
   * reacting to water consumption limits or irrigation duration rules.
 
-### Solution entities
+### 🔌 Devices
+
+We have pre-provisioned 12 devices with demo data across 2 fields to simulate a working farm. See device info and credentials below:
+
+<div class="tb-markdown-view table-wrapper">
+
+${device_list_and_credentials}
+
+</div>
+
+#### ⚡ Test it now
+
+Want to see the dashboard react? Simulate a "Critical Dryness" event for Field 1.
+Solution expects that the device telemetry will correspond to the samples provided in device profile section of the instruction.
+
+The most simple example of the moisture sensor payload is in JSON format:
+
+```json
+{"moisture": 77}{:copy-code}
+```
+
+<br>
+
+To emulate the data upload on behalf of device "SI Soil Moisture 1" located inside field "Field 1", one should execute the following command to raise the Critical Alarm for Field 1:
+
+```bash
+curl -v -X POST -d "{\"moisture\":  77}" ${BASE_URL}/api/v1/${SI Soil Moisture 1ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
+```
+
+<br>
+
+The example above uses <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a> for simplicity of demonstration.
+See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_blank">connecting devices</a> for other connectivity options.
+
+Go check your dashboard — you should see the values update instantly 🚀
+
+### 📦 Solution entities
 
 As part of this solution, the following entities were created:
 
@@ -132,7 +203,7 @@ ${all_entities}
 
 </div>
 
-### Edge computing
+### 📡 Edge computing
 
 **Optionally**, this solution can be extended to use edge computing.
 
@@ -160,7 +231,7 @@ To install ThingsBoard Edge and connect to the cloud, please navigate to <a href
 
 Once the edge is installed and connected to the cloud, you will be able to log in into edge using your tenant credentials.
 
-#### Push data to device on edge
+#### 🔄 Push data to device on edge
 
 Four **"SI \*\*\*"** devices were assigned to the edge entity "Remote Farm R1", thus these devices will be automatically provisioned to the edge.
 
@@ -172,10 +243,14 @@ To emulate the data upload on behalf of device "SI Soil Moisture 1" to the edge,
 curl -v -X POST -d "{\"moisture\":  77}" http://localhost:8080/api/v1/${SI Soil Moisture 1ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
 ```
 
+<br>
+
 Or please use next command if you updated edge HTTP 8080 bind port to **18080** during edge installation:
 
 ```bash
 curl -v -X POST -d "{\"moisture\":  77}" http://localhost:18080/api/v1/${SI Soil Moisture 1ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
 ```
+
+<br>
 
 Once you'll push data to the device "SI Soil Moisture 1" on edge, you'll be able to see telemetry update on the cloud for this device as well.
