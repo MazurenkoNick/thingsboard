@@ -43,6 +43,8 @@ import {
 } from '@shared/models/trendz-analytics.models';
 import { ActivatedRoute } from '@angular/router';
 import { map, Observable, of, switchMap } from 'rxjs';
+import { DialogService } from '@core/services/dialog.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'tb-trendz-settings',
@@ -58,7 +60,9 @@ export class TrendzSettingsComponent extends PageComponent implements OnInit{
 
   constructor(private fb: FormBuilder,
               private trendzService: TrendzService,
-              private route: ActivatedRoute){
+              private route: ActivatedRoute,
+              private dialogService: DialogService,
+              private translate: TranslateService){
     super()
   }
 
@@ -76,22 +80,54 @@ export class TrendzSettingsComponent extends PageComponent implements OnInit{
   save(): void {
     const trendzConfig: TrendzConfiguration = this.trendzSettingsForm.value;
 
-    this.trendzService.saveTrendzConfig(trendzConfig).subscribe((savedConfig) => {
-      if (savedConfig) {
-        this.trendzSettingsForm.patchValue(savedConfig);
-        this.trendzSettingsForm.markAsPristine();
-
-        this.updateTrendzStatus(this.trendzService.getTrendzSyncResult()).subscribe(trendzStatus => {
-          this.trendzSyncInfo = trendzStatus;
-        });
-      }
+    this.trendzService.saveTrendzConfig(trendzConfig).pipe(
+      switchMap((savedConfig) => {
+        if (savedConfig) {
+          this.trendzSettingsForm.patchValue(savedConfig);
+          this.trendzSettingsForm.markAsPristine();
+          return this.updateTrendzStatus(this.trendzService.getTrendzSyncResult());
+        }
+        return of(this.trendzSyncInfo);
+      })
+    ).subscribe(trendzStatus => {
+      this.trendzSyncInfo = trendzStatus;
     });
   }
 
   retryDiscovery(): void {
-    this.updateTrendzStatus(this.trendzService.connectToTrendz()).subscribe(trendzStatus => {
-      this.trendzSyncInfo = trendzStatus;
-    });
+    if(this.trendzSettingsForm.dirty) {
+      this.dialogService.confirm(
+        this.translate.instant('confirm-on-exit.title'),
+        this.translate.instant('trendz-analytics.trendz-configuration-unsaved-message'),
+        this.translate.instant('trendz-analytics.trendz-configuration-unsaved-continue-without-saving'),
+        this.translate.instant('action.save')
+      ).subscribe(result => {
+        if(result) {
+          const trendzConfig: TrendzConfiguration = this.trendzSettingsForm.value;
+
+          this.trendzService.saveTrendzConfig(trendzConfig).pipe(
+            switchMap((savedConfig) => {
+              if (savedConfig) {
+                this.trendzSettingsForm.patchValue(savedConfig);
+                this.trendzSettingsForm.markAsPristine();
+                return this.updateTrendzStatus(this.trendzService.connectToTrendz());
+              }
+              return of(this.trendzSyncInfo);
+            })
+          ).subscribe(trendzStatus => {
+            this.trendzSyncInfo = trendzStatus;
+          });
+        } else {
+          this.updateTrendzStatus(this.trendzService.connectToTrendz()).subscribe(trendzStatus => {
+            this.trendzSyncInfo = trendzStatus;
+          });
+        }
+      });
+    } else {
+      this.updateTrendzStatus(this.trendzService.connectToTrendz()).subscribe(trendzStatus => {
+        this.trendzSyncInfo = trendzStatus;
+      });
+    }
   }
 
   private updateTrendzStatus(syncResult$: Observable<TrendzSynchronization>): Observable<TrendzStatus> {
