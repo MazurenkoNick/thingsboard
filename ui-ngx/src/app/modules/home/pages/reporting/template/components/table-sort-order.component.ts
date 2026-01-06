@@ -52,6 +52,23 @@ export class TableSortOrderComponent implements OnInit, ControlValueAccessor, On
   Direction = Direction;
 
   @Input()
+  set columnNameChange(args: [string, string]) {
+    if (this.tableSortOrderFormGroup && Array.isArray(args) && args.length === 2) {
+      const columnIndex = this.columns.indexOf(args[0]);
+      let updatedFormValue = false;
+      if(columnIndex !== -1) {
+        this.columns[columnIndex] = args[1];
+        updatedFormValue = true;
+      } else if (this.columns.indexOf(args[1]) !== -1) {
+        updatedFormValue = true;
+      }
+      if (updatedFormValue && this.tableSortOrderFormGroup.get('column').value === args[0]) {
+        this.tableSortOrderFormGroup.get('column').setValue(args[1]);
+      }
+    }
+  }
+
+  @Input()
   columns: string[] = [];
 
   @Input()

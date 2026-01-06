@@ -117,7 +117,7 @@
       [entityAliasId]="datasource?.entityAliasId"
       [aliasController]="context.aliasController"
       formControlName="columns">
-      <tb-table-sort-order formControlName="tableSortOrder" [columns]="columnLabels"></tb-table-sort-order>
+      <tb-table-sort-order formControlName="tableSortOrder" [columns]="columnLabels" [columnNameChange]="columnNameChanged"></tb-table-sort-order>
     </tb-data-keys-panel>
   </div>
   @if (!isPlainFormat) {
