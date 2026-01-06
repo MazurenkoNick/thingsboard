@@ -57,7 +57,7 @@
   {
     "id": "swimming_pool_scada_system",
     "title": "Swimming pool SCADA system",
-    "level": "MAKER",
+    "level": "PROTOTYPE",
     "installTimeoutMs": 0,
     "previewImageUrl": "https://img.thingsboard.io/solutions/swimming_pool_scada_system/hp-swimming-pool-1.png",
     "videoPreviewImageUrl": "https://img.thingsboard.io/solutions/swimming_pool_scada_system/hp-swimming-pool-1.png",
