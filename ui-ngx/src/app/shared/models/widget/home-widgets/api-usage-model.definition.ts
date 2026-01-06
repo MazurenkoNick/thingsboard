@@ -87,6 +87,12 @@ export const ApiUsageModelDefinition: WidgetModelDefinition<ApiUsageDatasourcesI
   },
   hasTimewindow(): boolean {
     return false;
+  },
+  datasourcesHasAggregation(): boolean {
+    return false;
+  },
+  datasourcesHasOnlyComparisonAggregation(): boolean {
+    return false;
   }
 };
 
