@@ -1,6 +1,6 @@
 ### 💡 Solution Description
 
-The **Mine Site Monitoring** template is your accelerator for heavy industry IoT. Whether you are managing a clay mine, a quarry, or a large-scale construction site, this template provides the essential tools to visualize assets, enforce safety protocols, and optimize haulage cycles.
+The **Site Fleet Tracking** template is your accelerator for heavy industry IoT. Whether you are managing a clay mine, a quarry, or a large-scale construction site, this template provides the essential tools to visualize assets, enforce safety protocols, and optimize haulage cycles.
 
 #### 🌟 Why use this template?
 
