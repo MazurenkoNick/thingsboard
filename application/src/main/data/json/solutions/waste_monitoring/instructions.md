@@ -94,7 +94,7 @@ ${alarm_rules}
 
 User may configure the alarm rules via the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Waste Management"</a> dashboard using "Alarm rules" form.
 
-### ⚙️ Rule Chains
+### 🧠 Rule Chains
 
 The "Waste Sensor Rule Chain" is processing all incoming messages from waste sensors. This rule chain is responsible for counting alarms of both types and updating the status of the garbage bin by fullness and battery levels.
 

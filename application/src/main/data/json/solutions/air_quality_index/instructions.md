@@ -11,7 +11,7 @@ Welcome to your new **Air Quality Monitoring** solution 👋 We have generated t
 
 This solution includes two distinct interfaces: one for the **Public** (End Users) and one for **Tenant Administrators**.
 
-#### 1. Public Air Quality Monitoring Dashboard 🌍
+#### 🌍 Public Air Quality Monitoring Dashboard 
 
 This dashboard is designed for end-users and requires no login. It is pre-configured to monitor **Los Angeles** and operates in two main views within the same interface.
 The dashboard layout consists of an interactive map on the right and a dynamic information sidebar on the left.
@@ -56,7 +56,7 @@ When a marker is selected (e.g., Beverly Hills), the sidebar updates to show the
 <iframe src="${BASE_URL}${MAIN_DASHBOARD_PUBLIC_URL}" style="position:fixed; inset:0; width:100%; height:100%; border:none;"></iframe>{:copy-code}
 ```
 
-#### 2. Administration Air Quality Monitoring Dashboard 🛠️
+#### 🛠️ Administration Air Quality Monitoring Dashboard
 
 This dashboard is designed for tenant administrators to oversee the entire sensor fleet. It allows you to add new devices, monitor technical health (battery, connectivity), and configure alarm rules.
 
