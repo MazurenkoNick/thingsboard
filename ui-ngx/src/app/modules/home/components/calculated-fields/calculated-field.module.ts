@@ -65,6 +65,7 @@ import {
 import {
   CalculatedFieldsFilterConfigComponent
 } from '@home/components/calculated-fields/table-header/calculated-fields-filter-config.component';
+import { CalculatedFieldComponent } from '@home/components/calculated-fields/calculated-field.component';
 import {
   CalculatedFieldReprocessingPanelComponent
 } from '@home/components/calculated-fields/components/reprocessing/calculated-field-reprocessing-panel.component';
@@ -76,7 +77,8 @@ import {
     CalculatedFieldTestArgumentsComponent,
     CalculatedFieldsHeaderComponent,
     CalculatedFieldsFilterConfigComponent,
-    CalculatedFieldReprocessingPanelComponent
+    CalculatedFieldComponent,
+    CalculatedFieldReprocessingPanelComponent,
   ],
   imports: [
     CommonModule,
@@ -91,6 +93,7 @@ import {
   exports: [
     CalculatedFieldDialogComponent,
     CalculatedFieldScriptTestDialogComponent,
+    CalculatedFieldComponent,
   ]
 })
 export class CalculatedFieldsModule {}

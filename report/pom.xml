@@ -152,8 +152,8 @@
                 </excludes>
             </resource>
             <resource>
-                <directory>${project.basedir}/../ui-ngx/src/assets</directory>
-                <targetPath>public/assets</targetPath>
+                <directory>${project.basedir}/../ui-ngx/src/assets/report</directory>
+                <targetPath>public/assets/report</targetPath>
                 <filtering>false</filtering>
             </resource>
         </resources>

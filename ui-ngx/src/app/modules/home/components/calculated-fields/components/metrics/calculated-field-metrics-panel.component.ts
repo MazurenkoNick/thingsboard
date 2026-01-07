@@ -39,6 +39,8 @@ import {
   AggInputType,
   AggInputTypeTranslations,
   CalculatedFieldAggMetricValue,
+  calculatedFieldMetricFilterDefaultScript,
+  calculatedFieldMetricMapDefaultScript,
   FORBIDDEN_NAMES,
   forbiddenNamesValidator,
   uniqueNameValidator
@@ -57,7 +59,7 @@ interface CalculatedFieldAggMetricValuePanel extends CalculatedFieldAggMetricVal
 @Component({
   selector: 'tb-calculated-field-metrics-panel',
   templateUrl: './calculated-field-metrics-panel.component.html',
-  styleUrl: '../common/calculated-field-panel.scss',
+  styleUrls: ['../common/calculated-field-panel.scss', '../../calculated-field.component.scss'],
 })
 export class CalculatedFieldMetricsPanelComponent implements OnInit {
 
@@ -69,6 +71,7 @@ export class CalculatedFieldMetricsPanelComponent implements OnInit {
   @Input() editorCompleter: TbEditorCompleter;
   @Input() highlightRules: AceHighlightRules;
   @Input({required: true}) testScript: (expression?: string) => Observable<string>;
+  @Input() readonly = false;
 
   metricDataApplied = output<CalculatedFieldAggMetricValue>();
   filterExpanded = false;
@@ -78,18 +81,18 @@ export class CalculatedFieldMetricsPanelComponent implements OnInit {
     name: ['', [Validators.required, forbiddenNamesValidator(FORBIDDEN_NAMES), Validators.pattern(charsWithNumRegex), Validators.maxLength(255)]],
     function: [AggFunction.AVG],
     allowFilter: [false],
-    filter: ['', Validators.required],
+    filter: [calculatedFieldMetricFilterDefaultScript, Validators.required],
     input: this.fb.group({
       type: [AggInputType.key],
       key: ['', Validators.required],
-      function: ['', Validators.required],
+      function: [calculatedFieldMetricMapDefaultScript, Validators.required],
     }),
     defaultValue: [null]
   });
 
   entityFilter: EntityFilter;
 
-  readonly AggFunctions = Object.values(AggFunction) as AggFunction[];
+  AggFunctions = Object.values(AggFunction) as AggFunction[];
   readonly AggFunctionTranslations = AggFunctionTranslations;
   readonly ScriptLanguage = ScriptLanguage;
   readonly AggInputType = AggInputType;
@@ -118,6 +121,14 @@ export class CalculatedFieldMetricsPanelComponent implements OnInit {
     this.validateInputKey();
 
     this.functionArgs = ['ctx', ...this.arguments];
+
+    if (this.simpleMode) {
+      this.AggFunctions = this.AggFunctions.filter(aggFunc => aggFunc !== AggFunction.COUNT_UNIQUE);
+    }
+
+    if (this.readonly) {
+      this.metricForm.disable({emitEvent: false});
+    }
   }
 
   saveMetric(): void {

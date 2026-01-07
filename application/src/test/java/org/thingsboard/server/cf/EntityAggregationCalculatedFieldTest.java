@@ -58,6 +58,8 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
 import org.thingsboard.server.common.data.job.JobType;
+import org.thingsboard.server.common.data.job.task.CfReprocessingTaskResult;
+import org.thingsboard.server.common.data.job.task.TaskResult;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.controller.AbstractControllerTest;
 import org.thingsboard.server.controller.AbstractWebTest;
@@ -120,7 +122,7 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
     public void testCreateCfAndNoTelemetryDuringInterval_checkAggregation() throws Exception {
         Device device = createDevice("Device", "1234567890111");
 
-        CustomInterval customInterval = new CustomInterval("Europe/Kyiv", 0L, 5L);
+        CustomInterval customInterval = new CustomInterval(TZ, 0L, 5L);
         createConsumptionCF(device.getId(), customInterval, null);
 
         long interval = customInterval.getCurrentIntervalDurationMillis();
@@ -140,7 +142,7 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
     public void testCreateCfWithoutWatermark_checkAggregation() throws Exception {
         Device device = createDevice("Device", "1234567890111");
 
-        CustomInterval customInterval = new CustomInterval("Europe/Kyiv", 0L, 5L);
+        CustomInterval customInterval = new CustomInterval(TZ, 0L, 5L);
         createConsumptionCF(device.getId(), customInterval, null);
 
         long currentIntervalStartTs = customInterval.getCurrentIntervalStartTs();
@@ -183,7 +185,7 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
     public void testCreateCfWithWatermark_checkAggregationDuringWatermark() throws Exception {
         Device device = createDevice("Device", "1234567890111");
 
-        CustomInterval customInterval = new CustomInterval("Europe/Kyiv", 0L, 5L);
+        CustomInterval customInterval = new CustomInterval(TZ, 0L, 5L);
         Watermark watermark = new Watermark(10);
         createConsumptionCF(device.getId(), customInterval, watermark);
 
@@ -333,6 +335,84 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
         });
     }
 
+    @Test
+    public void testReprocessCalculatedFieldWhenNoTimeseriesDataAvailableForTimewindow() throws Exception {
+        Device device = createDevice("Device", "1234567890111");
+
+        LocalDate testDate = LocalDate.of(2025, 11, 11);
+        ZonedDateTime dateTime = ZonedDateTime.of(testDate, LocalTime.of(13, 24), ZoneId.of(TZ));
+        // reprocessing time window(TW)
+        long startTs = dateTime.minusHours(4).toInstant().toEpochMilli(); // 2025-11-11 9:24
+        long endTs = dateTime.toInstant().toEpochMilli(); // 2025-11-11 13:24
+
+        CalculatedField savedCalculatedField = createConsumptionCF(device.getId(), new HourInterval(TZ, 0L), null, null);
+
+        reprocessCalculatedField(savedCalculatedField, startTs, endTs);
+
+        await().atMost(AbstractWebTest.TIMEOUT, TimeUnit.SECONDS).untilAsserted(() -> {
+            Job cfReprocessingJob = findJobs(List.of(JobType.CF_REPROCESSING), List.of(device.getUuidId())).stream().findFirst().orElseThrow();
+            assertThat(cfReprocessingJob.getStatus()).isEqualTo(JobStatus.FAILED);
+            assertThat(cfReprocessingJob.getResult().getSuccessfulCount()).isEqualTo(0);
+            assertThat(cfReprocessingJob.getResult().getTotalCount()).isEqualTo(1);
+            assertThat(cfReprocessingJob.getResult().getFailedCount()).isEqualTo(1);
+            assertThat(cfReprocessingJob.getResult().getResults()).isNotNull().hasSize(1);
+            assertThat(cfReprocessingJob.getEntityId()).isEqualTo(device.getId());
+            assertThat(cfReprocessingJob.getEntityName()).isEqualTo(device.getName());
+
+            TaskResult taskResult = cfReprocessingJob.getResult().getResults().get(0);
+            assertThat(taskResult).isInstanceOf(CfReprocessingTaskResult.class);
+            CfReprocessingTaskResult cfReprocessingTaskResult = (CfReprocessingTaskResult) taskResult;
+            assertThat(cfReprocessingTaskResult.getFailure()).isNotNull()
+                    .extracting(CfReprocessingTaskResult.CfReprocessingTaskFailure::getError)
+                    .isEqualTo("Time series data aggregation for selected reprocessing time window has no results!");
+        });
+    }
+
+    @Test
+    public void testSendFutureTelemetry_checkAggregation() throws Exception {
+        Device device = createDevice("Device", "1234567890111");
+
+        CustomInterval customInterval = new CustomInterval(TZ, 0L, 2L);
+        createConsumptionCF(device.getId(), customInterval, null);
+
+        long currentIntervalStartTs = customInterval.getCurrentIntervalStartTs();
+
+        long tsBeforeInterval = currentIntervalStartTs - 1000;
+        long tsInInterval_1 = currentIntervalStartTs + 1000;
+        long tsInInterval_2 = currentIntervalStartTs + 500;
+        long tsInInterval_3 = currentIntervalStartTs + 200;
+        postTelemetry(device.getId(), String.format("{\"ts\": \"%s\", \"values\": {\"energy\":120}}", tsBeforeInterval));
+        postTelemetry(device.getId(), String.format("{\"ts\": \"%s\", \"values\": {\"energy\":100}}", tsInInterval_1));
+        postTelemetry(device.getId(), String.format("{\"ts\": \"%s\", \"values\": {\"energy\":180}}", tsInInterval_2));
+        postTelemetry(device.getId(), String.format("{\"ts\": \"%s\", \"values\": {\"energy\":120}}", tsInInterval_3));
+
+        long interval = customInterval.getCurrentIntervalDurationMillis();
+
+        await().alias("create CF -> perform aggregation after interval end")
+                .atMost(2 * interval, TimeUnit.MILLISECONDS)
+                .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    ObjectNode result = getLatestTelemetry(device.getId(), "consumption", "avgConsumption");
+                    assertThat(result).isNotNull();
+                    assertThat(result.get("consumption").get(0).get("value").asText()).isEqualTo("400");
+                    assertThat(result.get("avgConsumption").get(0).get("value").asText()).isEqualTo("133");
+                });
+
+        postTelemetry(device.getId(), String.format("{\"ts\": \"%s\", \"values\": {\"energy\":500}}", currentIntervalStartTs + 4500L));
+
+        await().alias("update telemetry that belongs to future interval -> check aggregation ")
+                .atMost(3 * interval, TimeUnit.MILLISECONDS)
+                .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    ObjectNode result = getLatestTelemetry(device.getId(), "consumption", "avgConsumption");
+                    assertThat(result).isNotNull();
+                    assertThat(result.get("consumption").get(0).get("value").asText()).isEqualTo("500");
+                    assertThat(result.get("consumption").get(0).get("ts").asLong()).isEqualTo(currentIntervalStartTs + 4000L);
+                    assertThat(result.get("avgConsumption").get(0).get("value").asText()).isEqualTo("500");
+                    assertThat(result.get("avgConsumption").get(0).get("ts").asLong()).isEqualTo(currentIntervalStartTs + 4000L);
+                });
+    }
+
     private long ts(LocalDate date, int hour, int minute, int second) {
         return ZonedDateTime.of(date, LocalTime.of(hour, minute, second), ZoneId.of(TZ))
                 .toInstant()
@@ -340,6 +420,10 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
     }
 
     private CalculatedField createConsumptionCF(EntityId entityId, AggInterval aggInterval, Watermark watermark) {
+        return createConsumptionCF(entityId, aggInterval, watermark, 9999L);
+    }
+
+    private CalculatedField createConsumptionCF(EntityId entityId, AggInterval aggInterval, Watermark watermark, Long defaultValue) {
         Map<String, Argument> arguments = new HashMap<>();
         Argument argument = new Argument();
         argument.setRefEntityKey(new ReferencedEntityKey("energy", ArgumentType.TS_LATEST, null));
@@ -350,7 +434,7 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
         AggMetric consumption = new AggMetric();
         consumption.setFunction(AggFunction.SUM);
         consumption.setInput(new AggKeyInput("en"));
-        consumption.setDefaultValue(9999L);
+        consumption.setDefaultValue(defaultValue);
         aggMetrics.put("consumption", consumption);
 
         AggMetric avgEnergyConsumption = new AggMetric();

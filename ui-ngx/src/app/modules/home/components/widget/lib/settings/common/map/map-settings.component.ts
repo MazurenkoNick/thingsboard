@@ -319,7 +319,8 @@ export class MapSettingsComponent implements OnInit, ControlValueAccessor, Valid
     this.propagateChange(this.modelValue);
   }
 
-  private editKey(key: DataKey, deviceId: string, entityAliasId: string, _widgetType = widgetType.latest): Observable<DataKey> {
+  private editKey(key: DataKey, deviceId: string, entityAliasId: string, _widgetType = widgetType.latest,
+                  hideDataKeyAggregation = true): Observable<DataKey> {
     return this.dialog.open<DataKeyConfigDialogComponent, DataKeyConfigDialogData, DataKey>(DataKeyConfigDialogComponent,
       {
         disableClose: true,
@@ -336,6 +337,7 @@ export class MapSettingsComponent implements OnInit, ControlValueAccessor, Valid
           hideDataKeyColor: true,
           hideDataKeyDecimals: true,
           hideDataKeyUnits: true,
+          hideDataKeyAggregation: hideDataKeyAggregation,
           widget: this.widget,
           dashboard: null,
           dataKeySettingsForm: null,

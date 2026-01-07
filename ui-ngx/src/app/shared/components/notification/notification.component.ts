@@ -39,7 +39,11 @@ import {
 } from '@shared/models/notification.models';
 import { UtilsService } from '@core/services/utils.service';
 import { Router } from '@angular/router';
-import { alarmSeverityColors, alarmSeverityTranslations } from '@shared/models/alarm.models';
+import {
+  alarmSeverityBackgroundColors,
+  alarmSeverityColors,
+  alarmSeverityTranslations
+} from '@shared/models/alarm.models';
 import tinycolor from 'tinycolor2';
 import { StateObject } from '@core/api/widget-api.models';
 import { objToBase64URI } from '@core/utils';
@@ -148,8 +152,8 @@ export class NotificationComponent implements OnInit {
     }
   }
 
-  alarmColorSeverity(alpha: number) {
-    return tinycolor(alarmSeverityColors.get(this.notification.info.alarmSeverity)).setAlpha(alpha).toRgbString();
+  alarmColorSeverityBackground() {
+    return alarmSeverityBackgroundColors.get(this.notification.info.alarmSeverity);
   }
 
   notificationColor(): string {
@@ -171,7 +175,8 @@ export class NotificationComponent implements OnInit {
       return {color: alarmSeverityColors.get(this.notification.info.alarmSeverity)};
     } else if (this.notification.type === NotificationType.RULE_ENGINE_COMPONENT_LIFECYCLE_EVENT) {
       return {color: '#D12730'};
-    } else if (this.notification.type === NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST) {
+    } else if (this.notification.type === NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST ||
+               this.notification.type === NotificationType.ADDON_ACCESS_ERROR) {
       return {color: 'var(--tb-primary-500)'};
     }
     return null;

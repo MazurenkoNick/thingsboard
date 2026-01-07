@@ -38,6 +38,7 @@ import org.thingsboard.script.api.tbel.TbelCfSingleValueArg;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntryType;
+import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
 import org.thingsboard.server.service.cf.ctx.state.HasLatestTs;
 import org.thingsboard.server.service.cf.ctx.state.SingleValueArgumentEntry;
 
@@ -78,7 +79,7 @@ public class RelatedEntitiesArgumentEntry implements ArgumentEntry, HasLatestTs 
     }
 
     @Override
-    public boolean updateEntry(ArgumentEntry entry) {
+    public boolean updateEntry(ArgumentEntry entry, CalculatedFieldCtx ctx) {
         if (entry instanceof RelatedEntitiesArgumentEntry relatedEntitiesArgumentEntry) {
             entityInputs.putAll(relatedEntitiesArgumentEntry.entityInputs);
             return true;
@@ -89,7 +90,7 @@ public class RelatedEntitiesArgumentEntry implements ArgumentEntry, HasLatestTs 
             }
             ArgumentEntry argumentEntry = entityInputs.get(singleValueArgumentEntry.getEntityId());
             if (argumentEntry != null) {
-                argumentEntry.updateEntry(singleValueArgumentEntry);
+                argumentEntry.updateEntry(singleValueArgumentEntry, ctx);
             } else {
                 entityInputs.put(singleValueArgumentEntry.getEntityId(), singleValueArgumentEntry);
             }

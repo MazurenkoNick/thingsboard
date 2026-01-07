@@ -69,9 +69,10 @@ export class EmailVerifiedComponent {
   login(): void {
     if (this.loginResponse) {
       this.isLoading = true;
-      this.authService.setUserFromJwtToken(this.loginResponse.token, this.loginResponse.refreshToken, true).subscribe(
-        (value) => {this.isLoading = value;}
-      );
+      this.authService.setUserFromJwtToken(this.loginResponse.token, this.loginResponse.refreshToken, true).subscribe({
+        next: (value) => {this.isLoading = value;},
+        error: () => {this.isLoading = false;}
+      });
     } else {
       this.router.navigateByUrl(`/login`).then(() => {});
     }

@@ -108,6 +108,7 @@ export class TaskParametersPanelComponent implements OnInit, OnDestroy {
         const value = JSON.stringify(cloneConfig, null, 2);
         this.aceEditor.setValue(value, -1);
         updateEditorSize(editorElement, value, this.aceEditor, this.renderer, {showGutter: true});
+        this.renderer.setStyle(this.taskPanelElmRef.nativeElement, 'width', editorElement.style.width);
         this.popover.updatePosition();
       }
     );

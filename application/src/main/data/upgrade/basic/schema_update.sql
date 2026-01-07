@@ -136,18 +136,21 @@ DELETE FROM admin_settings WHERE key = 'trendz' AND tenant_id != '13814000-1dd2-
 -- UPGRADING WL settings with overrideTrendzName flag
 
 UPDATE white_labeling SET settings = jsonb_set(settings::jsonb, '{overrideTrendzName}', 'true', true)::text
-                      WHERE type = 'GENERAL' AND ((settings::jsonb -> 'platformName' <> 'null'::jsonb) AND (LOWER(settings::jsonb ->> 'platformName') <> 'thingsboard'));
+                      WHERE type = 'GENERAL' AND (((settings::jsonb -> 'platformName' <> 'null'::jsonb) AND (LOWER(btrim(settings::jsonb ->> 'platformName')) <> 'thingsboard'))
+                                                      OR ((settings::jsonb -> 'appTitle' <> 'null'::jsonb) AND (LOWER(btrim(settings::jsonb ->> 'appTitle')) <> 'thingsboard')));
 
-UPDATE white_labeling g SET settings = jsonb_set(settings::jsonb, '{overrideTrendzName}', 'true', true)::text
-                      WHERE type = 'GENERAL' AND EXISTS (SELECT 1 from white_labeling l WHERE l.tenant_id = g.tenant_id AND l.customer_id = g.customer_id AND l.type = 'LOGIN'
-                                                       AND ((l.settings::jsonb -> 'platformName' <> 'null'::jsonb) AND (LOWER(settings::jsonb ->> 'platformName') <> 'thingsboard')));
-
-UPDATE white_labeling SET settings = jsonb_set(settings::jsonb, '{overrideTrendzName}', 'true', true)::text
-                      WHERE type = 'GENERAL' AND ((settings::jsonb -> 'appTitle' <> 'null'::jsonb) AND (LOWER(settings::jsonb ->> 'appTitle') <> 'thingsboard'));
-
-UPDATE white_labeling g SET settings = jsonb_set(settings::jsonb, '{overrideTrendzName}', 'true', true)::text
-                        WHERE type = 'GENERAL' AND EXISTS (SELECT 1 from white_labeling l WHERE l.tenant_id = g.tenant_id AND l.customer_id = g.customer_id AND l.type = 'LOGIN'
-                                                        AND ((l.settings::jsonb -> 'appTitle' <> 'null'::jsonb) AND (LOWER(l.settings::jsonb ->> 'appTitle') <> 'thingsboard')));
+INSERT INTO white_labeling (tenant_id, customer_id, type, settings)
+SELECT l.tenant_id,
+       l.customer_id,
+       'GENERAL',
+       '{"overrideTrendzName": true}'::jsonb::text
+FROM white_labeling l
+WHERE l.type = 'LOGIN'
+  AND ((l.settings::jsonb -> 'platformName' <> 'null'::jsonb AND LOWER(btrim(l.settings::jsonb ->> 'platformName')) <> 'thingsboard')
+           OR (l.settings::jsonb -> 'appTitle' <> 'null'::jsonb AND LOWER(btrim(l.settings::jsonb ->> 'appTitle')) <> 'thingsboard'))
+ON CONFLICT (tenant_id, customer_id, type)
+    DO UPDATE
+    SET settings = jsonb_set(white_labeling.settings::jsonb, '{overrideTrendzName}', 'true', true)::text;
 
 -- tenant specific updates
 UPDATE white_labeling SET settings = jsonb_set(settings::jsonb, '{overrideTrendzName}', 'true', true)::text
