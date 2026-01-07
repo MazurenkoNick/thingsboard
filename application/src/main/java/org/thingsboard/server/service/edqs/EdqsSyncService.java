@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -40,6 +40,7 @@ import org.thingsboard.server.common.data.ObjectType;
 import org.thingsboard.server.common.data.edqs.AttributeKv;
 import org.thingsboard.server.common.data.edqs.EdqsEventType;
 import org.thingsboard.server.common.data.edqs.EdqsObject;
+import org.thingsboard.server.common.data.edqs.EdqsSyncRequest;
 import org.thingsboard.server.common.data.edqs.Entity;
 import org.thingsboard.server.common.data.edqs.LatestTsKv;
 import org.thingsboard.server.common.data.edqs.fields.EntityFields;
@@ -102,20 +103,38 @@ public abstract class EdqsSyncService {
 
     public abstract boolean isSyncNeeded();
 
-    public void sync() {
+    public void sync(EdqsSyncRequest syncRequest) {
         log.info("Synchronizing data to EDQS");
         long startTs = System.currentTimeMillis();
         counters.clear();
 
-        syncTenantEntities();
-        syncEntityGroups();
-        syncRelations();
-        loadKeyDictionary();
-        syncAttributes();
-        syncLatestTimeseries();
+        if (syncRequest.getObjectTypes() != null && !syncRequest.getObjectTypes().isEmpty()) {
+            log.info("Sync request for entity types: {}", syncRequest.getObjectTypes());
+            for (ObjectType objectType : syncRequest.getObjectTypes()) {
+                syncObjectType(objectType);
+            }
+        } else {
+            log.info("Sync request for all entity types");
+            syncTenantEntities();
+            syncEntityGroups();
+            syncRelations();
+            loadKeyDictionary();
+            syncAttributes();
+            syncLatestTimeseries();
+        }
 
         counters.clear();
         log.info("Finished synchronizing data to EDQS in {} ms", (System.currentTimeMillis() - startTs));
+    }
+
+    private void syncObjectType(ObjectType objectType) {
+        switch (objectType) {
+            case ENTITY_GROUP -> syncEntityGroups();
+            case RELATION -> syncRelations();
+            case ATTRIBUTE_KV -> syncAttributes();
+            case LATEST_TS_KV -> syncLatestTimeseries();
+            default -> syncTenantEntity(objectType);
+        }
     }
 
     private void process(TenantId tenantId, ObjectType type, EdqsObject object) {
@@ -128,26 +147,30 @@ public abstract class EdqsSyncService {
 
     private void syncTenantEntities() {
         for (ObjectType type : edqsTenantTypes) {
-            log.info("Synchronizing {} entities to EDQS", type);
-            long ts = System.currentTimeMillis();
-            EntityType entityType = type.toEntityType();
-            Dao<?> dao = entityDaoRegistry.getDao(entityType);
-            UUID lastId = UUID.fromString("00000000-0000-0000-0000-000000000000");
-            while (true) {
-                var batch = dao.findNextBatch(lastId, entityBatchSize);
-                if (batch.isEmpty()) {
-                    break;
-                }
-                for (EntityFields entityFields : batch) {
-                    TenantId tenantId = TenantId.fromUUID(entityFields.getTenantId());
-                    entityInfoMap.put(entityFields.getId(), new EntityIdInfo(entityType, tenantId));
-                    process(tenantId, type, new Entity(entityType, entityFields));
-                }
-                EntityFields lastRecord = batch.get(batch.size() - 1);
-                lastId = lastRecord.getId();
-            }
-            log.info("Finished synchronizing {} entities to EDQS in {} ms", type, (System.currentTimeMillis() - ts));
+            syncTenantEntity(type);
         }
+    }
+
+    private void syncTenantEntity(ObjectType type) {
+        log.info("Synchronizing {} entities to EDQS", type);
+        long ts = System.currentTimeMillis();
+        EntityType entityType = type.toEntityType();
+        Dao<?> dao = entityDaoRegistry.getDao(entityType);
+        UUID lastId = UUID.fromString("00000000-0000-0000-0000-000000000000");
+        while (true) {
+            var batch = dao.findNextBatch(lastId, entityBatchSize);
+            if (batch.isEmpty()) {
+                break;
+            }
+            for (EntityFields entityFields : batch) {
+                TenantId tenantId = TenantId.fromUUID(entityFields.getTenantId());
+                entityInfoMap.put(entityFields.getId(), new EntityIdInfo(entityType, tenantId));
+                process(tenantId, type, new Entity(entityType, entityFields));
+            }
+            EntityFields lastRecord = batch.get(batch.size() - 1);
+            lastId = lastRecord.getId();
+        }
+        log.info("Finished synchronizing {} entities to EDQS in {} ms", type, (System.currentTimeMillis() - ts));
     }
     private void syncEntityGroups() {
         log.info("Synchronizing entity groups to EDQS");

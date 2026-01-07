@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -143,18 +143,20 @@ export class FiltersDialogComponent extends DialogComponent<FiltersDialogCompone
       let componentsTitleList: Array<string>;
       this.data.reportComponents.forEach((component) => {
         const datasources = component.type === ReportComponentType.ALARM_TABLE ? [(component as AlarmTableReportComponentConfig).alarmSource] : (component as DataReportComponentConfig).dataSources;
-        datasources.forEach((datasource) => {
-          if (datasource.filterId) {
-            componentsTitleList = this.filterToWidgetsMap[datasource.filterId];
-            if (!componentsTitleList) {
-              componentsTitleList = [];
-              this.filterToWidgetsMap[datasource.filterId] = componentsTitleList;
+        if (Array.isArray(datasources) && datasources.length) {
+          datasources.forEach((datasource) => {
+            if (datasource.filterId) {
+              componentsTitleList = this.filterToWidgetsMap[datasource.filterId];
+              if (!componentsTitleList) {
+                componentsTitleList = [];
+                this.filterToWidgetsMap[datasource.filterId] = componentsTitleList;
+              }
+              if (!componentsTitleList.includes(reportComponentTypesData.getReportComponentTypeData(component.type, component.subType).title)) {
+                componentsTitleList.push(reportComponentTypesData.getReportComponentTypeData(component.type, component.subType).title);
+              }
             }
-            if (!componentsTitleList.includes(reportComponentTypesData.getReportComponentTypeData(component.type, component.subType).title)) {
-              componentsTitleList.push(reportComponentTypesData.getReportComponentTypeData(component.type, component.subType).title);
-            }
-          }
-        });
+          });
+        }
       });
     }
 

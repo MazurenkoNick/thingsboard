@@ -2,7 +2,7 @@
 
     ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 
-    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+    Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 
     NOTICE: All information contained herein is, and remains
     the property of ThingsBoard, Inc. and its suppliers,
@@ -30,7 +30,6 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-
 @if(trendzSynced) {
   <div class="cards-wrapper flex flex-col">
     <div class="cards-grid">
@@ -44,7 +43,7 @@
               </div>
               <div class="card-subtitle" tbTruncateWithTooltip>{{ 'trendz-analytics.metric-explorer-description' | translate }}</div>
             </div>
-            <a mat-button mat-raised-button color="primary" href="/trendz/metricExplorer" target="_blank" [disabled]="(isLoading$ | async)">
+            <a mat-button mat-raised-button color="primary" href="/trendz/metric-explorer" target="_blank" [disabled]="(isLoading$ | async)">
               {{ 'trendz-analytics.explore' | translate }}
             </a>
           </div>

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -161,13 +161,15 @@ export class EntityAliasesDialogComponent extends DialogComponent<EntityAliasesD
           }
         } else {
           const dataSources = (component as DataReportComponentConfig).dataSources;
-          dataSources.forEach((datasource) => {
-            if ([DatasourceType.entity, DatasourceType.entityCount, DatasourceType.alarmCount].includes(datasource.type)
-              && datasource.entityAliasId) {
-              this.addWidgetTitleToWidgetsMap(datasource.entityAliasId,
-                reportComponentTypesData.getReportComponentTypeData(component.type, component.subType).title);
-            }
-          });
+          if (Array.isArray(dataSources) && dataSources.length) {
+            dataSources.forEach((datasource) => {
+              if ([DatasourceType.entity, DatasourceType.entityCount, DatasourceType.alarmCount].includes(datasource.type)
+                && datasource.entityAliasId) {
+                this.addWidgetTitleToWidgetsMap(datasource.entityAliasId,
+                  reportComponentTypesData.getReportComponentTypeData(component.type, component.subType).title);
+              }
+            });
+          }
         }
       });
     }

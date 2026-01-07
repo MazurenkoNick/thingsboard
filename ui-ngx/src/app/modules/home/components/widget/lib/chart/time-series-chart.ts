@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -678,7 +678,7 @@ export class TbTimeSeriesChart {
           }
         }
       } else if (limit.type === ValueSourceType.constant) {
-        const value = unitConvertor ? unitConvertor(limit.value) : limit.value;
+        const value = unitConvertor && isDefinedAndNotNull(limit.value) ? unitConvertor(limit.value) : limit.value;
         if (limitType === 'min') {
           yAxis.option.min = value;
         } else {
