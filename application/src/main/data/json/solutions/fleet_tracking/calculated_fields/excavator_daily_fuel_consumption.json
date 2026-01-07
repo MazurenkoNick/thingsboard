@@ -35,7 +35,7 @@
     },
     "interval": {
       "type": "DAY",
-      "tz": "Europe/Kiev"
+      "tz": "UTC"
     },
     "watermark": null,
     "produceIntermediateResult": true,
