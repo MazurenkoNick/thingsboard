@@ -49,7 +49,6 @@ import { delay, share } from 'rxjs/operators';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Observable, Subscription } from 'rxjs';
 import { parseHttpErrorMessage } from '@core/utils';
-import { EntityType } from '@shared/models/entity-type.models';
 
 @Component({
   selector: 'tb-entity-version-restore',
