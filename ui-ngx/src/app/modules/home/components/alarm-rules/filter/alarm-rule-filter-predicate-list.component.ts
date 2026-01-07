@@ -95,6 +95,8 @@ export class AlarmRuleFilterPredicateListComponent implements ControlValueAccess
 
   @Input() argumentInUse: string;
 
+  @Input() readonly: boolean;
+
   filterListFormGroup = this.fb.group({
     predicates: this.fb.array([])
   });

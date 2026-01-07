@@ -41,8 +41,9 @@
     <tb-entity-aggregation-arguments-table formControlName="arguments"
                                            [entityId]="entityId"
                                            [tenantId]="tenantId"
-                                           [entityName]="entityName"
                                            [readonly]="readonly" />
+                                           [isEditValue]="isEditValue"
+                                           [entityName]="entityName"/>
   </div>
   <div class="tb-form-panel">
     <div class="tb-form-panel-title" tb-hint-tooltip-icon="{{ 'calculated-fields.hint.entity-aggregation-metrics' | translate }}">

@@ -96,6 +96,8 @@ export class SimpleConfigurationComponent implements ControlValueAccessor, Valid
   @Input({required: true})
   testScript: () => Observable<string>;
 
+  @Input({transform: booleanAttribute}) isEditValue = true;
+
   @Input({ transform: booleanAttribute })
   readonly: boolean;
 
