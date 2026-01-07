@@ -95,6 +95,8 @@ export class PropagationConfigurationComponent implements ControlValueAccessor, 
   @Input({required: true})
   testScript: () => Observable<string>;
 
+  @Input({transform: booleanAttribute}) isEditValue = true;
+
   propagateConfiguration = this.fb.group({
     arguments: this.fb.control({}, notEmptyObjectValidator()),
     applyExpressionToResolvedArguments: [false],

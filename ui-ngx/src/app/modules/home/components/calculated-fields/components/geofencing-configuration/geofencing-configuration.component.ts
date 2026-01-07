@@ -90,6 +90,8 @@ export class GeofencingConfigurationComponent implements ControlValueAccessor, V
   @Input({ transform: booleanAttribute })
   readonly: boolean;
 
+  @Input({transform: booleanAttribute}) isEditValue = true;
+
   readonly minAllowedScheduledUpdateIntervalInSecForCF = getCurrentAuthState(this.store).minAllowedScheduledUpdateIntervalInSecForCF;
   readonly DataKeyType = DataKeyType;
 

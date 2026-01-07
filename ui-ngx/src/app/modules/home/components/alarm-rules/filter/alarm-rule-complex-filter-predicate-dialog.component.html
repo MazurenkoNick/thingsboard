@@ -67,7 +67,7 @@
             cdkFocusInitial>
       {{'action.cancel' | translate }}
     </button>
-    @if (!data.readonly) {
+    @if (!readonly) {
       <button mat-raised-button color="primary"
               type="submit"
               [disabled]="complexFilterFormGroup.invalid || !complexFilterFormGroup.dirty">

@@ -116,6 +116,7 @@
                                      [entityName]="entityName"
                                      [ownerId]="ownerId"
                                      [tenantId]="tenantId"
+                                     [isEditValue]="isEditValue"
         ></tb-geofencing-configuration>
       }
       @case (CalculatedFieldType.PROPAGATION) {
@@ -126,6 +127,7 @@
                                       [tenantId]="tenantId"
                                       [ownerId]="ownerId"
                                       [testScript]="onTestScript.bind(this)"
+                                      [isEditValue]="isEditValue"
         ></tb-propagation-configuration>
       }
       @case (CalculatedFieldType.RELATED_ENTITIES_AGGREGATION) {
@@ -135,6 +137,7 @@
                                                    [entityName]="entityName"
                                                    [tenantId]="tenantId"
                                                    [testScript]="onTestScript.bind(this)"
+                                                   [isEditValue]="isEditValue"
         ></tb-related-entities-aggregation-component>
       }
       @case (CalculatedFieldType.ENTITY_AGGREGATION) {
@@ -143,6 +146,7 @@
                                          [entityId]="entityId"
                                          [entityName]="entityName"
                                          [tenantId]="tenantId"
+                                         [isEditValue]="isEditValue"
         ></tb-entity-aggregation-component>
       }
       @default {
@@ -154,6 +158,7 @@
                                  [tenantId]="tenantId"
                                  [isScript]="entityForm.get('type').value === CalculatedFieldType.SCRIPT"
                                  [testScript]="onTestScript.bind(this)"
+                                 [isEditValue]="isEditValue"
         ></tb-simple-configuration>
       }
     }

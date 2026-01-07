@@ -102,6 +102,8 @@ export class EntityAggregationComponentComponent implements ControlValueAccessor
 
   @Input() testScript: (expression?: string) => Observable<string>;
 
+  @Input({transform: booleanAttribute}) isEditValue = true;
+
   @Input({ transform: booleanAttribute })
   readonly: boolean;
 

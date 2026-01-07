@@ -82,6 +82,8 @@ export class AlarmRuleFilterDialogComponent extends DialogComponent<AlarmRuleFil
   arguments = this.data.arguments;
   argumentsList: Array<string>;
 
+  readonly = this.data.readonly;
+
   constructor(protected store: Store<AppState>,
               protected router: Router,
               @Inject(MAT_DIALOG_DATA) public data: AlarmRuleFilterDialogData,
@@ -135,6 +137,10 @@ export class AlarmRuleFilterDialogComponent extends DialogComponent<AlarmRuleFil
         }
       }
     });
+
+    if (this.readonly) {
+      this.filterFormGroup.disable({emitEvent: false});
+    }
   }
 
   argumentInUse(argument: string): boolean {
