@@ -89,6 +89,8 @@ ${calculated_fields}
 
 </div>
 
+**💡 Tip:** The aggregation is done in the UTC time zone by default. You may configure settings like the time zone or interval duration in "Time series data aggregation" calculated fields.
+
 ### 📦 Solution entities
 
 The following entities were automatically created to power this solution:
