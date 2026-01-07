@@ -99,6 +99,7 @@ export class CalculatedFieldGeofencingZoneGroupsTableComponent implements Contro
   @Input({required: true}) entityName: string;
   @Input({required: true}) ownerId: EntityId;
   @Input({ transform: booleanAttribute }) readonly: boolean;
+  @Input({transform: booleanAttribute}) isEditValue = true;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 

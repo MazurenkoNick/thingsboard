@@ -105,6 +105,7 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
   @Input() isScript: boolean;
   @Input({transform: booleanAttribute}) disable = false;
   @Input({transform: booleanAttribute}) readonly: boolean;
+  @Input({transform: booleanAttribute}) isEditValue = true;
   @Input() watchKeyChange = false;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
