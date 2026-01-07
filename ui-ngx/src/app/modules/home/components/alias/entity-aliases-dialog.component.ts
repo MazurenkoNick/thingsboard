@@ -61,7 +61,9 @@ import {
   ReportComponentConfig,
   ReportComponentType
 } from '@shared/models/report-component.models';
-import { reportComponentTypesData } from '@home/pages/reporting/template/components/report-component.models';
+import {
+  reportComponentTypesData
+} from '@home/pages/reporting/template/components/report-component.models';
 
 export interface EntityAliasesDialogData {
   entityAliases: EntityAliases;
@@ -151,17 +153,19 @@ export class EntityAliasesDialogComponent extends DialogComponent<EntityAliasesD
 
     if(data.reportMode && data.reportComponents.length) {
       this.data.reportComponents.forEach((component) => {
-        const typedComponent = component as DataReportComponentConfig;
-        if (typedComponent.type === ReportComponentType.ALARM_TABLE) {
-          const alarmSource = (typedComponent as AlarmTableReportComponentConfig).alarmSource
+        if (component.type === ReportComponentType.ALARM_TABLE) {
+          const alarmSource = (component as AlarmTableReportComponentConfig).alarmSource
           if (alarmSource) {
-            this.addWidgetTitleToWidgetsMap(alarmSource.entityAliasId, typedComponent.type);
+            this.addWidgetTitleToWidgetsMap(alarmSource.entityAliasId,
+              reportComponentTypesData.getReportComponentTypeData(component.type, component.subType).title);
           }
         } else {
-          typedComponent.dataSources.forEach((datasource) => {
+          const dataSources = (component as DataReportComponentConfig).dataSources;
+          dataSources.forEach((datasource) => {
             if ([DatasourceType.entity, DatasourceType.entityCount, DatasourceType.alarmCount].includes(datasource.type)
               && datasource.entityAliasId) {
-              this.addWidgetTitleToWidgetsMap(datasource.entityAliasId, typedComponent.type);
+              this.addWidgetTitleToWidgetsMap(datasource.entityAliasId,
+                reportComponentTypesData.getReportComponentTypeData(component.type, component.subType).title);
             }
           });
         }
@@ -229,10 +233,7 @@ export class EntityAliasesDialogComponent extends DialogComponent<EntityAliasesD
     if (widgetsTitleList) {
       let widgetsListHtml = '';
       for (const widgetTitle of widgetsTitleList) {
-        const title = this.data.reportMode ?
-          this.translate.instant(reportComponentTypesData.getReportComponentTypeData(widgetTitle as ReportComponentType).title)
-          : widgetTitle;
-        widgetsListHtml += '<br/>\'' + title + '\'';
+        widgetsListHtml += '<br/>\'' + this.translate.instant(widgetTitle) + '\'';
       }
       const messageKey = this.data.reportMode ? 'entity.unable-delete-entity-alias-text-components' : 'entity.unable-delete-entity-alias-text';
       const message = this.translate.instant(messageKey,

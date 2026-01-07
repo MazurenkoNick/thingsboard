@@ -142,8 +142,7 @@ export class FiltersDialogComponent extends DialogComponent<FiltersDialogCompone
     if(data.reportMode && data.reportComponents.length) {
       let componentsTitleList: Array<string>;
       this.data.reportComponents.forEach((component) => {
-        const typedComponent = component as DataReportComponentConfig;
-        const datasources = typedComponent.type === ReportComponentType.ALARM_TABLE ? [(typedComponent as AlarmTableReportComponentConfig).alarmSource] : typedComponent.dataSources;
+        const datasources = component.type === ReportComponentType.ALARM_TABLE ? [(component as AlarmTableReportComponentConfig).alarmSource] : (component as DataReportComponentConfig).dataSources;
         datasources.forEach((datasource) => {
           if (datasource.filterId) {
             componentsTitleList = this.filterToWidgetsMap[datasource.filterId];
@@ -151,8 +150,8 @@ export class FiltersDialogComponent extends DialogComponent<FiltersDialogCompone
               componentsTitleList = [];
               this.filterToWidgetsMap[datasource.filterId] = componentsTitleList;
             }
-            if (!componentsTitleList.includes(typedComponent.type)) {
-              componentsTitleList.push(typedComponent.type);
+            if (!componentsTitleList.includes(reportComponentTypesData.getReportComponentTypeData(component.type, component.subType).title)) {
+              componentsTitleList.push(reportComponentTypesData.getReportComponentTypeData(component.type, component.subType).title);
             }
           }
         });
@@ -203,10 +202,7 @@ export class FiltersDialogComponent extends DialogComponent<FiltersDialogCompone
     if (widgetsTitleList) {
       let widgetsListHtml = '';
       for (const widgetTitle of widgetsTitleList) {
-        const title = this.data.reportMode ?
-          this.translate.instant(reportComponentTypesData.getReportComponentTypeData(widgetTitle as ReportComponentType).title)
-          : widgetTitle;
-        widgetsListHtml += '<br/>\'' + title + '\'';
+        widgetsListHtml += '<br/>\'' + this.translate.instant(widgetTitle) + '\'';
       }
       const messageKey = this.data.reportMode ? 'filter.unable-delete-filter-text-components' : 'entity.unable-delete-filter-text';
       const message = this.translate.instant(messageKey,
