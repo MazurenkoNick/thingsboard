@@ -37,6 +37,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisClusterConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisClientConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.thingsboard.server.common.data.StringUtils;
 
 @Configuration
 @ConditionalOnMissingBean(TbCaffeineCacheConfiguration.class)
@@ -52,6 +53,9 @@ public class TBRedisClusterConfiguration extends TBRedisCacheConfiguration {
     @Value("${redis.cluster.useDefaultPoolConfig:true}")
     private boolean useDefaultPoolConfig;
 
+    @Value("${redis.username:}")
+    private String username;
+
     @Value("${redis.password:}")
     private String password;
 
@@ -62,6 +66,7 @@ public class TBRedisClusterConfiguration extends TBRedisCacheConfiguration {
         RedisClusterConfiguration clusterConfiguration = new RedisClusterConfiguration();
         clusterConfiguration.setClusterNodes(getNodes(clusterNodes));
         clusterConfiguration.setMaxRedirects(maxRedirects);
+        clusterConfiguration.setUsername(username);
         clusterConfiguration.setPassword(password);
         return new JedisConnectionFactory(clusterConfiguration, buildClientConfig());
     }
@@ -80,4 +85,5 @@ public class TBRedisClusterConfiguration extends TBRedisCacheConfiguration {
         }
         return jedisClientConfigurationBuilder.build();
     }
+
 }
