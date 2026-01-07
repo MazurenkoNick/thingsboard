@@ -210,6 +210,10 @@ public abstract class EdgeGrpcSession implements Closeable {
                     }
                 }
                 if (connected) {
+                    if (isAddonEdgeCommunicationDisabled()) {
+                        outputStream.onError(new RuntimeException("Edge add-on is disabled for this tenant. Disconnecting edge session."));
+                        return;
+                    }
                     if (requestMsg.getMsgType().equals(RequestMsgType.SYNC_REQUEST_RPC_MESSAGE)) {
                         if (requestMsg.hasSyncRequestMsg()) {
                             boolean fullSync = false;
@@ -403,6 +407,15 @@ public abstract class EdgeGrpcSession implements Closeable {
             tenantId = edge.getTenantId();
             try {
                 if (edge.getSecret().equals(request.getEdgeSecret())) {
+                    if (isAddonEdgeCommunicationDisabled()) {
+                        String failureMsg = "Edge add-on is disabled for this tenant. Disconnecting edge session.";
+                        log.info("[{}][{}] Rejecting add-on edge connection for edge [{}] because subscription edge add-on is disabled",
+                                tenantId, sessionId, edge.getId());
+                        return ConnectResponseMsg.newBuilder()
+                                .setResponseCode(ConnectResponseCode.BAD_CREDENTIALS)
+                                .setErrorMsg(failureMsg)
+                                .setConfiguration(EdgeConfiguration.getDefaultInstance()).build();
+                    }
                     sessionOpenListener.accept(edge.getId(), this);
                     edgeVersion = request.getEdgeVersion();
                     processSaveEdgeVersionAsAttribute(request.getEdgeVersion().name());
@@ -440,6 +453,20 @@ public abstract class EdgeGrpcSession implements Closeable {
 
     private EdgeConfiguration createEdgeConfiguration(Edge edge) {
         return EdgeMsgConstructorUtils.constructEdgeConfiguration(edge, ctx.getSubscriptionService().getLicenseVersion());
+    }
+
+    private boolean isAddonEdgeCommunicationDisabled() {
+        int licenseVersion = ctx.getSubscriptionService().getLicenseVersion();
+        if (!EdgeUtils.isAddonEdge(edge, licenseVersion)) { // todo: verify it's correct implementation
+            return false;
+        }
+        try {
+            return !ctx.getSubscriptionService().edgeEnabled(tenantId); // todo: verify count?
+        } catch (Exception e) {
+            log.warn("[{}][{}] Failed to check edge add-on state for tenant. Rejecting add-on edge communication by default.",
+                    tenantId, sessionId, e);
+            return true;
+        }
     }
 
     private void processSaveEdgeVersionAsAttribute(String edgeVersion) {
