@@ -66,7 +66,7 @@ The central hub for device management, divided into three key areas:
 
 * **📋 Sensors List:** a comprehensive table displaying the technical status of every device.
     * **Columns:** Quickly check the "Sensor Label", "Connection" status (Connected/Disconnected), "Battery level", and "Last AQI" reading.
-    * **Actions:** Use the icons on the right to "Edit" ✏️ or "Delete" 🗑️ sensors. You can also provision new devices using the "+ Add sensor" table header button.
+    * **Actions:** Use the icons on the right to "Edit" ✏️ or "Delete" 🗑️ sensors. You can also provision new devices using the "+" table header button.
 * **🚨 Alarms Console:** a real-time log of all active and cleared alerts across the system.
     * **Data:** Shows the "Created time", "Type" of alarm (e.g., Low Battery Level, Inactive), "Sensor id" and current alarm "Status".
     * **Configuration:** Click the settings icon ⚙️ "Alarm rules" in the header to configure global thresholds, such as the minimum **Battery Level %** or the timeout duration for **Connection Loss**.
