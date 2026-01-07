@@ -48,6 +48,10 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class LicenseManagementComponent extends PageComponent implements OnInit {
 
+  get planWithoutWhiteLabeling(): boolean {
+    return this.subscriptionInfo?.planUiType === PlanUiType.TbMaker || this.subscriptionInfo?.planUiType === PlanUiType.TbPrototype
+  }
+
   PlanUiType = PlanUiType;
 
   subscriptionInfo: SubscriptionInfo;
@@ -93,11 +97,11 @@ export class LicenseManagementComponent extends PageComponent implements OnInit 
     this.addLicenseItem(this.translate.instant('subscription.edges'), true, { extraEdgeCount: 1 });
   }
 
-  choosePrototypePlan($event: Event) {
+  choosePilotPlan($event: Event) {
     if ($event) {
       $event.stopPropagation();
     }
-    const url = `${this.subscriptionInfo.licenseServerEndpoint}/?changeSubscriptionPlan=true&subscriptionId=${this.subscriptionInfo.subscriptionId}&planUiType=${PlanUiType.TbPrototype}`;
+    const url = `${this.subscriptionInfo.licenseServerEndpoint}/?changeSubscriptionPlan=true&subscriptionId=${this.subscriptionInfo.subscriptionId}&planUiType=${PlanUiType.TbPilot}`;
     window.open(url, '_blank');
   }
 

@@ -79,9 +79,9 @@ export const subscriptionErrorsMap = new Map<SubscriptionErrorCode, Map<Subscrip
 export enum PlanUiType {
   TbMaker = 'TbMaker',
   TbPrototype = 'TbPrototype',
+  TbPilot = 'TbPilot',
   TbStartup = 'TbStartup',
   TbBusiness = 'TbBusiness',
-  TbBusinessPlus = 'TbBusinessPlus',
   TbPerpetual = 'TbPerpetual'
 }
 

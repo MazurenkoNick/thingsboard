@@ -121,14 +121,14 @@
             }
           </div>
         </div>
-        <div class="item-row" [class.column-xs]="subscriptionInfo.planUiType === PlanUiType.TbMaker">
+        <div class="item-row" [class.column-xs]="planWithoutWhiteLabeling">
           <div class="label" translate>subscription.white-labeling</div>
-          @if (subscriptionInfo.planUiType === PlanUiType.TbMaker) {
-            <button mat-button color="primary" class="choose-prototype" (click)="choosePrototypePlan($event)">
-              {{ 'subscription.choose-prototype-plan' | translate }}
+          @if (planWithoutWhiteLabeling) {
+            <button mat-button color="primary" class="choose-pilot" (click)="choosePilotPlan($event)">
+              {{ 'subscription.choose-pilot-plan' | translate }}
             </button>
-            <button mat-stroked-button color="primary" class="choose-prototype-xs" (click)="choosePrototypePlan($event)">
-              {{ 'subscription.choose-prototype-plan' | translate }}
+            <button mat-stroked-button color="primary" class="choose-pilot-xs" (click)="choosePilotPlan($event)">
+              {{ 'subscription.choose-pilot-plan' | translate }}
             </button>
           } @else {
             <div class="status" [class.enabled]="subscriptionInfo.whiteLabelingEnabled">
