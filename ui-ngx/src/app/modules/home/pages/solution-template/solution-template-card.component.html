@@ -34,7 +34,9 @@
   <mat-card-header>
     <mat-card-title class="flex items-center justify-between gap-2">
       <span>{{solutionTemplate.title}}</span>
-      <span class="level">{{solutionTemplate.level}}</span>
+      @if (solutionTemplate.level !== SolutionTemplateLevel.MAKER) {
+        <span class="level">{{solutionTemplate.level}}</span>
+      }
     </mat-card-title>
   </mat-card-header>
   <div mat-card-image>
