@@ -45,7 +45,11 @@
           <button *ngIf="solutionTemplateDetails.installed" (click)="deleteSolutionTemplate()" [disabled]="isLoading$ | async" mat-button mat-raised-button color="warn">{{ 'solution-template.delete' | translate }}</button>
         </div>
       </div>
-      <div style="padding-bottom: 20px;"><span style="font-weight: bold;">{{ 'solution-template.level' | translate }}: </span><span class="level">{{ solutionTemplateDetails.level }}</span></div>
+      <div style="padding-bottom: 20px;">
+        @if (solutionTemplateDetails.level !== SolutionTemplateLevel.MAKER) {
+          <span style="font-weight: bold;">{{ 'solution-template.level' | translate }}: </span><span class="level">{{ solutionTemplateDetails.level }}</span>
+        }
+      </div>
       <mat-divider style="margin-bottom: 20px;"></mat-divider>
       <tb-markdown [style]="{ paddingTop: '20px' }" [data]="solutionTemplateDetails.highlights" lineNumbers fallbackToPlainMarkdown></tb-markdown>
     </div>

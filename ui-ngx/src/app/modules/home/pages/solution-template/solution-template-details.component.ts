@@ -34,7 +34,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { PageComponent } from '@shared/components/page.component';
 import { ActivatedRoute, Router } from '@angular/router';
-import { TenantSolutionTemplateDetails } from '@shared/models/solution-template.models';
+import { SolutionTemplateLevel, TenantSolutionTemplateDetails } from '@shared/models/solution-template.models';
 import { SolutionsService } from '@core/http/solutions.service';
 import {
   SolutionInstallDialogComponent,
@@ -51,6 +51,8 @@ import { Subject } from 'rxjs';
   styleUrls: ['./solution-template-details.component.scss']
 })
 export class SolutionTemplateDetailsComponent extends PageComponent implements OnInit {
+
+  SolutionTemplateLevel = SolutionTemplateLevel;
 
   imageCarouselIndex = 0;
 

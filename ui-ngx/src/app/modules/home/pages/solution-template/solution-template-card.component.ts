@@ -33,7 +33,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { PageComponent } from '@shared/components/page.component';
-import { TenantSolutionTemplateInfo } from '@shared/models/solution-template.models';
+import { SolutionTemplateLevel, TenantSolutionTemplateInfo } from '@shared/models/solution-template.models';
 import { Router } from '@angular/router';
 import { SolutionsService } from '@core/http/solutions.service';
 import { MatDialog } from '@angular/material/dialog';
@@ -51,6 +51,8 @@ import { Subject } from 'rxjs';
   styleUrls: ['./solution-template-card.component.scss']
 })
 export class SolutionTemplateCardComponent extends PageComponent {
+
+  SolutionTemplateLevel = SolutionTemplateLevel;
 
   @Input()
   solutionTemplate: TenantSolutionTemplateInfo;
