@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -37,6 +37,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisSentinelConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisClientConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.thingsboard.server.common.data.StringUtils;
 
 @Configuration
 @ConditionalOnMissingBean(TbCaffeineCacheConfiguration.class)
@@ -61,6 +62,9 @@ public class TBRedisSentinelConfiguration extends TBRedisCacheConfiguration {
     @Value("${redis.ssl.enabled:false}")
     private boolean useSsl;
 
+    @Value("${redis.username:}")
+    private String username;
+
     @Value("${redis.password:}")
     private String password;
 
@@ -69,9 +73,10 @@ public class TBRedisSentinelConfiguration extends TBRedisCacheConfiguration {
         redisSentinelConfiguration.setMaster(master);
         redisSentinelConfiguration.setSentinels(getNodes(sentinels));
         redisSentinelConfiguration.setSentinelPassword(sentinelPassword);
+        redisSentinelConfiguration.setUsername(username);
         redisSentinelConfiguration.setPassword(password);
         redisSentinelConfiguration.setDatabase(database);
-        return new JedisConnectionFactory(redisSentinelConfiguration,  buildClientConfig());
+        return new JedisConnectionFactory(redisSentinelConfiguration, buildClientConfig());
     }
 
     private JedisClientConfiguration buildClientConfig() {
@@ -88,4 +93,5 @@ public class TBRedisSentinelConfiguration extends TBRedisCacheConfiguration {
         }
         return jedisClientConfigurationBuilder.build();
     }
+
 }

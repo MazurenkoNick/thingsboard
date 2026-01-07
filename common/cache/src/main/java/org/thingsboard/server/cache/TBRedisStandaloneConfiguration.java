@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -69,6 +69,9 @@ public class TBRedisStandaloneConfiguration extends TBRedisCacheConfiguration {
     @Value("${redis.db:0}")
     private Integer db;
 
+    @Value("${redis.username:}")
+    private String username;
+
     @Value("${redis.password:}")
     private String password;
 
@@ -80,6 +83,7 @@ public class TBRedisStandaloneConfiguration extends TBRedisCacheConfiguration {
         standaloneConfiguration.setHostName(host);
         standaloneConfiguration.setPort(port);
         standaloneConfiguration.setDatabase(db);
+        standaloneConfiguration.setUsername(username);
         standaloneConfiguration.setPassword(password);
         return new JedisConnectionFactory(standaloneConfiguration, buildClientConfig());
     }
@@ -104,4 +108,5 @@ public class TBRedisStandaloneConfiguration extends TBRedisCacheConfiguration {
         }
         return jedisClientConfigurationBuilder.build();
     }
+
 }
