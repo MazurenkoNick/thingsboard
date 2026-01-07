@@ -2,7 +2,7 @@
 #
 # The Thingsboard Authors ("COMPANY") CONFIDENTIAL
 #
-# Copyright © 2016-2024 The Thingsboard Authors All Rights Reserved.
+# Copyright © 2016-2026 The Thingsboard Authors All Rights Reserved.
 #
 # NOTICE: All information contained herein is, and remains
 # the property of The Thingsboard Authors and its suppliers,
