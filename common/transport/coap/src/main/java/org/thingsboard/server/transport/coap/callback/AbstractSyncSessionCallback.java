@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -92,6 +92,12 @@ public abstract class AbstractSyncSessionCallback implements SessionMsgListener 
         } else {
             return false;
         }
+    }
+    public static boolean isMulticastRequest(TbCoapObservationState state) {
+        if (state != null) {
+            return state.getExchange().advanced().getRequest().isMulticast();
+        }
+        return false;
     }
 
     protected void respond(Response response) {

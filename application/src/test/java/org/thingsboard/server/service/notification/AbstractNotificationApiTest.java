@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -34,9 +34,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.util.Pair;
-import org.thingsboard.rule.engine.api.MailService;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.thingsboard.rule.engine.api.notification.SlackService;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.id.NotificationRequestId;
@@ -86,10 +85,8 @@ public abstract class AbstractNotificationApiTest extends AbstractControllerTest
     protected NotificationApiWsClient wsClient;
     protected NotificationApiWsClient otherWsClient;
 
-    @MockBean
+    @MockitoBean
     protected SlackService slackService;
-    @Autowired
-    protected MailService mailService;
 
     @Autowired
     protected NotificationRuleService notificationRuleService;
