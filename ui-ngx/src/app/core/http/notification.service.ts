@@ -94,6 +94,10 @@ export class NotificationService {
     return this.http.post<void>(`/api/notification/sendAddonAccessRequest/${addonType}`, defaultHttpOptionsFromConfig(config));
   }
 
+  public sendPlanUpgradeRequest(planName: string, config?: RequestConfig): Observable<void> {
+    return this.http.post<void>(`/api/notification/sendPlanUpgradeRequest/${planName}`, defaultHttpOptionsFromConfig(config));
+  }
+
   public getNotificationRequestById(id: string, config?: RequestConfig): Observable<NotificationRequest> {
     return this.http.get<NotificationRequest>(`/api/notification/request/${id}`, defaultHttpOptionsFromConfig(config));
   }

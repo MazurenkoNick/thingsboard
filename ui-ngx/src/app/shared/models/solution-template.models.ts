@@ -42,7 +42,7 @@ export const solutionTemplateLevelToPlanNameMap = new Map<SolutionTemplateLevel,
   [
     [SolutionTemplateLevel.MAKER, 'Maker'],
     [SolutionTemplateLevel.PROTOTYPE, 'Prototype'],
-    [SolutionTemplateLevel.STARTUP, 'Startup'],
+    [SolutionTemplateLevel.STARTUP, 'Pilot'],
   ]
 );
 

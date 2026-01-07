@@ -28,42 +28,75 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.notification;
+@import '../../../../scss/constants';
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+.request-plan-upgrade-dialog {
+  max-width: 100%;
+  height: 100%;
 
-@AllArgsConstructor
-@NoArgsConstructor
-public enum NotificationType {
+  @media #{$mat-gt-xs} {
+    max-width: 500px;
+    max-height: 80vh;
+  }
 
-    GENERAL,
-    ALARM,
-    DEVICE_ACTIVITY,
-    ENTITY_ACTION,
-    ALARM_COMMENT,
-    RULE_ENGINE_COMPONENT_LIFECYCLE_EVENT,
-    ALARM_ASSIGNMENT,
-    NEW_PLATFORM_VERSION,
-    ENTITIES_LIMIT,
-    ENTITIES_LIMIT_INCREASE_REQUEST(true),
-    ADDON_ACCESS_REQUEST(true),
-    ADDON_ACCESS_ERROR(true),
-    PLAN_UPGRADE_REQUEST(true),
-    API_USAGE_LIMIT,
-    RULE_NODE,
-    INTEGRATION_LIFECYCLE_EVENT,
-    RATE_LIMITS,
-    EDGE_CONNECTION,
-    EDGE_COMMUNICATION_FAILURE,
-    TASK_PROCESSING_FAILURE,
-    RESOURCES_SHORTAGE,
-    USER_ACTIVATED(true),
-    USER_REGISTERED(true),
-    REPORT_GENERATED;
+  position: relative;
+  padding: 40px 40px 24px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 
-    @Getter
-    private boolean system;
+  .close-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: rgba(0, 0, 0, 0.54);
+  }
 
+  .request-plan-upgrade-bg {
+    position: relative;
+    width: 100%;
+    height: 140px;
+    &:before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--tb-primary-500);
+      mask-image: url(/assets/entity-limit-reached.svg);
+      -webkit-mask-image: url(/assets/entity-limit-reached.svg);
+      mask-repeat: no-repeat;
+      -webkit-mask-repeat: no-repeat;
+      mask-size: contain;
+      -webkit-mask-size: contain;
+      mask-position: center;
+      -webkit-mask-position: center;
+    }
+  }
+
+  .request-plan-upgrade-title {
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 32px;
+    color: rgba(0, 0, 0, 0.87);
+    text-align: center;
+  }
+
+  .request-plan-upgrade-container {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    .request-plan-upgrade-text {
+      font-size: 16px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 24px;
+      color: rgba(0, 0, 0, 0.76);
+      text-align: center;
+    }
+  }
 }

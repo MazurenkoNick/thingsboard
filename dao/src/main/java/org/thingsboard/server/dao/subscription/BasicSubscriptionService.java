@@ -63,13 +63,29 @@ import org.thingsboard.server.dao.tenant.TenantService;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TimeZone;
+import java.util.function.Predicate;
 
 @Service
 @Slf4j
 @Profile("!install & !test")
 public class BasicSubscriptionService implements SubscriptionService, TbLicenseClientListener {
+
+    private static final Map<String, Predicate<String>> solutionTemplateLevelFilters = new HashMap<>();
+
+    private static final Set<String> makerSolutionTemplateLevelPlans = Set.of("Maker", "Prototype", "Pilot", "Startup", "Business", "Enterprise", "Perpetual");
+    private static final Set<String> prototypeSolutionTemplateLevelPlans = Set.of("Prototype", "Pilot", "Startup", "Business", "Enterprise", "Perpetual");
+    private static final Set<String> startUpSolutionTemplateLevelPlans = Set.of("Pilot", "Startup", "Business", "Enterprise", "Perpetual");
+
+    static {
+        solutionTemplateLevelFilters.put("MAKER", planName -> makerSolutionTemplateLevelPlans.stream().anyMatch(planName::contains));
+        solutionTemplateLevelFilters.put("PROTOTYPE", planName -> prototypeSolutionTemplateLevelPlans.stream().anyMatch(planName::contains));
+        solutionTemplateLevelFilters.put("STARTUP", planName -> startUpSolutionTemplateLevelPlans.stream().anyMatch(planName::contains));
+    }
 
     @Value("${license.secret}")
     private String licenseSecret;
@@ -330,6 +346,12 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
         } catch (Exception e) {
             return false;
         }
+    }
+
+    @Override
+    public boolean solutionTemplateLevelAllowed(TenantId tenantId, String solutionTemplateLevel) throws SubscriptionException {
+        String planName = this.tbLicenseClient.getSubscriptionData().getSubscriptionPlanName();
+        return solutionTemplateLevelFilters.get(solutionTemplateLevel).test(planName);
     }
 
     private long countDevices() {

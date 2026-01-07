@@ -67,6 +67,7 @@ import org.thingsboard.server.common.data.notification.info.AddonAccessErrorNoti
 import org.thingsboard.server.common.data.notification.info.AddonAccessRequestNotificationInfo;
 import org.thingsboard.server.common.data.notification.info.EntitiesLimitIncreaseRequestNotificationInfo;
 import org.thingsboard.server.common.data.notification.info.NotificationInfo;
+import org.thingsboard.server.common.data.notification.info.PlanUpgradeRequestNotificationInfo;
 import org.thingsboard.server.common.data.notification.settings.NotificationSettings;
 import org.thingsboard.server.common.data.notification.settings.UserNotificationSettings;
 import org.thingsboard.server.common.data.notification.targets.MicrosoftTeamsNotificationTargetConfig;
@@ -120,6 +121,7 @@ import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DE
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH;
+import static org.thingsboard.server.controller.ControllerConstants.TENANT_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 
 @RestController
@@ -487,6 +489,33 @@ public class NotificationController extends BaseController {
             } else {
                 throw new IllegalArgumentException("Notification target for 'Tenant administrators' not found");
             }
+        }
+    }
+
+    @ApiOperation(value = "Send plan upgrade request notification to System administrators (sendPlanUpgradeRequest)",
+            notes = "Send plan upgrade access request notification by Tenant Administrator to System administrators." +
+                    TENANT_AUTHORITY_PARAGRAPH)
+    @PostMapping("/notification/sendPlanUpgradeRequest/{planName}")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    public void sendPlanUpgradeRequest(@Parameter(description = "Plan name", required = true)
+                                       @PathVariable("planName") String planName,
+                                       @AuthenticationPrincipal SecurityUser user,
+                                       HttpServletRequest request) throws Exception {
+        checkParameter("planName", planName);
+        Optional<NotificationTarget> sysAdmins = notificationTargetService.findNotificationTargetsByTenantIdAndUsersFilterType(TenantId.SYS_TENANT_ID, UsersFilterType.SYSTEM_ADMINISTRATORS)
+                .stream().findFirst();
+        if (sysAdmins.isPresent()) {
+            NotificationTargetId notificationTargetId = sysAdmins.get().getId();
+            String baseUrl = systemSecurityService.getBaseUrl(TenantId.SYS_TENANT_ID, new CustomerId(EntityId.NULL_UUID), request);
+            NotificationInfo info = PlanUpgradeRequestNotificationInfo.builder()
+                    .planName(planName)
+                    .userEmail(user.getEmail())
+                    .upgradePlanLink("/license")
+                    .baseUrl(baseUrl)
+                    .build();
+            notificationCenter.sendSystemNotification(TenantId.SYS_TENANT_ID, notificationTargetId, NotificationType.PLAN_UPGRADE_REQUEST, info);
+        } else {
+            throw new IllegalArgumentException("Notification target for 'System administrators' not found");
         }
     }
 

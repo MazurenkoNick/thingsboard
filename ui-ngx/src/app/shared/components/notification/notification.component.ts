@@ -177,7 +177,8 @@ export class NotificationComponent implements OnInit {
       return {color: '#D12730'};
     } else if (this.notification.type === NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST ||
                this.notification.type === NotificationType.ADDON_ACCESS_REQUEST ||
-               this.notification.type === NotificationType.ADDON_ACCESS_ERROR) {
+               this.notification.type === NotificationType.ADDON_ACCESS_ERROR ||
+               this.notification.type === NotificationType.PLAN_UPGRADE_REQUEST) {
       return {color: 'var(--tb-primary-500)'};
     }
     return null;

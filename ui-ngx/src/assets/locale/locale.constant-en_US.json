@@ -6008,6 +6008,7 @@
             "entities-limit-increase-request": "Entities limit increase request",
             "addon-access-error": "Add-on/Feature access error",
             "addon-access-request": "Add-on/Feature access request",
+            "plan-upgrade-request": "Plan upgrade request",
             "entity-action": "Entity action",
             "general": "General",
             "integration-lifecycle-event": "Integration lifecycle event",
@@ -12595,6 +12596,7 @@
         "white-labeling-action-pilot-plan-text": "White labeling is available starting from the Pilot plan",
         "tenant-request-white-labeling-action-text": "Contact your System Administrator to enable White labeling",
         "request-access": "Request access",
+        "request-plan-upgrade": "Request plan upgrade",
         "upgrade-plan": "Upgrade plan",
         "learn-more": "Learn more",
         "feature-request-sent-title": "We have sent an automated request to your System Administrator to enable {{addonName}}",
@@ -12614,13 +12616,17 @@
         "trendz-card-views-title": "Views",
         "trendz-card-views-text": "Build shareable analytics dashboards for teams and clients — all in one place.",
         "trendz-card-ai-assistant-title": "AI Assistant",
-        "trendz-card-ai-assistant-text": "Generate logic, refine formulas, and automate metric creation using natural-language AI."
+        "trendz-card-ai-assistant-text": "Generate logic, refine formulas, and automate metric creation using natural-language AI.",
+        "request-plan-upgrade-title": "Upgrade your plan",
+        "unsupported-solution-template-request-plan-upgrade-text": "<b>{{solutionTemplateName}}</b> is available starting from the <b>{{planName}}</b> plan. To proceed, please ask your System Administrator to upgrade the plan.",
+        "plan-upgrade-request-sent-title": "We have sent an automated request to your System Administrator to upgrade the plan",
+        "plan-upgrade-request-sent-text": "Please allow some time for them to review the request and update the settings. You may need to refresh this page to see the changes."
     },
     "subscription-error": {
       "title": "Subscription violation",
       "warning-title": "Subscription warning",
       "upgrade-subscription-plan": "Please upgrade your subscription plan",
-      "upgrade-subscription-plan-to-install-solution-template": "In order to install <b>{{solutionTemplateName}}</b> solution you must upgrade your subscription at least to the <b>{{planName}}</b> plan!",
+      "upgrade-subscription-plan-to-install-solution-template": "<b>{{solutionTemplateName}}</b> is available starting from the <b>{{planName}}</b> plan. To proceed, please ask your System Administrator to upgrade the plan.",
       "limit-reached": {
         "device-count": "You have reached maximum devices ({{value}}) allowed by your subscription plan!",
         "asset-count": "You have reached maximum assets ({{value}}) allowed by your subscription plan!",

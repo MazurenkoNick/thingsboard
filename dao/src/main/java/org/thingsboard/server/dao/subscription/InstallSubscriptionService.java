@@ -90,6 +90,11 @@ public class InstallSubscriptionService implements SubscriptionService {
     }
 
     @Override
+    public boolean solutionTemplateLevelAllowed(TenantId tenantId, String solutionTemplateLevel) throws SubscriptionException {
+        return false;
+    }
+
+    @Override
     public LicenseInfo getLicenseInfo() {
         return null;
     }

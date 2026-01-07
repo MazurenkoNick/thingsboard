@@ -55,6 +55,8 @@ public interface SubscriptionService {
 
     boolean isDevelopment(TenantId tenantId) throws SubscriptionException;
 
+    boolean solutionTemplateLevelAllowed(TenantId tenantId, String solutionTemplateLevel) throws SubscriptionException;
+
     LicenseInfo getLicenseInfo();
 
     int getLicenseVersion();

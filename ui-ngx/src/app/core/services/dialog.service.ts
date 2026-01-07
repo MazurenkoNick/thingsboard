@@ -76,6 +76,10 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { getCurrentAuthState } from '@core/auth/auth.selectors';
 import { RequestWhiteLabelingDialogComponent } from '@shared/components/dialog/request-white-labeling-dialog.component';
+import {
+  RequestPlanUpgradeDialogComponent,
+  RequestPlanUpgradeDialogData
+} from '@shared/components/dialog/request-plan-upgrade-dialog.component';
 
 @Injectable({
   providedIn: 'root'
@@ -234,16 +238,30 @@ export class DialogService {
 
   unsupportedSolutionTemplateLevel(error: SubscriptionErrorData): Observable<any> {
     const value = error.subscriptionValue;
-    return this.dialog.open<UnsupportedSolutionTemplateLevelDialogComponent,
-      UnsupportedSolutionTemplateLevelDialogData>(UnsupportedSolutionTemplateLevelDialogComponent,
-      {
-        disableClose: true,
-        panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
-        data: {
-          solutionTemplateName: value.solutionTemplateName,
-          solutionTemplateLevel: value.solutionTemplateLevel
-        }
-      }).afterClosed();
+    if (getCurrentAuthState(this.store).licenseVersion > 1) {
+      return this.dialog.open<RequestPlanUpgradeDialogComponent,
+        RequestPlanUpgradeDialogData>(RequestPlanUpgradeDialogComponent,
+        {
+          disableClose: true,
+          autoFocus: false,
+          panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+          data: {
+            solutionTemplateName: value.solutionTemplateName,
+            solutionTemplateLevel: value.solutionTemplateLevel
+          }
+        }).afterClosed();
+    } else {
+      return this.dialog.open<UnsupportedSolutionTemplateLevelDialogComponent,
+        UnsupportedSolutionTemplateLevelDialogData>(UnsupportedSolutionTemplateLevelDialogComponent,
+        {
+          disableClose: true,
+          panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+          data: {
+            solutionTemplateName: value.solutionTemplateName,
+            solutionTemplateLevel: value.solutionTemplateLevel
+          }
+        }).afterClosed();
+    }
   }
 
   subscriptionAlert(error: SubscriptionErrorData): Observable<any> {

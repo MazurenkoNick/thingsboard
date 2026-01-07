@@ -287,6 +287,7 @@ import { DynamicMatDialogModule } from '@shared/components/dialog/dynamic/dynami
 import { RequestEdgeDialogComponent } from '@shared/components/dialog/request-edge-dialog.component';
 import { RequestWhiteLabelingDialogComponent } from '@shared/components/dialog/request-white-labeling-dialog.component';
 import { RequestTrendzDialogComponent } from '@shared/components/dialog/request-trendz-dialog.component';
+import { RequestPlanUpgradeDialogComponent } from '@shared/components/dialog/request-plan-upgrade-dialog.component';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -444,6 +445,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     RequestEdgeDialogComponent,
     RequestWhiteLabelingDialogComponent,
     RequestTrendzDialogComponent,
+    RequestPlanUpgradeDialogComponent,
     ColorInputComponent,
     MaterialIconSelectComponent,
     NodeScriptTestDialogComponent,
@@ -749,6 +751,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     RequestEdgeDialogComponent,
     RequestWhiteLabelingDialogComponent,
     RequestTrendzDialogComponent,
+    RequestPlanUpgradeDialogComponent,
     ColorInputComponent,
     MaterialIconSelectComponent,
     NodeScriptTestDialogComponent,

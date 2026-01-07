@@ -126,6 +126,7 @@ import org.thingsboard.server.dao.subscription.SubscriptionService;
 import org.thingsboard.server.dao.scheduler.SchedulerEventService;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
 import org.thingsboard.server.dao.user.UserService;
+import org.thingsboard.server.exception.EntitiesLimitExceededException;
 import org.thingsboard.server.exception.ThingsboardRuntimeException;
 import org.thingsboard.server.queue.discovery.PartitionService;
 import org.thingsboard.server.queue.discovery.TbServiceInfoProvider;
@@ -217,24 +218,8 @@ public class DefaultSolutionService implements SolutionService {
 
     public static final String SOLUTIONS_DIR = "solutions";
 
-    private static final Map<SolutionTemplateLevel, Set<String>> allowedSolutionTemplateLevelsMap = new HashMap<>();
-
     @Value("${ui.solution_templates.docs_base_url:https://thingsboard.io/docs/pe}")
     private String docsBaseUrl;
-
-    static {
-        allowedSolutionTemplateLevelsMap.put(SolutionTemplateLevel.MAKER, Set.of("Maker", "Prototype", "Startup", "Business"));
-        allowedSolutionTemplateLevelsMap.put(SolutionTemplateLevel.PROTOTYPE, Set.of("Prototype", "Startup", "Business"));
-        allowedSolutionTemplateLevelsMap.put(SolutionTemplateLevel.STARTUP, Set.of("Startup", "Business"));
-    }
-
-    private static final Map<SolutionTemplateLevel, Boolean> allowedWhiteLabelingSolutionTemplateLevelsMap = new HashMap<>();
-
-    static {
-        allowedWhiteLabelingSolutionTemplateLevelsMap.put(SolutionTemplateLevel.MAKER, false);
-        allowedWhiteLabelingSolutionTemplateLevelsMap.put(SolutionTemplateLevel.PROTOTYPE, true);
-        allowedWhiteLabelingSolutionTemplateLevelsMap.put(SolutionTemplateLevel.STARTUP, true);
-    }
 
     private List<SolutionTemplateInfo> solutions = new ArrayList<>();
     private Map<String, SolutionTemplateDetails> solutionsMap = new HashMap<>();
@@ -439,15 +424,13 @@ public class DefaultSolutionService implements SolutionService {
 
         SolutionTemplateDetails solutionTemplate = solutionsMap.get(solutionId);
 
-        if (allowedWhiteLabelingSolutionTemplateLevelsMap.get(solutionTemplate.getLevel()).booleanValue()) {
-            if (!subscriptionService.whiteLabelingEnabled(tenantId)) {
-                ObjectNode value = JacksonUtil.newObjectNode();
-                value.put("solutionTemplateName", solutionTemplate.getTitle());
-                value.put("solutionTemplateLevel", solutionTemplate.getLevel().name());
-                throw new SubscriptionException(String.format("Failed to install solution template '%s' - unsupported subscription plan",
-                        solutionTemplate.getTitle()),
-                        SubscriptionErrorCode.UNSUPPORTED_SOLUTION_TEMPLATE_PLAN, value);
-            }
+        if (!subscriptionService.solutionTemplateLevelAllowed(tenantId, solutionTemplate.getLevel().name())) {
+            ObjectNode value = JacksonUtil.newObjectNode();
+            value.put("solutionTemplateName", solutionTemplate.getTitle());
+            value.put("solutionTemplateLevel", solutionTemplate.getLevel().name());
+            throw new SubscriptionException(String.format("Failed to install solution template '%s' - unsupported subscription plan",
+                    solutionTemplate.getTitle()),
+                    SubscriptionErrorCode.UNSUPPORTED_SOLUTION_TEMPLATE_PLAN, value);
         }
 
         Map<EntityType, List<HasName>> alreadyExistingEntities = new HashMap<>();
@@ -575,7 +558,7 @@ public class DefaultSolutionService implements SolutionService {
             }
 
             return new SolutionInstallResponse(ctx.getSolutionInstructions(), true);
-        } catch (SubscriptionException se) {
+        } catch (SubscriptionException | EntitiesLimitExceededException se) {
             log.error("[{}][{}] Failed to provision", tenantId, solutionId, se);
             rollback(tenantId, solutionId, ctx, se);
             throw se;
