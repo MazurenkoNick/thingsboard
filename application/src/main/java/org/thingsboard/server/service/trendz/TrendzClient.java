@@ -74,6 +74,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.thingsboard.server.dao.trendz.TrendzSyncService.TRENDZ_API_KEY_DESCRIPTION;
@@ -97,6 +98,18 @@ public class TrendzClient {
 
     public static final String TRENDZ_SUMMARY_URI = "/apiTrendz/summary";
     public static final String TRENDZ_USAGE_URI = "/apiTrendz/summary/usage";
+
+    private static final Set<String> HOP_BY_HOP_HEADERS = Set.of(
+            HttpHeaders.TRANSFER_ENCODING.toLowerCase(),
+            HttpHeaders.CONNECTION.toLowerCase(),
+            HttpHeaders.CONTENT_LENGTH.toLowerCase(),
+            "Keep-Alive".toLowerCase(),
+            "Proxy-Authenticate".toLowerCase(),
+            "Proxy-Authorization".toLowerCase(),
+            "TE".toLowerCase(),
+            "Trailer".toLowerCase(),
+            "Upgrade".toLowerCase()
+    );
 
     @Value("${trendz.request_timeout_ms:15000}")
     private int requestTimeoutMs;
@@ -199,16 +212,31 @@ public class TrendzClient {
             );
 
             log.debug("Trendz proxy request completed successfully");
-            return response;
+            return ResponseEntity.status(response.getStatusCode())
+                    .headers(clearResponseHeaders(response.getHeaders()))
+                    .body(response.getBody());
         } catch (RestClientResponseException e) {
             log.debug("Trendz proxy request received non-successful response: {}", e.getStatusCode());
             return ResponseEntity.status(e.getStatusCode())
-                    .headers(e.getResponseHeaders())
+                    .headers(clearResponseHeaders(e.getResponseHeaders()))
                     .body(e.getResponseBodyAsByteArray());
         } catch (Exception e) {
             log.debug("Trendz proxy request failed at {} [{}]: {}", trendzUrl, uriPath, e.getMessage(), e);
             throw new ThingsboardException("Unexpected error during Trendz proxy request", e, ThingsboardErrorCode.GENERAL);
         }
+    }
+
+    private HttpHeaders clearResponseHeaders(HttpHeaders original) {
+        if (original == null) {
+            return null;
+        }
+        HttpHeaders cleared = new HttpHeaders();
+        original.forEach((key, values) -> {
+            if (!HOP_BY_HOP_HEADERS.contains(key.toLowerCase())) {
+                cleared.put(key, values);
+            }
+        });
+        return cleared;
     }
 
     private <T> T sendTrendzRequest(String trendzUrl, String uriPath, HttpMethod method,
