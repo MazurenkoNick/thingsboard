@@ -122,7 +122,7 @@ Most of the water meters are using LoRaWAN, Sigfox or NB IoT technology. Please 
 
 ### 🚨 Alarms
 
-Alarms are generated based on rules configured in the "Water Meter" device profile and thresholds set in the Dashboard Settings.
+Alarms are generated based on <a href="${DOCS_BASE_URL}/user-guide/alarm-rules" target="_blank">Alarm rules</a> configured in the "Water Meter" device profile and thresholds set in the Dashboard Settings.
 
 <div class="tb-markdown-view table-wrapper">
 

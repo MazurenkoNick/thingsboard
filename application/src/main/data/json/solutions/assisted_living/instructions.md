@@ -1,70 +1,97 @@
 ## Solution instructions
 
-As part of this solution, we have created the "Assisted Living Administration" dashboard. We will review and describe each solution part below.
+Welcome to your new **Assisted Living** solution! 👋
+We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Assisted Living Administration"</a> dashboard for you.
+This dashboard is designed for monitoring the health and safety of residents using BLE/LoRa wearables and environmental sensors. Use this solution to:
 
-The solution is designed to be used with BLE or LoRa gateways and devices.
-The rooms may be equipped with a number of sensors like room temperature, humidity, indoor air quality (IAQ), leak, smoke, and open/close detectors.
-The geopositioning of the resident is done via the beacon in the wristband and a set of nearby gateways. 
-The platform deduplicates the incoming message from the beacon and enriches it with the attributes of the nearby gateways. 
-The geopositioning algorithm is relatively simple and based on the payload's RSSI parameter. 
-One may improve the algorithm based on the particular use case.
+* 🏥 **Monitor** residents' vital signs (Heart Rate, Temperature) in real-time;
+* 📍 **Track** resident locations via BLE beacons and gateways;
+* 🚨 **Detect** critical events like falls (Panic Button), smoke, or open doors;
+* 🗺️ **Manage** facility layout, zones, and device assignments.
 
+The solution is built on **BLE or LoRa gateways and devices**. Key technical features include:
+
+* **🏠 Room Sensors:** Rooms may be equipped with sensors like room temperature, humidity, indoor air quality (IAQ), leak, smoke, and open/close detectors.
+* **🛰️ Geopositioning:** Resident tracking is done via the beacon in the wristband and a set of nearby gateways.
+* **🔄 Data Processing:** The platform deduplicates incoming messages from beacons and enriches them with the attributes of nearby gateways.
+* **🧠 Algorithm:** The location logic is based on the payload's **RSSI parameter**. One may improve the algorithm based on the particular use case.
 
 <div class="img-float" style="max-width: 50%;margin: 20px auto;">
 <img src="https://img.thingsboard.io/solutions/assisted_living/al-scheme.png" alt="Assisted Living">
 </div>
 
+### 🖥 Mastering the dashboards
 
-### Assisted Living Administration Dashboard
+**1. 🏥 Main State (Overview)**
 
-The <a href="${Assisted Living AdministrationDASHBOARD_URL}" target="_blank">"Assisted Living Administration"</a> dashboard
-is intended for monitoring and controlling the status of residents, areas of the institution, devices, and their management. It has multiple states:
+The default view provides a real-time operational picture of the facility.
 
-* **Main** state is assigned to provisions of residents, alarms of residents, and rooms. The Main state contains:
-  * A section with an interactive scheme of zones and resident location markers that can be viewed in real-time. When the status of a resident or room changes or an alarm occurs, the marker will change. To get more detailed information, click on the Resident's marker, and a pop-up with detailed information about the Resident will be displayed. 
-    The card contains detailed information about the Resident, as well as current vital signs, such as heart rate, temperature, panic button status, etc. You can also view vital statistics.
-  
-  * The Resident Alarm section is designed to display all alarms about residents health status or behavior. 
-    You can track the following data: "type" of alarm, resident "name", "location", "duration" of alarm, "severity," and also perform one of the actions: "call an ambulance", "call nurse," or resolve the alarm. 
-    By default, you can set the values (for major or severity) at which alarms will be triggered. These values are panic button (number of presses), heart rate (range from/to), body temperature (range from/to), and noise level. You can also determine the number of an ambulance and the number of a nurse.
+* **🗺️ Interactive Scheme:** View zones and resident markers in real-time.
+  * **🪜 Floors:** Use the tabs on the top left (**Floor 1 / Floor 2**) to switch between different floor plans.
+  * **👤 Resident Markers:** Click any resident marker to view a profile card with real-time vitals (**Heart Rate**, **Temperature**, **Panic Button** status) and their last known location.
+  * **🌡️ Room Markers:** Click on room sensors (e.g., thermometer icons) to see environmental stats like **IAQ**, **Temperature**, and **Humidity**.
 
-  * The Room Alarm section is designed to display all alarms from the sensors located in the room. You can track the following data: “type”, “location”, “duration”, and “severity”, and also perform one of the actions: “call attendant” or resolve the alarm.
-    By default, you can set the values (for major and critical) at which alarms will be triggered. These values are: Room temperature(range from/to in %), Room humidity(range from/to in C), Room air quality(range from/to in IAQ), Door open(duration in min), Window open(duration in min), Sensors battery level(in %), Water leaks and Smoke detected. You can also determine the number of the attendant.
+* **🚨 Resident Alarms:**
+  * **📋 Overview:** A detailed list of health/behavior alarms. Tracks "Type", "Name", "Location", and "Severity".
+  * **⚡ Actions:** You can take actions like **"Call Ambulance"** 🚑 or **"Call Nurse"** 👩‍⚕️ directly from this list.
+  * **🔎 Locate:** Click on the **Location** name (e.g., "Room 102") in the alarm list to instantly view that specific room on the map popup.
+  * **🔔 Notification Rules:** Click the **Settings (⚙️)** icon to configure alarm thresholds. You can set rules for **Panic Button** presses, **Heart Rate** limits (BPM), **Body Temperature**, and **Noise Levels**.
+
+* **🚪 Room Alarms:**
+  * **📋 Overview:** Displays infrastructure alerts (Smoke, Leak, Door Open). You can acknowledge these or **"Call Attendant"**.
+  * **🔎 Locate:** Click on the **Location** name (e.g., "Room 102") in the alarm list to instantly view that specific room on the map popup.
+  * **🔔 Notification Rules:** Click the **Settings (⚙️)** icon to set thresholds for **Temperature**, **Humidity**, **Air Quality**, **Door/Window** open duration, **Battery Levels**, **Water Leaks**, and **Smoke** detection.
 
 <div class="img-float" style="max-width: 50%;margin: 20px auto;">
 <img src="https://img.thingsboard.io/solutions/assisted_living/1-main-state.png" alt="Assisted Living">
 </div>
 
-The main state also contains links to the states of resident and zone management.
-To switch to the Resident state - click on the “Residents” button on Main State.
-
 <br>
 
-* **Residents state** is assigned to resident management. You can create, edit or delete them, and if such users exist, follow them in the general list.
-Basic data of residents is divided into the following data blocks: "Personal info", "Emergency contact", "Health information", "Location", "Wristband".
+**2. 👥 Residents State**
+
+Access this state by clicking the **"Residents"** button on the Main State.
+
+* **📋 Resident List:** The main view provides a comprehensive roster of all residents.
+  * **Columns:** Quickly view the resident's **Name & Avatar**, **Gender**, **Age**, and their assigned location (**Zone** and **Room**).
+  * **Actions:** Use the "+" add resident button to onboard new users, or use the row icons to ✏️ "Edit" or 🗑️ "Delete" existing profiles.
+
+* **🆔 Resident Profile (Data Blocks):** When creating or editing a resident, information is structured into five key sections:
+  * **ℹ️ Personal Info:** Basic details including Name, Gender, Birth Date, Phone Number, and Photo.
+  * **🆘 Emergency Contact:** Contact details for next of kin (First name, Last name, Role/Relationship, Phone number).
+  * **⚕️ Health Information:** Critical medical data such as **Chronic diseases** and **Allergies**.
+  * **📍 Location:** Logic assignment to a specific **Zone** (e.g., Floor 1) and **Room**.
+  * **⌚ Wristband:** Binds a specific wearable device (by Serial Number) to the resident.
 
 <div class="img-float" style="max-width:50%;margin: 20px auto">
 <img src="https://img.thingsboard.io/solutions/assisted_living/2-residents-state.png" alt="Assisted Living">
 </div>
-  
-Click the “Zones” button on Main State to switch to the Zones state.
 
 <br>
 
-* **Zones state** is intended for the management of zones, which in the future will be the basis for rooms and devices. You can create, edit or delete a zone as needed. In order to create a new zone - click the "Add zone" button and then specify the name and add a mapping scheme. Then save the zone. In our example, we created the zones “Floor 1” and “Floor 2”. 
+**3. 🏢 Zones State**
+
+Access this state by clicking the **"Zones"** button on the Main State.
+
+* **🎯 Purpose:** Manage the high-level facility hierarchy (floors), which serves as the foundation for rooms and device placement.
+* **⚡ Actions:**
+  * **➕ Add Zone:** Click **"Add zone"** to create a new area. You will need to specify a name (e.g., "Floor 1") and upload a **mapping scheme** (image/floor plan).
+  * **⤵️ Drill Down:** Click on any zone row to navigate to the detailed **Zone State** for that specific area.
 
 <div class="img-float" style="max-width: 50%;margin: 20px auto;">
 <img src="https://img.thingsboard.io/solutions/assisted_living/3-zones-state.png" alt="Assisted Living">
 </div>
 
-
-In order to go to the main state of a specific zone - click on its line, after which you will be redirected to the page.
-
 <br>
 
-  * **Zone State** is intended for room and device management.
-You can create the desired room and define it in the corresponding location on the Zone map you downloaded earlier. After saving, the room will occupy the place you specified.
-You can create a device of the appropriate type and attach it to the corresponding room, thus creating a connection between them.
+**4. 📍 Zone Details State**
+
+This state allows you to map the physical environment on the floor plan you uploaded.
+
+* **🧱 Create Rooms:** Define specific rooms and place them on the zone map.
+* **🔗 Assign Devices:** Create devices of the appropriate type and attach them to specific rooms to establish the connection.
+
+<br>
 
 <div class="img-float" style="max-width:50%;margin: 20px auto">
 <img src="https://img.thingsboard.io/solutions/assisted_living/4-zone-state.png" alt="Assisted Living">
@@ -72,196 +99,55 @@ You can create a device of the appropriate type and attach it to the correspondi
 
 <br>
 
-**When you are trying to add devices, note that you can select only those devices that are in "Device Groups" -> "Unassigned Devices" on the "Customers hierarchy" page.** To add new devices on your dashboard, first create them on the "Customers hierarchy" page.
+* **⚠️ Important:** You can only select devices that currently exist in the **"Device Groups" -> "Unassigned Devices"** list. To add a new device to the dashboard, you must first create it on the **"Customers hierarchy"** page.
 
 <div class="img-float" style="max-width: 50%;margin: 20px auto;">
 <img src="https://img.thingsboard.io/solutions/assisted_living/5-customer-hierarchy.png" alt="Assisted Living" style="border: 1px solid #eee;">
 </div>
 
-### Device Profiles
+### 🚨 Alarms
 
-The device profile listed below uses pre-defined values for alarm thresholds. Administrator may configure alarm thresholds for all devices by navigating to alarm rules.
+The solution uses pre-configured <a href="${DOCS_BASE_URL}/user-guide/alarm-rules" target="_blank">Alarm rules</a> assigned to device profiles.
+Administrators can configure specific thresholds for **Major** and **Critical** severity levels directly from the dashboard settings (as described in the **Mastering the Dashboard** section).
 
-##### Wristband
+#### ⌚ Resident Alarms (Wristband)
 
-The profile by default is configured to raise alarms if:
+These alarms monitor the health and safety of the resident.
 
-* the value of "panicButton" is TRUE and repeated 1 time for Major alarm, and 2 and more times for Critical alarm;
-* the value of "pulse" is lower or greater than a threshold. Also Major and Critical alarms for Heart Rate defined by the administrator;
-* the value of "temperature" is less or greater than a threshold. Also Major and Critical alarms for Body Temperature defined by the administrator;
-* the value of "noise" is equal or greater than a configured. Also Major and Critical alarms for Noise defined by the administrator;
-* the value of "battery" is equal or less than a configured. Also Major and Critical alarms for Battery level defined by the administrator;
+* **Panic Button:** Triggers a **Major** alarm on a single press and a **Critical** alarm if pressed 2 or more times.
+* **Heart Rate:** Triggers if the `pulse` value falls outside the safe range (lower/upper limits).
+* **Body Temperature:** Triggers if the `temperature` value falls outside the safe range.
+* **High Noise:** Triggers if the `noise` level exceeds the configured decibel limit, indicating a potential fall or distress.
+* **Low Battery:** Triggers if the wristband `battery` level drops below the configured percentage.
 
-##### Window Sensor
+#### 🏢 Infrastructure Alarms (Room Sensors)
 
-The profile by default is configured to raise alarms if:
+These alarms monitor the safety and environmental conditions of the facility.
 
-* the value of "battery" is equal or less than a configured. Also Major and Critical alarms for Battery level defined by the administrator;
-* the value of "windowOpen" is equal or greater than a configured. Also Major and Critical duration of alarms for Window opened defined by the administrator;
+* **Security (Door/Window):** Triggers if a `doorOpen` or `windowOpen` event lasts longer than the allowed duration.
+* **Critical Hazards:** Triggers immediately if **Smoke** (`smoke` = TRUE) or a **Water Leak** (`waterLeak` = TRUE) is detected.
+* **Environment:** Triggers if **Air Quality** (`roomIaq`), **Temperature** (`roomTemperature`), or **Humidity** (`roomHumidity`) breach the defined comfort ranges.
+* **Sensor Battery:** Triggers if any room sensor's `battery` level drops below the configured limit.
 
-##### Smoke Sensor
+<br>
 
-The profile by default is configured to raise alarms if:
-
-* the value of "battery" is equal or less than a configured. Also Major and Critical alarms for Battery level defined by the administrator;
-* the value of "smoke" is TRUE.
-
-##### Room Sensor
-
-The profile by default is configured to raise alarms if:
-
-* the value of "battery" is equal or less than a configured. Also Major and Critical alarms for Battery level defined by the administrator;
-* the value of "roomIaq" is equal or greater than a configured. Also Major and Critical alarms for Battery level defined by the administrator;
-* the value of "roomTemperature" is less or greater than a threshold. Also Major and Critical alarms for Battery level defined by the administrator;
-* the value of "roomHumidity" is less or greater than a threshold. Also Major and Critical alarms for Battery level defined by the administrator;
-
-##### Leak Sensor
-
-The profile by default is configured to raise alarms if:
-
-* the value of "battery" is equal or less than a configured. Also Major and Critical alarms for Battery level defined by the administrator;
-* the value of "waterLeak" is TRUE.
-
-##### Door Sensor
-
-The profile by default is configured to raise alarms if:
-
-* the value of "battery" is equal or less than a configured. Also Major and Critical alarms for Battery level defined by the administrator;
-* the value of "doorOpen" is equal or greater than a configured. Also Major and Critical duration of alarms for Door opened defined by the administrator;
-
-### Devices
-
-The solution includes wearable devices and room sensors connected via gateways.
-
-Device types include:
-- Resident wristbands
-- Room sensors (temperature, humidity, IAQ, smoke, leak, door/window)
-- BLE or LoRa gateways
-
-Each device sends telemetry that is processed by Rule Chains and evaluated against alarm rules.
+Below is the complete list of alarm rules configured for this solution:
 
 <div class="tb-markdown-view table-wrapper">
 
-${device_list_and_credentials}
+${alarm_rules}
 
 </div>
 
-### Rule Chains
+### 🔌 Devices
 
-* **AL Gateway Rule Chain** rule chain responsible for processing the data from the gateways: deduplication and enrichment of the payload with the signal strength and location of the gateway.
+The solution includes wearable devices and room sensors connected via gateways.
 
-The "Fetch Room attributes" node enriches the incoming message with the location of the gateway.
-The "Change Owner from Gateway to Device" nodes transforms the incoming message and lookup associated device based on the value of serial number.
-The "Switch by Device Type" node routes the incoming message to "Room" or "Wristband" rule chains.
-The "Deduplicate From Multiple Gateways" combines all copies of the message from multiple gateways. Each copy contains parameters of the gateway including the RSSI.
-The "Use msg with Max RSSI" node calculates the location of the resident beacon based on the attributes of the closest gateway.
+* ⌚ **Resident wristbands:** Track health vitals (Heart Rate, Temp) and location via BLE beacons.
+* 🏠 **Room sensors:** Monitor environmental conditions including Temperature, Humidity, IAQ, Smoke, Water Leaks, and Door/Window status.
+* 📡 **Gateways:** BLE or LoRa gateways that collect data from nearby sensors and wristbands to forward to the platform.
 
-* **AL Wristband Device Rule Chain** is very similar to default platform rule chain. The rule chain also count number of alarms and propagate the value to corresponding resident user.
-
-* **AL Room Device Rule Chain** is very similar to "AL Wristband Device Rule Chain" but does not propagate alarm counts to the user.
-
-#### Examples
-
-##### How to call a resident's heart rate alarm?
-
-Let's recreate an event where we will generate data that will trigger an alarm about a specific resident.
-For example, let's take resident **"William Harris"**. His current vital heart rate is - 95 BPM.
-
-<div class="img-float" style="max-width: 40%;margin: 20px auto;">
-<img src="https://img.thingsboard.io/solutions/assisted_living/example-1-1.png" alt="Assisted Living">
-</div>
-
-To check the current resident alarm settings, go to the "Notification rules" section in the "Resident alarms" section by clicking on the "gear" button.
-
-You can see the heart rate alarm threshold for different alarm types.
-
-<div class="img-float" style="max-width: 40%;margin: 20px auto;">
-<img src="https://img.thingsboard.io/solutions/assisted_living/example-1-2.png" alt="Assisted Living">
-</div>
-
-Then to emulate the resident's "pulse" data let's take the value: "55" for bpm. After that, we should execute the following command:
-
-```bash
-curl -v -X POST -d "{\"serial\": \"C00000025FE2\", \"data\":{\"pulse\":55}}" ${BASE_URL}/api/v1/${D00000020002ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
-```
-
-<br>
-
-Since the BPM indicator is equal to 55 and falls under the requirements for calling an alarm - the alarm with the type "heart rate" for the resident "William Harris" was displayed in the "Resident alarms" section, and its marker was also highlighted in red.
-
-<div class="img-float" style="max-width: 55%;margin: 20px auto;">
-<img src="https://img.thingsboard.io/solutions/assisted_living/example-1-3.png" alt="Assisted Living">
-</div>
-
-
-##### Moving a resident from one room to another
-
-We remind you that the system is also intended for auditing the movement of residents of the institution.
-
-Therefore, for example, let's create a case in which the system tracks and displays the movement of a guest.
-
-Take, for example, **"Isabella Davis"**, who is in her room on the **Floor 1**.
-
-<div class="img-float" style="max-width: 40%;margin: 20px auto;">
-<img src="https://img.thingsboard.io/solutions/assisted_living/example-2-1.png" alt="Assisted Living">
-</div>
-
-The system determines the placement of residents using a bracelet that transmits the corresponding signal and a Gateway placed in the corresponding room/zone that processes it. Thus, the Gateway with the best connection level with the bracelet is considered the resident's location.
-
-To emulate the data for moving the resident, we will generate the gateway data, namely **“rssi”**.
-
-In our case, we will reproduce the data of several Gateways with different bracelet coverage levels. Let's take the "rssi" value for "Room 103": "-10"(better connection) and Room 104: "-70"(worse connection). After that, we should execute the following command:
-
-```bash
-curl -v -X POST -d "{\"serial\": \"C00000066F66\", \"rssi\": -10, \"data\":{\"batteryLevel\":55}}" ${BASE_URL}/api/v1/${D00000030003ACCESS_TOKEN}/telemetry --header "Content-Type:application/json" && curl -v -X POST -d "{\"serial\": \"C00000066F66\", \"rssi\": -70, \"data\":{\"batteryLevel\":55}}" ${BASE_URL}/api/v1/${D00000040004ACCESS_TOKEN}/telemetry --header "Content-Type:application/json" {:copy-code}
-```
-
-
-<div class="img-float" style="max-width: 40%;margin: 20px auto;">
-<img src="https://img.thingsboard.io/solutions/assisted_living/example-2-2.png" alt="Assisted Living">
-</div>
-
-After using this command, we can see that after the data transfer, **Isabella Davis** moved to **“Room 103”** because his gateway connection signal was better than “Room 104”.
-
-<br>
-
-##### Room alarm when the door is opened
-
-This time we will reproduce the alarm of the room sensor that monitors the IAQ level.
-
-To check the current room alarm settings, go to the "Notification rules" section in the "Room alarms" section by clicking on the "gear" button.
-
-<div class="img-float" style="max-width: 40%;margin: 20px auto;">
-<img src="https://img.thingsboard.io/solutions/assisted_living/example-3-1.png" alt="Assisted Living">
-</div>
-
-As we can see, the room IAQ level alarm will go off if the value exceeds 150.
-
-Next, for our example, let's take a resident's room, for instance - Room 101, in which the IAQ level is at the permissible level - "67".
-
-<div class="img-float" style="max-width: 40%;margin: 20px auto;">
-<img src="https://img.thingsboard.io/solutions/assisted_living/example-3-2.png" alt="Assisted Living">
-</div>
-
-To emulate the room's "iaq" data, let's take the value: "160". After that, we should execute the following command:
-
-<div class="img-float" style="max-width: 50%;margin: 20px auto;">
-<img src="https://img.thingsboard.io/solutions/assisted_living/example-3-3.png" alt="Assisted Living">
-</div>
-
-
-
-```bash
-curl -v -X POST -d "{\"serial\": \"E00000015FE1\", \"rssi\": -50, \"data\":{\"IAQ\":160}}" ${BASE_URL}/api/v1/${D00000010001ACCESS_TOKEN}/telemetry --header "Content-Type:application/json" {:copy-code}
-```
-
-<br>
-
-We can see that the IAQ has changed by 160, so its level exceeds the indicators specified in the rules for calling alarms. Therefore, in the "Room alarms" section, we can track the appearance of an alarm with the type "Air Quality" - Room 101.
-
-
-### Devices
-
+Each device sends telemetry that is processed by rule chains and evaluated against alarm rules.
 We have already created devices and loaded some demo data for them. See device info and credentials below:
 
 <div class="tb-markdown-view table-wrapper">
@@ -270,7 +156,21 @@ ${device_list_and_credentials}
 
 </div>
 
-### Solution entities
+### 🧠 Rule Chains
+
+* **📡 AL Gateway Rule Chain:** This chain handles the core processing of data arriving from gateways: deduplication, device identification, and location enrichment.
+  * **Enrichment:** The "Fetch Room attributes" node adds the gateway's location to the incoming message.
+  * **Device Lookup:** The "Change Owner from Gateway to Device" node identifies the specific device (wristband or sensor) using the serial number in the payload.
+  * **Routing:** The "Switch by Device Type" node directs the message to either the "Room" or "Wristband" processing chain.
+  * **Location Logic:** The chain uses "Deduplicate From Multiple Gateways" to combine duplicate messages and "Use msg with Max RSSI" to pinpoint the resident's location based on the strongest signal (closest gateway).
+
+* **⌚ AL Wristband Device Rule Chain:**
+  This chain functions similarly to the default platform rule chain (saving telemetry). Uniquely, it also counts the number of active alarms and propagates this value to the corresponding resident user entity for dashboard display.
+
+* **🏠 AL Room Device Rule Chain:**
+  Very similar to the Wristband chain but dedicated to infrastructure sensors. It processes data and alarms but does not propagate alarm counts to specific user entities.
+
+### 📦 Solution entities
 
 As part of this solution, the following entities were created:
 
@@ -280,7 +180,123 @@ ${all_entities}
 
 </div>
 
-### Edge computing
+### 📚 Examples & Scenarios
+
+#### 💓 Scenario 1: Triggering a Heart Rate Alarm
+
+**Goal:** Simulate a critical health event where a resident's heart rate drops below the safety threshold.
+
+**1. Context:** We will use resident "William Harris" (Current vital heart rate: 95 BPM).
+
+<br>
+
+<div class="img-float" style="max-width: 40%;margin: 20px auto;">
+<img src="https://img.thingsboard.io/solutions/assisted_living/example-1-1.png" alt="Assisted Living">
+</div>
+
+<br>
+
+**2. Check Rules:** By clicking the **Settings (⚙️)** icon in the Resident Alarms section, we see that a pulse lower than **60 BPM** triggers an alarm.
+
+<br>
+
+<div class="img-float" style="max-width: 40%;margin: 20px auto;">
+<img src="https://img.thingsboard.io/solutions/assisted_living/example-1-2.png" alt="Assisted Living">
+</div>
+
+<br>
+
+**3. Action:** Run the following command to send a telemetry update with a pulse of **55 BPM**:
+
+```bash
+curl -v -X POST -d "{\"serial\": \"C00000025FE2\", \"data\":{\"pulse\":55}}" ${BASE_URL}/api/v1/${D00000020002ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
+```
+
+<br>
+
+**Result:** The resident marker for William Harris turns Red on the map, and a new "Heart Rate" alarm appears in the active alarms list.
+
+<br>
+
+<div class="img-float" style="max-width: 55%;margin: 20px auto;">
+<img src="https://img.thingsboard.io/solutions/assisted_living/example-1-3.png" alt="Assisted Living">
+</div>
+
+#### 🚶 Scenario 2: Tracking Resident Movement
+
+**Goal:** Demonstrate how the system uses signal strength (RSSI) to locate a resident moving between rooms.
+
+**1. Context:** Resident "Isabella Davis" is currently located on Floor 1.
+
+<br>
+
+<div class="img-float" style="max-width: 40%;margin: 20px auto;">
+<img src="https://img.thingsboard.io/solutions/assisted_living/example-2-1.png" alt="Assisted Living">
+</div>
+
+<br>
+
+**2. Logic:** The system receives signals from multiple gateways. The gateway with the highest (least negative) RSSI value determines the location.
+
+**3. Action:** We will simulate her wristband sending signals to two gateways simultaneously:
+  * **Room 103 Gateway:** RSSI -10 (Strong Signal)
+  * **Room 104 Gateway:** RSSI -70 (Weak Signal)
+
+```bash
+curl -v -X POST -d "{\"serial\": \"C00000066F66\", \"rssi\": -10, \"data\":{\"batteryLevel\":55}}" ${BASE_URL}/api/v1/${D00000030003ACCESS_TOKEN}/telemetry --header "Content-Type:application/json" && curl -v -X POST -d "{\"serial\": \"C00000066F66\", \"rssi\": -70, \"data\":{\"batteryLevel\":55}}" ${BASE_URL}/api/v1/${D00000040004ACCESS_TOKEN}/telemetry --header "Content-Type:application/json" {:copy-code}
+```
+
+<br>
+
+**Result:** The system compares the signals (-10 vs -70) and updates Isabella's location to Room 103 on the interactive map.
+
+<br>
+
+<div class="img-float" style="max-width: 40%;margin: 20px auto;">
+<img src="https://img.thingsboard.io/solutions/assisted_living/example-2-2.png" alt="Assisted Living">
+</div>
+
+##### 🌫️ Scenario 3: Room Air Quality Alert
+
+**Goal:** Trigger an infrastructure alarm due to poor indoor air quality (IAQ).
+
+**1. Context:** We are monitoring Room 101, which has a normal IAQ level of 67.
+
+<br>
+
+<div class="img-float" style="max-width: 40%;margin: 20px auto;">
+<img src="https://img.thingsboard.io/solutions/assisted_living/example-3-2.png" alt="Assisted Living">
+</div>
+
+<br>
+
+**2. Check Rules:** In the Room Alarms settings, the threshold for a "High IAQ" alarm is set to > 150.
+
+<br>
+
+<div class="img-float" style="max-width: 40%;margin: 20px auto;">
+<img src="https://img.thingsboard.io/solutions/assisted_living/example-3-1.png" alt="Assisted Living">
+</div>
+
+<br>
+
+**3. Action:** Run the command below to simulate a sensor reading of 160 IAQ:
+
+```bash
+curl -v -X POST -d "{\"serial\": \"E00000015FE1\", \"rssi\": -50, \"data\":{\"IAQ\":160}}" ${BASE_URL}/api/v1/${D00000010001ACCESS_TOKEN}/telemetry --header "Content-Type:application/json" {:copy-code}
+```
+
+<br>
+
+**Result:** Because 160 exceeds the limit of 150, a new "Air Quality" alarm is generated for Room 101, and the room's status indicator changes to warn staff.
+
+<br>
+
+<div class="img-float" style="max-width: 50%;margin: 20px auto;">
+<img src="https://img.thingsboard.io/solutions/assisted_living/example-3-3.png" alt="Assisted Living">
+</div>
+
+### 📡 Edge computing
 
 **Optionally**, this solution can be extended to use edge computing.
 
@@ -315,7 +331,7 @@ To install ThingsBoard Edge and connect to the cloud, please navigate to <a href
 
 Once the edge is installed and connected to the cloud, you will be able to log in into edge using your tenant credentials.
 
-#### Push data to device on edge
+#### 🔄 Push data to device on edge
 
 All the devices that were assigned to the edge entity "Remote Residence R1" are going to be automatically provisioned to the edge.
 

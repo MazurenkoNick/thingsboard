@@ -84,7 +84,7 @@ Go check your dashboard — you should see the values update instantly 🚀
 
 ### 🚨 Alarms
 
-Alarms are generated based on rules configured in the "Waste Sensor" device profile. We have pre-configured two core rules:
+Alarms are generated based on <a href="${DOCS_BASE_URL}/user-guide/alarm-rules" target="_blank">Alarm rules</a> configured in the "Waste Sensor" device profile. We have pre-configured two core rules:
 
 <div class="tb-markdown-view table-wrapper">
 
