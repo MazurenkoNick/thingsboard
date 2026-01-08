@@ -38,7 +38,7 @@ SET profile_data = jsonb_set(
     jsonb_build_object(
         'minAllowedScheduledUpdateIntervalInSecForCF', 60,
         'maxRelationLevelPerCfArgument', 10,
-        'maxRelatedEntitiesToReturnPerCfArgument', 100,
+        'maxRelatedEntitiesToReturnPerCfArgument', 1000,
         'minAllowedDeduplicationIntervalInSecForCF', 10,
         'minAllowedAggregationIntervalInSecForCF', 60,
         'intermediateAggregationIntervalInSecForCF', 300,
@@ -62,6 +62,51 @@ WHERE NOT (
 );
 
 -- UPDATE TENANT PROFILE CONFIGURATION END
+
+-- UPDATE TENANT PROFILE CALCULATED FIELD LIMITS START
+
+UPDATE tenant_profile
+SET profile_data = jsonb_set(
+        profile_data,
+        '{configuration}',
+        jsonb_strip_nulls(
+                (profile_data -> 'configuration') ||
+                jsonb_build_object(
+                        'maxCalculatedFieldsPerEntity',
+                        CASE
+                            WHEN (profile_data -> 'configuration' ->> 'maxCalculatedFieldsPerEntity') IS NULL
+                                OR (profile_data -> 'configuration' ->> 'maxCalculatedFieldsPerEntity') = '5'
+                                THEN to_jsonb(100)
+                            ELSE profile_data -> 'configuration' -> 'maxCalculatedFieldsPerEntity'
+                            END,
+
+                        'maxStateSizeInKBytes',
+                        CASE
+                            WHEN (profile_data -> 'configuration' ->> 'maxStateSizeInKBytes') IS NULL
+                                OR (profile_data -> 'configuration' ->> 'maxStateSizeInKBytes') = '32'
+                                THEN to_jsonb(512)
+                            ELSE profile_data -> 'configuration' -> 'maxStateSizeInKBytes'
+                            END,
+
+                        'maxSingleValueArgumentSizeInKBytes',
+                        CASE
+                            WHEN (profile_data -> 'configuration' ->> 'maxSingleValueArgumentSizeInKBytes') IS NULL
+                                OR (profile_data -> 'configuration' ->> 'maxSingleValueArgumentSizeInKBytes') = '2'
+                                THEN to_jsonb(32)
+                            ELSE profile_data -> 'configuration' -> 'maxSingleValueArgumentSizeInKBytes'
+                            END
+                )
+        )
+                   )
+WHERE
+    (profile_data -> 'configuration' ->> 'maxCalculatedFieldsPerEntity') IS NULL
+   OR (profile_data -> 'configuration' ->> 'maxCalculatedFieldsPerEntity') = '5'
+   OR (profile_data -> 'configuration' ->> 'maxStateSizeInKBytes') IS NULL
+   OR (profile_data -> 'configuration' ->> 'maxStateSizeInKBytes') = '32'
+   OR (profile_data -> 'configuration' ->> 'maxSingleValueArgumentSizeInKBytes') IS NULL
+   OR (profile_data -> 'configuration' ->> 'maxSingleValueArgumentSizeInKBytes') = '2';
+
+-- UPDATE TENANT PROFILE CALCULATED FIELD LIMITS END
 
 -- CALCULATED FIELD UNIQUE CONSTRAINT UPDATE START
 
