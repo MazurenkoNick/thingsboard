@@ -147,9 +147,9 @@ Solution utilizes <a href="${DOCS_BASE_URL}/user-guide/calculated-fields/" targe
 
 ${calculated_fields}
 
-**💡 Tip:** The aggregation is done in the UTC time zone by default. You may configure settings like the time zone or interval duration in "Time series data aggregation" calculated fields.
-
 </div>
+
+**💡 Tip:** The aggregation is done in the UTC time zone by default. You may configure settings like the time zone or interval duration in "Time series data aggregation" calculated fields.
 
 ### ⛓️ Rule Chains
 
