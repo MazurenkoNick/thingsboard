@@ -156,7 +156,7 @@ ${device_list_and_credentials}
 
 </div>
 
-### 🧠 Rule Chains
+### ⛓️ Rule Chains
 
 * **📡 AL Gateway Rule Chain:** This chain handles the core processing of data arriving from gateways: deduplication, device identification, and location enrichment.
   * **Enrichment:** The "Fetch Room attributes" node adds the gateway's location to the incoming message.

@@ -142,7 +142,7 @@ ${calculated_fields}
 
 </div>
 
-### 🧠 Rule Chains
+### ⛓️ Rule Chains
 
 The system includes intelligent processing logic:
 

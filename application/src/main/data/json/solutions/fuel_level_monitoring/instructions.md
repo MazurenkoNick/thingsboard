@@ -110,7 +110,7 @@ After all, stages have been completed, the user can save all changes by pressing
 button — this tank will be placed in the general list of tanks, and the corresponding marker will be displayed on the interactive map.
 For the completeness of the picture, you can test the functionality and simulate the data of the tank. To do this, go to the **Examples & Scenarios** section to find practical examples and instructions.
 
-### 🧠 Rule Chains
+### ⛓️ Rule Chains
 
 The **"Fuel Monitoring"** rule chain is processing all incoming messages from tank sensors. 
 This rule chain is responsible for counting alarms of all types (temperature, battery, fuel level, fuel height) 

@@ -147,7 +147,7 @@ ${calculated_fields}
 
 </div>
 
-### 🧠 Rule Chains
+### ⛓️ Rule Chains
 
 * **SI Devices** rule chain processes telemetry from all device types, including soil moisture sensors, water meters, and smart valves.
   This rule chain is responsible for telemetry ingestion and alarm counting.
