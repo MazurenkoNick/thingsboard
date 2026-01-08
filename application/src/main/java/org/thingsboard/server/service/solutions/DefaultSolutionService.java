@@ -628,7 +628,7 @@ public class DefaultSolutionService implements SolutionService {
 
         StringBuilder devList = new StringBuilder();
 
-        devList.append("| Device name | Access token | Customer name |");
+        devList.append("| Device name | Access token | Owner |");
         devList.append(System.lineSeparator());
         devList.append("| :---   | :---  | :---  |");
         devList.append(System.lineSeparator());
@@ -636,7 +636,7 @@ public class DefaultSolutionService implements SolutionService {
         for (DeviceCredentialsInfo credentialsInfo : ctx.getCreatedDevices().values()) {
             devList.append("|").append(credentialsInfo.getName())
                     .append("|").append(credentialsInfo.getCredentials().getCredentialsId()).append("{:copy-code}")
-                    .append("|").append(credentialsInfo.getCustomerName() != null ? credentialsInfo.getCustomerName() : "");
+                    .append("|").append(credentialsInfo.getCustomerName() != null ? credentialsInfo.getCustomerName() : "Tenant");
             devList.append(System.lineSeparator());
 
             template = template.replace("${" + credentialsInfo.getName() + "ACCESS_TOKEN}", credentialsInfo.getCredentials().getCredentialsId());
