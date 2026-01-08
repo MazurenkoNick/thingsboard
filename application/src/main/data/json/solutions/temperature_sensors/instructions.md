@@ -1,6 +1,6 @@
 ## Solution instructions
 
-Welcome to your new **Temperature & Humidity** monitoring solution 👋 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Temperature & Humidity"</a> dashboard that displays data from multiple sensors. You may use the dashboard to:
+Welcome to your new **Temperature & Humidity** monitoring solution 👋 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Temperature & Humidity</a> dashboard that displays data from multiple sensors. You may use the dashboard to:
 
 * 📍 **Add** and locate sensors on the map;
 * 🔔 **Configure** alarm thresholds;
@@ -65,7 +65,7 @@ ${alarm_rules}
 
 We created a sample customer, "Customer D", to demonstrate how you can isolate data for different clients. "Sensor C1" has been explicitly assigned to this customer.
 
-The following users belong to "Customer D" and have read-only access to the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Temperature & Humidity"</a> dashboard. When they log in, they will only see "Sensor C1".
+The following users belong to "Customer D" and have read-only access to the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Temperature & Humidity</a> dashboard. When they log in, they will only see "Sensor C1".
 
 <div class="tb-markdown-view table-wrapper">
 

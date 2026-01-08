@@ -1,7 +1,7 @@
 ## Solution instructions
 
 Welcome to your new **Assisted Living** solution! 👋
-We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Assisted Living Administration"</a> dashboard for you.
+We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Assisted Living Administration</a> dashboard for you.
 This dashboard is designed for monitoring the health and safety of residents using BLE/LoRa wearables and environmental sensors. Use this solution to:
 
 * 🏥 **Monitor** residents' vital signs (Heart Rate, Temperature) in real-time;
@@ -20,7 +20,7 @@ The solution is built on **BLE or LoRa gateways and devices**. Key technical fea
 <img src="https://img.thingsboard.io/solutions/assisted_living/al-scheme.png" alt="Assisted Living">
 </div>
 
-### 🖥 Mastering the dashboards
+### 🖥 Mastering the dashboard
 
 **1. 🏥 Main State (Overview)**
 

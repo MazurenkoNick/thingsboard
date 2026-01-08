@@ -56,9 +56,9 @@ When a marker is selected (e.g., Beverly Hills), the sidebar updates to show the
 <iframe src="${BASE_URL}${MAIN_DASHBOARD_PUBLIC_URL}" style="position:fixed; inset:0; width:100%; height:100%; border:none;"></iframe>{:copy-code}
 ```
 
-#### 🛠️ Administration Air Quality Monitoring Dashboard
+#### 🛠️ Air Quality Monitoring Administration Dashboard
 
-This dashboard is designed for tenant administrators to oversee the entire sensor fleet. It allows you to add new devices, monitor technical health (battery, connectivity), and configure alarm rules.
+This <a href="${Air Quality Monitoring AdministrationDASHBOARD_URL}" target="_blank">**dashboard**</a> is designed for tenant administrators to oversee the entire sensor fleet. It allows you to add new devices, monitor technical health (battery, connectivity), and configure alarm rules.
 
 **1. 🛠️ Main State**
 

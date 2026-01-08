@@ -11,8 +11,10 @@ This template is a complete Smart Utility platform designed for municipalities, 
 ### 🖥 Mastering the dashboards
 
 This solution includes two distinct interfaces:
-**1.**  <a href="${MAIN_DASHBOARD_URL}" target="_blank">**Water Metering Tenant Dashboard:**</a> For the utility provider to manage the entire metering infrastructure and customer base.
-**2.  Water Metering User Dashboard:** A simplified view for end-users to monitor their own water usage.
+
+**1.**  <a href="${MAIN_DASHBOARD_URL}" target="_blank">**Water Metering Tenant Dashboard:**</a> for the utility provider to manage the entire metering infrastructure and customer base.
+
+**2.**  <a href="${Water Metering User DashboardDASHBOARD_URL}" target="_blank">**Water Metering User Dashboard:**</a> simplified view for end-users to monitor their own water usage.
 
 You may always customize dashboards using dashboard development <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">guide</a>.
 

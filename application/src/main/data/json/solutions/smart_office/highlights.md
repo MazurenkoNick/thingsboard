@@ -10,4 +10,4 @@ We have auto-generated a complete digital twin of a modern office:
 * 🌡️ **Smart Sensors:** Pre-configured devices monitoring ambient conditions with active "High Temperature" alarms.
 * ❄️ **HVAC Control:** A functional "HVAC" device that lets you adjust setpoints and modes directly from the UI.
 * ⚡ **Resource Metering:** Dedicated "Energy" and "Water" meters to track consumption trends.
-* ☁️ **Edge Ready:** Optional support for Edge computing to bring intelligence closer to your assets.
+* ☁️ **Edge Ready:** Optional support for **ThingsBoard Edge** to bring intelligence closer to your assets.

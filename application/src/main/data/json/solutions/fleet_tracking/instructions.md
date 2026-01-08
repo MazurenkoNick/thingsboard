@@ -1,7 +1,7 @@
 ## Solution instructions
 
 Welcome to your new **Site Fleet Tracking** solution 👋
-We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Mine site monitoring"</a> dashboard for you. Use it to:
+We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Mine site monitoring</a> dashboard for you. Use it to:
 
 * 📍 **Observe** real-time positions of excavators and haul trucks;
 * 🚧 **Monitor** geofencing events and alarms;

@@ -1,7 +1,7 @@
 ## Solution instructions
 
 Welcome to your new **Fuel Level Monitoring** solution 👋 
-We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Fuel Level Monitoring"</a> dashboard for you. Use it to:
+We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Fuel Level Monitoring</a> dashboard for you. Use it to:
 
 * 🗺️ **Monitor** tank locations and real-time status on an interactive map;
 * 🛢️ **Track** fuel levels, consumption history, and refilling events;

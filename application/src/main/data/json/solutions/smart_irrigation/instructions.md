@@ -1,6 +1,6 @@
 ## Solution instructions
 
-Welcome to your new **Smart Irrigation** solution 👋 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Irrigation Management"</a> dashboard for you. Use it to:
+Welcome to your new **Smart Irrigation** solution 👋 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Irrigation Management</a> dashboard for you. Use it to:
 
 * 🚜 **Monitor** field conditions and soil moisture in real-time;
 * 💧 **Manage** irrigation schedules and automate water valves;

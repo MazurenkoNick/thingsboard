@@ -7,8 +7,8 @@ It allows you to immediately experience the solution from an **End-User perspect
 
 We have auto-generated everything you need to simulate a real-world scenario:
 
-* 📊 **Interactive Dashboard:** A "Temperature & Humidity" dashboard for real-time visualization and alarm management.
+* 📊 **Interactive Dashboard:** Temperature & Humidity dashboard for real-time visualization and alarm management.
 * 👥 **User Hierarchy:** A generic "Customer" with **two pre-configured users** (Read-only access) so you can test permission levels instantly.
 * 🔌 **Demo Devices:** Two "Temperature Sensor" devices with data flows already set up.
 * 🧠 **Smart Logic:** A Device Profile with active **Alarm Rules** ("High Temperature" & "Low Humidity").
-* ☁️ **Edge Ready:** Optional support for Edge computing instances.
+* ☁️ **Edge Ready:** Optional support for **ThingsBoard Edge** computing instances.

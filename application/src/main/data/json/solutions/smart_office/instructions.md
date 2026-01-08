@@ -1,6 +1,6 @@
 ## Solution instructions
 
-Welcome to your new **Smart Office** monitoring solution 👋 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Smart office"</a> dashboard for you. Use it to:
+Welcome to your new **Smart Office** monitoring solution 👋 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Smart office</a> dashboard for you. Use it to:
 
 * 📍 **Observe** office sensors and their locations;
 * 📈 **Browse** indoor temperature and power consumption history;

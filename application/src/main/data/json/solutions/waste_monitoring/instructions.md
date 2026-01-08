@@ -1,6 +1,6 @@
 ## Solution instructions
 
-Welcome to your new **Waste Management** solution 👋 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Waste Management Administration"</a> dashboard for you. You may use the dashboard to:
+Welcome to your new **Waste Management** solution 👋 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Waste Management Administration</a> dashboard for you. You may use the dashboard to:
 
 * 🗑️ **Monitor** the real-time fullness of trash bins across the city;
 * 🗺️ **Visualize** bin locations and critical status on an interactive map;
@@ -92,11 +92,11 @@ ${alarm_rules}
 
 </div>
 
-User may configure the alarm rules via the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Waste Management"</a> dashboard using "Alarm rules" form.
+User may configure the alarm rules via the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Waste Management Administration</a> dashboard using "Alarm rules" form.
 
 ### ⛓️ Rule Chains
 
-The "Waste Sensor Rule Chain" is processing all incoming messages from waste sensors. This rule chain is responsible for counting alarms of both types and updating the status of the garbage bin by fullness and battery levels.
+The **Waste Sensor Rule Chain** is processing all incoming messages from waste sensors. This rule chain is responsible for counting alarms of both types and updating the status of the garbage bin by fullness and battery levels.
 
 <div class="img-float" style="max-width:50%;margin: 10px auto">
 <img src="https://img.thingsboard.io/solutions/waste_monitoring/rule-chain.png" alt="Waste Management">
