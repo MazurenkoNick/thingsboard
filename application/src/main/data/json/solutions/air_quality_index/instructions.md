@@ -131,7 +131,7 @@ Go check your dashboard — you should see the values update instantly 🚀
 
 ### 🚨 Alarms
 
-Your solution monitors device health based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> configured in the "AQI Sensor" device profile:
+Your solution monitors device health based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">alarm rules</a> configured in the "AQI Sensor" device profile:
 
 <div class="tb-markdown-view table-wrapper">
 

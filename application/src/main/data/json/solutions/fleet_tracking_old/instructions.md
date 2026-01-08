@@ -52,7 +52,7 @@ Go check your dashboard — you should see the values update instantly 🚀
 
 ### 🚨 Alarms
 
-Your solution monitors data based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> configured in the "bus" device profile:
+Your solution monitors data based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">alarm rules</a> configured in the "bus" device profile:
 
 <div class="tb-markdown-view table-wrapper">
 

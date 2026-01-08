@@ -122,7 +122,7 @@ and updating the status of the tank sensor based on alarms count and connectivit
 
 ### 🚨 Alarms
 
-Your solution monitors fuel tank conditions based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> configured in the "Tank" device profile:
+Your solution monitors fuel tank conditions based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">alarm rules</a> configured in the "Tank" device profile:
 
 <div class="tb-markdown-view table-wrapper">
 

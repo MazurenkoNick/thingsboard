@@ -107,7 +107,7 @@ This state allows you to map the physical environment on the floor plan you uplo
 
 ### 🚨 Alarms
 
-The solution uses pre-configured <a href="${DOCS_BASE_URL}/user-guide/alarm-rules" target="_blank">Alarm rules</a> assigned to device profiles.
+The solution uses pre-configured <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">alarm rules</a> assigned to device profiles.
 Administrators can configure specific thresholds for **Major** and **Critical** severity levels directly from the dashboard settings (as described in the **Mastering the Dashboard** section).
 
 #### ⌚ Resident Alarms (Wristband)

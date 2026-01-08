@@ -117,8 +117,7 @@ This profile manages water flow control.
 
 ### 🚨 Alarms
 
-Your solution monitors field health based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/"
-target="_blank">Alarm rules</a> configured in the Device Profiles detailed in the previous section.
+Your solution monitors field health based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">alarm rules</a> configured in the Device Profiles detailed in the previous section.
 
 You can review the complete list of configured alarms in the table below:
 
