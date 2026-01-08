@@ -2,28 +2,28 @@
 
 Welcome to your new **Waste Management** solution 👋 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Waste Management Administration</a> dashboard for you. You may use the dashboard to:
 
-* 🗑️ **Monitor** the real-time fullness of trash bins across the city;
-* 🗺️ **Visualize** bin locations and critical status on an interactive map;
-* 🚨 **Manage** sensor health, battery levels, and maintenance alarms;
-* 🚛 **Optimize** collection routes by prioritizing full bins.
+* **Monitor** the real-time fullness of trash bins across the city;
+* **Visualize** bin locations and critical status on an interactive map;
+* **Manage** sensor health, battery levels, and maintenance alarms;
+* **Optimize** collection routes by prioritizing full bins.
 
 ### 🖥 Mastering the dashboard
 
 This solution provides a comprehensive **Waste Management Administration** dashboard intended for monitoring the fullness of trash bins, viewing fullness statistics, and managing devices.
 
-**1. 🏙️ Main State (City Overview)**
+**1. Main State (City Overview)**
 
 The central hub for waste operations, giving you a bird's-eye view of all deployed assets.
 
-* **🗺️ Interactive Map:** Displays the precise location of every garbage bin.
+* **Interactive Map:** Displays the precise location of every garbage bin.
   * **Status Indicators:** Markers change color based on fullness (e.g., 🔴 **Red** indicates a bin is critically full and needs an immediate collection).
   * **Quick Info:** Click any marker to open a pop-up with key details like "Fullness %" and "Battery Level." Click "Details" to drill down into that specific bin.
-* **📊 Interactive KPI Cards:** Located at the top of the list, these cards summarize the fleet's health ("Total bins", "Fullness" > configurable threshold (default: 90%)", "Low Battery", "Offline").
+* **Interactive KPI Cards:** Located at the top of the list, these cards summarize the fleet's health ("Total bins", "Fullness" > configurable threshold (default: 90%)", "Low Battery", "Offline").
   * **Global Filtering:** Click any card to instantly filter the **entire dashboard state**. This updates both the "Map" markers and the "Bins" list to show only the devices matching that category (e.g., clicking "Fullness" isolates only the critical bins for route planning).
-* **📋 Bins List:** A sortable table managing your entire inventory.
+* **Bins List:** A sortable table managing your entire inventory.
   * **Columns:** View essential data like "Serial Number", "Address", "Connection" status, "Fullness", and "Battery Level".
   * **Actions:** Add new sensors via the widget header "+" button (supports bulk CSV upload). Also, you can "Edit" ✏️ or "Delete" 🗑️ existing ones using "row" action buttons.
-* **🚨 Alarms Console:**
+* **Alarms Console:**
   A dedicated section for active alarms.
   * **Triggers:** Automatically lists events like "Bin Full" (>= 90%) or "Low Battery" (< 30%).
   * **Configuration:** Click the settings icon ⚙️ "Alarm rules" to adjust global thresholds for when alarms should fire.
@@ -32,16 +32,16 @@ The central hub for waste operations, giving you a bird's-eye view of all deploy
 <img src="https://img.thingsboard.io/solutions/waste_monitoring/waste-monitoring-1.png" alt="Waste Management">
 </div>
 
-**2. 🔍 Bin State (Drill Down)**
+**2. Bin State (Drill Down)**
 
 To access this detailed view, click on a "Bin Marker" on the map, then "Details" or click on a "Row" in the "Bins" list. This view focuses on the health and history of a single collection point.
 
-* **ℹ️ Sensor Details:** Displays static data (Serial Number, Address) and real-time status (Connection, Last Update). Use the "Edit" button to update location or tags.
-* **📍 Location Management:** An embedded map allowing you to manually drag-and-drop the bin marker to correct its physical location.
-* **📊 Real-Time Telemetry:**
-  * **🗑️ Fullness Chart:** History chart showing how quickly the bin fills up over time.
-  * **🔋Battery Chart:** Monitors the sensor's power level to prevent device outages.
-* **🚨 Alarms:** A filtered log showing only the alarms relevant to this specific bin.
+* **Sensor Details:** Displays static data (Serial Number, Address) and real-time status (Connection, Last Update). Use the "Edit" button to update location or tags.
+* **Location Management:** An embedded map allowing you to manually drag-and-drop the bin marker to correct its physical location.
+* **Real-Time Telemetry:**
+  * **Fullness Chart:** History chart showing how quickly the bin fills up over time.
+  * **Battery Chart:** Monitors the sensor's power level to prevent device outages.
+* **Alarms:** A filtered log showing only the alarms relevant to this specific bin.
 
 <div class="img-float" style="max-width:50%;margin: 10px auto">
 <img src="https://img.thingsboard.io/solutions/waste_monitoring/waste-monitoring-2.png" alt="Waste Management">

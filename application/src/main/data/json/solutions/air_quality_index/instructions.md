@@ -2,10 +2,10 @@
 
 Welcome to your new **Air Quality Monitoring** solution 👋 We have generated two robust dashboards (Public & Administration) for you. Use this solution to:
 
-* 🍃 **Monitor** real-time Air Quality Index (AQI) and specific pollutants;
-* 🗺️ **Visualize** city-wide pollution levels on an interactive map;
-* 🚨 **Manage** sensor health, battery levels, and connectivity alarms;
-* 📢 **Inform** the public with automated health recommendations.
+* **Monitor** real-time Air Quality Index (AQI) and specific pollutants;
+* **Visualize** city-wide pollution levels on an interactive map;
+* **Manage** sensor health, battery levels, and connectivity alarms;
+* **Inform** the public with automated health recommendations.
 
 ### 🖥 Mastering the dashboards
 
@@ -16,7 +16,7 @@ This solution includes two distinct interfaces: one for the **Public** (End User
 This dashboard is designed for end-users and requires no login. It is pre-configured to monitor **Los Angeles** and operates in two main views within the same interface.
 The dashboard layout consists of an interactive map on the right and a dynamic information sidebar on the left.
 
-**1. 🏙️ City State (Aggregate View)**
+**1. City State (Aggregate View)**
 
 This view represents the overall air pollution monitoring of the specific city. It calculates values based on data received from all city sensors.
 
@@ -32,11 +32,11 @@ This view represents the overall air pollution monitoring of the specific city. 
 * **History:** A chart displaying the AQI level trends in the **Live**, **weekly**, and **monthly** range.
 * **Interactive Map:** Shows air pollution monitoring stations across the city. The markers are **color-coded** depending on their specific AQI level.
 
-**👉 Interaction:** Click on any sensor marker on the map to **instantly update the dashboard** with data for that specific district (Sensor State). You can switch between districts by clicking different markers.
+**Interaction:** Click on any sensor marker on the map to **instantly update the dashboard** with data for that specific district (Sensor State). You can switch between districts by clicking different markers.
 
 <br>
 
-**2. 📍 Sensor State (District View)**
+**2. Sensor State (District View)**
 
 When a marker is selected (e.g., Beverly Hills), the sidebar updates to show the local state of that specific district.
 
@@ -60,17 +60,17 @@ When a marker is selected (e.g., Beverly Hills), the sidebar updates to show the
 
 This <a href="${Air Quality Monitoring AdministrationDASHBOARD_URL}" target="_blank">**dashboard**</a> is designed for tenant administrators to oversee the entire sensor fleet. It allows you to add new devices, monitor technical health (battery, connectivity), and configure alarm rules.
 
-**1. 🛠️ Main State**
+**1. Main State**
 
 The central hub for device management, divided into three key areas:
 
-* **📋 Sensors List:** a comprehensive table displaying the technical status of every device.
+* **Sensors List:** a comprehensive table displaying the technical status of every device.
     * **Columns:** Quickly check the "Sensor Label", "Connection" status (Connected/Disconnected), "Battery level", and "Last AQI" reading.
     * **Actions:** Use the icons on the right to "Edit" ✏️ or "Delete" 🗑️ sensors. You can also provision new devices using the "+" table header button.
-* **🚨 Alarms Console:** a real-time log of all active and cleared alerts across the system.
+* **Alarms Console:** a real-time log of all active and cleared alerts across the system.
     * **Data:** Shows the "Created time", "Type" of alarm (e.g., Low Battery Level, Inactive), "Sensor id" and current alarm "Status".
     * **Configuration:** Click the settings icon ⚙️ "Alarm rules" in the header to configure global thresholds, such as the minimum **Battery Level %** or the timeout duration for **Connection Loss**.
-* **🗺️ Interactive Map:** visualizes the physical location and status of your AQI sensors.
+* **Interactive Map:** visualizes the physical location and status of your AQI sensors.
     * **Actions:** Click the "+ Add sensor" button at the top of the map to provision a new device and place it in the map.
     * **Markers:** Color-coded based on the sensor's real-time status: 
       * **🔴 Red:** Has active alarms (Critical state).
@@ -82,15 +82,15 @@ The central hub for device management, divided into three key areas:
 <img src="https://img.thingsboard.io/solutions/air_quality_index/instruction-admin-state-1.png" alt="AQI Administration Dashboard - Sensor State">
 </div>
 
-**2. 🔌 Sensor State (Drill Down)** 
+**2. Sensor State (Drill Down)** 
 
 Accessed by clicking a table row or the "Details" link in the tooltip of the selected sensor on the map.
 This view provides deep diagnostics for a single sensor.
 
-* **📶 Diagnostics:** Detailed charts for **Battery Level** history and **Connection Status** uptime.
-* **📊 Telemetry:** A live stream of all incoming data points (PM2.5, CO, NO2, etc.).
-* **📍 Location Management:** An embedded map allowing you to drag-and-drop the sensor to update its precise coordinates.
-* **🚨 Device Alarms:** A filtered list showing only the alarms relevant to this specific sensor.
+* **Diagnostics:** Detailed charts for **Battery Level** history and **Connection Status** uptime.
+* **Telemetry:** A live stream of all incoming data points (PM2.5, CO, NO2, etc.).
+* **Location Management:** An embedded map allowing you to drag-and-drop the sensor to update its precise coordinates.
+* **Device Alarms:** A filtered list showing only the alarms relevant to this specific sensor.
 
 <div class="img-float" style="max-width: 50%;margin: 10px auto">
 <img src="https://img.thingsboard.io/solutions/air_quality_index/instruction-admin-state-2.png" alt="AQI Administration Dashboard - Sensor State">
@@ -156,8 +156,8 @@ ${calculated_fields}
 
 The solution organizes your infrastructure into clear logical containers to keep your tenant structured:
 
-* **🏙️ "AQI city" (Asset Group):** Stores all city entities managed by your tenant.
-* **🔌 "AQI Sensor" (Device Group):** Stores all physical air quality sensors belonging to those cities.
+* **AQI city (Asset Group):** Stores all city entities managed by your tenant.
+* **AQI Sensor (Device Group):** Stores all physical air quality sensors belonging to those cities.
 
 ### 📦 Solution entities
 

@@ -1,20 +1,20 @@
 ## Solution instructions
 
-Welcome to your new **Assisted Living** solution! 👋
+Welcome to your new **Assisted Living** solution 👋
 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Assisted Living Administration</a> dashboard for you.
 This dashboard is designed for monitoring the health and safety of residents using BLE/LoRa wearables and environmental sensors. Use this solution to:
 
-* 🏥 **Monitor** residents' vital signs (Heart Rate, Temperature) in real-time;
-* 📍 **Track** resident locations via BLE beacons and gateways;
-* 🚨 **Detect** critical events like falls (Panic Button), smoke, or open doors;
-* 🗺️ **Manage** facility layout, zones, and device assignments.
+* **Monitor** residents' vital signs (Heart Rate, Temperature) in real-time;
+* **Track** resident locations via BLE beacons and gateways;
+* **Detect** critical events like falls (Panic Button), smoke, or open doors;
+* **Manage** facility layout, zones, and device assignments.
 
 The solution is built on **BLE or LoRa gateways and devices**. Key technical features include:
 
-* **🏠 Room Sensors:** Rooms may be equipped with sensors like room temperature, humidity, indoor air quality (IAQ), leak, smoke, and open/close detectors.
-* **🛰️ Geopositioning:** Resident tracking is done via the beacon in the wristband and a set of nearby gateways.
-* **🔄 Data Processing:** The platform deduplicates incoming messages from beacons and enriches them with the attributes of nearby gateways.
-* **🧠 Algorithm:** The location logic is based on the payload's **RSSI parameter**. One may improve the algorithm based on the particular use case.
+* **Room Sensors:** Rooms may be equipped with sensors like room temperature, humidity, indoor air quality (IAQ), leak, smoke, and open/close detectors.
+* **Geopositioning:** Resident tracking is done via the beacon in the wristband and a set of nearby gateways.
+* **Data Processing:** The platform deduplicates incoming messages from beacons and enriches them with the attributes of nearby gateways.
+* **Algorithm:** The location logic is based on the payload's **RSSI parameter**. One may improve the algorithm based on the particular use case.
 
 <div class="img-float" style="max-width: 50%;margin: 20px auto;">
 <img src="https://img.thingsboard.io/solutions/assisted_living/al-scheme.png" alt="Assisted Living">
@@ -22,25 +22,25 @@ The solution is built on **BLE or LoRa gateways and devices**. Key technical fea
 
 ### 🖥 Mastering the dashboard
 
-**1. 🏥 Main State (Overview)**
+**1. Main State (Overview)**
 
 The default view provides a real-time operational picture of the facility.
 
-* **🗺️ Interactive Scheme:** View zones and resident markers in real-time.
-  * **🪜 Floors:** Use the tabs on the top left (**Floor 1 / Floor 2**) to switch between different floor plans.
-  * **👤 Resident Markers:** Click any resident marker to view a profile card with real-time vitals (**Heart Rate**, **Temperature**, **Panic Button** status) and their last known location.
-  * **🌡️ Room Markers:** Click on room sensors (e.g., thermometer icons) to see environmental stats like **IAQ**, **Temperature**, and **Humidity**.
+* **Interactive Scheme:** View zones and resident markers in real-time.
+  * **Floors:** Use the tabs on the top left (**Floor 1 / Floor 2**) to switch between different floor plans.
+  * **Resident Markers:** Click any resident marker to view a profile card with real-time vitals (**Heart Rate**, **Temperature**, **Panic Button** status) and their last known location.
+  * **Room Markers:** Click on room sensors (e.g., thermometer icons) to see environmental stats like **IAQ**, **Temperature**, and **Humidity**.
 
-* **🚨 Resident Alarms:**
-  * **📋 Overview:** A detailed list of health/behavior alarms. Tracks "Type", "Name", "Location", and "Severity".
-  * **⚡ Actions:** You can take actions like **"Call Ambulance"** 🚑 or **"Call Nurse"** 👩‍⚕️ directly from this list.
-  * **🔎 Locate:** Click on the **Location** name (e.g., "Room 102") in the alarm list to instantly view that specific room on the map popup.
-  * **🔔 Notification Rules:** Click the **Settings (⚙️)** icon to configure alarm thresholds. You can set rules for **Panic Button** presses, **Heart Rate** limits (BPM), **Body Temperature**, and **Noise Levels**.
+* **Resident Alarms:**
+  * **Overview:** A detailed list of health/behavior alarms. Tracks "Type", "Name", "Location", and "Severity".
+  * **Actions:** You can take actions like **"Call Ambulance"** 🚑 or **"Call Nurse"** 👩‍⚕️ directly from this list.
+  * **Locate:** Click on the **Location** name (e.g., "Room 102") in the alarm list to instantly view that specific room on the map popup.
+  * **Notification Rules:** Click the **Settings ⚙️** icon to configure alarm thresholds. You can set rules for **Panic Button** presses, **Heart Rate** limits (BPM), **Body Temperature**, and **Noise Levels**.
 
-* **🚪 Room Alarms:**
-  * **📋 Overview:** Displays infrastructure alerts (Smoke, Leak, Door Open). You can acknowledge these or **"Call Attendant"**.
-  * **🔎 Locate:** Click on the **Location** name (e.g., "Room 102") in the alarm list to instantly view that specific room on the map popup.
-  * **🔔 Notification Rules:** Click the **Settings (⚙️)** icon to set thresholds for **Temperature**, **Humidity**, **Air Quality**, **Door/Window** open duration, **Battery Levels**, **Water Leaks**, and **Smoke** detection.
+* **Room Alarms:**
+  * **Overview:** Displays infrastructure alerts (Smoke, Leak, Door Open). You can acknowledge these or **"Call Attendant"**.
+  * **Locate:** Click on the **Location** name (e.g., "Room 102") in the alarm list to instantly view that specific room on the map popup.
+  * **Notification Rules:** Click the **Settings ⚙️** icon to set thresholds for **Temperature**, **Humidity**, **Air Quality**, **Door/Window** open duration, **Battery Levels**, **Water Leaks**, and **Smoke** detection.
 
 <div class="img-float" style="max-width: 50%;margin: 20px auto;">
 <img src="https://img.thingsboard.io/solutions/assisted_living/1-main-state.png" alt="Assisted Living">
@@ -48,20 +48,20 @@ The default view provides a real-time operational picture of the facility.
 
 <br>
 
-**2. 👥 Residents State**
+**2. Residents State**
 
 Access this state by clicking the **"Residents"** button on the Main State.
 
-* **📋 Resident List:** The main view provides a comprehensive roster of all residents.
+* **Resident List:** The main view provides a comprehensive roster of all residents.
   * **Columns:** Quickly view the resident's **Name & Avatar**, **Gender**, **Age**, and their assigned location (**Zone** and **Room**).
   * **Actions:** Use the "+" add resident button to onboard new users, or use the row icons to ✏️ "Edit" or 🗑️ "Delete" existing profiles.
 
-* **🆔 Resident Profile (Data Blocks):** When creating or editing a resident, information is structured into five key sections:
-  * **ℹ️ Personal Info:** Basic details including Name, Gender, Birth Date, Phone Number, and Photo.
-  * **🆘 Emergency Contact:** Contact details for next of kin (First name, Last name, Role/Relationship, Phone number).
-  * **⚕️ Health Information:** Critical medical data such as **Chronic diseases** and **Allergies**.
-  * **📍 Location:** Logic assignment to a specific **Zone** (e.g., Floor 1) and **Room**.
-  * **⌚ Wristband:** Binds a specific wearable device (by Serial Number) to the resident.
+* **Resident Profile (Data Blocks):** When creating or editing a resident, information is structured into five key sections:
+  * **Personal Info:** Basic details including Name, Gender, Birth Date, Phone Number, and Photo.
+  * **Emergency Contact:** Contact details for next of kin (First name, Last name, Role/Relationship, Phone number).
+  * **Health Information:** Critical medical data such as **Chronic diseases** and **Allergies**.
+  * **Location:** Logic assignment to a specific **Zone** (e.g., Floor 1) and **Room**.
+  * **Wristband:** Binds a specific wearable device (by Serial Number) to the resident.
 
 <div class="img-float" style="max-width:50%;margin: 20px auto">
 <img src="https://img.thingsboard.io/solutions/assisted_living/2-residents-state.png" alt="Assisted Living">
@@ -69,14 +69,14 @@ Access this state by clicking the **"Residents"** button on the Main State.
 
 <br>
 
-**3. 🏢 Zones State**
+**3. Zones State**
 
 Access this state by clicking the **"Zones"** button on the Main State.
 
-* **🎯 Purpose:** Manage the high-level facility hierarchy (floors), which serves as the foundation for rooms and device placement.
-* **⚡ Actions:**
-  * **➕ Add Zone:** Click **"Add zone"** to create a new area. You will need to specify a name (e.g., "Floor 1") and upload a **mapping scheme** (image/floor plan).
-  * **⤵️ Drill Down:** Click on any zone row to navigate to the detailed **Zone State** for that specific area.
+* **Purpose:** Manage the high-level facility hierarchy (floors), which serves as the foundation for rooms and device placement.
+* **Actions:**
+  * **Add Zone:** Click **"Add zone"** to create a new area. You will need to specify a name (e.g., "Floor 1") and upload a **mapping scheme** (image/floor plan).
+  * **Drill Down:** Click on any zone row to navigate to the detailed **Zone State** for that specific area.
 
 <div class="img-float" style="max-width: 50%;margin: 20px auto;">
 <img src="https://img.thingsboard.io/solutions/assisted_living/3-zones-state.png" alt="Assisted Living">
@@ -84,12 +84,12 @@ Access this state by clicking the **"Zones"** button on the Main State.
 
 <br>
 
-**4. 📍 Zone Details State**
+**4. Zone Details State**
 
 This state allows you to map the physical environment on the floor plan you uploaded.
 
-* **🧱 Create Rooms:** Define specific rooms and place them on the zone map.
-* **🔗 Assign Devices:** Create devices of the appropriate type and attach them to specific rooms to establish the connection.
+* **Create Rooms:** Define specific rooms and place them on the zone map.
+* **Assign Devices:** Create devices of the appropriate type and attach them to specific rooms to establish the connection.
 
 <br>
 
@@ -143,9 +143,9 @@ ${alarm_rules}
 
 The solution includes wearable devices and room sensors connected via gateways.
 
-* ⌚ **Resident wristbands:** Track health vitals (Heart Rate, Temp) and location via BLE beacons.
-* 🏠 **Room sensors:** Monitor environmental conditions including Temperature, Humidity, IAQ, Smoke, Water Leaks, and Door/Window status.
-* 📡 **Gateways:** BLE or LoRa gateways that collect data from nearby sensors and wristbands to forward to the platform.
+* **Resident wristbands:** Track health vitals (Heart Rate, Temp) and location via BLE beacons.
+* **Room sensors:** Monitor environmental conditions including Temperature, Humidity, IAQ, Smoke, Water Leaks, and Door/Window status.
+* **Gateways:** BLE or LoRa gateways that collect data from nearby sensors and wristbands to forward to the platform.
 
 Each device sends telemetry that is processed by rule chains and evaluated against alarm rules.
 We have already created devices and loaded some demo data for them. See device info and credentials below:
@@ -158,16 +158,16 @@ ${device_list_and_credentials}
 
 ### ⛓️ Rule Chains
 
-* **📡 AL Gateway Rule Chain:** This chain handles the core processing of data arriving from gateways: deduplication, device identification, and location enrichment.
+* **AL Gateway Rule Chain:** This chain handles the core processing of data arriving from gateways: deduplication, device identification, and location enrichment.
   * **Enrichment:** The "Fetch Room attributes" node adds the gateway's location to the incoming message.
   * **Device Lookup:** The "Change Owner from Gateway to Device" node identifies the specific device (wristband or sensor) using the serial number in the payload.
   * **Routing:** The "Switch by Device Type" node directs the message to either the "Room" or "Wristband" processing chain.
   * **Location Logic:** The chain uses "Deduplicate From Multiple Gateways" to combine duplicate messages and "Use msg with Max RSSI" to pinpoint the resident's location based on the strongest signal (closest gateway).
 
-* **⌚ AL Wristband Device Rule Chain:**
+* **AL Wristband Device Rule Chain:**
   This chain functions similarly to the default platform rule chain (saving telemetry). Uniquely, it also counts the number of active alarms and propagates this value to the corresponding resident user entity for dashboard display.
 
-* **🏠 AL Room Device Rule Chain:**
+* **AL Room Device Rule Chain:**
   Very similar to the Wristband chain but dedicated to infrastructure sensors. It processes data and alarms but does not propagate alarm counts to specific user entities.
 
 ### 📦 Solution entities

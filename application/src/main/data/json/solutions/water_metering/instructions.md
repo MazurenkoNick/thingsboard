@@ -1,20 +1,20 @@
 ## Solution instructions
 
-Welcome to your new **Water Metering** solution! 👋
+Welcome to your new **Water Metering** solution 👋
 This template is a complete Smart Utility platform designed for municipalities, sub-metering companies, and building managers. Use this solution to:
 
-* 💧 **Monitor** real-time water consumption and detect anomalies;
-* 🗺️ **Visualize** your entire meter network on an interactive, clustered map;
-* 🚨 **Detect** leaks, pipe bursts, and freezing conditions instantly;
-* 👥 **Manage** customers and automate sub-metering data collection.
+* **Monitor** real-time water consumption and detect anomalies;
+* **Visualize** your entire meter network on an interactive, clustered map;
+* **Detect** leaks, pipe bursts, and freezing conditions instantly;
+* **Manage** customers and automate sub-metering data collection.
 
 ### 🖥 Mastering the dashboards
 
 This solution includes two distinct interfaces:
 
-**1.**  <a href="${MAIN_DASHBOARD_URL}" target="_blank">**Water Metering Tenant Dashboard:**</a> for the utility provider to manage the entire metering infrastructure and customer base.
+1. <a href="${MAIN_DASHBOARD_URL}" target="_blank">Water Metering Tenant Dashboard</a>: for the utility provider to manage the entire metering infrastructure and customer base.
 
-**2.**  <a href="${Water Metering User DashboardDASHBOARD_URL}" target="_blank">**Water Metering User Dashboard:**</a> simplified view for end-users to monitor their own water usage.
+2. <a href="${Water Metering User DashboardDASHBOARD_URL}" target="_blank">Water Metering User Dashboard</a>: simplified view for end-users to monitor their own water usage.
 
 You may always customize dashboards using dashboard development <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">guide</a>.
 
@@ -23,49 +23,55 @@ You may always customize dashboards using dashboard development <a href="${DOCS_
 This interface allows you to manage the entire hierarchy: from the physical meter to the end-user customer. It is organized into six key tabs.
 
 **1. Total (Overview)**
+
 The default landing page designed for a high-level operational summary.
-* **📊 KPI Cards:** Instant metrics for "Consumed per current week", "Active devices", "Low battery", and "Inactive devices".
-* **🗺️ Interactive Map:**
+
+* **KPI Cards:** Instant metrics for "Consumed per current week", "Active devices", "Low battery", and "Inactive devices".
+* **Interactive Map:**
   * **Clustering:** Markers are grouped to handle thousands of meters.
   * **Quick Add:** Use the "+ Add water meter" button directly on the map to provision new water meters.
-* **📋 Water Meters:** A quick-access table on the right side showing the most relevant device data.
+* **Water Meters:** A quick-access table on the right side showing the most relevant device data.
   * **Columns:** Check "Serial Number", "Latest reading", "Status", and "Battery level" at a glance.
   * **Actions:** Add new sensors via the widget header "+" button. Also, click on "row" will navigate you to specific **water meter details** state.
-* **📉 Consumption & Alerts:** A split view showing a "Water Consumption" bar chart (Daily/Weekly) and a list of "Active Alarms" for immediate attention.
+* **Consumption & Alerts:** A split view showing a "Water Consumption" bar chart (Daily/Weekly) and a list of "Active Alarms" for immediate attention.
 
-**2. 📊 Analytics**
+**2. Analytics**
+
 Navigate here for deep-dive consumption analysis.
 
-* **📈 Consumption Chart:** A detailed line graph comparing water usage over time (Current vs. Previous interval), helping you identify trends.
+* **Consumption Chart:** A detailed line graph comparing water usage over time (Current vs. Previous interval), helping you identify trends.
 
 **3. Devices**
+
 Navigate to the **"Devices"** tab to manage your physical sensors.
 
-* **🛠️ Water Meters:** A comprehensive table managing your entire metering network.
+* **Water Meters:** A comprehensive table managing your entire metering network.
   * **Columns:** View "Serial Number", "Latest Reading", "Address", "Status", and "Leakage" status (🟢 **Green** dot means that there is no leak).
   * **Actions:** Use the widget header button "+" to add new meters. Use row buttons to "Edit" ✏️, "Locate" 📍, or "Delete" 🗑️ water meters. As usual, click on "row" will navigate you to specific **water meter details** state.
-  * **Assignment:** Click the **Edit** ✏️ button on any row to change the **Device Owner**. This allows you to re-assign a meter from the Tenant (Stock) to a specific Customer (Rental/Lease) instantly.
-* **🚨 Active Alarms:** A list showing active alarms for all sensors.
+  * **Assignment:** Click the "Edit" ✏️ button on any row to change the **Device Owner**. This allows you to re-assign a meter from the Tenant (Stock) to a specific Customer (Rental/Lease) instantly.
+* **Active Alarms:** A list showing active alarms for all sensors.
 
-**4. 👥 Customers**
+**4.Customers**
+
 This solution supports a **Supplier/Rental model**. As a Tenant Admin, you own the meters but can assign them to customers and unassign them by changing ownership.
 
-* **➕ Onboard Customers:** Click the "+" button to create a new customer. This **automatically creates a user account**, under newly created customer, allowing the customer to log in to their personal dashboard immediately.
-* **📦 Manage Inventory:** Click on any customer row to **drill down** into their specific state. This opens a view showing only the devices currently assigned to that customer.
-* **🚛 Provisioning:** While inside a customer's view, you can create a new device to provision a meter straight from the warehouse directly to that customer's account.
+* **Onboard Customers:** Click the "+" button to create a new customer. This **automatically creates a user account**, under newly created customer, allowing the customer to log in to their personal dashboard immediately.
+* **Manage Inventory:** Click on any customer row to **drill down** into their specific state. This opens a view showing only the devices currently assigned to that customer.
+* **Provisioning:** While inside a customer's view, you can create a new device to provision a meter straight from the warehouse directly to that customer's account.
 
-**5. 🚨 Alarms**
+**5. Alarms**
 
 A dedicated console for operational health and maintenance allow you
 to track critical issues like "Daily/Weekly Consumption Threshold Exceeded"
 or "Leakage Detected" or "Device Inactive" etc., across all devices.
 
-**6. ⚙️ Settings**
+**6. Settings**
+
 Configure the business logic of your solution without coding.
 
-* **🚨 System Alarms:** Toggle global alerts for "Low Battery", "Low Temperature", "Inactivity" and "Daily/Weekly Consumption Threshold Exceeded".
-  * **📏 Thresholds:** Set specific limits (e.g., "Max Daily Consumption = 100") to trigger alerts depends on your sensor limits or business logic.
-* **📨 Notifications:** Enable SMS or Email routing for specific alarm types.
+* **System Alarms:** Toggle global alerts for "Low Battery", "Low Temperature", "Inactivity" and "Daily/Weekly Consumption Threshold Exceeded".
+  * **Thresholds:** Set specific limits (e.g., "Max Daily Consumption = 100") to trigger alerts depends on your sensor limits or business logic.
+* **Notifications:** Enable SMS or Email routing for specific alarm types.
 
 
 #### 👤 Water Metering User Dashboard
@@ -75,22 +81,23 @@ When a Customer User logs in, they are presented with a **full-screen dashboard*
 **Key Differences:**
 
 **1. Total (Customer View)**
-* **📊 Simplified KPIs:** Focuses purely on consumption metrics (e.g., "Consumed per day", "Consumed per current week") relevant to their bill, rather than the operational health metrics seen by the Admin.
-* **🔒 Read-Only Map:** Shows only the meters owned by the customer. Crucially, the "+ Add water meter" button is removed.
+* **Simplified KPIs:** Focuses purely on consumption metrics (e.g., "Consumed per day", "Consumed per current week") relevant to their bill, rather than the operational health metrics seen by the Admin.
+* **Read-Only Map:** Shows only the meters owned by the customer. Crucially, the "+ Add water meter" button is removed.
 
-**2. 📉 Analytics**
+**2. Analytics**
 * **Personal Tracking:** Users can compare their current usage against previous periods to track their own efficiency.
 
 **3. Devices (Read-Only)**
-* **🔒 Inventory:** Users can view their list of meters and check status/consumption, but the add "+" and delete 🗑 buttons are removed.
+* **Inventory:** Users can view their list of meters and check status/consumption, but the add "+" and delete 🗑 buttons are removed.
 * **Actions:** Row actions are limited to "Edit" ✏️ (change label) and "Locate" 📍.
 
-**4. ⚙️ Settings (Restricted)**
+**4. Settings (Restricted)**
+
 Customers can configure alerts relevant to their property usage, but technical device health settings (managed by the Tenant) are hidden.
 
-* **✅ Visible Settings:** Customers **can** toggle alarms and modify the specific thresholds for "Low Temperature" (Freeze risk), "Daily Consumption", and "Weekly Consumption".
-* **❌ Technical Alarms:** Alarms related to device health (e.g., "Low Battery", "Inactivity") are not applicable to the Customer, as maintenance is handled entirely by the Tenant.
-* **📨 Notifications:** Customers can toggle SMS or Email notifications, but only for the specific alarms visible to them (Temperature and Consumption).
+* **Visible Settings:** Customers **can** toggle alarms and modify the specific thresholds for "Low Temperature" (Freeze risk), "Daily Consumption", and "Weekly Consumption".
+* **Technical Alarms:** Alarms related to device health (e.g., "Low Battery", "Inactivity") are not applicable to the Customer, as maintenance is handled entirely by the Tenant.
+* **Notifications:** Customers can toggle SMS or Email notifications, but only for the specific alarms visible to them (Temperature and Consumption).
 
 ### 🔌 Devices
 

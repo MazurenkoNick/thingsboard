@@ -3,10 +3,10 @@
 Welcome to your new **Fuel Level Monitoring** solution 👋 
 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Fuel Level Monitoring</a> dashboard for you. Use it to:
 
-* 🗺️ **Monitor** tank locations and real-time status on an interactive map;
-* 🛢️ **Track** fuel levels, consumption history, and refilling events;
-* 🚨 **Manage** alarms for low fuel, temperature limits, or battery issues;
-* ⚙️ **Configure** tank shapes, dimensions, and sensor parameters.
+* **Monitor** tank locations and real-time status on an interactive map;
+* **Track** fuel levels, consumption history, and refilling events;
+* **Manage** alarms for low fuel, temperature limits, or battery issues;
+* **Configure** tank shapes, dimensions, and sensor parameters.
 
 ### 🖥 Mastering the dashboard
 
@@ -16,7 +16,7 @@ This dashboard is designed to monitor remaining fuel, view consumption statistic
 
 The main state is designed to monitor the remaining fuel and control the placement of tanks, device management, and the alarm system. This page contains the following sections:
 
-* **🗺 Interactive map** displays the location of the tanks with the help of color-coded markers. 
+* **Interactive map** displays the location of the tanks with the help of color-coded markers. 
   * The **marker** informs about the current status of the tank sensor: 
     * 🟢 **Green** - sensor is in a normal state, and the rules for triggering alarms are not applied;  
     * 🟡 **Yellow** - sensor has a low battery level;
@@ -24,10 +24,10 @@ The main state is designed to monitor the remaining fuel and control the placeme
     * ⚪ **Gray** - sensor is in the offline mode. 
   * More information about the tank status inside a tooltip of each marker.
 
-* **🔍 Filter alarms** allows you to filter which tanks are displayed across the dashboard state.
+* **Filter alarms** allows you to filter which tanks are displayed across the dashboard state.
 By toggling the switches, you can hide or show tanks based on specific criteria, such as "No alarms", "Low battery", "Offline", or active alarm types.
 
-* **📋 Tanks** section is a list designed to display all existing tanks. You can delete or edit existing ones. 
+* **Tanks** section is a list designed to display all existing tanks. You can delete or edit existing ones. 
   * **Data Columns:** Each row displays key metrics including "Tank" label, "Remaining %", "Temperature", "Battery", and "Connection" status.
   * **Actions:** Use the action buttons on the right side of each row to edit ✏️ or delete 🗑️ a tank.
   * **Add Sensor:** Click the "+" button in the table header to create a new tank.
@@ -68,13 +68,13 @@ We have included **9 pre-defined geometric tank shapes** to automatically calcul
 
 To create a tank, you need to go through **next steps**:
 
-**1. 📝 General Info**
+**1. General Info**
 
 The user must fill in mandatory fields: "Serial number" and "Sensor label".
 
 *Click "Next" to proceed.*
 
-**2. 🛢️ Tank Info**
+**2. Tank Info**
 
 This step contains basic information about the tank's parameters, sensor, and fuel type. The entered data directly affects the final volume calculation.
 
@@ -98,7 +98,7 @@ This step contains basic information about the tank's parameters, sensor, and fu
 <img style="border: 1px solid #d7d7d7;" src="https://img.thingsboard.io/solutions/fuel_level_monitoring/2-2-3.png" alt="Fuel level monitoring">
 </div>
 
-**3. 📍 Set Location (optional)**
+**3. Set Location (optional)**
 
 The stage at which the user can choose the location of the tank. The interactive map allows you to select a point on the map manually.
 
@@ -202,9 +202,9 @@ ${all_entities}
 **The Goal:** clear all active alarms for tank "001273" by simulating "healthy" data.
 
 **Current State:** As shown below, the tank has 3 active alarms due to critical telemetry:
-* 🌡️ **High Temperature:** 82°C (Limit: 80°C)
-* 🔋 **Low Battery:** 9% (Limit: 20%)
-* ⛽ **Low Fuel:** 5% (Limit: 10%)
+* **High Temperature:** 82°C (Limit: 80°C)
+* **Low Battery:** 9% (Limit: 20%)
+* **Low Fuel:** 5% (Limit: 10%)
 
 <div class="img-float" style="max-width:60%;margin: 20px auto">
 <img style="border: 1px solid #d7d7d7;" src="https://img.thingsboard.io/solutions/fuel_level_monitoring/ex-1-2.png" alt="Fuel level monitoring">
@@ -219,9 +219,9 @@ ${all_entities}
 </div>
 
 **The Fix:** we will send a telemetry update with values that fall within the "safe" range defined in the alarm rules:
-* 🌡️ **Temperature:** 25°C
-* 🔋 **Battery:** 100%
-* ⛽ **Fuel Level:** 100%
+* **Temperature:** 25°C
+* **Battery:** 100%
+* **Fuel Level:** 100%
 
 Run the following command:
 

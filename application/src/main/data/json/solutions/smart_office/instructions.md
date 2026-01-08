@@ -2,15 +2,16 @@
 
 Welcome to your new **Smart Office** monitoring solution 👋 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Smart office</a> dashboard for you. Use it to:
 
-* 📍 **Observe** office sensors and their locations;
-* 📈 **Browse** indoor temperature and power consumption history;
-* 🔔 **Monitor** temperature alarms;
-* 🎮 **Control** HVAC systems remotely (requires connected device);
-* ⚙️ **Manage** devices details.
+* **Observe** office sensors and their locations;
+* **Browse** indoor temperature and power consumption history;
+* **Monitor** temperature alarms;
+* **Control** HVAC systems remotely (requires connected device);
+* **Manage** devices details.
 
 ### 🖥 Mastering the dashboard
 
 The dashboard has multiple states. The **Main** state displays the list of devices and their map location. Click on any row to drill down to the **Device Details** state (specific to each device type).
+
 You can always customize this dashboard using our <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">dashboard development guide</a>.
 
 ### 🔌 Devices

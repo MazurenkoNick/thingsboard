@@ -3,9 +3,9 @@
 Welcome to your new **Site Fleet Tracking** solution 👋
 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Mine site monitoring</a> dashboard for you. Use it to:
 
-* 📍 **Observe** real-time positions of excavators and haul trucks;
-* 🚧 **Monitor** geofencing events and alarms;
-* ⛽ **Browse** movement history and fuel levels.
+* **Observe** real-time positions of excavators and haul trucks;
+* **Monitor** geofencing events and alarms;
+* **Browse** movement history and fuel levels.
 
 ### 🖥 Mastering the dashboard
 
@@ -15,10 +15,10 @@ The **Main** state provides a complete overview of your mining operations:
 * **Lists:** View detailed tables for **Zones**, **Machines**, and active **Alarms**.
 
 **Drill Down features:**
-* 🚛 **Machine Details:** Click any machine row in the table or click the "See Details" button in a map tooltip to inspect specific alarms, hydraulic pressure (for excavators), and load weight (for haul trucks) history.
-* 🏗️ **Zone Details:** Click any zone row in the table to view a list of all machines currently inside that zone, along with their alarms.
+* **Machine Details:** Click any machine row in the table or click the "See Details" button in a map tooltip to inspect specific alarms, hydraulic pressure (for excavators), and load weight (for haul trucks) history.
+* **Zone Details:** Click any zone row in the table to view a list of all machines currently inside that zone, along with their alarms.
 
-**🎮 Interactive Simulation:** 
+**Interactive Simulation:** 
 
 The map markers are **movable**! You can drag and drop a machine from one zone to another directly on the map.
 This simulates a real-time coordinate change (`latitude`/`longitude`), automatically triggering the corresponding 

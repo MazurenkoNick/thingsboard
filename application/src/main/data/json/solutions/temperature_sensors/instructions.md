@@ -2,10 +2,10 @@
 
 Welcome to your new **Temperature & Humidity** monitoring solution 👋 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Temperature & Humidity</a> dashboard that displays data from multiple sensors. You may use the dashboard to:
 
-* 📍 **Add** and locate sensors on the map;
-* 🔔 **Configure** alarm thresholds;
-* 📈 **Browse** historical data;
-* ⚙️ **Manage** sensor settings.
+* **Add** and locate sensors on the map;
+* **Configure** alarm thresholds;
+* **Browse** historical data;
+* **Manage** sensor settings.
 
 ### 🖥 Mastering the dashboard
 

@@ -2,10 +2,10 @@
 
 Welcome to your new **Smart Irrigation** solution 👋 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Irrigation Management</a> dashboard for you. Use it to:
 
-* 🚜 **Monitor** field conditions and soil moisture in real-time;
-* 💧 **Manage** irrigation schedules and automate water valves;
-* 🚨 **Track** alarms for critical dryness or low battery levels;
-* ⚙️ **Configure** crop types and moisture thresholds for each zone.
+* **Monitor** field conditions and soil moisture in real-time;
+* **Manage** irrigation schedules and automate water valves;
+* **Track** alarms for critical dryness or low battery levels;
+* **Configure** crop types and moisture thresholds for each zone.
 
 ### 🖥 Mastering the dashboard
 
@@ -14,27 +14,27 @@ This solution is designed to simplify farm management by visualizing fields, sen
 **1. Main State**
 The main page gives you a bird's-eye view of your entire operation, allowing you to compare performance across different zones.
 
-* **🗺️ Interactive Map:** Displays your defined field polygons overlaid on a satellite map.
+* **Interactive Map:** Displays your defined field polygons overlaid on a satellite map.
   * **Create:** Click the **"+ Add field"** button (top center) to draw a new polygon, assign a crop type (e.g., Wheat, Corn), and define specific moisture thresholds.
-* **📋 Fields List:** A summary table of all managed fields.
+* **Fields List:** A summary table of all managed fields.
   * **Data Columns:** Quickly scan key metrics including: "Label", "Crop type", "Average moisture" (visual bar), and current "Irrigation" status (On/Off).
   * **Actions:** Use the buttons on the right to "Edit" ✏️ field settings or "Delete" 🗑️ it.
-* **📉 Moisture History:** Located at the bottom, this chart compares the historical soil moisture trends of all your fields over the last 7 days, helping you identify drying trends at a glance.
+* **Moisture History:** Located at the bottom, this chart compares the historical soil moisture trends of all your fields over the last 7 days, helping you identify drying trends at a glance.
 
 **2. Field Details State (Drill Down)**
 To access the detailed management view, click on a "Field Polygon" on the map or click a "Row" in the Fields list.
 
 This state allows for precise control and deep analytics:
 
-* **🚜 Control & Status:**
+* **Control & Status:**
   * **Irrigation status indicator:** View the current state of the water valves (ON/OFF).
   * **KPI Cards:** View real-time "Avg moisture" and "Daily water consumption".
   * **Alarms:** A dedicated button showing active alarms (e.g., "3 Major Alarms"). Click to investigate.
-* **🗓️ Scheduling & Tasks:**
+* **Scheduling & Tasks:**
   * **Schedule:** Configure recurring watering windows (e.g., "Morning", "Evening") with specific durations or volume limits.
   * **Irrigation Tasks:** A log tracking the progress and completion of past and upcoming watering events.
-* **🌡 Sensors List️:** A granular list of every device in this field (Soil Moisture sensors, Valves) showing their individual status and values.
-* **📊 Analytics:** A dual-axis chart correlating "Soil Moisture" levels with "Water Consumption" over time to visualize irrigation efficiency.
+* **Sensors List️:** A granular list of every device in this field (Soil Moisture sensors, Valves) showing their individual status and values.
+* **Analytics:** A dual-axis chart correlating "Soil Moisture" levels with "Water Consumption" over time to visualize irrigation efficiency.
 
 ### 🧬 Device & Asset Profiles
 

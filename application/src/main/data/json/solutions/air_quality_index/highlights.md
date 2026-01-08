@@ -13,4 +13,3 @@ We have auto-generated a complete environmental monitoring ecosystem for you:
 * 🧠 **Automated AQI Logic:** Pre-configured **Calculated Fields** that instantly convert raw telemetry (PM2.5, NO2, Ozone) into the standard Air Quality Index.
 * 🔌 **Demo Fleet:** Five pre-provisioned "Air Quality Sensors" simulating real-world data across different city districts.
 * 📡 **Edge Readiness:** Built-in support for **ThingsBoard Edge**, allowing you to deploy local processing nodes in remote cities or districts.
-* 
