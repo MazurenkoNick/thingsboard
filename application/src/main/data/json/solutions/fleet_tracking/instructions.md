@@ -80,8 +80,8 @@ ${alarm_rules}
 
 ### 🧮 Calculated fields
 
-Calculated fields are used to derive new telemetry values and events based on incoming data. They are configured in the "Excavator" and "Haul truck"
-device profiles and in the "Mine site" asset profile. The configured calculated fields are listed below:
+Solution utilizes <a href="${DOCS_BASE_URL}/user-guide/calculated-fields/" target="_blank">calculated fields</a> to derive new telemetry values and geofencing events based on incoming data.
+They are configured in the "Excavator" and "Haul truck" device profiles and in the "Mine site" asset profile. The configured calculated fields are listed below:
 
 <div class="tb-markdown-view table-wrapper">
 

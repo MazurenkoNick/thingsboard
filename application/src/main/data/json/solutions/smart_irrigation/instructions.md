@@ -129,7 +129,7 @@ ${alarm_rules}
 
 ### 🧮 Calculated fields
 
-Calculated fields are used to derive irrigation-related metrics and indicators based on incoming device telemetry.
+Solution utilizes <a href="${DOCS_BASE_URL}/user-guide/calculated-fields/" target="_blank">calculated fields</a> to derive irrigation-related metrics and indicators based on incoming device telemetry.
 
 Key logic implemented includes:
 
@@ -145,6 +145,8 @@ You can view the complete list of calculation scripts below:
 ${calculated_fields}
 
 </div>
+
+**💡 Tip:** The aggregation is done in the UTC time zone by default. You may configure settings like the time zone or interval duration in "Time series data aggregation" calculated fields.
 
 ### ⛓️ Rule Chains
 

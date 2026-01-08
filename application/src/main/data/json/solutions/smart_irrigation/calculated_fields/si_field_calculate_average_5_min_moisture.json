@@ -34,7 +34,7 @@
     },
     "interval": {
       "type": "CUSTOM",
-      "tz": "Europe/Kiev",
+      "tz": "UTC",
       "durationSec": 300
     },
     "watermark": null,
