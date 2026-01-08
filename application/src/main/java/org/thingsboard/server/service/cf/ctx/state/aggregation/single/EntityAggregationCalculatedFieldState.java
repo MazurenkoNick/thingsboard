@@ -84,6 +84,8 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
 
     private CalculatedFieldProcessingService cfProcessingService;
 
+    private long now;
+
     public EntityAggregationCalculatedFieldState(EntityId entityId) {
         super(entityId);
     }
@@ -116,7 +118,7 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
     @Override
     public ListenableFuture<CalculatedFieldResult> performCalculation(Map<String, ArgumentEntry> updatedArgs, CalculatedFieldCtx ctx) throws Exception {
         createIntervalIfNotExist();
-        long now = System.currentTimeMillis();
+        now = System.currentTimeMillis();
 
         if (DebugModeUtil.isDebugFailuresAvailable(ctx.getCalculatedField())) {
             if (debugTracker == null) {
@@ -130,7 +132,7 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
         Map<AggIntervalEntry, Map<String, ArgumentEntry>> results = new HashMap<>();
         List<AggIntervalEntry> expiredIntervals = new ArrayList<>();
         getIntervals().forEach((intervalEntry, argIntervalStatuses) -> {
-            processInterval(now, intervalEntry, argIntervalStatuses, expiredIntervals, results);
+            processInterval(intervalEntry, argIntervalStatuses, expiredIntervals, results);
         });
         removeExpiredIntervals(expiredIntervals);
 
@@ -218,8 +220,7 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
         return intervals;
     }
 
-    private void processInterval(long now,
-                                 AggIntervalEntry intervalEntry,
+    private void processInterval(AggIntervalEntry intervalEntry,
                                  Map<String, AggIntervalEntryStatus> args,
                                  List<AggIntervalEntry> expiredIntervals,
                                  Map<AggIntervalEntry, Map<String, ArgumentEntry>> results) {
@@ -260,11 +261,11 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
         args.forEach((argName, argEntryIntervalStatus) -> {
             if (argEntryIntervalStatus.intervalPassed(cfCheckInterval)) {
                 if (argEntryIntervalStatus.argsUpdated()) {
-                    argEntryIntervalStatus.setLastMetricsEvalTs(System.currentTimeMillis());
+                    argEntryIntervalStatus.setLastMetricsEvalTs(now);
                     argEntryIntervalStatus.setLastArgsRefreshTs(DEFAULT_LAST_UPDATE_TS);
                     processArgument(intervalEntry, argName, false, results);
                 } else if (argEntryIntervalStatus.getLastMetricsEvalTs() == DEFAULT_LAST_UPDATE_TS) {
-                    argEntryIntervalStatus.setLastMetricsEvalTs(System.currentTimeMillis());
+                    argEntryIntervalStatus.setLastMetricsEvalTs(now);
                     processArgument(intervalEntry, argName, true, results);
                 }
             }
