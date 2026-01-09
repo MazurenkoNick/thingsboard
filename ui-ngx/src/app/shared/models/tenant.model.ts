@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -207,19 +207,19 @@ export function createTenantProfileConfiguration(type: TenantProfileType): Tenan
           ruleEngineExceptionsTtlDays: 0,
           blobEntityTtlDays: 0,
           reportTtlDays: 0,
-          maxCalculatedFieldsPerEntity: 5,
+          maxCalculatedFieldsPerEntity: 100,
           maxArgumentsPerCF: 10,
           maxDataPointsPerRollingArg: 1000,
           maxRelationLevelPerCfArgument: 10,
           minAllowedDeduplicationIntervalInSecForCF: 10,
           minAllowedAggregationIntervalInSecForCF: 60,
-          maxRelatedEntitiesToReturnPerCfArgument: 100,
+          maxRelatedEntitiesToReturnPerCfArgument: 1000,
           minAllowedScheduledUpdateIntervalInSecForCF: 0,
           intermediateAggregationIntervalInSecForCF: 300,
           cfReevaluationCheckInterval: 60,
           alarmsReevaluationInterval: 60,
-          maxStateSizeInKBytes: 32,
-          maxSingleValueArgumentSizeInKBytes: 2,
+          maxStateSizeInKBytes: 512,
+          maxSingleValueArgumentSizeInKBytes: 32,
           calculatedFieldDebugEventsRateLimit: ''
         };
         configuration = {...defaultConfiguration, type: TenantProfileType.DEFAULT};

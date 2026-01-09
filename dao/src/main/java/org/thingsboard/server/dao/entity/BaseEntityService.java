@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -327,7 +327,7 @@ public class BaseEntityService extends AbstractEntityService implements EntitySe
 
         long startNs = System.nanoTime();
         PageData<EntityData> result;
-        if (edqsService.isApiEnabled() && validForEdqs(query)) {
+        if (edqsService.isApiEnabled() && validForEdqs(query) && !tenantId.isSysTenantId()) {
             EdqsRequest request = EdqsRequest.builder()
                     .entityDataQuery(query)
                     .userPermissions(userPermissions)

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -199,11 +199,13 @@ export class CfAlarmRuleConditionDialogComponent extends DialogComponent<CfAlarm
       takeUntilDestroyed()
     ).subscribe((mode) => {
       this.updateStaticValueValidator(AlarmRuleConditionType.DURATION, mode);
+      this.updateSpecText(this.conditionFormGroup.get('type').value);
     });
     this.repeatingDynamicModeControl.valueChanges.pipe(
       takeUntilDestroyed()
     ).subscribe((mode) => {
       this.updateStaticValueValidator(AlarmRuleConditionType.REPEATING, mode);
+      this.updateSpecText(this.conditionFormGroup.get('type').value);
     });
 
     this.updateValidators(this.conditionFormGroup.get('type').value ?? AlarmRuleConditionType.SIMPLE);
@@ -309,20 +311,20 @@ export class CfAlarmRuleConditionDialogComponent extends DialogComponent<CfAlarm
             duringText = this.translate.instant('timewindow.days', {days: value.staticValue});
             break;
         }
-        if (value.dynamicValueArgument) {
+        if (this.durationDynamicModeControl.value) {
           this.specText = this.translate.instant('alarm-rule.condition-during-dynamic', {
-            attribute: `${value.dynamicValueArgument}`
+            attribute: `${value.dynamicValueArgument ?? ''}`
           }) + ' ' + this.translate.instant(this.timeUnitTranslations.get(this.conditionFormGroup.get('unit').value)).toLowerCase();
         } else {
           this.specText = this.translate.instant('alarm-rule.condition-during', {
-            during: duringText
+            during: duringText.trim()
           });
         }
         break;
       case AlarmRuleConditionType.REPEATING:
-        if (count.dynamicValueArgument) {
+        if (this.repeatingDynamicModeControl.value) {
           this.specText = this.translate.instant('alarm-rule.condition-repeat-times-dynamic', {
-            attribute: `${count.dynamicValueArgument}`
+            attribute: `${count.dynamicValueArgument ?? ''}`
           });
         } else {
           this.specText = this.translate.instant('alarm-rule.condition-repeat-times',

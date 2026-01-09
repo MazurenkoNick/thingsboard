@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -182,6 +182,7 @@ public class DefaultNotificationSettingsService implements NotificationSettingsS
             defaultNotifications.create(tenantId, DefaultNotifications.entitiesLimitForSysadmin, sysAdmins.getId());
             defaultNotifications.create(tenantId, DefaultNotifications.entitiesLimitForTenant, affectedTenantAdmins.getId());
             defaultNotifications.create(tenantId, DefaultNotifications.entitiesLimitIncreaseRequest, sysAdmins.getId());
+            defaultNotifications.create(tenantId, DefaultNotifications.addonAccessError, sysAdmins.getId());
             defaultNotifications.create(tenantId, DefaultNotifications.apiFeatureWarningForSysadmin, sysAdmins.getId());
             defaultNotifications.create(tenantId, DefaultNotifications.apiFeatureWarningForTenant, affectedTenantAdmins.getId());
             defaultNotifications.create(tenantId, DefaultNotifications.apiFeatureDisabledForSysadmin, sysAdmins.getId());
@@ -234,6 +235,9 @@ public class DefaultNotificationSettingsService implements NotificationSettingsS
             }
             if (!isNotificationConfigured(tenantId, NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST)) {
                 defaultNotifications.create(tenantId, DefaultNotifications.entitiesLimitIncreaseRequest, sysAdmins.getId());
+            }
+            if (!isNotificationConfigured(tenantId, NotificationType.ADDON_ACCESS_ERROR)) {
+                defaultNotifications.create(tenantId, DefaultNotifications.addonAccessError, sysAdmins.getId());
             }
         } else {
             NotificationTarget tenantAdmins = notificationTargetService.findNotificationTargetsByTenantIdAndUsersFilterType(tenantId, UsersFilterType.TENANT_ADMINISTRATORS)

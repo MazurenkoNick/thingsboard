@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -275,6 +275,14 @@ public class AlarmRuleState {
             durationCheckFuture.cancel(true);
             durationCheckFuture = null;
         }
+    }
+
+    public void setDurationCheckFuture(ScheduledFuture<?> durationCheckFuture) {
+        if (this.durationCheckFuture != null) {
+            log.warn("Setting new duration check future while previous is not null for state {}", this, new RuntimeException("stacktrace"));
+            this.durationCheckFuture.cancel(true);
+        }
+        this.durationCheckFuture = durationCheckFuture;
     }
 
     public boolean isEmpty() {

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -57,6 +57,9 @@ import { FormGroup } from '@angular/forms';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { Operation } from '@shared/models/security.models';
 import { TenantId } from '@shared/models/id/tenant-id';
+import { AssetInfo } from '@shared/models/asset.models';
+import { DeviceInfo } from '@shared/models/device.models';
+import { NULL_UUID } from '@shared/models/id/has-uuid';
 
 export interface CalculatedFieldDialogData {
   value?: CalculatedField;
@@ -68,6 +71,7 @@ export interface CalculatedFieldDialogData {
   additionalDebugActionConfig: AdditionalDebugActionConfig<(calculatedField: CalculatedField) => void>;
   getTestScriptDialogFn: CalculatedFieldTestScriptFn;
   isDirty?: boolean;
+  disabledSelectType?: boolean;
   readonly: boolean;
 }
 
@@ -126,6 +130,7 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
           this.fieldFormGroup.get('configuration').disable({emitEvent: false});
         } else {
           this.fieldFormGroup.get('configuration').enable({emitEvent: false});
+          this.fieldFormGroup.get('configuration').updateValueAndValidity({emitEvent: false});
         }
       });
       if (this.calculatedFieldsEntityTypeList.includes(EntityType.DEVICE_PROFILE)) {
@@ -135,6 +140,10 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
       }
     }
 
+    if (this.data.disabledSelectType) {
+      this.fieldFormGroup.get('type').disable({emitEvent: false});
+    }
+
     if (this.data.readonly) {
       this.fieldFormGroup.disable();
       this.disabledConfiguration = true;
@@ -142,7 +151,7 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
   }
 
   get fromGroupValue(): CalculatedField {
-    return deepTrim(this.fieldFormGroup.value as CalculatedField);
+    return deepTrim(this.fieldFormGroup.getRawValue() as CalculatedField);
   }
 
   cancel(): void {

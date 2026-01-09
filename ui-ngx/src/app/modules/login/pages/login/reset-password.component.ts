@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -35,6 +35,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserPasswordPolicy } from '@shared/models/settings.models';
 import { passwordsMatchValidator, passwordStrengthValidator } from '@shared/models/password.models';
+import { finalize } from 'rxjs/operators';
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 @Component({
@@ -83,10 +84,9 @@ export class ResetPasswordComponent {
       this.resetPassword.markAllAsTouched();
     } else {
       this.isLoading = true;
-      this.authService.resetPassword(this.resetToken, this.resetPassword.get('newPassword').value).subscribe({
-        next: () => this.router.navigateByUrl('login'),
-        error: () => {this.isLoading = false;}
-      });
+      this.authService.resetPassword(this.resetToken, this.resetPassword.get('newPassword').value).pipe(
+        finalize(() => {this.isLoading = false})
+      ).subscribe(() => this.router.navigateByUrl('login'));
     }
   }
 }

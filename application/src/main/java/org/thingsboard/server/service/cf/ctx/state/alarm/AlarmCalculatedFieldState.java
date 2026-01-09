@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -165,7 +165,8 @@ public class AlarmCalculatedFieldState extends BaseCalculatedFieldState {
                 clearRuleState = null;
             }
         }
-        log.debug("Initialized create rule states {} and clear rule state {} for {}", createRuleStates, clearRuleState, configuration);
+        log.debug("Initialized create rule states {} and clear rule state {} for {}. Restored: {}, reeval needed: {}",
+                createRuleStates, clearRuleState, configuration, restored, reevalNeeded);
 
         if (reevalNeeded.get()) {
             initCurrentAlarm(ctx);
@@ -239,17 +240,17 @@ public class AlarmCalculatedFieldState extends BaseCalculatedFieldState {
     }
 
     @Override
-    protected boolean updateEntry(ArgumentEntry existingArgumentEntry, ArgumentEntry newArgumentEntry) {
+    protected boolean updateEntry(ArgumentEntry existingArgumentEntry, ArgumentEntry newArgumentEntry, CalculatedFieldCtx ctx) {
         if (!(existingArgumentEntry instanceof SingleValueArgumentEntry existingEntry) ||
             !(newArgumentEntry instanceof SingleValueArgumentEntry newEntry)) {
-            return super.updateEntry(existingArgumentEntry, newArgumentEntry);
+            return super.updateEntry(existingArgumentEntry, newArgumentEntry, ctx);
         }
         if (newEntry.getTs() < existingEntry.getTs()) {
             if (existingEntry.isDefaultValue()) {
                 existingEntry.setTs(newEntry.getTs());
             }
         }
-        return super.updateEntry(existingEntry, newEntry);
+        return super.updateEntry(existingEntry, newEntry, ctx);
     }
 
     public void processAlarmAction(Alarm alarm, ActionType action) {

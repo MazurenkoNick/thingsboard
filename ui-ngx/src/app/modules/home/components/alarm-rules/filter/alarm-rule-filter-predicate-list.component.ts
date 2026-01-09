@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -94,6 +94,8 @@ export class AlarmRuleFilterPredicateListComponent implements ControlValueAccess
   @Input() arguments: Record<string, CalculatedFieldArgument>;
 
   @Input() argumentInUse: string;
+
+  @Input() readonly: boolean;
 
   filterListFormGroup = this.fb.group({
     predicates: this.fb.array([])

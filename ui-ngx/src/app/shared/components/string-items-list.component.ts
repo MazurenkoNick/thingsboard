@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -225,8 +225,8 @@ export class StringItemsListComponent implements ControlValueAccessor, OnInit {
 
   addOnBlur(event: FocusEvent) {
     const target: HTMLElement = event.relatedTarget as HTMLElement;
-    if (target?.tagName !== 'MAT-OPTION') {
-      this.addItem(this.stringItemInput.nativeElement.value ?? '')
+    if ((target && target.tagName !== 'MAT-OPTION') || this.allowUserValue) {
+      this.addItem(this.stringItemInput.nativeElement.value ?? '');
     }
     this.onTouched();
   }

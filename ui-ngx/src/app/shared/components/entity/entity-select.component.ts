@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, DestroyRef, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
+import { Component, DestroyRef, EventEmitter, forwardRef, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
@@ -43,6 +43,7 @@ import { coerceBoolean } from '@shared/decorators/coercion';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatFormFieldAppearance } from '@angular/material/form-field';
 import { BaseData } from '@shared/models/base-data';
+import { EntityAutocompleteComponent } from '@shared/components/entity/entity-autocomplete.component';
 
 @Component({
   selector: 'tb-entity-select',
@@ -55,6 +56,8 @@ import { BaseData } from '@shared/models/base-data';
   }]
 })
 export class EntitySelectComponent implements ControlValueAccessor, OnInit {
+
+  @ViewChild('entityAutocompleteComponent') entityAutocompleteComponent!: EntityAutocompleteComponent;
 
   entitySelectFormGroup: UntypedFormGroup;
 
@@ -87,10 +90,13 @@ export class EntitySelectComponent implements ControlValueAccessor, OnInit {
   useEntityDisplayName = false;
 
   @Input()
-  filterAllowedEntityTypes: boolean;
+  filterAllowedEntityTypes = true;
 
   @Input()
   defaultEntityType: AliasEntityType | EntityType;
+
+  @Input()
+  entityTypeLabel: string;
 
   @Output()
   entityChanged = new EventEmitter<BaseData<EntityId>>();
@@ -99,7 +105,7 @@ export class EntitySelectComponent implements ControlValueAccessor, OnInit {
 
   AliasEntityType = AliasEntityType;
 
-  entityTypeNullUUID: Set<AliasEntityType | EntityType | string> = new Set([
+  entityTypeNullUUID = new Set<AliasEntityType | EntityType | string>([
     AliasEntityType.CURRENT_TENANT, AliasEntityType.CURRENT_USER, AliasEntityType.CURRENT_USER_OWNER
   ]);
 
@@ -219,5 +225,9 @@ export class EntitySelectComponent implements ControlValueAccessor, OnInit {
 
   changeEntity(entity: BaseData<EntityId>): void {
     this.entityChanged.emit(entity);
+  }
+
+  entityAutocompleteMarkAsTouched() {
+    this.entityAutocompleteComponent.markAsTouched();
   }
 }

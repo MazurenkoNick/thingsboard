@@ -2,7 +2,7 @@
 
     ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 
-    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+    Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 
     NOTICE: All information contained herein is, and remains
     the property of ThingsBoard, Inc. and its suppliers,
@@ -61,7 +61,7 @@
                   {{ dayOfWeekTranslationsArray[day] | translate }}
                 </mat-chip-option>
               </mat-chip-listbox>
-              <tb-error class="block mb-2" [error]="alarmScheduleForm.get('staticValue.daysOfWeek').hasError('required')
+              <tb-error class="mb-2 block" [error]="alarmScheduleForm.get('staticValue.daysOfWeek').hasError('required')
                     ? ('alarm-rule.schedule-days-of-week-required' | translate) : ''"></tb-error>
               <div class="flex flex-row xs:flex-col gt-xs:gap-2">
                 <div class="flex flex-row gap-2 gt-md:flex-1">
@@ -78,7 +78,7 @@
                     <input required matInput formControlName="endsOn" [matDatetimepicker]="endTimePicker">
                   </mat-form-field>
                 </div>
-                <div class="flex flex-1 items-center justify-center mb-[22px]">
+                <div class="flex flex-1 items-center justify-center" style="margin-bottom: 22px;">
                   <div class="text-center" [innerHTML]="getSchedulerRangeText(alarmScheduleForm.get('staticValue'))"></div>
                 </div>
               </div>
@@ -105,7 +105,7 @@
                       <input required matInput formControlName="endsOn" [matDatetimepicker]="endTimePicker">
                     </mat-form-field>
                   </div>
-                  <div class="flex flex-1 items-center justify-center sm:max-w-[120px] text-center"
+                  <div class="flex flex-1 items-center justify-center text-center sm:max-w-[120px]"
                        [innerHTML]="getSchedulerRangeText(itemsSchedulerForm.at(day))">
                   </div>
                 </div>

@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -92,8 +92,6 @@ public class EdgeStatsIntegrationTest extends AbstractEdgeTest {
             assertEquals(EXPECTED_MSGS_PERMANENTLY_FAILED, counters.getMsgsPermanentlyFailed().get());
             assertEquals(EXPECTED_MSGS_TMP_FAILED, counters.getMsgsTmpFailed().get());
         });
-
-        Thread.sleep(1000);
 
         // WHEN
         edgeStatsService.reportStats();

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -88,6 +88,7 @@ export class CalculatedFieldGeofencingZoneGroupsPanelComponent implements OnInit
   @Input() ownerId: EntityId;
   @Input() calculatedFieldType: CalculatedFieldType;
   @Input() usedNames: string[];
+  @Input() readonly = false;
 
   @ViewChild('entityAutocomplete') entityAutocomplete: EntityAutocompleteComponent;
 
@@ -177,6 +178,10 @@ export class CalculatedFieldGeofencingZoneGroupsPanelComponent implements OnInit
 
     this.currentEntityFilter = getCalculatedFieldCurrentEntityFilter(this.entityName, this.entityId);
     this.updateEntityFilter(this.zone.refEntityId?.entityType);
+
+    if (this.readonly) {
+      this.geofencingFormGroup.disable({emitEvent: false});
+    }
   }
 
   fetchOptions(searchText: string): Observable<Array<string>> {
@@ -320,6 +325,7 @@ export class CalculatedFieldGeofencingZoneGroupsPanelComponent implements OnInit
 
   removeKey(index: number) {
     this.levelsFormArray().removeAt(index);
+    this.levelsFormArray().markAsDirty();
   }
 
   addKey() {
@@ -337,6 +343,6 @@ export class CalculatedFieldGeofencingZoneGroupsPanelComponent implements OnInit
   }
 
   get dragEnabled(): boolean {
-    return this.levelsFormArray().controls.length > 1;
+    return this.levelsFormArray().controls.length > 1 && !this.readonly;
   }
 }

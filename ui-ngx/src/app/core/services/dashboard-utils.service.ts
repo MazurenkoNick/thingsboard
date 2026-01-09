@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -73,8 +73,7 @@ import {
   WidgetConfigMode,
   WidgetSize,
   widgetType,
-  WidgetTypeDescriptor,
-  widgetTypeHasTimewindow
+  WidgetTypeDescriptor
 } from '@app/shared/models/widget.models';
 import { EntityType } from '@shared/models/entity-type.models';
 import { AliasFilterType, EntityAlias, EntityAliasFilter } from '@app/shared/models/alias.models';
@@ -90,7 +89,11 @@ import { MediaBreakpoints } from '@shared/models/constants';
 import { TranslateService } from '@ngx-translate/core';
 import { DashboardPageLayout } from '@home/components/dashboard-page/dashboard-page.models';
 import { maxGridsterCol, maxGridsterRow } from '@home/models/dashboard-component.models';
-import { findWidgetModelDefinition } from '@shared/models/widget/widget-model.definition';
+import {
+  findWidgetModelDefinition,
+  widgetHasTimewindow,
+  WidgetModelDefinition
+} from '@shared/models/widget/widget-model.definition';
 
 @Injectable({
   providedIn: 'root'
@@ -263,7 +266,12 @@ export class DashboardUtilsService {
   }
 
   public validateAndUpdateWidget(widget: Widget): Widget {
-    widget.config = this.validateAndUpdateWidgetConfig(widget.config, widget.type);
+    const widgetDefinition = widget.config ? findWidgetModelDefinition(widget) : null;
+    if (widgetDefinition) {
+      widget.config = this.validateAndUpdateWidgetConfigWithModelDefinition(widget, widgetDefinition);
+    } else {
+      widget.config = this.validateAndUpdateWidgetConfig(widget.config, widget.type);
+    }
     widget = this.validateAndUpdateWidgetTypeFqn(widget);
     this.removeTimewindowConfigIfUnused(widget);
     if (isDefined((widget as any).title)) {
@@ -383,25 +391,25 @@ export class DashboardUtilsService {
     return deepClean(widgetConfig, {cleanKeys: ['_hash'], cleanOnlyKey: true});
   }
 
+  public validateAndUpdateWidgetConfigWithModelDefinition(widget: Widget, widgetDefinition: WidgetModelDefinition): WidgetConfig {
+    const widgetConfig = widget.config;
+    if (widget.type === widgetType.latest && widgetDefinition.hasTimewindow(widget)) {
+      widgetConfig.timewindow = initModelFromDefaultTimewindow(widgetConfig.timewindow, true,
+        widgetDefinition.datasourcesHasOnlyComparisonAggregation(widget), this.timeService, false);
+    }
+    return deepClean(widgetConfig, {cleanKeys: ['_hash'], cleanOnlyKey: true});
+  }
+
   private removeTimewindowConfigIfUnused(widget: Widget) {
-    const widgetHasTimewindow = this.widgetHasTimewindow(widget);
-    if (!widgetHasTimewindow || widget.config.useDashboardTimewindow) {
+    const hasTimewindow = widgetHasTimewindow(widget);
+    if (!hasTimewindow || widget.config.useDashboardTimewindow) {
       delete widget.config.displayTimewindow;
       delete widget.config.timewindow;
 
-      if (!widgetHasTimewindow) {
+      if (!hasTimewindow) {
         delete widget.config.useDashboardTimewindow;
       }
     }
-  }
-
-  private widgetHasTimewindow(widget: Widget): boolean {
-    const widgetDefinition = findWidgetModelDefinition(widget);
-    if (widgetDefinition) {
-      return widgetDefinition.hasTimewindow(widget);
-    }
-    return widgetTypeHasTimewindow(widget.type)
-      || (widget.type === widgetType.latest && datasourcesHasAggregation(widget.config.datasources));
   }
 
   public prepareWidgetForSaving(widget: Widget): Widget {

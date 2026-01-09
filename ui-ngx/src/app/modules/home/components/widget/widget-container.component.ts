@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -170,8 +170,8 @@ export class WidgetContainerComponent extends PageComponent implements OnInit, O
     this.widget.widgetContext.containerChangeDetector = this.cd;
     const cssString = this.widget.widget.config.widgetCss;
     if (isNotEmptyStr(cssString)) {
-      this.cssClass =
-        this.utils.applyCssToElement(this.renderer, this.gridsterItem.el, 'tb-widget-css', cssString);
+      this.cssClass = this.utils.applyCssToElement(this.renderer, this.gridsterItem.el, 'tb-widget-css', cssString, true);
+      this.widget.widgetContext.widgetCssClass = this.cssClass;
     }
     $(this.gridsterItem.el).on('mousedown', (e) => this.onMouseDown(e.originalEvent));
     $(this.gridsterItem.el).on('click', (e) => this.onClicked(e.originalEvent));
@@ -239,7 +239,7 @@ export class WidgetContainerComponent extends PageComponent implements OnInit, O
   widgetActionAbsolute(widgetComponent: WidgetComponent, absolute = false) {
     return absolute ? true :
       !(this.widget.showWidgetTitlePanel && !widgetComponent.widgetContext?.embedTitlePanel &&
-        (this.widget.showTitle||this.widget.hasAggregation)) && !widgetComponent.widgetContext?.embedActionsPanel;
+        (this.widget.showTitle||this.widget.hasTimewindow)) && !widgetComponent.widgetContext?.embedActionsPanel;
   }
 
   onClicked(event: MouseEvent): void {

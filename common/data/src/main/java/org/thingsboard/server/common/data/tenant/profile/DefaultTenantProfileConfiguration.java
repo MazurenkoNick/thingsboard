@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -200,8 +200,8 @@ public class DefaultTenantProfileConfiguration implements TenantProfileConfigura
 
     private double warnThreshold;
 
-    @Schema(example = "5")
-    private long maxCalculatedFieldsPerEntity = 5;
+    @Schema(example = "100")
+    private long maxCalculatedFieldsPerEntity = 100;
     @Schema(example = "10")
     private long maxArgumentsPerCF = 10;
     @Schema(example = "60")
@@ -211,17 +211,17 @@ public class DefaultTenantProfileConfiguration implements TenantProfileConfigura
     @Positive
     private int maxRelationLevelPerCfArgument = 10;
     @Builder.Default
-    @Schema(example = "100")
+    @Schema(example = "1000")
     @Positive
-    private int maxRelatedEntitiesToReturnPerCfArgument = 100;
+    private int maxRelatedEntitiesToReturnPerCfArgument = 1000;
     @Builder.Default
     @Positive
     @Schema(example = "1000")
     private long maxDataPointsPerRollingArg = 1000;
+    @Schema(example = "512")
+    private long maxStateSizeInKBytes = 512;
     @Schema(example = "32")
-    private long maxStateSizeInKBytes = 32;
-    @Schema(example = "2")
-    private long maxSingleValueArgumentSizeInKBytes = 2;
+    private long maxSingleValueArgumentSizeInKBytes = 32;
     @Schema(example = "10")
     private long minAllowedDeduplicationIntervalInSecForCF = 10;
     @Schema(example = "60")

@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -163,6 +163,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             ctx.prepareCtx(startTs, endTs);
             ctx.processData(startTs, endTs);
             ctx.awaitResults();
+            ctx.validateTaskResult();
         }
     }
 
@@ -330,6 +331,8 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
 
         Future<CalculatedFieldResult> performCalculation(CalculatedFieldState state) throws Exception;
 
+        void validateTaskResult();
+
         void close();
 
     }
@@ -357,10 +360,12 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             this.ctxId = new CalculatedFieldEntityCtxId(tenantId, cfId, entityId);
         }
 
+        @Override
         public void processInitialState(long startTs) throws Exception {
             processStateIfReady(this, startTs).get();
         }
 
+        @Override
         public void checkStateSize() {
             state.checkStateSize(ctxId, cfCtx.getMaxStateSize());
             if (!state.isSizeOk()) {
@@ -375,6 +380,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             }
         }
 
+        @Override
         public void awaitResults() throws InterruptedException {
             for (Future<Void> resultFuture : resultFutures) {
                 if (Thread.interrupted()) {
@@ -388,6 +394,13 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             }
             log.debug("[{}][{}] Saved {} CF results", tenantId, entityId, resultFutures.size());
             resultFutures.clear();
+        }
+
+        @Override
+        public void validateTaskResult() {
+            if (!state.isReady()) {
+                throw new IllegalStateException(state.getReadinessStatus().errorMsg());
+            }
         }
 
         @Override
@@ -409,6 +422,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             super(tenantId, entityId, cfCtx, state);
         }
 
+        @Override
         public void processInitialState(long startTs) {}
 
         @Override
@@ -457,6 +471,13 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         public void close() {
             super.close();
             intervals.clear();
+        }
+
+        @Override
+        public void validateTaskResult() {
+            if (latestResult == null) {
+                throw new IllegalStateException("Time series data aggregation for selected reprocessing time window has no results!");
+            }
         }
 
     }

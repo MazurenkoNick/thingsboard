@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -79,6 +79,8 @@ export class ActionGuard {
           let actionObservable: Observable<any> = of(null);
           if (path === 'action.entitiesLimitIncreaseRequest') {
             actionObservable = this.performEntitiesLimitIncreaseRequest(authState, lastChild);
+          } else if (path === 'action.addonAccessError') {
+            actionObservable = this.performAddonAccessError(authState, lastChild);
           }
           return actionObservable.pipe(
             mergeMap(() => {
@@ -106,6 +108,22 @@ export class ActionGuard {
           mergeMap(() => this.dialogs.alert(
             this.translate.instant('entity.increase-limit-request-sent-title'),
             this.translate.instant('entity.increase-limit-request-sent-text'),
+            this.translate.instant('action.close')
+          ))
+        );
+      }
+    }
+    return of(null);
+  }
+
+  performAddonAccessError(authState: AuthState, route: ActivatedRouteSnapshot): Observable<any> {
+    if (authState.authUser.authority === Authority.TENANT_ADMIN) {
+      const addonType = route.queryParams.addonType;
+      if (addonType) {
+        return this.notificationService.sendAddonAccessError(addonType).pipe(
+          mergeMap(() => this.dialogs.alert(
+            this.translate.instant('trendz-analytics.service-unavailable-request-sent-title'),
+            this.translate.instant('trendz-analytics.service-unavailable-request-sent-message'),
             this.translate.instant('action.close')
           ))
         );

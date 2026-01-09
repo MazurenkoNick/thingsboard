@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -174,7 +174,7 @@ public class SingleValueArgumentEntry implements ArgumentEntry {
     }
 
     @Override
-    public boolean updateEntry(ArgumentEntry entry) {
+    public boolean updateEntry(ArgumentEntry entry, CalculatedFieldCtx ctx) {
         if (entry instanceof SingleValueArgumentEntry singleValueEntry) {
             if (singleValueEntry.getTs() < this.ts) {
                 return false;

@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -522,7 +522,7 @@ public class EdgeImitator {
         Optional<T> result;
         lock.lock();
         try {
-            result = (Optional<T>) downlinkMsgs.stream().filter(downlinkMsg -> downlinkMsg.getClass().isAssignableFrom(tClass)).findAny();
+            result = (Optional<T>) downlinkMsgs.stream().filter(downlinkMsg -> tClass.isAssignableFrom(downlinkMsg.getClass())).findAny();
         } finally {
             lock.unlock();
         }
@@ -534,7 +534,7 @@ public class EdgeImitator {
         List<T> result;
         lock.lock();
         try {
-            result = (List<T>) downlinkMsgs.stream().filter(downlinkMsg -> downlinkMsg.getClass().isAssignableFrom(tClass)).collect(Collectors.toList());
+            result = (List<T>) downlinkMsgs.stream().filter(downlinkMsg -> tClass.isAssignableFrom(downlinkMsg.getClass())).collect(Collectors.toList());
         } finally {
             lock.unlock();
         }

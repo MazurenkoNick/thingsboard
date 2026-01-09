@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -94,6 +94,8 @@ export class PropagationConfigurationComponent implements ControlValueAccessor, 
 
   @Input({required: true})
   testScript: () => Observable<string>;
+
+  @Input({transform: booleanAttribute}) isEditValue = true;
 
   propagateConfiguration = this.fb.group({
     arguments: this.fb.control({}, notEmptyObjectValidator()),

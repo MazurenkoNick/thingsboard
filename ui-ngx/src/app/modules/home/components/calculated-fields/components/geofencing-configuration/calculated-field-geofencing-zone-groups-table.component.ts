@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -99,6 +99,7 @@ export class CalculatedFieldGeofencingZoneGroupsTableComponent implements Contro
   @Input({required: true}) entityName: string;
   @Input({required: true}) ownerId: EntityId;
   @Input({ transform: booleanAttribute }) readonly: boolean;
+  @Input({transform: booleanAttribute}) isEditValue = true;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
@@ -164,7 +165,7 @@ export class CalculatedFieldGeofencingZoneGroupsTableComponent implements Contro
     this.zoneGroupsFormArray.markAsDirty();
   }
 
-  manageZone($event: Event, matButton: MatButton, zone = {} as CalculatedFieldGeofencingValue): void {
+  manageZone($event: Event, matButton: MatButton, zone = {} as CalculatedFieldGeofencingValue, readonly: boolean = false): void {
     $event?.stopPropagation();
     if (this.popoverComponent && !this.popoverComponent.tbHidden) {
       this.popoverComponent.hide();
@@ -184,6 +185,7 @@ export class CalculatedFieldGeofencingZoneGroupsTableComponent implements Contro
         entityName: this.entityName,
         ownerId: this.ownerId,
         usedNames: this.zoneGroupsFormArray.value.map(({ name }) => name).filter(name => name !== zone.name),
+        readonly
       };
       this.popoverComponent = this.popoverService.displayPopover({
         trigger,

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -79,6 +79,8 @@ export class AlarmRuleComplexFilterPredicateDialogComponent extends
 
   arguments = this.data.arguments;
 
+  readonly = this.data.readonly;
+
   constructor(protected store: Store<AppState>,
               protected router: Router,
               @Inject(MAT_DIALOG_DATA) public data: AlarmRuleComplexFilterPredicateDialogData,
@@ -89,7 +91,8 @@ export class AlarmRuleComplexFilterPredicateDialogComponent extends
     this.isAdd = this.data.isAdd;
 
     this.complexFilterFormGroup.patchValue(this.data.complexPredicate, {emitEvent: false});
-    if (this.data.readonly) {
+
+    if (this.readonly) {
       this.complexFilterFormGroup.disable({emitEvent: false});
     }
   }

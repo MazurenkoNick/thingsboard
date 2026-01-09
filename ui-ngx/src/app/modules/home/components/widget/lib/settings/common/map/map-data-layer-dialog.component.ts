@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -511,7 +511,7 @@ export class MapDataLayerDialogComponent extends DialogComponent<MapDataLayerDia
     const targetDataKey: DataKey = this.dataLayerFormGroup.get(keyType).value;
     this.context.editKey(targetDataKey,
       this.dataLayerFormGroup.get('dsDeviceId').value, this.dataLayerFormGroup.get('dsEntityAliasId').value,
-      this.dataLayerType === 'trips' ? widgetType.timeseries : widgetType.latest).subscribe(
+      this.dataLayerType === 'trips' ? widgetType.timeseries : widgetType.latest, false).subscribe(
       (updatedDataKey) => {
         if (updatedDataKey) {
           this.dataLayerFormGroup.get(keyType).patchValue(updatedDataKey);

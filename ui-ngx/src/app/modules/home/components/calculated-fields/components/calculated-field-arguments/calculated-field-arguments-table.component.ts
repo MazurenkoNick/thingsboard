@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -105,6 +105,7 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
   @Input() isScript: boolean;
   @Input({transform: booleanAttribute}) disable = false;
   @Input({transform: booleanAttribute}) readonly: boolean;
+  @Input({transform: booleanAttribute}) isEditValue = true;
   @Input() watchKeyChange = false;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
@@ -170,7 +171,7 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
 
   validate(): ValidationErrors | null {
     this.updateErrorText();
-    return this.errorText ? { argumentsFormArray: false } : null;
+    return this.errorText || !this.argumentsFormArray.controls.length ? { argumentsFormArray: false } : null;
   }
 
   setDisabledState(isDisabled: boolean): void {
@@ -184,7 +185,7 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
     this.argumentsFormArray.markAsDirty();
   }
 
-  manageArgument($event: Event, matButton: MatButton, argument = {} as CalculatedFieldArgumentValue): void {
+  manageArgument($event: Event, matButton: MatButton, argument = {} as CalculatedFieldArgumentValue, readonly: boolean = false): void {
     $event?.stopPropagation();
     if (this.popoverComponent && !this.popoverComponent.tbHidden) {
       this.popoverComponent.hide();
@@ -206,6 +207,7 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
         ownerId: this.ownerId,
         watchKeyChange: this.watchKeyChange,
         usedArgumentNames: this.argumentsFormArray.value.map(({ argumentName }) => argumentName).filter(name => name !== argument.argumentName),
+        readonly
       };
       this.popoverComponent = this.popoverService.displayPopover({
         trigger,

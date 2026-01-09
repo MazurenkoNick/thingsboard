@@ -2,7 +2,7 @@
 
     ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 
-    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+    Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 
     NOTICE: All information contained herein is, and remains
     the property of ThingsBoard, Inc. and its suppliers,
@@ -61,7 +61,7 @@
               </mat-icon>
             }
           </mat-form-field>
-          <mat-form-field class="flex-1 tb-value-type" appearance="outline" subscriptSizing="dynamic" hideRequiredMarker>
+          <mat-form-field class="tb-value-type flex-1" appearance="outline" subscriptSizing="dynamic" hideRequiredMarker>
             <mat-label translate>filter.value-type.value-type</mat-label>
             <mat-select formControlName="valueType">
               <mat-select-trigger>
@@ -108,7 +108,7 @@
             cdkFocusInitial>
       {{ 'action.cancel' | translate }}
     </button>
-    @if (!data.readonly) {
+    @if (!readonly) {
       <button mat-raised-button color="primary"
               type="submit"
               [disabled]="filterFormGroup.invalid || !filterFormGroup.dirty || !predicatesValid">

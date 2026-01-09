@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -621,6 +621,7 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
       const cssParser = new cssjs();
       cssParser.testMode = false;
       this.dashboardPageClass  = 'tb-dashboard-page-css-' + guid();
+      this.dashboardCtx.dashboardCssClass = this.dashboardPageClass;
       cssParser.cssPreviewNamespace = 'tb-default .' + this.dashboardPageClass;
       cssParser.createStyleElement(this.dashboardPageClass, cssString);
     }

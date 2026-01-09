@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -110,7 +110,7 @@ public class DeviceConnectivityControllerTest extends AbstractControllerTest {
     private DeviceProfileId mqttDeviceProfileId;
     private DeviceProfileId coapDeviceProfileId;
 
-    @Value("${device.connectivity.gateway.image_version:3.7-stable}")
+    @Value("${device.connectivity.gateway.image_version:3.8-stable}")
     private String gatewayImageVersion;
 
     @Before

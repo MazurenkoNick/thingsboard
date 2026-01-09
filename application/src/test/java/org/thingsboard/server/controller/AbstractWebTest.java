@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -1314,7 +1314,7 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
 
     protected void createEntityRelation(EntityId entityIdFrom, EntityId entityIdTo, String typeRelation) throws Exception {
         EntityRelation relation = new EntityRelation(entityIdFrom, entityIdTo, typeRelation);
-        doPost("/api/relation", relation);
+        doPost("/api/relation", relation).andExpect(status().isOk());
     }
 
     protected void deleteEntityRelation(EntityRelation entityRelation) throws Exception {

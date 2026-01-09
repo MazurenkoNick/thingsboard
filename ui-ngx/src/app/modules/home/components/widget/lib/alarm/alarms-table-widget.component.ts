@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -1029,7 +1029,7 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
       (AlarmDetailsDialogComponent,
         {
           disableClose: true,
-          panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+          panelClass: ['tb-dialog', 'tb-fullscreen-dialog', this.ctx.stateController.dashboardCtrl.dashboardCtx.dashboardCssClass, this.ctx.widgetCssClass],
           data: {
             alarmId: alarm.id.id,
             alarm,

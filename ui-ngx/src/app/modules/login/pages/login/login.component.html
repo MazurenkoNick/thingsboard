@@ -2,7 +2,7 @@
 
     ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 
-    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+    Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 
     NOTICE: All information contained herein is, and remains
     the property of ThingsBoard, Inc. and its suppliers,
@@ -41,9 +41,9 @@
             <section class="version center"
                        *ngIf="(wl.loginShowNameVersion$ | async) && (wl.showNameBottom$ | async) === false" [innerHTML]="platformNameAndVersion$() | async"></section>
           </div>
-          <mat-progress-bar color="warn" mode="indeterminate" *ngIf="isLoading">
+          <mat-progress-bar color="warn" mode="indeterminate" *ngIf="isLoading || (isLoading$ | async)">
           </mat-progress-bar>
-          <span style="height: 4px;" *ngIf="!isLoading"></span>
+          <span style="height: 4px;" *ngIf="!isLoading && !(isLoading$ | async)"></span>
           <span tb-toast style="height: 20px;"></span>
           <div class="flex flex-col">
             @if(oauth2Clients?.length) {
@@ -89,7 +89,7 @@
               <tb-toggle-password matSuffix></tb-toggle-password>
               <mat-icon matPrefix>lock</mat-icon>
             </mat-form-field>
-            <button mat-flat-button color="accent" [disabled]="isLoading"
+            <button mat-flat-button color="accent" [disabled]="isLoading || (isLoading$ | async)"
                     class="tb-action-button" type="submit">{{ 'login.sign-in' | translate }}</button>
             <div class="forgot-password flex items-center justify-between gap-5">
               @if(selfRegistrationService.signUpParams?.activate) {

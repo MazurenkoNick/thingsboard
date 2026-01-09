@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -367,7 +367,7 @@ export abstract class TbMap<S extends BaseMapSettings> {
             const dataLayersSubscriptionOptions: WidgetSubscriptionOptions = {
               datasources,
               hasDataPageLink: true,
-              useDashboardTimewindow: false,
+              useDashboardTimewindow: this.ctx.widgetConfig.useDashboardTimewindow ?? true,
               type: widgetType.latest,
               callbacks: {
                 onDataUpdated: (subscription) => {
@@ -379,6 +379,9 @@ export abstract class TbMap<S extends BaseMapSettings> {
                 }
               }
             };
+            if (!dataLayersSubscriptionOptions.useDashboardTimewindow) {
+              dataLayersSubscriptionOptions.timeWindowConfig = this.ctx.widgetConfig.timewindow;
+            }
             this.ctx.subscriptionApi.createSubscription(dataLayersSubscriptionOptions, false).subscribe(
               (dataLayersSubscription) => {
                 this.dataLayersSubscription = dataLayersSubscription;

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, DestroyRef, Inject, ViewEncapsulation } from '@angular/core';
+import { Component, DestroyRef, Inject, ViewChild, ViewEncapsulation } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
@@ -60,6 +60,7 @@ import { RelationTypes } from "@shared/models/relation.models";
 import { StringItemsOption } from "@shared/components/string-items-list.component";
 import { BaseData } from "@shared/models/base-data";
 import { CalculatedFieldFormService } from '@core/services/calculated-field-form.service';
+import { EntitySelectComponent } from '@shared/components/entity/entity-select.component';
 import { TenantId } from '@shared/models/id/tenant-id';
 
 export interface AlarmRuleDialogData {
@@ -82,6 +83,8 @@ export interface AlarmRuleDialogData {
   encapsulation: ViewEncapsulation.None
 })
 export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogComponent, CalculatedField> {
+
+  @ViewChild('entitySelect') entitySelect!: EntitySelectComponent;
 
   fieldFormGroup: FormGroup ;
 
@@ -207,6 +210,7 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
         });
     } else {
       this.fieldFormGroup.get('name').markAsTouched();
+      this.entitySelect.entityAutocompleteMarkAsTouched();
     }
   }
 

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -164,7 +164,7 @@ export enum TrendzViewType {
 
 export const getMetricLink = (metric: MetricSummaryItem) => {
     const metricId = metric.metricData?.metricId ?? metric.fieldData?.fieldId;
-    return `/trendz/metricExplorer?itemId=${encodeURIComponent(metric.itemId)}&metricId=${encodeURIComponent(metricId)}`;
+    return `/trendz/metric-explorer?itemId=${encodeURIComponent(metric.itemId)}&metricId=${encodeURIComponent(metricId)}`;
 }
 
 export interface TrendzConfiguration {

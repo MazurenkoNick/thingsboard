@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -32,7 +32,13 @@
 import { EntityAliases, EntityAliasInfo, getEntityAliasId } from '@shared/models/alias.models';
 import { FilterInfo, Filters, getFilterId } from '@shared/models/query/query.models';
 import { Dashboard } from '@shared/models/dashboard.models';
-import { Datasource, datasourcesHasAggregation, DatasourceType, Widget } from '@shared/models/widget.models';
+import {
+  Datasource,
+  datasourcesHasAggregation,
+  datasourcesHasOnlyComparisonAggregation,
+  DatasourceType,
+  Widget
+} from '@shared/models/widget.models';
 import {
   additionalMapDataSourcesToDatasources,
   BaseMapSettings,
@@ -147,21 +153,17 @@ export const MapModelDefinition: WidgetModelDefinition<MapDatasourcesInfo> = {
     if (settings.trips?.length) {
       return true;
     } else {
-      const datasources: Datasource[] = [];
-      if (settings.markers?.length) {
-        datasources.push(...getMapDataLayersDatasources(settings.markers, true, 'markers'));
-      }
-      if (settings.polygons?.length) {
-        datasources.push(...getMapDataLayersDatasources(settings.polygons, true, 'polygons'));
-      }
-      if (settings.circles?.length) {
-        datasources.push(...getMapDataLayersDatasources(settings.circles, true, 'circles'));
-      }
-      if (settings.additionalDataSources?.length) {
-        datasources.push(...additionalMapDataSourcesToDatasources(settings.additionalDataSources));
-      }
+      const datasources: Datasource[] = getMapLatestDataLayersDatasources(settings);
       return datasourcesHasAggregation(datasources);
     }
+  },
+  datasourcesHasAggregation(widget: Widget): boolean {
+    const datasources: Datasource[] = getMapLatestDataLayersDatasources(widget.config.settings as BaseMapSettings);
+    return datasourcesHasAggregation(datasources);
+  },
+  datasourcesHasOnlyComparisonAggregation(widget: Widget): boolean {
+    const datasources: Datasource[] = getMapLatestDataLayersDatasources(widget.config.settings as BaseMapSettings);
+    return datasourcesHasOnlyComparisonAggregation(datasources);
   }
 };
 
@@ -265,5 +267,22 @@ const getMapDataLayersDatasources = (settings: MapDataLayerSettings[],
       });
     }
   });
+  return datasources;
+};
+
+const getMapLatestDataLayersDatasources = (settings: BaseMapSettings): Datasource[] => {
+  const datasources: Datasource[] = [];
+  if (settings.markers?.length) {
+    datasources.push(...getMapDataLayersDatasources(settings.markers, true, 'markers'));
+  }
+  if (settings.polygons?.length) {
+    datasources.push(...getMapDataLayersDatasources(settings.polygons, true, 'polygons'));
+  }
+  if (settings.circles?.length) {
+    datasources.push(...getMapDataLayersDatasources(settings.circles, true, 'circles'));
+  }
+  if (settings.additionalDataSources?.length) {
+    datasources.push(...additionalMapDataSourcesToDatasources(settings.additionalDataSources));
+  }
   return datasources;
 };

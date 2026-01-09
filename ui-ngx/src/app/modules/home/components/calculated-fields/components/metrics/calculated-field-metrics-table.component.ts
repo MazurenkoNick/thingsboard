@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -169,7 +169,7 @@ export class CalculatedFieldMetricsTableComponent implements OnInit, ControlValu
     this.metricsFormArray.markAsDirty();
   }
 
-  manageMetrics($event: Event, matButton: MatButton, metric = {} as CalculatedFieldAggMetricValue): void {
+  manageMetrics($event: Event, matButton: MatButton, metric = {} as CalculatedFieldAggMetricValue, readonly: boolean = false): void {
     $event?.stopPropagation();
     if (this.popoverComponent && !this.popoverComponent.tbHidden) {
       this.popoverComponent.hide();
@@ -189,7 +189,8 @@ export class CalculatedFieldMetricsTableComponent implements OnInit, ControlValu
         editorCompleter: this.editorCompleter,
         highlightRules: this.highlightRules,
         simpleMode: this.simpleMode,
-        testScript: this.testScript
+        testScript: this.testScript,
+        readonly
       };
       this.popoverComponent = this.popoverService.displayPopover({
         trigger,

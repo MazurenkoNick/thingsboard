@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -108,6 +108,7 @@ export class TaskParametersPanelComponent implements OnInit, OnDestroy {
         const value = JSON.stringify(cloneConfig, null, 2);
         this.aceEditor.setValue(value, -1);
         updateEditorSize(editorElement, value, this.aceEditor, this.renderer, {showGutter: true});
+        this.renderer.setStyle(this.taskPanelElmRef.nativeElement, 'width', editorElement.style.width);
         this.popover.updatePosition();
       }
     );

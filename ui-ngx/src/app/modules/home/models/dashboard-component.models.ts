@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -30,15 +30,7 @@
 ///
 
 import { GridsterComponent, GridsterConfig, GridsterItem, GridsterItemComponentInterface } from 'angular-gridster2';
-import {
-  datasourcesHasAggregation,
-  datasourcesHasOnlyComparisonAggregation,
-  FormattedData,
-  Widget,
-  WidgetPosition,
-  widgetType,
-  WidgetExportType
-} from '@app/shared/models/widget.models';
+import { FormattedData, Widget, WidgetExportType, WidgetPosition, widgetType } from '@app/shared/models/widget.models';
 import { WidgetLayout, WidgetLayouts } from '@app/shared/models/dashboard.models';
 import { IDashboardWidget, WidgetAction, WidgetContext, WidgetHeaderAction } from './widget-component.models';
 import { Timewindow } from '@shared/models/time/time.models';
@@ -59,6 +51,11 @@ import { UtilsService } from '@core/services/utils.service';
 import { TbPopoverComponent } from '@shared/components/popover.component';
 import { ComponentStyle, iconStyle, textStyle } from '@shared/models/widget-settings.models';
 import { TbContextMenuEvent } from '@shared/models/jquery-event.models';
+import {
+  widgetDatasourcesHasAggregation,
+  widgetDatasourcesHasOnlyComparisonAggregation,
+  widgetHasTimewindow
+} from '@shared/models/widget/widget-model.definition';
 
 export interface WidgetsData {
   widgets: Array<Widget>;
@@ -639,16 +636,13 @@ export class DashboardWidget implements GridsterItem, IDashboardWidget {
       this.enableDataExport = false;
     }
 
-    let canHaveTimewindow = false;
+    const canHaveTimewindow = widgetHasTimewindow(this.widget);
     let onlyQuickInterval = false;
     let onlyHistoryTimewindow = false;
-    if (this.widget.type === widgetType.timeseries || this.widget.type === widgetType.alarm) {
-      canHaveTimewindow = true;
-    } else if (this.widget.type === widgetType.latest) {
-      canHaveTimewindow = datasourcesHasAggregation(this.widget.config.datasources);
-      onlyQuickInterval = canHaveTimewindow;
+    if (this.widget.type === widgetType.latest) {
+      onlyQuickInterval = widgetDatasourcesHasAggregation(this.widget);
       if (canHaveTimewindow) {
-        onlyHistoryTimewindow = datasourcesHasOnlyComparisonAggregation(this.widget.config.datasources);
+        onlyHistoryTimewindow = widgetDatasourcesHasOnlyComparisonAggregation(this.widget);
       }
     }
 

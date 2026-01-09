@@ -2,7 +2,7 @@
 
     ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 
-    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+    Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 
     NOTICE: All information contained herein is, and remains
     the property of ThingsBoard, Inc. and its suppliers,
@@ -81,6 +81,7 @@
       <tb-entity-select formControlName="entityId"
                         appearance="outline"
                         required
+                        entityTypeLabel="{{ 'entity.entity-type' | translate }}"
                         [filterAllowedEntityTypes]="false"
                         [allowedEntityTypes]="calculatedFieldsEntityTypeList"
                         (entityChanged)="changeEntity($event)">
@@ -88,13 +89,23 @@
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>{{ 'common.type' | translate }}</mat-label>
         <mat-select formControlName="type">
+          <mat-select-trigger>
+            {{ CalculatedFieldTypeTranslations.has(entityForm.get('type').value)
+                ? (CalculatedFieldTypeTranslations.get(entityForm.get('type').value).name | translate)
+                : entityForm.get('type').value }}
+          </mat-select-trigger>
           @for (type of fieldTypes; track type) {
-            <mat-option [value]="type">{{ CalculatedFieldTypeTranslations.get(type).name | translate }}</mat-option>
+            <mat-option [value]="type" class="py-1">
+              <span matListItemTitle>
+                {{ CalculatedFieldTypeTranslations.get(type).name | translate }}
+              </span>
+              <br>
+              <small matListItemMeta style="color: inherit">
+                {{ CalculatedFieldTypeTranslations.get(type).hint | translate }}
+              </small>
+            </mat-option>
           }
         </mat-select>
-        @if (CalculatedFieldTypeTranslations.get(entityForm.get('type').value).hint) {
-          <mat-hint>{{ CalculatedFieldTypeTranslations.get(entityForm.get('type').value).hint | translate }}</mat-hint>
-        }
       </mat-form-field>
     </div>
     @switch (entityForm.get('type').value) {
@@ -105,6 +116,7 @@
                                      [entityName]="entityName"
                                      [ownerId]="ownerId"
                                      [tenantId]="tenantId"
+                                     [isEditValue]="isEditValue"
         ></tb-geofencing-configuration>
       }
       @case (CalculatedFieldType.PROPAGATION) {
@@ -115,6 +127,7 @@
                                       [tenantId]="tenantId"
                                       [ownerId]="ownerId"
                                       [testScript]="onTestScript.bind(this)"
+                                      [isEditValue]="isEditValue"
         ></tb-propagation-configuration>
       }
       @case (CalculatedFieldType.RELATED_ENTITIES_AGGREGATION) {
@@ -124,6 +137,7 @@
                                                    [entityName]="entityName"
                                                    [tenantId]="tenantId"
                                                    [testScript]="onTestScript.bind(this)"
+                                                   [isEditValue]="isEditValue"
         ></tb-related-entities-aggregation-component>
       }
       @case (CalculatedFieldType.ENTITY_AGGREGATION) {
@@ -132,6 +146,7 @@
                                          [entityId]="entityId"
                                          [entityName]="entityName"
                                          [tenantId]="tenantId"
+                                         [isEditValue]="isEditValue"
         ></tb-entity-aggregation-component>
       }
       @default {
@@ -143,6 +158,7 @@
                                  [tenantId]="tenantId"
                                  [isScript]="entityForm.get('type').value === CalculatedFieldType.SCRIPT"
                                  [testScript]="onTestScript.bind(this)"
+                                 [isEditValue]="isEditValue"
         ></tb-simple-configuration>
       }
     }

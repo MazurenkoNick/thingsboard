@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -180,14 +180,14 @@ public class TenantProfileController extends BaseController {
                     "      \"ruleEngineExceptionsTtlDays\": 0,\n" +
                     "      \"blobEntityTtlDays\": 0,\n" +
                     "      \"warnThreshold\": 0,\n" +
-                    "      \"maxCalculatedFieldsPerEntity\": 5,\n" +
+                    "      \"maxCalculatedFieldsPerEntity\": 100,\n" +
                     "      \"maxArgumentsPerCF\": 10,\n" +
                     "      \"minAllowedScheduledUpdateIntervalInSecForCF\": 60,\n" +
                     "      \"maxRelationLevelPerCfArgument\": 10,\n" +
-                    "      \"maxRelatedEntitiesToReturnPerCfArgument\": 100,\n" +
+                    "      \"maxRelatedEntitiesToReturnPerCfArgument\": 1000,\n" +
                     "      \"maxDataPointsPerRollingArg\": 1000,\n" +
-                    "      \"maxStateSizeInKBytes\": 32,\n" +
-                    "      \"maxSingleValueArgumentSizeInKBytes\": 2," +
+                    "      \"maxStateSizeInKBytes\": 512,\n" +
+                    "      \"maxSingleValueArgumentSizeInKBytes\": 32," +
                     "      \"minAllowedDeduplicationIntervalInSecForCF\": 10," +
                     "      \"minAllowedAggregationIntervalInSecForCF\": 60," +
                     "      \"intermediateAggregationIntervalInSecForCF\": 300," +

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -161,17 +161,17 @@ export class AlarmRuleFilterListComponent implements ControlValueAccessor, Valid
     });
   }
 
-  public editFilter(index: number) {
+  public editFilter(index: number, readonly = false) {
     const filter: AlarmRuleFilter =
       (this.filterListFormGroup.get('filters') as FormArray).at(index).value;
-    this.openFilterDialog(filter).subscribe(result => {
+    this.openFilterDialog(filter, readonly).subscribe(result => {
       if (result) {
         (this.filterListFormGroup.get('filters') as FormArray).at(index).patchValue(result);
       }
     });
   }
 
-  private openFilterDialog(filter?: AlarmRuleFilter): Observable<AlarmRuleFilter> {
+  private openFilterDialog(filter?: AlarmRuleFilter, readonly = false): Observable<AlarmRuleFilter> {
     const isAdd = !filter;
     if (isAdd) {
       filter = {
@@ -190,7 +190,7 @@ export class AlarmRuleFilterListComponent implements ControlValueAccessor, Valid
         isAdd,
         arguments: this.arguments,
         usedArguments: this.getUsedArguments,
-        readonly: this.readonly,
+        readonly: this.readonly || readonly,
       }
     }).afterClosed();
   }

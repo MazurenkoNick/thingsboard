@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -116,7 +116,7 @@ public class TsRollingArgumentEntry implements ArgumentEntry, HasLatestTs {
     }
 
     @Override
-    public boolean updateEntry(ArgumentEntry entry) {
+    public boolean updateEntry(ArgumentEntry entry, CalculatedFieldCtx ctx) {
         if (entry instanceof TsRollingArgumentEntry tsRollingEntry) {
             updateTsRollingEntry(tsRollingEntry);
         } else if (entry instanceof SingleValueArgumentEntry singleValueEntry) {

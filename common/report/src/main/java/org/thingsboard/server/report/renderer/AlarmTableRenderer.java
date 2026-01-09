@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -45,11 +45,11 @@ public class AlarmTableRenderer extends TableWithLayoutComponentRenderer<AlarmTa
     private static final Map<String, String> DISPLAY_STATUS = new HashMap<>();
 
     static {
-        SEVERITY_COLOR.put("CRITICAL", "red");
-        SEVERITY_COLOR.put("MAJOR", "orange");
-        SEVERITY_COLOR.put("MINOR", "#ffca3d");
-        SEVERITY_COLOR.put("WARNING", "#abab00");
-        SEVERITY_COLOR.put("INDETERMINATE", "green");
+        SEVERITY_COLOR.put("CRITICAL", "rgb(209, 39, 48)");
+        SEVERITY_COLOR.put("MAJOR", "rgb(246, 103, 22)");
+        SEVERITY_COLOR.put("MINOR", "rgb(250, 164, 5)");
+        SEVERITY_COLOR.put("WARNING", "rgb(242, 218, 5)");
+        SEVERITY_COLOR.put("INDETERMINATE", "rgba(0, 0, 0, 0.38)");
 
         DISPLAY_STATUS.put("ACTIVE_UNACK", "Active Unacknowledged");
         DISPLAY_STATUS.put("ACTIVE_ACK", "Active Acknowledged");

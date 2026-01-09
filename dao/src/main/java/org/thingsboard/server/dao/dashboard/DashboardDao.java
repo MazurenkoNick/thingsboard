@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -64,4 +64,8 @@ public interface DashboardDao extends Dao<Dashboard>, TenantEntityDao<Dashboard>
     PageData<DashboardId> findAllIds(PageLink pageLink);
 
     void replacePatternInAllDashboardsConfigurations(String pattern, String replacement);
+
+    void replaceWidgetTypeFullFqn(String oldLink, String newLink);
+
+    void setTrendzWidgetsTypeLatestBySystemFqn(String systemFqn);
 }

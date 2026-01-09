@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -990,7 +990,7 @@ public class ActorSystemContext {
                 if (tbMsgType != null) {
                     eventBuilder.msgType(tbMsgType);
                 }
-                if (arguments != null) {
+                if (arguments != null && !arguments.isEmpty()) {
                     eventBuilder.arguments(JacksonUtil.toString(arguments));
                 }
                 if (result != null) {

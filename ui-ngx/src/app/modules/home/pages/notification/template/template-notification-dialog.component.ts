@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -207,6 +207,7 @@ export class TemplateNotificationDialogComponent
     const sysAdminAllowNotificationTypes = new Set([
       NotificationType.ENTITIES_LIMIT,
       NotificationType.ENTITIES_LIMIT_INCREASE_REQUEST,
+      NotificationType.ADDON_ACCESS_ERROR,
       NotificationType.API_USAGE_LIMIT,
       NotificationType.NEW_PLATFORM_VERSION,
       NotificationType.RATE_LIMITS,

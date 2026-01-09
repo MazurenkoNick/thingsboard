@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -38,6 +38,12 @@ import { of } from 'rxjs';
 const routes: Routes = [
   {
     path: 'action/entitiesLimitIncreaseRequest',
+    loadComponent: () => of(null),
+    data: {},
+    canActivate: [ActionGuard],
+  },
+  {
+    path: 'action/addonAccessError',
     loadComponent: () => of(null),
     data: {},
     canActivate: [ActionGuard],

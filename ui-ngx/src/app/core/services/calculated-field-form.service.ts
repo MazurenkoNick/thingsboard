@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -117,7 +117,12 @@ export class CalculatedFieldFormService {
       return this.calculatedFieldsService.getLatestCalculatedFieldDebugEvent(calculatedFieldId, {ignoreLoading: true})
         .pipe(
           switchMap(event => {
-            const args = event?.arguments ? JSON.parse(event.arguments) : null;
+            let args = null;
+            if (event?.arguments) {
+              try {
+                args = JSON.parse(event.arguments);
+              } catch (e) {}
+            }
             return testDialogFn(formValue, args, false, expression);
           }),
           takeUntilDestroyed(destroyRef)

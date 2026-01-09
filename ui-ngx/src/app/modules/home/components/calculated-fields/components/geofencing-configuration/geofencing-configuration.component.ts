@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { booleanAttribute, Component, forwardRef, Input, OnInit } from '@angular/core';
+import { booleanAttribute, Component, forwardRef, Input, OnChanges, SimpleChanges } from '@angular/core';
 import {
   ControlValueAccessor,
   FormBuilder,
@@ -73,7 +73,7 @@ import { EntityId } from '@shared/models/id/entity-id';
     }
   ],
 })
-export class GeofencingConfigurationComponent implements ControlValueAccessor, Validator, OnInit {
+export class GeofencingConfigurationComponent implements ControlValueAccessor, Validator, OnChanges {
 
   @Input({required: true})
   entityId: EntityId;
@@ -89,6 +89,8 @@ export class GeofencingConfigurationComponent implements ControlValueAccessor, V
 
   @Input({ transform: booleanAttribute })
   readonly: boolean;
+
+  @Input({transform: booleanAttribute}) isEditValue = true;
 
   readonly minAllowedScheduledUpdateIntervalInSecForCF = getCurrentAuthState(this.store).minAllowedScheduledUpdateIntervalInSecForCF;
   readonly DataKeyType = DataKeyType;
@@ -131,8 +133,14 @@ export class GeofencingConfigurationComponent implements ControlValueAccessor, V
     })
   }
 
-  ngOnInit() {
-    this.currentEntityFilter = getCalculatedFieldCurrentEntityFilter(this.entityName, this.entityId);
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.entityName || changes.entityId) {
+      const entityNameChanges = changes.entityName;
+      const entityIdChanges = changes.entityId;
+      if ((entityNameChanges?.currentValue !== entityNameChanges?.previousValue) || (entityIdChanges?.currentValue !== entityIdChanges?.previousValue)) {
+        this.currentEntityFilter = getCalculatedFieldCurrentEntityFilter(this.entityName, this.entityId);
+      }
+    }
   }
 
   validate(): ValidationErrors | null {

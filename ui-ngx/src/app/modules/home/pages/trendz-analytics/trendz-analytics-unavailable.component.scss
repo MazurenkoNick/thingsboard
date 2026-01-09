@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -28,19 +28,24 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-
 .trendz-unavailable {
   max-width: 750px;
-  padding: 24px;  
   color: rgba(0, 0, 0, 0.76);
+
+  .trendz-unavailable-content {
+    padding: 24px;
+  }
 
   .trendz-unavailable-title {
     font-size: 20px;
     font-weight: 600
   }
-
   .trendz-unavailable-text {
     line-height: 20px;
+  }
+
+  .trendz-unavailable-actions {
+    padding: 8px;
   }
 }
 

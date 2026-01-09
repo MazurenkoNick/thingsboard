@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -80,6 +80,14 @@ public class TrendzUpdater {
         String urlString = urls.iterator().next();
         URL url = new URL(urlString);
         return Optional.of(url);
+    }
+
+    public void replaceWidgetTypeFullFqn(String pattern, String replacement) {
+        this.dashboardDao.replaceWidgetTypeFullFqn(pattern, replacement);
+    }
+
+    public void setTrendzWidgetsTypeLatestBySystemFqn(String systemFqn) {
+        this.dashboardDao.setTrendzWidgetsTypeLatestBySystemFqn(systemFqn);
     }
 
     public void replacePatternInAllDashboardsConfigurations(String pattern, String replacement) {

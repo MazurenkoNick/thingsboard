@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -50,6 +50,23 @@ import { Direction } from '@shared/models/page/sort-order';
 export class TableSortOrderComponent implements OnInit, ControlValueAccessor, OnChanges {
 
   Direction = Direction;
+
+  @Input()
+  set columnNameChange(args: [string, string]) {
+    if (this.tableSortOrderFormGroup && Array.isArray(args) && args.length === 2) {
+      const columnIndex = this.columns.indexOf(args[0]);
+      let updatedFormValue = false;
+      if(columnIndex !== -1) {
+        this.columns[columnIndex] = args[1];
+        updatedFormValue = true;
+      } else if (this.columns.indexOf(args[1]) !== -1) {
+        updatedFormValue = true;
+      }
+      if (updatedFormValue && this.tableSortOrderFormGroup.get('column').value === args[0]) {
+        this.tableSortOrderFormGroup.get('column').setValue(args[1]);
+      }
+    }
+  }
 
   @Input()
   columns: string[] = [];

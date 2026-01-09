@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -103,6 +103,7 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
     maxlength: 'calculated-fields.hint.argument-name-max-length',
     forbidden: 'calculated-fields.hint.argument-name-forbidden'
   };
+  @Input() readonly = false;
 
   @ViewChild('entityAutocomplete') entityAutocomplete: EntityAutocompleteComponent;
 
@@ -191,6 +192,11 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
 
     this.argumentTypes = Object.values(ArgumentType)
       .filter(type => type !== ArgumentType.Rolling || this.isScript);
+
+    if (this.readonly) {
+      this.argumentType.disable({emitEvent: false});
+      this.argumentFormGroup.disable({emitEvent: false});
+    }
   }
 
   ngAfterViewInit(): void {
@@ -274,7 +280,11 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
         };
     }
     if (!onInit) {
-      this.argumentFormGroup.get('refEntityKey').get('key').setValue('');
+      this.argumentFormGroup.get('refEntityKey').get('key').setValue('', {emitEvents: !this.watchKeyChange});
+      if (this.watchKeyChange && this.argumentFormGroup.get('argumentName').pristine) {
+        this.argumentFormGroup.get('argumentName').markAsUntouched({emitEvent: false});
+        this.argumentFormGroup.get('argumentName').setValue('', {emitEvent: false});
+      }
     } else if (this.predefinedEntityFilter) {
       entityFilter = this.predefinedEntityFilter;
     }
