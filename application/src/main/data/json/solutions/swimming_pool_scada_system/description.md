@@ -4,14 +4,14 @@ The **Swimming Pool SCADA System** template is a production-ready accelerator fo
 
 #### 🌟 Why use this template?
 
-* **💧 Water Quality Management:** Automate the monitoring of water levels and pH filtration segments to ensure sanitary conditions without constant manual checking.
-* **🌡️ Smart Temperature Control:** Integrate outdoor and pool temperature sensors to intelligently control heat pumps, ensuring consistent water temperature while optimizing energy usage.
-* **⚙️ Equipment Health:** Prevent downtime by tracking the performance of pumps and filters through real-time monitoring of vibration, flow rates, and power consumption.
+* **💧 Water Quality Management:** Automate the monitoring of the **Water level meter** and **Filter PH sensor** to ensure sanitary conditions without constant manual checking.
+* **🌡️ Smart Temperature Control:** Integrate **Heat pump** telemetry to intelligently monitor compressor temperature and refrigerant pressure, ensuring consistent water temperature while optimizing energy usage.
+* **⚙️ Equipment Health:** Prevent downtime by tracking the performance of the **Sand filter** and pumps through real-time monitoring of vibration, rotation speed, and pressure.
 
 #### ✨ Key Features
 
 * **Unified SCADA View:** Consolidate data from 14 distinct subsystems (Valves, Pumps, Sensors, Heaters) into a single, real-time command center.
-* **Complex Flow Logic:** Utilizes **Calculated Fields** to dynamically determine the flow status of specific pipe segments (Drain, Filter, Heat) based on valve states.
+* **Complex Flow Logic:** Utilizes **Calculated Fields** to dynamically determine the flow status of specific pipe segments (Drain, Filter, Heat) based on the state of valves like the **Main intake valve** and **Pool weir valve**.
 * **Remote Management:** Enable operators to remotely alter system states, such as switching operational modes or opening/closing specific valves.
 
 #### 🌍 Real-World Applications

@@ -1,5 +1,8 @@
 ## Solution instructions
 
+Welcome to your new **SCADA Drilling System** solution 👋
+This template provides a comprehensive monitoring and control environment tailored for drilling operations, utilizing Modbus communication and IoT Gateway integration.
+
 ### 🐳 Step 1: Install Docker Compose 
 
 Follow the instructions in the official [Docker Compose installation guide](https://docs.docker.com/compose/install/) to install Docker Compose on your system.
@@ -62,11 +65,11 @@ Control system components remotely directly from the dashboard.
 
 The solution automatically configures the IoT gateway and creates five essential drilling devices.
 
-* **Drill Bit Sensors:** Monitors torque, speed, and wear.
-* **Drawwork System:** Controls hoisting operations.
-* **Drilling Mud Sensors:** Tracks mud circulation parameters (pressure, flow rate).
-* **Drilling Rig Monitoring:** Provides data on rig structure and vibrations.
-* **Blowout Preventer (BOP):** Monitors pressure levels for well safety.
+* **Drill Bit:** Monitors **vibration** and **temperature** levels downhole.
+* **Drawwork:** Monitors **lifting speed** (in both Slow and Normal modes), **inclination**, **vibration**, and **tension**.
+* **Drilling Mud:** Tracks fluid properties including **density**, **pressure**, **flow rate**, and **temperature**.
+* **Drilling Rig:** Monitors general mechanical performance such as **rotary speed**, **hoist speed**, **hook load**, and **pressure**.
+* **Preventer (BOP):** Monitors **well pressure**, **flow rate**, and **vibration** to ensure fail-safe operation.
 
 Below is the complete list of devices configured for this solution:
 

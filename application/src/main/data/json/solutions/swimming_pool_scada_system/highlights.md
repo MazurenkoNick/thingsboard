@@ -8,7 +8,7 @@ Press **Install** to generate a complete SCADA ecosystem — populated with devi
 We have auto-generated a comprehensive industrial platform for you:
 
 * **🎛️ SCADA Dashboard:** A feature-rich dashboard offering real-time visualization of water temperature, pump status, and valve positions.
-* **🤖 Modbus Emulator:** A complete Docker environment simulating 14 distinct devices (sensors, actuators, pumps), allowing you to see the solution in action immediately.
+* **🤖 Modbus Emulator:** A complete Docker environment simulating 14 distinct devices (**Sand filter**, **Heat pump**, etc.), allowing you to see the solution in action immediately.
 * **🧮 Flow Logic:** Pre-configured **Calculated Fields** that analyze valve states to visualize water flow through Filter, Heat, and Drain segments.
-* **🚨 Equipment Alarms:** Automated rules that trigger on critical events, such as **Heat Pump Vibration**, **Sand Filter Pressure**, or **Water Pump Overheating**.
-* **📡 Auto-Configured Gateway:** The solution automatically configures the IoT Gateway to communicate with the pool devices using the Modbus protocol.
+* **🚨 Equipment Alarms:** Automated rules that trigger on critical events, such as **Heat Pump Vibration** (>5.0), **Sand Filter Pressure** anomalies, or **Water Pump Overheating**.
+* **📡 Auto-Configured Gateway:** The solution automatically configures the **Pool System Gateway** to communicate with the pool devices using the Modbus protocol.
