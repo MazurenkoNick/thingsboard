@@ -166,6 +166,11 @@
               </mat-slide-toggle>
             </div>
             <div class="tb-form-row">
+              <mat-slide-toggle class="mat-slide margin" formControlName="propagateToOwnerHierarchy">
+                {{ 'alarm-rule.propagate-alarm-to-owner-hierarchy' | translate }}
+              </mat-slide-toggle>
+            </div>
+            <div class="tb-form-row">
               <mat-slide-toggle class="mat-slide margin" formControlName="propagateToTenant">
                 {{ 'alarm-rule.propagate-alarm-to-tenant' | translate }}
               </mat-slide-toggle>
