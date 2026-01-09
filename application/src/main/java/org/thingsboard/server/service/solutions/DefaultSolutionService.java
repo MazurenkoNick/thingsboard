@@ -696,11 +696,16 @@ public class DefaultSolutionService implements SolutionService {
                 .forEach(entry -> {
                     UUID key = entry.getKey();
                     var alarmRuleInfo = entry.getValue();
+
                     String alarmType = alarmRuleInfo.alarmType();
                     String link = alarmRuleInfo.getCfPageLink(key);
-                    String alarmTypeWithLink = "[" + alarmType + "](" + link + ")";
+
+                    String alarmTypeWithLink = "<a href=\"" + link + "\" target=\"_blank\">" + alarmType + "</a>";
+
                     String profileName = alarmRuleInfo.entityId() != null ?
-                            "[" + alarmRuleInfo.entityName() + "](" + alarmRuleInfo.getEntityPageLink() + ")" : alarmRuleInfo.entityName();
+                            "<a href=\"" + alarmRuleInfo.getEntityPageLink() + "\" target=\"_blank\">" + alarmRuleInfo.entityName() + "</a>"
+                            : alarmRuleInfo.entityName();
+
                     alarmRules.append("|")
                             .append(profileName).append("|")
                             .append(alarmTypeWithLink).append("|")
@@ -725,11 +730,16 @@ public class DefaultSolutionService implements SolutionService {
                 .forEach(entry -> {
                     UUID key = entry.getKey();
                     var cfInfo = entry.getValue();
+
                     String cfTitle = cfInfo.name();
                     String link = cfInfo.getCfPageLink(key);
-                    String cfTitleWithLink = "[" + cfTitle + "](" + link + ")";
+
+                    String cfTitleWithLink = "<a href=\"" + link + "\" target=\"_blank\">" + cfTitle + "</a>";
+
                     String profileName = cfInfo.entityId() != null ?
-                            "[" + cfInfo.entityName() + "](" + cfInfo.getEntityPageLink() + ")" : cfInfo.entityName();
+                            "<a href=\"" + cfInfo.getEntityPageLink() + "\" target=\"_blank\">" + cfInfo.entityName() + "</a>"
+                            : cfInfo.entityName();
+
                     calculatedFields.append("|")
                             .append(profileName).append("|")
                             .append(cfTitleWithLink).append("|")
@@ -751,7 +761,11 @@ public class DefaultSolutionService implements SolutionService {
             var entityInfo = entry.getValue();
             String link = entityInfo.getEntityPageLink(key);
             String entityName = entityInfo.getName();
-            String name = link != null ? "[" + entityName + "](" + link + ")" : entityName;
+
+            String name = link != null ?
+                    "<a href=\"" + link + "\" target=\"_blank\">" + entityName + "</a>"
+                    : entityName;
+
             entityList.append("|")
                     .append(name).append("|")
                     .append(entityInfo.getType().getNormalName()).append("|")
