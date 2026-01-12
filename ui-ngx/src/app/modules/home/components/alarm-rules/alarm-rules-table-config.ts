@@ -145,6 +145,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
       selectedEntities: 'alarm-rule.selected-fields'
     };
 
+    this.entityTitle = (alarmRule) => alarmRule ? this.utilsService.customTranslation(alarmRule.name) : '';
     this.entitiesFetchFunction = (pageLink: PageLink) => this.fetchCalculatedFields(pageLink);
     this.addEntity = this.getCalculatedAlarmDialog.bind(this);
     this.loadEntity = id => this.calculatedFieldsService.getCalculatedFieldById(id.id);

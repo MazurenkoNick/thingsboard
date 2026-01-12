@@ -68,6 +68,7 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
 import org.thingsboard.server.common.data.query.SingleEntityFilter;
+import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportInfo;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
@@ -488,7 +489,9 @@ public class ReportControllerTest extends AbstractControllerTest {
         assertThat(job.getEntityName()).isEqualTo(reportTemplate.getName());
 
         ReportJobResult result = (ReportJobResult) job.getResult();
-        String csvReport = doGet("/api/v2/report/" + result.getReport().getId() + "/download", String.class);
+        Report report = result.getReport();
+        assertThat(report.getName()).isEqualTo("test.csv");
+        String csvReport = doGet("/api/v2/report/" + report.getId() + "/download", String.class);
 
         // Check headers and content
         String[] lines = csvReport.split("\r?\n");
@@ -505,6 +508,20 @@ public class ReportControllerTest extends AbstractControllerTest {
             assertThat(reportNotification.getSubject()).isEqualTo("Report generated");
             assertThat(reportNotification.getText()).isEqualTo("CSV report 'test.csv' is ready");
         });
+
+        //update report file name pattern without extension
+        ((CsvReportTemplateConfig)reportTemplate.getConfiguration()).setNamePattern("without_extension");
+        doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
+
+        //generate report
+        doPost("/api/v2/report/request", reportRequest, Job.class);
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() ->
+                        findJobs(List.of(JobType.REPORT), List.of(reportTemplateId.getId()))
+                                .stream()
+                                .filter(j -> (j.getStatus() == JobStatus.COMPLETED &&
+                                        ((ReportJobResult) j.getResult()).getReport().getName().equals("without_extension.csv")))
+                                .collect(Collectors.toList()),
+                res -> res.size() == 1);
     }
 
     @Test
