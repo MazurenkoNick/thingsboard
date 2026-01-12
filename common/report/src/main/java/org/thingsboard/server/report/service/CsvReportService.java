@@ -92,7 +92,7 @@ public class CsvReportService extends AbstractReportService {
 
         List<List<String>> content = renderContent(ctx, stateEntity);
         byte[] csvBytes = generateCsv(content);
-        String reportName = prepareReportName(configuration.getNamePattern(), new Date(), task.getTimezone());
+        String reportName = prepareReportName(configuration.getNamePattern(), new Date(), task.getTimezone(), TbReportFormat.CSV.getExtension());
 
         return ReportData.builder()
                 .data(csvBytes)

@@ -44,9 +44,6 @@ import org.thingsboard.server.dao.model.sql.EntityViewEntity;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Created by Victor Basanets on 8/31/2017.
- */
 public interface EntityViewRepository extends JpaRepository<EntityViewEntity, UUID>, ExportableEntityRepository<EntityViewEntity> {
 
     @Query("SELECT e FROM EntityViewEntity e WHERE e.tenantId = :tenantId " +
