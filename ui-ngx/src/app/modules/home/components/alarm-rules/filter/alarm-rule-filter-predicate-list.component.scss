@@ -28,7 +28,6 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-@import "../../../../../../scss/constants";
 
 :host {
   .filter-title {
@@ -57,11 +56,11 @@
     &-label {
       font-size: 15px;
       font-weight: 400;
-      color: $tb-primary-color;
+      color: var(--tb-primary-500);
       padding: 0 8px;
       border-radius: 4px;
-      border: 1px solid rgba($tb-primary-color, 0.32);
-      background-color: rgba($tb-primary-color, 0.04);
+      border: 1px solid rgba(from var(--tb-primary-500) r g b / 0.32);
+      background-color: rgba(from var(--tb-primary-500) r g b / 0.04);
     }
   }
 }
