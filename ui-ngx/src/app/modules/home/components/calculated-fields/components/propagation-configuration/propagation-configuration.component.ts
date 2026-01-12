@@ -155,7 +155,7 @@ export class PropagationConfigurationComponent implements ControlValueAccessor, 
       this.updatedFormWithScript();
     }
     setTimeout(() => {
-      this.propagateConfiguration.get('arguments').updateValueAndValidity({onlySelf: true, emitEvent: false});
+      this.propagateConfiguration.get('arguments').updateValueAndValidity({onlySelf: true});
     });
   }
 
