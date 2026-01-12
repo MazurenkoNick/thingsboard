@@ -144,6 +144,8 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
 
     protected final String CUSTOMER_ADMIN_EMAIL = "testadmincustomer@thingsboard.org";
     protected final String CUSTOMER_ADMIN_PASSWORD = "admincustomer";
+    protected final String TEST_CSV_NAME_PATTERN = "csv_report.csv";
+    protected final String TEST_PDF_NAME_PATTERN = "pdf_report.pdf";
 
     private Tenant savedTenant;
     private User tenantAdmin;
@@ -1855,6 +1857,7 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
         EntityTypeFilter entityTypeFilter = new EntityTypeFilter();
         entityTypeFilter.setEntityType(EntityType.REPORT_TEMPLATE);
         List<EntityKey> entityFields = List.of(
+                new EntityKey(EntityKeyType.ENTITY_FIELD, "displayName"),
                 new EntityKey(EntityKeyType.ENTITY_FIELD, "name"),
                 new EntityKey(EntityKeyType.ENTITY_FIELD, "format")
         );
@@ -1865,10 +1868,16 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
         List<String> reportTemplateNames = reportTemplates.getData().stream().map(entityData -> entityData.getLatest().get(EntityKeyType.ENTITY_FIELD).get("name").getValue()).toList();
         assertThat(reportTemplateNames).containsOnly(csvTemplate.getName(), pdfTemplate.getName());
 
+        List<String> reportTemplateDisplayNames = reportTemplates.getData().stream().map(entityData -> entityData.getLatest().get(EntityKeyType.ENTITY_FIELD).get("displayName").getValue()).toList();
+        assertThat(reportTemplateDisplayNames).isEqualTo(reportTemplateNames);
+
         entityTypeFilter.setEntityType(EntityType.REPORT);
         PageData<EntityData> reports = findByQueryAndCheck(query, 10);
-        List<String> reportFormat = reports.getData().stream().map(entityData -> entityData.getLatest().get(EntityKeyType.ENTITY_FIELD).get("format").getValue()).toList();
-        assertThat(reportFormat).containsOnly(TbReportFormat.CSV.name(), TbReportFormat.PDF.name());
+        List<String> reportFormats = reports.getData().stream().map(entityData -> entityData.getLatest().get(EntityKeyType.ENTITY_FIELD).get("format").getValue()).toList();
+        assertThat(reportFormats).containsOnly(TbReportFormat.CSV.name(), TbReportFormat.PDF.name());
+
+        List<String> reportDisplayNames = reports.getData().stream().map(entityData -> entityData.getLatest().get(EntityKeyType.ENTITY_FIELD).get("displayName").getValue()).toList();
+        assertThat(reportDisplayNames).containsOnly(TEST_PDF_NAME_PATTERN, TEST_CSV_NAME_PATTERN);
     }
 
     private ReportTemplate buildReportTemplate(TbReportFormat format) {
@@ -1879,12 +1888,14 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
         switch (format){
             case CSV -> {
                 CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
+                configuration.setNamePattern(TEST_CSV_NAME_PATTERN);
                 configuration.setComponents(new ArrayList<>());
                 template.setConfiguration(configuration);
             }
             case PDF -> {
                 PdfReportTemplateConfig configuration = new PdfReportTemplateConfig();
                 configuration.setComponents(new ArrayList<>());
+                configuration.setNamePattern(TEST_PDF_NAME_PATTERN);
                 template.setConfiguration(configuration);
             }
         }
