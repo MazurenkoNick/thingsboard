@@ -11,7 +11,7 @@
     }
   },
   "metadata": {
-    "firstNodeIndex": 4,
+    "firstNodeIndex": 1,
     "nodes": [
       {
         "type": "org.thingsboard.rule.engine.rpc.TbSendRPCRequestNode",
@@ -24,8 +24,8 @@
           "timeoutInSeconds": 60
         },
         "additionalInfo": {
-          "layoutX": 928,
-          "layoutY": 265
+          "layoutX": 805,
+          "layoutY": 251
         }
       },
       {
@@ -39,8 +39,8 @@
           "version": 0
         },
         "additionalInfo": {
-          "layoutX": 446,
-          "layoutY": 155
+          "layoutX": 326,
+          "layoutY": 151
         }
       },
       {
@@ -60,8 +60,8 @@
           "updateAttributesOnlyOnValueChange": false
         },
         "additionalInfo": {
-          "layoutX": 924,
-          "layoutY": 125
+          "layoutX": 801,
+          "layoutY": 111
         }
       },
       {
@@ -80,36 +80,8 @@
         },
         "additionalInfo": {
           "description": null,
-          "layoutX": 926,
-          "layoutY": 196
-        }
-      },
-      {
-        "type": "org.thingsboard.rule.engine.metadata.CalculateDeltaNode",
-        "name": "Calculate Consumption Based on Pulse Counter",
-        "debugSettings": {
-          "failuresEnabled": false,
-          "allEnabled": false,
-          "allEnabledUntil": 1764593862147
-        },
-        "singletonMode": false,
-        "queueName": null,
-        "configurationVersion": 1,
-        "configuration": {
-          "inputValueKey": "pulseCounter",
-          "outputValueKey": "meterReadingDelta",
-          "useCache": true,
-          "addPeriodBetweenMsgs": false,
-          "periodValueKey": "periodInMs",
-          "round": 2,
-          "tellFailureIfInputValueKeyIsAbsent": false,
-          "tellFailureIfDeltaIsNegative": true,
-          "excludeZeroDeltas": false
-        },
-        "additionalInfo": {
-          "description": "",
-          "layoutX": 225,
-          "layoutY": 279
+          "layoutX": 803,
+          "layoutY": 182
         }
       },
       {
@@ -125,8 +97,8 @@
         },
         "additionalInfo": {
           "description": "Forwards message to the \"Water Metering Solution Customer Alarm Routing\" rule chain",
-          "layoutX": 755,
-          "layoutY": 454
+          "layoutX": 632,
+          "layoutY": 440
         }
       },
       {
@@ -142,8 +114,8 @@
         },
         "additionalInfo": {
           "description": "Forwards message to the \"Water Metering Solution Tenant Alarm Routing\" rule chain",
-          "layoutX": 756,
-          "layoutY": 378
+          "layoutX": 633,
+          "layoutY": 364
         }
       }
     ],
@@ -165,23 +137,13 @@
       },
       {
         "fromIndex": 1,
-        "toIndex": 5,
+        "toIndex": 4,
         "type": "Alarm Created"
       },
       {
         "fromIndex": 1,
-        "toIndex": 6,
+        "toIndex": 5,
         "type": "Alarm Created"
-      },
-      {
-        "fromIndex": 4,
-        "toIndex": 1,
-        "type": "Other"
-      },
-      {
-        "fromIndex": 4,
-        "toIndex": 1,
-        "type": "Success"
       }
     ],
     "ruleChainConnections": null

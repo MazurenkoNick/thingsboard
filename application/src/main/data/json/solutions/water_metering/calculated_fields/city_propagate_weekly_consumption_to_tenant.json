@@ -1,5 +1,5 @@
 {
-  "reprocessingOrder": 3,
+  "reprocessingOrder": 4,
   "type": "PROPAGATION",
   "name": "Propagate city weekly consumption to tenant",
   "entityId": {

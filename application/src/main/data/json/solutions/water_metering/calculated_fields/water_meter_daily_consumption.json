@@ -1,5 +1,5 @@
 {
-  "reprocessingOrder": 0,
+  "reprocessingOrder": 1,
   "type": "ENTITY_AGGREGATION",
   "name": "Calculate water meter daily consumption",
   "entityId": {
@@ -41,12 +41,7 @@
     "output": {
       "type": "TIME_SERIES",
       "strategy": {
-        "type": "IMMEDIATE",
-        "ttl": 0,
-        "saveTimeSeries": true,
-        "saveLatest": true,
-        "sendWsUpdate": true,
-        "processCfs": true
+        "type": "RULE_CHAIN"
       },
       "decimalsByDefault": 2
     }

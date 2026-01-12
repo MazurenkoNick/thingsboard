@@ -1,5 +1,5 @@
 {
-  "reprocessingOrder": 1,
+  "reprocessingOrder": 2,
   "type": "RELATED_ENTITIES_AGGREGATION",
   "name": "Calculate location daily consumption",
   "entityId": {
