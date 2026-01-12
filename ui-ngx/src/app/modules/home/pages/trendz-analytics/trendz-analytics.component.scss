@@ -103,7 +103,7 @@
 
   .entity-item {
     padding: 10px 0;
-    border-bottom: 1px solid var(--mat-divider-color);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 
     &:hover {
       background-color: var(--tb-hover-color, #f4f4f4);
@@ -114,7 +114,7 @@
     font-size: 14px;
     line-height: 30px;
     letter-spacing: 0.2px;
-    color: rgba(0, 0, 0, 0.54);
+    color: rgba(0, 0, 0, 0.76);
     cursor: pointer;
     border-bottom: none;
   }

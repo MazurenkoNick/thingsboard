@@ -75,6 +75,7 @@ import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -533,7 +534,13 @@ class BaseRelationService implements RelationService {
                     return Collections.emptyList();
                 }
                 List<EntityRelation> relations = relationFilter != null ? filterRelations(entityRelations, relationFilter) : entityRelations;
-                return relations.size() > limit ? relations.subList(0, limit) : relations;
+                if (relations.size() > limit) {
+                    List<EntityRelation> limitedRelations = new ArrayList<>(relations);
+                    limitedRelations.sort(Comparator.comparing(r -> r.getFrom().getId()));
+                    return limitedRelations.subList(0, limit);
+                } else {
+                    return relations;
+                }
             }, directExecutor());
         }
         return executor.submit(() -> {
@@ -560,7 +567,13 @@ class BaseRelationService implements RelationService {
                 case FROM -> findByFromAndType(tenantId, relationPathQuery.rootEntityId(), relationPathLevel.relationType(), RelationTypeGroup.COMMON);
                 case TO -> findByToAndType(tenantId, relationPathQuery.rootEntityId(), relationPathLevel.relationType(), RelationTypeGroup.COMMON);
             };
-            return relations.size() > limit ? relations.subList(0, limit) : relations;
+            if (relations.size() > limit) {
+                List<EntityRelation> limitedRelations = new ArrayList<>(relations);
+                limitedRelations.sort(Comparator.comparing(r -> r.getFrom().getId()));
+                return limitedRelations.subList(0, limit);
+            } else {
+                return relations;
+            }
         }
         return relationDao.findByRelationPathQuery(tenantId, relationPathQuery, limit);
     }

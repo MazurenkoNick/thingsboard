@@ -47,6 +47,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 public class RelatedEntitiesArgumentEntryTest {
@@ -63,6 +64,8 @@ public class RelatedEntitiesArgumentEntryTest {
 
     @BeforeEach
     void setUp() {
+        lenient().when(ctx.getMaxRelatedEntitiesPerCfArgument()).thenReturn(1000L);
+
         Map<EntityId, ArgumentEntry> aggInputs = new HashMap<>();
         aggInputs.put(device1, new SingleValueArgumentEntry(device1, new BasicTsKvEntry(ts - 100, new LongDataEntry("key", 12L), 1L)));
         aggInputs.put(device2, new SingleValueArgumentEntry(device2, new BasicTsKvEntry(ts - 150, new LongDataEntry("key", 16L), 6L)));

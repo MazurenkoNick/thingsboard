@@ -45,9 +45,6 @@ import org.thingsboard.server.dao.model.sql.AssetEntity;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Created by Valerii Sosliuk on 5/21/2017.
- */
 public interface AssetRepository extends JpaRepository<AssetEntity, UUID>, ExportableEntityRepository<AssetEntity> {
 
     @Query("SELECT a FROM AssetEntity a WHERE a.tenantId = :tenantId " +
