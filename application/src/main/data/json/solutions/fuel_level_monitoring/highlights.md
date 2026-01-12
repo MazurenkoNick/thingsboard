@@ -1,14 +1,13 @@
+Stop guessing and start measuring. The **Fuel Level Monitoring** template transforms your static tanks into smart digital assets in minutes. This solution deploys a complete inventory management system, allowing you to visualize liquid levels, detect refilling events, and prevent stock-outs instantly. ⛽📉
 
+Press **Install** to generate a fleet of smart tanks and experience the power of automated volume calculation immediately.
 
-Fuel Level Monitoring offers a powerful solution that simplifies fuel management for your business. Our cutting-edge solution provides real-time insights into fuel levels, enabling you to make informed decisions that drive efficiency, optimize maintenance schedules, and reduce costs. 
+#### 📦 What's inside the box?
 
+We have auto-generated a complete monitoring ecosystem for you:
 
-With a user-friendly dashboard that is easy to navigate and provides clear visualizations of data, you can easily monitor fuel levels across your entire operation, set custom alerts for low fuel levels, and track fuel usage to identify inefficiencies and opportunities for improvement. Our solution is also highly adaptable to various industries, including transportation, agriculture, and more. Say goodbye to unexpected downtime and wasted fuel and hello to a streamlined, cost-effective operation with Fuel Level Monitoring. Try it today and see the difference for yourself.
-
-#### Solution structure
-
-Administration dashboard:
-- tank sensor management system;
-- monitoring the states and fuel remaining of tanks on an interactive map;
-- alarm section with configurable options;
-- specific sensor page with detailed information and statistical data. 
+* 🗺️ **Inventory Command Center:** A main dashboard featuring an interactive map with color-coded status markers (Green/Red/Yellow/Gray) for instant fleet health assessment.
+* 🧠 **Geometric Intelligence:** A powerful "Tank Creation" wizard with **9 pre-defined shapes** (Cylinders, Capsules, Ovals) that automatically converts raw sensor height into precise volume (Liters/Gallons).
+* 📉 **Consumption Forensics:** A dedicated analytics view that logs every **Refilling** event and tracks **Consumption** trends over time to help you spot inefficiencies or theft.
+* 🛠️ **Hardware Agnostic Logic:** Smart profiles that support both **Float sensors** (Fill height) and **Ultrasonic sensors** (Remaining space), including compensation for technical gaps (e.g., tank necks).
+* 🚨 **Proactive Safety:** Built-in alarms for Low Fuel, Low Battery, and Temperature extremes.

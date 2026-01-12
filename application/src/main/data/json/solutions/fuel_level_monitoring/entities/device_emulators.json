@@ -49,58 +49,6 @@
     ]
   },
   {
-    "name": "Vertical Capsule Tank Emulator",
-    "extendz": "Tank Emulator",
-    "telemetryProfiles": [
-      {
-        "key": "fuelHeight",
-        "valueStrategy": {
-          "type": "natural",
-          "precision": 1,
-          "minStartValue": 8400,
-          "maxStartValue": 8500,
-          "minLowValue": 2500,
-          "maxLowValue": 3000,
-          "minHighValue": 8200,
-          "maxHighValue": 8500,
-          "minIncrement": 8400,
-          "maxIncrement": 8450,
-          "minDecrement": 40,
-          "maxDecrement": 80,
-          "holidayMultiplier": 1.0,
-          "workHoursMultiplier": 1.0,
-          "nightHoursMultiplier": 1.0
-        }
-      }
-    ]
-  },
-  {
-    "name": "Horizontal 2:1 Elliptical Tank Emulator",
-    "extendz": "Tank Emulator",
-    "telemetryProfiles": [
-      {
-        "key": "fuelHeight",
-        "valueStrategy": {
-          "type": "natural",
-          "precision": 1,
-          "minStartValue": 250,
-          "maxStartValue": 260,
-          "minLowValue": 250,
-          "maxLowValue": 260,
-          "minHighValue": 1000,
-          "maxHighValue": 1000,
-          "minIncrement": 20,
-          "maxIncrement": 70,
-          "minDecrement": 20,
-          "maxDecrement": 50,
-          "holidayMultiplier": 1.0,
-          "workHoursMultiplier": 1.0,
-          "nightHoursMultiplier": 1.0
-        }
-      }
-    ]
-  },
-  {
     "name": "Horizontal Ellipse Tank Emulator",
     "extendz": "Tank Emulator",
     "telemetryProfiles": [
@@ -153,32 +101,6 @@
     ]
   },
   {
-    "name": "Horizontal Cylinder Tank Emulator",
-    "extendz": "Tank Emulator",
-    "telemetryProfiles": [
-      {
-        "key": "fuelHeight",
-        "valueStrategy": {
-          "type": "natural",
-          "precision": 1,
-          "minStartValue": 540,
-          "maxStartValue": 548,
-          "minLowValue": 150,
-          "maxLowValue": 153,
-          "minHighValue": 540,
-          "maxHighValue": 548,
-          "minIncrement": 530,
-          "maxIncrement": 540,
-          "minDecrement": 1,
-          "maxDecrement": 2,
-          "holidayMultiplier": 1.0,
-          "workHoursMultiplier": 1.0,
-          "nightHoursMultiplier": 1.0
-        }
-      }
-    ]
-  },
-  {
     "name": "Horizontal Capsule Tank Emulator",
     "extendz": "Tank Emulator",
     "telemetryProfiles": [
@@ -204,32 +126,6 @@
           "maxIncrement": 2,
           "minDecrement": 94,
           "maxDecrement": 96,
-          "holidayMultiplier": 1.0,
-          "workHoursMultiplier": 1.0,
-          "nightHoursMultiplier": 1.0
-        }
-      }
-    ]
-  },
-  {
-    "name": "Vertical Oval Tank Emulator",
-    "extendz": "Tank Emulator",
-    "telemetryProfiles": [
-      {
-        "key": "fuelHeight",
-        "valueStrategy": {
-          "type": "natural",
-          "precision": 1,
-          "minStartValue": 215,
-          "maxStartValue": 220,
-          "minLowValue": 120,
-          "maxLowValue": 130,
-          "minHighValue": 215,
-          "maxHighValue": 220,
-          "minIncrement": 195,
-          "maxIncrement": 205,
-          "minDecrement": 1,
-          "maxDecrement": 2,
           "holidayMultiplier": 1.0,
           "workHoursMultiplier": 1.0,
           "nightHoursMultiplier": 1.0
@@ -266,19 +162,6 @@
           "holidayMultiplier": 1.0,
           "workHoursMultiplier": 1.0,
           "nightHoursMultiplier": 1.0
-        }
-      }
-    ]
-  },
-  {
-    "name": "Rectangle Tank Emulator",
-    "extendz": "Tank Emulator",
-    "telemetryProfiles": [
-      {
-        "key": "fuelHeight",
-        "valueStrategy": {
-          "type": "constant",
-          "value": 450
         }
       }
     ]

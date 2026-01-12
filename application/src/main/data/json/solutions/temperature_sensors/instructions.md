@@ -1,21 +1,21 @@
 ## Solution instructions
 
-As part of this solution, we have created the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Temperature & Humidity"</a> dashboard that displays 
-data from multiple sensors. You may use the dashboard to:
+Welcome to your new **Temperature & Humidity** monitoring solution 👋 We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Temperature & Humidity</a> dashboard that displays data from multiple sensors. You may use the dashboard to:
 
-* add new sensors;
-* change the location of the sensors; 
-* configure the alarm thresholds;
-* browse historical data.
+* **Add** and locate sensors on the map;
+* **Configure** alarm thresholds;
+* **Browse** historical data;
+* **Manage** sensor settings.
 
-The dashboard has two states. The main state displays the list of the sensors, their location on the map as well as the list of their alarms. 
-You may drill down to the sensor details state by clicking on the table row. The sensor details state allows to browse temperature and humidity history, change sensor settings and location.
+### 🖥 Mastering the dashboard
 
-You may always customize the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Temperature & Humidity"</a> dashboard using dashboard development <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">guide</a>.
+The dashboard has two states. The **Main** state displays the list of sensors and their map location. 
+Click on any row to drill down to the **Sensor Details** state to see history and change settings.
+You can always customize this dashboard using our <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">dashboard development guide</a>.
 
-### Devices
+### 🔌 Devices
 
-We have already created two sensors and loaded some demo data for them. See device info and credentials below:
+We have pre-provisioned two demo sensors for you. You can find their info and credentials below:
 
 <div class="tb-markdown-view table-wrapper">
 
@@ -23,33 +23,48 @@ ${device_list_and_credentials}
 
 </div>
 
-Solution expects that the sensor device will upload "temperature" and "humidity" values. 
-The most simple example of the expected payload is in JSON format:
+#### ⚡ Test it now
+
+Want to see the dashboard come alive? You can simulate a real device right now.
+The solution expects the device to upload `temperature` and `humidity` values in JSON format:
+
 
 ```json
-{"temperature":  42, "humidity":  73}{:copy-code}
+{"temperature": 42, "humidity": 73}{:copy-code}
 ```
+
+<br>
 
 To emulate the data upload on behalf of device "Sensor T1", one should execute the following command:
 
 ```bash
-curl -v -X POST -d "{\"temperature\":  42, \"humidity\":  73}" ${BASE_URL}/api/v1/${Sensor T1ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
+curl -v -X POST -d "{\"temperature\": 42, \"humidity\": 73}" ${BASE_URL}/api/v1/${Sensor T1ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
 ```
+
+<br>
 
 The example above uses <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a>.
 See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_blank">connecting devices</a> for other connectivity options.
 
-### Alarms
+Go check your dashboard — you should see the values update instantly 🚀
 
-Alarms are generated using two <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> in the
-"Temperature Sensor" <a href="/profiles/deviceProfiles" target="_blank">device profile</a>.
-User may turn alarms on and off as well as configure the alarm thresholds via the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Temperature & Humidity"</a> dashboard using "Edit Sensor" form. 
+### 🚨 Alarms 
 
-### Customers
+Your solution monitors data based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">alarm rules</a> configured in the "Temperature Sensor" device profile:
 
-"Sensor C1" is assigned to a newly created customer "Customer D".
-You may notice that "Customer D" has two users, and the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Temperature & Humidity"</a> dashboard is accessible for those users.
-You may create more Customers and more Users via administration UI.
+<div class="tb-markdown-view table-wrapper">
+
+${alarm_rules}
+
+</div>
+
+**💡 Tip:** You can enable/disable alarms and configure their thresholds anytime directly from the <a href="${MAIN_DASHBOARD_URL}" target="_blank">dashboard</a> using the "Edit Sensor" button.
+
+### 🔐 Managing Users & Access
+
+We created a sample customer, "Customer D", to demonstrate how you can isolate data for different clients. "Sensor C1" has been explicitly assigned to this customer.
+
+The following users belong to "Customer D" and have read-only access to the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Temperature & Humidity</a> dashboard. When they log in, they will only see "Sensor C1".
 
 <div class="tb-markdown-view table-wrapper">
 
@@ -57,7 +72,9 @@ ${user_list}
 
 </div>
 
-### Solution entities
+**💡 Note:** You can create more Customers and Users via the administration UI. You can also change the owner of other sensors (like Sensor T1) to "Customer D" to make them visible to these users.
+
+### 📦 Solution entities
 
 As part of this solution, the following entities were created:
 
@@ -67,7 +84,7 @@ ${all_entities}
 
 </div>
 
-### Edge computing
+### 📡 Edge computing
 
 **Optionally**, this solution can be extended to use edge computing.
 
@@ -92,7 +109,7 @@ To install ThingsBoard Edge and connect to the cloud, please navigate to <a href
 
 Once the edge is installed and connected to the cloud, you will be able to log in into edge using your tenant or users of customer "Customer D" credentials.
 
-#### Push data to device on edge
+#### 🔄 Push data to device on edge
 
 **"Temperature & Humidity sensors"** *DEVICE* group of customer "Customer D" was assigned to the edge entity "Remote Facility R1".
 This means that all devices from this group will be automatically provisioned to the edge.
@@ -105,10 +122,14 @@ To emulate the data upload on behalf of device "Sensor C1" to the edge, one shou
 curl -v -X POST -d "{\"temperature\":  43, \"humidity\":  74}" http://localhost:8080/api/v1/${Sensor C1ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
 ```
 
+<br>
+
 Or please use next command if you updated edge HTTP 8080 bind port to **18080** during edge installation:
 
 ```bash
 curl -v -X POST -d "{\"temperature\":  43, \"humidity\":  74}" http://localhost:18080/api/v1/${Sensor C1ACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
 ```
+
+<br>
 
 Once you'll push data to the device "Sensor C1" on edge, you'll be able to see telemetry update on the cloud for this device as well.

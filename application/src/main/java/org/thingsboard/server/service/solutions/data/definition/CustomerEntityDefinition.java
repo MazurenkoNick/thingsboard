@@ -31,8 +31,10 @@
 package org.thingsboard.server.service.solutions.data.definition;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public abstract class CustomerEntityDefinition extends BaseEntityDefinition {
 
     private String customer;

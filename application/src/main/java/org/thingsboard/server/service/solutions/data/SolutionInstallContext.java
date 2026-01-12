@@ -41,6 +41,7 @@ import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetProfile;
 import org.thingsboard.server.common.data.cf.CalculatedField;
+import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -48,11 +49,13 @@ import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.service.solutions.data.definition.AssetDefinition;
+import org.thingsboard.server.service.solutions.data.definition.AssetProfileDefinition;
 import org.thingsboard.server.service.solutions.data.definition.CustomerDefinition;
 import org.thingsboard.server.service.solutions.data.definition.DashboardDefinition;
 import org.thingsboard.server.service.solutions.data.definition.DeviceDefinition;
 import org.thingsboard.server.service.solutions.data.definition.DeviceProfileDefinition;
 import org.thingsboard.server.service.solutions.data.definition.EdgeDefinition;
+import org.thingsboard.server.service.solutions.data.definition.EmulatorDefinition;
 import org.thingsboard.server.service.solutions.data.definition.EntityDefinition;
 import org.thingsboard.server.service.solutions.data.definition.EntitySearchKey;
 import org.thingsboard.server.service.solutions.data.definition.RelationDefinition;
@@ -83,8 +86,17 @@ public class SolutionInstallContext {
     private final Map<String, DeviceCredentialsInfo> createdDevices = new LinkedHashMap<>();
     private final Map<String, UserCredentialsInfo> createdUsers = new LinkedHashMap<>();
     private final Map<UUID, CreatedEntityInfo> createdEntities = new LinkedHashMap<>();
+    private final Map<UUID, CreatedAlarmRuleInfo> createdAlarmRules = new LinkedHashMap<>();
+    private final Map<UUID, CreatedCalculatedFieldInfo> createdCalculatedFields = new LinkedHashMap<>();
     private final List<DashboardLinkInfo> dashboardLinks = new ArrayList<>();
     private final Map<String, EdgeLinkInfo> createdEdges = new LinkedHashMap<>();
+
+    private final long installTs;
+
+    // for timeseries and attributes emulation and also for CFs reprocessing
+    private long oldestTelemetryTs;
+    private Map<String, EmulatorDefinition> deviceEmulators;
+    private Map<String, EmulatorDefinition> assetEmulators;
 
     public SolutionInstallContext(TenantId tenantId, String solutionId, User user, TenantSolutionTemplateInstructions solutionInstructions) {
         this.tenantId = tenantId;
@@ -92,6 +104,7 @@ public class SolutionInstallContext {
         this.user = user;
         this.solutionInstructions = solutionInstructions;
         put(new EntitySearchKey(tenantId, EntityType.TENANT, null, false), tenantId);
+        this.installTs = System.currentTimeMillis();
     }
 
     public void registerReferenceOnly(String referenceId, EntityId entityId) {
@@ -111,53 +124,53 @@ public class SolutionInstallContext {
 
     public void register(CustomerDefinition definition, Customer customer) {
         register(definition.getJsonId(), customer.getId());
-        createdEntities.put(customer.getUuidId(), new CreatedEntityInfo(customer.getName(), "Customer", "Tenant"));
+        createdEntities.put(customer.getUuidId(), new CreatedEntityInfo(customer.getName(), EntityType.CUSTOMER, "Tenant"));
     }
 
     public void register(CustomerDefinition cDef, UserDefinition definition, User user) {
         register(definition.getJsonId(), user.getId());
-        createdEntities.put(user.getUuidId(), new CreatedEntityInfo(user.getName(), "User", StringUtils.isEmpty(cDef.getName()) ? "Tenant" : cDef.getName()));
+        createdEntities.put(user.getUuidId(), new CreatedEntityInfo(user.getName(), EntityType.USER, StringUtils.isEmpty(cDef.getName()) ? "Tenant" : cDef.getName()));
     }
 
     public void register(AssetDefinition definition, Asset asset) {
         register(definition.getJsonId(), asset.getId());
-        createdEntities.put(asset.getUuidId(), new CreatedEntityInfo(asset.getName(), "Asset", StringUtils.isEmpty(definition.getCustomer()) ? "Tenant" : definition.getCustomer()));
+        createdEntities.put(asset.getUuidId(), new CreatedEntityInfo(asset.getName(), EntityType.ASSET, StringUtils.isEmpty(definition.getCustomer()) ? "Tenant" : definition.getCustomer()));
     }
 
     public void register(DeviceDefinition definition, Device device) {
         register(definition.getJsonId(), device.getId());
-        createdEntities.put(device.getUuidId(), new CreatedEntityInfo(device.getName(), "Device", StringUtils.isEmpty(definition.getCustomer()) ? "Tenant" : definition.getCustomer()));
+        createdEntities.put(device.getUuidId(), new CreatedEntityInfo(device.getName(), EntityType.DEVICE, StringUtils.isEmpty(definition.getCustomer()) ? "Tenant" : definition.getCustomer()));
     }
 
     public void register(DashboardDefinition definition, Dashboard dashboard) {
         register(definition.getJsonId(), dashboard.getId());
-        createdEntities.put(dashboard.getUuidId(), new CreatedEntityInfo(dashboard.getName(), "Dashboard", StringUtils.isEmpty(definition.getCustomer()) ? "Tenant" : definition.getCustomer()));
+        createdEntities.put(dashboard.getUuidId(), new CreatedEntityInfo(dashboard.getName(), EntityType.DASHBOARD, StringUtils.isEmpty(definition.getCustomer()) ? "Tenant" : definition.getCustomer()));
     }
 
     public void register(String referenceId, RuleChain ruleChain) {
         register(referenceId, ruleChain.getId());
-        createdEntities.put(ruleChain.getUuidId(), new CreatedEntityInfo(ruleChain.getName(), "Rule chain", "Tenant"));
+        createdEntities.put(ruleChain.getUuidId(), new CreatedEntityInfo(ruleChain.getName(), EntityType.RULE_CHAIN, "Tenant"));
     }
 
 
     public void register(Role role) {
         register(role.getId());
-        createdEntities.put(role.getUuidId(), new CreatedEntityInfo(role.getName(), "Role", "Tenant"));
+        createdEntities.put(role.getUuidId(), new CreatedEntityInfo(role.getName(), EntityType.ROLE, "Tenant"));
     }
 
     public void register(DeviceProfileDefinition definition, DeviceProfile deviceProfile) {
         register(definition.getJsonId(), deviceProfile.getId());
-        createdEntities.put(deviceProfile.getUuidId(), new CreatedEntityInfo(deviceProfile.getName(), "Device profile", "Tenant"));
+        createdEntities.put(deviceProfile.getUuidId(), new CreatedEntityInfo(deviceProfile.getName(), EntityType.DEVICE_PROFILE, "Tenant"));
     }
 
-    public void register(AssetProfile assetProfile) {
-        register(assetProfile.getId());
-        createdEntities.put(assetProfile.getUuidId(), new CreatedEntityInfo(assetProfile.getName(), "Asset profile", "Tenant"));
+    public void register(AssetProfileDefinition definition, AssetProfile assetProfile) {
+        register(definition.getJsonId(), assetProfile.getId());
+        createdEntities.put(assetProfile.getUuidId(), new CreatedEntityInfo(assetProfile.getName(), EntityType.ASSET_PROFILE, "Tenant"));
     }
 
     public void register(EdgeDefinition definition, Edge edge) {
         register(definition.getJsonId(), edge.getId());
-        createdEntities.put(edge.getUuidId(), new CreatedEntityInfo(edge.getName(), "Edge", StringUtils.isEmpty(definition.getCustomer()) ? "Tenant" : definition.getCustomer()));
+        createdEntities.put(edge.getUuidId(), new CreatedEntityInfo(edge.getName(), EntityType.EDGE, StringUtils.isEmpty(definition.getCustomer()) ? "Tenant" : definition.getCustomer()));
     }
 
     public void register(SchedulerEventDefinition definition, SchedulerEvent schedulerEvent) {
@@ -166,7 +179,19 @@ public class SolutionInstallContext {
 
     public void register(CalculatedField calculatedField) {
         register(calculatedField.getId());
-        createdEntities.put(calculatedField.getUuidId(), new CreatedEntityInfo(calculatedField.getName(), "Calculated field", "Tenant"));
+        EntityId entityId = calculatedField.getEntityId();
+        CreatedEntityInfo entityInfo = createdEntities.get(entityId.getId());
+        boolean alarmRule = calculatedField.getType() == CalculatedFieldType.ALARM;
+        if (entityInfo == null) {
+            String target = alarmRule ? "Alarm rule" : "Calculated field";
+            throw new IllegalStateException("Failed to register " + target + " with name: " +
+                                            calculatedField.getName() + " for non-existing entity with id: " + entityId);
+        }
+        if (alarmRule) {
+            createdAlarmRules.put(calculatedField.getUuidId(), CreatedAlarmRuleInfo.from(entityId, entityInfo.getName(), calculatedField));
+            return;
+        }
+        createdCalculatedFields.put(calculatedField.getUuidId(), CreatedCalculatedFieldInfo.from(entityId, entityInfo.getName(), calculatedField));
     }
 
     public void put(EntitySearchKey entitySearchKey, EntityId entityId) {

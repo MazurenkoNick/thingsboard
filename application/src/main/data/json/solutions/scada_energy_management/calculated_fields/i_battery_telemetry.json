@@ -2,8 +2,8 @@
   "type": "SCRIPT",
   "name": "Battery telemetry",
   "entityId": {
-    "id": "e9c3bdd0-1503-11f0-8308-dfc38c65ed1c",
-    "entityType": "DEVICE"
+    "id": "217335c0-87ee-4f89-b134-0953a7d544ea",
+    "entityType": "DEVICE_PROFILE"
   },
   "debugSettings": {
     "failuresEnabled": true,
@@ -37,7 +37,7 @@
         "defaultValue": ""
       }
     },
-    "expression": "// Sample script to convert temperature readings from Fahrenheit to Celsius\nreturn {\n    \"batteryTemperature\": temperature,\n    \"batteryLevel\": batteryLevel\n};",
+    "expression": "return {\n    \"batteryTemperature\": temperature,\n    \"batteryLevel\": batteryLevel\n};",
     "output": {
       "name": "",
       "type": "TIME_SERIES"
