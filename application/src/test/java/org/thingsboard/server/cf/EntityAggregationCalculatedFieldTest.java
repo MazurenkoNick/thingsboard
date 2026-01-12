@@ -420,10 +420,10 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
     }
 
     private CalculatedField createConsumptionCF(EntityId entityId, AggInterval aggInterval, Watermark watermark) {
-        return createConsumptionCF(entityId, aggInterval, watermark, 9999L);
+        return createConsumptionCF(entityId, aggInterval, watermark, 9999.0);
     }
 
-    private CalculatedField createConsumptionCF(EntityId entityId, AggInterval aggInterval, Watermark watermark, Long defaultValue) {
+    private CalculatedField createConsumptionCF(EntityId entityId, AggInterval aggInterval, Watermark watermark, Double defaultValue) {
         Map<String, Argument> arguments = new HashMap<>();
         Argument argument = new Argument();
         argument.setRefEntityKey(new ReferencedEntityKey("energy", ArgumentType.TS_LATEST, null));
@@ -499,7 +499,7 @@ public class EntityAggregationCalculatedFieldTest extends AbstractControllerTest
         AggMetric consumption = new AggMetric();
         consumption.setFunction(AggFunction.SUM);
         consumption.setInput(new AggKeyInput("en"));
-        consumption.setDefaultValue(9999L);
+        consumption.setDefaultValue(9999.0);
         aggMetrics.put("consumption", consumption);
 
         AggMetric avgTemperature = new AggMetric();
