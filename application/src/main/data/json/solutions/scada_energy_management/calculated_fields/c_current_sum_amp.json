@@ -1,18 +1,18 @@
 {
-  "type": "SIMPLE",
+  "type": "SCRIPT",
   "name": "Current sum ampere",
   "entityId": {
-    "id": "e9ce9340-1503-11f0-8308-dfc38c65ed1c",
-    "entityType": "DEVICE"
+    "id": "51be019a-7518-47a6-b60f-a04922736fe8",
+    "entityType": "DEVICE_PROFILE"
   },
   "debugSettings": {
     "failuresEnabled": true,
     "allEnabled": false,
-    "allEnabledUntil": 1743783667407
+    "allEnabledUntil": 0
   },
   "configurationVersion": 0,
   "configuration": {
-    "type": "SIMPLE",
+    "type": "SCRIPT",
     "arguments": {
       "consumptionL1": {
         "refEntityKey": {
@@ -57,11 +57,12 @@
         "defaultValue": ""
       }
     },
-    "expression": "(consumptionL1/voltageL1) + (consumptionL2/voltageL2) + (consumptionL1/voltageL3)",
+    "expression": "var currentSumAmp = 0;\n\nif (voltageL1 != 0) {\n    currentSumAmp += consumptionL1/voltageL1;\n}\n\nif (voltageL2 != 0) {\n    currentSumAmp += consumptionL2/voltageL2;\n}\n\nif (voltageL3 != 0) {\n    currentSumAmp += consumptionL3/voltageL3;\n}\n\nreturn {\n    \"currentSumAmp\": currentSumAmp\n};",
     "output": {
-      "name": "currentSumAmp",
       "type": "TIME_SERIES",
-      "decimalsByDefault": 0
+      "strategy": {
+        "type": "RULE_CHAIN"
+      }
     }
   }
 }

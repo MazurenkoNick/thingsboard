@@ -1,14 +1,15 @@
-The AIR Quality Monitoring template represents a solution for general air pollution monitoring and provides general recommendations in a user-friendly manner. The main metric for controlling the level of air pollution is AQI. 
+Transform raw sensor data into public health insights instantly.
+The **Air Quality Monitoring** template deploys a complete Smart City solution,
+allowing you to visualize pollution levels, manage AQI sensors, and inform citizens with real-time health recommendations. 🏙️😷
 
-AQI is calculated based on Ozone, PM2.5, PM10, CO, SO2 and NO2 sensor readings. Solution supports sensors that report all or limited number of the readings.
+Press **Install** to generate a working simulation of **Los Angeles** — complete with district-level monitoring and live AQI calculations.
 
-Also, when installing this solution, the possibility of managing air quality control sensors will be provided.
+#### 📦 What's inside the box?
 
-#### Solution structure
+We have auto-generated a complete environmental monitoring ecosystem for you:
 
-* AQI dashboard of a specific city;
-* AQI set of specific pollutants;  
-* Interactive map with mapped sensors;
-* Pollution statistic;
-* Public dashboard;
-* Edge instance - optionally, add edge computing to your solution.
+* 🌍 **Public Citizens Dashboard:** A transparency portal featuring interactive maps, pollution gauges, and automated health advice based on EPA standards.
+* 🛠️ **Admin Command Center:** A dedicated management console to oversee sensor health, battery levels, and connectivity alarms.
+* 🧠 **Automated AQI Logic:** Pre-configured **Calculated Fields** that instantly convert raw telemetry (PM2.5, NO2, Ozone) into the standard Air Quality Index.
+* 🔌 **Demo Fleet:** Five pre-provisioned "Air Quality Sensors" simulating real-world data across different city districts.
+* 📡 **Edge Readiness:** Built-in support for **ThingsBoard Edge**, allowing you to deploy local processing nodes in remote cities or districts.

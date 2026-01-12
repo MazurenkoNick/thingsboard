@@ -1,19 +1,15 @@
-Water Metering template represent generic water metering solution. 
-With this template you get interactive dashboards that allow administrator and end user 
-browse state of the water meters and aggregated water consumption statistics. 
-Users are able to define thresholds and enable alarms and notifications over SMS or email.  
+Transform your utility operations with the **Water Metering** solution template. 
+Designed for municipalities, sub-metering providers, and building managers, this solution bridges the gap between infrastructure management and customer data sharing. 🏙️🚿
 
+Press **Install** to generate a complete Supplier/Rental metering ecosystem — populated with demo devices, multi-customers, and pre-configured analytics.
 
-Press the install button and you will have a ready-to-use generic application that covers all common requirements.
+#### 📦 What's inside the box?
 
-#### Solution structure
+We have auto-generated a comprehensive utility platform for you:
 
-* "Water Metering Tenant Dashboard" dashboard for tenant administrators;
-* "Water Metering User Dashboard" dashboard for end customers;
-* Three "Water Meter" devices with battery level, water temperature and consumption history;
-* "Water Meter" device profile that generates "Low battery", "Low temperature", "Leakage Detected" and "Daily/Weekly Consumption" alarms;
-* Rule chains:
-   * "Water Metering Solution Main" contains data aggregation rule nodes. 
-   * "Water Metering Solution Tenant Alarm Routing" responsible for sending alarm notifications over SMS or email if corresponding administrator settings are enabled.
-   * "Water Metering Solution User Alarm Routing" responsible for sending alarm notifications over SMS or email if corresponding user settings are enabled.
-* Edge instance - optionally, add edge computing to your solution.
+* 🛠️ **Tenant Command Center:** A centralized dashboard for administrator to provision devices, monitor city-wide consumption, and manage the customer database.
+* 👥 **Supplier/Rental Workflow:** Built-in logic allows you to create Customers, automatically generate User accounts, and assign/unassign meters to them instantly.
+* 🚨 **Infrastructure Protection:** Comprehensive rules protect your water meters by tracking **Leakage**, **Device Inactivity**, and **Freezing** conditions.
+* 🔀 **Role-Based Alarm Routing:** The system intelligently splits alerts. **Technical** (Low Battery, Inactivity) and **Critical** (Leakage) alerts go to your maintenance team, while **Usage** alerts go to the Customer.
+* 📊 **Automated Metrics:** Built-in **Calculated Fields** automatically convert raw "Pulse Counts" into **Daily** and **Weekly** consumption data for easy analysis, clear reporting, and potential billing automation.
+* 👤 **Customer Transparency Portal:** A dedicated, read-only dashboard where your end-users can track their own consumption and set personal usage alerts without accessing technical settings.
