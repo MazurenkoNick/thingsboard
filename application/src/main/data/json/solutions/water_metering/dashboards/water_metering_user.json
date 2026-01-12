@@ -62,7 +62,7 @@
                 "_hash": 0.8381664834025695
               },
               {
-                "name": "details.label",
+                "name": "originator",
                 "type": "alarm",
                 "label": "Originator",
                 "color": "#9c27b0",
@@ -804,7 +804,7 @@
                 "_hash": 0.8381664834025695
               },
               {
-                "name": "details.label",
+                "name": "originator",
                 "type": "alarm",
                 "label": "Originator",
                 "color": "#9c27b0",

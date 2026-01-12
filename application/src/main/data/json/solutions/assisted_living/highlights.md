@@ -1,14 +1,14 @@
-The Assisted Living template represents a solution for monitoring and controlling residents' health, tracking their movement and environment. Alert systems allow you to timely notify service personnel about changes in conditions and respond to them promptly, which significantly facilitates monitoring as a whole and raises the service to a new level.
+Enhance resident safety and operational efficiency with the **Assisted Living** solution template. Designed for senior housing, nursing homes, and care facilities, this solution provides real-time visibility into resident health and facility status. 💓🏠
 
-The interactive map of the resident helps to keep the necessary information always at hand and to monitor its changes.
-With the help of sensors reading body metrics, the staff can monitor residents' condition in real-time, receive accurate and reliable data, document it, analyze it and keep statistics. The data, in turn, will help doctors and staff quickly identify potential problems and warn them before they occur.
+Press **Install** to generate a complete monitoring ecosystem—populated with demo residents, floor plans, and pre-configured smart sensors.
 
-The system analyzes telemetry from sensors and notifies supervisors about changes in the conditions of stay — for example, when someone presses the alarm button or when one of the parameters becomes critical.
+#### 📦 What's inside the box?
 
-#### Solution structure
+We have auto-generated a comprehensive care platform for you:
 
-Admin dashboard:
-* interactive scheme of the area for monitoring the movement of residents and tracking alarms in real-time;
-* alarm display sections for rooms and residents;
-* resident management system;
-* zone management system: creating, editing, and binding rooms and devices.
+* 🖥️ **Care Command Center:** A centralized dashboard for staff to monitor resident vitals (Heart Rate, Temp), handle panic alerts, and view real-time locations on an interactive floor plan.
+* 📍 **Indoor Positioning System:** Built-in logic uses BLE/LoRa gateways and RSSI data to track resident movement and locate them instantly during emergencies.
+* 🚨 **Smart Alarm System:** Pre-configured rules differentiate between **Resident Health Alerts** (Panic Button, Fall/Noise, Low Vitals) and **Infrastructure Alerts** (Smoke, Leak, Door Open).
+* 👥 **Resident Management:** A digital roster to manage resident profiles, emergency contacts, medical info, and device assignments.
+* 🏢 **Facility & Zone Manager:** Tools to upload floor plans, define zones, and assign sensors to specific rooms via a drag-and-drop interface.
+* 📡 **Edge Ready:** Includes specific configurations for **ThingsBoard Edge**, enabling local data processing and offline reliability for remote residences.

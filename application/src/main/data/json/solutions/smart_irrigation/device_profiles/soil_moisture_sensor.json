@@ -7,11 +7,11 @@
   "provisionType": "DISABLED",
   "defaultRuleChainId": {
     "entityType": "RULE_CHAIN",
-    "id": "f18f71a0-38d6-11ed-af17-3d7337747e91"
+    "id": "cd629220-398b-11ed-af17-3d7337747e91"
   },
   "defaultEdgeRuleChainId": {
     "entityType": "RULE_CHAIN",
-    "id": "9fdea7b0-9676-11ed-b5e1-392bb934190c"
+    "id": "53190790-9676-11ed-b5e1-392bb934190c"
   },
   "defaultDashboardId": null,
   "defaultQueueName": null,
