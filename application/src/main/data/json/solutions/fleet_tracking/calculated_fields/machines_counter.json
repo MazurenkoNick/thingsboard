@@ -27,7 +27,7 @@
         "defaultValue": null
       }
     },
-    "deduplicationIntervalInSec": 60,
+    "deduplicationIntervalInSec": 10,
     "metrics": {
       "insideLoadingZone": {
         "function": "COUNT",

@@ -79,7 +79,7 @@ public class TrendzControllerTest extends AbstractControllerTest {
         );
         TrendzSettings settings = new TrendzSettings(config, syncResult);
 
-        trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
+        trendzSettingsService.saveTrendzSettings(settings);
 
         TrendzConfiguration result = doGet("/api/trendz/config", TrendzConfiguration.class);
 
@@ -105,7 +105,7 @@ public class TrendzControllerTest extends AbstractControllerTest {
         assertThat(result.trendzUrl()).isEqualTo(TRENDZ_URL);
         assertThat(result.tbUrl()).isEqualTo(TB_URL);
 
-        TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+        TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings();
         assertThat(savedSettings).isNotNull();
         assertThat(savedSettings.configuration().trendzUrl()).isEqualTo(TRENDZ_URL);
         assertThat(savedSettings.configuration().tbUrl()).isEqualTo(TB_URL);
@@ -141,7 +141,7 @@ public class TrendzControllerTest extends AbstractControllerTest {
         );
         TrendzSettings settings = new TrendzSettings(config, syncResult);
 
-        trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
+        trendzSettingsService.saveTrendzSettings(settings);
 
         TrendzSynchronizationResult result = doGet("/api/trendz/sync", TrendzSynchronizationResult.class);
 
@@ -163,7 +163,7 @@ public class TrendzControllerTest extends AbstractControllerTest {
         );
         TrendzSettings settings = new TrendzSettings(config, syncResult);
 
-        trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
+        trendzSettingsService.saveTrendzSettings(settings);
 
         TrendzSynchronizationResult result = doGet("/api/trendz/sync", TrendzSynchronizationResult.class);
 

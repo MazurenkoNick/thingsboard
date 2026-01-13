@@ -240,10 +240,13 @@ public class DefaultDataUpdateService implements DataUpdateService {
                     String urlString = baseUrl.toString();
                     log.info("Found unique Trendz URL '{}'. Migrating dashboards to use system Trendz widgets", urlString);
 
-                    TrendzSettings trendzSettings = this.trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+                    TrendzSettings trendzSettings = this.trendzSettingsService.findTrendzSettings();
                     if (trendzSettings == null) {
                         TrendzSettings newSettings = this.trendzUpdater.createSettings(urlString, null);
-                        this.trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, newSettings);
+                        this.trendzSettingsService.saveTrendzSettings(newSettings);
+                        log.info("Trendz Setting is not found for Sysadmin, saving a new one: {}", newSettings);
+                    } else {
+                        log.info("Trendz Setting already present for Sysadmin, keep that setting without changes: {}", trendzSettings);
                     }
 
                     for (String fullFqn : fullFqns) {

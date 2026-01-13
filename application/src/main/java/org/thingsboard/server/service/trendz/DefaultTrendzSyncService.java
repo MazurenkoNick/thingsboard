@@ -89,13 +89,14 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
     @Override
     public TrendzSettings performSync() {
+        log.trace("Executing performSync");
         if (!trendzEnabled) {
             return saveTrendzSettings(null, null, null, 0L,
                     TrendzSynchronizationResultType.SYNC_DISABLED,
                     TrendzSynchronizationStatus.NOT_AVAILABLE);
         }
 
-        TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+        TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings();
 
         if (!isValidTrendzConfiguration(trendzSettings)) {
             trendzSettings = createDefaultTrendzSettings(trendzSettings);
@@ -119,7 +120,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
         TrendzInfo trendzInfo = validateTrendzConnectionInfo(trendzUrl, tbUrl, updatedTs);
         if (trendzInfo == null) {
             log.debug("Trendz validation failed, sync result is already in settings");
-            return trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+            return trendzSettingsService.findTrendzSettings();
         }
 
         String trendzVersion = trendzInfo.version();
@@ -146,7 +147,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
     @Override
     public void performSyncIfNeeded() {
-        TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+        TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings();
         if (isSyncedUp(trendzSettings)) {
             log.trace("Trendz is already synced up. Status: {}, Result: {}",
                     trendzSettings.synchronizationResult().status(), trendzSettings.synchronizationResult().type());
@@ -157,6 +158,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
     @Override
     public TrendzHealthcheckResult performHealthcheck() {
+        log.trace("Executing performHealthcheck");
         if (!trendzEnabled) {
             return new TrendzHealthcheckResult(
                     null,
@@ -166,7 +168,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
             );
         }
 
-        TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+        TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings();
         if (!isSyncedUp(trendzSettings)) {
             return new TrendzHealthcheckResult(
                     null,
@@ -223,6 +225,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
     @Override
     public void performApiKeyRotationSync(ApiKey newApiKey, ApiKey oldApiKey) {
+        log.trace("Executing performApiKeyRotationSync");
         if (!trendzEnabled) {
             return;
         }
@@ -233,7 +236,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
 
             log.trace("Notifying Trendz about API key rotation. API Key ID: {}", newApiKey.getId());
 
-            TrendzSettings settings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+            TrendzSettings settings = trendzSettingsService.findTrendzSettings();
             if (settings == null || settings.configuration() == null) {
                 log.debug("Trendz settings not found, cannot notify about key rotation");
                 return;
@@ -289,7 +292,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
                 )
         );
 
-        trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
+        trendzSettingsService.saveTrendzSettings(settings);
         return settings;
     }
 
@@ -433,7 +436,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
                                               TrendzSynchronizationResultType resultType,
                                               TrendzSynchronizationStatus status) {
         TrendzSettings settings = createSettings(trendzUrl, tbUrl, version, updatedTs, resultType, status);
-        trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
+        trendzSettingsService.saveTrendzSettings(settings);
         return settings;
     }
 

@@ -314,7 +314,7 @@ public class TrendzClient {
         if (!trendzEnabled) {
             throw new ThingsboardException("Trendz is disabled.", ThingsboardErrorCode.GENERAL);
         }
-        Optional<TrendzSettings> trendzSettings = Optional.ofNullable(trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID));
+        Optional<TrendzSettings> trendzSettings = Optional.ofNullable(trendzSettingsService.findTrendzSettings());
         trendzSettings.map(TrendzSettings::synchronizationResult)
                 .map(TrendzSynchronizationResult::status)
                 .orElseThrow(() -> new ThingsboardException(
