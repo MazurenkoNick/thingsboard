@@ -841,6 +841,7 @@ public class DefaultSolutionService implements SolutionService {
     }
 
     private void provisionRuleChains(SolutionInstallContext ctx) {
+        boolean edgeAllowed = subscriptionService.isCreateEdgeAllowed(ctx.getTenantId());
         List<ReferenceableEntityDefinition> ruleChains = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "rule_chains.json", new TypeReference<>() {
         });
         for (ReferenceableEntityDefinition entityDefinition : ruleChains) {
@@ -848,6 +849,10 @@ public class DefaultSolutionService implements SolutionService {
             Path ruleChainPath = resolve(ctx.getSolutionId(), "rule_chains", entityDefinition.getFile());
             JsonNode ruleChainJson = replaceIds(ctx, JacksonUtil.toJsonNode(ruleChainPath));
             RuleChain ruleChain = JacksonUtil.treeToValue(ruleChainJson.get("ruleChain"), RuleChain.class);
+            if (!edgeAllowed && RuleChainType.EDGE.equals(ruleChain.getType())) {
+                log.warn("[{}][{}] Skipping EDGE rule chain provisioning due to subscription limitations: {}", ctx.getTenantId(), ctx.getSolutionId(), ruleChain.getName());
+                continue;
+            }
             ruleChain.setTenantId(ctx.getTenantId());
             String metadataStr = JacksonUtil.toString(ruleChainJson.get("metadata"));
             RuleChainMetaData ruleChainMetaData = JacksonUtil.treeToValue(JacksonUtil.toJsonNode(metadataStr), RuleChainMetaData.class);
@@ -880,7 +885,11 @@ public class DefaultSolutionService implements SolutionService {
             }
             RuleChainMetaData ruleChainMetaData = JacksonUtil.treeToValue(JacksonUtil.toJsonNode(metadataStr), RuleChainMetaData.class);
 
-            RuleChainId ruleChainId = (RuleChainId) EntityIdFactory.getByTypeAndUuid(EntityType.RULE_CHAIN, ctx.getRealIds().get(entityDefinition.getJsonId()));
+            String realRuleChainId = ctx.getRealIds().get(entityDefinition.getJsonId());
+            if (StringUtils.isEmpty(realRuleChainId)) {
+                continue;
+            }
+            RuleChainId ruleChainId = (RuleChainId) EntityIdFactory.getByTypeAndUuid(EntityType.RULE_CHAIN, realRuleChainId);
             RuleChain savedRuleChain = ruleChainService.findRuleChainById(ctx.getTenantId(), ruleChainId);
             ruleChainMetaData.setRuleChainId(savedRuleChain.getId());
             ruleChainService.saveRuleChainMetaData(ctx.getTenantId(), ruleChainMetaData, tbRuleChainService::updateRuleNodeConfiguration);
@@ -906,7 +915,11 @@ public class DefaultSolutionService implements SolutionService {
             }
             RuleChainMetaData ruleChainMetaData = JacksonUtil.treeToValue(JacksonUtil.toJsonNode(metadataStr), RuleChainMetaData.class);
 
-            RuleChainId ruleChainId = (RuleChainId) EntityIdFactory.getByTypeAndUuid(EntityType.RULE_CHAIN, ctx.getRealIds().get(entityDefinition.getJsonId()));
+            String realRuleChainId = ctx.getRealIds().get(entityDefinition.getJsonId());
+            if (StringUtils.isEmpty(realRuleChainId)) {
+                continue;
+            }
+            RuleChainId ruleChainId = (RuleChainId) EntityIdFactory.getByTypeAndUuid(EntityType.RULE_CHAIN, realRuleChainId);
             RuleChain savedRuleChain = ruleChainService.findRuleChainById(ctx.getTenantId(), ruleChainId);
             ruleChainMetaData.setRuleChainId(savedRuleChain.getId());
             ruleChainService.saveRuleChainMetaData(ctx.getTenantId(), ruleChainMetaData, tbRuleChainService::updateRuleNodeConfiguration);
@@ -932,11 +945,10 @@ public class DefaultSolutionService implements SolutionService {
             }
             if (deviceProfile.getDefaultEdgeRuleChainId() != null) {
                 String newId = ctx.getRealIds().get(deviceProfile.getDefaultEdgeRuleChainId().getId().toString());
-                if (newId != null) {
-                    deviceProfile.setDefaultEdgeRuleChainId(new RuleChainId(UUID.fromString(newId)));
+                if (StringUtils.isEmpty(newId)) {
+                    deviceProfile.setDefaultEdgeRuleChainId(null);
                 } else {
-                    log.error("[{}][{}] Device profile: {} references non existing edge rule chain.", ctx.getTenantId(), ctx.getSolutionId(), deviceProfile.getName());
-                    throw new ThingsboardRuntimeException();
+                    deviceProfile.setDefaultEdgeRuleChainId(new RuleChainId(UUID.fromString(newId)));
                 }
             }
         });
@@ -967,11 +979,10 @@ public class DefaultSolutionService implements SolutionService {
             }
             if (assetProfile.getDefaultEdgeRuleChainId() != null) {
                 String newId = ctx.getRealIds().get(assetProfile.getDefaultEdgeRuleChainId().getId().toString());
-                if (newId != null) {
-                    assetProfile.setDefaultEdgeRuleChainId(new RuleChainId(UUID.fromString(newId)));
+                if (StringUtils.isEmpty(newId)) {
+                    assetProfile.setDefaultEdgeRuleChainId(null);
                 } else {
-                    log.error("[{}][{}] Asset profile: {} references non existing edge rule chain.", ctx.getTenantId(), ctx.getSolutionId(), assetProfile.getName());
-                    throw new ThingsboardRuntimeException();
+                    assetProfile.setDefaultEdgeRuleChainId(new RuleChainId(UUID.fromString(newId)));
                 }
             }
         });
