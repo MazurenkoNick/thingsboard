@@ -201,6 +201,9 @@ export class CalculatedFieldOutputComponent implements ControlValueAccessor, Val
       this.toggleScopeByOutputType(this.outputForm.get('type').value);
       this.updatedStrategy();
       this.updateTimeSeriesTtl(this.outputForm.get('strategy.saveTimeSeries').value);
+      if (this.outputForm.invalid) {
+        this.outputForm.updateValueAndValidity();
+      }
     }
   }
 
@@ -228,7 +231,7 @@ export class CalculatedFieldOutputComponent implements ControlValueAccessor, Val
 
   private updatedFormWithMode(): void {
     if (this.simpleMode && !this.hiddenName) {
-      this.outputForm.get('name').enable({emitEvent: true});
+      this.outputForm.get('name').enable({emitEvent: false});
     } else {
       this.outputForm.get('name').disable({emitEvent: false});
     }
