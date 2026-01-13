@@ -55,7 +55,8 @@ public class DefaultTrendzSettingsService implements TrendzSettingsService {
 
     @CacheEvict(cacheNames = CacheConstants.TRENDZ_SETTINGS_CACHE, key = "'system'")
     @Override
-    public void saveTrendzSettings(TenantId tenantId, TrendzSettings settings) {
+    public void saveTrendzSettings(TrendzSettings settings) {
+        log.trace("Executing saveTrendzSettings [{}]", settings);
         AdminSettings adminSettings = Optional.ofNullable(adminSettingsService.findAdminSettingsByTenantIdAndKey(TenantId.SYS_TENANT_ID, SETTINGS_KEY))
                 .orElseGet(() -> {
                     AdminSettings newAdminSettings = new AdminSettings();
@@ -69,7 +70,8 @@ public class DefaultTrendzSettingsService implements TrendzSettingsService {
 
     @Cacheable(cacheNames = CacheConstants.TRENDZ_SETTINGS_CACHE, key = "'system'")
     @Override
-    public TrendzSettings findTrendzSettings(TenantId tenantId) {
+    public TrendzSettings findTrendzSettings() {
+        log.trace("Executing findTrendzSettings");
         return Optional.ofNullable(adminSettingsService.findAdminSettingsByTenantIdAndKey(TenantId.SYS_TENANT_ID, SETTINGS_KEY))
                 .map(adminSettings -> JacksonUtil.treeToValue(adminSettings.getJsonValue(), TrendzSettings.class))
                 .orElse(null);
@@ -77,7 +79,8 @@ public class DefaultTrendzSettingsService implements TrendzSettingsService {
 
     @CacheEvict(cacheNames = CacheConstants.TRENDZ_SETTINGS_CACHE, key = "'system'")
     @Override
-    public void deleteTrendzSettings(TenantId tenantId) {
+    public void deleteTrendzSettings() {
+        log.trace("Executing deleteTrendzSettings");
         adminSettingsService.deleteAdminSettingsByTenantIdAndKey(TenantId.SYS_TENANT_ID, SETTINGS_KEY);
     }
 

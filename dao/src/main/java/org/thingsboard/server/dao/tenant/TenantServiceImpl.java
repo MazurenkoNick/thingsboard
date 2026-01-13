@@ -216,7 +216,6 @@ public class TenantServiceImpl extends AbstractCachedEntityService<TenantId, Ten
         whiteLabelingService.deleteAllTenantWhiteLabeling(tenantId);
         customTranslationService.deleteCustomTranslationByTenantId(tenantId);
         notificationSettingsService.deleteNotificationSettings(tenantId);
-        trendzSettingsService.deleteTrendzSettings(tenantId);
         qrCodeSettingService.deleteByTenantId(tenantId);
         customMenuService.deleteByTenantId(tenantId);
         encryptionService.deleteEncryptionKeyByTenantId(tenantId);

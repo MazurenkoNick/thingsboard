@@ -32,7 +32,6 @@ package org.thingsboard.server.common.data;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
 
 import java.util.List;
 import java.util.Set;
@@ -65,5 +64,4 @@ public class SystemParams {
     long minAllowedDeduplicationIntervalInSecForCF;
     long minAllowedAggregationIntervalInSecForCF;
     long intermediateAggregationIntervalInSecForCF;
-    TrendzSettings trendzSettings;
 }
