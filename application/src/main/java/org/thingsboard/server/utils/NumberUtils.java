@@ -28,29 +28,21 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.cf.ctx.state.aggregation.function;
+package org.thingsboard.server.utils;
 
-import org.thingsboard.server.common.data.cf.configuration.aggregation.AggFunction;
-import org.thingsboard.server.utils.NumberUtils;
+import static org.thingsboard.script.api.tbel.TbUtils.toFixed;
+import static org.thingsboard.script.api.tbel.TbUtils.toInt;
 
-public class MinAggEntry extends BaseAggEntry {
+public class NumberUtils {
 
-    private double min = Double.MAX_VALUE;
-
-    @Override
-    protected void doUpdate(double value) {
-        if (value < min) {
-            min = value;
+    public static Object roundResult(double value, Integer precision) {
+        if (precision == null) {
+            return value;
         }
+        if (precision.equals(0)) {
+            return toInt(value);
+        }
+        return toFixed(value, precision);
     }
 
-    @Override
-    protected Object prepareResult(Integer precision) {
-        return NumberUtils.roundResult(min, precision);
-    }
-
-    @Override
-    public AggFunction getType() {
-        return AggFunction.MIN;
-    }
 }

@@ -28,29 +28,20 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.cf.ctx.state.aggregation.function;
+package org.thingsboard.server.utils;
 
-import org.thingsboard.server.common.data.cf.configuration.aggregation.AggFunction;
-import org.thingsboard.server.utils.NumberUtils;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-public class MinAggEntry extends BaseAggEntry {
+public class NumberUtilsTest {
 
-    private double min = Double.MAX_VALUE;
+    private final double doubleVal = 1729.1729;
 
-    @Override
-    protected void doUpdate(double value) {
-        if (value < min) {
-            min = value;
-        }
+    @Test
+    public void roundResult() {
+        Assertions.assertEquals(1729.1729, NumberUtils.roundResult(doubleVal, null));
+        Assertions.assertEquals(1729, NumberUtils.roundResult(doubleVal, 0));
+        Assertions.assertEquals(1729.17, NumberUtils.roundResult(doubleVal, 2));
     }
 
-    @Override
-    protected Object prepareResult(Integer precision) {
-        return NumberUtils.roundResult(min, precision);
-    }
-
-    @Override
-    public AggFunction getType() {
-        return AggFunction.MIN;
-    }
 }
