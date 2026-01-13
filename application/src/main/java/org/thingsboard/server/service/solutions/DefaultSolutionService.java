@@ -633,17 +633,25 @@ public class DefaultSolutionService implements SolutionService {
         devList.append("| :---   | :---  | :---  |");
         devList.append(System.lineSeparator());
 
+        Map<String, String> placeholders = new HashMap<>();
+        placeholders.put("${DOCS_BASE_URL}", docsBaseUrl);
+        placeholders.put("${BASE_URL}", baseUrl);
+
         for (DeviceCredentialsInfo credentialsInfo : ctx.getCreatedDevices().values()) {
             devList.append("|").append(credentialsInfo.getName())
                     .append("|").append(credentialsInfo.getCredentials().getCredentialsId()).append("{:copy-code}")
                     .append("|").append(credentialsInfo.getCustomerName() != null ? credentialsInfo.getCustomerName() : "Tenant");
             devList.append(System.lineSeparator());
 
-            template = template.replace("${" + credentialsInfo.getName() + "ACCESS_TOKEN}", credentialsInfo.getCredentials().getCredentialsId());
+            placeholders.put("${" + credentialsInfo.getName() + "ACCESS_TOKEN}", credentialsInfo.getCredentials().getCredentialsId());
 
             if (credentialsInfo.isGateway()) {
                 template = template.replace("${DOCKER_CONFIG}", prepareDockerComposeFile(ctx.getTenantId(), ctx.getSolutionId(), baseUrl, credentialsInfo.getCredentials().getDeviceId()));
             }
+        }
+
+        for (var entry : placeholders.entrySet()) {
+            template = template.replace(entry.getKey(), entry.getValue());
         }
 
         template = template.replace("${device_list_and_credentials}", devList.toString());
@@ -670,6 +678,20 @@ public class DefaultSolutionService implements SolutionService {
         template = replaceCalculatedFields(ctx, template);
         template = replaceCreatedEntities(ctx, template);
 
+        if (ctx.getCreatedEdges().isEmpty()) {
+            return template.replace("${edge_instructions}", "");
+        }
+
+        boolean hasEdgeInstructionsPlaceholder = template.contains("${edge_instructions}");
+        String edgeTemplate = null;
+        if (hasEdgeInstructionsPlaceholder) {
+            Path edgeFile = resolve(ctx.getSolutionId(), "edge_instructions.md");
+            edgeTemplate = Files.exists(edgeFile) ? readFile(edgeFile) : "";
+            for (var entry : placeholders.entrySet()) {
+                edgeTemplate = edgeTemplate.replace(entry.getKey(), entry.getValue());
+            }
+        }
+
         for (Map.Entry<String, EdgeLinkInfo> edgeLinkInfoEntry : ctx.getCreatedEdges().entrySet()) {
             EdgeLinkInfo edgeLinkInfo = edgeLinkInfoEntry.getValue();
             StringBuilder edgeDetailsUrl = new StringBuilder();
@@ -678,10 +700,14 @@ public class DefaultSolutionService implements SolutionService {
             }
             edgeDetailsUrl.append("/edgeManagement/instances/all/").append(edgeLinkInfo.getEdgeId().getId());
             String edgeName = edgeLinkInfoEntry.getKey();
-            template = template.replace("${" + edgeName + "EDGE_DETAILS_URL}", edgeDetailsUrl.toString());
+            String edgeDetailsPlaceholder = "${" + edgeName + "EDGE_DETAILS_URL}";
+            template = template.replace(edgeDetailsPlaceholder, edgeDetailsUrl.toString());
+            if (hasEdgeInstructionsPlaceholder) {
+                edgeTemplate = edgeTemplate.replace(edgeDetailsPlaceholder, edgeDetailsUrl.toString());
+            }
         }
 
-        return template;
+        return hasEdgeInstructionsPlaceholder ? template.replace("${edge_instructions}", edgeTemplate) : template;
     }
 
     private static String replaceAlarmRules(SolutionInstallContext ctx, String template) {
