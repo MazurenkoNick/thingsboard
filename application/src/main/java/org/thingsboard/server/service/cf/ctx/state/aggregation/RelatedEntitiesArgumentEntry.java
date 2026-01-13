@@ -39,6 +39,7 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntryType;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
+import org.thingsboard.server.service.cf.ctx.state.HasEntityLimit;
 import org.thingsboard.server.service.cf.ctx.state.HasLatestTs;
 import org.thingsboard.server.service.cf.ctx.state.SingleValueArgumentEntry;
 
@@ -49,7 +50,7 @@ import static org.thingsboard.server.service.cf.ctx.state.BaseCalculatedFieldSta
 
 @Data
 @AllArgsConstructor
-public class RelatedEntitiesArgumentEntry implements ArgumentEntry, HasLatestTs {
+public class RelatedEntitiesArgumentEntry implements ArgumentEntry, HasLatestTs, HasEntityLimit {
 
     private final Map<EntityId, ArgumentEntry> entityInputs;
 
@@ -81,18 +82,18 @@ public class RelatedEntitiesArgumentEntry implements ArgumentEntry, HasLatestTs 
     @Override
     public boolean updateEntry(ArgumentEntry entry, CalculatedFieldCtx ctx) {
         if (entry instanceof RelatedEntitiesArgumentEntry relatedEntitiesArgumentEntry) {
-            checkRelatedEntitiesNumber(ctx);
+            checkEntityLimit(entityInputs.size(), ctx);
             entityInputs.putAll(relatedEntitiesArgumentEntry.entityInputs);
         } else if (entry instanceof SingleValueArgumentEntry singleValueArgumentEntry) {
             if (entry.isForceResetPrevious()) {
-                checkRelatedEntitiesNumber(ctx);
+                checkEntityLimit(entityInputs.size(), ctx);
                 entityInputs.put(singleValueArgumentEntry.getEntityId(), singleValueArgumentEntry);
             } else {
                 ArgumentEntry argumentEntry = entityInputs.get(singleValueArgumentEntry.getEntityId());
                 if (argumentEntry != null) {
                     argumentEntry.updateEntry(singleValueArgumentEntry, ctx);
                 } else {
-                    checkRelatedEntitiesNumber(ctx);
+                    checkEntityLimit(entityInputs.size(), ctx);
                     entityInputs.put(singleValueArgumentEntry.getEntityId(), singleValueArgumentEntry);
                 }
             }
@@ -100,15 +101,6 @@ public class RelatedEntitiesArgumentEntry implements ArgumentEntry, HasLatestTs 
             throw new IllegalArgumentException("Unsupported argument entry type for aggregation argument entry: " + entry.getType());
         }
         return true;
-    }
-
-    private void checkRelatedEntitiesNumber(CalculatedFieldCtx ctx) {
-        if (entityInputs.size() >= ctx.getMaxRelatedEntitiesPerCfArgument()) {
-            throw new IllegalArgumentException(
-                    "Exceeded the maximum allowed related entities per argument '"
-                            + ctx.getMaxRelatedEntitiesPerCfArgument() + "'. Increase the limit in the tenant profile configuration."
-            );
-        }
     }
 
     @Override
