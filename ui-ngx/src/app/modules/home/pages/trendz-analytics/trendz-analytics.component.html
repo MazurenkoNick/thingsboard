@@ -55,7 +55,7 @@
             <div class="entities-table flex-1">
               @for(item of trendzSummary.metricSummaryItems; track item.itemId) {
                 <div class="entity-item flex">
-                  <a class="entity-name flex-1" [href]="getMetricLink(item)" target="_blank">
+                  <a class="entity-name flex-1" [href]="getMetricLink(item)" target="_blank" tbTruncateWithTooltip>
                     {{ item.metricData?.metricName ?? item.fieldData?.fieldName }}
                   </a>
                 </div>
@@ -97,7 +97,7 @@
             <div class="entities-table flex-1">
               @for(item of trendzSummary.anomalyModelSummaryItems; track item.modelId) {
                 <div class="entity-item flex">
-                  <a class="entity-name flex-1" href="/trendz/anomalies/{{item.modelId}}" target="_blank">
+                  <a class="entity-name flex-1" href="/trendz/anomalies/{{item.modelId}}" target="_blank" tbTruncateWithTooltip>
                     {{ item.modelName }}
                   </a>
                   <span class="entity-status" [class.active]="item.enabled">{{ (item.enabled ? 'trendz-analytics.enabled' : 'trendz-analytics.disabled') | translate }}</span>
@@ -140,7 +140,7 @@
             <div class="entities-table flex-1">
               @for(item of trendzSummary?.calculationFieldSummaryItems; track item.calculationId) {
                 <div class="entity-item flex">
-                  <a class="entity-name flex-1" href="/trendz/calculation/{{item.calculationId}}" target="_blank">
+                  <a class="entity-name flex-1" href="/trendz/calculation/{{item.calculationId}}" target="_blank" tbTruncateWithTooltip>
                     {{ item.calculationName }}
                   </a>
                   <span class="entity-status" [class.active]="item.enabled">{{ (item.enabled ? 'trendz-analytics.enabled' : 'trendz-analytics.disabled') | translate }}</span>
@@ -183,7 +183,7 @@
             <div class="entities-table flex-1">
               @for(item of trendzSummary?.predictionModelSummaryItems; track item.modelId) {
                 <div class="entity-item flex">
-                  <a class="entity-name flex-1" href="/trendz/prediction/{{item.modelId}}" target="_blank">
+                  <a class="entity-name flex-1" href="/trendz/prediction/{{item.modelId}}" target="_blank" tbTruncateWithTooltip>
                     {{ item.modelName }}
                   </a>
                   <span class="entity-status" [class.active]="item.enabled">{{ (item.enabled ? 'trendz-analytics.enabled' : 'trendz-analytics.disabled') | translate }}</span>
@@ -232,7 +232,7 @@
               <div class="entities-table flex-1">
                 @for(item of trendzSummary.viewSummaryItems; track item.viewConfigId) {
                   <div class="entity-item flex">
-                    <a class="entity-name flex-1" href="/trendz/editConfig/{{item.viewConfigId}}" target="_blank">
+                    <a class="entity-name flex-1" href="/trendz/editConfig/{{item.viewConfigId}}" target="_blank" tbTruncateWithTooltip>
                       {{ item.viewName }}
                     </a>
                   </div>
@@ -275,7 +275,7 @@
             <div class="entities-table flex-1">
               @for(item of trendzSummary.aiSummaryItems; track item.chatId) {
                 <div class="entity-item flex">
-                  <a class="entity-name flex-1" href="/trendz/assistant/chats/{{item.chatId}}" target="_blank">
+                  <a class="entity-name flex-1" href="/trendz/assistant/chats/{{item.chatId}}" target="_blank" tbTruncateWithTooltip>
                     {{ item.chatSummary ?? item.lastMessage }}
                   </a>
                 </div>
