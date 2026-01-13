@@ -48,16 +48,14 @@
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
-                "settings": {},
-                "_hash": 0.8381664834025695
+                "settings": {}
               },
               {
                 "name": "originator",
                 "type": "alarm",
                 "label": "Originator",
                 "color": "#4caf50",
-                "settings": {},
-                "_hash": 0.2921772271979377
+                "settings": {}
               },
               {
                 "name": "type",
@@ -68,8 +66,7 @@
                   "columnWidth": "0px",
                   "useCellStyleFunction": false,
                   "useCellContentFunction": false
-                },
-                "_hash": 0.29133570655221086
+                }
               }
             ]
           },
@@ -169,7 +166,6 @@
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
                   },
-                  "_hash": 0.6622074305397865,
                   "units": {
                     "from": "m³",
                     "METRIC": "m³",
@@ -192,7 +188,6 @@
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
                   },
-                  "_hash": 0.9076421001622259,
                   "postFuncBody": "if (value === 'true') {\n    return 'Active';\n} else {\n    return 'Inactive';\n}"
                 },
                 {
@@ -205,7 +200,6 @@
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
                   },
-                  "_hash": 0.0013008241290599631,
                   "units": "%",
                   "decimals": null,
                   "funcBody": null,
@@ -279,7 +273,6 @@
                   "label": "activeDevicesNumber",
                   "color": "#4caf50",
                   "settings": {},
-                  "_hash": 0.7404827038869322,
                   "units": null,
                   "decimals": null,
                   "funcBody": null,
@@ -348,7 +341,6 @@
                   "label": "lowBatteryDevicesNumber",
                   "color": "#4caf50",
                   "settings": {},
-                  "_hash": 0.05443601143832355,
                   "units": null,
                   "decimals": null,
                   "funcBody": null,
@@ -397,75 +389,6 @@
           "enableDataExport": false
         },
         "id": "a3c7811c-0a83-865b-af64-bed805a685f2",
-        "typeFullFqn": "system.cards.html_value_card"
-      },
-      "457136f8-c871-1835-c9fc-276a3231ec86": {
-        "type": "latest",
-        "sizeX": 8,
-        "sizeY": 3,
-        "config": {
-          "datasources": [
-            {
-              "type": "entityCount",
-              "name": null,
-              "entityAliasId": "f7bed459-ea25-5a39-bfc1-a3bb8c941d8d",
-              "filterId": "0f79c9b4-ffdb-f8fa-e860-a45095837597",
-              "dataKeys": [
-                {
-                  "name": "count",
-                  "type": "count",
-                  "label": "inactiveDevicesNumber",
-                  "color": "#4caf50",
-                  "settings": {},
-                  "_hash": 0.7518461373516785,
-                  "units": null,
-                  "decimals": null,
-                  "funcBody": null,
-                  "usePostProcessing": null,
-                  "postFuncBody": null
-                }
-              ]
-            }
-          ],
-          "showTitle": false,
-          "backgroundColor": "#fff",
-          "color": "rgba(0, 0, 0, 0.87)",
-          "padding": "0px",
-          "settings": {
-            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   border: 1px solid #E0E0E0;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 22px 30px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .value {\n    font-size: 1.5em;\n    font-weight: bold;\n    line-height: 1.5;\n    color: #EB5757;\n    text-align: center;\n}\n\n.card .description {\n    font-size: 1em;\n    font-weight: normal;\n    line-height: 1.5;\n    color: #333333;\n    text-align: center;\n}\n\n@media (min-width: 960px) and (max-width: 1200px) {\n    .card .value {\n        font-size: 1.2em;\n        line-height: 1;\n    }\n    \n    .card .description {\n        font-size: 0.8em;\n        line-height: 1;\n    }\n}",
-            "cardHtml": "<div class='card' id=\"inactiveDevices\">\n    <div class='content' id=\"inactiveDevices\">\n        <div class='value' id=\"inactiveDevices\">\n            ${inactiveDevicesNumber:0}\n        </div> \n        <div class='description' id=\"inactiveDevices\">\n            Inactive devices\n        </div>\n    </div>\n</div>"
-          },
-          "title": "New HTML Value Card",
-          "dropShadow": false,
-          "enableFullscreen": false,
-          "widgetStyle": {},
-          "titleStyle": {
-            "fontSize": "16px",
-            "fontWeight": 400
-          },
-          "showLegend": false,
-          "actions": {
-            "elementClick": [
-              {
-                "name": "inactiveDevices",
-                "icon": "more_horiz",
-                "type": "updateDashboardState",
-                "targetDashboardStateId": "inactive_devices",
-                "setEntityId": false,
-                "stateEntityParamName": null,
-                "openRightLayout": false,
-                "id": "20174295-39d9-1284-46b1-d9325c928cca"
-              }
-            ]
-          },
-          "showTitleIcon": false,
-          "titleIcon": null,
-          "iconColor": "rgba(0, 0, 0, 0.87)",
-          "iconSize": "24px",
-          "titleTooltip": "",
-          "enableDataExport": false
-        },
-        "id": "457136f8-c871-1835-c9fc-276a3231ec86",
         "typeFullFqn": "system.cards.html_value_card"
       },
       "291ab4b2-f371-9897-6856-385e5745f430": {
@@ -520,7 +443,6 @@
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
                   },
-                  "_hash": 0.6622074305397865,
                   "units": {
                     "from": "m³",
                     "METRIC": "m³",
@@ -542,8 +464,7 @@
                     "columnWidth": "0px",
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
-                  },
-                  "_hash": 0.9392023657375805
+                  }
                 },
                 {
                   "name": "active",
@@ -555,7 +476,6 @@
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
                   },
-                  "_hash": 0.9076421001622259,
                   "postFuncBody": "if (value === 'true') {\n    return 'Active';\n} else {\n    return 'Inactive';\n}"
                 },
                 {
@@ -570,7 +490,6 @@
                     "cellStyleFunction": "var color;\nif (value == 'true') {\n    color = '#EB5757';\n} else {\n    color = '#27AE60';\n}\nreturn {\n    color: color,\n    fontSize: '18px'\n};",
                     "cellContentFunction": "value = '&#11044;';\nreturn value;"
                   },
-                  "_hash": 0.9508568110027811,
                   "units": null,
                   "decimals": null,
                   "funcBody": null,
@@ -721,16 +640,14 @@
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
-                "settings": {},
-                "_hash": 0.8381664834025695
+                "settings": {}
               },
               {
                 "name": "originator",
                 "type": "alarm",
                 "label": "Originator",
                 "color": "#4caf50",
-                "settings": {},
-                "_hash": 0.2921772271979377
+                "settings": {}
               },
               {
                 "name": "type",
@@ -743,8 +660,7 @@
                   "cellStyleFunction": "",
                   "useCellContentFunction": false,
                   "cellContentFunction": ""
-                },
-                "_hash": 0.5983551827511795
+                }
               }
             ]
           },
@@ -836,7 +752,6 @@
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
                   },
-                  "_hash": 0.6622074305397865,
                   "units": {
                     "from": "m³",
                     "METRIC": "m³",
@@ -859,7 +774,6 @@
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
                   },
-                  "_hash": 0.9076421001622259,
                   "postFuncBody": "if (value === 'true') {\n    return 'Active';\n} else {\n    return 'Inactive';\n}"
                 }
               ],
@@ -939,40 +853,35 @@
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
-                "settings": {},
-                "_hash": 0.8381664834025695
+                "settings": {}
               },
               {
                 "name": "originator",
                 "type": "alarm",
                 "label": "Originator",
                 "color": "#4caf50",
-                "settings": {},
-                "_hash": 0.2921772271979377
+                "settings": {}
               },
               {
                 "name": "type",
                 "type": "alarm",
                 "label": "Type",
                 "color": "#f44336",
-                "settings": {},
-                "_hash": 0.3769001942764416
+                "settings": {}
               },
               {
                 "name": "severity",
                 "type": "alarm",
                 "label": "Severity",
                 "color": "#ffc107",
-                "settings": {},
-                "_hash": 0.45046333683628226
+                "settings": {}
               },
               {
                 "name": "status",
                 "type": "alarm",
                 "label": "Status",
                 "color": "#607d8b",
-                "settings": {},
-                "_hash": 0.7071153699227859
+                "settings": {}
               }
             ]
           },
@@ -1051,8 +960,7 @@
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
-                "settings": {},
-                "_hash": 0.8381664834025695
+                "settings": {}
               },
               {
                 "name": "type",
@@ -1065,8 +973,7 @@
                   "cellStyleFunction": "",
                   "useCellContentFunction": false,
                   "cellContentFunction": ""
-                },
-                "_hash": 0.6632477787428679
+                }
               }
             ]
           },
@@ -1132,7 +1039,6 @@
                   "label": "battery",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.7691945203875652,
                   "postFuncBody": "if (typeof value === 'number') {\n    return value.toFixed(1) + '%';\n} else {\n    return value;\n}",
                   "decimals": 1,
                   "usePostProcessing": true,
@@ -1220,16 +1126,14 @@
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
-                "settings": {},
-                "_hash": 0.32271162435866696
+                "settings": {}
               },
               {
                 "name": "originator",
                 "type": "alarm",
                 "label": "Originator",
                 "color": "#4caf50",
-                "settings": {},
-                "_hash": 0.5289265043998732
+                "settings": {}
               },
               {
                 "name": "details.meterId",
@@ -1240,32 +1144,28 @@
                   "columnWidth": "0px",
                   "useCellStyleFunction": false,
                   "useCellContentFunction": false
-                },
-                "_hash": 0.9148549754772513
+                }
               },
               {
                 "name": "type",
                 "type": "alarm",
                 "label": "Type",
                 "color": "#f44336",
-                "settings": {},
-                "_hash": 0.6799953560962899
+                "settings": {}
               },
               {
                 "name": "severity",
                 "type": "alarm",
                 "label": "Severity",
                 "color": "#ffc107",
-                "settings": {},
-                "_hash": 0.18391967117871633
+                "settings": {}
               },
               {
                 "name": "status",
                 "type": "alarm",
                 "label": "Status",
                 "color": "#607d8b",
-                "settings": {},
-                "_hash": 0.004003465189153399
+                "settings": {}
               }
             ],
             "entityAliasId": "2754dd92-28a3-a689-d65c-ab9001a86f73",
@@ -1315,40 +1215,35 @@
                   "type": "attribute",
                   "label": "address",
                   "color": "#2196f3",
-                  "settings": {},
-                  "_hash": 0.7221680351335023
+                  "settings": {}
                 },
                 {
                   "name": "buildingOwner",
                   "type": "attribute",
                   "label": "buildingOwner",
                   "color": "#4caf50",
-                  "settings": {},
-                  "_hash": 0.5563788873287914
+                  "settings": {}
                 },
                 {
                   "name": "buildingOwnerEmail",
                   "type": "attribute",
                   "label": "buildingOwnerEmail",
                   "color": "#f44336",
-                  "settings": {},
-                  "_hash": 0.8134429336988194
+                  "settings": {}
                 },
                 {
                   "name": "renterName",
                   "type": "attribute",
                   "label": "renterName",
                   "color": "#ffc107",
-                  "settings": {},
-                  "_hash": 0.9602853858495966
+                  "settings": {}
                 },
                 {
                   "name": "renterPhone",
                   "type": "attribute",
                   "label": "renterPhone",
                   "color": "#607d8b",
-                  "settings": {},
-                  "_hash": 0.2924585860274258
+                  "settings": {}
                 }
               ],
               "entityAliasId": "2754dd92-28a3-a689-d65c-ab9001a86f73"
@@ -1415,16 +1310,14 @@
                   "type": "attribute",
                   "label": "firstName",
                   "color": "#ffc107",
-                  "settings": {},
-                  "_hash": 0.13198124303128123
+                  "settings": {}
                 },
                 {
                   "name": "lastName",
                   "type": "attribute",
                   "label": "lastName",
                   "color": "#607d8b",
-                  "settings": {},
-                  "_hash": 0.9492563158125378
+                  "settings": {}
                 },
                 {
                   "name": "email",
@@ -1432,7 +1325,6 @@
                   "label": "email",
                   "color": "#9c27b0",
                   "settings": {},
-                  "_hash": 0.3716880828983571,
                   "units": null,
                   "decimals": null,
                   "funcBody": null,
@@ -1445,7 +1337,6 @@
                   "label": "address",
                   "color": "#8bc34a",
                   "settings": {},
-                  "_hash": 0.7595268392739936,
                   "units": null,
                   "decimals": null,
                   "funcBody": null,
@@ -1458,7 +1349,6 @@
                   "label": "phone",
                   "color": "#3f51b5",
                   "settings": {},
-                  "_hash": 0.17832513942326078,
                   "units": null,
                   "decimals": null,
                   "funcBody": null,
@@ -1519,7 +1409,6 @@
                   "label": "active",
                   "color": "#4caf50",
                   "settings": {},
-                  "_hash": 0.9421613144570329,
                   "postFuncBody": "if (value === 'false') {\n    return 'Inactive';\n} else {\n    return 'Active';\n}"
                 },
                 {
@@ -1528,7 +1417,6 @@
                   "label": "installationDate",
                   "color": "#607d8b",
                   "settings": {},
-                  "_hash": 0.2099158296476744,
                   "postFuncBody": "if (value) {\n    return moment(value).format(\"LL\");\n} else {\n    return 'Not set';\n}",
                   "usePostProcessing": true,
                   "units": null,
@@ -1600,8 +1488,7 @@
                   "type": "attribute",
                   "label": "meterPhoto",
                   "color": "#2196f3",
-                  "settings": {},
-                  "_hash": 0.12577658530662794
+                  "settings": {}
                 }
               ],
               "entityAliasId": "2754dd92-28a3-a689-d65c-ab9001a86f73"
@@ -1703,8 +1590,7 @@
                     "cellStyleFunction": "",
                     "useCellContentFunction": false,
                     "cellContentFunction": ""
-                  },
-                  "_hash": 0.5086132106831367
+                  }
                 },
                 {
                   "name": "firstName",
@@ -1715,8 +1601,7 @@
                     "columnWidth": "0px",
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
-                  },
-                  "_hash": 0.7593813392746664
+                  }
                 },
                 {
                   "name": "lastName",
@@ -1727,8 +1612,7 @@
                     "columnWidth": "0px",
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
-                  },
-                  "_hash": 0.17634836448426272
+                  }
                 },
                 {
                   "name": "phone",
@@ -1739,8 +1623,7 @@
                     "columnWidth": "0px",
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
-                  },
-                  "_hash": 0.2832401181596269
+                  }
                 },
                 {
                   "name": "address",
@@ -1751,8 +1634,7 @@
                     "columnWidth": "0px",
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
-                  },
-                  "_hash": 0.25194222822878287
+                  }
                 }
               ]
             }
@@ -1839,7 +1721,6 @@
                     "dataKeyHidden": false,
                     "step": 1
                   },
-                  "_hash": 0.6927732945431533,
                   "units": null,
                   "decimals": null,
                   "funcBody": null,
@@ -1864,7 +1745,6 @@
                     "useGetValueFunction": false,
                     "useSetValueFunction": false
                   },
-                  "_hash": 0.43810120489248616,
                   "units": null,
                   "decimals": null,
                   "funcBody": null,
@@ -1884,8 +1764,7 @@
                     "isEditable": "editable",
                     "dataKeyHidden": false,
                     "step": 1
-                  },
-                  "_hash": 0.7775367356739471
+                  }
                 },
                 {
                   "name": "lowTempThreshold",
@@ -1905,7 +1784,6 @@
                     "useGetValueFunction": false,
                     "useSetValueFunction": false
                   },
-                  "_hash": 0.9590971916933051,
                   "aggregationType": null,
                   "units": null,
                   "decimals": null,
@@ -1925,8 +1803,7 @@
                     "isEditable": "editable",
                     "dataKeyHidden": false,
                     "step": 1
-                  },
-                  "_hash": 0.07853020804094801
+                  }
                 },
                 {
                   "name": "dailyConsumptionThreshold",
@@ -1947,7 +1824,6 @@
                     "useGetValueFunction": false,
                     "useSetValueFunction": false
                   },
-                  "_hash": 0.20555135495339383,
                   "aggregationType": null,
                   "units": null,
                   "decimals": null,
@@ -1967,8 +1843,7 @@
                     "isEditable": "editable",
                     "dataKeyHidden": false,
                     "step": 1
-                  },
-                  "_hash": 0.3361600543780858
+                  }
                 },
                 {
                   "name": "weeklyConsumptionThreshold",
@@ -1989,7 +1864,6 @@
                     "useGetValueFunction": false,
                     "useSetValueFunction": false
                   },
-                  "_hash": 0.9860115623092394,
                   "aggregationType": null,
                   "units": null,
                   "decimals": null,
@@ -2009,8 +1883,7 @@
                     "isEditable": "editable",
                     "dataKeyHidden": false,
                     "step": 1
-                  },
-                  "_hash": 0.9480348252243465
+                  }
                 }
               ],
               "alarmFilterConfig": {
@@ -2086,8 +1959,7 @@
                     "dataKeyHidden": false,
                     "step": 1,
                     "disabledOnDataKey": "lowBattAlarmEnabled"
-                  },
-                  "_hash": 0.6927732945431533
+                  }
                 },
                 {
                   "name": "lowTempSmsEnabled",
@@ -2102,8 +1974,7 @@
                     "dataKeyHidden": false,
                     "step": 1,
                     "disabledOnDataKey": "lowTempAlarmEnabled"
-                  },
-                  "_hash": 0.7775367356739471
+                  }
                 },
                 {
                   "name": "inactivitySmsEnabled",
@@ -2118,8 +1989,7 @@
                     "dataKeyHidden": false,
                     "step": 1,
                     "disabledOnDataKey": "inactivityAlarmEnabled"
-                  },
-                  "_hash": 0.9480348252243465
+                  }
                 },
                 {
                   "name": "dailyConsumptionSmsEnabled",
@@ -2134,8 +2004,7 @@
                     "dataKeyHidden": false,
                     "step": 1,
                     "disabledOnDataKey": "dailyConsumptionAlarmEnabled"
-                  },
-                  "_hash": 0.07853020804094801
+                  }
                 },
                 {
                   "name": "weeklyConsumptionSmsEnabled",
@@ -2150,8 +2019,7 @@
                     "dataKeyHidden": false,
                     "step": 1,
                     "disabledOnDataKey": "weeklyConsumptionAlarmEnabled"
-                  },
-                  "_hash": 0.1337452487876316
+                  }
                 },
                 {
                   "name": "lowBattAlarmEnabled",
@@ -2165,8 +2033,7 @@
                     "isEditable": "editable",
                     "dataKeyHidden": true,
                     "step": 1
-                  },
-                  "_hash": 0.9331619031893095
+                  }
                 },
                 {
                   "name": "lowTempAlarmEnabled",
@@ -2180,8 +2047,7 @@
                     "isEditable": "editable",
                     "dataKeyHidden": true,
                     "step": 1
-                  },
-                  "_hash": 0.10791951005981737
+                  }
                 },
                 {
                   "name": "inactivityAlarmEnabled",
@@ -2195,8 +2061,7 @@
                     "isEditable": "editable",
                     "dataKeyHidden": true,
                     "step": 1
-                  },
-                  "_hash": 0.201416227417764
+                  }
                 },
                 {
                   "name": "dailyConsumptionAlarmEnabled",
@@ -2210,8 +2075,7 @@
                     "isEditable": "editable",
                     "dataKeyHidden": true,
                     "step": 1
-                  },
-                  "_hash": 0.6877141787041134
+                  }
                 },
                 {
                   "name": "weeklyConsumptionAlarmEnabled",
@@ -2225,8 +2089,7 @@
                     "isEditable": "editable",
                     "dataKeyHidden": true,
                     "step": 1
-                  },
-                  "_hash": 0.3514341740752789
+                  }
                 }
               ],
               "entityAliasId": "9da9bd9c-a7cc-244f-16ac-3e2045cff5b1"
@@ -2297,8 +2160,7 @@
                     "dataKeyHidden": false,
                     "step": 1,
                     "disabledOnDataKey": "lowBattAlarmEnabled"
-                  },
-                  "_hash": 0.6927732945431533
+                  }
                 },
                 {
                   "name": "lowTempEmailEnabled",
@@ -2313,8 +2175,7 @@
                     "dataKeyHidden": false,
                     "step": 1,
                     "disabledOnDataKey": "lowTempAlarmEnabled"
-                  },
-                  "_hash": 0.7775367356739471
+                  }
                 },
                 {
                   "name": "inactivityEmailEnabled",
@@ -2329,8 +2190,7 @@
                     "dataKeyHidden": false,
                     "step": 1,
                     "disabledOnDataKey": "inactivityAlarmEnabled"
-                  },
-                  "_hash": 0.9480348252243465
+                  }
                 },
                 {
                   "name": "dailyConsumptionEmailEnabled",
@@ -2345,8 +2205,7 @@
                     "dataKeyHidden": false,
                     "step": 1,
                     "disabledOnDataKey": "dailyConsumptionAlarmEnabled"
-                  },
-                  "_hash": 0.07853020804094801
+                  }
                 },
                 {
                   "name": "weeklyConsumptionEmailEnabled",
@@ -2361,8 +2220,7 @@
                     "dataKeyHidden": false,
                     "step": 1,
                     "disabledOnDataKey": "weeklyConsumptionAlarmEnabled"
-                  },
-                  "_hash": 0.1337452487876316
+                  }
                 },
                 {
                   "name": "lowBattAlarmEnabled",
@@ -2376,8 +2234,7 @@
                     "isEditable": "editable",
                     "dataKeyHidden": true,
                     "step": 1
-                  },
-                  "_hash": 0.5094072453291982
+                  }
                 },
                 {
                   "name": "lowTempAlarmEnabled",
@@ -2391,8 +2248,7 @@
                     "isEditable": "editable",
                     "dataKeyHidden": true,
                     "step": 1
-                  },
-                  "_hash": 0.33533143393702325
+                  }
                 },
                 {
                   "name": "inactivityAlarmEnabled",
@@ -2406,8 +2262,7 @@
                     "isEditable": "editable",
                     "dataKeyHidden": true,
                     "step": 1
-                  },
-                  "_hash": 0.6498041417701894
+                  }
                 },
                 {
                   "name": "dailyConsumptionAlarmEnabled",
@@ -2421,8 +2276,7 @@
                     "isEditable": "editable",
                     "dataKeyHidden": true,
                     "step": 1
-                  },
-                  "_hash": 0.8778621689054382
+                  }
                 },
                 {
                   "name": "weeklyConsumptionAlarmEnabled",
@@ -2436,8 +2290,7 @@
                     "isEditable": "editable",
                     "dataKeyHidden": true,
                     "step": 1
-                  },
-                  "_hash": 0.4706952279595922
+                  }
                 }
               ],
               "entityAliasId": "9da9bd9c-a7cc-244f-16ac-3e2045cff5b1"
@@ -2538,7 +2391,6 @@
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
                   },
-                  "_hash": 0.6622074305397865,
                   "units": {
                     "from": "m³",
                     "METRIC": "m³",
@@ -2560,8 +2412,7 @@
                     "columnWidth": "0px",
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
-                  },
-                  "_hash": 0.9392023657375805
+                  }
                 },
                 {
                   "name": "active",
@@ -2573,7 +2424,6 @@
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
                   },
-                  "_hash": 0.9076421001622259,
                   "postFuncBody": "if (value === 'true') {\n    return 'Active';\n} else {\n    return 'Inactive';\n}"
                 },
                 {
@@ -2588,7 +2438,6 @@
                     "cellStyleFunction": "var color;\nif (value == 'true') {\n    color = '#EB5757';\n} else {\n    color = '#27AE60';\n}\nreturn {\n    color: color,\n    fontSize: '18px'\n};",
                     "cellContentFunction": "value = '&#11044;';\nreturn value;"
                   },
-                  "_hash": 0.9508568110027811,
                   "units": null,
                   "decimals": null,
                   "funcBody": null,
@@ -2721,16 +2570,14 @@
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
-                "settings": {},
-                "_hash": 0.8381664834025695
+                "settings": {}
               },
               {
                 "name": "originator",
                 "type": "alarm",
                 "label": "Originator",
                 "color": "#4caf50",
-                "settings": {},
-                "_hash": 0.2921772271979377
+                "settings": {}
               },
               {
                 "name": "type",
@@ -2743,8 +2590,7 @@
                   "cellStyleFunction": "",
                   "useCellContentFunction": false,
                   "cellContentFunction": ""
-                },
-                "_hash": 0.5983551827511795
+                }
               }
             ],
             "entityAliasId": "2754dd92-28a3-a689-d65c-ab9001a86f73",
@@ -2809,7 +2655,6 @@
                   "label": "lowBatteryDevicesNumber",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.9365559121113138,
                   "postFuncBody": "return value || 0;"
                 }
               ],
@@ -2844,56 +2689,6 @@
         "id": "47beef8a-be00-49f9-fd8e-3b4c409e0a1a",
         "typeFullFqn": "system.cards.html_value_card"
       },
-      "db41ee56-d991-3354-6210-f66ea84e9623": {
-        "type": "latest",
-        "sizeX": 8,
-        "sizeY": 3,
-        "config": {
-          "datasources": [
-            {
-              "type": "entity",
-              "dataKeys": [
-                {
-                  "name": "inactiveDevicesNumber",
-                  "type": "attribute",
-                  "label": "inactiveDevicesNumber",
-                  "color": "#2196f3",
-                  "settings": {},
-                  "_hash": 0.2857686772503587,
-                  "postFuncBody": "return value || 0;"
-                }
-              ],
-              "entityAliasId": "9da9bd9c-a7cc-244f-16ac-3e2045cff5b1"
-            }
-          ],
-          "showTitle": false,
-          "backgroundColor": "#fff",
-          "color": "rgba(0, 0, 0, 0.87)",
-          "padding": "0px",
-          "settings": {
-            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   border: 1px solid #E0E0E0;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 22px 30px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .value {\n    font-size: 1.5em;\n    font-weight: bold;\n    line-height: 1.5;\n    color: #EB5757;\n    text-align: center;\n}\n\n.card .description {\n    font-size: 1em;\n    font-weight: normal;\n    line-height: 1.5;\n    color: #333333;\n    text-align: center;\n}\n\n@media (min-width: 960px) and (max-width: 1200px) {\n    .card .value {\n        font-size: 1.2em;\n        line-height: 1;\n    }\n    \n    .card .description {\n        font-size: 0.8em;\n        line-height: 1;\n    }\n}",
-            "cardHtml": "<div class='card'>\n    <div class='content'>\n        <div class='value'>\n            ${inactiveDevicesNumber:0}\n        </div> \n        <div class='description'>\n            Inactive devices\n        </div>\n    </div>\n</div>"
-          },
-          "title": "New HTML Value Card",
-          "dropShadow": false,
-          "enableFullscreen": false,
-          "widgetStyle": {},
-          "titleStyle": {
-            "fontSize": "16px",
-            "fontWeight": 400
-          },
-          "showLegend": false,
-          "actions": {},
-          "showTitleIcon": false,
-          "titleIcon": null,
-          "iconColor": "rgba(0, 0, 0, 0.87)",
-          "iconSize": "24px",
-          "titleTooltip": "",
-          "enableDataExport": false
-        },
-        "id": "db41ee56-d991-3354-6210-f66ea84e9623",
-        "typeFullFqn": "system.cards.html_value_card"
-      },
       "d902d11f-3f82-c6c8-f868-7e795c4981d3": {
         "type": "latest",
         "sizeX": 7.5,
@@ -2924,7 +2719,6 @@
                     "useGetValueFunction": false,
                     "useSetValueFunction": false
                   },
-                  "_hash": 0.48214674570930094,
                   "units": null,
                   "decimals": null,
                   "funcBody": null,
@@ -3022,7 +2816,6 @@
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
                   },
-                  "_hash": 0.6622074305397865,
                   "units": "m³",
                   "decimals": 2,
                   "postFuncBody": "return value || 0;",
@@ -3038,8 +2831,7 @@
                     "columnWidth": "0px",
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
-                  },
-                  "_hash": 0.9392023657375805
+                  }
                 },
                 {
                   "name": "active",
@@ -3051,7 +2843,6 @@
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
                   },
-                  "_hash": 0.9076421001622259,
                   "postFuncBody": "if (value === 'true') {\n    return 'Active';\n} else {\n    return 'Inactive';\n}"
                 },
                 {
@@ -3066,7 +2857,6 @@
                     "cellStyleFunction": "var color;\nif (value == 'true') {\n    color = '#EB5757';\n} else {\n    color = '#27AE60';\n}\nreturn {\n    color: color,\n    fontSize: '18px'\n};",
                     "cellContentFunction": "value = '&#11044;';\nreturn value;"
                   },
-                  "_hash": 0.9508568110027811,
                   "units": null,
                   "decimals": null,
                   "funcBody": null,
@@ -3193,16 +2983,14 @@
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
-                "settings": {},
-                "_hash": 0.8381664834025695
+                "settings": {}
               },
               {
                 "name": "originator",
                 "type": "alarm",
                 "label": "Originator",
                 "color": "#4caf50",
-                "settings": {},
-                "_hash": 0.2921772271979377
+                "settings": {}
               },
               {
                 "name": "type",
@@ -3215,8 +3003,7 @@
                   "cellStyleFunction": "",
                   "useCellContentFunction": false,
                   "cellContentFunction": ""
-                },
-                "_hash": 0.5983551827511795
+                }
               }
             ]
           },
@@ -3312,7 +3099,6 @@
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
                   },
-                  "_hash": 0.6622074305397865,
                   "units": "m³",
                   "decimals": 2,
                   "postFuncBody": "return value || 0;",
@@ -3328,8 +3114,7 @@
                     "columnWidth": "0px",
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
-                  },
-                  "_hash": 0.9392023657375805
+                  }
                 },
                 {
                   "name": "active",
@@ -3341,7 +3126,6 @@
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
                   },
-                  "_hash": 0.9076421001622259,
                   "postFuncBody": "if (value === 'true') {\n    return 'Active';\n} else {\n    return 'Inactive';\n}"
                 },
                 {
@@ -3356,7 +3140,6 @@
                     "cellStyleFunction": "var color;\nif (value == 'true') {\n    color = '#EB5757';\n} else {\n    color = '#27AE60';\n}\nreturn {\n    color: color,\n    fontSize: '18px'\n};",
                     "cellContentFunction": "value = '&#11044;';\nreturn value;"
                   },
-                  "_hash": 0.9508568110027811,
                   "units": null,
                   "decimals": null,
                   "funcBody": null,
@@ -3483,16 +3266,14 @@
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
-                "settings": {},
-                "_hash": 0.8381664834025695
+                "settings": {}
               },
               {
                 "name": "originator",
                 "type": "alarm",
                 "label": "Originator",
                 "color": "#4caf50",
-                "settings": {},
-                "_hash": 0.2921772271979377
+                "settings": {}
               },
               {
                 "name": "type",
@@ -3505,8 +3286,7 @@
                   "cellStyleFunction": "",
                   "useCellContentFunction": false,
                   "cellContentFunction": ""
-                },
-                "_hash": 0.5983551827511795
+                }
               }
             ]
           },
@@ -3602,7 +3382,6 @@
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
                   },
-                  "_hash": 0.6622074305397865,
                   "units": "m³",
                   "decimals": 2,
                   "postFuncBody": "return value || 0;",
@@ -3618,8 +3397,7 @@
                     "columnWidth": "0px",
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
-                  },
-                  "_hash": 0.9392023657375805
+                  }
                 },
                 {
                   "name": "active",
@@ -3631,7 +3409,6 @@
                     "useCellStyleFunction": false,
                     "useCellContentFunction": false
                   },
-                  "_hash": 0.9076421001622259,
                   "postFuncBody": "if (value === 'true') {\n    return 'Active';\n} else {\n    return 'Inactive';\n}"
                 },
                 {
@@ -3646,7 +3423,6 @@
                     "cellStyleFunction": "var color;\nif (value == 'true') {\n    color = '#EB5757';\n} else {\n    color = '#27AE60';\n}\nreturn {\n    color: color,\n    fontSize: '18px'\n};",
                     "cellContentFunction": "value = '&#11044;';\nreturn value;"
                   },
-                  "_hash": 0.9508568110027811,
                   "units": null,
                   "decimals": null,
                   "funcBody": null,
@@ -3773,16 +3549,14 @@
                 "type": "alarm",
                 "label": "Created time",
                 "color": "#2196f3",
-                "settings": {},
-                "_hash": 0.8381664834025695
+                "settings": {}
               },
               {
                 "name": "originator",
                 "type": "alarm",
                 "label": "Originator",
                 "color": "#4caf50",
-                "settings": {},
-                "_hash": 0.2921772271979377
+                "settings": {}
               },
               {
                 "name": "type",
@@ -3795,8 +3569,7 @@
                   "cellStyleFunction": "",
                   "useCellContentFunction": false,
                   "cellContentFunction": ""
-                },
-                "_hash": 0.5983551827511795
+                }
               }
             ]
           },
@@ -3930,7 +3703,6 @@
                       "color": ""
                     }
                   },
-                  "_hash": 0.6850103979581212,
                   "units": {
                     "from": "m³",
                     "METRIC": "m³",
@@ -4346,7 +4118,6 @@
                       "color": ""
                     }
                   },
-                  "_hash": 0.19778923192757314,
                   "units": {
                     "from": "m³",
                     "METRIC": "m³",
@@ -4799,7 +4570,6 @@
                       "color": ""
                     }
                   },
-                  "_hash": 0.6850103979581212,
                   "units": {
                     "from": "m³",
                     "METRIC": "m³",
@@ -12840,48 +12610,42 @@
                     "type": "attribute",
                     "label": "dailyConsumptionThresholdExceeded",
                     "color": "#2196f3",
-                    "settings": {},
-                    "_hash": 0.6268476149327276
+                    "settings": {}
                   },
                   {
                     "name": "weeklyConsumptionThresholdExceeded",
                     "type": "attribute",
                     "label": "weeklyConsumptionThresholdExceeded",
                     "color": "#2196f3",
-                    "settings": {},
-                    "_hash": 0.37605082440651416
+                    "settings": {}
                   },
                   {
                     "name": "deviceInactive",
                     "type": "attribute",
                     "label": "deviceInactive",
                     "color": "#2196f3",
-                    "settings": {},
-                    "_hash": 0.5777710625996171
+                    "settings": {}
                   },
                   {
                     "name": "lowBattery",
                     "type": "attribute",
                     "label": "lowBattery",
                     "color": "#2196f3",
-                    "settings": {},
-                    "_hash": 0.40230545139156626
+                    "settings": {}
                   },
                   {
                     "name": "temperatureUnderThreshold",
                     "type": "attribute",
                     "label": "temperatureUnderThreshold",
                     "color": "#2196f3",
-                    "settings": {},
-                    "_hash": 0.9110500568014697
+                    "settings": {}
                   },
                   {
                     "name": "address",
                     "type": "attribute",
                     "label": "address",
                     "color": "#2196f3",
-                    "settings": {},
-                    "_hash": 0.9096495939657083
+                    "settings": {}
                   },
                   {
                     "name": "weeklyConsumption",
@@ -12889,7 +12653,6 @@
                     "label": "weeklyConsumption",
                     "color": "#2196f3",
                     "settings": {},
-                    "_hash": 0.031173748763005493,
                     "aggregationType": "NONE",
                     "units": null,
                     "decimals": null,
@@ -12903,7 +12666,6 @@
                     "label": "temperature",
                     "color": "#2196f3",
                     "settings": {},
-                    "_hash": 0.23723264131388988,
                     "aggregationType": "NONE",
                     "units": null,
                     "decimals": null,
@@ -12917,7 +12679,6 @@
                     "label": "dailyConsumption",
                     "color": "#2196f3",
                     "settings": {},
-                    "_hash": 0.4790075793759083,
                     "aggregationType": "NONE",
                     "units": null,
                     "decimals": null,
@@ -12930,8 +12691,7 @@
                     "type": "entityField",
                     "label": "Type",
                     "color": "#2196f3",
-                    "settings": {},
-                    "_hash": 0.4116023413769916
+                    "settings": {}
                   }
                 ],
                 "label": {
@@ -13146,40 +12906,35 @@
                     "type": "attribute",
                     "label": "dailyConsumptionThresholdExceeded",
                     "color": "#2196f3",
-                    "settings": {},
-                    "_hash": 0.6268476149327276
+                    "settings": {}
                   },
                   {
                     "name": "weeklyConsumptionThresholdExceeded",
                     "type": "attribute",
                     "label": "weeklyConsumptionThresholdExceeded",
                     "color": "#2196f3",
-                    "settings": {},
-                    "_hash": 0.37605082440651416
+                    "settings": {}
                   },
                   {
                     "name": "deviceInactive",
                     "type": "attribute",
                     "label": "deviceInactive",
                     "color": "#2196f3",
-                    "settings": {},
-                    "_hash": 0.5777710625996171
+                    "settings": {}
                   },
                   {
                     "name": "lowBattery",
                     "type": "attribute",
                     "label": "lowBattery",
                     "color": "#2196f3",
-                    "settings": {},
-                    "_hash": 0.40230545139156626
+                    "settings": {}
                   },
                   {
                     "name": "temperatureUnderThreshold",
                     "type": "attribute",
                     "label": "temperatureUnderThreshold",
                     "color": "#2196f3",
-                    "settings": {},
-                    "_hash": 0.9110500568014697
+                    "settings": {}
                   }
                 ],
                 "label": {
@@ -13357,7 +13112,6 @@
                   "label": "weeklyConsumption",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.27364482120638345,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -13424,7 +13178,6 @@
                   "label": "weeklyConsumption",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.27364482120638345,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -13491,7 +13244,6 @@
                   "label": "weeklyConsumption",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.27364482120638345,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -13558,7 +13310,6 @@
                   "label": "totalConsumption",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.7394107634683736,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -13625,7 +13376,6 @@
                   "label": "temperature",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.7394107634683736,
                   "aggregationType": "NONE",
                   "units": null,
                   "decimals": null,
@@ -13673,6 +13423,142 @@
         "row": 0,
         "col": 0,
         "id": "6f217a43-ea57-bc4e-750b-823758ace483"
+      },
+      "5076c56f-85a8-a2f6-c4fb-962f7ea7eca1": {
+        "type": "latest",
+        "sizeX": 8,
+        "sizeY": 3,
+        "config": {
+          "datasources": [
+            {
+              "type": "entityCount",
+              "name": null,
+              "entityAliasId": "f7bed459-ea25-5a39-bfc1-a3bb8c941d8d",
+              "filterId": "0f79c9b4-ffdb-f8fa-e860-a45095837597",
+              "dataKeys": [
+                {
+                  "name": "count",
+                  "type": "count",
+                  "label": "inactiveDevicesNumber",
+                  "color": "#4caf50",
+                  "settings": {},
+                  "units": null,
+                  "decimals": null,
+                  "funcBody": null,
+                  "usePostProcessing": null,
+                  "postFuncBody": null
+                }
+              ]
+            }
+          ],
+          "showTitle": false,
+          "backgroundColor": "#fff",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   border: 1px solid #E0E0E0;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 22px 30px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .value {\n    font-size: 1.5em;\n    font-weight: bold;\n    line-height: 1.5;\n    color: #EB5757;\n    text-align: center;\n}\n\n.card .description {\n    font-size: 1em;\n    font-weight: normal;\n    line-height: 1.5;\n    color: #333333;\n    text-align: center;\n}\n\n@media (min-width: 960px) and (max-width: 1200px) {\n    .card .value {\n        font-size: 1.2em;\n        line-height: 1;\n    }\n    \n    .card .description {\n        font-size: 0.8em;\n        line-height: 1;\n    }\n}",
+            "cardHtml": "<div class='card' id=\"inactiveDevices\">\n    <div class='content' id=\"inactiveDevices\">\n        <div class='value' id=\"inactiveDevices\">\n            ${inactiveDevicesNumber:0}\n        </div> \n        <div class='description' id=\"inactiveDevices\">\n            Inactive devices\n        </div>\n    </div>\n</div>"
+          },
+          "title": "New HTML Value Card",
+          "dropShadow": false,
+          "enableFullscreen": false,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "inactiveDevices",
+                "icon": "more_horiz",
+                "type": "updateDashboardState",
+                "targetDashboardStateId": "inactive_devices",
+                "setEntityId": false,
+                "stateEntityParamName": null,
+                "openRightLayout": false,
+                "id": "20174295-39d9-1284-46b1-d9325c928cca"
+              }
+            ]
+          },
+          "showTitleIcon": false,
+          "titleIcon": null,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableDataExport": false
+        },
+        "id": "5076c56f-85a8-a2f6-c4fb-962f7ea7eca1",
+        "typeFullFqn": "system.cards.html_value_card"
+      },
+      "fc09b491-a1fd-3ea3-3423-f439a39caad1": {
+        "type": "latest",
+        "sizeX": 8,
+        "sizeY": 3,
+        "config": {
+          "datasources": [
+            {
+              "type": "entityCount",
+              "name": null,
+              "entityAliasId": "f7bed459-ea25-5a39-bfc1-a3bb8c941d8d",
+              "filterId": "0f79c9b4-ffdb-f8fa-e860-a45095837597",
+              "dataKeys": [
+                {
+                  "name": "count",
+                  "type": "count",
+                  "label": "inactiveDevicesNumber",
+                  "color": "#4caf50",
+                  "settings": {},
+                  "units": null,
+                  "decimals": null,
+                  "funcBody": null,
+                  "usePostProcessing": null,
+                  "postFuncBody": null
+                }
+              ]
+            }
+          ],
+          "showTitle": false,
+          "backgroundColor": "#fff",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   border: 1px solid #E0E0E0;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 22px 30px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .value {\n    font-size: 1.5em;\n    font-weight: bold;\n    line-height: 1.5;\n    color: #EB5757;\n    text-align: center;\n}\n\n.card .description {\n    font-size: 1em;\n    font-weight: normal;\n    line-height: 1.5;\n    color: #333333;\n    text-align: center;\n}\n\n@media (min-width: 960px) and (max-width: 1200px) {\n    .card .value {\n        font-size: 1.2em;\n        line-height: 1;\n    }\n    \n    .card .description {\n        font-size: 0.8em;\n        line-height: 1;\n    }\n}",
+            "cardHtml": "<div class='card' id=\"inactiveDevices\">\n    <div class='content' id=\"inactiveDevices\">\n        <div class='value' id=\"inactiveDevices\">\n            ${inactiveDevicesNumber:0}\n        </div> \n        <div class='description' id=\"inactiveDevices\">\n            Inactive devices\n        </div>\n    </div>\n</div>"
+          },
+          "title": "New HTML Value Card",
+          "dropShadow": false,
+          "enableFullscreen": false,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "inactiveDevices",
+                "icon": "more_horiz",
+                "type": "updateDashboardState",
+                "targetDashboardStateId": "inactive_devices",
+                "setEntityId": false,
+                "stateEntityParamName": null,
+                "openRightLayout": false,
+                "id": "20174295-39d9-1284-46b1-d9325c928cca"
+              }
+            ]
+          },
+          "showTitleIcon": false,
+          "titleIcon": null,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableDataExport": false
+        },
+        "id": "fc09b491-a1fd-3ea3-3423-f439a39caad1",
+        "typeFullFqn": "system.cards.html_value_card"
       }
     },
     "states": {
@@ -13713,14 +13599,6 @@
                 "mobileHeight": 2,
                 "row": 1,
                 "col": 18
-              },
-              "457136f8-c871-1835-c9fc-276a3231ec86": {
-                "sizeX": 9,
-                "sizeY": 3,
-                "mobileOrder": 10,
-                "mobileHeight": 2,
-                "row": 1,
-                "col": 27
               },
               "c3742231-ed1f-b85f-c39f-5b7c0562050a": {
                 "sizeX": 18,
@@ -13792,6 +13670,12 @@
                 "sizeY": 3,
                 "row": 1,
                 "col": 0
+              },
+              "5076c56f-85a8-a2f6-c4fb-962f7ea7eca1": {
+                "sizeX": 9,
+                "sizeY": 3,
+                "row": 1,
+                "col": 27
               }
             },
             "gridSettings": {
@@ -13821,12 +13705,6 @@
                 "sizeY": 3,
                 "row": 1,
                 "col": 18
-              },
-              "db41ee56-d991-3354-6210-f66ea84e9623": {
-                "sizeX": 9,
-                "sizeY": 3,
-                "row": 1,
-                "col": 27
               },
               "17543c57-af4a-2c1e-bf12-53a7b46791e6": {
                 "sizeX": 9,
@@ -13901,6 +13779,12 @@
                 "sizeY": 3,
                 "row": 1,
                 "col": 0
+              },
+              "fc09b491-a1fd-3ea3-3423-f439a39caad1": {
+                "sizeX": 9,
+                "sizeY": 3,
+                "row": 1,
+                "col": 27
               }
             },
             "gridSettings": {
@@ -14874,15 +14758,10 @@
       }
     },
     "timewindow": {
-      "hideAggregation": false,
-      "hideAggInterval": false,
-      "hideTimezone": false,
       "selectedTab": 0,
       "realtime": {
         "realtimeType": 1,
-        "timewindowMs": 60000,
-        "quickInterval": "CURRENT_WEEK_ISO",
-        "interval": 86400000
+        "quickInterval": "CURRENT_WEEK_ISO"
       },
       "aggregation": {
         "type": "NONE",

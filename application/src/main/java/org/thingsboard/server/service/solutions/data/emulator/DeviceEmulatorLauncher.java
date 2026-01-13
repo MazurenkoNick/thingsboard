@@ -57,7 +57,10 @@ import java.util.concurrent.ExecutorService;
 public class DeviceEmulatorLauncher extends AbstractEmulatorLauncher<Device> {
 
     @Builder
-    public DeviceEmulatorLauncher(Device entity, EmulatorDefinition emulatorDefinition, ExecutorService oldTelemetryExecutor, TbClusterService tbClusterService,
+    public DeviceEmulatorLauncher(Device entity,
+                                  EmulatorDefinition emulatorDefinition,
+                                  ExecutorService oldTelemetryExecutor,
+                                  TbClusterService tbClusterService,
                                   PartitionService partitionService,
                                   TbQueueProducerProvider tbQueueProducerProvider,
                                   TbServiceInfoProvider serviceInfoProvider,
