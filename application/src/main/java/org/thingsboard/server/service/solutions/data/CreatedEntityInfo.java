@@ -44,6 +44,12 @@ public class CreatedEntityInfo {
     private EntityType type;
     private String owner;
 
+    private boolean edgeRuleChain;
+
+    public CreatedEntityInfo(String name, EntityType type, String owner) {
+        this(name, type, owner, false);
+    }
+
     public String getEntityPageLink(UUID id) {
         return switch (type) {
             case DEVICE -> "/entities/devices/all/" + id;
@@ -53,7 +59,7 @@ public class CreatedEntityInfo {
             case USER -> "/users/all/" + id;
             case CUSTOMER -> "/customers/all/" + id;
             case DASHBOARD -> "/dashboards/all/" + id;
-            case RULE_CHAIN -> "/ruleChains/" + id;
+            case RULE_CHAIN -> edgeRuleChain ? "/edgeManagement/ruleChains/" + id : "/ruleChains/" + id;
             case ROLE -> "/security-settings/roles/" + id;
             case EDGE -> "/edgeManagement/instances/all/" + id;
             default -> null;
