@@ -28,20 +28,37 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.utils;
+package org.thingsboard.common.util;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
-public class NumberUtilsTest {
+public class NumberUtils {
 
-    private final double doubleVal = 1729.1729;
+    public static boolean isNaN(double value) {
+        return Double.isNaN(value);
+    }
 
-    @Test
-    public void roundResult() {
-        Assertions.assertEquals(1729.1729, NumberUtils.roundResult(doubleVal, null));
-        Assertions.assertEquals(1729, NumberUtils.roundResult(doubleVal, 0));
-        Assertions.assertEquals(1729.17, NumberUtils.roundResult(doubleVal, 2));
+    public static double toFixed(double value, int precision) {
+        return BigDecimal.valueOf(value).setScale(precision, RoundingMode.HALF_UP).doubleValue();
+    }
+
+    public static float toFixed(float value, int precision) {
+        return BigDecimal.valueOf(value).setScale(precision, RoundingMode.HALF_UP).floatValue();
+    }
+
+    public static int toInt(double value) {
+        return BigDecimal.valueOf(value).setScale(0, RoundingMode.HALF_UP).intValue();
+    }
+
+    public static Object roundResult(double value, Integer precision) {
+        if (precision == null) {
+            return value;
+        }
+        if (precision.equals(0)) {
+            return toInt(value);
+        }
+        return toFixed(value, precision);
     }
 
 }

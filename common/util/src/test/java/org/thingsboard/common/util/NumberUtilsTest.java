@@ -28,21 +28,49 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.utils;
+package org.thingsboard.common.util;
 
-import static org.thingsboard.script.api.tbel.TbUtils.toFixed;
-import static org.thingsboard.script.api.tbel.TbUtils.toInt;
+import org.junit.jupiter.api.Test;
 
-public class NumberUtils {
+import static org.assertj.core.api.Assertions.assertThat;
 
-    public static Object roundResult(double value, Integer precision) {
-        if (precision == null) {
-            return value;
-        }
-        if (precision.equals(0)) {
-            return toInt(value);
-        }
-        return toFixed(value, precision);
+public class NumberUtilsTest {
+
+    private final Float floatVal = 29.29824f;
+    private final double doubleVal = 1729.1729;
+
+    @Test
+    public void isNaN() {
+        assertThat(NumberUtils.isNaN(doubleVal)).isFalse();
+        assertThat(NumberUtils.isNaN(Double.NaN)).isTrue();
+    }
+
+    @Test
+    public void toFixedFloat() {
+        float actualF = NumberUtils.toFixed(floatVal, 3);
+        assertThat(Float.compare(floatVal, actualF)).isEqualTo(1);
+        assertThat(Float.compare(29.298f, actualF)).isEqualTo(0);
+    }
+
+    @Test
+    public void toFixedDouble() {
+        double actualD = NumberUtils.toFixed(doubleVal, 3);
+        assertThat(Double.compare(doubleVal, actualD)).isEqualTo(-1);
+        assertThat(Double.compare(1729.173, actualD)).isEqualTo(0);
+    }
+
+    @Test
+    public void toInt() {
+        assertThat(NumberUtils.toInt(doubleVal)).isEqualTo(1729);
+        assertThat(NumberUtils.toInt(12.8)).isEqualTo(13);
+        assertThat(NumberUtils.toInt(28.0)).isEqualTo(28);
+    }
+
+    @Test
+    public void roundResult() {
+        assertThat(NumberUtils.roundResult(doubleVal, null)).isEqualTo(1729.1729);
+        assertThat(NumberUtils.roundResult(doubleVal, 0)).isEqualTo(1729);
+        assertThat(NumberUtils.roundResult(doubleVal, 2)).isEqualTo(1729.17);
     }
 
 }
