@@ -602,9 +602,22 @@ public class DefaultSolutionService implements SolutionService {
 
     private String prepareInstructions(SolutionInstallContext ctx, HttpServletRequest request) {
         String template = readFile(resolve(ctx.getSolutionId(), "instructions.md"));
-        template = template.replace("${DOCS_BASE_URL}", docsBaseUrl);
         String baseUrl = systemSecurityService.getBaseUrl(ctx.getTenantId(), null, request);
+
+        // Inject edge instructions first, then run the full replacement logic on the combined string
+        if (template.contains("${edge_instructions}")) {
+            if (ctx.getCreatedEdges().isEmpty()) {
+                template = template.replace("${edge_instructions}", "");
+            } else {
+                Path edgeFile = resolve(ctx.getSolutionId(), "edge_instructions.md");
+                String edgeTemplate = Files.exists(edgeFile) ? readFile(edgeFile) : "";
+                template = template.replace("${edge_instructions}", edgeTemplate);
+            }
+        }
+
+        template = template.replace("${DOCS_BASE_URL}", docsBaseUrl);
         template = template.replace("${BASE_URL}", baseUrl);
+
         TenantSolutionTemplateInstructions solutionInstructions = ctx.getSolutionInstructions();
         template = template.replace("${MAIN_DASHBOARD_URL}",
                 getDashboardLink(solutionInstructions, solutionInstructions.getDashboardGroupId(), solutionInstructions.getDashboardId(), false));
@@ -633,25 +646,18 @@ public class DefaultSolutionService implements SolutionService {
         devList.append("| :---   | :---  | :---  |");
         devList.append(System.lineSeparator());
 
-        Map<String, String> placeholders = new HashMap<>();
-        placeholders.put("${DOCS_BASE_URL}", docsBaseUrl);
-        placeholders.put("${BASE_URL}", baseUrl);
-
         for (DeviceCredentialsInfo credentialsInfo : ctx.getCreatedDevices().values()) {
             devList.append("|").append(credentialsInfo.getName())
                     .append("|").append(credentialsInfo.getCredentials().getCredentialsId()).append("{:copy-code}")
                     .append("|").append(credentialsInfo.getCustomerName() != null ? credentialsInfo.getCustomerName() : "Tenant");
             devList.append(System.lineSeparator());
 
-            placeholders.put("${" + credentialsInfo.getName() + "ACCESS_TOKEN}", credentialsInfo.getCredentials().getCredentialsId());
+            template = template.replace("${" + credentialsInfo.getName() + "ACCESS_TOKEN}", credentialsInfo.getCredentials().getCredentialsId());
 
             if (credentialsInfo.isGateway()) {
-                template = template.replace("${DOCKER_CONFIG}", prepareDockerComposeFile(ctx.getTenantId(), ctx.getSolutionId(), baseUrl, credentialsInfo.getCredentials().getDeviceId()));
+                template = template.replace("${DOCKER_CONFIG}",
+                        prepareDockerComposeFile(ctx.getTenantId(), ctx.getSolutionId(), baseUrl, credentialsInfo.getCredentials().getDeviceId()));
             }
-        }
-
-        for (var entry : placeholders.entrySet()) {
-            template = template.replace(entry.getKey(), entry.getValue());
         }
 
         template = template.replace("${device_list_and_credentials}", devList.toString());
@@ -674,24 +680,6 @@ public class DefaultSolutionService implements SolutionService {
 
         template = template.replace("${user_list}", userList.toString());
 
-        template = replaceAlarmRules(ctx, template);
-        template = replaceCalculatedFields(ctx, template);
-        template = replaceCreatedEntities(ctx, template);
-
-        if (ctx.getCreatedEdges().isEmpty()) {
-            return template.replace("${edge_instructions}", "");
-        }
-
-        boolean hasEdgeInstructionsPlaceholder = template.contains("${edge_instructions}");
-        String edgeTemplate = null;
-        if (hasEdgeInstructionsPlaceholder) {
-            Path edgeFile = resolve(ctx.getSolutionId(), "edge_instructions.md");
-            edgeTemplate = Files.exists(edgeFile) ? readFile(edgeFile) : "";
-            for (var entry : placeholders.entrySet()) {
-                edgeTemplate = edgeTemplate.replace(entry.getKey(), entry.getValue());
-            }
-        }
-
         for (Map.Entry<String, EdgeLinkInfo> edgeLinkInfoEntry : ctx.getCreatedEdges().entrySet()) {
             EdgeLinkInfo edgeLinkInfo = edgeLinkInfoEntry.getValue();
             StringBuilder edgeDetailsUrl = new StringBuilder();
@@ -702,12 +690,13 @@ public class DefaultSolutionService implements SolutionService {
             String edgeName = edgeLinkInfoEntry.getKey();
             String edgeDetailsPlaceholder = "${" + edgeName + "EDGE_DETAILS_URL}";
             template = template.replace(edgeDetailsPlaceholder, edgeDetailsUrl.toString());
-            if (hasEdgeInstructionsPlaceholder) {
-                edgeTemplate = edgeTemplate.replace(edgeDetailsPlaceholder, edgeDetailsUrl.toString());
-            }
         }
 
-        return hasEdgeInstructionsPlaceholder ? template.replace("${edge_instructions}", edgeTemplate) : template;
+        template = replaceAlarmRules(ctx, template);
+        template = replaceCalculatedFields(ctx, template);
+        template = replaceCreatedEntities(ctx, template);
+
+        return template;
     }
 
     private static String replaceAlarmRules(SolutionInstallContext ctx, String template) {
