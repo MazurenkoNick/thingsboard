@@ -32,23 +32,19 @@ package org.thingsboard.server.service.solutions.data;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.EntityType;
 
 import java.util.UUID;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class CreatedEntityInfo {
 
     private String name;
     private EntityType type;
     private String owner;
-
-    private boolean edgeRuleChain;
-
-    public CreatedEntityInfo(String name, EntityType type, String owner) {
-        this(name, type, owner, false);
-    }
 
     public String getEntityPageLink(UUID id) {
         return switch (type) {
@@ -59,7 +55,6 @@ public class CreatedEntityInfo {
             case USER -> "/users/all/" + id;
             case CUSTOMER -> "/customers/all/" + id;
             case DASHBOARD -> "/dashboards/all/" + id;
-            case RULE_CHAIN -> edgeRuleChain ? "/edgeManagement/ruleChains/" + id : "/ruleChains/" + id;
             case ROLE -> "/security-settings/roles/" + id;
             case EDGE -> "/edgeManagement/instances/all/" + id;
             default -> null;
