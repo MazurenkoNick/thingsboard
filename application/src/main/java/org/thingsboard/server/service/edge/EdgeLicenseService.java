@@ -38,8 +38,4 @@ public interface EdgeLicenseService {
     ResponseEntity<JsonNode> checkInstance(JsonNode request);
 
     ResponseEntity<JsonNode> activateInstance(String licenseSecret, String releaseDate);
-
-    ResponseEntity<JsonNode> checkInstanceV2(JsonNode request);
-
-    ResponseEntity<JsonNode> activateInstanceV2(String licenseSecret, String releaseDate);
 }
