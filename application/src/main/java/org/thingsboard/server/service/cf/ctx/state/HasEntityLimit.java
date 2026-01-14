@@ -28,41 +28,17 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
+package org.thingsboard.server.service.cf.ctx.state;
 
-:host {
-  width: 100%;
-  height: 100%;
+public interface HasEntityLimit {
 
-  .tb-form-panel-title {
-    .tb-form-panel-help {
-      color: var(--mat-icon-color, rgba(0, 0, 0, .54));
-    }
-  }
-
-  .service-connection {
-    .tb-form-panel {
-      gap: 0;
-    }
-  }
-
-  .sync-result {
-    --mat-text-button-with-icon-horizontal-padding: 16px;
-    border: 1px solid rgba(0, 0, 0, .12);
-    border-left: 4px solid #DD2C00;
-    border-radius: 6px;
-    padding: 20px;
-
-    .sync-result-title {
-      color: #DD2C00;
-      font-weight: 500;
+    default void checkEntityLimit(int currentEntitiesCount, CalculatedFieldCtx ctx) {
+        if (currentEntitiesCount >= ctx.getMaxRelatedEntitiesPerCfArgument()) {
+            throw new IllegalArgumentException(
+                    "Exceeded the maximum allowed related entities per argument '"
+                    + ctx.getMaxRelatedEntitiesPerCfArgument() + "'. Increase the limit in the tenant profile configuration."
+            );
+        }
     }
 
-    &.active {
-      border-left-color: #198038;
-
-      .sync-result-title {
-        color: #198038;
-      }
-    }
-  }
 }

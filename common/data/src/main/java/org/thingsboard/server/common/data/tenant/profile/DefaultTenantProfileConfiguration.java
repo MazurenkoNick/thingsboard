@@ -204,12 +204,12 @@ public class DefaultTenantProfileConfiguration implements TenantProfileConfigura
     private long maxCalculatedFieldsPerEntity = 100;
     @Schema(example = "10")
     private long maxArgumentsPerCF = 10;
-    @Schema(example = "60")
-    private int minAllowedScheduledUpdateIntervalInSecForCF = 60;
-    @Builder.Default
     @Schema(example = "10")
+    private int minAllowedScheduledUpdateIntervalInSecForCF = 10;
+    @Builder.Default
+    @Schema(example = "2")
     @Positive
-    private int maxRelationLevelPerCfArgument = 10;
+    private int maxRelationLevelPerCfArgument = 2;
     @Builder.Default
     @Schema(example = "1000")
     @Positive
