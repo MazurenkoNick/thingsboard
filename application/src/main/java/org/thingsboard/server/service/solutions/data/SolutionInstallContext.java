@@ -150,8 +150,7 @@ public class SolutionInstallContext {
 
     public void register(String referenceId, RuleChain ruleChain) {
         register(referenceId, ruleChain.getId());
-        boolean edgeRuleChain = RuleChainType.EDGE.equals(ruleChain.getType());
-        createdEntities.put(ruleChain.getUuidId(), new CreatedEntityInfo(ruleChain.getName(), EntityType.RULE_CHAIN, "Tenant", edgeRuleChain));
+        createdEntities.put(ruleChain.getUuidId(), new CreatedRuleChainInfo(ruleChain.getName(), ruleChain.getType(), "Tenant"));
     }
 
 
