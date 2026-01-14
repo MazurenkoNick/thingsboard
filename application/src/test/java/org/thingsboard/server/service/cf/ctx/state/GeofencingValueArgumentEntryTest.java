@@ -192,7 +192,7 @@ public class GeofencingValueArgumentEntryTest {
         BaseAttributeKvEntry invalidZoneEntry = new BaseAttributeKvEntry(new StringDataEntry("zone", "someString"), 363L, 155L);
         assertThatThrownBy(() -> new GeofencingArgumentEntry(Map.of(ZONE_1_ID, invalidZoneEntry)))
                 .isExactlyInstanceOf(IllegalArgumentException.class)
-                .hasMessage("The given string value cannot be transformed to Json object: someString");
+                .hasMessage("Invalid perimeter definition format for Zone with id: " + ZONE_1_ID + ". Failed to parse attribute 'zone'");
     }
 
     @Test
@@ -200,7 +200,7 @@ public class GeofencingValueArgumentEntryTest {
         BaseAttributeKvEntry invalidZoneEntry = new BaseAttributeKvEntry(new JsonDataEntry("zone", "\"{}\""), 363L, 155L);
         assertThatThrownBy(() -> new GeofencingArgumentEntry(Map.of(ZONE_1_ID, invalidZoneEntry)))
                 .isExactlyInstanceOf(IllegalArgumentException.class)
-                .hasMessage("The given string value cannot be transformed to Json object: \"{}\"");
+                .hasMessage("Invalid perimeter definition format for Zone with id: " + ZONE_1_ID + ". Failed to parse attribute 'zone'");
     }
 
 }
