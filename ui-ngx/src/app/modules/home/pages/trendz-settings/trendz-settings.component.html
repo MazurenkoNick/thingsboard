@@ -35,7 +35,7 @@
         <div class="tb-form-panel no-border">
             <div class="tb-form-panel-title flex items-center">
                 <span class="flex-1">{{ 'trendz-analytics.service-connection' | translate }}</span>
-                <div tb-help="trendzSettings"></div>
+                <div class="tb-form-panel-help" tb-help="trendzSettings"></div>
             </div>
             <div class="sync-result flex flex-1 flex-col gap-4" [class.active]="trendzSyncInfo.healthcheckStatus === TrendzSynchronizationStatus.SYNCED">
                 <div class="flex flex-col gap-2">
