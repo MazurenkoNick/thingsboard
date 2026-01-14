@@ -50,7 +50,7 @@
       "decimalsByDefault": 2
     },
     "useLatestTs": true,
-    "scheduledUpdateInterval": 60,
+    "scheduledUpdateInterval": 10,
     "scheduledUpdateEnabled": true
   }
 }
