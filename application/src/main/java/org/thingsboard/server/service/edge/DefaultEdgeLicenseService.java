@@ -128,7 +128,7 @@ public class DefaultEdgeLicenseService implements EdgeLicenseService {
         ResponseEntity<JsonNode> response = this.restTemplate.postForEntity(
                 EDGE_LICENSE_SERVER_ENDPOINT + "/api/v2/license/activateInstance?licenseSecret={licenseSecret}&releaseDate={releaseDate}",
                 null, JsonNode.class, params);
-        log.trace("activateInstance response: {}", response);
+        log.trace("activateInstance V2 response: {}", response);
         // removing headers from response of the license server, because it might be a conflict with the proxy from we are accepting incoming connections
         return new ResponseEntity<>(response.getBody(), response.getStatusCode());
     }
