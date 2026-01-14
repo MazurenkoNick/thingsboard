@@ -43,7 +43,8 @@
       "type": "TIME_SERIES",
       "strategy": {
         "type": "RULE_CHAIN"
-      }
+      },
+      "decimalsByDefault": 2
     }
   }
 }

@@ -24,7 +24,7 @@
           "key": "dailyFuelConsumption",
           "type": "TS_LATEST"
         },
-        "defaultValue": null
+        "defaultValue": "0"
       }
     },
     "deduplicationIntervalInSec": 10,

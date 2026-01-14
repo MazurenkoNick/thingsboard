@@ -21,10 +21,10 @@
           "type": "TS_ROLLING"
         },
         "limit": 2,
-        "timeWindow": 3600
+        "timeWindow": 1800000
       }
     },
-    "expression": "var waterConsumption = 0;\n\nif (pulseCounter.values.size() == 1) {\n    waterConsumption = pulseCounter.values[0].value;\n} else if (pulseCounter.values.size() >= 2) {\n    waterConsumption = pulseCounter.values[1].value - pulseCounter.values[0].value;\n}\n\nreturn {\n    ts: ctx.latestTs,\n    values: {\n        \"waterConsumption\": waterConsumption\n    }\n}",
+    "expression": "return {\n    ts: ctx.latestTs,\n    values: {\n        \"waterConsumption\": getConsumption()\n    }\n}\n\n\nfunction getConsumption() {\n    if (pulseCounter.count() == 1) {\n        return pulseCounter.first();\n    }\n    if (pulseCounter.count() < 2) {\n        return 0;\n    }\n    var first = pulseCounter.first();\n    var last = pulseCounter.last();\n    \n    \n    if (isNaN(first) || isNaN(last)) {\n        return 0;\n    }\n\n    var waterConsumption = first - last;\n    if (waterConsumption <= 0) {\n        return 0;\n    }\n    \n    return toFixed(waterConsumption, 2);\n}",
     "output": {
       "type": "TIME_SERIES",
       "strategy": {
