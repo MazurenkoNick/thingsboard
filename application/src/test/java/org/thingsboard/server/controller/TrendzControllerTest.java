@@ -30,11 +30,11 @@
  */
 package org.thingsboard.server.controller;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.trendz.TrendzConfiguration;
 import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
 import org.thingsboard.server.common.data.trendz.TrendzSettings;
@@ -67,6 +67,14 @@ public class TrendzControllerTest extends AbstractControllerTest {
     @Before
     public void setUp() throws Exception {
         loginSysAdmin();
+    }
+
+    @After
+    public void tearDown() {
+        TrendzSettings settings = trendzSettingsService.findTrendzSettings();
+        if (settings != null) {
+            trendzSettingsService.deleteTrendzSettings();
+        }
     }
 
     @Test
