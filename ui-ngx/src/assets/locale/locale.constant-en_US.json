@@ -550,7 +550,7 @@
             "within-time": "Within time",
             "within-time-pattern": "Time must be a positive integer.",
             "within-time-required": "Time is required.",
-            "force-2fa": "Force two-factor authentication",
+            "force-2fa": "Enforce two-factor authentication",
             "enforce-for": "Enforce for"
         },
         "jwt": {
@@ -1090,7 +1090,8 @@
         "delete-api-key-text": "Be careful, after the confirmation key will become unrecoverable.",
         "delete-api-keys-title": "Are you sure you want to delete { count, plural, =1 {1 API key} other {# API keys} }?",
         "delete-api-keys-text": "Be careful, after the confirmation all selected keys will  become unrecoverable.",
-        "date": "Date",
+        "expiration-date": "Expiration date",
+        "date": "date",
         "description": "Description",
         "disable": "Disable",
         "edit-description": "Edit description",
@@ -1489,9 +1490,9 @@
             "zone-group-refresh-interval": "Defines how often zone groups configured via related entities are refreshed.",
             "zone-group-refresh-interval-required": "Zone groups refresh interval is required.",
             "zone-group-refresh-interval-min": "Zone group refresh interval should be at least {{ min }} seconds.",
-            "propagation-path-related-entities": "Defines a direct, single-level path to a related entity based on the selected direction and relation type.",
+            "propagation-path-related-entities": "Defines a direct, single-level path to a related entity based on the selected direction and relation type. Only relations between device, asset, customer, and tenant entities are supported. Maximum entities resolved by relation path is {{ max }}.",
             "data-propagate": "Defines the data to be propagated from the arguments configured below. 'Arguments only' uses the retrieved data directly, while 'Expression result' calculates a new value from that data.",
-            "aggregation-path-related-entities": "Defines a single-level aggregation path via direct relations with parent or child entities, based on direction and relation type. Only relations between device, asset, customer, and tenant entities are supported.",
+            "aggregation-path-related-entities": "Defines a single-level aggregation path via direct relations with parent or child entities, based on direction and relation type. Only relations between device, asset, customer, and tenant entities are supported. Maximum entities resolved by relation path is {{ max }}.",
             "arguments-aggregation": "Defines the input arguments used for filtering and aggregation.",
             "setting-arguments-aggregation": "Data will be fetched from related entities configured in aggregation path.",
             "metrics": "Defines metrics aggregated based on configured arguments.",
@@ -1829,6 +1830,7 @@
     "contact": {
         "country": "Country",
         "country-required": "Country is required.",
+        "country-object-required": "Please select a valid country from the list.",
         "city": "City",
         "state": "State / Province",
         "postal-code": "Zip / Postal Code",

@@ -50,9 +50,11 @@ import org.thingsboard.server.queue.provider.TbQueueProducerProvider;
 import org.thingsboard.server.service.solutions.data.definition.EmulatorDefinition;
 import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Data
@@ -82,7 +84,10 @@ public abstract class AbstractEmulatorLauncher<T extends GroupEntity<?>> {
     private final Emulator emulator;
     private ScheduledFuture<?> scheduledFuture;
 
-    public AbstractEmulatorLauncher(T entity, EmulatorDefinition emulatorDefinition, ExecutorService oldTelemetryExecutor, TbClusterService tbClusterService,
+    public AbstractEmulatorLauncher(T entity,
+                                    EmulatorDefinition emulatorDefinition,
+                                    ExecutorService oldTelemetryExecutor,
+                                    TbClusterService tbClusterService,
                                     PartitionService partitionService,
                                     TbQueueProducerProvider tbQueueProducerProvider,
                                     TbServiceInfoProvider serviceInfoProvider,
@@ -104,41 +109,59 @@ public abstract class AbstractEmulatorLauncher<T extends GroupEntity<?>> {
         emulator.init(emulatorDefinition);
     }
 
-    public void launch() {
-        final long latestTs = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(emulatorDefinition.getPublishPeriodInDays()) - publishFrequency;
+    public CompletableFuture<Void> launch() {
+        final long oldestTs = emulatorDefinition.getOldestTs(System.currentTimeMillis());
+        CompletableFuture<Void> future = new CompletableFuture<>();
         oldTelemetryExecutor.submit(() -> {
+            AtomicInteger pending = new AtomicInteger(1);
             try {
                 if (emulator instanceof SimpleEmulator) {
-                    if (latestTs < (System.currentTimeMillis() - publishFrequency)) {
-                        pushOldTelemetry(latestTs);
+                    if (oldestTs < (System.currentTimeMillis() - publishFrequency)) {
+                        pushOldTelemetry(oldestTs, pending, future);
                     }
-                } else if (emulator instanceof CustomEmulator) {
-                    Pair<Long, ObjectNode> telemetry = ((CustomEmulator) emulator).getNextValue();
+                } else if (emulator instanceof CustomEmulator customEmulator) {
+                    Pair<Long, ObjectNode> telemetry = customEmulator.getNextValue();
                     while (telemetry != null) {
-                        publishTelemetry(telemetry.getFirst(), telemetry.getSecond());
-                        telemetry = ((CustomEmulator) emulator).getNextValue();
+                        pending.incrementAndGet();
+                        publishTelemetry(telemetry.getFirst(), telemetry.getSecond(), pending, future);
+                        telemetry = customEmulator.getNextValue();
                     }
                 }
-
-                postProcessEntity(entity);
             } catch (Exception e) {
-                log.warn("[{}] Failed to upload telemetry for device: ", entity.getName(), e);
+                log.warn("Telemetry upload failed for {}", entity.getName(), e);
+                future.completeExceptionally(e);
+            } finally {
+                if (pending.decrementAndGet() == 0 && !future.isDone()) {
+                    log.trace("[{}] Telemetry emulation finished. Producer and all callbacks completed successfully", entity.getName());
+                    future.complete(null);
+                }
             }
+
+            future.whenComplete((v, t) -> {
+                try {
+                    postProcessEntity(entity);
+                } catch (Exception e) {
+                    log.warn("Post-processing failed for {}", entity.getName(), e);
+                }
+            });
+
         });
+        return future;
     }
 
     protected void postProcessEntity(T entity) {
     }
 
-    private void pushOldTelemetry(long latestTs) throws InterruptedException {
-        for (long ts = latestTs; ts < System.currentTimeMillis(); ts += publishFrequency) {
-            publishTelemetry(ts);
+    private void pushOldTelemetry(long oldestTs, AtomicInteger pending, CompletableFuture<Void> future) throws InterruptedException {
+        for (long ts = oldestTs; ts < System.currentTimeMillis(); ts += publishFrequency) {
+            pending.incrementAndGet();
+            publishTelemetry(ts, pending, future);
         }
     }
 
-    private void publishTelemetry(long ts) throws InterruptedException {
+    private void publishTelemetry(long ts, AtomicInteger pending, CompletableFuture<Void> future) throws InterruptedException {
         ObjectNode values = ((SimpleEmulator) emulator).getValue(ts);
-        publishTelemetry(ts, values);
+        publishTelemetry(ts, values, pending, future);
         Thread.sleep(emulatorDefinition.getPublishPauseInMillis());
     }
 
@@ -146,7 +169,7 @@ public abstract class AbstractEmulatorLauncher<T extends GroupEntity<?>> {
         scheduledFuture.cancel(true);
     }
 
-    private void publishTelemetry(long ts, ObjectNode value) {
+    private void publishTelemetry(long ts, ObjectNode value, AtomicInteger pending, CompletableFuture<Void> future) {
         String msgData = JacksonUtil.toString(value);
         log.debug("[{}] Publishing telemetry: {}", entity.getName(), msgData);
         TbMsgMetaData md = new TbMsgMetaData();
@@ -158,6 +181,27 @@ public abstract class AbstractEmulatorLauncher<T extends GroupEntity<?>> {
                 .dataType(TbMsgDataType.JSON)
                 .data(msgData)
                 .build();
-        tbClusterService.pushMsgToRuleEngine(entity.getTenantId(), entity.getId(), tbMsg, null);
+
+        TbQueueCallback callback = new TbQueueCallback() {
+
+            @Override
+            public void onSuccess(TbQueueMsgMetadata metadata) {
+                log.debug("[{}] Successfully pushed message to Rule Engine for ts {}", entity.getName(), ts);
+                if (pending.decrementAndGet() == 0 && !future.isDone()) {
+                    log.trace("[{}] Completing emulation future from callback for msg with ts: {}", entity.getName(), ts);
+                    future.complete(null);
+                }
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                log.warn("[{}] Telemetry upload failed for ts {}", entity.getName(), ts, t);
+                if (pending.decrementAndGet() == 0 && !future.isDone()) {
+                    future.completeExceptionally(t);
+                }
+            }
+        };
+
+        tbClusterService.pushMsgToRuleEngine(entity.getTenantId(), entity.getId(), tbMsg, callback);
     }
 }

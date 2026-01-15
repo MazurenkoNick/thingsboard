@@ -113,6 +113,8 @@ public class TrendzClient {
 
     @Value("${trendz.request_timeout_ms:15000}")
     private int requestTimeoutMs;
+    @Value("${trendz.usage_request_timeout_ms:5000}")
+    private int usageRequestTimeoutMs;
     @Value("${trendz.enabled:true}")
     private boolean trendzEnabled;
 
@@ -120,12 +122,17 @@ public class TrendzClient {
     private final ApiKeyService apiKeyService;
 
     private RestTemplate restTemplate;
+    private RestTemplate usageRestTemplate;
 
     @PostConstruct
     private void init() {
         restTemplate = new RestTemplateBuilder()
                 .connectTimeout(Duration.ofMillis(requestTimeoutMs))
                 .readTimeout(Duration.ofMillis(requestTimeoutMs))
+                .build();
+        usageRestTemplate = new RestTemplateBuilder()
+                .connectTimeout(Duration.ofMillis(usageRequestTimeoutMs))
+                .readTimeout(Duration.ofMillis(usageRequestTimeoutMs))
                 .build();
     }
 
@@ -188,7 +195,7 @@ public class TrendzClient {
     public TrendzUsage getTrendzUsage(User user) throws ThingsboardException {
         return sendTrendzRequest(HttpMethod.GET, TRENDZ_USAGE_URI, Collections.emptyMap(), null,
                 new ParameterizedTypeReference<>() {
-                }, user, "Get Trendz usage");
+                }, user, "Get Trendz usage", usageRestTemplate);
     }
 
     public ResponseEntity<byte[]> sendTrendzProxyRequest(String uriPath, Map<String, String[]> params, HttpMethod method, byte[] body, HttpHeaders headers) throws ThingsboardException {
@@ -260,6 +267,12 @@ public class TrendzClient {
     private <T> T sendTrendzRequest(HttpMethod method, String uriPath, Map<String, Object> params, Object requestBody,
                                     ParameterizedTypeReference<T> typeReference, User user, String operationName
     ) throws ThingsboardException {
+        return sendTrendzRequest(method, uriPath, params, requestBody, typeReference, user, operationName, restTemplate);
+    }
+
+    private <T> T sendTrendzRequest(HttpMethod method, String uriPath, Map<String, Object> params, Object requestBody,
+                                    ParameterizedTypeReference<T> typeReference, User user, String operationName, RestTemplate restTemplate
+    ) throws ThingsboardException {
         String trendzUrl = getBaseTrendzUrl();
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(uriPath);
@@ -314,7 +327,7 @@ public class TrendzClient {
         if (!trendzEnabled) {
             throw new ThingsboardException("Trendz is disabled.", ThingsboardErrorCode.GENERAL);
         }
-        Optional<TrendzSettings> trendzSettings = Optional.ofNullable(trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID));
+        Optional<TrendzSettings> trendzSettings = Optional.ofNullable(trendzSettingsService.findTrendzSettings());
         trendzSettings.map(TrendzSettings::synchronizationResult)
                 .map(TrendzSynchronizationResult::status)
                 .orElseThrow(() -> new ThingsboardException(

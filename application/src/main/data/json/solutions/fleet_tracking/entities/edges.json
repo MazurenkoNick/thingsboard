@@ -1,20 +1,2 @@
 [
-  {
-    "name": "Remote Bus Station R1",
-    "type": "station",
-    "attributes": {},
-    "relations": [],
-    "userGroups": [],
-    "assetGroups": [],
-    "deviceGroups": [
-      {
-        "name": "Bus devices"
-      }
-    ],
-    "dashboardGroups": [
-      {
-        "name": "Fleet tracking"
-      }
-    ]
-  }
 ]

@@ -44,6 +44,7 @@ import org.thingsboard.server.actors.ActorSystemContext;
 import org.thingsboard.server.actors.TbActorRef;
 import org.thingsboard.server.actors.calculatedField.CalculatedFieldReevaluateMsg;
 import org.thingsboard.server.common.data.AttributeScope;
+import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.alarm.rule.AlarmRule;
 import org.thingsboard.server.common.data.alarm.rule.condition.expression.TbelAlarmConditionExpression;
 import org.thingsboard.server.common.data.cf.CalculatedField;
@@ -69,11 +70,9 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.kv.BasicKvEntry;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
-import org.thingsboard.server.common.data.tenant.profile.DefaultTenantProfileConfiguration;
 import org.thingsboard.server.common.data.util.CollectionsUtil;
 import org.thingsboard.server.common.util.ProtoUtils;
 import org.thingsboard.server.dao.relation.RelationService;
-import org.thingsboard.server.dao.usagerecord.ApiLimitService;
 import org.thingsboard.server.dao.util.TimeUtils;
 import org.thingsboard.server.gen.transport.TransportProtos.CalculatedFieldTelemetryMsgProto;
 import org.thingsboard.server.service.cf.CalculatedFieldProcessingService;
@@ -144,6 +143,9 @@ public class CalculatedFieldCtx implements Closeable {
     private long scheduledUpdateIntervalMillis;
     private long cfCheckReevaluationIntervalMillis;
     private long alarmReevaluationIntervalMillis;
+    private long maxRelatedEntitiesPerCfArgument;
+    private long minScheduledUpdateIntervalMillis;
+    private long minDeduplicationIntervalMillis;
 
     private Argument propagationArgument;
     private boolean applyExpressionForResolvedArguments;
@@ -316,12 +318,20 @@ public class CalculatedFieldCtx implements Closeable {
     }
 
     public void setTenantProfileProperties() {
-        ApiLimitService apiLimitService = systemContext.getApiLimitService();
-        this.maxStateSize = apiLimitService.getLimit(tenantId, DefaultTenantProfileConfiguration::getMaxStateSizeInKBytes) * 1024;
-        this.maxSingleValueArgumentSize = apiLimitService.getLimit(tenantId, DefaultTenantProfileConfiguration::getMaxSingleValueArgumentSizeInKBytes) * 1024;
-        this.intermediateAggregationIntervalMillis = TimeUnit.SECONDS.toMillis(apiLimitService.getLimit(tenantId, DefaultTenantProfileConfiguration::getIntermediateAggregationIntervalInSecForCF));
-        this.cfCheckReevaluationIntervalMillis = TimeUnit.SECONDS.toMillis(apiLimitService.getLimit(tenantId, DefaultTenantProfileConfiguration::getCfReevaluationCheckInterval));
-        this.alarmReevaluationIntervalMillis = TimeUnit.SECONDS.toMillis(apiLimitService.getLimit(tenantId, DefaultTenantProfileConfiguration::getAlarmsReevaluationInterval));
+        TenantProfile tenantProfile = systemContext.getTenantProfileCache().get(tenantId);
+        if (tenantProfile == null) {
+            throw new IllegalStateException("Tenant Profile not found for tenant: " + tenantId);
+        }
+        tenantProfile.getProfileConfiguration().ifPresent(config -> {
+            this.maxStateSize = config.getMaxStateSizeInKBytes() * 1024L;
+            this.maxSingleValueArgumentSize = config.getMaxSingleValueArgumentSizeInKBytes() * 1024L;
+            this.intermediateAggregationIntervalMillis = TimeUnit.SECONDS.toMillis(config.getIntermediateAggregationIntervalInSecForCF());
+            this.cfCheckReevaluationIntervalMillis = TimeUnit.SECONDS.toMillis(config.getCfReevaluationCheckInterval());
+            this.alarmReevaluationIntervalMillis = TimeUnit.SECONDS.toMillis(config.getAlarmsReevaluationInterval());
+            this.maxRelatedEntitiesPerCfArgument = config.getMaxRelatedEntitiesToReturnPerCfArgument();
+            this.minScheduledUpdateIntervalMillis = TimeUnit.SECONDS.toMillis(config.getMinAllowedScheduledUpdateIntervalInSecForCF());
+            this.minDeduplicationIntervalMillis = TimeUnit.SECONDS.toMillis(config.getMinAllowedDeduplicationIntervalInSecForCF());
+        });
     }
 
     public double evaluateSimpleExpression(Expression expression, CalculatedFieldState state) {
@@ -771,6 +781,10 @@ public class CalculatedFieldCtx implements Closeable {
         return scheduledUpdateIntervalMillis == DISABLED_INTERVAL_VALUE;
     }
 
+    public boolean hasRelatedEntities() {
+        return cfHasRelationPathQuerySource;
+    }
+
     public boolean shouldFetchRelatedEntities(CalculatedFieldState state) {
         if (!cfHasRelationPathQuerySource) {
             return false;
@@ -784,7 +798,7 @@ public class CalculatedFieldCtx implements Closeable {
         if (scheduledRefreshSupported.getLastScheduledRefreshTs() == DEFAULT_LAST_UPDATE_TS) {
             return true;
         }
-        return scheduledRefreshSupported.getLastScheduledRefreshTs() < System.currentTimeMillis() - scheduledUpdateIntervalMillis;
+        return scheduledRefreshSupported.getLastScheduledRefreshTs() < System.currentTimeMillis() - Math.max(scheduledUpdateIntervalMillis, minScheduledUpdateIntervalMillis);
     }
 
     @Override

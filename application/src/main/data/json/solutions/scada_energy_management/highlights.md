@@ -1,20 +1,14 @@
-The SCADA Energy management template provides a comprehensive solution for real-time monitoring, control, and optimization of energy systems.
-It includes a feature-rich dashboard for managing devices, visualizing energy flow, and configuring alarms—all in a single, intuitive interface.
+Transform your facility management with the **SCADA Energy Management** solution template.
+Designed for energy managers and automation engineers, this solution modernizes legacy power infrastructure into a cloud-native monitoring suite. ⚡🔋
 
-Solution automatically configures the IoT gateway and creates seven key energy devices representing all layers of the energy infrastructure.
+Press **Install** to generate a complete Energy ecosystem — populated with device emulators, gateway configurations, and analytics logic.
 
-**Hardware Components**:
+#### 📦 What's inside the box?
 
-* **Solar panel**: Simulates solar power generation, with real-time energy output.
-* **Wind turbine**: Tracks wind-generated power and allows control of turbine state.
-* **Battery**: Monitors charge level and output; supports charging/discharging modes.
-* **Inverter**: Displays operational mode (Inverter/Charger), power status, and system alerts (overload, temperature).
-* **Generator**: Enables control and status monitoring of on-demand power generation.
-* **Power transformer**: Provides voltage insights and tap-specific power output.
-* **Consumption**: Aggregates and visualizes energy usage data across the system.
+We have auto-generated a comprehensive industrial platform for you:
 
-**Software Components**:
-
-* **IoT Gateway**: Utilizes the ModBus protocol to communicate with physical energy equipment.
-* **Device Emulator**: Modbus energy emulator that simulates seven virtual devices for easy deployment and testing.
-* **Dashboard**: An intuitive dashboard presents a live overview of the entire energy system, allowing users to monitor energy flow and manage device states with precision.
+* **🎛️ SCADA Dashboard:** A high-fidelity interface for visualizing energy flow, monitoring **Batteries** health, and controlling **Generators**.
+* **🤖 Modbus Emulator:** A complete Docker environment simulating 7 distinct devices (**Solar panels**, **Wind turbine**, etc.), allowing you to see the solution in action immediately.
+* **🧮 Smart Calculations:** 12 pre-configured **Calculated Fields** that derive complex metrics like **Average 3-Phase Voltage**, **Net Battery Flow**, and **System Overload** automatically.
+* **🚨 System Alarms:** Over 30 automated rules that trigger on critical events, such as **Solar panels** overheating, high discharge current, or **Power transformer** overload.
+* **📡 Auto-Configured Gateway:** The solution automatically configures the **Energy management gateway** to communicate with energy assets using the Modbus protocol.

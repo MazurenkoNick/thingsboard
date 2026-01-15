@@ -30,8 +30,8 @@
  */
 package org.thingsboard.server.service.cf.ctx.state.aggregation.function;
 
-import org.thingsboard.script.api.tbel.TbUtils;
 import org.thingsboard.server.common.data.cf.configuration.aggregation.AggFunction;
+import org.thingsboard.common.util.NumberUtils;
 
 public class MinAggEntry extends BaseAggEntry {
 
@@ -46,7 +46,7 @@ public class MinAggEntry extends BaseAggEntry {
 
     @Override
     protected Object prepareResult(Integer precision) {
-        return TbUtils.roundResult(min, precision);
+        return NumberUtils.roundResult(min, precision);
     }
 
     @Override

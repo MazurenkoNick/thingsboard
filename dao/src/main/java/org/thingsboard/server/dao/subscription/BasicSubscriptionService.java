@@ -350,7 +350,7 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
 
     @Override
     public boolean solutionTemplateLevelAllowed(TenantId tenantId, String solutionTemplateLevel) throws SubscriptionException {
-        String planName = this.tbLicenseClient.getSubscriptionData().getSubscriptionPlanName();
+        String planName = this.tbLicenseClient.getPlanStringValue(PlanDataConstants.PLAN_KEY);
         return solutionTemplateLevelFilters.get(solutionTemplateLevel).test(planName);
     }
 

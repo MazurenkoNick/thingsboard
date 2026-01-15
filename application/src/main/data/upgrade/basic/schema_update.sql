@@ -36,8 +36,8 @@ SET profile_data = jsonb_set(
     profile_data,
     '{configuration}',
     jsonb_build_object(
-        'minAllowedScheduledUpdateIntervalInSecForCF', 60,
-        'maxRelationLevelPerCfArgument', 10,
+        'minAllowedScheduledUpdateIntervalInSecForCF', 10,
+        'maxRelationLevelPerCfArgument', 2,
         'maxRelatedEntitiesToReturnPerCfArgument', 1000,
         'minAllowedDeduplicationIntervalInSecForCF', 10,
         'minAllowedAggregationIntervalInSecForCF', 60,

@@ -142,6 +142,7 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
     this.entityTranslations = entityTypeTranslations.get(EntityType.CALCULATED_FIELD);
     this.entityResources = entityTypeResources.get(EntityType.CALCULATED_FIELD);
 
+    this.entityTitle = (cf) => cf ? this.utilsService.customTranslation(cf.name, cf.name) : '';
     this.entitiesFetchFunction = (pageLink: PageLink) => this.fetchCalculatedFields(pageLink);
     this.addEntity = this.getCalculatedFieldDialog.bind(this);
     this.saveEntity = (cf) => this.calculatedFieldsService.saveCalculatedField(cf);

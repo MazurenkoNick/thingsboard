@@ -1,8 +1,5 @@
 {
   "ruleChain": {
-    "additionalInfo": {
-      "description": ""
-    },
     "name": "SI Count Alarms (Remote Farm)",
     "type": "EDGE",
     "firstRuleNodeId": null,
@@ -15,15 +12,12 @@
     "firstNodeIndex": 0,
     "nodes": [
       {
-        "additionalInfo": {
-          "description": "",
-          "layoutX": 367,
-          "layoutY": 153
-        },
         "type": "org.thingsboard.rule.engine.analytics.latest.alarm.TbAlarmsCountNodeV2",
         "name": "Count Alarms",
-        "debugFailures": false,
-        "debugAll": false,
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": "Main",
+        "configurationVersion": 2,
         "configuration": {
           "alarmsCountMappings": [
             {
@@ -56,21 +50,20 @@
           "propagationEntityTypes": [
             "ASSET"
           ],
-          "outMsgType": "POST_ATTRIBUTES_REQUEST",
-          "queueName": "Main"
+          "outMsgType": "POST_ATTRIBUTES_REQUEST"
         },
-        "externalId": null
-      },
-      {
         "additionalInfo": {
           "description": "",
-          "layoutX": 688,
+          "layoutX": 367,
           "layoutY": 153
-        },
+        }
+      },
+      {
         "type": "org.thingsboard.rule.engine.telemetry.TbMsgAttributesNode",
         "name": "Save as attribute",
-        "debugFailures": false,
-        "debugAll": false,
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": null,
         "configurationVersion": 3,
         "configuration": {
           "processingSettings": {
@@ -81,13 +74,41 @@
           "sendAttributesUpdatedNotification": false,
           "updateAttributesOnlyOnValueChange": false
         },
-        "externalId": null
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 688,
+          "layoutY": 153
+        }
+      },
+      {
+        "type": "org.thingsboard.rule.engine.edge.TbMsgPushToCloudNode",
+        "name": "Push to cloud",
+        "debugSettings": {
+          "failuresEnabled": false,
+          "allEnabled": false,
+          "allEnabledUntil": 0
+        },
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 0,
+        "configuration": {
+          "scope": "SERVER_SCOPE"
+        },
+        "additionalInfo": {
+          "layoutX": 993,
+          "layoutY": 153
+        }
       }
     ],
     "connections": [
       {
         "fromIndex": 0,
         "toIndex": 1,
+        "type": "Success"
+      },
+      {
+        "fromIndex": 1,
+        "toIndex": 2,
         "type": "Success"
       }
     ],

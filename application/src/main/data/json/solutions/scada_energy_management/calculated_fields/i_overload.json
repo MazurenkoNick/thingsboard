@@ -2,8 +2,8 @@
   "type": "SIMPLE",
   "name": "Overload",
   "entityId": {
-    "id": "e9c3bdd0-1503-11f0-8308-dfc38c65ed1c",
-    "entityType": "DEVICE"
+    "id": "217335c0-87ee-4f89-b134-0953a7d544ea",
+    "entityType": "DEVICE_PROFILE"
   },
   "debugSettings": {
     "failuresEnabled": true,

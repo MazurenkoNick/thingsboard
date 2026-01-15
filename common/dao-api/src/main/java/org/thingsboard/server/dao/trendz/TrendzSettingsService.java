@@ -30,15 +30,14 @@
  */
 package org.thingsboard.server.dao.trendz;
 
-import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.trendz.TrendzSettings;
 
 public interface TrendzSettingsService {
 
-    void saveTrendzSettings(TenantId tenantId, TrendzSettings settings);
+    void saveTrendzSettings(TrendzSettings settings);
 
-    TrendzSettings findTrendzSettings(TenantId tenantId);
+    TrendzSettings findTrendzSettings();
 
-    void deleteTrendzSettings(TenantId tenantId);
+    void deleteTrendzSettings();
 
 }

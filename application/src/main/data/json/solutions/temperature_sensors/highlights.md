@@ -1,13 +1,14 @@
-Temperature & Humidity sensors template represents a generic monitoring solution suitable for multiple applications.
-With this template you get an interactive dashboard with ability to manage sensors and user-friendly alarms configuration.
+Ready to track climate conditions in seconds? This template is your fast-track ticket to a fully functional **Temperature & Humidity** monitoring system. 🌡️💧
 
-Solution automatically creates a customer and two customer users. 
-Those users will have the dashboard assigned to them and the user will see the dashboard in full screen mode.
+With a single click, you get a production-ready interactive dashboard, pre-configured alarms, and a complete user hierarchy. 
+It allows you to immediately experience the solution from an **End-User perspective** without writing a single line of code.
 
-#### Solution structure
+#### 📦 What's inside the box?
 
-* "Temperature & Humidity" dashboard;
-* "Read only" role;  
-* Two "Temperature Sensor" devices and their device profile;
-* Customer with two users;
-* Edge instance - optionally, add edge computing to your solution.
+We have auto-generated everything you need to simulate a real-world scenario:
+
+* 📊 **Interactive Dashboard:** Temperature & Humidity dashboard for real-time visualization and alarm management.
+* 👥 **User Hierarchy:** A generic "Customer" with **two pre-configured users** (Read-only access) so you can test permission levels instantly.
+* 🔌 **Demo Devices:** Two "Temperature Sensor" devices with data flows already set up.
+* 🧠 **Smart Logic:** A Device Profile with active **Alarm Rules** ("High Temperature" & "Low Humidity").
+* ☁️ **Edge Ready:** Optional support for **ThingsBoard Edge** computing instances.

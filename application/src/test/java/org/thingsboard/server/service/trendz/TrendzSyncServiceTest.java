@@ -120,9 +120,9 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
             apiKeyService.deleteApiKey(TenantId.SYS_TENANT_ID, trendzApiKey, true);
         }
 
-        TrendzSettings settings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+        TrendzSettings settings = trendzSettingsService.findTrendzSettings();
         if (settings != null) {
-            trendzSettingsService.deleteTrendzSettings(TenantId.SYS_TENANT_ID);
+            trendzSettingsService.deleteTrendzSettings();
         }
     }
 
@@ -136,7 +136,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, result.synchronizationResult().type());
         assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, result.synchronizationResult().status());
 
-        TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+        TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings();
         assertNotNull(savedSettings);
         assertEquals(TrendzSynchronizationResultType.SYNC_DISABLED, savedSettings.synchronizationResult().type());
     }
@@ -184,7 +184,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         assertTrue(apiKey.isInternal());
         assertTrue(apiKey.isEnabled());
 
-        TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+        TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings();
         assertNotNull(savedSettings);
         assertEquals(TrendzSynchronizationResultType.SYNC_COMPLETED, savedSettings.synchronizationResult().type());
         assertEquals(TrendzSynchronizationStatus.SYNCED, savedSettings.synchronizationResult().status());
@@ -205,7 +205,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
         assertEquals(TrendzSynchronizationResultType.TRENDZ_URL_UNREACHABLE, result.synchronizationResult().type());
         assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, result.synchronizationResult().status());
 
-        TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+        TrendzSettings savedSettings = trendzSettingsService.findTrendzSettings();
         assertNotNull(savedSettings);
         assertEquals(TrendzSynchronizationStatus.NOT_AVAILABLE, savedSettings.synchronizationResult().status());
     }
@@ -257,12 +257,12 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
                         TrendzSynchronizationResultType.SYNC_COMPLETED,
                         TrendzSynchronizationStatus.SYNCED)
         );
-        trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, trendzSettings);
+        trendzSettingsService.saveTrendzSettings(trendzSettings);
 
         reset(trendzSettingsService);
         trendzSyncService.performSyncIfNeeded();
         verify(trendzSettingsService, never())
-                .saveTrendzSettings(any(), any());
+                .saveTrendzSettings(any());
     }
 
     @Test
@@ -273,12 +273,12 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
                         TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED,
                         TrendzSynchronizationStatus.NOT_AVAILABLE)
         );
-        trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, trendzSettings);
+        trendzSettingsService.saveTrendzSettings(trendzSettings);
 
         reset(trendzSettingsService);
         trendzSyncService.performSyncIfNeeded();
         verify(trendzSettingsService)
-                .saveTrendzSettings(any(), any());
+                .saveTrendzSettings(any());
     }
 
     @Test
@@ -308,7 +308,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
                 TrendzSynchronizationStatus.SYNCED
         );
         TrendzSettings settings = new TrendzSettings(config, syncResult);
-        trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
+        trendzSettingsService.saveTrendzSettings(settings);
 
         ObjectNode trendzInfoResponse = JacksonUtil.newObjectNode();
         trendzInfoResponse.put("version", TEST_TRENDZ_VERSION);
@@ -371,7 +371,7 @@ public class TrendzSyncServiceTest extends AbstractControllerTest {
                 TrendzSynchronizationStatus.SYNCED
         );
         TrendzSettings settings = new TrendzSettings(config, syncResult);
-        trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, settings);
+        trendzSettingsService.saveTrendzSettings(settings);
 
         ObjectNode trendzInfoResponse = JacksonUtil.newObjectNode();
         trendzInfoResponse.put("version", TEST_TRENDZ_VERSION);

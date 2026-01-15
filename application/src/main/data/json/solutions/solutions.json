@@ -15,22 +15,22 @@
     "title": "Smart office",
     "level": "MAKER",
     "installTimeoutMs": 2000,
-    "previewImageUrl": "https://img.thingsboard.io/solutions/smart_office/smart-office-1-v2.png",
-    "videoPreviewImageUrl": "https://img.thingsboard.io/usecases/smart-office/video/smart-office-v2.png",
-    "previewMp4Url": "https://video.thingsboard.io/usecases/smart-office-v2.mp4",
-    "previewWebmUrl": "https://video.thingsboard.io/usecases/smart-office-v2.webm",
-    "imageUrls": ["https://img.thingsboard.io/solutions/smart_office/smart-office-1-v2.png", "https://img.thingsboard.io/solutions/smart_office/smart-office-2-v2.png", "https://img.thingsboard.io/solutions/smart_office/smart-office-3-v2.png", "https://img.thingsboard.io/solutions/smart_office/smart-office-4-v2.png", "https://img.thingsboard.io/solutions/smart_office/smart-office-5-v2.png"]
+    "previewImageUrl": "https://img.thingsboard.io/solutions/smart_office/smart-office-1-v3.png",
+    "videoPreviewImageUrl": "https://img.thingsboard.io/usecases/smart-office/video/smart-office-v3.png",
+    "previewMp4Url": "https://video.thingsboard.io/usecases/smart-office-v3.mp4",
+    "previewWebmUrl": "https://video.thingsboard.io/usecases/smart-office-v3.webm",
+    "imageUrls": ["https://img.thingsboard.io/solutions/smart_office/smart-office-1-v3.png", "https://img.thingsboard.io/solutions/smart_office/smart-office-2-v3.png", "https://img.thingsboard.io/solutions/smart_office/smart-office-3-v3.png", "https://img.thingsboard.io/solutions/smart_office/smart-office-4-v3.png", "https://img.thingsboard.io/solutions/smart_office/smart-office-5-v3.png"]
   },
   {
     "id": "fleet_tracking",
-    "title": "Fleet tracking",
+    "title": "Site Fleet Tracking",
     "level": "MAKER",
     "installTimeoutMs": 2000,
-    "previewImageUrl": "https://img.thingsboard.io/solutions/fleet_tracking/fleet-tracking-preview.png",
-    "videoPreviewImageUrl": "https://img.thingsboard.io/usecases/fleet-tracking-v2/video/fleet-tracking-v2.png",
-    "previewMp4Url": "https://video.thingsboard.io/usecases/fleet-tracking-v2.mp4",
-    "previewWebmUrl": "https://video.thingsboard.io/usecases/fleet-tracking-v2.webm",
-    "imageUrls": ["https://img.thingsboard.io/solutions/fleet_tracking/fleet-tracking-1.png", "https://img.thingsboard.io/solutions/fleet_tracking/fleet-tracking-2.png", "https://img.thingsboard.io/solutions/fleet_tracking/fleet-tracking-3.png"]
+    "previewImageUrl": "https://img.thingsboard.io/solutions/mine_site_monitoring/mine-site-monitoring-1.png",
+    "videoPreviewImageUrl": "https://img.thingsboard.io/solutions/mine_site_monitoring/mine-site-monitoring-1.png",
+    "previewMp4Url": "https://video.thingsboard.io/usecases/mine-site-monitoring.mp4",
+    "previewWebmUrl": "https://video.thingsboard.io/usecases/mine-site-monitoring.webm",
+    "imageUrls": ["https://img.thingsboard.io/solutions/mine_site_monitoring/mine-site-monitoring-1.png", "https://img.thingsboard.io/solutions/mine_site_monitoring/mine-site-monitoring-2.png", "https://img.thingsboard.io/solutions/mine_site_monitoring/mine-site-monitoring-3.png", "https://img.thingsboard.io/solutions/mine_site_monitoring/mine-site-monitoring-4.png", "https://img.thingsboard.io/solutions/mine_site_monitoring/mine-site-monitoring-5.png", "https://img.thingsboard.io/solutions/mine_site_monitoring/mine-site-monitoring-6.png"]
   },
   {
     "id": "fuel_level_monitoring",
@@ -46,7 +46,7 @@
   {
     "id": "swimming_pool_scada_system",
     "title": "Swimming pool SCADA system",
-    "level": "MAKER",
+    "level": "PROTOTYPE",
     "installTimeoutMs": 0,
     "previewImageUrl": "https://img.thingsboard.io/solutions/swimming_pool_scada_system/hp-swimming-pool-1.png",
     "videoPreviewImageUrl": "https://img.thingsboard.io/solutions/swimming_pool_scada_system/hp-swimming-pool-1.png",

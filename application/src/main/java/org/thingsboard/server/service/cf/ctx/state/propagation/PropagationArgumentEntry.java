@@ -37,6 +37,7 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntryType;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
+import org.thingsboard.server.service.cf.ctx.state.HasEntityLimit;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,7 +46,7 @@ import java.util.List;
 import java.util.Set;
 
 @Data
-public class PropagationArgumentEntry implements ArgumentEntry {
+public class PropagationArgumentEntry implements ArgumentEntry, HasEntityLimit {
 
     private Set<EntityId> entityIds;
     private transient List<EntityId> added;
@@ -80,7 +81,7 @@ public class PropagationArgumentEntry implements ArgumentEntry {
             throw new IllegalArgumentException("Unsupported argument entry type for propagation argument entry: " + entry.getType());
         }
         if (updated.getAdded() != null) {
-            return checkAdded(updated.getAdded());
+            return checkAdded(updated.getAdded(), ctx);
         }
         if (updated.getRemoved() != null) {
             return entityIds.remove(updated.getRemoved());
@@ -95,7 +96,7 @@ public class PropagationArgumentEntry implements ArgumentEntry {
                 return true;
             }
             boolean retained = entityIds.retainAll(dbEntityIds);
-            boolean added = checkAdded(dbEntityIds);
+            boolean added = checkAdded(dbEntityIds, ctx);
             return retained || added;
         }
         if (updated.isEmpty()) {
@@ -106,8 +107,9 @@ public class PropagationArgumentEntry implements ArgumentEntry {
         return true;
     }
 
-    private boolean checkAdded(Collection<EntityId> updatedIds) {
+    private boolean checkAdded(Collection<EntityId> updatedIds, CalculatedFieldCtx ctx) {
         for (EntityId id : updatedIds) {
+            checkEntityLimit(entityIds.size(), ctx);
             if (entityIds.add(id)) {
                 if (added == null) {
                     added = new ArrayList<>();
