@@ -1716,7 +1716,7 @@ trendz:
   # Request timeout in ms
   request_timeout_ms: "${TRENDZ_REQUEST_TIMEOUT_MS:15000}"
   # Usage request timeout in ms
-  usage_request_timeout_ms: "${TRENDZ_USAGE_REQUEST_TIMEOUT_MS:5000}"
+  usage_request_timeout_ms: "${TRENDZ_USAGE_REQUEST_TIMEOUT_MS:3000}"
 
 # Spring doc common parameters
 springdoc:
