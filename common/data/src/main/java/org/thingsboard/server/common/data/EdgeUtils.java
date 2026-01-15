@@ -78,8 +78,8 @@ public final class EdgeUtils {
 
     private EdgeUtils() {}
 
-    public static boolean isAddonEdge(Edge edge, int licenseVersion) {
-        return edge != null && licenseVersion == 2;
+    public static boolean isAddonEdge(int licenseVersion) {
+        return licenseVersion == 2;
     }
 
     public static int nextPositiveInt() {

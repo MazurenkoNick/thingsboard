@@ -457,7 +457,7 @@ public abstract class EdgeGrpcSession implements Closeable {
 
     private boolean isAddonEdgeCommunicationDisabled() {
         int licenseVersion = ctx.getSubscriptionService().getLicenseVersion();
-        if (!EdgeUtils.isAddonEdge(edge, licenseVersion)) {
+        if (!EdgeUtils.isAddonEdge(licenseVersion)) {
             return false;
         }
         try {
