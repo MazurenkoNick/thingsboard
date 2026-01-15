@@ -1,7 +1,7 @@
 # thingsboard-web-report
 Report service for generating ThingsBoard reports
 
-## CentOS 7
+## Rocky Linux 9, AlmaLinux 9, Fedora 40
 
 ```
 sudo yum install pango.x86_64 libXcomposite.x86_64 libXcursor.x86_64 libXdamage.x86_64 libXext.x86_64 libXi.x86_64 libXtst.x86_64 cups-libs.x86_64 libXScrnSaver.x86_64 libXrandr.x86_64 GConf2.x86_64 alsa-lib.x86_64 atk.x86_64 gtk3.x86_64 ipa-gothic-fonts xorg-x11-fonts-100dpi xorg-x11-fonts-75dpi xorg-x11-utils xorg-x11-fonts-cyrillic xorg-x11-fonts-Type1 xorg-x11-fonts-misc unzip nss -y
@@ -25,15 +25,7 @@ sudo yum install google-roboto-fonts -y
 - Get Noto fonts (Japanese, Chinese, etc.):
 
 ```
-$ mkdir ~/noto
-$ cd ~/noto
-$ wget https://noto-website-2.storage.googleapis.com/pkgs/NotoSansCJKjp-hinted.zip
-$ unzip NotoSansCJKjp-hinted.zip
-$ sudo mkdir -p /usr/share/fonts/noto
-$ sudo cp *.otf /usr/share/fonts/noto
-$ sudo chmod 655 -R /usr/share/fonts/noto/
-$ sudo fc-cache -fv
-$ rm -rf ~/noto
+sudo yum install google-noto-sans-cjk-ttc-fonts google-noto-serif-cjk-ttc-fonts -y
 ```
 
 - Install Web Report service:
@@ -45,7 +37,7 @@ sudo rpm -Uvh [--force] tb-web-report.rpm
 sudo systemctl daemon-reload
 ```
 
-## Ubuntu 16.04
+## Ubuntu 24.04
 
 ```
 sudo apt install -yq gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 \
@@ -64,15 +56,7 @@ sudo apt install fonts-roboto
 - Get Noto fonts (Japanese, Chinese, etc.):
 
 ```
-$ mkdir ~/noto
-$ cd ~/noto
-$ wget https://noto-website-2.storage.googleapis.com/pkgs/NotoSansCJKjp-hinted.zip
-$ unzip NotoSansCJKjp-hinted.zip
-$ sudo mkdir -p /usr/share/fonts/noto
-$ sudo cp *.otf /usr/share/fonts/noto
-$ sudo chmod 655 -R /usr/share/fonts/noto/
-$ sudo fc-cache -fv
-$ rm -rf ~/noto
+sudo apt install fonts-noto-cjk-extra
 ```
 
 - Install Web Report service:
