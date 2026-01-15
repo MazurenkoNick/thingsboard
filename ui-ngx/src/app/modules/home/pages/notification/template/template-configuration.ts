@@ -72,8 +72,6 @@ export abstract class TemplateConfiguration<T, R = any> extends DialogComponent<
 
   protected readonly destroy$ = new Subject<void>();
 
-  protected deliveryMethodFormsMap: Map<NotificationDeliveryMethod, FormGroup>;
-
   private authUser: AuthUser = getCurrentAuthUser(this.store);
 
   protected constructor(protected store: Store<AppState>,

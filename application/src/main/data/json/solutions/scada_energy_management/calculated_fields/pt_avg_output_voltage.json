@@ -2,8 +2,8 @@
   "type": "SIMPLE",
   "name": "Average output voltage",
   "entityId": {
-    "id": "e9b12030-1503-11f0-8308-dfc38c65ed1c",
-    "entityType": "DEVICE"
+    "id": "74ee6a2a-05ad-4629-a451-a5d8011bda62",
+    "entityType": "DEVICE_PROFILE"
   },
   "debugSettings": {
     "failuresEnabled": true,

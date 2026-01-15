@@ -80,7 +80,7 @@ public class TrendzController extends BaseController {
     @PreAuthorize("hasAuthority('SYS_ADMIN')")
     public TrendzConfiguration getTrendzConfig(@AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
         accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.READ);
-        TrendzSettings settings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+        TrendzSettings settings = trendzSettingsService.findTrendzSettings();
         return settings != null ? settings.configuration() : new TrendzConfiguration(null, null);
     }
 
@@ -98,13 +98,13 @@ public class TrendzController extends BaseController {
     public TrendzConfiguration saveTrendzConfig(@RequestBody TrendzConfiguration config,
                                                 @AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
         accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.WRITE);
-        TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+        TrendzSettings trendzSettings = trendzSettingsService.findTrendzSettings();
         if (trendzSettings != null && trendzSettings.configuration() != null && trendzSettings.configuration().equals(config)) {
             return trendzSettings.configuration();
         }
         TrendzSynchronizationResult syncResult = new TrendzSynchronizationResult(null, 0L, TrendzSynchronizationResultType.SYNC_NOT_INITIALIZED, TrendzSynchronizationStatus.NOT_AVAILABLE);
         TrendzSettings newSettings = new TrendzSettings(config, syncResult);
-        trendzSettingsService.saveTrendzSettings(TenantId.SYS_TENANT_ID, newSettings);
+        trendzSettingsService.saveTrendzSettings(newSettings);
         return config;
     }
 
@@ -115,7 +115,7 @@ public class TrendzController extends BaseController {
     @GetMapping("/sync")
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
     public TrendzSynchronizationResult getTrendzSyncResult() {
-        TrendzSettings settings = trendzSettingsService.findTrendzSettings(TenantId.SYS_TENANT_ID);
+        TrendzSettings settings = trendzSettingsService.findTrendzSettings();
         if (settings != null && settings.synchronizationResult() != null) {
             return settings.synchronizationResult();
         }

@@ -34,14 +34,18 @@ import { EntityDetailsPageComponent } from '@home/components/entity/entity-detai
 import { EntityType } from '@shared/models/entity-type.models';
 import { ResourceInfo } from '@shared/models/resource.models';
 import { OtaPackage } from '@shared/models/ota-package.models';
+import { UtilsService } from '@core/services/utils.service';
 
 export const entityDetailsPageBreadcrumbLabelFunction: BreadCrumbLabelFunction<EntityDetailsPageComponent>
-  = ((route, translate, component) => {
+  = ((route, translate, component, data,  utils) => {
+  let label = '';
   switch (component.entitiesTableConfig.entityType) {
     case EntityType.TB_RESOURCE:
     case EntityType.OTA_PACKAGE:
-      return (component.entity as ResourceInfo | OtaPackage)?.title;
+      label = (component.entity as ResourceInfo | OtaPackage)?.title;
+      break;
     default:
-      return component.entity?.name;
+      label = component.entity?.name;
   }
+  return utils ? utils.customTranslation(label) : label;
 });

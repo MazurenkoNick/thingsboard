@@ -10,19 +10,9 @@
     "jsonId": "7e327000-38ee-11ed-af17-3d7337747e91"
   },
   {
-    "name": "SI Soil Moisture",
-    "file": "soil_moisture.json",
-    "jsonId": "f18f71a0-38d6-11ed-af17-3d7337747e91"
-  },
-  {
-    "name": "SI Water Meter",
-    "file": "water_meter.json",
+    "name": "SI Device",
+    "file": "device.json",
     "jsonId": "cd629220-398b-11ed-af17-3d7337747e91"
-  },
-  {
-    "name": "SI Smart Valve",
-    "file": "smart_valve.json",
-    "jsonId": "106b4e00-43db-11ed-95eb-f3315fc07af7"
   },
   {
     "name": "SI Count Alarms (Remote Farm)",
@@ -35,19 +25,8 @@
     "jsonId": "c3daff10-9676-11ed-b5e1-392bb934190c"
   },
   {
-    "name": "SI Soil Moisture (Remote Farm)",
-    "file": "remote_farm_soil_moisture.json",
-    "jsonId": "9fdea7b0-9676-11ed-b5e1-392bb934190c"
-  },
-  {
-    "name": "SI Water Meter (Remote Farm)",
-    "file": "remote_farm_water_meter.json",
-    "jsonId": "6bc73c80-9676-11ed-b5e1-392bb934190c"
-  },
-  {
-    "name": "SI Smart Valve (Remote Farm)",
-    "file": "remote_farm_smart_valve.json",
+    "name": "SI Device (Remote Farm)",
+    "file": "remote_farm_device.json",
     "jsonId": "53190790-9676-11ed-b5e1-392bb934190c"
   }
 ]
-

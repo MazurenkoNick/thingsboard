@@ -233,6 +233,7 @@ export class TenantProfileAutocompleteComponent implements ControlValueAccessor,
 
   createTenantProfile($event: Event, profileName: string) {
     $event.preventDefault();
+    $event.stopPropagation();
     const tenantProfile: TenantProfile = {
       name: profileName
     };

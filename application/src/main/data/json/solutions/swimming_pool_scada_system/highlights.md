@@ -1,16 +1,14 @@
-The Swimming Pool SCADA template provides a comprehensive monitoring and control solution specifically designed for swimming pool operations. 
-With this template, you get a feature-rich dashboard, offering real-time device management and intuitive alarm configuration.
-SCADA systems are generally divided into two types: Traditional and High-Performance.
+Transform your swimming pool facility management with the **Swimming Pool SCADA System** solution template.
+Designed for facility managers and system integrators, this solution brings advanced SCADA capabilities to pool operations, enhancing sustainability and efficiency. 🏊‍♂️📊
 
-Solution automatically configures the IoT gateway, creates an asset and 14 devices.
+Press **Install** to generate a complete SCADA ecosystem — populated with device emulators, gateway configurations, and flow logic.
 
-**Hardware Components**:
+#### 📦 What's inside the box?
 
-* **Sensors**: Water level, temperature (outdoor, pool), flow rate, vibration, and pressure sensors.
-* **Actuators**: Valves and switches for managing the filtration system, heat pump states, and flow control in pump segments.
+We have auto-generated a comprehensive industrial platform for you:
 
-**Software Components**:
-
-* **IoT Gateway**: Utilizes ModBus protocol to communicate with physical devices.
-* **Device Emulators**: Docker images that simulate real device responses for testing and demonstration.
-* **SCADA Dashboard**: Customizable dashboard for real-time data visualization and control.
+* **🎛️ SCADA Dashboard:** A feature-rich dashboard offering real-time visualization of water temperature, pump status, and valve positions.
+* **🤖 Modbus Emulator:** A complete Docker environment simulating 14 distinct devices (**Sand filter**, **Heat pump**, etc.), allowing you to see the solution in action immediately.
+* **🧮 Flow Logic:** Pre-configured **Calculated Fields** that analyze valve states to visualize water flow through Filter, Heat, and Drain segments.
+* **🚨 Equipment Alarms:** Automated rules that trigger on critical events, such as **Heat Pump Vibration** (>5.0), **Sand Filter Pressure** anomalies, or **Water Pump Overheating**.
+* **📡 Auto-Configured Gateway:** The solution automatically configures the **Pool System Gateway** to communicate with the pool devices using the Modbus protocol.

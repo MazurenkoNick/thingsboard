@@ -2,8 +2,8 @@
   "type": "SIMPLE",
   "name": "Flow charge-discharge",
   "entityId": {
-    "id": "e9c91500-1503-11f0-8308-dfc38c65ed1c",
-    "entityType": "DEVICE"
+    "id": "c9163c32-76bb-49ad-aabb-7e0181dca116",
+    "entityType": "DEVICE_PROFILE"
   },
   "debugSettings": {
     "failuresEnabled": true,

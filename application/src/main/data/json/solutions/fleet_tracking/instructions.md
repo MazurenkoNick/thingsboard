@@ -1,21 +1,34 @@
 ## Solution instructions
 
-As part of this solution, we have created the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Fleet Tracking"</a> dashboard that displays
-data from multiple buses. You may use the dashboard to:
+Welcome to your new **Site Fleet Tracking** solution 👋
+We have generated the <a href="${MAIN_DASHBOARD_URL}" target="_blank">Mine site monitoring</a> dashboard for you. Use it to:
 
-* observe location and status of the buses;
-* monitor bus tracking events (alarms);  
-* browse individual bus route, speed and fuel level history;
+* **Observe** real-time positions of excavators and haul trucks;
+* **Monitor** geofencing events and alarms;
+* **Browse** movement history and fuel levels.
 
-The dashboard has two states. The main state displays the list of the buses, their location on the map as well as the list of their alarms.
-You may browse bus location history popup by clicking on the "Route history" icon located on the right side of the bus table row.  
-You may drill down to the bus details state by clicking on the table row. The bus details state allows to browse alarms, location, speed, and fuel level history.
+### 🖥 Mastering the dashboard
 
-You may always customize the <a href="${MAIN_DASHBOARD_URL}" target="_blank">"Fleet Tracking"</a> dashboard using dashboard development <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">guide</a>.
+The **Main** state provides a complete overview of your mining operations:
+* **KPI Cards:** Monitor real-time counts of machines in Loading, Unloading, or Restricted zones, along with daily fuel consumption.
+* **Map:** Visualize geofenced zones and the live location of your machinery.
+* **Lists:** View detailed tables for **Zones**, **Machines**, and active **Alarms**.
 
-### Devices
+**Drill Down features:**
+* **Machine Details:** Click any machine row in the table or click the "See Details" button in a map tooltip to inspect specific alarms, hydraulic pressure (for excavators), and load weight (for haul trucks) history.
+* **Zone Details:** Click any zone row in the table to view a list of all machines currently inside that zone, along with their alarms.
 
-We have already created four bus tracking devices and loaded some demo data for them. See device info and credentials below:
+**Interactive Simulation:** 
+
+The map markers are **movable**! You can drag and drop a machine from one zone to another directly on the map.
+This simulates a real-time coordinate change (`latitude`/`longitude`), automatically triggering the corresponding 
+**Geofencing** calculated fields logic to update the machine's status and generate alarms.
+
+You can always customize this dashboard using our <a href="${DOCS_BASE_URL}/user-guide/dashboards/" target="_blank">dashboard development guide</a>.
+
+### 🔌 Devices
+
+We have pre-provisioned two excavators and three haul trucks with demo data. You can find their info and credentials below:
 
 <div class="tb-markdown-view table-wrapper">
 
@@ -23,78 +36,67 @@ ${device_list_and_credentials}
 
 </div>
 
-Solution expects that the bus tracking device will upload "latitude", "longitude", "speed", "fuel" and "status" values.
+#### ⚡ Test it now
+
+Want to see the dashboard come alive? You can simulate a machine right now.
+The solution expects telemetry like `latitude`, `longitude`, `speed`, `fuelLevel`, and machine-specific data (`loadWeight` for haul trucks and `hydraulicPressure` for excavators).
+
 The most simple example of the expected payload is in JSON format:
 
 ```json
-{"latitude":  37.764702, "longitude":  -122.476071, "speed":  50, "fuel":  5, "status": "On route"}{:copy-code}
+{
+  "latitude": 36.215322,
+  "longitude": -88.665637,
+  "speed": 18.5,
+  "fuelLevel": 72.3,
+  "loadWeight": 56000
+}{:copy-code}
 ```
 
-To emulate the data upload on behalf of device "Bus C", one should execute the following command:
+<br>
+
+To emulate data upload on behalf of device "Haul truck A", execute the following command:
 
 ```bash
-curl -v -X POST -d "{\"latitude\":  37.764702, \"longitude\":  -122.476071, \"speed\":  50, \"fuel\":  5, \"status\": \"On route\"}" ${BASE_URL}/api/v1/${Bus CACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
+curl -v -X POST -d "{\"latitude\": 36.215322,\"longitude\": -88.665637,\"speed\": 18.5,\"fuelLevel\": 72.3,\"loadWeight\": 56000}" ${BASE_URL}/api/v1/${Haul truck AACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
 ```
+
+<br>
 
 The example above uses <a href="${DOCS_BASE_URL}/reference/http-api/#telemetry-upload-api" target="_blank">HTTP API</a>.
 See <a href="${DOCS_BASE_URL}/getting-started-guides/connectivity/" target="_blank">connecting devices</a> for other connectivity options.
 
-### Alarms
+Go check your dashboard — you should see the values update instantly 🚀
 
-Alarms are generated using three <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">Alarm rules</a> in the
-"bus" <a href="/profiles/deviceProfiles" target="_blank">device profile</a>: "Speed limit", "Stopped" and "Low fuel" alarm types.
+### 🚨 Alarms
 
-### Solution entities
+Your solution monitors data based on the <a href="${DOCS_BASE_URL}/user-guide/alarm-rules/" target="_blank">alarm rules</a> configured in the "Excavator" and "Haul truck" device profiles:
 
-As part of this solution, the following entities were created:
+<div class="tb-markdown-view table-wrapper">
+
+${alarm_rules}
+
+</div>
+
+### 🧮 Calculated fields
+
+Solution utilizes <a href="${DOCS_BASE_URL}/user-guide/calculated-fields/" target="_blank">calculated fields</a> to derive new telemetry values and geofencing events based on incoming data.
+They are configured in the "Excavator" and "Haul truck" device profiles and in the "Mine site" asset profile. The configured calculated fields are listed below:
+
+<div class="tb-markdown-view table-wrapper">
+
+${calculated_fields}
+
+</div>
+
+**💡 Tip:** The aggregation is done in the UTC time zone by default. You may configure settings like the time zone or interval duration in "Time series data aggregation" calculated fields.
+
+### 📦 Solution entities
+
+The following entities were automatically created to power this solution:
 
 <div class="tb-markdown-view table-wrapper">
 
 ${all_entities}
 
 </div>
-
-### Edge computing
-
-**Optionally**, this solution can be extended to use edge computing.
-
-<a href="https://thingsboard.io/products/thingsboard-edge/" target="_blank">ThingsBoard Edge</a> allows bringing data analysis and management to the edge, where the data created.
-At the same time ThingsBoard Edge seamlessly synchronizing with the ThingsBoard cloud according to your business needs.
-
-As example, in the context of Fleet tracking solution, edge computing could be useful if you have bus stations that are scattered throughout the town.
-In this case, ThingsBoard Edge can be deployed into every bus station to process data from nearby bus tracking devices, enabling real-time analysis and decision-making, such as warnings in case bus is not on the route. 
-Edge is going to process data in case there is no network connection to the central ThingsBoard server, and thus no data will be lost and required decisions are going to be taken locally. 
-Eventually, required data is going to be pushed to the cloud, once network connection is established. 
-Configuration of edge computing business logic is centralized in a single place - ThingsBoard server.
-
-In the scope of this solution, new edge entity <a href="${Remote Bus Station R1EDGE_DETAILS_URL}" target="_blank">Remote Bus Station R1</a> was created.
-
-Additionally, particular entity groups were already assigned to the edge entity to simplify the edge deployment:
-
-* **"Bus devices"** *DEVICE* group;
-* **"Fleet tracking"** *DASHBOARD* group.
-
-To install ThingsBoard Edge and connect to the cloud, please navigate to <a href="${Remote Bus Station R1EDGE_DETAILS_URL}" target="_blank">edge details page</a> and click **Install & Connect instructions** button.
-
-Once the edge is installed and connected to the cloud, you will be able to log in into edge using your tenant credentials.
-
-#### Push data to device on edge
-
-**"Bus devices"** *DEVICE* group was assigned to the edge entity "Remote Bus Station R1".
-This means that all devices from this group will be automatically provisioned to the edge.
-
-You can see devices from this group once you log in into edge and navigate to the **Entities -> Devices** page.
-
-To emulate the data upload on behalf of device "Bus C" to the edge, one should execute the following command:
-
-```bash
-curl -v -X POST -d "{\"latitude\":  37.764702, \"longitude\":  -122.476071, \"speed\":  50, \"fuel\":  5, \"status\": \"On route\"}" http://localhost:8080/api/v1/${Bus CACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
-```
-
-Or please use next command if you updated edge HTTP 8080 bind port to **18080** during edge installation:
-
-```bash
-curl -v -X POST -d "{\"latitude\":  37.764702, \"longitude\":  -122.476071, \"speed\":  50, \"fuel\":  5, \"status\": \"On route\"}" http://localhost:18080/api/v1/${Bus CACCESS_TOKEN}/telemetry --header "Content-Type:application/json"{:copy-code}
-```
-
-Once you'll push data to the device "Bus C" on edge, you'll be able to see telemetry update on the cloud for this device as well.

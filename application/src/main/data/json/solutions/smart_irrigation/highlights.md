@@ -1,24 +1,14 @@
-The Smart Irrigation template represents a generic field irrigation solution. 
-You may provision fields by selecting the crop type and moisture thresholds.
-You may also define the field location using a rectangle or a complex polygon on the map.
+Transform your agriculture management with a powerful **Smart Irrigation** digital twin. 
+This template deploys a fully interactive map with real-time soil moisture tracking, automated irrigation scheduling, and critical crop health alarms. 🗺️🌾
 
-Each Field may contain multiple moisture sensors. 
-The soil moisture thresholds are applied to each sensor reading. 
-Use receives an alarm when the threshold is violated or the sensor battery is low.
-The sensor alarms are propagated to the field level.
+Press **Install** to instantly generate a working farm simulation — no hardware or complex coding required.
 
-The sensor readings are also aggregated to the average soil moisture of the field. 
-Users may observe the history of the aggregated value or each particular sensor reading separately.
+#### 📦 What's inside the box?
 
-Users may configure the irrigation schedule and define desired water consumption or irrigation duration for each scheduled task.
-The history of the irrigation tasks is available in the field details. 
+We have auto-generated a complete operational environment for you:
 
-Press the "install" button, and you will have a ready-to-use generic application that covers all common requirements.
-
-#### Solution structure
-
-* "Irrigation Management" dashboard for tenant administrators to provision the fields, sensors, and irrigation scheduling;
-* Multiple device and asset profiles with pre-configured alarm rules: "SI Water Meter", "SI Smart Valve", "SI Soil Moisture Sensor", "SI Field";
-* Rule Chains to control the irrigation logic and process data from devices and assets;
-* Each device type generates a specific alarm based on configurable thresholds;
-* Edge instance - optionally, add edge computing to your solution.
+* 🖥️ **Irrigation Command Center:** A main dashboard featuring live field maps, zone-specific analytics, and real-time moisture monitoring.
+* 🧠 **Smart Logic:** Pre-configured algorithms that calculate **Average Moisture** across sensors and automate **Irrigation States** based on consumption limits.
+* 🌾 **Field Assets:** A robust asset structure where individual sensors (Moisture, Water Meter, Valves) are automatically aggregated into "Field" entities.
+* 🗓️ **Automated Scheduling:** A built-in scheduler to plan watering cycles based on duration or specific water volume targets.
+* 📡 **Edge Ready:** Optional support for **ThingsBoard Edge** to run critical irrigation logic locally on remote farms, even without internet access.

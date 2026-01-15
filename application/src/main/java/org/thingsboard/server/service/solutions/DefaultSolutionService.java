@@ -52,6 +52,7 @@ import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.DeviceProfile;
+import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.HasName;
 import org.thingsboard.server.common.data.StringUtils;
@@ -85,12 +86,14 @@ import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.job.task.CfReprocessingTask;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
 import org.thingsboard.server.common.data.kv.BaseDeleteTsKvQuery;
 import org.thingsboard.server.common.data.kv.BooleanDataEntry;
 import org.thingsboard.server.common.data.kv.DeleteTsKvQuery;
 import org.thingsboard.server.common.data.kv.StringDataEntry;
+import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.TimePageLink;
 import org.thingsboard.server.common.data.permission.GroupPermission;
@@ -133,6 +136,7 @@ import org.thingsboard.server.queue.discovery.TbServiceInfoProvider;
 import org.thingsboard.server.queue.provider.TbQueueProducerProvider;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.action.EntityActionService;
+import org.thingsboard.server.service.cf.CalculatedFieldReprocessingService;
 import org.thingsboard.server.service.entitiy.asset.TbAssetService;
 import org.thingsboard.server.service.entitiy.cf.TbCalculatedFieldService;
 import org.thingsboard.server.service.entitiy.device.TbDeviceService;
@@ -143,6 +147,8 @@ import org.thingsboard.server.service.install.InstallScripts;
 import org.thingsboard.server.service.rule.TbRuleChainService;
 import org.thingsboard.server.service.scheduler.SchedulerService;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
+import org.thingsboard.server.service.solutions.data.CreatedAlarmRuleInfo;
+import org.thingsboard.server.service.solutions.data.CreatedCalculatedFieldInfo;
 import org.thingsboard.server.service.solutions.data.CreatedEntityInfo;
 import org.thingsboard.server.service.solutions.data.DashboardLinkInfo;
 import org.thingsboard.server.service.solutions.data.DeviceCredentialsInfo;
@@ -150,6 +156,8 @@ import org.thingsboard.server.service.solutions.data.EdgeLinkInfo;
 import org.thingsboard.server.service.solutions.data.SolutionInstallContext;
 import org.thingsboard.server.service.solutions.data.UserCredentialsInfo;
 import org.thingsboard.server.service.solutions.data.definition.AssetDefinition;
+import org.thingsboard.server.service.solutions.data.definition.AssetProfileDefinition;
+import org.thingsboard.server.service.solutions.data.definition.CalculatedFieldDefinition;
 import org.thingsboard.server.service.solutions.data.definition.CustomerDefinition;
 import org.thingsboard.server.service.solutions.data.definition.CustomerEntityDefinition;
 import org.thingsboard.server.service.solutions.data.definition.DashboardDefinition;
@@ -194,6 +202,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -201,7 +210,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -221,8 +232,8 @@ public class DefaultSolutionService implements SolutionService {
     @Value("${ui.solution_templates.docs_base_url:https://thingsboard.io/docs/pe}")
     private String docsBaseUrl;
 
-    private List<SolutionTemplateInfo> solutions = new ArrayList<>();
-    private Map<String, SolutionTemplateDetails> solutionsMap = new HashMap<>();
+    private final List<SolutionTemplateInfo> solutions = new ArrayList<>();
+    private final Map<String, SolutionTemplateDetails> solutionsMap = new HashMap<>();
 
     private final InstallScripts installScripts;
     private final DeviceProfileService deviceProfileService;
@@ -242,6 +253,7 @@ public class DefaultSolutionService implements SolutionService {
     private final UserService userService;
     private final CalculatedFieldService calculatedFieldService;
     private final TbCalculatedFieldService tbCalculatedFieldService;
+    private final CalculatedFieldReprocessingService calculatedFieldReprocessingService;
 
     private final TbEdgeService tbEdgeService;
     private final EntityGroupService entityGroupService;
@@ -260,7 +272,8 @@ public class DefaultSolutionService implements SolutionService {
     private final SchedulerEventService schedulerEventService;
     private final SchedulerService schedulerService;
     private final DeviceConnectivityService deviceConnectivityService;
-    private final ExecutorService emulatorExecutor = ThingsBoardExecutors.newWorkStealingPool(10, getClass());
+    private final ExecutorService emulatorExecutor = ThingsBoardExecutors.newWorkStealingPool(10, "solution-emulators-executor");
+    private final ExecutorService cfsReprocessingExecutor = ThingsBoardExecutors.newWorkStealingPool(Math.max(4, Runtime.getRuntime().availableProcessors()), "solution-cfs-reprocessing-executor");
     private final SubscriptionService subscriptionService;
 
     @PostConstruct
@@ -462,9 +475,9 @@ public class DefaultSolutionService implements SolutionService {
             }
         }
 
-        List<AssetProfile> assetProfiles = loadListOfEntitiesIfFileExists(solutionId, "asset_profiles.json", new TypeReference<>() {
+        List<AssetProfileDefinition> assetProfiles = loadListOfEntitiesIfFileExists(solutionId, "asset_profiles.json", new TypeReference<>() {
         });
-        assetProfiles.addAll(loadListOfEntitiesFromDirectory(solutionId, "asset_profiles", AssetProfile.class));
+        assetProfiles.addAll(loadListOfEntitiesFromDirectory(solutionId, "asset_profiles", AssetProfileDefinition.class));
         // Validate that entities with such name does not exist entities
         if (!assetProfiles.isEmpty()) {
             for (AssetProfile assetProfile : assetProfiles) {
@@ -503,6 +516,8 @@ public class DefaultSolutionService implements SolutionService {
     private SolutionInstallResponse doInstallSolution(User user, TenantId tenantId, String solutionId, HttpServletRequest request) {
         SolutionInstallContext ctx = new SolutionInstallContext(tenantId, solutionId, user, new TenantSolutionTemplateInstructions());
         try {
+            registerEmulatorsAndComputeOldestTelemetryTs(ctx);
+
             provisionRoles(ctx);
 
             provisionTenantDetails(ctx);
@@ -534,9 +549,13 @@ public class DefaultSolutionService implements SolutionService {
 
             provisionEdges(user, ctx, request);
 
-            provisionCalculatedFields(ctx);
+            provisionAlarmRules(ctx);
 
-            launchEmulators(ctx, devices, assets);
+            Set<CompletableFuture<Void>> telemetryLoading = launchEmulators(ctx, devices, assets);
+
+            waitForTelemetryCompletion(telemetryLoading);
+
+            provisionCalculatedFields(ctx);
 
             ctx.getSolutionInstructions().setDetails(prepareInstructions(ctx, request));
 
@@ -566,6 +585,17 @@ public class DefaultSolutionService implements SolutionService {
             log.error("[{}][{}] Failed to provision", tenantId, solutionId, e);
             rollback(tenantId, solutionId, ctx, e);
             return new SolutionInstallResponse(ctx.getSolutionInstructions(), false);
+        }
+    }
+
+    private void waitForTelemetryCompletion(Set<CompletableFuture<Void>> futures) throws InterruptedException {
+        CompletableFuture<Void> all = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+
+        try {
+            all.get(); // wait until all done
+            Thread.sleep(futures.size() * 100L);
+        } catch (ExecutionException e) {
+            throw new RuntimeException("Telemetry processing failed", e.getCause());
         }
     }
 
@@ -611,7 +641,7 @@ public class DefaultSolutionService implements SolutionService {
 
         StringBuilder devList = new StringBuilder();
 
-        devList.append("| Device name | Access token | Customer name |");
+        devList.append("| Device name | Access token | Owner |");
         devList.append(System.lineSeparator());
         devList.append("| :---   | :---  | :---  |");
         devList.append(System.lineSeparator());
@@ -619,7 +649,7 @@ public class DefaultSolutionService implements SolutionService {
         for (DeviceCredentialsInfo credentialsInfo : ctx.getCreatedDevices().values()) {
             devList.append("|").append(credentialsInfo.getName())
                     .append("|").append(credentialsInfo.getCredentials().getCredentialsId()).append("{:copy-code}")
-                    .append("|").append(credentialsInfo.getCustomerName() != null ? credentialsInfo.getCustomerName() : "");
+                    .append("|").append(credentialsInfo.getCustomerName() != null ? credentialsInfo.getCustomerName() : "Tenant");
             devList.append(System.lineSeparator());
 
             template = template.replace("${" + credentialsInfo.getName() + "ACCESS_TOKEN}", credentialsInfo.getCredentials().getCredentialsId());
@@ -633,7 +663,7 @@ public class DefaultSolutionService implements SolutionService {
 
         StringBuilder userList = new StringBuilder();
 
-        userList.append("| Name | Login | Password | Customer name | User Group |");
+        userList.append("| Name | Login | Password | Customer name | User group |");
         userList.append(System.lineSeparator());
         userList.append("| :---  | :---  | :---  | :---  | :---  |");
         userList.append(System.lineSeparator());
@@ -649,21 +679,9 @@ public class DefaultSolutionService implements SolutionService {
 
         template = template.replace("${user_list}", userList.toString());
 
-        StringBuilder entityList = new StringBuilder();
-
-        entityList.append("| Name | Type | Owner |");
-        entityList.append(System.lineSeparator());
-        entityList.append("| :---  | :---  | :---  |");
-        entityList.append(System.lineSeparator());
-
-        for (CreatedEntityInfo entityInfo : ctx.getCreatedEntities().values()) {
-            entityList.append("|").append(entityInfo.getName())
-                    .append("|").append(entityInfo.getType()).append("|")
-                    .append(entityInfo.getOwner());
-            entityList.append(System.lineSeparator());
-        }
-
-        template = template.replace("${all_entities}", entityList.toString());
+        template = replaceAlarmRules(ctx, template);
+        template = replaceCalculatedFields(ctx, template);
+        template = replaceCreatedEntities(ctx, template);
 
         for (Map.Entry<String, EdgeLinkInfo> edgeLinkInfoEntry : ctx.getCreatedEdges().entrySet()) {
             EdgeLinkInfo edgeLinkInfo = edgeLinkInfoEntry.getValue();
@@ -677,6 +695,97 @@ public class DefaultSolutionService implements SolutionService {
         }
 
         return template;
+    }
+
+    private static String replaceAlarmRules(SolutionInstallContext ctx, String template) {
+        StringBuilder alarmRules = new StringBuilder();
+
+        alarmRules.append("| Entity Profile Name | Alarm Type | Severities |").append(System.lineSeparator());
+        alarmRules.append("| :--- | :--- | :--- |").append(System.lineSeparator());
+
+        ctx.getCreatedAlarmRules().entrySet().stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.comparing(CreatedAlarmRuleInfo::entityName, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(CreatedAlarmRuleInfo::alarmType, String.CASE_INSENSITIVE_ORDER)))
+                .forEach(entry -> {
+                    UUID key = entry.getKey();
+                    var alarmRuleInfo = entry.getValue();
+
+                    String alarmType = alarmRuleInfo.alarmType();
+                    String link = alarmRuleInfo.getCfPageLink(key);
+
+                    String alarmTypeWithLink = "<a href=\"" + link + "\" target=\"_blank\">" + alarmType + "</a>";
+
+                    String profileName = alarmRuleInfo.entityId() != null ?
+                            "<a href=\"" + alarmRuleInfo.getEntityPageLink() + "\" target=\"_blank\">" + alarmRuleInfo.entityName() + "</a>"
+                            : alarmRuleInfo.entityName();
+
+                    alarmRules.append("|")
+                            .append(profileName).append("|")
+                            .append(alarmTypeWithLink).append("|")
+                            .append(alarmRuleInfo.severities()).append("|")
+                            .append(System.lineSeparator());
+                });
+
+        return template.replace("${alarm_rules}", alarmRules.toString());
+    }
+
+    private static String replaceCalculatedFields(SolutionInstallContext ctx, String template) {
+        StringBuilder calculatedFields = new StringBuilder();
+
+        calculatedFields.append("| Entity Profile Name | Field Name | Field Type |").append(System.lineSeparator());
+        calculatedFields.append("| :--- | :--- | :--- |").append(System.lineSeparator());
+
+        ctx.getCreatedCalculatedFields().entrySet().stream()
+                .sorted(Map.Entry.comparingByValue(
+                        Comparator.comparing(CreatedCalculatedFieldInfo::entityName, String.CASE_INSENSITIVE_ORDER)
+                                .thenComparing(CreatedCalculatedFieldInfo::name, String.CASE_INSENSITIVE_ORDER)
+                ))
+                .forEach(entry -> {
+                    UUID key = entry.getKey();
+                    var cfInfo = entry.getValue();
+
+                    String cfTitle = cfInfo.name();
+                    String link = cfInfo.getCfPageLink(key);
+
+                    String cfTitleWithLink = "<a href=\"" + link + "\" target=\"_blank\">" + cfTitle + "</a>";
+
+                    String profileName = cfInfo.entityId() != null ?
+                            "<a href=\"" + cfInfo.getEntityPageLink() + "\" target=\"_blank\">" + cfInfo.entityName() + "</a>"
+                            : cfInfo.entityName();
+
+                    calculatedFields.append("|")
+                            .append(profileName).append("|")
+                            .append(cfTitleWithLink).append("|")
+                            .append(cfInfo.type()).append("|")
+                            .append(System.lineSeparator());
+                });
+
+        return template.replace("${calculated_fields}", calculatedFields.toString());
+    }
+
+    private static String replaceCreatedEntities(SolutionInstallContext ctx, String template) {
+        StringBuilder entityList = new StringBuilder();
+
+        entityList.append("| Name | Type | Owner |").append(System.lineSeparator());
+        entityList.append("| :--- | :--- | :--- |").append(System.lineSeparator());
+
+        for (Map.Entry<UUID, CreatedEntityInfo> entry : ctx.getCreatedEntities().entrySet()) {
+            UUID key = entry.getKey();
+            var entityInfo = entry.getValue();
+            String link = entityInfo.getEntityPageLink(key);
+            String entityName = entityInfo.getName();
+
+            String name = link != null ?
+                    "<a href=\"" + link + "\" target=\"_blank\">" + entityName + "</a>"
+                    : entityName;
+
+            entityList.append("|")
+                    .append(name).append("|")
+                    .append(entityInfo.getType().getNormalName()).append("|")
+                    .append(entityInfo.getOwner()).append("|")
+                    .append(System.lineSeparator());
+        }
+        return template.replace("${all_entities}", entityList.toString());
     }
 
     private String getDashboardLink(TenantSolutionTemplateInstructions solutionInstructions, EntityGroupId dashboardGroupId, DashboardId dashboardId, boolean isPublic) {
@@ -792,7 +901,8 @@ public class DefaultSolutionService implements SolutionService {
     }
 
     private void provisionDeviceProfiles(SolutionInstallContext ctx) {
-        List<DeviceProfileDefinition> deviceProfiles = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "device_profiles.json", new TypeReference<>() {});
+        List<DeviceProfileDefinition> deviceProfiles = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "device_profiles.json", new TypeReference<>() {
+        });
         deviceProfiles.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "device_profiles", DeviceProfileDefinition.class));
         deviceProfiles.forEach(deviceProfile -> {
             deviceProfile.setId(null);
@@ -826,9 +936,9 @@ public class DefaultSolutionService implements SolutionService {
     }
 
     private void provisionAssetProfiles(SolutionInstallContext ctx) {
-        List<AssetProfile> assetProfiles = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "asset_profiles.json", new TypeReference<>() {
+        List<AssetProfileDefinition> assetProfiles = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "asset_profiles.json", new TypeReference<>() {
         });
-        assetProfiles.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "asset_profiles", AssetProfile.class));
+        assetProfiles.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "asset_profiles", AssetProfileDefinition.class));
         assetProfiles.forEach(assetProfile -> {
             assetProfile.setId(null);
             assetProfile.setCreatedTime(0L);
@@ -853,8 +963,11 @@ public class DefaultSolutionService implements SolutionService {
             }
         });
 
-        assetProfiles = assetProfiles.stream().map(assetProfileService::saveAssetProfile).collect(Collectors.toList());
-        assetProfiles.forEach(ctx::register);
+        assetProfiles.forEach(assetProfileDefinition -> {
+            AssetProfile assetProfile = new AssetProfile(assetProfileDefinition);
+            assetProfile = assetProfileService.saveAssetProfile(assetProfile);
+            ctx.register(assetProfileDefinition, assetProfile);
+        });
     }
 
     private void provisionSchedulerEvents(SolutionInstallContext ctx) {
@@ -938,7 +1051,7 @@ public class DefaultSolutionService implements SolutionService {
             for (RelationDefinition relationDef : relations) {
                 log.info("[{}] Saving relation: {}", id, relationDef);
                 EntityRelation entityRelation = new EntityRelation();
-                EntityId otherId = ctx.getIdFromMap(relationDef.getEntityType(), relationDef.getEntityName());
+                EntityId otherId = resolveRelatedEntityId(relationDef, ctx);
                 if (EntitySearchDirection.FROM.equals(relationDef.getDirection())) {
                     entityRelation.setFrom(otherId);
                     entityRelation.setTo(id);
@@ -955,6 +1068,13 @@ public class DefaultSolutionService implements SolutionService {
                 }
             }
         });
+    }
+
+    private EntityId resolveRelatedEntityId(RelationDefinition relationDef, SolutionInstallContext ctx) {
+        if (EntityType.TENANT == relationDef.getEntityType()) {
+            return ctx.getTenantId();
+        }
+        return ctx.getIdFromMap(relationDef.getEntityType(), relationDef.getEntityName());
     }
 
     protected Map<Device, DeviceDefinition> provisionDevices(User user, SolutionInstallContext ctx) throws Exception {
@@ -982,8 +1102,8 @@ public class DefaultSolutionService implements SolutionService {
             DeviceId entityId = entity.getId();
             ctx.putIdToMap(entityDef, entityId);
 
-            saveServerSideAttributes(ctx.getTenantId(), entityId, entityDef.getAttributes());
-            saveSharedAttributes(ctx.getTenantId(), entityId, entityDef.getSharedAttributes());
+            saveServerSideAttributes(ctx, entityId, entityDef.getAttributes());
+            saveSharedAttributes(ctx, entityId, entityDef.getSharedAttributes());
             ctx.put(entityId, entityDef.getRelations());
             addEntityToGroup(ctx, entityDef, entityId);
 
@@ -1015,7 +1135,7 @@ public class DefaultSolutionService implements SolutionService {
         }
     }
 
-    private void launchEmulators(SolutionInstallContext ctx, Map<Device, DeviceDefinition> devicesMap, Map<Asset, AssetDefinition> assets) throws Exception {
+    private void registerEmulatorsAndComputeOldestTelemetryTs(SolutionInstallContext ctx) {
         List<EmulatorDefinition> emulatorDefinitions = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "device_emulators.json", new TypeReference<>() {
         });
         Map<String, EmulatorDefinition> deviceEmulators = emulatorDefinitions.stream().collect(Collectors.toMap(EmulatorDefinition::getName, Function.identity()));
@@ -1026,42 +1146,60 @@ public class DefaultSolutionService implements SolutionService {
                         ed.enrich(parent);
                     }
                 });
-
-
-        for (var entry : devicesMap.entrySet().stream().filter(e -> StringUtils.isNotBlank(e.getValue().getEmulator())).collect(Collectors.toSet())) {
-            DeviceEmulatorLauncher.builder()
-                    .entity(entry.getKey())
-                    .emulatorDefinition(deviceEmulators.get(entry.getValue().getEmulator()))
-                    .oldTelemetryExecutor(emulatorExecutor)
-                    .tbClusterService(tbClusterService)
-                    .partitionService(partitionService)
-                    .tbQueueProducerProvider(tbQueueProducerProvider)
-                    .serviceInfoProvider(serviceInfoProvider)
-                    .tsSubService(tsSubService)
-                    .build().launch();
-        }
-
         Map<String, EmulatorDefinition> assetEmulators = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "asset_emulators.json", new TypeReference<List<EmulatorDefinition>>() {
         }).stream().collect(Collectors.toMap(EmulatorDefinition::getName, Function.identity()));
 
-        for (var entry : assets.entrySet().stream().filter(e -> StringUtils.isNotBlank(e.getValue().getEmulator())).collect(Collectors.toSet())) {
-            AssetEmulatorLauncher.builder()
+        ctx.setDeviceEmulators(deviceEmulators);
+        ctx.setAssetEmulators(assetEmulators);
+
+        long solutionInstallTs = ctx.getInstallTs();
+        long oldestDeviceEmulatorsTs = deviceEmulators.values().stream()
+                .mapToLong(value -> value.getOldestTs(ctx))
+                .min().orElse(solutionInstallTs);
+        long oldestAssetEmulatorsTs = assetEmulators.values().stream()
+                .mapToLong(value -> value.getOldestTs(ctx))
+                .min().orElse(solutionInstallTs);
+        long solutionOldestTs = Math.min(oldestDeviceEmulatorsTs, oldestAssetEmulatorsTs);
+
+        ctx.setOldestTelemetryTs(solutionOldestTs);
+    }
+
+    private Set<CompletableFuture<Void>> launchEmulators(SolutionInstallContext ctx, Map<Device, DeviceDefinition> devicesMap, Map<Asset, AssetDefinition> assets) throws Exception {
+        Set<CompletableFuture<Void>> results = new HashSet<>();
+
+        for (var entry : devicesMap.entrySet().stream().filter(e -> StringUtils.isNotBlank(e.getValue().getEmulator())).collect(Collectors.toSet())) {
+            results.add(DeviceEmulatorLauncher.builder()
                     .entity(entry.getKey())
-                    .emulatorDefinition(assetEmulators.get(entry.getValue().getEmulator()))
+                    .emulatorDefinition(ctx.getDeviceEmulators().get(entry.getValue().getEmulator()))
                     .oldTelemetryExecutor(emulatorExecutor)
                     .tbClusterService(tbClusterService)
                     .partitionService(partitionService)
                     .tbQueueProducerProvider(tbQueueProducerProvider)
                     .serviceInfoProvider(serviceInfoProvider)
                     .tsSubService(tsSubService)
-                    .build().launch();
+                    .build().launch());
         }
+
+        for (var entry : assets.entrySet().stream().filter(e -> StringUtils.isNotBlank(e.getValue().getEmulator())).collect(Collectors.toSet())) {
+            results.add(AssetEmulatorLauncher.builder()
+                    .entity(entry.getKey())
+                    .emulatorDefinition(ctx.getAssetEmulators().get(entry.getValue().getEmulator()))
+                    .oldTelemetryExecutor(emulatorExecutor)
+                    .tbClusterService(tbClusterService)
+                    .partitionService(partitionService)
+                    .tbQueueProducerProvider(tbQueueProducerProvider)
+                    .serviceInfoProvider(serviceInfoProvider)
+                    .tsSubService(tsSubService)
+                    .build().launch());
+        }
+
+        return results;
     }
 
     protected void provisionTenantDetails(SolutionInstallContext ctx) throws Exception {
         TenantDefinition tenant = loadEntityIfFileExists(ctx.getSolutionId(), "tenant.json", TenantDefinition.class);
         if (tenant != null) {
-            saveServerSideAttributes(ctx.getTenantId(), ctx.getTenantId(), tenant.getAttributes());
+            saveServerSideAttributes(ctx, ctx.getTenantId(), tenant.getAttributes());
             ctx.put(ctx.getTenantId(), tenant.getRelations());
 
             for (UserGroupDefinition ugDef : tenant.getUserGroups()) {
@@ -1115,7 +1253,7 @@ public class DefaultSolutionService implements SolutionService {
             log.info("[{}] Saved asset: {}", entity.getId(), entity);
             AssetId entityId = entity.getId();
             ctx.putIdToMap(entityDef, entityId);
-            saveServerSideAttributes(ctx.getTenantId(), entityId, entityDef.getAttributes());
+            saveServerSideAttributes(ctx, entityId, entityDef.getAttributes());
             ctx.put(entityId, entityDef.getRelations());
             addEntityToGroup(ctx, entityDef, entityId);
             result.put(entity, entityDef);
@@ -1156,7 +1294,7 @@ public class DefaultSolutionService implements SolutionService {
             ctx.register(entityDef, entity);
             CustomerId entityId = entity.getId();
             ctx.putIdToMap(entityDef, entityId);
-            saveServerSideAttributes(ctx.getTenantId(), entityId, entityDef.getAttributes(), entityDef.getRandomNameData());
+            saveServerSideAttributes(ctx, entityId, entityDef.getAttributes(), entityDef.getRandomNameData());
             ctx.put(entityId, entityDef.getRelations());
 
             entityDef.getAssetGroups().forEach(name -> createEntityGroup(ctx, entityId, name, EntityType.ASSET));
@@ -1233,7 +1371,7 @@ public class DefaultSolutionService implements SolutionService {
                 ctx.put(user.getId(), uDef.getRelations());
                 ctx.putIdToMap(EntityType.USER, originalName, user.getId());
                 ctx.putIdToMap(EntityType.USER, uDef.getName(), user.getId());
-                saveServerSideAttributes(ctx.getTenantId(), user.getId(), uDef.getAttributes());
+                saveServerSideAttributes(ctx, user.getId(), uDef.getAttributes());
             }
         }
     }
@@ -1317,7 +1455,7 @@ public class DefaultSolutionService implements SolutionService {
             log.info("[{}] Saved edge: {}", entity.getId(), entity);
             EdgeId entityId = entity.getId();
             ctx.putIdToMap(entityDef, entityId);
-            saveServerSideAttributes(ctx.getTenantId(), entityId, entityDef.getAttributes());
+            saveServerSideAttributes(ctx, entityId, entityDef.getAttributes());
             ctx.put(entityId, entityDef.getRelations());
             addEntityToGroup(ctx, entityDef, entityId);
 
@@ -1419,51 +1557,133 @@ public class DefaultSolutionService implements SolutionService {
         }
     }
 
-    protected void provisionCalculatedFields(SolutionInstallContext ctx) {
-        List<CalculatedField> cfs = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "calculated_fields.json", new TypeReference<>() {
+    private void provisionAlarmRules(SolutionInstallContext ctx) {
+        List<CalculatedField> cfs = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "alarm_rules.json", new TypeReference<>() {
         });
-        cfs.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "calculated_fields", CalculatedField.class));
+        cfs.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "alarm_rules", CalculatedField.class));
+        cfs.forEach(cf -> ctx.register(createCalculatedField(cf, ctx)));
+    }
 
-        cfs.forEach(cf -> {
-            cf.setId(null);
-            cf.setCreatedTime(0L);
-            cf.setTenantId(ctx.getTenantId());
-            cf.setDebugSettings(new DebugSettings(true, System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(15)));
+    private void provisionCalculatedFields(SolutionInstallContext ctx) {
+        List<CalculatedFieldDefinition> cfs = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "calculated_fields.json", new TypeReference<>() {
+        });
+        cfs.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "calculated_fields", CalculatedFieldDefinition.class));
 
-            Map<String, String> realIds = ctx.getRealIds();
+        List<CalculatedFieldDefinition> createOnly = new ArrayList<>();
+        TreeMap<Integer, List<CalculatedFieldDefinition>> ordered = new TreeMap<>();
 
-            EntityId entityId = cf.getEntityId();
-            if (entityId != null) {
-                String newEntityId = realIds.get(entityId.getId().toString());
-                if (newEntityId != null) {
-                    cf.setEntityId(EntityIdFactory.getByTypeAndUuid(entityId.getEntityType(), newEntityId));
-                } else {
-                    log.error("[{}][{}] Calculated field: {} references non existing entity.", ctx.getTenantId(), ctx.getSolutionId(), cf.getName());
-                    throw new ThingsboardRuntimeException();
-                }
+        for (CalculatedFieldDefinition cf : cfs) {
+            if (cf.getReprocessingOrder() == null || cf.getReprocessingOrder() < 0) {
+                createOnly.add(cf);
+            } else {
+                ordered.computeIfAbsent(cf.getReprocessingOrder(), integer -> new ArrayList<>()).add(cf);
             }
-            if (cf.getConfiguration() instanceof ArgumentsBasedCalculatedFieldConfiguration argBasedCfg) {
-                argBasedCfg.getArguments().forEach((key, argument) -> {
-                    EntityId refEntityId = argument.getRefEntityId();
-                    if (refEntityId != null) {
-                        if (refEntityId.getEntityType() == EntityType.TENANT) {
-                            argument.setRefEntityId(ctx.getTenantId());
+        }
+
+        createOnly.forEach(cf -> ctx.register(createCalculatedField(cf, ctx)));
+
+        for (Map.Entry<Integer, List<CalculatedFieldDefinition>> entry : ordered.entrySet()) {
+            Integer order = entry.getKey();
+            List<CalculatedFieldDefinition> cfDefs = entry.getValue();
+
+            log.debug("Starting reprocessing calculated fields for order: {}", order);
+
+            List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+            log.debug("Start reprocessing calculated fields for order {}", order);
+            for (CalculatedFieldDefinition cfDef : cfDefs) {
+                CalculatedField calculatedField = createCalculatedField(cfDef, ctx);
+                ctx.register(calculatedField);
+                Iterable<EntityInfo> targetEntities = resolveTargetEntities(calculatedField);
+                targetEntities.forEach(entityInfo ->
+                        futures.add(CompletableFuture.runAsync(() -> {
+                            log.debug("Reprocessing calculated field: {}", calculatedField.getName());
+                            reprocessCf(ctx, entityInfo, calculatedField);
+                        }, cfsReprocessingExecutor)));
+            }
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+            log.debug("Finished reprocessing calculated fields for order: {}", order);
+        }
+    }
+
+    private Iterable<EntityInfo> resolveTargetEntities(CalculatedField cf) {
+        EntityId cfEntityId = cf.getEntityId();
+        TenantId tenantId = cf.getTenantId();
+        return switch (cfEntityId.getEntityType()) {
+            case DEVICE -> List.of(deviceService.findDeviceEntityInfoById(tenantId, new DeviceId(cfEntityId.getId())));
+            case ASSET -> List.of(assetService.findAssetEntityInfoById(tenantId, new AssetId(cfEntityId.getId())));
+            case DEVICE_PROFILE ->
+                    new PageDataIterable<>(pageLink -> deviceService.findDeviceEntityInfosByTenantIdAndDeviceProfileId(tenantId, new DeviceProfileId(cfEntityId.getId()), pageLink), 512);
+            case ASSET_PROFILE ->
+                    new PageDataIterable<>(pageLink -> assetService.findAssetEntityInfosByTenantIdAndAssetProfileId(tenantId, new AssetProfileId(cfEntityId.getId()), pageLink), 512);
+            default -> throw new IllegalArgumentException("Unsupported CF entity type " + cfEntityId.getEntityType());
+        };
+    }
+
+    private void reprocessCf(SolutionInstallContext ctx, EntityInfo entityInfo, CalculatedField cf) {
+        try {
+            // NOTE: We use solutionOldestTelemetryTs as a reprocessing startTs for all calculated fields.
+            // This assumes a telemetry emulation window is effectively uniform across all entities in the solution.
+            // If different emulators start generating telemetry with different history windows (e.g., 7d vs 1d),
+            // then CF reprocessing should use per-profile/per-emulator oldestTs instead of the global minimum.
+            long reprocessingStartTs = ctx.getOldestTelemetryTs();
+            CfReprocessingTask task = createTask(ctx.getTenantId(), entityInfo, cf, reprocessingStartTs, System.currentTimeMillis());
+            calculatedFieldReprocessingService.reprocess(task);
+        } catch (Exception e) {
+            log.error("Failed to reprocess calculated field {}", cf.getName(), e);
+        }
+    }
+
+    private CfReprocessingTask createTask(TenantId tenantId, EntityInfo entityInfo, CalculatedField calculatedField, long startTs, long endTs) {
+        return CfReprocessingTask.builder()
+                .tenantId(tenantId)
+                .retries(0) // only 1 attempt
+                .calculatedField(calculatedField)
+                .entityInfo(entityInfo)
+                .startTs(startTs)
+                .endTs(endTs)
+                .build();
+    }
+
+    private CalculatedField createCalculatedField(CalculatedField cf, SolutionInstallContext ctx) {
+        cf.setId(null);
+        cf.setCreatedTime(0L);
+        cf.setTenantId(ctx.getTenantId());
+        cf.setDebugSettings(new DebugSettings(true, System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(15)));
+
+        Map<String, String> realIds = ctx.getRealIds();
+
+        EntityId entityId = cf.getEntityId();
+        if (entityId != null) {
+            String newEntityId = realIds.get(entityId.getId().toString());
+            if (newEntityId != null) {
+                cf.setEntityId(EntityIdFactory.getByTypeAndUuid(entityId.getEntityType(), newEntityId));
+            } else {
+                log.error("[{}][{}] Calculated field: {} references non existing entity.", ctx.getTenantId(), ctx.getSolutionId(), cf.getName());
+                throw new ThingsboardRuntimeException();
+            }
+        }
+        if (cf.getConfiguration() instanceof ArgumentsBasedCalculatedFieldConfiguration argBasedCfg) {
+            argBasedCfg.getArguments().forEach((key, argument) -> {
+                EntityId refEntityId = argument.getRefEntityId();
+                if (refEntityId != null) {
+                    if (refEntityId.getEntityType() == EntityType.TENANT) {
+                        argument.setRefEntityId(ctx.getTenantId());
+                    } else {
+                        String newId = realIds.get(refEntityId.getId().toString());
+                        if (newId != null) {
+                            argument.setRefEntityId(EntityIdFactory.getByTypeAndUuid(refEntityId.getEntityType(), newId));
                         } else {
-                            String newId = realIds.get(refEntityId.getId().toString());
-                            if (newId != null) {
-                                argument.setRefEntityId(EntityIdFactory.getByTypeAndUuid(refEntityId.getEntityType(), newId));
-                            } else {
-                                log.error("[{}][{}] Calculated field: {} references non existing entity.", ctx.getTenantId(), ctx.getSolutionId(), cf.getName());
-                                throw new ThingsboardRuntimeException();
-                            }
+                            log.error("[{}][{}] Calculated field: {} references non existing entity.", ctx.getTenantId(), ctx.getSolutionId(), cf.getName());
+                            throw new ThingsboardRuntimeException();
                         }
                     }
-                });
-            }
-        });
+                }
+            });
+        }
 
-        cfs = cfs.stream().map(calculatedFieldService::save).collect(Collectors.toList());
-        cfs.forEach(ctx::register);
+        CalculatedField calculatedField = new CalculatedField(cf);
+        return calculatedFieldService.save(calculatedField);
     }
 
     private RandomNameData generateRandomName(SolutionInstallContext ctx) {
@@ -1527,30 +1747,30 @@ public class DefaultSolutionService implements SolutionService {
         return ugEntity;
     }
 
-    private void saveServerSideAttributes(TenantId tenantId, EntityId entityId, JsonNode attributes) {
-        saveServerSideAttributes(tenantId, entityId, attributes, null);
+    private void saveServerSideAttributes(SolutionInstallContext ctx, EntityId entityId, JsonNode attributes) {
+        saveServerSideAttributes(ctx, entityId, attributes, null);
     }
 
-    private void saveServerSideAttributes(TenantId tenantId, EntityId entityId, JsonNode attributes, RandomNameData randomNameData) {
-        saveAttributes(tenantId, entityId, attributes, randomNameData, AttributeScope.SERVER_SCOPE);
+    private void saveServerSideAttributes(SolutionInstallContext ctx, EntityId entityId, JsonNode attributes, RandomNameData randomNameData) {
+        saveAttributes(ctx, entityId, attributes, randomNameData, AttributeScope.SERVER_SCOPE);
     }
 
-    private void saveSharedAttributes(TenantId tenantId, EntityId entityId, JsonNode attributes) {
+    private void saveSharedAttributes(SolutionInstallContext ctx, EntityId entityId, JsonNode attributes) {
         if (!EntityType.DEVICE.equals(entityId.getEntityType())) {
             throw new IllegalArgumentException(entityId.getEntityType() + " cannot have shared attributes.");
         }
-        saveAttributes(tenantId, entityId, attributes, null, AttributeScope.SHARED_SCOPE);
+        saveAttributes(ctx, entityId, attributes, null, AttributeScope.SHARED_SCOPE);
     }
 
-    private void saveAttributes(TenantId tenantId, EntityId entityId, JsonNode attributes, RandomNameData randomNameData, AttributeScope attributeScope) {
-        if (attributes != null && !attributes.isNull() && attributes.size() > 0) {
+    private void saveAttributes(SolutionInstallContext ctx, EntityId entityId, JsonNode attributes, RandomNameData randomNameData, AttributeScope attributeScope) {
+        if (attributes != null && !attributes.isNull() && !attributes.isEmpty()) {
             attributes = prepareAttributes(attributes);
             log.info("[{}] Saving attributes: {}", entityId, attributes);
             if (randomNameData != null) {
                 attributes = JacksonUtil.toJsonNode(randomize(JacksonUtil.toString(attributes), randomNameData, null));
             }
-            attributesService.save(tenantId, entityId, attributeScope,
-                    new ArrayList<>(JsonConverter.convertToAttributes(JsonParser.parseString(JacksonUtil.toString(attributes)))));
+            attributesService.save(ctx.getTenantId(), entityId, attributeScope,
+                    new ArrayList<>(JsonConverter.convertToAttributes(JsonParser.parseString(JacksonUtil.toString(attributes)), ctx.getOldestTelemetryTs())));
         }
     }
 
