@@ -47,6 +47,7 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.rule.RuleChain;
+import org.thingsboard.server.common.data.rule.RuleChainType;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.service.solutions.data.definition.AssetDefinition;
 import org.thingsboard.server.service.solutions.data.definition.AssetProfileDefinition;
@@ -149,7 +150,7 @@ public class SolutionInstallContext {
 
     public void register(String referenceId, RuleChain ruleChain) {
         register(referenceId, ruleChain.getId());
-        createdEntities.put(ruleChain.getUuidId(), new CreatedEntityInfo(ruleChain.getName(), EntityType.RULE_CHAIN, "Tenant"));
+        createdEntities.put(ruleChain.getUuidId(), new CreatedRuleChainInfo(ruleChain.getName(), ruleChain.getType(), "Tenant"));
     }
 
 
