@@ -113,7 +113,7 @@ public class TrendzClient {
 
     @Value("${trendz.request_timeout_ms:15000}")
     private int requestTimeoutMs;
-    @Value("${trendz.usage_request_timeout_ms:5000}")
+    @Value("${trendz.usage_request_timeout_ms:3000}")
     private int usageRequestTimeoutMs;
     @Value("${trendz.enabled:true}")
     private boolean trendzEnabled;
