@@ -28,29 +28,49 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.cf.ctx.state.aggregation.function;
+package org.thingsboard.common.util;
 
-import org.thingsboard.server.common.data.cf.configuration.aggregation.AggFunction;
-import org.thingsboard.common.util.NumberUtils;
+import org.junit.jupiter.api.Test;
 
-public class MinAggEntry extends BaseAggEntry {
+import static org.assertj.core.api.Assertions.assertThat;
 
-    private double min = Double.MAX_VALUE;
+public class NumberUtilsTest {
 
-    @Override
-    protected void doUpdate(double value) {
-        if (value < min) {
-            min = value;
-        }
+    private final Float floatVal = 29.29824f;
+    private final double doubleVal = 1729.1729;
+
+    @Test
+    public void isNaN() {
+        assertThat(NumberUtils.isNaN(doubleVal)).isFalse();
+        assertThat(NumberUtils.isNaN(Double.NaN)).isTrue();
     }
 
-    @Override
-    protected Object prepareResult(Integer precision) {
-        return NumberUtils.roundResult(min, precision);
+    @Test
+    public void toFixedFloat() {
+        float actualF = NumberUtils.toFixed(floatVal, 3);
+        assertThat(Float.compare(floatVal, actualF)).isEqualTo(1);
+        assertThat(Float.compare(29.298f, actualF)).isEqualTo(0);
     }
 
-    @Override
-    public AggFunction getType() {
-        return AggFunction.MIN;
+    @Test
+    public void toFixedDouble() {
+        double actualD = NumberUtils.toFixed(doubleVal, 3);
+        assertThat(Double.compare(doubleVal, actualD)).isEqualTo(-1);
+        assertThat(Double.compare(1729.173, actualD)).isEqualTo(0);
     }
+
+    @Test
+    public void toInt() {
+        assertThat(NumberUtils.toInt(doubleVal)).isEqualTo(1729);
+        assertThat(NumberUtils.toInt(12.8)).isEqualTo(13);
+        assertThat(NumberUtils.toInt(28.0)).isEqualTo(28);
+    }
+
+    @Test
+    public void roundResult() {
+        assertThat(NumberUtils.roundResult(doubleVal, null)).isEqualTo(1729.1729);
+        assertThat(NumberUtils.roundResult(doubleVal, 0)).isEqualTo(1729);
+        assertThat(NumberUtils.roundResult(doubleVal, 2)).isEqualTo(1729.17);
+    }
+
 }

@@ -28,29 +28,17 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.cf.ctx.state.aggregation.function;
+package org.thingsboard.server.service.cf.ctx.state;
 
-import org.thingsboard.server.common.data.cf.configuration.aggregation.AggFunction;
-import org.thingsboard.common.util.NumberUtils;
+public interface HasEntityLimit {
 
-public class MinAggEntry extends BaseAggEntry {
-
-    private double min = Double.MAX_VALUE;
-
-    @Override
-    protected void doUpdate(double value) {
-        if (value < min) {
-            min = value;
+    default void checkEntityLimit(int currentEntitiesCount, CalculatedFieldCtx ctx) {
+        if (currentEntitiesCount >= ctx.getMaxRelatedEntitiesPerCfArgument()) {
+            throw new IllegalArgumentException(
+                    "Exceeded the maximum allowed related entities per argument '"
+                    + ctx.getMaxRelatedEntitiesPerCfArgument() + "'. Increase the limit in the tenant profile configuration."
+            );
         }
     }
 
-    @Override
-    protected Object prepareResult(Integer precision) {
-        return NumberUtils.roundResult(min, precision);
-    }
-
-    @Override
-    public AggFunction getType() {
-        return AggFunction.MIN;
-    }
 }
