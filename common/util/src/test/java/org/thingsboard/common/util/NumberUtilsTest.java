@@ -28,37 +28,49 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.solutions.data;
+package org.thingsboard.common.util;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.EntityType;
+import org.junit.jupiter.api.Test;
 
-import java.util.UUID;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class CreatedEntityInfo {
+public class NumberUtilsTest {
 
-    private String name;
-    private EntityType type;
-    private String owner;
+    private final Float floatVal = 29.29824f;
+    private final double doubleVal = 1729.1729;
 
-    public String getEntityPageLink(UUID id) {
-        return switch (type) {
-            case DEVICE -> "/entities/devices/all/" + id;
-            case ASSET -> "/entities/assets/all/" + id;
-            case DEVICE_PROFILE -> "/profiles/deviceProfiles/" + id;
-            case ASSET_PROFILE -> "/profiles/assetProfiles/" + id;
-            case USER -> "/users/all/" + id;
-            case CUSTOMER -> "/customers/all/" + id;
-            case DASHBOARD -> "/dashboards/all/" + id;
-            case ROLE -> "/security-settings/roles/" + id;
-            case EDGE -> "/edgeManagement/instances/all/" + id;
-            default -> null;
-        };
+    @Test
+    public void isNaN() {
+        assertThat(NumberUtils.isNaN(doubleVal)).isFalse();
+        assertThat(NumberUtils.isNaN(Double.NaN)).isTrue();
+    }
+
+    @Test
+    public void toFixedFloat() {
+        float actualF = NumberUtils.toFixed(floatVal, 3);
+        assertThat(Float.compare(floatVal, actualF)).isEqualTo(1);
+        assertThat(Float.compare(29.298f, actualF)).isEqualTo(0);
+    }
+
+    @Test
+    public void toFixedDouble() {
+        double actualD = NumberUtils.toFixed(doubleVal, 3);
+        assertThat(Double.compare(doubleVal, actualD)).isEqualTo(-1);
+        assertThat(Double.compare(1729.173, actualD)).isEqualTo(0);
+    }
+
+    @Test
+    public void toInt() {
+        assertThat(NumberUtils.toInt(doubleVal)).isEqualTo(1729);
+        assertThat(NumberUtils.toInt(12.8)).isEqualTo(13);
+        assertThat(NumberUtils.toInt(28.0)).isEqualTo(28);
+    }
+
+    @Test
+    public void roundResult() {
+        assertThat(NumberUtils.roundResult(doubleVal, null)).isEqualTo(1729.1729);
+        assertThat(NumberUtils.roundResult(doubleVal, 0)).isEqualTo(1729);
+        assertThat(NumberUtils.roundResult(doubleVal, 2)).isEqualTo(1729.17);
     }
 
 }

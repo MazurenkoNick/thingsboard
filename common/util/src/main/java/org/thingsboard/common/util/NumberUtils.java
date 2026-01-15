@@ -28,37 +28,37 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.solutions.data;
+package org.thingsboard.common.util;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.EntityType;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
-import java.util.UUID;
+public class NumberUtils {
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class CreatedEntityInfo {
+    public static boolean isNaN(double value) {
+        return Double.isNaN(value);
+    }
 
-    private String name;
-    private EntityType type;
-    private String owner;
+    public static double toFixed(double value, int precision) {
+        return BigDecimal.valueOf(value).setScale(precision, RoundingMode.HALF_UP).doubleValue();
+    }
 
-    public String getEntityPageLink(UUID id) {
-        return switch (type) {
-            case DEVICE -> "/entities/devices/all/" + id;
-            case ASSET -> "/entities/assets/all/" + id;
-            case DEVICE_PROFILE -> "/profiles/deviceProfiles/" + id;
-            case ASSET_PROFILE -> "/profiles/assetProfiles/" + id;
-            case USER -> "/users/all/" + id;
-            case CUSTOMER -> "/customers/all/" + id;
-            case DASHBOARD -> "/dashboards/all/" + id;
-            case ROLE -> "/security-settings/roles/" + id;
-            case EDGE -> "/edgeManagement/instances/all/" + id;
-            default -> null;
-        };
+    public static float toFixed(float value, int precision) {
+        return BigDecimal.valueOf(value).setScale(precision, RoundingMode.HALF_UP).floatValue();
+    }
+
+    public static int toInt(double value) {
+        return BigDecimal.valueOf(value).setScale(0, RoundingMode.HALF_UP).intValue();
+    }
+
+    public static Object roundResult(double value, Integer precision) {
+        if (precision == null) {
+            return value;
+        }
+        if (precision.equals(0)) {
+            return toInt(value);
+        }
+        return toFixed(value, precision);
     }
 
 }
