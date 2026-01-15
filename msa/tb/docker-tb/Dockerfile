@@ -57,17 +57,9 @@ RUN echo "Previously installed font libraries:" \
 COPY logback.xml ${pkg.name}.conf start-tb.sh upgrade-tb.sh install-tb.sh ${pkg.name}.deb tb-web-report.deb /tmp/
 
 RUN apt-get update \
-    && apt-get install -yq --no-install-recommends wget unzip fonts-roboto chromium \
+    && apt-get install -yq --no-install-recommends fonts-noto-cjk-extra fonts-roboto chromium \
         && apt-get clean \
         && rm -r /var/lib/apt/lists/* \
-    && mkdir -p /noto \
-    && wget --no-verbose --no-check-certificate -O /noto/NotoSansCJKjp-hinted.zip https://noto-website-2.storage.googleapis.com/pkgs/NotoSansCJKjp-hinted.zip \
-    && unzip /noto/NotoSansCJKjp-hinted.zip -d /noto && \
-    mkdir -p /usr/share/fonts/noto && \
-    cp /noto/*.otf /usr/share/fonts/noto && \
-    chmod 655 -R /usr/share/fonts/noto/ && \
-    fc-cache -fv \
-    && rm -rf /noto \
     && chmod a+x /tmp/*.sh \
     && mv /tmp/start-tb.sh /usr/bin \
     && mv /tmp/upgrade-tb.sh /usr/bin \
