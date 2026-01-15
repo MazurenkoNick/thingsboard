@@ -41,6 +41,7 @@ import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbNodeConfiguration;
 import org.thingsboard.rule.engine.api.TbNodeException;
 import org.thingsboard.rule.engine.api.util.TbNodeUtils;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.HasOwnerId;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.AssetId;
@@ -49,7 +50,10 @@ import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EdgeId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityViewId;
+import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
+import org.thingsboard.server.common.data.ota.OtaPackageType;
 import org.thingsboard.server.common.data.plugin.ComponentType;
 import org.thingsboard.server.common.data.rule.RuleChainType;
 import org.thingsboard.server.common.msg.TbMsg;
@@ -178,7 +182,20 @@ public class TbAddToGroupNode extends TbAbstractGroupActionNode<TbAddToGroupConf
     }
 
     private void addEntityToGroup(TbContext ctx, TbMsg msg, EntityGroupId entityGroupId) {
-        ctx.getPeContext().getEntityGroupService().addEntityToEntityGroup(ctx.getTenantId(), entityGroupId, msg.getOriginator());
+        EntityId originatorId = msg.getOriginator();
+        ctx.getPeContext().getEntityGroupService().addEntityToEntityGroup(ctx.getTenantId(), entityGroupId, originatorId);
+        if (originatorId.getEntityType().equals(EntityType.DEVICE)) {
+            EntityGroup entityGroup = ctx.getPeContext().getEntityGroupService().findEntityGroupById(ctx.getTenantId(), entityGroupId);
+            if (EntityType.DEVICE.equals(entityGroup.getType())) {
+                DeviceGroupOtaPackage fw =
+                        ctx.getPeContext().getDeviceGroupOtaPackageService().findDeviceGroupOtaPackageByGroupIdAndType(entityGroupId, OtaPackageType.FIRMWARE);
+                DeviceGroupOtaPackage sw =
+                        ctx.getPeContext().getDeviceGroupOtaPackageService().findDeviceGroupOtaPackageByGroupIdAndType(entityGroupId, OtaPackageType.SOFTWARE);
+                if (fw != null || sw != null) {
+                    ctx.getOtaPackageStateService().update(ctx.getTenantId(), List.of((DeviceId)originatorId), fw != null, sw != null);
+                }
+            }
+        }
     }
 
     @Data

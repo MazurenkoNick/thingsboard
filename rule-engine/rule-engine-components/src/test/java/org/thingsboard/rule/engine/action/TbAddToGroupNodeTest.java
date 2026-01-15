@@ -51,10 +51,14 @@ import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
+import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
+import org.thingsboard.server.common.data.ota.OtaPackageType;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
 import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.group.EntityGroupService;
+import org.thingsboard.server.dao.ota.DeviceGroupOtaPackageService;
+import org.thingsboard.server.dao.ota.OtaPackageStateService;
 
 import java.util.List;
 import java.util.Map;
@@ -85,6 +89,10 @@ class TbAddToGroupNodeTest {
     private TbPeContext peContextMock;
     @Mock
     private EntityGroupService entityGroupServiceMock;
+    @Mock
+    private DeviceGroupOtaPackageService deviceGroupOtaPackageService;
+    @Mock
+    private OtaPackageStateService otaPackageStateService;
     @Mock
     private DeviceService deviceServiceMock;
 
@@ -195,11 +203,48 @@ class TbAddToGroupNodeTest {
         assertThatNoException().isThrownBy(() -> node.init(ctxMock, configuration));
     }
 
+    @Test
+    public void givenEntityGroupWithFirmware_whenOnMsg_thenUpdateFirmwareOnDevice() throws TbNodeException {
+        config.setGroupNamePattern("${groupName}");
+        var configuration = new TbNodeConfiguration(JacksonUtil.valueToTree(config));
+        node.init(ctxMock, configuration);
+
+        initMocks();
+        when(entityGroupServiceMock.findEntityGroupByTypeAndNameAsync(any(), any(), any(), any()))
+                .thenReturn(Futures.immediateFuture(Optional.of(new EntityGroup(ENTITY_GROUP_ID))));
+        EntityGroup entityGroup = new EntityGroup(ENTITY_GROUP_ID);
+        entityGroup.setType(EntityType.DEVICE);
+        when(entityGroupServiceMock.findEntityGroupById(TENANT_ID, ENTITY_GROUP_ID))
+                .thenReturn(entityGroup);
+        when(deviceGroupOtaPackageService.findDeviceGroupOtaPackageByGroupIdAndType(ENTITY_GROUP_ID, OtaPackageType.FIRMWARE))
+                .thenReturn(new DeviceGroupOtaPackage());
+
+
+        TbMsg msg = TbMsg.newMsg()
+                .type(TbMsgType.POST_TELEMETRY_REQUEST)
+                .originator(DEVICE_ID)
+                .copyMetaData(new TbMsgMetaData(Map.of("groupName", "Device Group")))
+                .data(TbMsg.EMPTY_JSON_OBJECT)
+                .build();
+        node.onMsg(ctxMock, msg);
+
+        verify(peContextMock).getOwner(TENANT_ID, DEVICE_ID);
+        verify(entityGroupServiceMock).findEntityGroupByTypeAndNameAsync(TENANT_ID, TENANT_ID, EntityType.DEVICE, "Device Group");
+        verify(entityGroupServiceMock).addEntityToEntityGroup(TENANT_ID, ENTITY_GROUP_ID, DEVICE_ID);
+        verify(deviceGroupOtaPackageService).findDeviceGroupOtaPackageByGroupIdAndType(ENTITY_GROUP_ID, OtaPackageType.FIRMWARE);
+        verify(deviceGroupOtaPackageService).findDeviceGroupOtaPackageByGroupIdAndType(ENTITY_GROUP_ID, OtaPackageType.SOFTWARE);
+        verify(otaPackageStateService).update(TENANT_ID, List.of(DEVICE_ID), true, false);
+        verify(ctxMock).tellNext(msg, TbNodeConnectionType.SUCCESS);
+        verifyNoMoreInteractions(ctxMock, peContextMock, entityGroupServiceMock, deviceGroupOtaPackageService, otaPackageStateService);
+    }
+
     private void initMocks() {
         when(ctxMock.getPeContext()).thenReturn(peContextMock);
         when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
         when(peContextMock.getOwner(any(), any())).thenReturn(TENANT_ID);
         when(ctxMock.getDbCallbackExecutor()).thenReturn(dbCallbackExecutor);
         when(peContextMock.getEntityGroupService()).thenReturn(entityGroupServiceMock);
+        when(peContextMock.getDeviceGroupOtaPackageService()).thenReturn(deviceGroupOtaPackageService);
+        when(ctxMock.getOtaPackageStateService()).thenReturn(otaPackageStateService);
     }
 }
