@@ -602,9 +602,22 @@ public class DefaultSolutionService implements SolutionService {
 
     private String prepareInstructions(SolutionInstallContext ctx, HttpServletRequest request) {
         String template = readFile(resolve(ctx.getSolutionId(), "instructions.md"));
-        template = template.replace("${DOCS_BASE_URL}", docsBaseUrl);
         String baseUrl = systemSecurityService.getBaseUrl(ctx.getTenantId(), null, request);
+
+        // Inject edge instructions first, then run the full replacement logic on the combined string
+        if (template.contains("${edge_instructions}")) {
+            if (ctx.getCreatedEdges().isEmpty()) {
+                template = template.replace("${edge_instructions}", "");
+            } else {
+                Path edgeFile = resolve(ctx.getSolutionId(), "edge_instructions.md");
+                String edgeTemplate = Files.exists(edgeFile) ? readFile(edgeFile) : "";
+                template = template.replace("${edge_instructions}", edgeTemplate);
+            }
+        }
+
+        template = template.replace("${DOCS_BASE_URL}", docsBaseUrl);
         template = template.replace("${BASE_URL}", baseUrl);
+
         TenantSolutionTemplateInstructions solutionInstructions = ctx.getSolutionInstructions();
         template = template.replace("${MAIN_DASHBOARD_URL}",
                 getDashboardLink(solutionInstructions, solutionInstructions.getDashboardGroupId(), solutionInstructions.getDashboardId(), false));
@@ -642,7 +655,8 @@ public class DefaultSolutionService implements SolutionService {
             template = template.replace("${" + credentialsInfo.getName() + "ACCESS_TOKEN}", credentialsInfo.getCredentials().getCredentialsId());
 
             if (credentialsInfo.isGateway()) {
-                template = template.replace("${DOCKER_CONFIG}", prepareDockerComposeFile(ctx.getTenantId(), ctx.getSolutionId(), baseUrl, credentialsInfo.getCredentials().getDeviceId()));
+                template = template.replace("${DOCKER_CONFIG}",
+                        prepareDockerComposeFile(ctx.getTenantId(), ctx.getSolutionId(), baseUrl, credentialsInfo.getCredentials().getDeviceId()));
             }
         }
 
@@ -666,10 +680,6 @@ public class DefaultSolutionService implements SolutionService {
 
         template = template.replace("${user_list}", userList.toString());
 
-        template = replaceAlarmRules(ctx, template);
-        template = replaceCalculatedFields(ctx, template);
-        template = replaceCreatedEntities(ctx, template);
-
         for (Map.Entry<String, EdgeLinkInfo> edgeLinkInfoEntry : ctx.getCreatedEdges().entrySet()) {
             EdgeLinkInfo edgeLinkInfo = edgeLinkInfoEntry.getValue();
             StringBuilder edgeDetailsUrl = new StringBuilder();
@@ -678,8 +688,13 @@ public class DefaultSolutionService implements SolutionService {
             }
             edgeDetailsUrl.append("/edgeManagement/instances/all/").append(edgeLinkInfo.getEdgeId().getId());
             String edgeName = edgeLinkInfoEntry.getKey();
-            template = template.replace("${" + edgeName + "EDGE_DETAILS_URL}", edgeDetailsUrl.toString());
+            String edgeDetailsPlaceholder = "${" + edgeName + "EDGE_DETAILS_URL}";
+            template = template.replace(edgeDetailsPlaceholder, edgeDetailsUrl.toString());
         }
+
+        template = replaceAlarmRules(ctx, template);
+        template = replaceCalculatedFields(ctx, template);
+        template = replaceCreatedEntities(ctx, template);
 
         return template;
     }
@@ -854,7 +869,11 @@ public class DefaultSolutionService implements SolutionService {
             }
             RuleChainMetaData ruleChainMetaData = JacksonUtil.treeToValue(JacksonUtil.toJsonNode(metadataStr), RuleChainMetaData.class);
 
-            RuleChainId ruleChainId = (RuleChainId) EntityIdFactory.getByTypeAndUuid(EntityType.RULE_CHAIN, ctx.getRealIds().get(entityDefinition.getJsonId()));
+            String realRuleChainId = ctx.getRealIds().get(entityDefinition.getJsonId());
+            if (StringUtils.isEmpty(realRuleChainId)) {
+                continue;
+            }
+            RuleChainId ruleChainId = (RuleChainId) EntityIdFactory.getByTypeAndUuid(EntityType.RULE_CHAIN, realRuleChainId);
             RuleChain savedRuleChain = ruleChainService.findRuleChainById(ctx.getTenantId(), ruleChainId);
             ruleChainMetaData.setRuleChainId(savedRuleChain.getId());
             ruleChainService.saveRuleChainMetaData(ctx.getTenantId(), ruleChainMetaData, tbRuleChainService::updateRuleNodeConfiguration);
@@ -880,7 +899,11 @@ public class DefaultSolutionService implements SolutionService {
             }
             RuleChainMetaData ruleChainMetaData = JacksonUtil.treeToValue(JacksonUtil.toJsonNode(metadataStr), RuleChainMetaData.class);
 
-            RuleChainId ruleChainId = (RuleChainId) EntityIdFactory.getByTypeAndUuid(EntityType.RULE_CHAIN, ctx.getRealIds().get(entityDefinition.getJsonId()));
+            String realRuleChainId = ctx.getRealIds().get(entityDefinition.getJsonId());
+            if (StringUtils.isEmpty(realRuleChainId)) {
+                continue;
+            }
+            RuleChainId ruleChainId = (RuleChainId) EntityIdFactory.getByTypeAndUuid(EntityType.RULE_CHAIN, realRuleChainId);
             RuleChain savedRuleChain = ruleChainService.findRuleChainById(ctx.getTenantId(), ruleChainId);
             ruleChainMetaData.setRuleChainId(savedRuleChain.getId());
             ruleChainService.saveRuleChainMetaData(ctx.getTenantId(), ruleChainMetaData, tbRuleChainService::updateRuleNodeConfiguration);
@@ -906,11 +929,10 @@ public class DefaultSolutionService implements SolutionService {
             }
             if (deviceProfile.getDefaultEdgeRuleChainId() != null) {
                 String newId = ctx.getRealIds().get(deviceProfile.getDefaultEdgeRuleChainId().getId().toString());
-                if (newId != null) {
-                    deviceProfile.setDefaultEdgeRuleChainId(new RuleChainId(UUID.fromString(newId)));
+                if (StringUtils.isEmpty(newId)) {
+                    deviceProfile.setDefaultEdgeRuleChainId(null);
                 } else {
-                    log.error("[{}][{}] Device profile: {} references non existing edge rule chain.", ctx.getTenantId(), ctx.getSolutionId(), deviceProfile.getName());
-                    throw new ThingsboardRuntimeException();
+                    deviceProfile.setDefaultEdgeRuleChainId(new RuleChainId(UUID.fromString(newId)));
                 }
             }
         });
@@ -941,11 +963,10 @@ public class DefaultSolutionService implements SolutionService {
             }
             if (assetProfile.getDefaultEdgeRuleChainId() != null) {
                 String newId = ctx.getRealIds().get(assetProfile.getDefaultEdgeRuleChainId().getId().toString());
-                if (newId != null) {
-                    assetProfile.setDefaultEdgeRuleChainId(new RuleChainId(UUID.fromString(newId)));
+                if (StringUtils.isEmpty(newId)) {
+                    assetProfile.setDefaultEdgeRuleChainId(null);
                 } else {
-                    log.error("[{}][{}] Asset profile: {} references non existing edge rule chain.", ctx.getTenantId(), ctx.getSolutionId(), assetProfile.getName());
-                    throw new ThingsboardRuntimeException();
+                    assetProfile.setDefaultEdgeRuleChainId(new RuleChainId(UUID.fromString(newId)));
                 }
             }
         });
