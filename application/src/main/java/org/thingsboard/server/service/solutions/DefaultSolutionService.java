@@ -843,6 +843,7 @@ public class DefaultSolutionService implements SolutionService {
     }
 
     private void provisionRuleChains(SolutionInstallContext ctx) {
+        boolean edgeAllowed = subscriptionService.isCreateEdgeAllowed(ctx.getTenantId());
         List<ReferenceableEntityDefinition> ruleChains = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "rule_chains.json", new TypeReference<>() {
         });
         for (ReferenceableEntityDefinition entityDefinition : ruleChains) {
@@ -850,6 +851,10 @@ public class DefaultSolutionService implements SolutionService {
             Path ruleChainPath = resolve(ctx.getSolutionId(), "rule_chains", entityDefinition.getFile());
             JsonNode ruleChainJson = replaceIds(ctx, JacksonUtil.toJsonNode(ruleChainPath));
             RuleChain ruleChain = JacksonUtil.treeToValue(ruleChainJson.get("ruleChain"), RuleChain.class);
+            if (!edgeAllowed && RuleChainType.EDGE.equals(ruleChain.getType())) {
+                log.warn("[{}][{}] Skipping EDGE rule chain provisioning due to subscription limitations: {}", ctx.getTenantId(), ctx.getSolutionId(), ruleChain.getName());
+                continue;
+            }
             ruleChain.setTenantId(ctx.getTenantId());
             String metadataStr = JacksonUtil.toString(ruleChainJson.get("metadata"));
             RuleChainMetaData ruleChainMetaData = JacksonUtil.treeToValue(JacksonUtil.toJsonNode(metadataStr), RuleChainMetaData.class);
