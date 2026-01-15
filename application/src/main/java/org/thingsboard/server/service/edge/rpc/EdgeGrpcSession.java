@@ -457,11 +457,11 @@ public abstract class EdgeGrpcSession implements Closeable {
 
     private boolean isAddonEdgeCommunicationDisabled() {
         int licenseVersion = ctx.getSubscriptionService().getLicenseVersion();
-        if (!EdgeUtils.isAddonEdge(edge, licenseVersion)) { // todo: verify it's correct implementation
+        if (!EdgeUtils.isAddonEdge(edge, licenseVersion)) {
             return false;
         }
         try {
-            return !ctx.getSubscriptionService().edgeEnabled(tenantId); // todo: verify count?
+            return !ctx.getSubscriptionService().edgeEnabled(tenantId);
         } catch (Exception e) {
             log.warn("[{}][{}] Failed to check edge add-on state for tenant. Rejecting add-on edge communication by default.",
                     tenantId, sessionId, e);
