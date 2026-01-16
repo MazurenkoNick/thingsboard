@@ -94,6 +94,8 @@ export class TwoFactorAuthSettingsComponent extends PageComponent implements OnI
     this.build2faSettingsForm();
     this.twoFaService.getTwoFaSettings().subscribe((setting) => {
       this.setAuthConfigFormValue(setting);
+      this.twoFaFormGroup.markAsUntouched();
+      this.twoFaFormGroup.markAsPristine();
     });
   }
 
