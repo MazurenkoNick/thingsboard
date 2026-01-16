@@ -24,7 +24,7 @@
         "timeWindow": 1800000
       }
     },
-    "expression": "return {\n    ts: ctx.latestTs,\n    values: {\n        \"waterConsumption\": getConsumption()\n    }\n}\n\n\nfunction getConsumption() {\n    if (pulseCounter.count() == 1) {\n        return pulseCounter.first();\n    }\n    if (pulseCounter.count() < 2) {\n        return 0;\n    }\n    var first = pulseCounter.first();\n    var last = pulseCounter.last();\n    \n    \n    if (isNaN(first) || isNaN(last)) {\n        return 0;\n    }\n\n    var waterConsumption = first - last;\n    if (waterConsumption <= 0) {\n        return 0;\n    }\n    \n    return toFixed(waterConsumption, 2);\n}",
+    "expression": "return {\n    ts: ctx.latestTs,\n    values: {\n        \"waterConsumption\": getConsumption()\n    }\n}\n\n\nfunction getConsumption() {\n    if (pulseCounter.count() == 1) {\n        return pulseCounter.first();\n    }\n    if (pulseCounter.count() < 2) {\n        return 0;\n    }\n    var first = pulseCounter.first();\n    var last = pulseCounter.last();\n    \n    \n    if (isNaN(first) || isNaN(last)) {\n        return 0;\n    }\n\n    var waterConsumption = last - first;\n    if (waterConsumption <= 0) {\n        return 0;\n    }\n    \n    return toFixed(waterConsumption, 2);\n}",
     "output": {
       "type": "TIME_SERIES",
       "strategy": {
