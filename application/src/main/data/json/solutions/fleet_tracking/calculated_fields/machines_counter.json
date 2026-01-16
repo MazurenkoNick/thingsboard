@@ -24,7 +24,7 @@
           "key": "geoStatus",
           "type": "TS_LATEST"
         },
-        "defaultValue": null
+        "defaultValue": "undefined"
       }
     },
     "deduplicationIntervalInSec": 10,

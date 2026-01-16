@@ -27,7 +27,7 @@
           "key": "irrigationState",
           "type": "TS_LATEST"
         },
-        "defaultValue": "DONE"
+        "defaultValue": ""
       },
       "waterConsumption": {
         "refEntityKey": {
