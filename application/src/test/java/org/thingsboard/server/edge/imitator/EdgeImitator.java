@@ -134,10 +134,16 @@ public class EdgeImitator {
     @Getter
     private UplinkResponseMsg latestResponseMsg;
 
+    private CountDownLatch closeLatch;
+
+    @Getter
+    private volatile Exception closeException;
+
     public EdgeImitator(String host, int port, String routingKey, String routingSecret) throws NoSuchFieldException, IllegalAccessException {
         edgeRpcClient = new EdgeGrpcClient();
         messagesLatch = new CountDownLatch(0);
         responsesLatch = new CountDownLatch(0);
+        closeLatch = new CountDownLatch(0);
         downlinkMsgs = new ArrayList<>();
         ignoredTypes = new ArrayList<>();
         this.routingKey = routingKey;
@@ -165,6 +171,24 @@ public class EdgeImitator {
                 this::onClose);
 
         edgeRpcClient.sendSyncRequestMsg(true);
+    }
+
+    public void expectClose() {
+        lock.lock();
+        try {
+            closeException = null;
+            closeLatch = new CountDownLatch(1);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public boolean waitForClose() {
+        try {
+            return closeLatch.await(AbstractWebTest.TIMEOUT, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void disconnect() throws InterruptedException {
@@ -208,6 +232,8 @@ public class EdgeImitator {
 
     private void onClose(Exception e) {
         log.info("onClose: {}", e.getMessage());
+        closeException = e;
+        closeLatch.countDown();
     }
 
     private ListenableFuture<List<Void>> processDownlinkMsg(DownlinkMsg downlinkMsg) {
