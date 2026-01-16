@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -43,9 +43,6 @@ import org.thingsboard.server.dao.model.sql.TenantInfoEntity;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Created by Valerii Sosliuk on 4/30/2017.
- */
 public interface TenantRepository extends JpaRepository<TenantEntity, UUID> {
 
     @Query("SELECT new org.thingsboard.server.dao.model.sql.TenantInfoEntity(t, p.name) " +

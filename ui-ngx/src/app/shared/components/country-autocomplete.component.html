@@ -2,7 +2,7 @@
 
     ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 
-    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+    Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 
     NOTICE: All information contained herein is, and remains
     the property of ThingsBoard, Inc. and its suppliers,
@@ -30,14 +30,19 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<mat-form-field [formGroup]="countryFormGroup" class="mat-block" subscriptSizing="{{subscriptSizing}}" [appearance]="appearance">
+<mat-form-field [formGroup]="countryFormGroup" class="mat-block" [subscriptSizing]="subscriptSizing" [appearance]="appearance">
   <mat-label>{{ labelText }}</mat-label>
+  @if (countryFormGroup.get('country').value?.flag) {
+    <span matPrefix>
+      {{ countryFormGroup.get('country').value.flag }}
+    </span>
+  }
   <input matInput type="text"
          #countryInput
+         #autocompleteTrigger="matAutocompleteTrigger"
          formControlName="country"
          (focusin)="onFocus()"
-         (blur)="onTouched()"
-         [required]="required"
+         (blur)="checkInputAndAutoSelect()"
          [matAutocomplete]="countryAutocomplete">
   <button *ngIf="countryFormGroup.get('country').value && !disabled"
           type="button"
@@ -69,5 +74,8 @@
   <mat-hint *ngIf="autocompleteHint">{{ autocompleteHint }}</mat-hint>
   <mat-error *ngIf="countryFormGroup.get('country').hasError('required')">
     {{ requiredText }}
+  </mat-error>
+  <mat-error *ngIf="countryFormGroup.get('country').hasError('objectRequired')">
+    {{ objectRequiredText }}
   </mat-error>
 </mat-form-field>

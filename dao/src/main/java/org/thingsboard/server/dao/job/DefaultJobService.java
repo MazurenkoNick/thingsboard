@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -169,6 +169,9 @@ public class DefaultJobService extends AbstractEntityService implements JobServi
                 } else {
                     job.setStatus(COMPLETED);
                     publishEvent = true;
+                }
+                if (result.getTotalCount() == 0 && lastFinishTs == 0) {
+                    lastFinishTs = System.currentTimeMillis();
                 }
                 result.setFinishTs(lastFinishTs);
                 job.getConfiguration().setToReprocess(null);

@@ -1,7 +1,7 @@
 #
 # ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 #
-# Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+# Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 #
 # NOTICE: All information contained herein is, and remains
 # the property of ThingsBoard, Inc. and its suppliers,
@@ -39,20 +39,27 @@ ENV SPRING_DRIVER_CLASS_NAME=org.postgresql.Driver
 ENV SPRING_DATASOURCE_USERNAME=postgres
 ENV SPRING_DATASOURCE_PASSWORD=postgres
 
+# For tb-report PDF renderer Debian Trixie slim fonts should be installed explicitly
+RUN echo "Previously installed font libraries:" \
+ && (dpkg -l | grep -E 'font|dejavu|harfbuzz' || echo "  (none)") \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends \
+      libharfbuzz0b fontconfig fonts-dejavu-core \
+ && rm -rf /var/lib/apt/lists/* \
+ && echo "Current fonts libraries:" \
+ && (dpkg -l | grep -E 'font|dejavu|harfbuzz') \
+ && echo "Font config list:" \
+ && fc-list && test -n "$(fc-list)" \
+ && (fc-list | grep -i dejavu) \
+ && echo "Harfbuzz library test with ldconfig:" \
+ && (ldconfig -p | grep harfbuzz)
+
 COPY logback.xml ${pkg.name}.conf start-tb.sh upgrade-tb.sh install-tb.sh ${pkg.name}.deb tb-web-report.deb /tmp/
 
 RUN apt-get update \
-    && apt-get install -yq --no-install-recommends wget unzip fonts-roboto chromium \
+    && apt-get install -yq --no-install-recommends fonts-noto-cjk-extra fonts-roboto chromium \
         && apt-get clean \
         && rm -r /var/lib/apt/lists/* \
-    && mkdir -p /noto \
-    && wget --no-verbose --no-check-certificate -O /noto/NotoSansCJKjp-hinted.zip https://noto-website-2.storage.googleapis.com/pkgs/NotoSansCJKjp-hinted.zip \
-    && unzip /noto/NotoSansCJKjp-hinted.zip -d /noto && \
-    mkdir -p /usr/share/fonts/noto && \
-    cp /noto/*.otf /usr/share/fonts/noto && \
-    chmod 655 -R /usr/share/fonts/noto/ && \
-    fc-cache -fv \
-    && rm -rf /noto \
     && chmod a+x /tmp/*.sh \
     && mv /tmp/start-tb.sh /usr/bin \
     && mv /tmp/upgrade-tb.sh /usr/bin \

@@ -2,7 +2,7 @@
 
     ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 
-    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+    Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 
     NOTICE: All information contained herein is, and remains
     the property of ThingsBoard, Inc. and its suppliers,
@@ -35,7 +35,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.thingsboard</groupId>
-        <version>4.2.1PE-RC</version>
+        <version>4.2.1.2PE-SNAPSHOT</version>
         <artifactId>msa</artifactId>
     </parent>
 
@@ -116,6 +116,92 @@
                                         <argument>build</argument>
                                         <argument>-t</argument>
                                         <argument>${docker.repo}/${docker.name}:${project.version}</argument>
+                                        <argument>--platform=linux/amd64,linux/arm64</argument>
+                                        <argument>-o</argument>
+                                        <argument>type=registry</argument>
+                                        <argument>.</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>push-lts-integration-docker-amd-arm-images</id>
+            <activation>
+                <property>
+                    <name>push-lts-integration-docker-amd-arm-images</name>
+                </property>
+            </activation>
+            <properties>
+                <docker.lts.tag>4.2.1-latest</docker.lts.tag>
+                <docker.skip.latest.tag>false</docker.skip.latest.tag>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>push-integration-latest-docker-amd-arm-images</id>
+                                <phase>${docker.push-integration-arm-amd-image.phase}</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <skip>${docker.skip.latest.tag}</skip>
+                                    <executable>docker</executable>
+                                    <workingDirectory>${project.build.directory}</workingDirectory>
+                                    <arguments>
+                                        <argument>buildx</argument>
+                                        <argument>build</argument>
+                                        <argument>-t</argument>
+                                        <argument>${docker.repo}/${docker.name}:latest</argument>
+                                        <argument>--platform=linux/amd64,linux/arm64</argument>
+                                        <argument>-o</argument>
+                                        <argument>type=registry</argument>
+                                        <argument>.</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>push-integration-version-docker-amd-arm-images</id>
+                                <phase>${docker.push-integration-arm-amd-image.phase}</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>docker</executable>
+                                    <workingDirectory>${project.build.directory}</workingDirectory>
+                                    <arguments>
+                                        <argument>buildx</argument>
+                                        <argument>build</argument>
+                                        <argument>-t</argument>
+                                        <argument>${docker.repo}/${docker.name}:${project.version}</argument>
+                                        <argument>--platform=linux/amd64,linux/arm64</argument>
+                                        <argument>-o</argument>
+                                        <argument>type=registry</argument>
+                                        <argument>.</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>push-integration-lts-docker-amd-arm-images</id>
+                                <phase>${docker.push-integration-arm-amd-image.phase}</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>docker</executable>
+                                    <workingDirectory>${project.build.directory}</workingDirectory>
+                                    <arguments>
+                                        <argument>buildx</argument>
+                                        <argument>build</argument>
+                                        <argument>-t</argument>
+                                        <argument>${docker.repo}/${docker.name}:${docker.lts.tag}</argument>
                                         <argument>--platform=linux/amd64,linux/arm64</argument>
                                         <argument>-o</argument>
                                         <argument>type=registry</argument>

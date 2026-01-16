@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -203,8 +203,14 @@ public class JpaBaseEventDao implements EventDao {
 
     @Override
     public void removeEvents(UUID tenantId, UUID entityId, Long startTime, Long endTime) {
+        removeEvents(tenantId, entityId, startTime, endTime, EventType.values());
+    }
+
+    @Override
+    public void removeEvents(UUID tenantId, UUID entityId, Long startTime, Long endTime, EventType... types) {
         log.debug("[{}][{}] Remove events [{}-{}] ", tenantId, entityId, startTime, endTime);
-        for (EventType eventType : EventType.values()) {
+        EventType[] eventTypes = (types == null || types.length == 0) ? EventType.values() : types;
+        for (EventType eventType : eventTypes) {
             getEventRepository(eventType).removeEvents(tenantId, entityId, startTime, endTime);
         }
     }

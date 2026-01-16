@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -1480,9 +1480,9 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
     @Test
     public void testCalculatedFieldWhenBatchOfTelemetrySent() throws Exception {
         Device testDevice = createDevice("Test device", "1234567890");
-        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode("{\"a\":5}"));
-        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode("{\"b\":10}"));
-        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode("{\"b\":20}"));
+        long now = System.currentTimeMillis();
+        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(String.format("{\"ts\": %s, \"values\": {\"a\":5, \"b\":10}}", now - TimeUnit.MINUTES.toMillis(3))));
+        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(String.format("{\"ts\": %s, \"values\": {\"b\":20}}", now - TimeUnit.MINUTES.toMillis(1))));
 
         CalculatedField calculatedField = new CalculatedField();
         calculatedField.setEntityId(testDevice.getId());
@@ -1490,7 +1490,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         calculatedField.setName("Script CF");
         calculatedField.setDebugSettings(DebugSettings.all());
 
-        SimpleCalculatedFieldConfiguration config = new SimpleCalculatedFieldConfiguration();
+        ScriptCalculatedFieldConfiguration config = new ScriptCalculatedFieldConfiguration();
 
         ReferencedEntityKey refEntityKeyA = new ReferencedEntityKey("a", ArgumentType.TS_LATEST, null);
         Argument argumentA = new Argument();
@@ -1525,7 +1525,6 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
                     assertThat(result.get("avgB").get(0).get("value").asText()).isEqualTo("15.0");
                 });
 
-        long now = System.currentTimeMillis();
         doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(String.format("""
                 [{
                     "ts": %s,

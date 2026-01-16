@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -52,6 +52,7 @@ import org.thingsboard.server.common.data.tenant.profile.DefaultTenantProfileCon
 import org.thingsboard.server.dao.device.DeviceProfileService;
 import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
+import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
 import org.thingsboard.server.dao.tenant.TenantProfileService;
 import org.thingsboard.server.exception.DataValidationException;
 
@@ -90,6 +91,8 @@ public class OtaPackageServiceTest extends AbstractServiceTest {
     OtaPackageService otaPackageService;
     @Autowired
     TenantProfileService tenantProfileService;
+    @Autowired
+    TbTenantProfileCache tenantProfileCache;
 
     @Before
     public void before() {
@@ -110,6 +113,7 @@ public class OtaPackageServiceTest extends AbstractServiceTest {
         TenantProfile defaultTenantProfile = tenantProfileService.findDefaultTenantProfile(tenantId);
         defaultTenantProfile.getProfileData().setConfiguration(DefaultTenantProfileConfiguration.builder().maxOtaPackagesInBytes(DATA_SIZE).build());
         tenantProfileService.saveTenantProfile(tenantId, defaultTenantProfile);
+        tenantProfileCache.evict(defaultTenantProfile.getId());
 
         Assert.assertEquals(0, otaPackageService.sumDataSizeByTenantId(tenantId));
 

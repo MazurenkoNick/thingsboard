@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -59,6 +59,7 @@ export const createTooltip = (map: TbMap<any>,
         tooltip.close();
       } else if (canOpen()) {
         if ((tooltip as any)._prepareOpen((layer as any)._latlng)) {
+          map.deselectItem();
           tooltip.openOn(map.getMap());
         }
       }

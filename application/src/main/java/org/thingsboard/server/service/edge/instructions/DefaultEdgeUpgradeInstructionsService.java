@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -67,11 +67,12 @@ public class DefaultEdgeUpgradeInstructionsService extends BaseEdgeInstallUpgrad
 
     @Override
     public EdgeInstructions getUpgradeInstructions(String edgeVersion, String upgradeMethod) {
+        String platformEdgeVersionFormatted = platformEdgeVersion.replace("-SNAPSHOT", "").replace("PE", "");
         String currentEdgeVersion = convertEdgeVersionToDocsFormat(edgeVersion);
         return switch (upgradeMethod.toLowerCase()) {
-            case "docker" -> getDockerUpgradeInstructions(this.platformEdgeVersion, currentEdgeVersion);
+            case "docker" -> getDockerUpgradeInstructions(platformEdgeVersionFormatted, currentEdgeVersion);
             case "ubuntu", "centos" ->
-                    getLinuxUpgradeInstructions(this.platformEdgeVersion, currentEdgeVersion, upgradeMethod.toLowerCase());
+                    getLinuxUpgradeInstructions(platformEdgeVersionFormatted, currentEdgeVersion, upgradeMethod.toLowerCase());
             default -> throw new IllegalArgumentException("Unsupported upgrade method for Edge: " + upgradeMethod);
         };
     }
@@ -88,7 +89,8 @@ public class DefaultEdgeUpgradeInstructionsService extends BaseEdgeInstallUpgrad
         Optional<AttributeKvEntry> attributeKvEntryOpt = attributesService.find(tenantId, edgeId, AttributeScope.SERVER_SCOPE, DataConstants.EDGE_VERSION_ATTR_KEY).get();
         if (attributeKvEntryOpt.isPresent()) {
             String edgeVersionFormatted = convertEdgeVersionToDocsFormat(attributeKvEntryOpt.get().getValueAsString());
-            return isVersionGreaterOrEqualsThan(edgeVersionFormatted, "3.6.0") && !isVersionGreaterOrEqualsThan(edgeVersionFormatted, platformEdgeVersion);
+            String platformEdgeVersionFormatted = platformEdgeVersion.replace("-SNAPSHOT", "").replace("PE", "");
+            return isVersionGreaterOrEqualsThan(edgeVersionFormatted, "3.6.0") && !isVersionGreaterOrEqualsThan(edgeVersionFormatted, platformEdgeVersionFormatted);
         }
         return false;
     }

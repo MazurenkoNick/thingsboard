@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -42,5 +42,5 @@ import java.lang.annotation.RetentionPolicy;
 
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
-@ConditionalOnExpression("'${service.type:null}'=='tb-transport' || ('${service.type:null}'=='monolith' && '${transport.api_enabled:true}'=='true' && '${transport.mqtt.enabled:true}'=='true' && '${transport.mqtt.ssl.enabled:false}'=='true')")
+@ConditionalOnExpression("'${transport.mqtt.ssl.enabled:false}'=='true' && ('${service.type:null}'=='tb-transport' || ('${service.type:null}'=='monolith' && '${transport.api_enabled:true}'=='true' && '${transport.mqtt.enabled:true}'=='true'))")
 public @interface TbMqttSslTransportComponent {}

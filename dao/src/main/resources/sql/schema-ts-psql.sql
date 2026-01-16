@@ -1,7 +1,7 @@
 --
 -- ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 --
--- Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+-- Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
 --
 -- NOTICE: All information contained herein is, and remains
 -- the property of ThingsBoard, Inc. and its suppliers,
@@ -87,7 +87,7 @@ BEGIN
                 IF partition_type = 'YEARS' THEN
                     FOR partition IN SELECT tablename
                                      FROM pg_tables
-                                     WHERE schemaname = 'public'
+                                     WHERE schemaname = current_schema()
                                        AND tablename like 'ts_kv_' || '%'
                                        AND tablename != 'ts_kv_latest'
                                        AND tablename != 'key_dictionary'
@@ -108,7 +108,7 @@ BEGIN
                         ELSE
                             FOR partition IN SELECT tablename
                                              FROM pg_tables
-                                             WHERE schemaname = 'public'
+                                             WHERE schemaname = current_schema()
                                                AND tablename like 'ts_kv_' || '%'
                                                AND tablename != 'ts_kv_latest'
                                                AND tablename != 'key_dictionary'
@@ -150,7 +150,7 @@ BEGIN
                                 ELSE
                                     FOR partition IN SELECT tablename
                                                      FROM pg_tables
-                                                     WHERE schemaname = 'public'
+                                                     WHERE schemaname = current_schema()
                                                        AND tablename like 'ts_kv_' || '%'
                                                        AND tablename != 'ts_kv_latest'
                                                        AND tablename != 'key_dictionary'
@@ -220,7 +220,7 @@ BEGIN
     IF partition IS NOT NULL THEN
         IF NOT EXISTS(SELECT
                       FROM pg_tables
-                      WHERE schemaname = 'public'
+                      WHERE schemaname = current_schema()
                         AND tablename = partition) THEN
             partition := NULL;
             RAISE NOTICE 'Failed to found partition by ttl';

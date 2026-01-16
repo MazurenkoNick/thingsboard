@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -184,7 +184,7 @@ public class PdfReportService extends AbstractReportService {
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             renderer.createPDF(outputStream);
             byte[] reportBytes = outputStream.toByteArray();
-            String reportName = prepareReportName(configuration.getNamePattern(), new Date(), task.getTimezone());
+            String reportName = prepareReportName(configuration.getNamePattern(), new Date(), task.getTimezone(), TbReportFormat.PDF.getExtension());
 
             return ReportData.builder()
                     .data(reportBytes)

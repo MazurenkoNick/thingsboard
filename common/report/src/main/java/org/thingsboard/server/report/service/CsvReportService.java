@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -92,7 +92,7 @@ public class CsvReportService extends AbstractReportService {
 
         List<List<String>> content = renderContent(ctx, stateEntity);
         byte[] csvBytes = generateCsv(content);
-        String reportName = prepareReportName(configuration.getNamePattern(), new Date(), task.getTimezone());
+        String reportName = prepareReportName(configuration.getNamePattern(), new Date(), task.getTimezone(), TbReportFormat.CSV.getExtension());
 
         return ReportData.builder()
                 .data(csvBytes)

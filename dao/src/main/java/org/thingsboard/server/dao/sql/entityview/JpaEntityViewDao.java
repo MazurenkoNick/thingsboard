@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -59,9 +59,6 @@ import java.util.UUID;
 
 import static org.thingsboard.server.dao.DaoUtil.convertTenantEntityTypesToDto;
 
-/**
- * Created by Victor Basanets on 8/31/2017.
- */
 @Component
 @Slf4j
 @SqlDao

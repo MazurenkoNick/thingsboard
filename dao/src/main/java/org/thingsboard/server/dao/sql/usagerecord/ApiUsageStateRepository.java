@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -44,9 +44,6 @@ import org.thingsboard.server.dao.model.sql.ApiUsageStateEntity;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * @author Valerii Sosliuk
- */
 public interface ApiUsageStateRepository extends JpaRepository<ApiUsageStateEntity, UUID> {
 
     @Query("SELECT ur FROM ApiUsageStateEntity ur WHERE ur.tenantId = :tenantId " +

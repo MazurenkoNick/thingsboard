@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -41,6 +41,7 @@ import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.TsValue;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.TableSortOrder;
@@ -82,6 +83,10 @@ public class ReportUtils {
     public static final String RAW_TS_PREFIX = "rawTs_";
 
     public static String prepareReportName(String namePattern, Date reportDate, String timeZoneStr) {
+        return prepareReportName(namePattern, reportDate, timeZoneStr, null);
+    }
+
+    public static String prepareReportName(String namePattern, Date reportDate, String timeZoneStr, String extension) {
         TimeZone timeZone = (timeZoneStr == null) ? TimeZone.getDefault() : TimeZone.getTimeZone(timeZoneStr);
         String name = (namePattern == null || namePattern.isEmpty()) ? DEFAULT_REPORT_NAME_PATTERN : namePattern;
         Matcher matcher = REPORT_NAME_DATE_PATTERN.matcher(name);
@@ -91,6 +96,9 @@ public class ReportUtils {
             dateFormat.setTimeZone(timeZone);
             String replacement = dateFormat.format(reportDate);
             name = name.replace(toReplace, replacement);
+        }
+        if (extension != null && !name.endsWith(extension)) {
+            name = name + extension;
         }
         return name;
     }
