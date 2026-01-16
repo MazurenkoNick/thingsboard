@@ -103,7 +103,10 @@ public class FieldIrrigationStateEmulator implements CustomEmulator {
     }
 
     private void add(Calendar c, ObjectNode objectNode) {
-        data.add(Pair.of(c.getTimeInMillis(), JacksonUtil.newObjectNode().set("irrigationTask", objectNode)));
+        ObjectNode startIrrigationMsg = JacksonUtil.newObjectNode();
+        startIrrigationMsg.put("irrigationState", "DONE");
+        startIrrigationMsg.set("irrigationTask", objectNode);
+        data.add(Pair.of(c.getTimeInMillis(), startIrrigationMsg));
         c.add(Calendar.DAY_OF_MONTH, 1);
     }
 

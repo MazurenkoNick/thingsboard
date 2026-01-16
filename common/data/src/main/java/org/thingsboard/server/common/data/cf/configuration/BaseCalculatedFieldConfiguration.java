@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.common.data.cf.configuration;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.Map;
@@ -39,6 +40,8 @@ public abstract class BaseCalculatedFieldConfiguration implements ExpressionBase
 
     protected Map<String, Argument> arguments;
     protected String expression;
+
+    @NotNull
     protected Output output;
 
     @Override
