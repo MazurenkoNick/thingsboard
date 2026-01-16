@@ -138,18 +138,18 @@ export class TableColumnsAssignmentComponent implements OnInit, ControlValueAcce
         );
         break;
       case EntityType.EDGE:
+        if (this.legacyEdgeFieldsRequired()) {
+          this.columnTypes.push(
+            { value: ImportEntityColumnType.cloudEndpoint },
+            { value: ImportEntityColumnType.edgeLicenseKey }
+          );
+        }
         this.columnTypes.push(
           { value: ImportEntityColumnType.routingKey },
           { value: ImportEntityColumnType.secret },
           { value: ImportEntityColumnType.serverAttribute },
           { value: ImportEntityColumnType.timeseries }
         );
-        if (this.legacyEdgeFieldsRequired()) {
-          this.columnTypes.unshift(
-            { value: ImportEntityColumnType.cloudEndpoint },
-            { value: ImportEntityColumnType.edgeLicenseKey }
-          );
-        }
         break;
     }
   }
@@ -206,18 +206,16 @@ export class TableColumnsAssignmentComponent implements OnInit, ControlValueAcce
       this.valid = this.valid && isSelectSecret && isSelectRoutingKey &&
         (!legacyEdgeFieldsRequired || (isSelectEdgeLicenseKey && isSelectCloudEndpoint));
 
-      if (legacyEdgeFieldsRequired) {
-        this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.edgeLicenseKey).disabled = isSelectEdgeLicenseKey;
-        this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.cloudEndpoint).disabled = isSelectCloudEndpoint;
+      const edgeLicenseKeyColumnType = this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.edgeLicenseKey);
+      if (edgeLicenseKeyColumnType) {
+        edgeLicenseKeyColumnType.disabled = isSelectEdgeLicenseKey;
       }
-      const routingKeyColumnType = this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.routingKey);
-      if (routingKeyColumnType) {
-        routingKeyColumnType.disabled = isSelectRoutingKey;
+      const cloudEndpointColumnType = this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.cloudEndpoint);
+      if (cloudEndpointColumnType) {
+        cloudEndpointColumnType.disabled = isSelectCloudEndpoint;
       }
-      const secretColumnType = this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.secret);
-      if (secretColumnType) {
-        secretColumnType.disabled = isSelectSecret;
-      }
+      this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.routingKey).disabled = isSelectRoutingKey;
+      this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.secret).disabled = isSelectSecret;
     }
 
     if (this.propagateChange) {
