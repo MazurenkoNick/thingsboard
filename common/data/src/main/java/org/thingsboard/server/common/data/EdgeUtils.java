@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Throwables;
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.server.common.data.audit.ActionType;
+import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.edge.EdgeEvent;
 import org.thingsboard.server.common.data.edge.EdgeEventActionType;
 import org.thingsboard.server.common.data.edge.EdgeEventType;
@@ -76,6 +77,10 @@ public final class EdgeUtils {
     }
 
     private EdgeUtils() {}
+
+    public static boolean isAddonEdge(int licenseVersion) {
+        return licenseVersion == 2;
+    }
 
     public static int nextPositiveInt() {
         return ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);

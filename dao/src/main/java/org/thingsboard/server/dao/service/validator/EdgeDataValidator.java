@@ -80,11 +80,13 @@ public class EdgeDataValidator extends DataValidator<Edge> {
         if (StringUtils.isEmpty(edge.getRoutingKey())) {
             throw new DataValidationException("Edge routing key should be specified!");
         }
-        if (StringUtils.isEmpty(edge.getEdgeLicenseKey())) {
-            throw new DataValidationException("Edge license key should be specified!");
-        }
-        if (StringUtils.isEmpty(edge.getCloudEndpoint())) {
-            throw new DataValidationException("Cloud endpoint should be specified!");
+        if (subscriptionService.getLicenseVersion() < 2) {
+            if (StringUtils.isEmpty(edge.getEdgeLicenseKey())) {
+                throw new DataValidationException("Edge license key should be specified!");
+            }
+            if (StringUtils.isEmpty(edge.getCloudEndpoint())) {
+                throw new DataValidationException("Cloud endpoint should be specified!");
+            }
         }
         if (edge.getTenantId() == null) {
             throw new DataValidationException("Edge should be assigned to tenant!");

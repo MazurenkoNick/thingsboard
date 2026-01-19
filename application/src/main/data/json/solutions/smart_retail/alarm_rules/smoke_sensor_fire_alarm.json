@@ -55,6 +55,7 @@
     "clearRule": null,
     "propagate": true,
     "propagateToOwner": false,
+    "propagateToOwnerHierarchy": true,
     "propagateToTenant": false,
     "propagateRelationTypes": [
       "Contains"

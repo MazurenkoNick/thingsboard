@@ -24,7 +24,7 @@
           "key": "dailyFuelConsumption",
           "type": "TS_LATEST"
         },
-        "defaultValue": null
+        "defaultValue": "0"
       }
     },
     "deduplicationIntervalInSec": 10,
@@ -50,7 +50,7 @@
       }
     },
     "useLatestTs": true,
-    "scheduledUpdateInterval": 60,
+    "scheduledUpdateInterval": 10,
     "scheduledUpdateEnabled": true
   }
 }

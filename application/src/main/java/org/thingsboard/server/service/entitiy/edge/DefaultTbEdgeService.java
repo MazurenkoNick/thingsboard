@@ -61,11 +61,14 @@ public class DefaultTbEdgeService extends AbstractTbEntityService implements TbE
 
     @Override
     public Edge save(Edge edge, RuleChain edgeTemplateRootRuleChain, EntityGroup entityGroup, User user) throws Exception {
-        return save(edge, edgeTemplateRootRuleChain, entityGroup != null ? Collections.singletonList(entityGroup) : null, user);
+        return save(edge, edgeTemplateRootRuleChain, entityGroup != null ? Collections.singletonList(entityGroup) : Collections.emptyList(), user);
     }
 
     @Override
     public Edge save(Edge edge, RuleChain edgeTemplateRootRuleChain, List<EntityGroup> entityGroups, User user) throws Exception {
+        if (entityGroups == null) {
+            entityGroups = Collections.emptyList();
+        }
         ActionType actionType = edge.getId() == null ? ActionType.ADDED : ActionType.UPDATED;
         TenantId tenantId = edge.getTenantId();
         try {

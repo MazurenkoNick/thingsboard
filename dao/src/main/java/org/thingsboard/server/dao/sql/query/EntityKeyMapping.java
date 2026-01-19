@@ -232,6 +232,9 @@ public class EntityKeyMapping {
         aliases.put(EntityType.EDGE, commonEntityAliases);
         aliases.put(EntityType.WIDGETS_BUNDLE, commonEntityAliases);
         aliases.put(EntityType.ENTITY_GROUP, commonEntityAliases);
+        Map<String, String> displayNameAlias = Map.of(DISPLAY_NAME, NAME);
+        aliases.put(EntityType.REPORT, displayNameAlias);
+        aliases.put(EntityType.REPORT_TEMPLATE, displayNameAlias);
 
         propertiesFunctions.put(EntityType.DEVICE, labeledPropertiesFunctions);
         propertiesFunctions.put(EntityType.ASSET, labeledPropertiesFunctions);

@@ -23,7 +23,7 @@
   },
   {
     "id": "fleet_tracking",
-    "title": "Site Fleet Tracking",
+    "title": "Site fleet tracking",
     "level": "MAKER",
     "installTimeoutMs": 2000,
     "previewImageUrl": "https://img.thingsboard.io/solutions/mine_site_monitoring/mine-site-monitoring-1.png",

@@ -54,6 +54,7 @@ import org.thingsboard.server.common.data.cf.configuration.Argument;
 import org.thingsboard.server.common.data.cf.configuration.ArgumentType;
 import org.thingsboard.server.common.data.cf.configuration.ArgumentsBasedCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.ExpressionBasedCalculatedFieldConfiguration;
+import org.thingsboard.server.common.data.cf.configuration.HasUseLatestTsConfig;
 import org.thingsboard.server.common.data.cf.configuration.Output;
 import org.thingsboard.server.common.data.cf.configuration.PropagationCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.ReferencedEntityKey;
@@ -144,6 +145,8 @@ public class CalculatedFieldCtx implements Closeable {
     private long cfCheckReevaluationIntervalMillis;
     private long alarmReevaluationIntervalMillis;
     private long maxRelatedEntitiesPerCfArgument;
+    private long minScheduledUpdateIntervalMillis;
+    private long minDeduplicationIntervalMillis;
 
     private Argument propagationArgument;
     private boolean applyExpressionForResolvedArguments;
@@ -200,7 +203,6 @@ public class CalculatedFieldCtx implements Closeable {
                     .collect(Collectors.toList());
             if (argBasedConfig instanceof ExpressionBasedCalculatedFieldConfiguration expressionBasedConfig) {
                 this.expression = expressionBasedConfig.getExpression();
-                this.useLatestTs = CalculatedFieldType.SIMPLE.equals(calculatedField.getType()) && ((SimpleCalculatedFieldConfiguration) argBasedConfig).isUseLatestTs();
             }
             if (calculatedField.getConfiguration() instanceof GeofencingCalculatedFieldConfiguration geofencingConfig) {
                 geofencingConfig.getZoneGroups().forEach((zoneGroupName, config) -> {
@@ -222,8 +224,8 @@ public class CalculatedFieldCtx implements Closeable {
         if (calculatedField.getConfiguration() instanceof ScheduledUpdateSupportedCalculatedFieldConfiguration scheduledConfig) {
             this.scheduledUpdateIntervalMillis = scheduledConfig.isScheduledUpdateEnabled() ? TimeUnit.SECONDS.toMillis(scheduledConfig.getScheduledUpdateInterval()) : DISABLED_INTERVAL_VALUE;
         }
-        if (calculatedField.getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration aggConfig) {
-            this.useLatestTs = aggConfig.isUseLatestTs();
+        if (calculatedField.getConfiguration() instanceof HasUseLatestTsConfig hasUseLatestTsConfig) {
+            this.useLatestTs = hasUseLatestTsConfig.isUseLatestTs();
         }
         this.systemContext = systemContext;
         this.tbelInvokeService = systemContext.getTbelInvokeService();
@@ -327,6 +329,8 @@ public class CalculatedFieldCtx implements Closeable {
             this.cfCheckReevaluationIntervalMillis = TimeUnit.SECONDS.toMillis(config.getCfReevaluationCheckInterval());
             this.alarmReevaluationIntervalMillis = TimeUnit.SECONDS.toMillis(config.getAlarmsReevaluationInterval());
             this.maxRelatedEntitiesPerCfArgument = config.getMaxRelatedEntitiesToReturnPerCfArgument();
+            this.minScheduledUpdateIntervalMillis = TimeUnit.SECONDS.toMillis(config.getMinAllowedScheduledUpdateIntervalInSecForCF());
+            this.minDeduplicationIntervalMillis = TimeUnit.SECONDS.toMillis(config.getMinAllowedDeduplicationIntervalInSecForCF());
         });
     }
 
@@ -778,9 +782,7 @@ public class CalculatedFieldCtx implements Closeable {
     }
 
     public boolean hasRelatedEntities() {
-        return CalculatedFieldType.GEOFENCING == cfType
-                || CalculatedFieldType.PROPAGATION == cfType
-                || CalculatedFieldType.RELATED_ENTITIES_AGGREGATION == cfType;
+        return cfHasRelationPathQuerySource;
     }
 
     public boolean shouldFetchRelatedEntities(CalculatedFieldState state) {
@@ -796,7 +798,7 @@ public class CalculatedFieldCtx implements Closeable {
         if (scheduledRefreshSupported.getLastScheduledRefreshTs() == DEFAULT_LAST_UPDATE_TS) {
             return true;
         }
-        return scheduledRefreshSupported.getLastScheduledRefreshTs() < System.currentTimeMillis() - scheduledUpdateIntervalMillis;
+        return scheduledRefreshSupported.getLastScheduledRefreshTs() < System.currentTimeMillis() - Math.max(scheduledUpdateIntervalMillis, minScheduledUpdateIntervalMillis);
     }
 
     @Override

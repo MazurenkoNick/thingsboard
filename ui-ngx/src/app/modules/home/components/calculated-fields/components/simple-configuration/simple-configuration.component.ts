@@ -173,6 +173,7 @@ export class SimpleConfigurationComponent implements ControlValueAccessor, Valid
     this.simpleConfiguration.patchValue(formValue, {emitEvent: false});
     setTimeout(() => {
       this.simpleConfiguration.get('arguments').updateValueAndValidity({onlySelf: true});
+      this.simpleConfiguration.get('output').updateValueAndValidity({onlySelf: true});
     });
   }
 
@@ -217,7 +218,7 @@ export class SimpleConfigurationComponent implements ControlValueAccessor, Valid
   }
 
   private toggleScopeByOutputType(): void {
-    if (this.isScript || this.simpleConfiguration.get('output').value.type === OutputType.Attribute) {
+    if (this.isScript || this.simpleConfiguration.get('output').value.type === OutputType.Attribute || this.disabled) {
       this.simpleConfiguration.get('useLatestTs').disable({emitEvent: false});
     } else {
       this.simpleConfiguration.get('useLatestTs').enable({emitEvent: false});
