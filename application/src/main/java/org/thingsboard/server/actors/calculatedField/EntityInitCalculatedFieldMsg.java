@@ -31,6 +31,7 @@
 package org.thingsboard.server.actors.calculatedField;
 
 import lombok.Data;
+import org.thingsboard.server.common.data.cf.CalculatedFieldEventType;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.msg.MsgType;
 import org.thingsboard.server.common.msg.ToCalculatedFieldSystemMsg;
@@ -43,6 +44,7 @@ public class EntityInitCalculatedFieldMsg implements ToCalculatedFieldSystemMsg 
     private final TenantId tenantId;
     private final CalculatedFieldCtx ctx;
     private final StateAction stateAction;
+    private final CalculatedFieldEventType eventType;
     private final TbCallback callback;
 
     @Override

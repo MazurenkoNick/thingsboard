@@ -28,27 +28,18 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.actors.calculatedField;
+package org.thingsboard.server.common.data.cf;
 
-import lombok.Data;
-import org.thingsboard.server.common.data.cf.CalculatedFieldEventType;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.msg.MsgType;
-import org.thingsboard.server.common.msg.ToCalculatedFieldSystemMsg;
-import org.thingsboard.server.common.msg.queue.TbCallback;
-import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
+public enum CalculatedFieldEventType {
 
-@Data
-public class CalculatedFieldArgumentResetMsg implements ToCalculatedFieldSystemMsg {
+    INITIALIZED,
+    UPDATED,
 
-    private final TenantId tenantId;
-    private final CalculatedFieldCtx ctx;
-    private final CalculatedFieldEventType eventType;
-    private final TbCallback callback;
+    TENANT_PROFILE_UPDATED,
+    OWNER_CHANGED,
+    RELATION_ADD_OR_UPDATE,
+    RELATION_DELETED,
 
-    @Override
-    public MsgType getMsgType() {
-        return MsgType.CF_ARGUMENT_RESET_MSG;
-    }
+    REEVALUATION_MSG
 
 }
