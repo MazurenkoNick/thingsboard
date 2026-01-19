@@ -32,11 +32,13 @@ package org.thingsboard.server.dao.service;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
 import org.thingsboard.server.common.data.cf.configuration.ArgumentType;
+import org.thingsboard.server.common.data.cf.configuration.AttributesOutput;
 import org.thingsboard.server.common.data.cf.configuration.CalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.ReferencedEntityKey;
 import org.thingsboard.server.common.data.cf.configuration.RelationPathQueryDynamicSourceConfiguration;
@@ -118,6 +120,10 @@ public class CalculatedFieldServiceTest extends AbstractServiceTest {
         zoneGroupConfiguration.setRefDynamicSourceConfiguration(dynamicSourceConfiguration);
         cfg.setZoneGroups(Map.of("allowed", zoneGroupConfiguration));
 
+        AttributesOutput out = new AttributesOutput();
+        out.setScope(AttributeScope.SERVER_SCOPE);
+        cfg.setOutput(out);
+
         // Get tenant profile min.
         int min = tbTenantProfileCache.get(tenantId)
                 .getDefaultProfileConfiguration()
@@ -172,6 +178,10 @@ public class CalculatedFieldServiceTest extends AbstractServiceTest {
         zoneGroupConfiguration.setRefDynamicSourceConfiguration(dynamicSourceConfiguration);
         cfg.setZoneGroups(Map.of("allowed", zoneGroupConfiguration));
 
+        AttributesOutput out = new AttributesOutput();
+        out.setScope(AttributeScope.SERVER_SCOPE);
+        cfg.setOutput(out);
+
         // Create & save Calculated Field
         CalculatedField cf = new CalculatedField();
         cf.setTenantId(tenantId);
@@ -205,6 +215,10 @@ public class CalculatedFieldServiceTest extends AbstractServiceTest {
         dynamicSourceConfiguration.setLevels(List.of(new RelationPathLevel(EntitySearchDirection.FROM, EntityRelation.CONTAINS_TYPE)));
         zoneGroupConfiguration.setRefDynamicSourceConfiguration(dynamicSourceConfiguration);
         cfg.setZoneGroups(Map.of("allowed", zoneGroupConfiguration));
+
+        AttributesOutput out = new AttributesOutput();
+        out.setScope(AttributeScope.SERVER_SCOPE);
+        cfg.setOutput(out);
 
         // Get tenant profile min.
         int min = tbTenantProfileCache.get(tenantId)
