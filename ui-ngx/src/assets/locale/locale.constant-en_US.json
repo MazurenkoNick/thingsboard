@@ -12576,7 +12576,7 @@
         "loading-calculation-field": "Loading calculation fields...",
         "loading-metric-explorer": "Loading metric explorer...",
         "loading-prediction-model": "Loading prediction models...",
-        "loading-trendz-views": "Loading views...",
+        "loading-views": "Loading views...",
         "metric-explorer": "Metric explorer",
         "metric-explorer-description": "Recently analyzed metrics for quick navigation",
         "no-anomaly-models-found": "No anomaly detection models yet",
