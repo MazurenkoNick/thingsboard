@@ -59,7 +59,8 @@ export class EdgeComponent extends GroupEntityComponent<EdgeInfo> {
   // edgeScope: 'tenant' | 'customer' | 'customer_user';
   upgradeAvailable: boolean = false;
 
-  licenseVersion = getCurrentAuthState(this.store).licenseVersion;
+  licenseVersion: number;
+  legacyLicenseFields: boolean;
 
   constructor(protected store: Store<AppState>,
               protected translate: TranslateService,
@@ -75,9 +76,11 @@ export class EdgeComponent extends GroupEntityComponent<EdgeInfo> {
 
   ngOnInit() {
     // this.edgeScope = this.entitiesTableConfig.componentsData.edgeScope;
-    this.entityForm.patchValue({
-      cloudEndpoint: window.location.origin
-    });
+    if (this.entityForm.get('cloudEndpoint')) {
+      this.entityForm.patchValue({
+        cloudEndpoint: window.location.origin
+      });
+    }
     super.ngOnInit();
   }
 
@@ -142,39 +145,45 @@ export class EdgeComponent extends GroupEntityComponent<EdgeInfo> {
   } */
 
   buildForm(entity: EdgeInfo): UntypedFormGroup {
-    const form = this.fb.group(
-      {
-        name: [entity ? entity.name : '', [Validators.required, Validators.maxLength(255)]],
-        type: [entity?.type ? entity.type : 'default', [Validators.required, Validators.maxLength(255)]],
-        label: [entity ? entity.label : '', Validators.maxLength(255)],
-        cloudEndpoint: [null, [Validators.required, Validators.maxLength(255)]],
-        edgeLicenseKey: ['', [Validators.required]],
-        routingKey: this.fb.control({value: entity ? entity.routingKey : null, disabled: true}),
-        secret: this.fb.control({value: entity ? entity.secret : null, disabled: true}),
-        additionalInfo: this.fb.group(
-          {
-            description: [entity && entity.additionalInfo ? entity.additionalInfo.description : '']
-          }
-        )
-      }
-    );
+    this.licenseVersion = getCurrentAuthState(this.store).licenseVersion;
+    this.legacyLicenseFields = this.licenseVersion < 2;
+
+    const form = this.fb.group({
+      name: [entity ? entity.name : '', [Validators.required, Validators.maxLength(255)]],
+      type: [entity?.type ? entity.type : 'default', [Validators.required, Validators.maxLength(255)]],
+      label: [entity ? entity.label : '', Validators.maxLength(255)],
+      routingKey: this.fb.control({value: entity ? entity.routingKey : null, disabled: true}),
+      secret: this.fb.control({value: entity ? entity.secret : null, disabled: true}),
+      additionalInfo: this.fb.group(
+        {
+          description: [entity && entity.additionalInfo ? entity.additionalInfo.description : '']
+        }
+      )
+    });
+    if (this.legacyLicenseFields) {
+      form.addControl('cloudEndpoint', this.fb.control(null, [Validators.required, Validators.maxLength(255)]));
+      form.addControl('edgeLicenseKey', this.fb.control('', [Validators.required]));
+    }
     this.generateRoutingKeyAndSecret(entity, form);
     return form;
   }
 
   updateForm(entity: EdgeInfo) {
-    this.entityForm.patchValue({
+    const patch: any = {
       name: entity.name,
       type: entity.type,
       label: entity.label,
-      cloudEndpoint: entity.cloudEndpoint ? entity.cloudEndpoint : window.location.origin,
-      edgeLicenseKey: entity.edgeLicenseKey,
       routingKey: entity.routingKey,
       secret: entity.secret,
       additionalInfo: {
         description: entity.additionalInfo ? entity.additionalInfo.description : ''
       }
-    });
+    };
+    if (this.legacyLicenseFields) {
+      patch.cloudEndpoint = entity.cloudEndpoint ? entity.cloudEndpoint : window.location.origin;
+      patch.edgeLicenseKey = entity.edgeLicenseKey;
+    }
+    this.entityForm.patchValue(patch);
     this.generateRoutingKeyAndSecret(entity, this.entityForm);
     if (this.isTenantAdmin()) {
       this.edgeService.isEdgeUpgradeAvailable(this.entity.id.id)
@@ -221,7 +230,9 @@ export class EdgeComponent extends GroupEntityComponent<EdgeInfo> {
 
   private generateRoutingKeyAndSecret(entity: EdgeInfo, form: UntypedFormGroup) {
     if (entity && (!entity.id || (entity.id && !entity.id.id))) {
-      form.get('edgeLicenseKey').patchValue('6qcGys6gz4M2ZuIqZ6hRDjWT', { emitEvent: false });
+      if (this.legacyLicenseFields) {
+        form.get('edgeLicenseKey').patchValue('6qcGys6gz4M2ZuIqZ6hRDjWT', { emitEvent: false });
+      }
       form.get('routingKey').patchValue(guid(), { emitEvent: false });
       form.get('secret').patchValue(generateSecret(20), { emitEvent: false });
     }

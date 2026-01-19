@@ -33,6 +33,7 @@ import { Component, ElementRef, forwardRef, Input, OnInit } from '@angular/core'
 import { ControlValueAccessor, UntypedFormControl, NG_VALIDATORS, NG_VALUE_ACCESSOR, Validator } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
+import { getCurrentAuthState } from '@core/auth/auth.selectors';
 import { EntityType } from '@shared/models/entity-type.models';
 import {
   CsvColumnParam,
@@ -83,9 +84,11 @@ export class TableColumnsAssignmentComponent implements OnInit, ControlValueAcce
 
   private propagateChangePending = false;
   private propagateChange = null;
+  private readonly legacyEdgeFieldsRequired: boolean;
 
   constructor(public elementRef: ElementRef,
               protected store: Store<AppState>) {
+    this.legacyEdgeFieldsRequired = getCurrentAuthState(this.store).licenseVersion < 2;
   }
 
   ngOnInit(): void {
@@ -133,9 +136,13 @@ export class TableColumnsAssignmentComponent implements OnInit, ControlValueAcce
         );
         break;
       case EntityType.EDGE:
+        if (this.legacyEdgeFieldsRequired) {
+          this.columnTypes.push(
+            { value: ImportEntityColumnType.cloudEndpoint },
+            { value: ImportEntityColumnType.edgeLicenseKey }
+          );
+        }
         this.columnTypes.push(
-          { value: ImportEntityColumnType.edgeLicenseKey },
-          { value: ImportEntityColumnType.cloudEndpoint },
           { value: ImportEntityColumnType.routingKey },
           { value: ImportEntityColumnType.secret },
           { value: ImportEntityColumnType.serverAttribute },
@@ -193,10 +200,13 @@ export class TableColumnsAssignmentComponent implements OnInit, ControlValueAcce
       const isSelectRoutingKey = this.columns.findIndex((column) => column.type === ImportEntityColumnType.routingKey) > -1;
       const isSelectSecret = this.columns.findIndex((column) => column.type === ImportEntityColumnType.secret) > -1;
 
-      this.valid = this.valid && isSelectEdgeLicenseKey && isSelectCloudEndpoint && isSelectSecret && isSelectRoutingKey;
+      this.valid = this.valid && isSelectSecret && isSelectRoutingKey &&
+        (!this.legacyEdgeFieldsRequired || (isSelectEdgeLicenseKey && isSelectCloudEndpoint));
 
-      this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.edgeLicenseKey).disabled = isSelectEdgeLicenseKey;
-      this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.cloudEndpoint).disabled = isSelectCloudEndpoint;
+      if (this.legacyEdgeFieldsRequired) {
+        this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.edgeLicenseKey).disabled = isSelectEdgeLicenseKey;
+        this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.cloudEndpoint).disabled = isSelectCloudEndpoint;
+      }
       this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.routingKey).disabled = isSelectRoutingKey;
       this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.secret).disabled = isSelectSecret;
     }
