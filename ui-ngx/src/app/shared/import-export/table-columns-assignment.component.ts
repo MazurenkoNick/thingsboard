@@ -84,13 +84,11 @@ export class TableColumnsAssignmentComponent implements OnInit, ControlValueAcce
 
   private propagateChangePending = false;
   private propagateChange = null;
+  private readonly legacyEdgeFieldsRequired: boolean;
 
   constructor(public elementRef: ElementRef,
               protected store: Store<AppState>) {
-  }
-
-  private legacyEdgeFieldsRequired(): boolean {
-    return this.entityType === EntityType.EDGE && (getCurrentAuthState(this.store)?.licenseVersion) < 2;
+    this.legacyEdgeFieldsRequired = getCurrentAuthState(this.store).licenseVersion < 2;
   }
 
   ngOnInit(): void {
@@ -138,7 +136,7 @@ export class TableColumnsAssignmentComponent implements OnInit, ControlValueAcce
         );
         break;
       case EntityType.EDGE:
-        if (this.legacyEdgeFieldsRequired()) {
+        if (this.legacyEdgeFieldsRequired) {
           this.columnTypes.push(
             { value: ImportEntityColumnType.cloudEndpoint },
             { value: ImportEntityColumnType.edgeLicenseKey }
@@ -197,22 +195,17 @@ export class TableColumnsAssignmentComponent implements OnInit, ControlValueAcce
     }
 
     if (this.entityType === EntityType.EDGE) {
-      const legacyEdgeFieldsRequired = this.legacyEdgeFieldsRequired();
       const isSelectEdgeLicenseKey = this.columns.findIndex((column) => column.type === ImportEntityColumnType.edgeLicenseKey) > -1;
       const isSelectCloudEndpoint = this.columns.findIndex((column) => column.type === ImportEntityColumnType.cloudEndpoint) > -1;
       const isSelectRoutingKey = this.columns.findIndex((column) => column.type === ImportEntityColumnType.routingKey) > -1;
       const isSelectSecret = this.columns.findIndex((column) => column.type === ImportEntityColumnType.secret) > -1;
 
       this.valid = this.valid && isSelectSecret && isSelectRoutingKey &&
-        (!legacyEdgeFieldsRequired || (isSelectEdgeLicenseKey && isSelectCloudEndpoint));
+        (!this.legacyEdgeFieldsRequired || (isSelectEdgeLicenseKey && isSelectCloudEndpoint));
 
-      const edgeLicenseKeyColumnType = this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.edgeLicenseKey);
-      if (edgeLicenseKeyColumnType) {
-        edgeLicenseKeyColumnType.disabled = isSelectEdgeLicenseKey;
-      }
-      const cloudEndpointColumnType = this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.cloudEndpoint);
-      if (cloudEndpointColumnType) {
-        cloudEndpointColumnType.disabled = isSelectCloudEndpoint;
+      if (this.legacyEdgeFieldsRequired) {
+        this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.edgeLicenseKey).disabled = isSelectEdgeLicenseKey;
+        this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.cloudEndpoint).disabled = isSelectCloudEndpoint;
       }
       this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.routingKey).disabled = isSelectRoutingKey;
       this.columnTypes.find((columnType) => columnType.value === ImportEntityColumnType.secret).disabled = isSelectSecret;

@@ -59,9 +59,8 @@ export class EdgeComponent extends GroupEntityComponent<EdgeInfo> {
   // edgeScope: 'tenant' | 'customer' | 'customer_user';
   upgradeAvailable: boolean = false;
 
-  get licenseVersion(): number {
-    return getCurrentAuthState(this.store)?.licenseVersion;
-  }
+  licenseVersion: number;
+  legacyLicenseFields: boolean;
 
   constructor(protected store: Store<AppState>,
               protected translate: TranslateService,
@@ -146,8 +145,10 @@ export class EdgeComponent extends GroupEntityComponent<EdgeInfo> {
   } */
 
   buildForm(entity: EdgeInfo): UntypedFormGroup {
-    const legacyLicenseFields = this.licenseVersion < 2;
-    const formControls: any = {
+    this.licenseVersion = getCurrentAuthState(this.store).licenseVersion;
+    this.legacyLicenseFields = this.licenseVersion < 2;
+
+    const form = this.fb.group({
       name: [entity ? entity.name : '', [Validators.required, Validators.maxLength(255)]],
       type: [entity?.type ? entity.type : 'default', [Validators.required, Validators.maxLength(255)]],
       label: [entity ? entity.label : '', Validators.maxLength(255)],
@@ -158,12 +159,11 @@ export class EdgeComponent extends GroupEntityComponent<EdgeInfo> {
           description: [entity && entity.additionalInfo ? entity.additionalInfo.description : '']
         }
       )
-    };
-    if (legacyLicenseFields) {
-      formControls.cloudEndpoint = [null, [Validators.required, Validators.maxLength(255)]];
-      formControls.edgeLicenseKey = ['', [Validators.required]];
+    });
+    if (this.legacyLicenseFields) {
+      form.addControl('cloudEndpoint', this.fb.control(null, [Validators.required, Validators.maxLength(255)]));
+      form.addControl('edgeLicenseKey', this.fb.control('', [Validators.required]));
     }
-    const form = this.fb.group(formControls);
     this.generateRoutingKeyAndSecret(entity, form);
     return form;
   }
@@ -179,10 +179,8 @@ export class EdgeComponent extends GroupEntityComponent<EdgeInfo> {
         description: entity.additionalInfo ? entity.additionalInfo.description : ''
       }
     };
-    if (this.entityForm.get('cloudEndpoint')) {
+    if (this.legacyLicenseFields) {
       patch.cloudEndpoint = entity.cloudEndpoint ? entity.cloudEndpoint : window.location.origin;
-    }
-    if (this.entityForm.get('edgeLicenseKey')) {
       patch.edgeLicenseKey = entity.edgeLicenseKey;
     }
     this.entityForm.patchValue(patch);
@@ -232,7 +230,7 @@ export class EdgeComponent extends GroupEntityComponent<EdgeInfo> {
 
   private generateRoutingKeyAndSecret(entity: EdgeInfo, form: UntypedFormGroup) {
     if (entity && (!entity.id || (entity.id && !entity.id.id))) {
-      if (form.get('edgeLicenseKey')) {
+      if (this.legacyLicenseFields) {
         form.get('edgeLicenseKey').patchValue('6qcGys6gz4M2ZuIqZ6hRDjWT', { emitEvent: false });
       }
       form.get('routingKey').patchValue(guid(), { emitEvent: false });
