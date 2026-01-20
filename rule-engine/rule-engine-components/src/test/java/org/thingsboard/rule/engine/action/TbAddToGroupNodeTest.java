@@ -108,7 +108,7 @@ class TbAddToGroupNodeTest {
         var configuration = new TbNodeConfiguration(JacksonUtil.valueToTree(config));
         node.init(ctxMock, configuration);
 
-        initMocks();
+        initMocks(ENTITY_GROUP_ID);
         when(entityGroupServiceMock.findEntityGroupByTypeAndNameAsync(any(), any(), any(), any()))
                 .thenReturn(Futures.immediateFuture(Optional.of(new EntityGroup(ENTITY_GROUP_ID))));
 
@@ -134,7 +134,7 @@ class TbAddToGroupNodeTest {
         var configuration = new TbNodeConfiguration(JacksonUtil.valueToTree(config));
         node.init(ctxMock, configuration);
 
-        initMocks();
+        initMocks(ENTITY_GROUP_ID);
         when(entityGroupServiceMock.findEntityGroupByTypeAndNameAsync(any(), any(), any(), any()))
                 .thenReturn(Futures.immediateFuture(Optional.empty()));
         when(entityGroupServiceMock.saveEntityGroup(any(), any(), any())).thenReturn(new EntityGroup(ENTITY_GROUP_ID));
@@ -169,7 +169,7 @@ class TbAddToGroupNodeTest {
         var configuration = new TbNodeConfiguration(JacksonUtil.valueToTree(config));
         node.init(ctxMock, configuration);
 
-        initMocks();
+        initMocks(newEntityGroupId);
         when(entityGroupServiceMock.findEntityGroupByTypeAndNameAsync(any(), any(), any(), any()))
                 .thenReturn(Futures.immediateFuture(Optional.of(new EntityGroup(newEntityGroupId))));
         when(entityGroupServiceMock.findEntityGroupsForEntityAsync(any(), any()))
@@ -209,16 +209,12 @@ class TbAddToGroupNodeTest {
         var configuration = new TbNodeConfiguration(JacksonUtil.valueToTree(config));
         node.init(ctxMock, configuration);
 
-        initMocks();
+        initMocks(ENTITY_GROUP_ID);
         when(entityGroupServiceMock.findEntityGroupByTypeAndNameAsync(any(), any(), any(), any()))
                 .thenReturn(Futures.immediateFuture(Optional.of(new EntityGroup(ENTITY_GROUP_ID))));
-        EntityGroup entityGroup = new EntityGroup(ENTITY_GROUP_ID);
-        entityGroup.setType(EntityType.DEVICE);
-        when(entityGroupServiceMock.findEntityGroupById(TENANT_ID, ENTITY_GROUP_ID))
-                .thenReturn(entityGroup);
+        when(ctxMock.getOtaPackageStateService()).thenReturn(otaPackageStateService);
         when(deviceGroupOtaPackageService.findDeviceGroupOtaPackageByGroupIdAndType(ENTITY_GROUP_ID, OtaPackageType.FIRMWARE))
                 .thenReturn(new DeviceGroupOtaPackage());
-
 
         TbMsg msg = TbMsg.newMsg()
                 .type(TbMsgType.POST_TELEMETRY_REQUEST)
@@ -238,13 +234,16 @@ class TbAddToGroupNodeTest {
         verifyNoMoreInteractions(ctxMock, peContextMock, entityGroupServiceMock, deviceGroupOtaPackageService, otaPackageStateService);
     }
 
-    private void initMocks() {
+    private void initMocks(EntityGroupId groupId) {
         when(ctxMock.getPeContext()).thenReturn(peContextMock);
         when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
         when(peContextMock.getOwner(any(), any())).thenReturn(TENANT_ID);
         when(ctxMock.getDbCallbackExecutor()).thenReturn(dbCallbackExecutor);
         when(peContextMock.getEntityGroupService()).thenReturn(entityGroupServiceMock);
         when(peContextMock.getDeviceGroupOtaPackageService()).thenReturn(deviceGroupOtaPackageService);
-        when(ctxMock.getOtaPackageStateService()).thenReturn(otaPackageStateService);
+        EntityGroup entityGroup = new EntityGroup(groupId);
+        entityGroup.setType(EntityType.DEVICE);
+        when(entityGroupServiceMock.findEntityGroupById(TENANT_ID, groupId))
+                .thenReturn(entityGroup);
     }
 }
