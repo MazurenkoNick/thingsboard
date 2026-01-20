@@ -1,5 +1,5 @@
 ///
-/// Copyright © 2016-2025 The Thingsboard Authors
+/// Copyright © 2016-2026 The Thingsboard Authors
 ///
 /// Licensed under the Apache License, Version 2.0 (the "License");
 /// you may not use this file except in compliance with the License.
@@ -109,7 +109,9 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
     }
     this.tableTitle = this.pageMode ? '' : this.translate.instant('alarm-rule.alarm-rules');
     this.detailsPanelEnabled = this.pageMode;
-    this.entityResources = entityTypeResources.get(EntityType.CALCULATED_FIELD);
+    this.entityResources = {
+      helpLinkId: 'alarmRules'
+    };
     this.entityType = EntityType.CALCULATED_FIELD;
     this.entityTranslations = {
       type: 'alarm-rule.alarm-rule',

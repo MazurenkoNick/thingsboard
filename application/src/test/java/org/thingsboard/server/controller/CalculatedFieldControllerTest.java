@@ -1,5 +1,5 @@
 /**
- * Copyright © 2016-2025 The Thingsboard Authors
+ * Copyright © 2016-2026 The Thingsboard Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -382,7 +382,7 @@ public class CalculatedFieldControllerTest extends AbstractControllerTest {
 
         AggMetric metric = new AggMetric();
         metric.setInput(new AggKeyInput("en"));
-        metric.setDefaultValue(9999L);
+        metric.setDefaultValue(9999.0);
         config.setMetrics(Map.of("consumption", metric));
 
         config.setWatermark(new Watermark(TimeUnit.DAYS.toSeconds(1)));

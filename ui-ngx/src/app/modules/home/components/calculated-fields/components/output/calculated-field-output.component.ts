@@ -1,5 +1,5 @@
 ///
-/// Copyright © 2016-2025 The Thingsboard Authors
+/// Copyright © 2016-2026 The Thingsboard Authors
 ///
 /// Licensed under the Apache License, Version 2.0 (the "License");
 /// you may not use this file except in compliance with the License.
@@ -186,6 +186,9 @@ export class CalculatedFieldOutputComponent implements ControlValueAccessor, Val
       this.toggleScopeByOutputType(this.outputForm.get('type').value);
       this.updatedStrategy();
       this.updateTimeSeriesTtl(this.outputForm.get('strategy.saveTimeSeries').value);
+      if (this.outputForm.invalid) {
+        this.outputForm.updateValueAndValidity();
+      }
     }
   }
 

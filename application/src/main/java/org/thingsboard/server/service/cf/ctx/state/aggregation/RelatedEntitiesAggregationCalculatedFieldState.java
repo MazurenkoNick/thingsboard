@@ -1,5 +1,5 @@
 /**
- * Copyright © 2016-2025 The Thingsboard Authors
+ * Copyright © 2016-2026 The Thingsboard Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import org.thingsboard.server.common.data.cf.configuration.aggregation.AggKeyInp
 import org.thingsboard.server.common.data.cf.configuration.aggregation.AggMetric;
 import org.thingsboard.server.common.data.cf.configuration.aggregation.RelatedEntitiesAggregationCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.relation.EntitySearchDirection;
 import org.thingsboard.server.dao.entity.EntityService;
 import org.thingsboard.server.service.cf.CalculatedFieldResult;
 import org.thingsboard.server.service.cf.TelemetryCalculatedFieldResult;
@@ -182,7 +183,7 @@ public class RelatedEntitiesAggregationCalculatedFieldState extends BaseCalculat
     }
 
     public void scheduleReevaluation() {
-        ScheduledFuture<?> future = ctx.scheduleReevaluation(deduplicationIntervalMs, actorCtx);
+        ScheduledFuture<?> future = ctx.scheduleReevaluation(getEnforcedDeduplicationIntervalMillis(), actorCtx);
         if (future != null) {
             reevaluationFuture = future;
         }
@@ -200,7 +201,7 @@ public class RelatedEntitiesAggregationCalculatedFieldState extends BaseCalculat
                     .outputStrategy(output.getStrategy())
                     .type(output.getType())
                     .scope(output.getScope())
-                    .result(toSimpleResult(ctx.isUseLatestTs(), aggResult))
+                    .result(toResultNode(aggResult))
                     .build());
         } else {
             return Futures.immediateFuture(TelemetryCalculatedFieldResult.EMPTY);
@@ -208,9 +209,13 @@ public class RelatedEntitiesAggregationCalculatedFieldState extends BaseCalculat
     }
 
     private boolean shouldRecalculate() {
-        boolean intervalPassed = lastMetricsEvalTs <= System.currentTimeMillis() - deduplicationIntervalMs;
+        boolean intervalPassed = lastMetricsEvalTs <= System.currentTimeMillis() - getEnforcedDeduplicationIntervalMillis();
         boolean argsUpdatedDuringInterval = lastArgsRefreshTs > lastMetricsEvalTs;
         return intervalPassed && argsUpdatedDuringInterval;
+    }
+
+    private long getEnforcedDeduplicationIntervalMillis() {
+        return Math.max(deduplicationIntervalMs, ctx.getMinDeduplicationIntervalMillis());
     }
 
     private Map<EntityId, Map<String, ArgumentEntry>> prepareInputs() {
@@ -300,8 +305,25 @@ public class RelatedEntitiesAggregationCalculatedFieldState extends BaseCalculat
             if (argumentEntry == null || argumentEntry.isEmpty()) {
                 return ReadinessStatus.notReady(MISSING_AGGREGATION_ENTITIES_ERROR);
             }
+            if (argumentEntry instanceof RelatedEntitiesArgumentEntry relatedEntitiesArgumentEntry) {
+                try {
+                    checkConstraintByDirection(relatedEntitiesArgumentEntry);
+                } catch (Exception e) {
+                    return ReadinessStatus.notReady(e.getMessage());
+                }
+            }
         }
         return ReadinessStatus.READY;
+    }
+
+    public void checkConstraintByDirection(RelatedEntitiesArgumentEntry relatedEntitiesArgumentEntry) {
+        if (ctx.getCalculatedField().getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration config) {
+            if (EntitySearchDirection.TO == config.getRelation().direction()) {
+                if (relatedEntitiesArgumentEntry.getEntityInputs().size() > 1) {
+                    throw new IllegalArgumentException("More than one related entity is not supported for relation direction 'TO'. Found: " + relatedEntitiesArgumentEntry.getEntityInputs().size() + ".");
+                }
+            }
+        }
     }
 
 }

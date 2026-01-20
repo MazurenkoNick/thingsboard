@@ -1,5 +1,5 @@
 --
--- Copyright © 2016-2025 The Thingsboard Authors
+-- Copyright © 2016-2026 The Thingsboard Authors
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
 -- you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ SET profile_data = jsonb_set(
     profile_data,
     '{configuration}',
     jsonb_build_object(
-        'minAllowedScheduledUpdateIntervalInSecForCF', 60,
-        'maxRelationLevelPerCfArgument', 10,
+        'minAllowedScheduledUpdateIntervalInSecForCF', 10,
+        'maxRelationLevelPerCfArgument', 2,
         'maxRelatedEntitiesToReturnPerCfArgument', 100,
         'minAllowedDeduplicationIntervalInSecForCF', 10,
         'minAllowedAggregationIntervalInSecForCF', 60,

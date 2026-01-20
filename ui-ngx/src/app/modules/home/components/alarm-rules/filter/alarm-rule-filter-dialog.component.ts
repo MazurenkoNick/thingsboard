@@ -1,5 +1,5 @@
- ///
-/// Copyright © 2016-2025 The Thingsboard Authors
+///
+/// Copyright © 2016-2026 The Thingsboard Authors
 ///
 /// Licensed under the Apache License, Version 2.0 (the "License");
 /// you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@
   isAdd: boolean;
   arguments: Record<string, CalculatedFieldArgument>;
   usedArguments: Array<string>;
+  readonly: boolean;
 }
 
 @Component({
@@ -65,6 +66,8 @@ export class AlarmRuleFilterDialogComponent extends DialogComponent<AlarmRuleFil
 
   arguments = this.data.arguments;
   argumentsList: Array<string>;
+
+  readonly = this.data.readonly;
 
   constructor(protected store: Store<AppState>,
               protected router: Router,
@@ -114,6 +117,10 @@ export class AlarmRuleFilterDialogComponent extends DialogComponent<AlarmRuleFil
         }
       }
     });
+
+    if (this.readonly) {
+      this.filterFormGroup.disable({emitEvent: false});
+    }
   }
 
   argumentInUse(argument: string): boolean {

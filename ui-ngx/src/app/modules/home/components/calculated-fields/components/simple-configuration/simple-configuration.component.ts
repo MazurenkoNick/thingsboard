@@ -1,5 +1,5 @@
 ///
-/// Copyright © 2016-2025 The Thingsboard Authors
+/// Copyright © 2016-2026 The Thingsboard Authors
 ///
 /// Licensed under the Apache License, Version 2.0 (the "License");
 /// you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 /// limitations under the License.
 ///
 
-import { Component, forwardRef, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { booleanAttribute, Component, forwardRef, Input, OnChanges, SimpleChanges } from '@angular/core';
 import {
   ControlValueAccessor,
   FormBuilder,
@@ -80,6 +80,8 @@ export class SimpleConfigurationComponent implements ControlValueAccessor, Valid
 
   @Input({required: true})
   testScript: () => Observable<string>;
+
+  @Input({transform: booleanAttribute}) isEditValue = true;
 
   simpleConfiguration = this.fb.group({
     arguments: this.fb.control({}),
@@ -153,6 +155,7 @@ export class SimpleConfigurationComponent implements ControlValueAccessor, Valid
     this.simpleConfiguration.patchValue(formValue, {emitEvent: false});
     setTimeout(() => {
       this.simpleConfiguration.get('arguments').updateValueAndValidity({onlySelf: true});
+      this.simpleConfiguration.get('output').updateValueAndValidity({onlySelf: true});
     });
   }
 
@@ -197,7 +200,7 @@ export class SimpleConfigurationComponent implements ControlValueAccessor, Valid
   }
 
   private toggleScopeByOutputType(): void {
-    if (this.isScript || this.simpleConfiguration.get('output').value.type === OutputType.Attribute) {
+    if (this.isScript || this.simpleConfiguration.get('output').value.type === OutputType.Attribute || this.disabled) {
       this.simpleConfiguration.get('useLatestTs').disable({emitEvent: false});
     } else {
       this.simpleConfiguration.get('useLatestTs').enable({emitEvent: false});

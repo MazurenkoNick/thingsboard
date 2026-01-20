@@ -1,5 +1,5 @@
 ///
-/// Copyright © 2016-2025 The Thingsboard Authors
+/// Copyright © 2016-2026 The Thingsboard Authors
 ///
 /// Licensed under the Apache License, Version 2.0 (the "License");
 /// you may not use this file except in compliance with the License.
@@ -71,7 +71,7 @@ export class CalculatedFieldFormService {
       takeUntilDestroyed(destroyRef)
     ).subscribe(([prevType, nextType]) => {
       const shouldCheck = isEditActive ? isEditActive() : true;
-      if (shouldCheck) {
+      if (shouldCheck && prevType !== nextType) {
         if (![CalculatedFieldType.SIMPLE, CalculatedFieldType.SCRIPT].includes(prevType) ||
           ![CalculatedFieldType.SIMPLE, CalculatedFieldType.SCRIPT].includes(nextType)) {
           form.get('configuration').setValue({} as CalculatedFieldConfiguration, { emitEvent: false });
@@ -101,7 +101,12 @@ export class CalculatedFieldFormService {
       return this.calculatedFieldsService.getLatestCalculatedFieldDebugEvent(calculatedFieldId, {ignoreLoading: true})
         .pipe(
           switchMap(event => {
-            const args = event?.arguments ? JSON.parse(event.arguments) : null;
+            let args = null;
+            if (event?.arguments) {
+              try {
+                args = JSON.parse(event.arguments);
+              } catch (e) {}
+            }
             return testDialogFn(formValue, args, false, expression);
           }),
           takeUntilDestroyed(destroyRef)

@@ -1,5 +1,5 @@
 ///
-/// Copyright © 2016-2025 The Thingsboard Authors
+/// Copyright © 2016-2026 The Thingsboard Authors
 ///
 /// Licensed under the Apache License, Version 2.0 (the "License");
 /// you may not use this file except in compliance with the License.
@@ -89,6 +89,7 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
   @Input() ownerId: EntityId;
   @Input() isScript: boolean;
   @Input({transform: booleanAttribute}) disable = false;
+  @Input({transform: booleanAttribute}) isEditValue = true;
   @Input() watchKeyChange = false;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
@@ -168,7 +169,7 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
     this.argumentsFormArray.markAsDirty();
   }
 
-  manageArgument($event: Event, matButton: MatButton, argument = {} as CalculatedFieldArgumentValue): void {
+  manageArgument($event: Event, matButton: MatButton, argument = {} as CalculatedFieldArgumentValue, readonly: boolean = false): void {
     $event?.stopPropagation();
     if (this.popoverComponent && !this.popoverComponent.tbHidden) {
       this.popoverComponent.hide();
@@ -190,6 +191,7 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
         ownerId: this.ownerId,
         watchKeyChange: this.watchKeyChange,
         usedArgumentNames: this.argumentsFormArray.value.map(({ argumentName }) => argumentName).filter(name => name !== argument.argumentName),
+        readonly
       };
       this.popoverComponent = this.popoverService.displayPopover({
         trigger,

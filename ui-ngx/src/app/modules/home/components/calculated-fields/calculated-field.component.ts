@@ -1,5 +1,5 @@
 ///
-/// Copyright © 2016-2025 The Thingsboard Authors
+/// Copyright © 2016-2026 The Thingsboard Authors
 ///
 /// Licensed under the Apache License, Version 2.0 (the "License");
 /// you may not use this file except in compliance with the License.
@@ -39,6 +39,10 @@ import {
 } from '@home/components/calculated-fields/calculated-fields-table-config';
 import { TenantId } from '@shared/models/id/tenant-id';
 import { CalculatedFieldFormService } from '@core/services/calculated-field-form.service';
+import { AssetInfo } from '@shared/models/asset.models';
+import { DeviceInfo } from '@shared/models/device.models';
+import { NULL_UUID } from '@shared/models/id/has-uuid';
+import { EntityService } from '@core/http/entity.service';
 
 @Component({
   selector: 'tb-calculated-field',
@@ -55,7 +59,7 @@ export class CalculatedFieldComponent extends EntityComponent<CalculatedFieldsTa
 
   disabledConfiguration = false;
 
-  readonly ownerId = new TenantId(getCurrentAuthUser(this.store).tenantId);
+  ownerId = new TenantId(getCurrentAuthUser(this.store).tenantId);
   readonly tenantId = getCurrentAuthUser(this.store).tenantId;
   readonly EntityType = EntityType;
   readonly calculatedFieldsEntityTypeList = calculatedFieldsEntityTypeList;
@@ -71,7 +75,8 @@ export class CalculatedFieldComponent extends EntityComponent<CalculatedFieldsTa
               @Inject('entity') protected entityValue: CalculatedFieldInfo,
               @Inject('entitiesTableConfig') protected entitiesTableConfigValue: CalculatedFieldsTableConfig,
               protected fb: FormBuilder,
-              protected cd: ChangeDetectorRef) {
+              protected cd: ChangeDetectorRef,
+              private entityService: EntityService) {
     super(store, fb, entityValue, entitiesTableConfigValue, cd);
   }
 
@@ -119,13 +124,14 @@ export class CalculatedFieldComponent extends EntityComponent<CalculatedFieldsTa
     this.entityForm.patchValue({ type }, {emitEvent: false, onlySelf: true});
     setTimeout(() => {
       this.entityForm.patchValue({ configuration: preparedConfig, debugSettings, entityId, ...value }, {emitEvent: false});
+      this.entityForm.get('type').updateValueAndValidity();
     });
   }
 
   onTestScript(expression?: string): Observable<string> {
     return this.cfFormService.testScript(
       this.entity?.id?.id,
-      this.entityFormValue(),
+      this.entityValue,
       this.entitiesTableConfig.getTestScriptDialog.bind(this.entitiesTableConfig),
       this.destroyRef,
       expression
@@ -137,9 +143,26 @@ export class CalculatedFieldComponent extends EntityComponent<CalculatedFieldsTa
       if (this.isEditValue) {
         this.entityForm.enable({emitEvent: false});
         this.entityForm.get('entityId').disable({emitEvent: false});
+        this.getOwnerId(this.entityId);
       } else {
         this.entityForm.disable({emitEvent: false});
       }
     }
+  }
+
+  getOwnerId(entityId: EntityId) {
+    if (entityId?.entityType === EntityType.DEVICE || entityId?.entityType === EntityType.ASSET) {
+      this.entityService.getEntity(entityId.entityType, entityId.id, { ignoreLoading: true, ignoreErrors: true }).subscribe(
+        (entity: AssetInfo | DeviceInfo) => {
+          if (this.isAssignedToCustomer(entity)) {
+            this.ownerId = entity.customerId;
+          }
+        }
+      );
+    }
+  }
+
+  private isAssignedToCustomer(entity: AssetInfo | DeviceInfo): boolean {
+    return entity && entity.customerId && entity.customerId.id !== NULL_UUID;
   }
 }

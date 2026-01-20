@@ -1,5 +1,5 @@
 ///
-/// Copyright © 2016-2025 The Thingsboard Authors
+/// Copyright © 2016-2026 The Thingsboard Authors
 ///
 /// Licensed under the Apache License, Version 2.0 (the "License");
 /// you may not use this file except in compliance with the License.
@@ -79,6 +79,8 @@ export class AlarmRuleFilterPredicateListComponent implements ControlValueAccess
   @Input() arguments: Record<string, CalculatedFieldArgument>;
 
   @Input() argumentInUse: string;
+
+  @Input() readonly: boolean;
 
   filterListFormGroup = this.fb.group({
     predicates: this.fb.array([])
@@ -197,7 +199,8 @@ export class AlarmRuleFilterPredicateListComponent implements ControlValueAccess
         valueType: this.valueType,
         isAdd: true,
         arguments: this.arguments,
-        argumentInUse: this.argumentInUse
+        argumentInUse: this.argumentInUse,
+        readonly: this.readonly
       }
     }).afterClosed().pipe(
       map(result => result)
