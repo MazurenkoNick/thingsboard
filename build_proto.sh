@@ -18,6 +18,7 @@
 echo "Building ThingsBoard protobuf-containing packages..."
 MAVEN_OPTS="-Xmx1024m" NODE_OPTIONS="--max_old_space_size=3072" \
 mvn clean compile -T4 --also-make --projects='
+common/agent-api,
 common/cluster-api,
 common/edge-api,
 common/transport/coap,
