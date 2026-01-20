@@ -1356,7 +1356,7 @@
                   "patternFunction": {
                     "body": "return utils.getMachineTooltip(ctx, data, true);",
                     "modules": {
-                      "utils": "tb-resource;/api/resource/js_module/tenant/Mine site monitoring solution JS utils.js"
+                      "utils": "tb-resource;/api/resource/js_module/system/Mine site monitoring solution JS utils.js"
                     }
                   },
                   "tagActions": null
@@ -1442,7 +1442,7 @@
                   "patternFunction": {
                     "body": "return utils.getMachineTooltip(ctx, data, true);",
                     "modules": {
-                      "utils": "tb-resource;/api/resource/js_module/tenant/Mine site monitoring solution JS utils.js"
+                      "utils": "tb-resource;/api/resource/js_module/system/Mine site monitoring solution JS utils.js"
                     }
                   },
                   "trigger": "click",
@@ -2836,7 +2836,7 @@
                   "patternFunction": {
                     "body": "return utils.getMachineTooltip(ctx, data, true);",
                     "modules": {
-                      "utils": "tb-resource;/api/resource/js_module/tenant/Mine site monitoring solution JS utils.js"
+                      "utils": "tb-resource;/api/resource/js_module/system/Mine site monitoring solution JS utils.js"
                     }
                   },
                   "tagActions": null
@@ -2926,7 +2926,7 @@
                   "patternFunction": {
                     "body": "return utils.getMachineTooltip(ctx, data, true);",
                     "modules": {
-                      "utils": "tb-resource;/api/resource/js_module/tenant/Mine site monitoring solution JS utils.js"
+                      "utils": "tb-resource;/api/resource/js_module/system/Mine site monitoring solution JS utils.js"
                     }
                   },
                   "tagActions": null
