@@ -88,7 +88,7 @@ public class DefaultTrendzSyncService implements TrendzSyncService {
     private String defaultTrendzUrl;
 
     @Override
-    public TrendzSettings performSync() {
+    public synchronized TrendzSettings performSync() {
         log.trace("Executing performSync");
         if (!trendzEnabled) {
             return saveTrendzSettings(null, null, null, 0L,
