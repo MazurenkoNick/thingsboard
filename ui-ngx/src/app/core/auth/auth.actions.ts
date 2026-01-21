@@ -46,6 +46,7 @@ export enum AuthActionTypes {
   UPDATE_OPENED_MENU_SECTION = '[Preferences] Update Opened Menu Section',
   PUT_USER_SETTINGS = '[Preferences] Put user settings',
   DELETE_USER_SETTINGS = '[Preferences] Delete user settings',
+  UPDATE_ADDONS = '[Auth] Update Addons'
 }
 
 export class ActionAuthAuthenticated implements Action {
@@ -112,7 +113,13 @@ export class ActionPreferencesDeleteUserSettings implements Action {
   constructor(readonly payload: Array<NestedKeyOf<UserSettings>>) {}
 }
 
+export class ActionAuthUpdateAddons implements Action {
+  readonly type = AuthActionTypes.UPDATE_ADDONS;
+
+  constructor(readonly payload: { edgeEnabled: boolean, trendzEnabled: boolean }) {}
+}
+
 export type AuthActions = ActionAuthAuthenticated | ActionAuthUnauthenticated |
   ActionAuthLoadUser | ActionAuthUpdateUserDetails | ActionAuthUpdateLastPublicDashboardId | ActionAuthUpdateHasRepository |
   ActionPreferencesUpdateOpenedMenuSection | ActionPreferencesPutUserSettings | ActionPreferencesDeleteUserSettings |
-  ActionAuthUpdateAuthUser | ActionUpdateMobileQrCodeEnabled;
+  ActionAuthUpdateAuthUser | ActionUpdateMobileQrCodeEnabled | ActionAuthUpdateAddons;

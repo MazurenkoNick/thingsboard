@@ -54,6 +54,7 @@ import { createManageSubscriptionUrl, SubscriptionInfo } from '@shared/models/su
 import { AdminService } from '@core/http/admin.service';
 import { map, Observable, of, switchMap } from 'rxjs';
 import { DialogService } from '@core/services/dialog.service';
+import { ActionAuthUpdateAddons } from '@core/auth/auth.actions';
 
 @Component({
   selector: 'tb-trendz-settings',
@@ -168,6 +169,12 @@ export class TrendzSettingsComponent extends PageComponent implements OnInit {
         this.adminService.refreshLicense().subscribe(subscriptionInfo => {
           this.subscriptionInfo = subscriptionInfo;
           this.trendzEnabled = this.subscriptionInfo.trendzEnabled;
+          this.store.dispatch(new ActionAuthUpdateAddons(
+            {
+              edgeEnabled: subscriptionInfo.edgeEnabled,
+              trendzEnabled: subscriptionInfo.trendzEnabled
+            }
+          ));
           this.initTrendzSettings();
         });
       })
