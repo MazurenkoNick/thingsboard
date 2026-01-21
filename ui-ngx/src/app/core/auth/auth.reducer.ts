@@ -124,6 +124,8 @@ export const authReducer = (
       userSettings = {...state.userSettings};
       action.payload.forEach(path => unset(userSettings, path));
       return { ...state, ...{ userSettings }};
+    case AuthActionTypes.UPDATE_ADDONS:
+      return { ...state, ...action.payload};
 
     default:
       return state;

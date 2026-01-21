@@ -40,6 +40,7 @@ import {
   AddLicenseItemDialogData
 } from '@home/pages/admin/add-license-item-dialog.component';
 import { TranslateService } from '@ngx-translate/core';
+import { ActionAuthUpdateAddons } from '@core/auth/auth.actions';
 
 @Component({
   selector: 'tb-license-management',
@@ -80,6 +81,12 @@ export class LicenseManagementComponent extends PageComponent implements OnInit 
     }
     this.adminService.refreshLicense().subscribe(subscriptionInfo => {
       this.subscriptionInfo = subscriptionInfo;
+      this.store.dispatch(new ActionAuthUpdateAddons(
+        {
+          edgeEnabled: subscriptionInfo.edgeEnabled,
+          trendzEnabled: subscriptionInfo.trendzEnabled
+        }
+      ));
     });
   }
 
