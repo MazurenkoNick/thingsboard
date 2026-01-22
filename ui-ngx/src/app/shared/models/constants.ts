@@ -250,7 +250,7 @@ export const HelpLinks = {
     mobileQrCode: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/ui/mobile-qr-code/`,
     calculatedField: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/calculated-fields/`,
     aiModels: `${helpBaseUrl}/docs${docPlatformPrefix}/samples/analytics/ai-models/`,
-    apiKeys: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/ui/api-keys`,
+    apiKeys: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/security/api-keys/`,
     timewindowSettings: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/dashboards/#time-window`,
     converters: `${helpBaseUrl}/docs${docIntegrationPrefix}/user-guide/integrations/#data-converters`,
     uplinkConverters: `${helpBaseUrl}/docs${docIntegrationPrefix}/user-guide/integrations/#uplink-data-converter`,
