@@ -1273,7 +1273,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popCustomerMsg(List<AbstractMessage> messages, UpdateMsgType msgType, String title, String ownerType, UUID ownerUUID) {
+    private boolean popCustomerMsg(Deque<AbstractMessage> messages, UpdateMsgType msgType, String title, String ownerType, UUID ownerUUID) {
         for (AbstractMessage message : messages) {
             if (message instanceof CustomerUpdateMsg customerUpdateMsg) {
                 Customer customer = JacksonUtil.fromString(customerUpdateMsg.getEntity(), Customer.class, true);
@@ -1292,7 +1292,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
 
     }
 
-    private boolean popRoleMsg(List<AbstractMessage> messages, UpdateMsgType msgType, String name, RoleType type) {
+    private boolean popRoleMsg(Deque<AbstractMessage> messages, UpdateMsgType msgType, String name, RoleType type) {
         for (AbstractMessage message : messages) {
             if (message instanceof RoleProto roleProto) {
                 Role role = JacksonUtil.fromString(roleProto.getEntity(), Role.class, true);
@@ -1323,7 +1323,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return null;
     }
 
-    private boolean popDomainMsg(List<AbstractMessage> messages, UpdateMsgType msgType, String name, TenantId tenantId, CustomerId customerId) {
+    private boolean popDomainMsg(Deque<AbstractMessage> messages, UpdateMsgType msgType, String name, TenantId tenantId, CustomerId customerId) {
         for (AbstractMessage message : messages) {
             if (message instanceof OAuth2DomainUpdateMsg oAuth2DomainUpdateMsg) {
                 DomainInfo domainInfo = JacksonUtil.fromString(oAuth2DomainUpdateMsg.getEntity(), DomainInfo.class, true);
@@ -1340,7 +1340,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popSyncCompletedMsg(List<AbstractMessage> messages) {
+    private boolean popSyncCompletedMsg(Deque<AbstractMessage> messages) {
         for (AbstractMessage message : messages) {
             if (message instanceof SyncCompletedMsg) {
                 messages.remove(message);
@@ -1350,7 +1350,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popEntityGroupMsg(List<AbstractMessage> messages, UpdateMsgType msgType, String name, EntityType type, EntityType ownerType) {
+    private boolean popEntityGroupMsg(Deque<AbstractMessage> messages, UpdateMsgType msgType, String name, EntityType type, EntityType ownerType) {
         for (AbstractMessage message : messages) {
             if (message instanceof EntityGroupUpdateMsg entityGroupUpdateMsg) {
                 EntityGroup entityGroup = JacksonUtil.fromString(entityGroupUpdateMsg.getEntity(), EntityGroup.class, true);
@@ -1383,7 +1383,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return null;
     }
 
-    private boolean popGroupPermissionMsg(List<AbstractMessage> messages, UpdateMsgType msgType, EntityGroupId userGroupId, RoleId roleId) {
+    private boolean popGroupPermissionMsg(Deque<AbstractMessage> messages, UpdateMsgType msgType, EntityGroupId userGroupId, RoleId roleId) {
         for (AbstractMessage message : messages) {
             if (message instanceof GroupPermissionProto groupPermissionProto) {
                 GroupPermission groupPermission = JacksonUtil.fromString(groupPermissionProto.getEntity(), GroupPermission.class, true);
@@ -1399,7 +1399,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popEncryptionKeyUpdateMsg(List<AbstractMessage> messages, UpdateMsgType msgType, TenantId tenantId) {
+    private boolean popEncryptionKeyUpdateMsg(Deque<AbstractMessage> messages, UpdateMsgType msgType, TenantId tenantId) {
         for (AbstractMessage message : messages) {
             if (message instanceof EncryptionKeyUpdateMsg encryptionKeyUpdateMsg) {
                 EncryptionKey encryptionKey = JacksonUtil.fromString(encryptionKeyUpdateMsg.getEntity(), EncryptionKey.class, true);
@@ -1414,7 +1414,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popEdgeConfigurationMsg(List<AbstractMessage> messages, String name) {
+    private boolean popEdgeConfigurationMsg(Deque<AbstractMessage> messages, String name) {
         for (AbstractMessage message : messages) {
             if (message instanceof EdgeConfiguration edgeConfiguration) {
                 if (name.equals(edgeConfiguration.getName())) {
@@ -1441,7 +1441,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popTenantMsg(List<AbstractMessage> messages, TenantId tenantId1) {
+    private boolean popTenantMsg(Deque<AbstractMessage> messages, TenantId tenantId1) {
         for (AbstractMessage message : messages) {
             if (message instanceof TenantUpdateMsg tenantUpdateMsg) {
                 Tenant tenant = JacksonUtil.fromString(tenantUpdateMsg.getEntity(), Tenant.class, true);
@@ -1456,7 +1456,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popWhiteLabeling(List<AbstractMessage> messages, WhiteLabelingType type) {
+    private boolean popWhiteLabeling(Deque<AbstractMessage> messages, WhiteLabelingType type) {
         for (AbstractMessage message : messages) {
             if (message instanceof WhiteLabelingProto whiteLabelingProto) {
                 WhiteLabeling whiteLabeling = JacksonUtil.fromString(whiteLabelingProto.getEntity(), WhiteLabeling.class, true);
@@ -1470,7 +1470,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popCustomTranslation(List<AbstractMessage> messages, String locale) {
+    private boolean popCustomTranslation(Deque<AbstractMessage> messages, String locale) {
         for (AbstractMessage message : messages) {
             if (message instanceof CustomTranslationUpdateMsg customTranslationUpdateMsg) {
                 CustomTranslation customTranslation = JacksonUtil.fromString(customTranslationUpdateMsg.getEntity(), CustomTranslation.class, true);
@@ -1535,8 +1535,8 @@ public class EdgeControllerTest extends AbstractControllerTest {
 
         verifyFetchersMsgs_tenantLevel(edgeImitator, savedDevice);
         // verify queue msgs
-        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "DeviceGroup", EntityType.DEVICE, EntityType.TENANT));
-        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "AssetGroup", EntityType.ASSET, EntityType.TENANT));
+        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "DeviceGroup", EntityType.DEVICE, EntityType.TENANT));
+        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "AssetGroup", EntityType.ASSET, EntityType.TENANT));
         Assert.assertTrue("There are some messages: " + edgeImitator.getDownlinkMsgs(), edgeImitator.getDownlinkMsgs().isEmpty());
 
         // 30 connect messages
@@ -1700,12 +1700,12 @@ public class EdgeControllerTest extends AbstractControllerTest {
 
         verifyFetchersMsgs_customerLevel(edgeImitator, savedCustomer.getId(), savedDevice);
         // verify queue msgs
-        Assert.assertTrue(popCustomerMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Edge Customer", "TENANT", tenantId.getId()));
-        Assert.assertTrue(popEdgeConfigurationMsg(edgeImitator.getDownlinkMsgs(), edge.getName()));
-        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Customer Users", EntityType.USER, EntityType.CUSTOMER));
-        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Customer Administrators", EntityType.USER, EntityType.CUSTOMER));
-        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "CustomerDeviceGroup", EntityType.DEVICE, EntityType.CUSTOMER));
-        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "CustomerAssetGroup", EntityType.ASSET, EntityType.CUSTOMER));
+        Assert.assertTrue(popCustomerMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Edge Customer", "TENANT", tenantId.getId()));
+        Assert.assertTrue(popEdgeConfigurationMsg(edgeImitator.getDownlinkMsgsDeque(), edge.getName()));
+        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Customer Users", EntityType.USER, EntityType.CUSTOMER));
+        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Customer Administrators", EntityType.USER, EntityType.CUSTOMER));
+        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "CustomerDeviceGroup", EntityType.DEVICE, EntityType.CUSTOMER));
+        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "CustomerAssetGroup", EntityType.ASSET, EntityType.CUSTOMER));
         Assert.assertTrue("There are some messages: " + edgeImitator.getDownlinkMsgs(), edgeImitator.getDownlinkMsgs().isEmpty());
 
         // 30 connect messages
@@ -1750,14 +1750,14 @@ public class EdgeControllerTest extends AbstractControllerTest {
 
     private void verifyFetchersMsgs_tenantLevel(EdgeImitator edgeImitator, Device savedDevice) {
         verifyFetchersMsgs_bothLevels(edgeImitator);
-        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "DeviceGroup", EntityType.DEVICE, EntityType.TENANT));
-        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "AssetGroup", EntityType.ASSET, EntityType.TENANT));
-        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "test"));
-        Assert.assertTrue(popAssetMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Sync Test EG Edge Asset 1"));
-        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
-        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
-        Assert.assertTrue(popDeviceMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Sync Test EG Edge Device 1"));
-        Assert.assertTrue(popDeviceCredentialsMsg(edgeImitator.getDownlinkMsgs(), savedDevice.getId()));
+        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "DeviceGroup", EntityType.DEVICE, EntityType.TENANT));
+        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "AssetGroup", EntityType.ASSET, EntityType.TENANT));
+        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "test"));
+        Assert.assertTrue(popAssetMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Sync Test EG Edge Asset 1"));
+        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
+        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
+        Assert.assertTrue(popDeviceMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Sync Test EG Edge Device 1"));
+        Assert.assertTrue(popDeviceCredentialsMsg(edgeImitator.getDownlinkMsgsDeque(), savedDevice.getId()));
     }
 
     private void verifyFetchersMsgs_customerLevel(EdgeImitator edgeImitator, CustomerId edgeCustomerId, Device savedDevice) {
@@ -1767,24 +1767,24 @@ public class EdgeControllerTest extends AbstractControllerTest {
         EntityGroupId customerAdministratorsGroupId = findEntityGroupId(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Customer Administrators", EntityType.USER, EntityType.CUSTOMER);
 
         verifyFetchersMsgs_bothLevels(edgeImitator);
-        Assert.assertTrue(popDomainMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, CUSTOMER_EDGE_DOMAIN, tenantId, edgeCustomerId));
-        Assert.assertTrue(popCustomerMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Edge Customer", "TENANT", tenantId.getId()));
-        Assert.assertTrue(popCustomerMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "[Edge Customer] " + PUBLIC_CUSTOMER_SUFFIX, "CUSTOMER", edgeCustomerId.getId()));
-        Assert.assertTrue(popRoleMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Entity Group Public User", RoleType.GROUP));
-        Assert.assertTrue(popRoleMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Public User", RoleType.GENERIC));
-        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Public Users", EntityType.USER, EntityType.CUSTOMER));
-        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "CustomerDeviceGroup", EntityType.DEVICE, EntityType.CUSTOMER));
-        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "CustomerAssetGroup", EntityType.ASSET, EntityType.CUSTOMER));
-        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Customer Users", EntityType.USER, EntityType.CUSTOMER));
-        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Customer Administrators", EntityType.USER, EntityType.CUSTOMER));
-        Assert.assertTrue(popGroupPermissionMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, customerUsersGroupId, customerUserRoleId));
-        Assert.assertTrue(popGroupPermissionMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, customerAdministratorsGroupId, customerAdministratorRoleId));
-        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "test"));
-        Assert.assertTrue(popAssetMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Sync Test EG Edge Customer Asset 1"));
-        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
-        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
-        Assert.assertTrue(popDeviceMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Sync Test EG Edge Customer Device 1"));
-        Assert.assertTrue(popDeviceCredentialsMsg(edgeImitator.getDownlinkMsgs(), savedDevice.getId()));
+        Assert.assertTrue(popDomainMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, CUSTOMER_EDGE_DOMAIN, tenantId, edgeCustomerId));
+        Assert.assertTrue(popCustomerMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Edge Customer", "TENANT", tenantId.getId()));
+        Assert.assertTrue(popCustomerMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "[Edge Customer] " + PUBLIC_CUSTOMER_SUFFIX, "CUSTOMER", edgeCustomerId.getId()));
+        Assert.assertTrue(popRoleMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Entity Group Public User", RoleType.GROUP));
+        Assert.assertTrue(popRoleMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Public User", RoleType.GENERIC));
+        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Public Users", EntityType.USER, EntityType.CUSTOMER));
+        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "CustomerDeviceGroup", EntityType.DEVICE, EntityType.CUSTOMER));
+        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "CustomerAssetGroup", EntityType.ASSET, EntityType.CUSTOMER));
+        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Customer Users", EntityType.USER, EntityType.CUSTOMER));
+        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Customer Administrators", EntityType.USER, EntityType.CUSTOMER));
+        Assert.assertTrue(popGroupPermissionMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, customerUsersGroupId, customerUserRoleId));
+        Assert.assertTrue(popGroupPermissionMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, customerAdministratorsGroupId, customerAdministratorRoleId));
+        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "test"));
+        Assert.assertTrue(popAssetMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Sync Test EG Edge Customer Asset 1"));
+        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
+        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
+        Assert.assertTrue(popDeviceMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Sync Test EG Edge Customer Device 1"));
+        Assert.assertTrue(popDeviceCredentialsMsg(edgeImitator.getDownlinkMsgsDeque(), savedDevice.getId()));
     }
 
     private void verifyFetchersMsgs_bothLevels(EdgeImitator edgeImitator) {
@@ -1793,42 +1793,42 @@ public class EdgeControllerTest extends AbstractControllerTest {
         EntityGroupId tenantUsersGroupId = findEntityGroupId(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Tenant Users", EntityType.USER, EntityType.TENANT);
         EntityGroupId tenantAdministratorsGroupId = findEntityGroupId(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Tenant Administrators", EntityType.USER, EntityType.TENANT);
 
-        Assert.assertTrue(popTenantMsg(edgeImitator.getDownlinkMsgs(), tenantId));
-        Assert.assertTrue(popTenantProfileMsg(edgeImitator.getDownlinkMsgs(), tenantProfileId));
-        Assert.assertTrue(popQueueMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Main"));
-        Assert.assertTrue(popAdminSettingsMsg(edgeImitator.getDownlinkMsgs(), "general"));
-        Assert.assertTrue(popAdminSettingsMsg(edgeImitator.getDownlinkMsgs(), "mail"));
-        Assert.assertTrue(popAdminSettingsMsg(edgeImitator.getDownlinkMsgs(), "connectivity"));
-        Assert.assertTrue(popAdminSettingsMsg(edgeImitator.getDownlinkMsgs(), "jwt"));
-        Assert.assertTrue(popRuleChainMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Edge Root Rule Chain"));
-        Assert.assertTrue(popRuleChainMetadataMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, getEdgeRootRuleChainId(edgeImitator)));
-        Assert.assertTrue(popRoleMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Tenant User", RoleType.GENERIC));
-        Assert.assertTrue(popRoleMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Tenant Administrator", RoleType.GENERIC));
-        Assert.assertTrue(popRoleMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Customer User", RoleType.GENERIC));
-        Assert.assertTrue(popRoleMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Customer Administrator", RoleType.GENERIC));
-        Assert.assertTrue(popDomainMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, SYSADMIN_EDGE_DOMAIN, TenantId.SYS_TENANT_ID, new CustomerId(CustomerId.NULL_UUID)));
-        Assert.assertTrue(popDomainMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, TENANT_EDGE_DOMAIN, tenantId, new CustomerId(CustomerId.NULL_UUID)));
-        Assert.assertTrue(popWhiteLabeling(edgeImitator.getDownlinkMsgs(), WhiteLabelingType.GENERAL));
-        Assert.assertTrue(popWhiteLabeling(edgeImitator.getDownlinkMsgs(), WhiteLabelingType.LOGIN));
-        Assert.assertTrue(popCustomerMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Public", "TENANT", tenantId.getId()));
-        Assert.assertTrue(popRoleMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Entity Group Public User", RoleType.GROUP));
-        Assert.assertTrue(popRoleMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Public User", RoleType.GENERIC));
-        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Public Users", EntityType.USER, EntityType.CUSTOMER));
-        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
-        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
-        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
-        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
-        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "test"));
-        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Tenant Users", EntityType.USER, EntityType.TENANT));
-        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Tenant Administrators", EntityType.USER, EntityType.TENANT));
-        Assert.assertTrue(popGroupPermissionMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, tenantUsersGroupId, tenantUserRoleId));
-        Assert.assertTrue(popGroupPermissionMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, tenantAdministratorsGroupId, tenantAdministratorRoleId));
-        Assert.assertTrue(popEncryptionKeyUpdateMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, tenantId));
-        Assert.assertTrue(popUserCredentialsMsg(edgeImitator.getDownlinkMsgs(), currentUserId));
-        Assert.assertTrue(popUserMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, TENANT_ADMIN_EMAIL, Authority.TENANT_ADMIN));
-        Assert.assertTrue(popCustomTranslation(edgeImitator.getDownlinkMsgs(), "en_US")); // sysadmin custom translation
-        Assert.assertTrue(popCustomTranslation(edgeImitator.getDownlinkMsgs(), "es_ES")); // tenant custom translation
-        Assert.assertTrue(popSyncCompletedMsg(edgeImitator.getDownlinkMsgs()));
+        Assert.assertTrue(popTenantMsg(edgeImitator.getDownlinkMsgsDeque(), tenantId));
+        Assert.assertTrue(popTenantProfileMsg(edgeImitator.getDownlinkMsgsDeque(), tenantProfileId));
+        Assert.assertTrue(popQueueMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Main"));
+        Assert.assertTrue(popAdminSettingsMsg(edgeImitator.getDownlinkMsgsDeque(), "general"));
+        Assert.assertTrue(popAdminSettingsMsg(edgeImitator.getDownlinkMsgsDeque(), "mail"));
+        Assert.assertTrue(popAdminSettingsMsg(edgeImitator.getDownlinkMsgsDeque(), "connectivity"));
+        Assert.assertTrue(popAdminSettingsMsg(edgeImitator.getDownlinkMsgsDeque(), "jwt"));
+        Assert.assertTrue(popRuleChainMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Edge Root Rule Chain"));
+        Assert.assertTrue(popRuleChainMetadataMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, getEdgeRootRuleChainId(edgeImitator)));
+        Assert.assertTrue(popRoleMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Tenant User", RoleType.GENERIC));
+        Assert.assertTrue(popRoleMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Tenant Administrator", RoleType.GENERIC));
+        Assert.assertTrue(popRoleMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Customer User", RoleType.GENERIC));
+        Assert.assertTrue(popRoleMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Customer Administrator", RoleType.GENERIC));
+        Assert.assertTrue(popDomainMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, SYSADMIN_EDGE_DOMAIN, TenantId.SYS_TENANT_ID, new CustomerId(CustomerId.NULL_UUID)));
+        Assert.assertTrue(popDomainMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, TENANT_EDGE_DOMAIN, tenantId, new CustomerId(CustomerId.NULL_UUID)));
+        Assert.assertTrue(popWhiteLabeling(edgeImitator.getDownlinkMsgsDeque(), WhiteLabelingType.GENERAL));
+        Assert.assertTrue(popWhiteLabeling(edgeImitator.getDownlinkMsgsDeque(), WhiteLabelingType.LOGIN));
+        Assert.assertTrue(popCustomerMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Public", "TENANT", tenantId.getId()));
+        Assert.assertTrue(popRoleMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Entity Group Public User", RoleType.GROUP));
+        Assert.assertTrue(popRoleMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Public User", RoleType.GENERIC));
+        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Public Users", EntityType.USER, EntityType.CUSTOMER));
+        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
+        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
+        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
+        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
+        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "test"));
+        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Tenant Users", EntityType.USER, EntityType.TENANT));
+        Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Tenant Administrators", EntityType.USER, EntityType.TENANT));
+        Assert.assertTrue(popGroupPermissionMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, tenantUsersGroupId, tenantUserRoleId));
+        Assert.assertTrue(popGroupPermissionMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, tenantAdministratorsGroupId, tenantAdministratorRoleId));
+        Assert.assertTrue(popEncryptionKeyUpdateMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, tenantId));
+        Assert.assertTrue(popUserCredentialsMsg(edgeImitator.getDownlinkMsgsDeque(), currentUserId));
+        Assert.assertTrue(popUserMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, TENANT_ADMIN_EMAIL, Authority.TENANT_ADMIN));
+        Assert.assertTrue(popCustomTranslation(edgeImitator.getDownlinkMsgsDeque(), "en_US")); // sysadmin custom translation
+        Assert.assertTrue(popCustomTranslation(edgeImitator.getDownlinkMsgsDeque(), "es_ES")); // tenant custom translation
+        Assert.assertTrue(popSyncCompletedMsg(edgeImitator.getDownlinkMsgsDeque()));
     }
 
     @Test
