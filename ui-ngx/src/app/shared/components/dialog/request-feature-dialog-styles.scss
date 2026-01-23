@@ -107,6 +107,13 @@
         align-items: center;
         gap: 8px;
 
+        @media #{$mat-gt-md} {
+          flex-grow: 1;
+        }
+        @media #{$mat-gt-xl} {
+          flex-grow: 0;
+        }
+
         .feature-title-text {
           font-size: 16px;
           font-style: normal;
