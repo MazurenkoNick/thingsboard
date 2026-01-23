@@ -156,7 +156,7 @@ public class LwM2MTestClient {
     private Map<LwM2MClientState, Integer> clientDtlsCid;
     private LwM2mUplinkMsgHandler defaultLwM2mUplinkMsgHandlerTest;
     private LwM2mClientContext clientContext;
-    private LwM2mTemperatureSensor lwM2mTemperatureSensor12;
+    private LwM2mTemperatureSensor lwM2MTemperatureSensor12;
     private String deviceIdStr;
     private int clientPort;
 
@@ -205,8 +205,8 @@ public class LwM2MTestClient {
         locationParams.getPos();
         initializer.setInstancesForObject(LOCATION, new LwM2mLocation(locationParams.getLatitude(), locationParams.getLongitude(), locationParams.getScaleFactor(), executor, OBJECT_INSTANCE_ID_0));
         LwM2mTemperatureSensor lwM2mTemperatureSensor0 = new LwM2mTemperatureSensor(executor, OBJECT_INSTANCE_ID_0);
-        lwM2mTemperatureSensor12 = new LwM2mTemperatureSensor(executor, OBJECT_INSTANCE_ID_12);
-        initializer.setInstancesForObject(TEMPERATURE_SENSOR, lwM2mTemperatureSensor0, lwM2mTemperatureSensor12);
+        lwM2MTemperatureSensor12 = new LwM2mTemperatureSensor(executor, OBJECT_INSTANCE_ID_12);
+        initializer.setInstancesForObject(TEMPERATURE_SENSOR, lwM2mTemperatureSensor0, lwM2MTemperatureSensor12);
 
         List<LwM2mObjectEnabler> enablers = initializer.createAll();
 
@@ -493,7 +493,7 @@ public class LwM2MTestClient {
             if (isStartLw) {
                 this.awaitClientAfterStartConnectLw();
             }
-            lwM2mTemperatureSensor12.setLeshanClient(leshanClient);
+            lwM2MTemperatureSensor12.setLeshanClient(leshanClient);
             fwLwM2MDevice.setLeshanClient(leshanClient);
         }
     }
