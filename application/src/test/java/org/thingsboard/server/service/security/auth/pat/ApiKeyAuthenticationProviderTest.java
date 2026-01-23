@@ -144,7 +144,7 @@ public class ApiKeyAuthenticationProviderTest extends AbstractControllerTest {
     }
 
     @Test
-    public void testUnauthorizedWhenUserCredentialsDisabled() throws Exception {
+    public void testAuthorizedWhenUserCredentialsDisabled() throws Exception {
         User newUser = new User();
         newUser.setAuthority(Authority.TENANT_ADMIN);
         newUser.setTenantId(tenantId);
@@ -165,7 +165,7 @@ public class ApiKeyAuthenticationProviderTest extends AbstractControllerTest {
         doPost("/api/user/" + savedUser.getId().getId() + "/userCredentialsEnabled?userCredentialsEnabled=false").andExpect(status().isOk());
 
         await().atMost(5, TimeUnit.SECONDS)
-                .untilAsserted(() -> doGetWithApiKey("/api/admin/repositorySettings/exists").andExpect(status().isUnauthorized()));
+                .untilAsserted(() -> doGetWithApiKey("/api/admin/repositorySettings/exists").andExpect(status().isOk()));
 
         resetApiKey();
         doDelete("/api/apiKey/" + testApiKey.getId()).andExpect(status().isOk());
