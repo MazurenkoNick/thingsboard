@@ -52,7 +52,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.util.TestSocketUtils;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.ThingsBoardExecutors;
 import org.thingsboard.server.common.data.AdminSettings;
@@ -140,6 +143,7 @@ import org.thingsboard.server.service.edge.instructions.EdgeUpgradeInstructionsS
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -166,7 +170,13 @@ import static org.thingsboard.server.edge.AbstractEdgeTest.CONNECT_MESSAGE_COUNT
 public class EdgeControllerTest extends AbstractControllerTest {
 
     public static final String EDGE_HOST = "localhost";
-    public static final int EDGE_PORT = 7070;
+    public static final int EDGE_PORT = TestSocketUtils.findAvailableTcpPort();
+    @DynamicPropertySource
+    static void props(DynamicPropertyRegistry registry) {
+        log.debug("edges.rpc.port = {}", EDGE_PORT);
+        registry.add("edges.rpc.port", () -> EDGE_PORT);
+    }
+
     private static final String SYSADMIN_EDGE_DOMAIN = "sysadmin.edge.domain";
     private static final String TENANT_EDGE_DOMAIN = "tenant.edge.domain";
     private static final String CUSTOMER_EDGE_DOMAIN = "customer.edge.domain";
@@ -976,11 +986,11 @@ public class EdgeControllerTest extends AbstractControllerTest {
 
         verifyFetchersMsgs(edgeImitator, savedDevice);
         // verify queue msgs
-        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
-        Assert.assertTrue(popDeviceMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Test Sync Edge Device 1"));
-        Assert.assertTrue(popDeviceCredentialsMsg(edgeImitator.getDownlinkMsgs(), savedDevice.getId()));
-        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
-        Assert.assertTrue(popAssetMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Test Sync Edge Asset 1"));
+        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
+        Assert.assertTrue(popDeviceMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Test Sync Edge Device 1"));
+        Assert.assertTrue(popDeviceCredentialsMsg(edgeImitator.getDownlinkMsgsDeque(), savedDevice.getId()));
+        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
+        Assert.assertTrue(popAssetMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Test Sync Edge Asset 1"));
         printQueueMsgsIfNotEmpty(edgeImitator);
 
         // 27 connect messages
@@ -1060,32 +1070,32 @@ public class EdgeControllerTest extends AbstractControllerTest {
     }
 
     private void verifyFetchersMsgs(EdgeImitator edgeImitator, Device savedDevice) {
-        Assert.assertTrue(popQueueMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Main"));
-        Assert.assertTrue(popRuleChainMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Edge Root Rule Chain"));
-        Assert.assertTrue(popRuleChainMetadataMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, getEdgeRootRuleChainId(edgeImitator)));
-        Assert.assertTrue(popAdminSettingsMsg(edgeImitator.getDownlinkMsgs(), "general"));
-        Assert.assertTrue(popAdminSettingsMsg(edgeImitator.getDownlinkMsgs(), "mail"));
-        Assert.assertTrue(popAdminSettingsMsg(edgeImitator.getDownlinkMsgs(), "connectivity"));
-        Assert.assertTrue(popAdminSettingsMsg(edgeImitator.getDownlinkMsgs(), "jwt"));
-        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
-        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
-        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
-        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
-        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
-        Assert.assertTrue(popUserCredentialsMsg(edgeImitator.getDownlinkMsgs(), currentUserId));
-        Assert.assertTrue(popUserMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, TENANT_ADMIN_EMAIL, Authority.TENANT_ADMIN));
-        Assert.assertTrue(popCustomerMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Public"));
-        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
-        Assert.assertTrue(popDeviceMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Test Sync Edge Device 1"));
-        Assert.assertTrue(popDeviceCredentialsMsg(edgeImitator.getDownlinkMsgs(), savedDevice.getId()));
-        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
-        Assert.assertTrue(popAssetMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Test Sync Edge Asset 1"));
-        Assert.assertTrue(popTenantMsg(edgeImitator.getDownlinkMsgs(), tenantId));
-        Assert.assertTrue(popTenantProfileMsg(edgeImitator.getDownlinkMsgs(), tenantProfileId));
-        Assert.assertTrue(popSyncCompletedMsg(edgeImitator.getDownlinkMsgs()));
+        Assert.assertTrue(popQueueMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Main"));
+        Assert.assertTrue(popRuleChainMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Edge Root Rule Chain"));
+        Assert.assertTrue(popRuleChainMetadataMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, getEdgeRootRuleChainId(edgeImitator)));
+        Assert.assertTrue(popAdminSettingsMsg(edgeImitator.getDownlinkMsgsDeque(), "general"));
+        Assert.assertTrue(popAdminSettingsMsg(edgeImitator.getDownlinkMsgsDeque(), "mail"));
+        Assert.assertTrue(popAdminSettingsMsg(edgeImitator.getDownlinkMsgsDeque(), "connectivity"));
+        Assert.assertTrue(popAdminSettingsMsg(edgeImitator.getDownlinkMsgsDeque(), "jwt"));
+        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
+        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
+        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
+        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
+        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
+        Assert.assertTrue(popUserCredentialsMsg(edgeImitator.getDownlinkMsgsDeque(), currentUserId));
+        Assert.assertTrue(popUserMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, TENANT_ADMIN_EMAIL, Authority.TENANT_ADMIN));
+        Assert.assertTrue(popCustomerMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Public"));
+        Assert.assertTrue(popDeviceProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
+        Assert.assertTrue(popDeviceMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Test Sync Edge Device 1"));
+        Assert.assertTrue(popDeviceCredentialsMsg(edgeImitator.getDownlinkMsgsDeque(), savedDevice.getId()));
+        Assert.assertTrue(popAssetProfileMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "default"));
+        Assert.assertTrue(popAssetMsg(edgeImitator.getDownlinkMsgsDeque(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Test Sync Edge Asset 1"));
+        Assert.assertTrue(popTenantMsg(edgeImitator.getDownlinkMsgsDeque(), tenantId));
+        Assert.assertTrue(popTenantProfileMsg(edgeImitator.getDownlinkMsgsDeque(), tenantProfileId));
+        Assert.assertTrue(popSyncCompletedMsg(edgeImitator.getDownlinkMsgsDeque()));
     }
 
-    private boolean popQueueMsg(List<AbstractMessage> messages, UpdateMsgType msgType, String name) {
+    private boolean popQueueMsg(Deque<AbstractMessage> messages, UpdateMsgType msgType, String name) {
         for (AbstractMessage message : messages) {
             if (message instanceof QueueUpdateMsg queueUpdateMsg) {
                 Queue queue = JacksonUtil.fromString(queueUpdateMsg.getEntity(), Queue.class, true);
@@ -1099,7 +1109,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popRuleChainMsg(List<AbstractMessage> messages, UpdateMsgType msgType, String name) {
+    private boolean popRuleChainMsg(Deque<AbstractMessage> messages, UpdateMsgType msgType, String name) {
         for (AbstractMessage message : messages) {
             if (message instanceof RuleChainUpdateMsg ruleChainUpdateMsg) {
                 RuleChain ruleChain = JacksonUtil.fromString(ruleChainUpdateMsg.getEntity(), RuleChain.class, true);
@@ -1115,7 +1125,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popRuleChainMetadataMsg(List<AbstractMessage> messages, UpdateMsgType msgType, RuleChainId ruleChainId) {
+    private boolean popRuleChainMetadataMsg(Deque<AbstractMessage> messages, UpdateMsgType msgType, RuleChainId ruleChainId) {
         for (AbstractMessage message : messages) {
             if (message instanceof RuleChainMetadataUpdateMsg ruleChainMetadataUpdateMsg) {
                 RuleChainMetaData ruleChainMetaData = JacksonUtil.fromString(ruleChainMetadataUpdateMsg.getEntity(), RuleChainMetaData.class, true);
@@ -1130,7 +1140,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popAdminSettingsMsg(List<AbstractMessage> messages, String key) {
+    private boolean popAdminSettingsMsg(Deque<AbstractMessage> messages, String key) {
         for (AbstractMessage message : messages) {
             if (message instanceof AdminSettingsUpdateMsg adminSettingsUpdateMsg) {
                 AdminSettings adminSettings = JacksonUtil.fromString(adminSettingsUpdateMsg.getEntity(), AdminSettings.class, true);
@@ -1144,7 +1154,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popDeviceProfileMsg(List<AbstractMessage> messages, UpdateMsgType msgType, String name) {
+    private boolean popDeviceProfileMsg(Deque<AbstractMessage> messages, UpdateMsgType msgType, String name) {
         for (AbstractMessage message : messages) {
             if (message instanceof DeviceProfileUpdateMsg deviceProfileUpdateMsg) {
                 DeviceProfile deviceProfile = JacksonUtil.fromString(deviceProfileUpdateMsg.getEntity(), DeviceProfile.class, true);
@@ -1159,7 +1169,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popDeviceMsg(List<AbstractMessage> messages, UpdateMsgType msgType, String name) {
+    private boolean popDeviceMsg(Deque<AbstractMessage> messages, UpdateMsgType msgType, String name) {
         for (AbstractMessage message : messages) {
             if (message instanceof DeviceUpdateMsg deviceUpdateMsg) {
                 Device device = JacksonUtil.fromString(deviceUpdateMsg.getEntity(), Device.class, true);
@@ -1174,7 +1184,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popDeviceCredentialsMsg(List<AbstractMessage> messages, DeviceId deviceId) {
+    private boolean popDeviceCredentialsMsg(Deque<AbstractMessage> messages, DeviceId deviceId) {
         for (AbstractMessage message : messages) {
             if (message instanceof DeviceCredentialsUpdateMsg deviceCredentialsUpdateMsg) {
                 DeviceCredentials deviceCredentials = JacksonUtil.fromString(deviceCredentialsUpdateMsg.getEntity(), DeviceCredentials.class, true);
@@ -1188,7 +1198,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popAssetProfileMsg(List<AbstractMessage> messages, UpdateMsgType msgType, String name) {
+    private boolean popAssetProfileMsg(Deque<AbstractMessage> messages, UpdateMsgType msgType, String name) {
         for (AbstractMessage message : messages) {
             if (message instanceof AssetProfileUpdateMsg assetProfileUpdateMsg) {
                 AssetProfile assetProfile = JacksonUtil.fromString(assetProfileUpdateMsg.getEntity(), AssetProfile.class, true);
@@ -1203,7 +1213,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popAssetMsg(List<AbstractMessage> messages, UpdateMsgType msgType, String name) {
+    private boolean popAssetMsg(Deque<AbstractMessage> messages, UpdateMsgType msgType, String name) {
         for (AbstractMessage message : messages) {
             if (message instanceof AssetUpdateMsg assetUpdateMsg) {
                 Asset asset = JacksonUtil.fromString(assetUpdateMsg.getEntity(), Asset.class, true);
@@ -1218,7 +1228,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popUserCredentialsMsg(List<AbstractMessage> messages, UserId userId) {
+    private boolean popUserCredentialsMsg(Deque<AbstractMessage> messages, UserId userId) {
         for (AbstractMessage message : messages) {
             if (message instanceof UserCredentialsUpdateMsg userCredentialsUpdateMsg) {
                 UserCredentials userCredentials = JacksonUtil.fromString(userCredentialsUpdateMsg.getEntity(), UserCredentials.class, true);
@@ -1232,7 +1242,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popUserMsg(List<AbstractMessage> messages, UpdateMsgType msgType, String email, Authority authority) {
+    private boolean popUserMsg(Deque<AbstractMessage> messages, UpdateMsgType msgType, String email, Authority authority) {
         for (AbstractMessage message : messages) {
             if (message instanceof UserUpdateMsg userUpdateMsg) {
                 User user = JacksonUtil.fromString(userUpdateMsg.getEntity(), User.class, true);
@@ -1248,7 +1258,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popCustomerMsg(List<AbstractMessage> messages, UpdateMsgType msgType, String title) {
+    private boolean popCustomerMsg(Deque<AbstractMessage> messages, UpdateMsgType msgType, String title) {
         for (AbstractMessage message : messages) {
             if (message instanceof CustomerUpdateMsg customerUpdateMsg) {
                 Customer customer = JacksonUtil.fromString(customerUpdateMsg.getEntity(), Customer.class, true);
@@ -1416,7 +1426,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
-    private boolean popTenantProfileMsg(List<AbstractMessage> messages, TenantProfileId tenantProfileId) {
+    private boolean popTenantProfileMsg(Deque<AbstractMessage> messages, TenantProfileId tenantProfileId) {
         for (AbstractMessage message : messages) {
             if (message instanceof TenantProfileUpdateMsg tenantProfileUpdateMsg) {
                 TenantProfile tenantProfile = JacksonUtil.fromString(tenantProfileUpdateMsg.getEntity(), TenantProfile.class, true);
