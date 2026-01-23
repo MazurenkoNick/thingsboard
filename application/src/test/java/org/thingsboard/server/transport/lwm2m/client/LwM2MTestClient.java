@@ -459,14 +459,15 @@ public class LwM2MTestClient {
         destroySafe(swLwM2MDevice);
         destroySafe(lwM2MBinaryAppDataContainer);
         destroySafe(lwM2MTemperatureSensor);
+        destroySafe(lwM2MTemperatureSensor12);
 
         lwM2MDevice = null;
         fwLwM2MDevice = null;
         swLwM2MDevice = null;
         lwM2MBinaryAppDataContainer = null;
         lwM2MTemperatureSensor = null;
+        lwM2MTemperatureSensor12 = null;
     }
-
 
     private void destroySafe(Object obj) {
         if (obj == null) return;
