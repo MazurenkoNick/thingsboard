@@ -44,7 +44,7 @@ import org.thingsboard.server.common.msg.session.FeatureType;
 @Slf4j
 public abstract class AbstractCoapClientTest extends AbstractContainerTest{
 
-    private static final String COAP_BASE_URL = "coap://localhost:5683/api/v1/";
+    private static final String CONTAINER_COAP_BASE_URL = "coap://localhost:5683/api/v1/";
     private static final long CLIENT_REQUEST_TIMEOUT = 60000L;
 
 
@@ -70,7 +70,7 @@ public abstract class AbstractCoapClientTest extends AbstractContainerTest{
     protected byte[] createCoapClientAndPublish(String deviceName) throws Exception {
         String provisionRequestMsg = createTestProvisionMessage(deviceName);
         Configuration.addDefaultModule(MODULE_DEFINITIONS_PROVIDER);
-        String featureTokenUrl = COAP_BASE_URL + FeatureType.PROVISION.name().toLowerCase();
+        String featureTokenUrl = CONTAINER_COAP_BASE_URL + FeatureType.PROVISION.name().toLowerCase();
         client = new CoapClient(featureTokenUrl);
         try {
             return client.setTimeout(CLIENT_REQUEST_TIMEOUT)

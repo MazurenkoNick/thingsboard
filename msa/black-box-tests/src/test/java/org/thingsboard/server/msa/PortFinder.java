@@ -28,68 +28,30 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.edqs.util;
+package org.thingsboard.server.msa;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.rocksdb.Options;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksIterator;
-import org.rocksdb.WriteOptions;
 
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.function.BiConsumer;
+import java.io.IOException;
+import java.net.DatagramSocket;
+import java.net.SocketException;
 
 @Slf4j
-public class TbRocksDb {
-
-    protected final String path;
-    private final Options dbOptions;
-    private final WriteOptions writeOptions;
-    protected RocksDB db;
-
-    static {
-        RocksDB.loadLibrary();
-    }
-
-    public TbRocksDb(String path, Options dbOptions, WriteOptions writeOptions) {
-        this.path = path;
-        this.dbOptions = dbOptions;
-        this.writeOptions = writeOptions;
-    }
-
-    @SneakyThrows
-    public void init() {
-        log.debug("RocksDB init in {}", path);
-        Files.createDirectories(Path.of(path).getParent());
-        db = RocksDB.open(dbOptions, path);
-    }
-
-    @SneakyThrows
-    public void put(String key, byte[] value) {
-        db.put(writeOptions, key.getBytes(StandardCharsets.UTF_8), value);
-    }
-
-    public void forEach(BiConsumer<String, byte[]> processor) {
-        try (RocksIterator iterator = db.newIterator()) {
-            for (iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
-                String key = new String(iterator.key(), StandardCharsets.UTF_8);
-                processor.accept(key, iterator.value());
-            }
+public class PortFinder {
+    public static int findAvailableUdpPort() {
+        try (DatagramSocket socket = new DatagramSocket(0)) {
+            return socket.getLocalPort();
+        } catch (SocketException e) {
+            throw new IllegalStateException("No available UDP ports found", e);
         }
     }
 
-    @SneakyThrows
-    public void delete(String key) {
-        db.delete(writeOptions, key.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public void close() {
-        if (db != null) {
-            db.close();
+    public static boolean isUDPPortAvailable(int port) {
+        try (DatagramSocket socket = new DatagramSocket(port)) {
+            return true;
+        } catch (IOException e) {
+            log.debug("Failed to open UDP port {}", port, e);
+            return false;
         }
     }
-
 }

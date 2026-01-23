@@ -52,6 +52,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultActions;
 import org.thingsboard.common.util.ThingsBoardExecutors;
@@ -95,6 +97,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.thingsboard.server.dao.model.ModelConstants.NULL_UUID;
+import static org.thingsboard.server.transport.mqtt.AbstractMqttIntegrationTest.MQTT_PORT;
+import static org.thingsboard.server.transport.mqtt.AbstractMqttIntegrationTest.MQTT_URL;
 
 @TestPropertySource(properties = {
         "transport.mqtt.enabled=true",
@@ -104,6 +108,12 @@ import static org.thingsboard.server.dao.model.ModelConstants.NULL_UUID;
 @ContextConfiguration(classes = {EntityViewControllerTest.Config.class})
 @DaoSqlTest
 public class EntityViewControllerTest extends AbstractControllerTest {
+    @DynamicPropertySource
+    static void props(DynamicPropertyRegistry registry) {
+        log.warn("transport.mqtt.bind_port = {}", MQTT_PORT);
+        registry.add("transport.mqtt.bind_port", () -> MQTT_PORT);
+    }
+
     static final TypeReference<PageData<EntityView>> PAGE_DATA_ENTITY_VIEW_TYPE_REF = new TypeReference<>() {
     };
 
@@ -447,7 +457,7 @@ public class EntityViewControllerTest extends AbstractControllerTest {
 
     private void uploadTelemetry(String strKvs, String accessToken) throws Exception {
         String clientId = MqttAsyncClient.generateClientId();
-        MqttAsyncClient client = new MqttAsyncClient("tcp://localhost:1883", clientId, new MemoryPersistence());
+        MqttAsyncClient client = new MqttAsyncClient(MQTT_URL, clientId, new MemoryPersistence());
 
         MqttConnectOptions options = new MqttConnectOptions();
         options.setUserName(accessToken);
@@ -498,7 +508,7 @@ public class EntityViewControllerTest extends AbstractControllerTest {
         assertNotNull(accessToken);
 
         String clientId = MqttAsyncClient.generateClientId();
-        MqttAsyncClient client = new MqttAsyncClient("tcp://localhost:1883", clientId, new MemoryPersistence());
+        MqttAsyncClient client = new MqttAsyncClient(MQTT_URL, clientId, new MemoryPersistence());
 
         MqttConnectOptions options = new MqttConnectOptions();
         options.setUserName(accessToken);
