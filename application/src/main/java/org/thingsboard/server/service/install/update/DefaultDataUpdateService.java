@@ -36,23 +36,16 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
-import org.thingsboard.common.util.JacksonUtil;
-import org.thingsboard.server.common.data.AttributeScope;
 import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.EntityType;
-import org.thingsboard.server.common.data.ObjectType;
-import org.thingsboard.server.common.data.ResourceType;
 import org.thingsboard.server.common.data.ShortCustomerInfo;
-import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
-import org.thingsboard.server.common.data.edqs.EdqsState.EdqsSyncStatus;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DashboardId;
@@ -63,18 +56,13 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.integration.AbstractIntegration;
 import org.thingsboard.server.common.data.integration.Integration;
-import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
-import org.thingsboard.server.common.data.kv.JsonDataEntry;
-import org.thingsboard.server.common.data.kv.KvEntry;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.security.Authority;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
 import org.thingsboard.server.dao.asset.AssetService;
-import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.device.DeviceService;
@@ -83,15 +71,12 @@ import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.relation.RelationService;
-import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.dao.rule.RuleChainService;
 import org.thingsboard.server.dao.tenant.TenantService;
-import org.thingsboard.server.dao.trendz.TrendzSettingsService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
 import org.thingsboard.server.service.component.ComponentDiscoveryService;
 import org.thingsboard.server.service.component.RuleNodeClassInfo;
-import org.thingsboard.server.service.edqs.EdqsSyncState;
 import org.thingsboard.server.service.install.DbUpgradeExecutorService;
 import org.thingsboard.server.service.install.SystemDataLoaderService;
 import org.thingsboard.server.utils.TbNodeUpgradeUtils;
@@ -103,9 +88,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -128,16 +111,12 @@ public class DefaultDataUpdateService implements DataUpdateService {
     private final CustomerService customerService;
     private final AssetService assetService;
     private final DeviceService deviceService;
-    private final AttributesService attributesService;
     private final DashboardService dashboardService;
     private final EntityViewService entityViewService;
     private final EdgeService edgeService;
     private final SystemDataLoaderService systemDataLoaderService;
     private final ComponentDiscoveryService componentDiscoveryService;
     private final DbUpgradeExecutorService executorService;
-    private final ResourceService resourceService;
-    private final TrendzUpdater trendzUpdater;
-    private final TrendzSettingsService trendzSettingsService;
 
     @Override
     public void updateData(boolean fromCe) throws Exception {
@@ -146,17 +125,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
             updateDataFromCe();
         } else {
             //TODO: should be cleaned after each release
-            EdqsSyncState state = attributesService.find(TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID, AttributeScope.SERVER_SCOPE, "edqsSyncState")
-                    .get(15, TimeUnit.SECONDS)
-                    .flatMap(KvEntry::getJsonValue)
-                    .map(value -> JacksonUtil.fromString(value, EdqsSyncState.class))
-                    .orElse(null);
-            if (state != null && state.getStatus() == EdqsSyncStatus.FINISHED) {
-                EdqsSyncState edqsSyncState = new EdqsSyncState(EdqsSyncStatus.REQUESTED, Set.of(ObjectType.REPORT_TEMPLATE, ObjectType.REPORT));
-                attributesService.save(TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID, AttributeScope.SERVER_SCOPE,
-                                new BaseAttributeKvEntry(new JsonDataEntry("edqsSyncState", JacksonUtil.toString(edqsSyncState)), System.currentTimeMillis()))
-                        .get(15, TimeUnit.SECONDS);
-            }
+
         }
         log.info("Data updated.");
     }
@@ -165,8 +134,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
     @Transactional
     public void postUpdateData() throws Exception {
         //TODO: should be cleaned after each release
-        migrateTenantTrendzWidgetBundleToSysadminLevel();
-        migrateTenantTrendzJsModuleToSysadminLevel();
+
     }
 
     private void updateDataFromCe() throws Exception {
@@ -209,79 +177,6 @@ public class DefaultDataUpdateService implements DataUpdateService {
         }
         log.info("Finished rule nodes upgrade. Upgraded rule nodes count: {}", totalRuleNodesUpgraded);
     }
-
-
-    // Replacing old if safe
-    private void migrateTenantTrendzWidgetBundleToSysadminLevel() throws Exception {
-        log.info("Starting Trendz widget bundle migration ...");
-
-        String bundleAlias = "trendz_bundle";
-        Set<String> fqns = Set.of(
-                "trendz_builder",
-                "trendz_view_latest",
-                "trendz_view_static",
-                "trendz_view_latest_chat"
-        );
-        Set<String> fullFqns = fqns.stream()
-                .map(fqn -> bundleAlias + "." + fqn)
-                .collect(Collectors.toSet());
-
-        Map<String, String> oldToNew = Map.of(
-                "trendz_bundle", "advanced_analytics",
-                "trendz_builder", "advanced_analytics_builder",
-                "trendz_view_latest", "advanced_analytics_view",
-                "trendz_view_static", "advanced_analytics_view",
-                "trendz_view_latest_chat", "advanced_analytics_chat_assistant"
-        );
-
-        this.trendzUpdater.labelWidgetTypesAsDeprecatedByFqns(fullFqns);
-        this.trendzUpdater.findUniqueTrendzBaseUrlFromWidgetTypes(fullFqns)
-                .ifPresentOrElse(baseUrl -> {
-                    String urlString = baseUrl.toString();
-                    log.info("Found unique Trendz URL '{}'. Migrating dashboards to use system Trendz widgets", urlString);
-
-                    TrendzSettings trendzSettings = this.trendzSettingsService.findTrendzSettings();
-                    if (trendzSettings == null) {
-                        TrendzSettings newSettings = this.trendzUpdater.createSettings(urlString, null);
-                        this.trendzSettingsService.saveTrendzSettings(newSettings);
-                        log.info("Trendz Setting is not found for Sysadmin, saving a new one: {}", newSettings);
-                    } else {
-                        log.info("Trendz Setting already present for Sysadmin, keep that setting without changes: {}", trendzSettings);
-                    }
-
-                    for (String fullFqn : fullFqns) {
-                        String fqn = StringUtils.substringAfterLast(fullFqn, ".");
-                        String tenantFqnOld = "tenant." + fullFqn;
-                        String tenantFqnNew = "tenant." + fqn;
-                        String systemFqn = "system." + oldToNew.getOrDefault(fqn, fqn);
-                        this.trendzUpdater.replaceWidgetTypeFullFqn(tenantFqnNew, systemFqn);
-                        this.trendzUpdater.replaceWidgetTypeFullFqn(tenantFqnOld, systemFqn);
-                        this.trendzUpdater.setTrendzWidgetsTypeLatestBySystemFqn(systemFqn);
-                    }
-                }, () -> {
-                    log.info("Couldn't find unique Trendz URL, skipping migration of dashboards to system Trendz widgets");
-                });
-        log.debug("Finished trendz widget bundle upgrade.");
-    }
-
-    // Replacing all without old (it is appropriate)
-    private void migrateTenantTrendzJsModuleToSysadminLevel() {
-        String resourceKey = "ai-summary-module.js";
-        TbResource system = this.resourceService.findResourceByTenantIdAndKey(TenantId.SYS_TENANT_ID, ResourceType.JS_MODULE, resourceKey);
-        if (system == null) {
-            throw new RuntimeException("Can not find trendz js module as resource with key: " + resourceKey);
-        }
-
-        String systemLink = system.getLink();
-        log.info("Migrating dashboards to use system ai-summary-module.js");
-        this.trendzUpdater.replacePatternInAllDashboardsConfigurations(
-                "/api/resource/js_module/tenant/ai-summary-module.js",
-                systemLink
-        );
-
-        this.trendzUpdater.deleteAllTenantResourcesByResourceKey(system.getResourceKey());
-    }
-
 
     private int processRuleNodePack(List<RuleNodeId> ruleNodeIdsBatch, RuleNodeClassInfo ruleNodeClassInfo) {
         var saveFutures = new ArrayList<ListenableFuture<?>>(MAX_PENDING_SAVE_RULE_NODE_FUTURES);
