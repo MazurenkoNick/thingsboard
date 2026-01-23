@@ -42,7 +42,10 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.util.TestSocketUtils;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.AdminSettings;
 import org.thingsboard.server.common.data.Customer;
@@ -151,6 +154,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 @Slf4j
 abstract public class AbstractEdgeTest extends AbstractControllerTest {
+
+    public static final String EDGE_HOST = "localhost";
+    public static final int EDGE_PORT = TestSocketUtils.findAvailableTcpPort();
+    @DynamicPropertySource
+    static void props(DynamicPropertyRegistry registry) {
+        log.debug("edges.rpc.port = {}", EDGE_PORT);
+        registry.add("edges.rpc.port", () -> EDGE_PORT);
+    }
+
     public static final Integer CONNECT_MESSAGE_COUNT = 31;
     public static final Integer INSTALLATION_MESSAGE_COUNT = 6;
     public static final Integer SYNC_MESSAGE_COUNT = CONNECT_MESSAGE_COUNT + INSTALLATION_MESSAGE_COUNT;
@@ -192,7 +204,7 @@ abstract public class AbstractEdgeTest extends AbstractControllerTest {
         //6 installation messages
         installation();
 
-        edgeImitator = new EdgeImitator("localhost", 7070, edge.getRoutingKey(), edge.getSecret());
+        edgeImitator = new EdgeImitator(EDGE_HOST, EDGE_PORT, edge.getRoutingKey(), edge.getSecret());
         // 31 connect messages + 6 installation messages
         edgeImitator.expectMessageAmount(SYNC_MESSAGE_COUNT);
         edgeImitator.ignoreType(OAuth2ClientUpdateMsg.class);

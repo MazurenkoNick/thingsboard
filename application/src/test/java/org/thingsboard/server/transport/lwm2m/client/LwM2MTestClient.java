@@ -48,7 +48,6 @@ import org.eclipse.leshan.client.object.Security;
 import org.eclipse.leshan.client.object.Server;
 import org.eclipse.leshan.client.observer.LwM2mClientObserver;
 import org.eclipse.leshan.client.resource.DummyInstanceEnabler;
-import org.eclipse.leshan.client.resource.LwM2mInstanceEnabler;
 import org.eclipse.leshan.client.resource.LwM2mObjectEnabler;
 import org.eclipse.leshan.client.resource.ObjectsInitializer;
 import org.eclipse.leshan.client.resource.listener.ObjectsListenerAdapter;
@@ -97,6 +96,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static org.awaitility.Awaitility.await;
 import static org.eclipse.californium.scandium.config.DtlsConfig.DTLS_CONNECTION_ID_LENGTH;
 import static org.eclipse.californium.scandium.config.DtlsConfig.DTLS_RECOMMENDED_CIPHER_SUITES_ONLY;
 import static org.eclipse.leshan.core.LwM2mId.ACCESS_CONTROL;
@@ -107,6 +107,7 @@ import static org.eclipse.leshan.core.LwM2mId.SECURITY;
 import static org.eclipse.leshan.core.LwM2mId.SERVER;
 import static org.eclipse.leshan.core.LwM2mId.SOFTWARE_MANAGEMENT;
 import static org.eclipse.leshan.core.node.codec.DefaultLwM2mEncoder.getDefaultPathEncoder;
+import static org.thingsboard.server.transport.AbstractTransportIntegrationTest.DEFAULT_WAIT_TIMEOUT_SECONDS;
 import static org.thingsboard.server.transport.lwm2m.AbstractLwM2MIntegrationTest.shortServerId;
 import static org.thingsboard.server.transport.lwm2m.Lwm2mTestHelper.BINARY_APP_DATA_CONTAINER;
 import static org.thingsboard.server.transport.lwm2m.Lwm2mTestHelper.LwM2MClientState;
@@ -134,6 +135,7 @@ import static org.thingsboard.server.transport.lwm2m.Lwm2mTestHelper.OBJECT_INST
 import static org.thingsboard.server.transport.lwm2m.Lwm2mTestHelper.TEMPERATURE_SENSOR;
 import static org.thingsboard.server.transport.lwm2m.Lwm2mTestHelper.lwm2mClientResources;
 import static org.thingsboard.server.transport.lwm2m.utils.LwM2MTransportUtil.setDtlsConnectorConfigCidLength;
+import static org.thingsboard.server.utils.PortFinder.isUDPPortAvailable;
 
 
 @Slf4j
@@ -156,12 +158,14 @@ public class LwM2MTestClient {
     private LwM2mClientContext clientContext;
     private LwM2mTemperatureSensor lwM2mTemperatureSensor12;
     private String deviceIdStr;
+    private int clientPort;
 
-    public void init(Security securityLwm2m, Security securityBs, int port, boolean isRpc,
+    public void init(Security securityLwm2m, Security securityBs, int clientPort, boolean isRpc,
                      LwM2mUplinkMsgHandler defaultLwM2mUplinkMsgHandler,
                      LwM2mClientContext clientContext, Integer cIdLength, boolean queueMode,
                      boolean supportFormatOnly_SenMLJSON_SenMLCBOR, Integer value3_0_9) throws InvalidDDFFileException, IOException {
         Assert.assertNull("client already initialized", leshanClient);
+        this.clientPort = clientPort;
         this.defaultLwM2mUplinkMsgHandlerTest = defaultLwM2mUplinkMsgHandler;
         this.clientContext = clientContext;
 
@@ -171,7 +175,7 @@ public class LwM2MTestClient {
         if (securityLwm2m != null && securityLwm2m.getId() != null) {
             forceNullSecurityId(securityLwm2m);
         }
-        if (securityBs!= null && securityBs.getId() != null) {
+        if (securityBs != null && securityBs.getId() != null) {
             forceNullSecurityId(securityBs);
         }
         if (securityBs != null && securityLwm2m != null) {
@@ -180,7 +184,7 @@ public class LwM2MTestClient {
         } else if (securityBs != null) {
             log.warn("Security BS only: securityBs: [{}] ", securityBs.getId());
             initializer.setInstancesForObject(SECURITY, securityBs);
-        } else if (securityLwm2m != null){
+        } else if (securityLwm2m != null) {
             // SECURITY
             log.warn("Security Lwm2m only: security Lwm2m  [{}]", securityLwm2m.getId());
             initializer.setInstancesForObject(SECURITY, securityLwm2m);
@@ -223,7 +227,9 @@ public class LwM2MTestClient {
                         builder.setSessionListener(new DtlsSessionLogger(clientStates, clientDtlsCid));
 
                         return builder;
-                    };
+                    }
+
+                    ;
                 };
             }
         };
@@ -260,7 +266,7 @@ public class LwM2MTestClient {
 
         // Set Californium Configuration
         endpointsBuilder.setConfiguration(clientCoapConfig);
-        endpointsBuilder.setClientAddress(new InetSocketAddress(port).getAddress());
+        endpointsBuilder.setClientAddress(new InetSocketAddress(clientPort).getAddress());
 
 
         // creates EndpointsProvider
@@ -474,9 +480,14 @@ public class LwM2MTestClient {
         }
     }
 
-
     public void start(boolean isStartLw) {
         if (leshanClient != null) {
+            if (clientPort > 0) {
+                log.error("Await UDP clientPort {} to be available before leshanClient.start()", clientPort);
+                await("Await UDP clientPort " + clientPort + " to be available before leshanClient.start()")
+                        .atMost(DEFAULT_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                        .until(() -> isUDPPortAvailable(clientPort));
+            }
             leshanClient.start();
             if (isStartLw) {
                 this.awaitClientAfterStartConnectLw();
@@ -489,6 +500,12 @@ public class LwM2MTestClient {
     public void stop(boolean deregister) {
         if (leshanClient != null) {
             leshanClient.stop(deregister);
+            if (clientPort > 0) {
+                log.error("Await UDP clientPort {} to disconnect after leshanClient.stop(deregister)", clientPort);
+                await("Await client UDP port " + clientPort + " to disconnect after leshanClient.stop(deregister)")
+                        .atMost(DEFAULT_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                        .until(() -> isUDPPortAvailable(clientPort));
+            }
         }
     }
 
@@ -550,5 +567,6 @@ public class LwM2MTestClient {
             log.error("[forceNullSecurityId] Failed to set id=null for {}", security.getClass(), e);
         }
     }
+
 }
 
