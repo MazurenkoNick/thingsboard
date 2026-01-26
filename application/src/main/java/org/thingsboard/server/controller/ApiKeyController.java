@@ -99,7 +99,11 @@ public class ApiKeyController extends BaseController {
         if (apiKeyInfo.getId() == null && apiKeyInfo.isInternal()) {
             throw new ThingsboardException("Internal API key cannot be created!", ThingsboardErrorCode.PERMISSION_DENIED);
         }
-        return checkNotNull(apiKeyService.saveApiKey(apiKeyInfo.getTenantId(), apiKeyInfo));
+        ApiKey savedApiKey = checkNotNull(apiKeyService.saveApiKey(apiKeyInfo.getTenantId(), apiKeyInfo));
+        if (apiKeyInfo.getId() != null) {
+            savedApiKey.setValue(null);
+        }
+        return savedApiKey;
     }
 
     @ApiOperation(value = "Rotate internal API key (rotateInternalApiKey)",
@@ -157,7 +161,7 @@ public class ApiKeyController extends BaseController {
         ApiKey apiKey = checkApiKeyId(apiKeyId, Operation.WRITE);
         checkUserId(apiKey.getUserId(), Operation.WRITE);
         apiKey.setDescription(description.orElse(null));
-        return apiKeyService.saveApiKey(apiKey.getTenantId(), apiKey);
+        return new ApiKeyInfo(apiKeyService.saveApiKey(apiKey.getTenantId(), apiKey));
     }
 
     @ApiOperation(value = "Enable or disable API key (enableApiKey)",
@@ -173,7 +177,7 @@ public class ApiKeyController extends BaseController {
         ApiKey apiKey = checkApiKeyId(apiKeyId, Operation.WRITE);
         checkUserId(apiKey.getUserId(), Operation.WRITE);
         apiKey.setEnabled(enabledValue);
-        return apiKeyService.saveApiKey(apiKey.getTenantId(), apiKey);
+        return new ApiKeyInfo(apiKeyService.saveApiKey(apiKey.getTenantId(), apiKey));
     }
 
     @ApiOperation(value = "Delete API key by ID (deleteApiKey)",
