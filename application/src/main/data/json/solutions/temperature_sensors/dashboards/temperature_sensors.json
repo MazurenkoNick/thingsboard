@@ -1521,7 +1521,7 @@
                   "pattern": "<b>${entityName}</b><br/><br/><b>Temperature:</b> ${temperature:1} °C<br/><b>Humidity:</b> ${humidity:0} %<br/><br/><link-act name=\"navigate_to_details\">Sensor details</link-act><br/>",
                   "offsetX": 0,
                   "offsetY": -1,
-                  "patternFunction": "const unit = {\n  from: '°C',\n  METRIC: '°C',\n  IMPERIAL: '°F',\n  HYBRID: '°C'\n}\n\nvar usrUnit = ctx.unitService.getTargetUnitSymbol(unit);\n\nvar unitValue = ctx.unitService.convertUnitValue(data.temperature || 0, unit).toFixed(1);\n\nreturn `<b>${data.entityName}</b><br/><br/><b>Temperature:</b> ${unitValue} ${usrUnit}<br/><b>Humidity:</b> ${data.humidity || 0} %<br/><br/><link-act name=\"navigate_to_details\">Sensor details</link-act><br/>`;\n",
+                  "patternFunction": "const unit = {\n  from: '°C',\n  METRIC: '°C',\n  IMPERIAL: '°F',\n  HYBRID: '°C'\n}\n\nvar usrUnit = ctx.unitService.getTargetUnitSymbol(unit);\n\nvar convertedUnitValue = ctx.unitService.convertUnitValue(data.temperature || 0, unit);\nvar unitValue = typeof convertedUnitValue === 'number' ? convertedUnitValue.toFixed(1) : convertedUnitValue;\n\nreturn `<b>${data.entityName}</b><br/><br/><b>Temperature:</b> ${unitValue} ${usrUnit}<br/><b>Humidity:</b> ${data.humidity || 0} %<br/><br/><link-act name=\"navigate_to_details\">Sensor details</link-act><br/>`;\n",
                   "tagActions": [
                     {
                       "name": "navigate_to_details",
