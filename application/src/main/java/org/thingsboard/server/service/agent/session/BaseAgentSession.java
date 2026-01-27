@@ -51,9 +51,8 @@ public class BaseAgentSession implements AgentSession {
         this.state = new AgentSessionState();
 
         this.responseObserver = responseObserver;
-        // backpressure: gRPC calls this when transport becomes writable again
-        this.responseObserver.setOnReadyHandler(this::drainIfPossible);
-        this.responseObserver.setOnCancelHandler(this::closeSilently);
+        // Note: onReadyHandler and onCancelHandler must be set before returning the StreamObserver
+        // They are set in AgentGrpcService.controlStream() to comply with gRPC requirements
     }
 
     @Override
@@ -105,7 +104,8 @@ public class BaseAgentSession implements AgentSession {
         log.trace("[{}] Stream is closed silently", state.getAgentId());
     }
 
-    private void drainIfPossible() {
+    @Override
+    public void drainIfPossible() {
         if (state.isClosed()) {
             return;
         }

@@ -18,6 +18,7 @@ package org.thingsboard.server.service.agent;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
 import jakarta.annotation.PostConstruct;
@@ -36,6 +37,7 @@ import org.thingsboard.server.service.agent.session.BaseAgentSession;
 
 import java.util.Optional;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 @Slf4j
@@ -65,21 +67,28 @@ public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBas
 
     @Override
     public StreamObserver<AgentToServer> controlStream(StreamObserver<ServerToAgent> responseObserver) {
-        return new StreamObserver<>() {
-            private volatile AgentSession session;
-
+        ServerCallStreamObserver<ServerToAgent> serverCallStreamObserver =
+                (ServerCallStreamObserver<ServerToAgent>) responseObserver;
+        
+        AtomicReference<AgentSession> sessionRef = new AtomicReference<>();
+        
+        StreamObserver<AgentToServer> requestObserver = new StreamObserver<>() {
             @Override
             public void onNext(AgentToServer msg) {
+                AgentSession session = sessionRef.get();
                 if (session == null) {
-                    tryInitSession(msg, responseObserver).ifPresent(s -> this.session = s);
+                    tryInitSession(msg, responseObserver).ifPresent(s -> sessionRef.set(s));
+                    session = sessionRef.get();
                 }
                 processInboundMessage(session, msg);
             }
 
             @Override
             public void onError(Throwable throwable) {
+                AgentSession session = sessionRef.get();
                 if (session == null) {
                     log.trace("Ignoring onError for uninitialized session");
+                    return;
                 }
                 agentStateService.onError(session);
                 session.closeSilently();
@@ -87,13 +96,30 @@ public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBas
 
             @Override
             public void onCompleted() {
+                AgentSession session = sessionRef.get();
                 if (session == null) {
                     log.trace("Ignoring onCompleted for uninitialized session");
+                    return;
                 }
                 agentStateService.onCompleted(session);
                 session.complete();
             }
         };
+        
+        serverCallStreamObserver.setOnReadyHandler(() -> {
+            AgentSession session = sessionRef.get();
+            if (session instanceof BaseAgentSession s) {
+                s.drainIfPossible();
+            }
+        });
+        serverCallStreamObserver.setOnCancelHandler(() -> {
+            AgentSession session = sessionRef.get();
+            if (session != null) {
+                session.closeSilently();
+            }
+        });
+        
+        return requestObserver;
     }
 
     private void processInboundMessage(AgentSession session, AgentToServer msg) {
@@ -117,7 +143,9 @@ public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBas
 
         Optional<Status> err = agentStateService.onConnected(session, msg.getHello());
         if (err.isPresent()) {
-            observer.onError(err.get().asRuntimeException());
+            StatusRuntimeException e = err.get().asRuntimeException();
+            log.error("The state couldn't be initialized", e);
+            observer.onError(e);
             return Optional.empty();
         }
         session.push(AgentMsgConstructorUtils.helloSuccessResponse());

@@ -54,6 +54,7 @@ import org.thingsboard.server.common.msg.edge.EdgeHighPriorityMsg;
 import org.thingsboard.server.common.msg.edge.EdgeSessionMsg;
 import org.thingsboard.server.common.msg.edge.FromEdgeSyncResponse;
 import org.thingsboard.server.common.msg.edge.ToEdgeSyncRequest;
+import org.thingsboard.server.gen.agent.v1.AgentRpcServiceGrpc.AgentRpcServiceImplBase;
 import org.thingsboard.server.gen.edge.v1.EdgeRpcServiceGrpc;
 import org.thingsboard.server.gen.edge.v1.RequestMsg;
 import org.thingsboard.server.gen.edge.v1.ResponseMsg;
@@ -156,6 +157,9 @@ public class EdgeGrpcService extends EdgeRpcServiceGrpc.EdgeRpcServiceImplBase i
     @Autowired
     private Optional<KafkaAdmin> kafkaAdmin;
 
+    @Autowired
+    private AgentRpcServiceImplBase agentRpcService;
+
     private Server server;
 
     private ScheduledExecutorService edgeEventProcessingExecutorService;
@@ -173,7 +177,8 @@ public class EdgeGrpcService extends EdgeRpcServiceGrpc.EdgeRpcServiceImplBase i
                 .keepAliveTimeout(keepAliveTimeoutSec, TimeUnit.SECONDS)
                 .permitKeepAliveWithoutCalls(true)
                 .maxInboundMessageSize(maxInboundMessageSize)
-                .addService(this);
+                .addService(this)
+                .addService(agentRpcService);
         if (sslEnabled) {
             try {
                 InputStream certFileIs = ResourceUtils.getInputStream(this, certFileResource);

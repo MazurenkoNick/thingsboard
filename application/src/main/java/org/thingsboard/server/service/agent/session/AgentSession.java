@@ -25,4 +25,5 @@ public interface AgentSession {
     void onError(Status status);
     void complete();
     void closeSilently();
+    void drainIfPossible();
 }
