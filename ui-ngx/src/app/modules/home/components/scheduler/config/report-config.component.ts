@@ -60,19 +60,20 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatButton } from '@angular/material/button';
 
 @Component({
-  selector: 'tb-report-config',
-  templateUrl: './report-config.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => ReportConfigComponent),
-    multi: true
-  },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => ReportConfigComponent),
-      multi: true
-    }]
+    selector: 'tb-report-config',
+    templateUrl: './report-config.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ReportConfigComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => ReportConfigComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class ReportConfigComponent extends PageComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy, Validator {
 

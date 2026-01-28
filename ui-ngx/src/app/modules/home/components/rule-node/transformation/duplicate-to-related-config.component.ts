@@ -34,9 +34,10 @@ import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms
 import { RuleNodeConfiguration, RuleNodeConfigurationComponent } from '@shared/models/rule-node.models';
 
 @Component({
-  selector: 'tb-transformation-node-duplicate-to-related-config',
-  templateUrl: './duplicate-to-related-config.component.html',
-  styleUrls: []
+    selector: 'tb-transformation-node-duplicate-to-related-config',
+    templateUrl: './duplicate-to-related-config.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class DuplicateToRelatedConfigComponent extends RuleNodeConfigurationComponent {
 

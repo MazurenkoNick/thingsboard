@@ -65,16 +65,17 @@ import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Authority } from '@shared/models/authority.enum';
 
 @Component({
-  selector: 'tb-secret-key-input',
-  templateUrl: './secret-key-input.component.html',
-  styleUrls: ['./secret-key-input.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => SecretKeyInputComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-secret-key-input',
+    templateUrl: './secret-key-input.component.html',
+    styleUrls: ['./secret-key-input.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => SecretKeyInputComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class SecretKeyInputComponent extends PageComponent implements OnInit, ControlValueAccessor, OnChanges {
 

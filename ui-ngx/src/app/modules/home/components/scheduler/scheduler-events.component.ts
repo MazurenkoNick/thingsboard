@@ -119,10 +119,11 @@ import { CustomTranslatePipe } from '@shared/pipe/custom-translate.pipe';
 import { DomSanitizer } from "@angular/platform-browser";
 
 @Component({
-  selector: 'tb-scheduler-events',
-  templateUrl: './scheduler-events.component.html',
-  styleUrls: ['./scheduler-events.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-scheduler-events',
+    templateUrl: './scheduler-events.component.html',
+    styleUrls: ['./scheduler-events.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class SchedulerEventsComponent extends PageComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy {
 

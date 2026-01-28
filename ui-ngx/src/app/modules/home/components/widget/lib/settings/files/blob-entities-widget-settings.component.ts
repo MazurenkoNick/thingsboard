@@ -37,9 +37,10 @@ import { AppState } from '@core/core.state';
 import { buildPageStepSizeValues } from '@home/components/widget/lib/table-widget.models';
 
 @Component({
-  selector: 'tb-blob-entities-widget-settings',
-  templateUrl: './blob-entities-widget-settings.component.html',
-  styleUrls: ['./../widget-settings.scss']
+    selector: 'tb-blob-entities-widget-settings',
+    templateUrl: './blob-entities-widget-settings.component.html',
+    styleUrls: ['./../widget-settings.scss'],
+    standalone: false
 })
 export class BlobEntitiesWidgetSettingsComponent extends WidgetSettingsComponent {
 

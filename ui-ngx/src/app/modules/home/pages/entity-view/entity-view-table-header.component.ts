@@ -39,9 +39,10 @@ import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Authority } from '@shared/models/authority.enum';
 
 @Component({
-  selector: 'tb-entity-view-table-header',
-  templateUrl: './entity-view-table-header.component.html',
-  styleUrls: []
+    selector: 'tb-entity-view-table-header',
+    templateUrl: './entity-view-table-header.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class EntityViewTableHeaderComponent extends EntityTableHeaderComponent<EntityViewInfo | EntityView> implements OnInit {
 

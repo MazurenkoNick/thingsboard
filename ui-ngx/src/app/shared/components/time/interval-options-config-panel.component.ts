@@ -54,9 +54,10 @@ export interface IntervalOptionsConfigPanelData {
 }
 
 @Component({
-  selector: 'tb-interval-options-config-panel',
-  templateUrl: './interval-options-config-panel.component.html',
-  styleUrls: ['./interval-options-config-panel.component.scss']
+    selector: 'tb-interval-options-config-panel',
+    templateUrl: './interval-options-config-panel.component.html',
+    styleUrls: ['./interval-options-config-panel.component.scss'],
+    standalone: false
 })
 export class IntervalOptionsConfigPanelComponent implements OnInit {
 

@@ -36,10 +36,11 @@ import { isDefinedAndNotNull } from '@core/utils';
 import { AbstractReportComponentPreview } from '@home/pages/reporting/template/components/report-component.component';
 
 @Component({
-  selector: 'tb-report-divider-preview',
-  templateUrl: './divider-preview.component.html',
-  styleUrls: [],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-report-divider-preview',
+    templateUrl: './divider-preview.component.html',
+    styleUrls: [],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class DividerPreviewComponent extends AbstractReportComponentPreview<DividerReportComponentConfig> {
 

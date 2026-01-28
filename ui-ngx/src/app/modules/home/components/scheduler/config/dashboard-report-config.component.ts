@@ -63,19 +63,20 @@ import { safeMerge } from '@home/components/scheduler/config/config.models';
 import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
-  selector: 'tb-dashboard-report-config',
-  templateUrl: './dashboard-report-config.component.html',
-  styleUrls: ['./dashboard-report-config.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => DashboardReportConfigComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => DashboardReportConfigComponent),
-    multi: true
-  }]
+    selector: 'tb-dashboard-report-config',
+    templateUrl: './dashboard-report-config.component.html',
+    styleUrls: ['./dashboard-report-config.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => DashboardReportConfigComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => DashboardReportConfigComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class DashboardReportConfigComponent extends PageComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy, Validator {
 

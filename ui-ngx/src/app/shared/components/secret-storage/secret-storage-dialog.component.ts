@@ -56,9 +56,10 @@ export interface SecretStorageData  {
 }
 
 @Component({
-  selector: 'tb-secret-storage-dialog',
-  templateUrl: './secret-storage-dialog.component.html',
-  styleUrls: []
+    selector: 'tb-secret-storage-dialog',
+    templateUrl: './secret-storage-dialog.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class SecretStorageDialogComponent extends DialogComponent<SecretStorageDialogComponent, SecretStorage | string> implements OnInit {
 

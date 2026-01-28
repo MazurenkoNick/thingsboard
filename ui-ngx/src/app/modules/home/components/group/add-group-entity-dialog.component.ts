@@ -74,9 +74,10 @@ import { BreakpointObserver, BreakpointState } from '@angular/cdk/layout';
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'tb-add-group-entity-dialog',
-  templateUrl: './add-group-entity-dialog.component.html',
-  styleUrls: ['./add-group-entity-dialog.component.scss']
+    selector: 'tb-add-group-entity-dialog',
+    templateUrl: './add-group-entity-dialog.component.html',
+    styleUrls: ['./add-group-entity-dialog.component.scss'],
+    standalone: false
 })
 export class AddGroupEntityDialogComponent extends
   DialogComponent<AddGroupEntityDialogComponent, BaseData<HasId>> implements OnInit, OnDestroy, AfterViewInit {

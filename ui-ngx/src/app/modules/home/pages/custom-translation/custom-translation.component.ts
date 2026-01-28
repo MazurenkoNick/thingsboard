@@ -37,9 +37,10 @@ import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { FormBuilder } from '@angular/forms';
 
 @Component({
-  selector: 'tb-custom-translation',
-  templateUrl: './custom-translation.component.html',
-  styleUrls: ['../admin/settings-card.scss', './custom-translation.component.scss']
+    selector: 'tb-custom-translation',
+    templateUrl: './custom-translation.component.html',
+    styleUrls: ['../admin/settings-card.scss', './custom-translation.component.scss'],
+    standalone: false
 })
 export class CustomTranslationComponent {
 

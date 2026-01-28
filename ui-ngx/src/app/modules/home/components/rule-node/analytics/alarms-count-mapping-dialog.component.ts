@@ -57,9 +57,10 @@ export interface AlarmsCountMappingDialogData {
 }
 
 @Component({
-  selector: 'tb-alarms-count-mapping-dialog',
-  templateUrl: './alarms-count-mapping-dialog.component.html',
-  styleUrls: []
+    selector: 'tb-alarms-count-mapping-dialog',
+    templateUrl: './alarms-count-mapping-dialog.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class AlarmsCountMappingDialogComponent
   extends DialogComponent<AlarmsCountMappingDialogComponent, AlarmsCountMapping> implements OnInit {

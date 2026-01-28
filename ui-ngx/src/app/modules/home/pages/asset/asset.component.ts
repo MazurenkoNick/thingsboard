@@ -44,9 +44,10 @@ import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 
 @Component({
-  selector: 'tb-asset',
-  templateUrl: './asset.component.html',
-  styleUrls: ['./asset.component.scss']
+    selector: 'tb-asset',
+    templateUrl: './asset.component.html',
+    styleUrls: ['./asset.component.scss'],
+    standalone: false
 })
 export class AssetComponent extends GroupEntityComponent<AssetInfo> {
 

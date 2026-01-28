@@ -40,8 +40,9 @@ import { map } from 'rxjs/operators';
 import { DashboardService } from '@core/http/dashboard.service';
 
 @Component({
-  selector: 'tb-iframe-view',
-  templateUrl: './iframe-view.component.html'
+    selector: 'tb-iframe-view',
+    templateUrl: './iframe-view.component.html',
+    standalone: false
 })
 export class IFrameViewComponent implements OnInit, OnDestroy {
 

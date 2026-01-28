@@ -54,14 +54,15 @@ import { EntityInfoData } from '@shared/models/entity.models';
 import { MatAutocomplete } from '@angular/material/autocomplete';
 
 @Component({
-  selector: 'tb-owner-autocomplete',
-  templateUrl: './owner-autocomplete.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => OwnerAutocompleteComponent),
-    multi: true
-  }]
+    selector: 'tb-owner-autocomplete',
+    templateUrl: './owner-autocomplete.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => OwnerAutocompleteComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class OwnerAutocompleteComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnChanges {
 

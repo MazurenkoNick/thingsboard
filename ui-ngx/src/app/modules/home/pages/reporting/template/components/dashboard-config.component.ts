@@ -45,10 +45,11 @@ import {
 import { WidgetConfigMode } from '@shared/models/widget.models';
 
 @Component({
-  selector: 'tb-dashboard-config',
-  templateUrl: './dashboard-config.component.html',
-  styleUrls: ['./report-component-config.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-dashboard-config',
+    templateUrl: './dashboard-config.component.html',
+    styleUrls: ['./report-component-config.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class DashboardConfigComponent extends AbstractReportComponentConfig<DashboardReportComponentConfig> {
 

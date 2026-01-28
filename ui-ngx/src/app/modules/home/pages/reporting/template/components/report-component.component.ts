@@ -76,10 +76,11 @@ export interface IReportComponent {
 }
 
 @Component({
-  selector: 'tb-report-component',
-  templateUrl: './report-component.component.html',
-  styleUrls: ['./report-component.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-report-component',
+    templateUrl: './report-component.component.html',
+    styleUrls: ['./report-component.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class ReportComponentComponent implements IReportComponent, OnInit, AfterViewInit, OnChanges, OnDestroy {
 
@@ -494,7 +495,7 @@ export class ReportComponentComponent implements IReportComponent, OnInit, After
 }
 
 @Component({
-  template: `
+    template: `
     <div class="tb-report-component-action-container">
       <div class="tb-report-component-actions-panel">
         <button mat-icon-button class="tb-mat-20"
@@ -519,8 +520,9 @@ export class ReportComponentComponent implements IReportComponent, OnInit, After
         </button>
       </div>
     </div>`,
-  styles: [],
-  encapsulation: ViewEncapsulation.None
+    styles: [],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class EditReportComponentTooltipComponent implements AfterViewInit {
 

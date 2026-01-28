@@ -55,19 +55,20 @@ import { IntegrationForm } from '@home/components/integration/configuration/inte
 import { merge } from 'rxjs';
 
 @Component({
-  selector: 'tb-loriot-integration-form',
-  templateUrl: './loriot-integration-form.component.html',
-  styleUrls: ['./loriot-integration-form.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => LoriotIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => LoriotIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-loriot-integration-form',
+    templateUrl: './loriot-integration-form.component.html',
+    styleUrls: ['./loriot-integration-form.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => LoriotIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => LoriotIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class LoriotIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator, OnInit {
 

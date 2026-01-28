@@ -52,14 +52,15 @@ import { CMAssigneeType, CMScope, CustomMenuInfo } from '@shared/models/custom-m
 import { CustomMenuService } from '@core/http/custom-menu.service';
 
 @Component({
-  selector: 'tb-custom-menu-autocomplete',
-  templateUrl: './custom-menu-autocomplete.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => CustomMenuAutocompleteComponent),
-    multi: true
-  }]
+    selector: 'tb-custom-menu-autocomplete',
+    templateUrl: './custom-menu-autocomplete.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => CustomMenuAutocompleteComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class CustomMenuAutocompleteComponent implements ControlValueAccessor, OnInit, AfterViewInit {
 

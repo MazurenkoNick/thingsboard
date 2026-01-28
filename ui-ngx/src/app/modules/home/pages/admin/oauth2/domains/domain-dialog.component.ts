@@ -43,10 +43,11 @@ import { DomainComponent } from '@home/pages/admin/oauth2/domains/domain.compone
 import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared/models/entity-type.models';
 
 @Component({
-  selector: 'tb-mobile-app-dialog',
-  templateUrl: './domain-dialog.component.html',
-  providers: [{provide: ErrorStateMatcher, useExisting: DomainDialogComponent}],
-  styleUrls: []
+    selector: 'tb-mobile-app-dialog',
+    templateUrl: './domain-dialog.component.html',
+    providers: [{ provide: ErrorStateMatcher, useExisting: DomainDialogComponent }],
+    styleUrls: [],
+    standalone: false
 })
 export class DomainDialogComponent extends DialogComponent<DomainDialogComponent, Domain> implements OnDestroy, AfterViewInit, ErrorStateMatcher {
 

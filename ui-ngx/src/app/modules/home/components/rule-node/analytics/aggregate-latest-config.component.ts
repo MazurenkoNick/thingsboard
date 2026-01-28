@@ -45,9 +45,10 @@ const intervalValidators = [Validators.required,
   Validators.min(1), Validators.max(2147483647)];
 
 @Component({
-  selector: 'tb-analytics-node-aggregate-latest-config',
-  templateUrl: './aggregate-latest-config.component.html',
-  styleUrls: ['./aggregate-latest-config.component.scss']
+    selector: 'tb-analytics-node-aggregate-latest-config',
+    templateUrl: './aggregate-latest-config.component.html',
+    styleUrls: ['./aggregate-latest-config.component.scss'],
+    standalone: false
 })
 export class AggregateLatestConfigComponent extends RuleNodeConfigurationComponent {
 
