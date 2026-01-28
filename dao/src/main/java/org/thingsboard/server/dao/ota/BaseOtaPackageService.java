@@ -218,11 +218,7 @@ public class BaseOtaPackageService extends AbstractCachedEntityService<OtaPackag
         try {
             Long oid = getDataOidById(tenantId, otaPackageId);
             otaPackageDao.removeById(tenantId, otaPackageId.getId());
-            Integer result = otaPackageDao.unlinkLargeObject(oid);
-            if (result != 1) {
-                String status = (result == 0) ? "Object not found" : "Error occurred";
-                log.warn("[{}][{}] Failed to delete large object (OID: {}). Result code: {} ({})", tenantId, otaPackageId, oid, result, status);
-            }
+            unlinkDataIfPresent(tenantId, otaPackageId, oid);
             publishEvictEvent(new OtaPackageCacheEvictEvent(otaPackageId));
             eventPublisher.publishEvent(DeleteEntityEvent.builder().tenantId(tenantId).entityId(otaPackageId).build());
         } catch (Exception t) {
@@ -251,6 +247,20 @@ public class BaseOtaPackageService extends AbstractCachedEntityService<OtaPackag
             log.warn("[{}][{}] Failed to retrieve OID before deletion", tenantId, otaPackageId, e);
         }
         return null;
+    }
+
+    private void unlinkDataIfPresent(TenantId tenantId, OtaPackageId otaPackageId, Long oid) {
+        if (oid == null) {
+            return;
+        }
+        try {
+            Integer result = otaPackageDao.unlinkLargeObject(oid);
+            if (result != 1) {
+                log.warn("[{}][{}] Failed to delete large object (OID: {}). Result code: {}", tenantId, otaPackageId, oid, result);
+            }
+        } catch (Exception e) {
+            log.warn("[{}][{}] Failed to delete large object (OID: {})", tenantId, otaPackageId, oid, e);
+        }
     }
 
     @Override

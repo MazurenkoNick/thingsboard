@@ -51,6 +51,7 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.tenant.profile.DefaultTenantProfileConfiguration;
 import org.thingsboard.server.dao.device.DeviceProfileService;
 import org.thingsboard.server.dao.device.DeviceService;
+import org.thingsboard.server.dao.ota.OtaPackageDao;
 import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
 import org.thingsboard.server.dao.tenant.TenantProfileService;
@@ -91,6 +92,8 @@ public class OtaPackageServiceTest extends AbstractServiceTest {
     OtaPackageService otaPackageService;
     @Autowired
     TenantProfileService tenantProfileService;
+    @Autowired
+    OtaPackageDao otaPackageDao;
     @Autowired
     TbTenantProfileCache tenantProfileCache;
 
@@ -549,6 +552,39 @@ public class OtaPackageServiceTest extends AbstractServiceTest {
     }
 
     @Test
+    public void testDeleteOtaPackageWithoutData() {
+        OtaPackageInfo firmwareInfo = new OtaPackageInfo();
+        firmwareInfo.setTenantId(tenantId);
+        firmwareInfo.setDeviceProfileId(deviceProfileId);
+        firmwareInfo.setType(FIRMWARE);
+        firmwareInfo.setTitle(TITLE);
+        firmwareInfo.setVersion(VERSION);
+        OtaPackageInfo savedFirmwareInfo = otaPackageService.saveOtaPackageInfo(firmwareInfo, false);
+
+        Assert.assertNotNull(savedFirmwareInfo);
+        Assert.assertNotNull(savedFirmwareInfo.getId());
+
+        // Should not throw NPE when deleting package without data (OID is null)
+        otaPackageService.deleteOtaPackage(tenantId, savedFirmwareInfo.getId());
+
+        OtaPackageInfo foundFirmware = otaPackageService.findOtaPackageInfoById(tenantId, savedFirmwareInfo.getId());
+        Assert.assertNull(foundFirmware);
+    }
+
+    @Test
+    public void testDeleteOtaPackageUnlinksLargeObject() {
+        OtaPackage savedFirmware = createAndSaveFirmware(tenantId, VERSION);
+
+        Long oid = otaPackageDao.getDataOidById(savedFirmware.getId().getId());
+        Assert.assertNotNull(oid);
+
+        otaPackageService.deleteOtaPackage(tenantId, savedFirmware.getId());
+
+        // Verify the large object was unlinked - PostgreSQL throws an exception when the object doesn't exist
+        assertThatThrownBy(() -> otaPackageDao.unlinkLargeObject(oid)).hasMessageContaining("large object " + oid + " does not exist");
+    }
+
+    @Test
     public void testFindTenantFirmwaresByTenantId() {
         List<OtaPackageInfo> firmwares = new ArrayList<>();
         for (int i = 0; i < 165; i++) {
@@ -741,4 +777,5 @@ public class OtaPackageServiceTest extends AbstractServiceTest {
         firmware.setDataSize(DATA_SIZE);
         return firmware;
     }
+
 }
