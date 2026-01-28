@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Inject, Injectable, NgZone } from '@angular/core';
+import { Inject, Injectable, NgZone, DOCUMENT } from '@angular/core';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { HttpClient } from '@angular/common/http';
 
@@ -66,7 +66,7 @@ import { TwoFactorAuthProviderType, TwoFaProviderInfo } from '@shared/models/two
 import { UserPasswordPolicy } from '@shared/models/settings.models';
 import { TranslateDefaultLoader } from '@core/translate/translate-default-loader';
 import { updateUserLang } from '@core/settings/settings.utils';
-import { DOCUMENT } from '@angular/common';
+
 
 @Injectable({
     providedIn: 'root'
