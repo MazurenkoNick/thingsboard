@@ -243,6 +243,11 @@ public class ModelConstants {
     public static final String ASSET_ASSET_PROFILE_ID_PROPERTY = "asset_profile_id";
 
     /**
+     * Agent constants.
+     */
+    public static final String AGENT_TABLE_NAME = "asset_profile_name";
+
+    /**
      * Alarm constants.
      */
     public static final String ENTITY_ALARM_TABLE_NAME = "entity_alarm";

@@ -1,5 +1,5 @@
 /**
- * Copyright © 2016-2025 The Thingsboard Authors
+ * Copyright © 2016-2026 The Thingsboard Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.thingsboard.server.common.data.BaseDataWithAdditionalInfo;
 import org.thingsboard.server.common.data.HasCustomerId;
-import org.thingsboard.server.common.data.HasLabel;
+import org.thingsboard.server.common.data.HasName;
 import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.HasVersion;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -35,18 +35,19 @@ import org.thingsboard.server.common.data.validation.NoXss;
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter
-public class Agent extends BaseDataWithAdditionalInfo<AgentId> implements HasLabel, HasTenantId, HasCustomerId, HasVersion {
+public class Agent extends BaseDataWithAdditionalInfo<AgentId> implements HasTenantId, HasCustomerId, HasVersion, HasName {
 
     private TenantId tenantId;
     private CustomerId customerId;
     @NoXss
     @Length(fieldName = "name")
     private String name;
-    @NoXss
-    @Length(fieldName = "label")
-    private String label;
     @Getter
     private Long version;
+
+    public Agent(AgentId id) {
+        this.id = id;
+    }
 
     @Schema(description = "JSON object with the Agent Id. " +
             "Specify this field to update the Agent. " +
@@ -79,10 +80,5 @@ public class Agent extends BaseDataWithAdditionalInfo<AgentId> implements HasLab
     @Override
     public String getName() {
         return this.name;
-    }
-
-    @Schema(description = "Label that may be used in widgets", example = "Silo Agent on far field")
-    public String getLabel() {
-        return this.label;
     }
 }

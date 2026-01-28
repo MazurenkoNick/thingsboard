@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.agent.event;
+package org.thingsboard.server.service.agent.workflow;
 
-public interface AgentEventProcessor {
-
-    void launchEventProcessor();
+public record StepPayload(String id, String title, String type, boolean optional,
+                          Object compose, Object modifications, String projectName, String message) {
 }

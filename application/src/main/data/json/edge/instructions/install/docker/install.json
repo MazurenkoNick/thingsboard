@@ -1,0 +1,92 @@
+{
+  "steps": [
+    {
+      "id": "c1",
+      "title": "Create the ThingsBoard Edge Docker Compose file",
+      "type": "compose",
+      "optional": false,
+      "compose": {
+        "projectName": "tb-edge",
+        "services": {
+          "mytbedge": {
+            "image": "thingsboard/tb-edge:${TB_EDGE_VERSION}",
+            "restart": "always",
+            "ports": [
+              "8080:8080",
+              "1883:1883",
+              "5683-5688:5683-5688/udp"
+            ],
+            "environment": [
+              "SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/tb-edge",
+              "CLOUD_ROUTING_KEY=${CLOUD_ROUTING_KEY}",
+              "CLOUD_ROUTING_SECRET=${CLOUD_ROUTING_SECRET}",
+              "CLOUD_RPC_HOST=${BASE_URL}",
+              "CLOUD_RPC_PORT=${CLOUD_RPC_PORT}",
+              "CLOUD_RPC_SSL_ENABLED=${CLOUD_RPC_SSL_ENABLED}"
+            ],
+            "extra_hosts": [
+              "host.docker.internal:host-gateway"
+            ],
+            "volumes": [
+              "tb-edge-data:/data",
+              "tb-edge-logs:/var/log/tb-edge"
+            ]
+          },
+          "postgres": {
+            "image": "postgres:16",
+            "restart": "always",
+            "ports": [
+              "5432"
+            ],
+            "environment": [
+              "POSTGRES_DB=tb-edge",
+              "POSTGRES_PASSWORD=postgres"
+            ],
+            "volumes": [
+              "tb-edge-postgres-data:/var/lib/postgresql/data"
+            ]
+          }
+        },
+        "volumes": {
+          "tb-edge-data": {
+            "name": "tb-edge-data"
+          },
+          "tb-edge-logs": {
+            "name": "tb-edge-logs"
+          },
+          "tb-edge-postgres-data": {
+            "name": "tb-edge-postgres-data"
+          }
+        }
+      }
+    },
+    {
+      "id": "p1",
+      "title": "[Optional] Update Bind Ports",
+      "type": "compose-modify",
+      "optional": true,
+      "modifications": {
+        "service": "mytbedge",
+        "portMappings": {
+          "8080:8080": "18080:8080",
+          "1883:1883": "11883:1883",
+          "5683-5688:5683-5688/udp": "15683-15688:5683-5688/udp"
+        }
+      }
+    },
+    {
+      "id": "s1",
+      "title": "Start ThingsBoard Edge",
+      "type": "compose-start",
+      "optional": false,
+      "projectName": "tb-edge"
+    },
+    {
+      "id": "u1",
+      "title": "Open ThingsBoard Edge UI",
+      "type": "info",
+      "optional": false,
+      "message": "Once the Edge service has started, open the Edge web interface at http://localhost:8080, or http://localhost:18080 if you modified the HTTP bind port configuration in the previous step.\n\nLog in using your tenant credentials from either your local ThingsBoard Server or the ThingsBoard Live Demo."
+    }
+  ]
+}

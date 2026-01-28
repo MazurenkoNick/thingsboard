@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.agent.event;
+package org.thingsboard.server.service.entitiy.agent;
 
-public interface AgentEventProcessor {
+import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.agent.Agent;
 
-    void launchEventProcessor();
+public interface TbAgentService {
+    Agent save(Agent agent, User currentUser) throws Exception;
 }

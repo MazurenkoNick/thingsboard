@@ -13,24 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.agent.msg.inbound;
+package org.thingsboard.server.cache.edge;
 
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.thingsboard.server.service.agent.AgentInboundMsgCtx;
+import org.thingsboard.server.common.data.id.TenantId;
 
-import java.util.List;
+import java.io.Serial;
+import java.io.Serializable;
 
-@Service
+@Getter
+@EqualsAndHashCode
 @RequiredArgsConstructor
-public class BaseAgentInboundMessageDispatcher implements AgentInboundMessageDispatcher {
+@Builder
+public class AgentCacheKey implements Serializable {
 
-    private final List<AgentInboundMessageHandler> agentInboundMessageHandlerList;
+    @Serial
+    private static final long serialVersionUID = 7657100143498569699L;
+
+    private final TenantId tenantId;
+    private final String name;
 
     @Override
-    public void process(AgentInboundMsgCtx ctx) {
-        agentInboundMessageHandlerList.stream()
-                .filter(h -> h.canHandle(ctx))
-                .forEach(h -> h.handle(ctx));
+    public String toString() {
+        return tenantId + "_" + name;
     }
 }

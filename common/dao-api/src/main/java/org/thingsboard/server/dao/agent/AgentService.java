@@ -13,9 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.agent.event;
+package org.thingsboard.server.dao.agent;
 
-public interface AgentEventProcessor {
+import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.id.AgentId;
+import org.thingsboard.server.common.data.id.TenantId;
 
-    void launchEventProcessor();
+public interface AgentService {
+    Agent saveAgent(Agent agent);
+    Agent findAgentById(TenantId tenantId, AgentId agentId);
+    void deleteAgent(TenantId tenantId, AgentId agentId);
 }

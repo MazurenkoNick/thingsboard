@@ -13,9 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.agent.event;
+package org.thingsboard.edge.utils;
 
-public interface AgentEventProcessor {
+import org.thingsboard.server.gen.edge.v1.EdgeVersion;
 
-    void launchEventProcessor();
+import java.util.Arrays;
+import java.util.Comparator;
+
+public class EdgeProtoUtils {
+
+    public static EdgeVersion getNewestEdgeVersion() {
+        return Arrays.stream(EdgeVersion.values())
+                .filter(v -> v != EdgeVersion.UNRECOGNIZED)
+                .filter(v -> v != EdgeVersion.V_LATEST)
+                .max(Comparator.comparingInt(EdgeVersion::getNumber))
+                .orElseThrow();
+    }
 }

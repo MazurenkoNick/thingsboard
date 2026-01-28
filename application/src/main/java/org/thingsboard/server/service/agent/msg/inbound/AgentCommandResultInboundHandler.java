@@ -16,21 +16,31 @@
 package org.thingsboard.server.service.agent.msg.inbound;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import org.thingsboard.server.service.agent.AgentInboundMsgCtx;
+import org.thingsboard.server.service.agent.AgentWorkflowProcessorService;
 
-import java.util.List;
-
-@Service
+@Component
+@Slf4j
 @RequiredArgsConstructor
-public class BaseAgentInboundMessageDispatcher implements AgentInboundMessageDispatcher {
+public class AgentCommandResultInboundHandler implements AgentInboundMessageHandler {
 
-    private final List<AgentInboundMessageHandler> agentInboundMessageHandlerList;
+    private final AgentWorkflowProcessorService agentWorkflowProcessorService;
 
     @Override
-    public void process(AgentInboundMsgCtx ctx) {
-        agentInboundMessageHandlerList.stream()
-                .filter(h -> h.canHandle(ctx))
-                .forEach(h -> h.handle(ctx));
+    public boolean canHandle(AgentInboundMsgCtx msgCtx) {
+        return msgCtx != null && msgCtx.msg() != null && msgCtx.msg().hasResult();
+    }
+
+    @Override
+    public void handle(AgentInboundMsgCtx msgCtx) {
+        try {
+            agentWorkflowProcessorService.onStepResult(msgCtx.session(), msgCtx.msg().getResult());
+        } catch (Exception e) {
+            log.warn("[{}] Failed to process agent CommandAck", msgCtx.sessionState().getAgentId(), e);
+        }
     }
 }
+
+
