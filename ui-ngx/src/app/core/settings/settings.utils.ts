@@ -30,12 +30,12 @@
 ///
 
 import { environment as env } from '@env/environment';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateStore } from '@ngx-translate/core';
 import { mergeMap } from 'rxjs/operators';
 import _moment from 'moment';
 import { Observable } from 'rxjs';
 
-export function updateUserLang(translate: TranslateService, document: Document, userLang: string,
+export function updateUserLang(translate: TranslateService, translateStore: TranslateStore, document: Document, userLang: string,
                                translations = env.supportedLangs, reload = false): Observable<any> {
   let targetLang = userLang;
   if (!translations) {
@@ -57,8 +57,8 @@ export function updateUserLang(translate: TranslateService, document: Document, 
   document.documentElement.lang = detectedSupportedLang.replace('_', '-');
   _moment.locale([detectedSupportedLang]);
   if (reload) {
-    translate.addLangs(translations);
-    if (translate.getLangs()[detectedSupportedLang]) {
+    translateStore.addLanguages(translations);
+    if (translateStore.hasTranslationFor(detectedSupportedLang)) {
       return translate.currentLoader.getTranslation(detectedSupportedLang).pipe(
         mergeMap((value) => {
           translate.setTranslation(detectedSupportedLang, value, true);
@@ -75,7 +75,7 @@ export function updateUserLang(translate: TranslateService, document: Document, 
       return translate.use(detectedSupportedLang);
     }
   } else {
-    if (detectedSupportedLang === env.defaultLang && translate.getLangs()[detectedSupportedLang]) {
+    if (detectedSupportedLang === env.defaultLang && translateStore.hasTranslationFor(detectedSupportedLang)) {
       return translate.currentLoader.getTranslation(detectedSupportedLang).pipe(
         mergeMap((value) => {
           translate.setTranslation(detectedSupportedLang, value, true);

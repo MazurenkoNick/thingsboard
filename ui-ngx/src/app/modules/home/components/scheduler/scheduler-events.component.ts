@@ -112,7 +112,7 @@ import { FormBuilder } from '@angular/forms';
 import { isValidPageStepCount, isValidPageStepIncrement } from '@home/components/widget/lib/table-widget.models';
 import { WidgetComponent } from '@home/components/widget/widget.component';
 import { VersionControlComponent } from '@home/components/vc/version-control.component';
-import { MatButton } from '@angular/material/button';
+import { MatIconButton } from '@angular/material/button';
 import { TbPopoverService } from '@shared/components/popover.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CustomTranslatePipe } from '@shared/pipe/custom-translate.pipe';
@@ -771,7 +771,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
       .subscribe(() => this.cd.detectChanges());
   }
 
-  public toggleVersionControl($event: Event, scheduled: SchedulerEventWithCustomerInfo, versionControlButton: MatButton): void {
+  public toggleVersionControl($event: Event, scheduled: SchedulerEventWithCustomerInfo, versionControlButton: MatIconButton): void {
     $event?.stopPropagation();
     const trigger = versionControlButton._elementRef.nativeElement;
     if (this.popoverService.hasPopover(trigger)) {

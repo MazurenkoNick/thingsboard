@@ -51,7 +51,7 @@ import {
 import { getCurrentAuthState, getCurrentAuthUser } from './auth.selectors';
 import { Authority } from '@shared/models/authority.enum';
 import { AuthPayload, AuthState, SysParams, SysParamsState } from '@core/auth/auth.models';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateStore } from '@ngx-translate/core';
 import { AuthUser } from '@shared/models/user.model';
 import { TimeService } from '@core/services/time.service';
 import { UtilsService } from '@core/services/utils.service';
@@ -85,6 +85,7 @@ export class AuthService {
     private zone: NgZone,
     private utils: UtilsService,
     private translate: TranslateService,
+    private translateStore: TranslateStore,
     private dialog: MatDialog,
     @Inject(DOCUMENT) private document: Document,
   ) {
@@ -502,7 +503,7 @@ export class AuthService {
         mergeMap((sysParams: SysParams) => {
           (this.translate.currentLoader as TranslateDefaultLoader).isAuthenticated = true;
           this.timeService.setMaxDatapointsLimit(sysParams.maxDatapointsLimit);
-          return updateUserLang(this.translate, this.document, userLang, sysParams.availableLocales, true).pipe(
+          return updateUserLang(this.translate, this.translateStore, this.document, userLang, sysParams.availableLocales, true).pipe(
             map(() => sysParams)
           );
         })
