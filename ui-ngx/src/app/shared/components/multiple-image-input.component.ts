@@ -36,7 +36,7 @@ import { AppState } from '@core/core.state';
 import { ControlValueAccessor, FormArray, NG_VALUE_ACCESSOR, } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
-import { DropDirective, FlowDirective } from '@flowjs/ngx-flow';
+import { FlowConfig, FlowDrop } from '@flowjs/ngx-flow';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { UtilsService } from '@core/services/utils.service';
 import { DialogService } from '@core/services/dialog.service';
@@ -93,10 +93,10 @@ export class MultipleImageInputComponent extends PageComponent implements AfterV
   dragIndex: number;
 
   @ViewChild('flow', {static: true})
-  flow: FlowDirective;
+  flow: FlowConfig;
 
   @ViewChild('flowDrop', {static: true})
-  flowDrop: DropDirective;
+  flowDrop: FlowDrop;
 
   autoUploadSubscription: Subscription;
 

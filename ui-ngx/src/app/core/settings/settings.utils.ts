@@ -58,12 +58,12 @@ export function updateUserLang(translate: TranslateService, document: Document, 
   _moment.locale([detectedSupportedLang]);
   if (reload) {
     translate.addLangs(translations);
-    if (translate.translations[detectedSupportedLang]) {
+    if (translate.getLangs()[detectedSupportedLang]) {
       return translate.currentLoader.getTranslation(detectedSupportedLang).pipe(
         mergeMap((value) => {
           translate.setTranslation(detectedSupportedLang, value, true);
-          if (translate.currentLang !== detectedSupportedLang) {
-            const currentLanguage = translate.currentLang;
+          if (translate.getCurrentLang() !== detectedSupportedLang) {
+            const currentLanguage = translate.getCurrentLang();
             translate.currentLoader.getTranslation(currentLanguage).subscribe(currentLangValue => {
               translate.setTranslation(currentLanguage, currentLangValue, true);
             });
@@ -75,7 +75,7 @@ export function updateUserLang(translate: TranslateService, document: Document, 
       return translate.use(detectedSupportedLang);
     }
   } else {
-    if (detectedSupportedLang === env.defaultLang && translate.translations[detectedSupportedLang]) {
+    if (detectedSupportedLang === env.defaultLang && translate.getLangs()[detectedSupportedLang]) {
       return translate.currentLoader.getTranslation(detectedSupportedLang).pipe(
         mergeMap((value) => {
           translate.setTranslation(detectedSupportedLang, value, true);

@@ -36,17 +36,7 @@ import { select, Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
 import { BreakpointId, Dashboard, DashboardLayoutId } from '@shared/models/dashboard.models';
-import {
-  deepClone,
-  guid,
-  isDefined,
-  isNotEmptyStr,
-  isNumber,
-  isObject,
-  isString,
-  isUndefined,
-  unwrapModule
-} from '@core/utils';
+import { deepClone, guid, isDefined, isNotEmptyStr, isNumber, isObject, isString, isUndefined, unwrapModule } from '@core/utils';
 
 import {
   AliasesInfo,
