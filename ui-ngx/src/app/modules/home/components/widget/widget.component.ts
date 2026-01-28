@@ -90,7 +90,7 @@ import {
   WidgetContext,
   widgetContextToken,
   widgetErrorMessagesToken,
-  WidgetHeaderAction,
+  WidgetHeaderAction, widgetHeaderActionsPanelToken,
   WidgetInfo,
   widgetTitlePanelToken,
   WidgetTypeInstance
@@ -276,6 +276,7 @@ export class WidgetComponent extends PageComponent implements OnInit, OnChanges,
     this.widgetContext.toastTargetId = this.toastTargetId;
     this.widgetContext.renderer = this.renderer;
     this.widgetContext.widgetContentContainer = this.widgetContentContainer;
+    this.widgetContext.widgetHeaderActionsPanel = this.widgetHeaderActionsPanel;
 
     this.widgetContext.subscriptionApi = {
       createSubscription: this.createSubscription.bind(this),
@@ -847,6 +848,10 @@ export class WidgetComponent extends PageComponent implements OnInit, OnChanges,
             {
               provide: widgetTitlePanelToken,
               useValue: this.widgetTitlePanel
+            },
+            {
+              provide: widgetHeaderActionsPanelToken,
+              useValue: this.widgetHeaderActionsPanel
             }
           ],
           parent: this.injector
