@@ -148,6 +148,7 @@ export class EntityVersionDiffComponent extends PageComponent implements OnInit,
             {
               element: this.diffViewerElmRef.nativeElement,
               mode: 'ace/mode/json',
+              lockScrolling: false,
               left: {
                 copyLinkEnabled: false,
                 editable: false,
