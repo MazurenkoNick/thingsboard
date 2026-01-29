@@ -53,9 +53,10 @@ import { initCustomJQueryEvents } from '@shared/models/jquery-event.models';
 import { TranslateDefaultLoader } from '@core/translate/translate-default-loader';
 
 @Component({
-  selector: 'tb-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+    selector: 'tb-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.scss'],
+    standalone: false
 })
 export class AppComponent {
 

@@ -91,22 +91,23 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DisplayPopoverConfig } from '@shared/components/popover.models';
 
 @Component({
-  selector: 'tb-custom-menu-item-row',
-  templateUrl: './custom-menu-item-row.component.html',
-  styleUrls: ['./custom-menu-item-row.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => CustomMenuItemRowComponent),
-      multi: true
-    },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => CustomMenuItemRowComponent),
-      multi: true
-    }
-  ],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-custom-menu-item-row',
+    templateUrl: './custom-menu-item-row.component.html',
+    styleUrls: ['./custom-menu-item-row.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => CustomMenuItemRowComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => CustomMenuItemRowComponent),
+            multi: true
+        }
+    ],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class CustomMenuItemRowComponent implements ControlValueAccessor, OnInit, OnDestroy, Validator, OnChanges {
 

@@ -46,9 +46,10 @@ import { EntityTableConfig } from '@home/models/entity/entities-table-config.mod
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Component({
-  selector: 'tb-entity-view',
-  templateUrl: './entity-view.component.html',
-  styleUrls: ['./entity-view.component.scss']
+    selector: 'tb-entity-view',
+    templateUrl: './entity-view.component.html',
+    styleUrls: ['./entity-view.component.scss'],
+    standalone: false
 })
 export class EntityViewComponent extends GroupEntityComponent<EntityViewInfo> {
 

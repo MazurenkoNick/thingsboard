@@ -53,19 +53,20 @@ import { takeUntil } from 'rxjs/operators';
 import { privateNetworkAddressValidator } from '@home/components/integration/integration.models';
 
 @Component({
-  selector: 'tb-opc-ua-integration-form',
-  templateUrl: './opc-ua-integration-form.component.html',
-  styleUrls: ['./opc-ua-integration-form.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => OpcUaIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => OpcUaIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-opc-ua-integration-form',
+    templateUrl: './opc-ua-integration-form.component.html',
+    styleUrls: ['./opc-ua-integration-form.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => OpcUaIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => OpcUaIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class OpcUaIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator {
 

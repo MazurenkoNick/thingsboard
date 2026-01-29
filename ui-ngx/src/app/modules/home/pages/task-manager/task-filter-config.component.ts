@@ -54,16 +54,17 @@ import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { deepClone } from '@core/utils';
 
 @Component({
-  selector: 'tb-task-filter-config',
-  templateUrl: './task-filter-config.component.html',
-  styleUrls: ['./task-filter-config.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => TaskFilterConfigComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-task-filter-config',
+    templateUrl: './task-filter-config.component.html',
+    styleUrls: ['./task-filter-config.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => TaskFilterConfigComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class TaskFilterConfigComponent implements ControlValueAccessor, OnDestroy {
 

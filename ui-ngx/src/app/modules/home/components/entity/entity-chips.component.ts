@@ -37,9 +37,10 @@ import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { isEqual, isNotEmptyStr, isObject } from '@core/utils';
 
 @Component({
-  selector: 'tb-entity-chips',
-  templateUrl: './entity-chips.component.html',
-  styleUrls: ['./entity-chips.component.scss']
+    selector: 'tb-entity-chips',
+    templateUrl: './entity-chips.component.html',
+    styleUrls: ['./entity-chips.component.scss'],
+    standalone: false
 })
 export class EntityChipsComponent implements OnChanges {
 

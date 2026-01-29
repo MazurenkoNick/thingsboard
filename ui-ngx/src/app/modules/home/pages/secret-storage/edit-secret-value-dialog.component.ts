@@ -45,9 +45,10 @@ export interface EditSecretValueDialogData {
 }
 
 @Component({
-  selector: 'tb-edit-secret-value-dialog',
-  templateUrl: './edit-secret-value-dialog.component.html',
-  styleUrls: []
+    selector: 'tb-edit-secret-value-dialog',
+    templateUrl: './edit-secret-value-dialog.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class EditSecretValueDialogComponent extends
   DialogComponent<EditSecretValueDialogComponent, boolean> implements OnInit {

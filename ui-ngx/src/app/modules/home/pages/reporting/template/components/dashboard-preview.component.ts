@@ -41,10 +41,11 @@ import { EntityType } from '@shared/models/entity-type.models';
 import { Router } from '@angular/router';
 
 @Component({
-  selector: 'tb-dashboard-preview',
-  templateUrl: './dashboard-preview.component.html',
-  styleUrls: ['./dashboard-preview.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-dashboard-preview',
+    templateUrl: './dashboard-preview.component.html',
+    styleUrls: ['./dashboard-preview.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class DashboardPreviewComponent extends AbstractReportComponentPreview<DashboardReportComponentConfig> {
 

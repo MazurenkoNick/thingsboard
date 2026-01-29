@@ -54,19 +54,20 @@ import { TranslateService } from '@ngx-translate/core';
 import { IntegrationForm } from '@home/components/integration/configuration/integration-form';
 
 @Component({
-  selector: 'tb-http-integration-form',
-  templateUrl: './http-integration-form.component.html',
-  styleUrls: ['./http-integration-form.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => HttpIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => HttpIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-http-integration-form',
+    templateUrl: './http-integration-form.component.html',
+    styleUrls: ['./http-integration-form.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => HttpIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => HttpIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class HttpIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator, OnInit {
 

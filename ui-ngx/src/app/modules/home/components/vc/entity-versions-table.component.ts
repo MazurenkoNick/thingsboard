@@ -75,9 +75,10 @@ import { Operation, Resource } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Component({
-  selector: 'tb-entity-versions-table',
-  templateUrl: './entity-versions-table.component.html',
-  styleUrls: ['./entity-versions-table.component.scss']
+    selector: 'tb-entity-versions-table',
+    templateUrl: './entity-versions-table.component.html',
+    styleUrls: ['./entity-versions-table.component.scss'],
+    standalone: false
 })
 export class EntityVersionsTableComponent extends PageComponent implements OnInit, AfterViewInit, OnDestroy {
 

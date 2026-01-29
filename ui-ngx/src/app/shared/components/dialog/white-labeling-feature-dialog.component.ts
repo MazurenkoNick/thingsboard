@@ -39,10 +39,11 @@ import { WINDOW } from '@core/services/window.service';
 
 // @dynamic
 @Component({
-  selector: 'tb-white-labeling-feature-dialog',
-  templateUrl: './white-labeling-feature-dialog.component.html',
-  styleUrls: ['./white-labeling-feature-dialog.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-white-labeling-feature-dialog',
+    templateUrl: './white-labeling-feature-dialog.component.html',
+    styleUrls: ['./white-labeling-feature-dialog.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class WhiteLabelingFeatureDialogComponent extends DialogComponent<WhiteLabelingFeatureDialogComponent> {
 

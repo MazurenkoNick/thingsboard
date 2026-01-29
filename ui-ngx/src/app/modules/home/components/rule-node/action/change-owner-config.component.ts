@@ -36,9 +36,10 @@ import { RuleNodeConfiguration, RuleNodeConfigurationComponent } from '@app/shar
 import { OwnerType, ownerTypeTranslations } from '@home/components/rule-node/rule-node-config.models';
 
 @Component({
-  selector: 'tb-action-node-change-owner-config',
-  templateUrl: './change-owner-config.component.html',
-  styleUrls: []
+    selector: 'tb-action-node-change-owner-config',
+    templateUrl: './change-owner-config.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class ChangeOwnerConfigComponent extends RuleNodeConfigurationComponent {
 

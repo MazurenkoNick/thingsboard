@@ -41,9 +41,10 @@ import { CaptchaParams, CaptchaVersion } from '@shared/models/self-register.mode
 import { isDefinedAndNotNull } from '@core/utils';
 
 @Component({
-  selector: 'tb-recaptcha',
-  templateUrl: './tb-recaptcha.component.html',
-  styleUrls: ['./tb-recaptcha.component.scss']
+    selector: 'tb-recaptcha',
+    templateUrl: './tb-recaptcha.component.html',
+    styleUrls: ['./tb-recaptcha.component.scss'],
+    standalone: false
 })
 export class TbRecaptchaComponent extends PageComponent implements OnInit, OnDestroy {
 

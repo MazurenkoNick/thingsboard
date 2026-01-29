@@ -38,9 +38,10 @@ import { Authority } from '@shared/models/authority.enum';
 import { User, UserInfo } from '@shared/models/user.model';
 
 @Component({
-  selector: 'tb-user-table-header',
-  templateUrl: './user-table-header.component.html',
-  styleUrls: []
+    selector: 'tb-user-table-header',
+    templateUrl: './user-table-header.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class UserTableHeaderComponent extends EntityTableHeaderComponent<UserInfo | User> implements OnInit {
 

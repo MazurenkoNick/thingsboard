@@ -46,9 +46,10 @@ export interface UnsupportedSolutionTemplateLevelDialogData {
 
 // @dynamic
 @Component({
-  selector: 'tb-unsupported-solution-template-level-dialog',
-  templateUrl: './unsupported-solution-template-level-dialog.component.html',
-  styleUrls: []
+    selector: 'tb-unsupported-solution-template-level-dialog',
+    templateUrl: './unsupported-solution-template-level-dialog.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class UnsupportedSolutionTemplateLevelDialogComponent extends DialogComponent<UnsupportedSolutionTemplateLevelDialogComponent> {
 

@@ -70,16 +70,17 @@ import { coerceBoolean } from '@shared/decorators/coercion';
 export type CreateEntityGroupFunction = (groupType: EntityType, groupName?: string, ownerId?: EntityId) => Observable<EntityInfoData>;
 
 @Component({
-  selector: 'tb-entity-group-list',
-  templateUrl: './entity-group-list.component.html',
-  styleUrls: [],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => EntityGroupListComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-entity-group-list',
+    templateUrl: './entity-group-list.component.html',
+    styleUrls: [],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => EntityGroupListComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class EntityGroupListComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnChanges {
 

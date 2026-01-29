@@ -43,21 +43,22 @@ import { GroupPermission } from '@shared/models/group-permission.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-user-group-panel',
-  templateUrl: './user-group-panel.component.html',
-  styleUrls: [],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: UserGroupPanelComponent,
-      multi: true
-    },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: UserGroupPanelComponent,
-      multi: true
-    }
-  ]
+    selector: 'tb-user-group-panel',
+    templateUrl: './user-group-panel.component.html',
+    styleUrls: [],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: UserGroupPanelComponent,
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: UserGroupPanelComponent,
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class UserGroupPanelComponent implements ControlValueAccessor, Validator {
 

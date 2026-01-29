@@ -44,9 +44,10 @@ import { exportableEntityTypes } from '@shared/models/vc.models';
 import { EntityTableConfig } from '@home/models/entity/entities-table-config.models';
 
 @Component({
-  selector: 'tb-group-entity-tabs',
-  templateUrl: './group-entity-tabs.component.html',
-  styleUrls: []
+    selector: 'tb-group-entity-tabs',
+    templateUrl: './group-entity-tabs.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class GroupEntityTabsComponent<T extends BaseData<HasId>>
   extends EntityTabsComponent<T, PageLink, T | ShortEntityView, EntityTableConfig<T> | GroupEntityTableConfig<T>> {

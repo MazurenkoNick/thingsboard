@@ -47,9 +47,10 @@ export interface EntityLimitDialogData {
 
 // @dynamic
 @Component({
-  selector: 'tb-entity-limit-dialog',
-  templateUrl: './entity-limit-dialog.component.html',
-  styleUrls: ['./entity-limit-dialog.component.scss']
+    selector: 'tb-entity-limit-dialog',
+    templateUrl: './entity-limit-dialog.component.html',
+    styleUrls: ['./entity-limit-dialog.component.scss'],
+    standalone: false
 })
 export class EntityLimitDialogComponent extends DialogComponent<EntityLimitDialogComponent> {
 

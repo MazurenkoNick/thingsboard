@@ -39,17 +39,18 @@ import { WhiteLabelingService } from '@core/http/white-labeling.service';
 import { plainColorFromVariable } from '@app/core/utils';
 
 @Component({
-  selector: 'tb-theme-color-select',
-  templateUrl: './theme-color-select.component.html',
-  styleUrls: ['./theme-color-select.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => ThemeColorSelectComponent),
-      multi: true
-    }
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'tb-theme-color-select',
+    templateUrl: './theme-color-select.component.html',
+    styleUrls: ['./theme-color-select.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ThemeColorSelectComponent),
+            multi: true
+        }
+    ],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ThemeColorSelectComponent extends PageComponent implements OnInit, ControlValueAccessor {
 

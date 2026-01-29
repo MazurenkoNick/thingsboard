@@ -108,10 +108,11 @@ import { DeleteTimeseriesPanelComponent } from '@home/components/attribute/delet
 import { FormBuilder } from '@angular/forms';
 
 @Component({
-  selector: 'tb-attribute-table',
-  templateUrl: './attribute-table.component.html',
-  styleUrls: ['./attribute-table.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'tb-attribute-table',
+    templateUrl: './attribute-table.component.html',
+    styleUrls: ['./attribute-table.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AttributeTableComponent extends PageComponent implements AfterViewInit, OnInit, OnDestroy {
 

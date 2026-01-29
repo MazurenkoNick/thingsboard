@@ -65,11 +65,12 @@ import { reportComponentTypesData } from '@home/pages/reporting/template/compone
 import { TranslateService } from '@ngx-translate/core';
 
 @Component({
-  selector: 'tb-latest-chart-preview',
-  templateUrl: './latest-chart-preview.component.html',
-  styleUrls: ['./latest-chart-preview.component.scss'],
-  encapsulation: ViewEncapsulation.None,
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'tb-latest-chart-preview',
+    templateUrl: './latest-chart-preview.component.html',
+    styleUrls: ['./latest-chart-preview.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LatestChartPreviewComponent extends AbstractReportComponentPreview<LatestChartReportComponentConfig>
   implements AfterViewInit, OnDestroy, WidgetSubscriptionCallbacks {

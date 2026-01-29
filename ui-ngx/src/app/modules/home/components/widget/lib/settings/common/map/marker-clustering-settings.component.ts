@@ -46,21 +46,22 @@ import { MarkerClusteringSettings } from '@shared/models/widget/maps/map.models'
 import { merge } from 'rxjs';
 
 @Component({
-  selector: 'tb-marker-clustering-settings',
-  templateUrl: './marker-clustering-settings.component.html',
-  styleUrls: ['./../../widget-settings.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => MarkerClusteringSettingsComponent),
-      multi: true
-    },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => MarkerClusteringSettingsComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-marker-clustering-settings',
+    templateUrl: './marker-clustering-settings.component.html',
+    styleUrls: ['./../../widget-settings.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => MarkerClusteringSettingsComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => MarkerClusteringSettingsComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class MarkerClusteringSettingsComponent implements OnInit, ControlValueAccessor, Validator {
 

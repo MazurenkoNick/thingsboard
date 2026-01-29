@@ -42,16 +42,17 @@ import { ColorPalette, getContrastColor, materialColorPalette } from '@shared/mo
 import { PaletteDialogComponent, PaletteDialogData } from '@home/pages/admin/palette-dialog.component';
 
 @Component({
-  selector: 'tb-palette',
-  templateUrl: './palette.component.html',
-  styleUrls: ['./palette.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => PaletteComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-palette',
+    templateUrl: './palette.component.html',
+    styleUrls: ['./palette.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => PaletteComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class PaletteComponent extends PageComponent implements AfterViewInit, OnDestroy, ControlValueAccessor {
 

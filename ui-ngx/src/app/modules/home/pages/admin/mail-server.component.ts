@@ -59,9 +59,10 @@ import { DomainSchema, domainSchemaTranslations, } from '@shared/models/oauth2.m
 import { WINDOW } from '@core/services/window.service';
 
 @Component({
-  selector: 'tb-mail-server',
-  templateUrl: './mail-server.component.html',
-  styleUrls: ['./mail-server.component.scss', './settings-card.scss']
+    selector: 'tb-mail-server',
+    templateUrl: './mail-server.component.html',
+    styleUrls: ['./mail-server.component.scss', './settings-card.scss'],
+    standalone: false
 })
 export class MailServerComponent extends PageComponent implements OnInit, OnDestroy, HasConfirmForm {
 

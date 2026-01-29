@@ -32,9 +32,10 @@
 import { AfterViewInit, Component, ElementRef, Input } from '@angular/core';
 
 @Component({
-  selector: 'tb-spark-line',
-  template: '',
-  styleUrls: []
+    selector: 'tb-spark-line',
+    template: '',
+    styleUrls: [],
+    standalone: false
 })
 export class TbSparkLineComponent implements AfterViewInit {
 

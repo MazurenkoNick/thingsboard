@@ -44,9 +44,10 @@ import { isEqual } from '@core/utils';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-role',
-  templateUrl: './role.component.html',
-  styleUrls: ['./role.component.scss']
+    selector: 'tb-role',
+    templateUrl: './role.component.html',
+    styleUrls: ['./role.component.scss'],
+    standalone: false
 })
 export class RoleComponent extends EntityComponent<Role> {
 

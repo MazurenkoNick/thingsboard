@@ -51,19 +51,20 @@ import { TranslateService } from '@ngx-translate/core';
 import { safeMerge, sendRPCRequestDefaults } from '@home/components/scheduler/config/config.models';
 
 @Component({
-  selector: 'tb-send-rpc-request-event-config',
-  templateUrl: './send-rpc-request.component.html',
-  styleUrls: ['./send-rpc-request.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => SendRpcRequestComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => SendRpcRequestComponent),
-    multi: true
-  }]
+    selector: 'tb-send-rpc-request-event-config',
+    templateUrl: './send-rpc-request.component.html',
+    styleUrls: ['./send-rpc-request.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => SendRpcRequestComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => SendRpcRequestComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class SendRpcRequestComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy, Validator {
 

@@ -40,9 +40,10 @@ import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Authority } from '@shared/models/authority.enum';
 
 @Component({
-  selector: 'tb-group-entity-info',
-  templateUrl: './group-entity-info.component.html',
-  styleUrls: ['./group-entity-info.component.scss']
+    selector: 'tb-group-entity-info',
+    templateUrl: './group-entity-info.component.html',
+    styleUrls: ['./group-entity-info.component.scss'],
+    standalone: false
 })
 export class GroupEntityInfoComponent {
 

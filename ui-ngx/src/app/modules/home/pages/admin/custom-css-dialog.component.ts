@@ -47,9 +47,10 @@ export interface CustomCssDialogData {
 }
 
 @Component({
-  selector: 'tb-custom-css-dialog',
-  templateUrl: './custom-css-dialog.component.html',
-  styleUrls: ['./custom-css-dialog.component.scss']
+    selector: 'tb-custom-css-dialog',
+    templateUrl: './custom-css-dialog.component.html',
+    styleUrls: ['./custom-css-dialog.component.scss'],
+    standalone: false
 })
 export class CustomCssDialogComponent extends DialogComponent<CustomCssDialogComponent, string> implements OnInit, OnDestroy {
 

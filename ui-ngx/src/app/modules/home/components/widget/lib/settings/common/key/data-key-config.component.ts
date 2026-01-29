@@ -95,21 +95,22 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ScriptLanguage } from '@shared/models/rule-node.models';
 
 @Component({
-  selector: 'tb-data-key-config',
-  templateUrl: './data-key-config.component.html',
-  styleUrls: [],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => DataKeyConfigComponent),
-      multi: true
-    },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => DataKeyConfigComponent),
-      multi: true,
-    }
-  ]
+    selector: 'tb-data-key-config',
+    templateUrl: './data-key-config.component.html',
+    styleUrls: [],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => DataKeyConfigComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => DataKeyConfigComponent),
+            multi: true,
+        }
+    ],
+    standalone: false
 })
 export class DataKeyConfigComponent extends PageComponent implements OnInit, ControlValueAccessor, Validator, OnChanges {
 
