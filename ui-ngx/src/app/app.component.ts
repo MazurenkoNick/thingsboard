@@ -35,7 +35,7 @@ import { Component } from '@angular/core';
 
 import { environment as env } from '@env/environment';
 
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateStore } from '@ngx-translate/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { LocalStorageService } from '@core/local-storage/local-storage.service';
@@ -62,6 +62,7 @@ export class AppComponent {
 
   constructor(private store: Store<AppState>,
               private storageService: LocalStorageService,
+              private translateStore: TranslateStore,
               private translate: TranslateService,
               private matIconRegistry: MatIconRegistry,
               private domSanitizer: DomSanitizer,
@@ -112,8 +113,7 @@ export class AppComponent {
     if (!env.production) {
       console.log(`Default Lang: ${env.defaultLang}`);
     }
-    // @ts-ignore
-    this.translate.changeDefaultLang(env.defaultLang);
+    this.translateStore.setFallbackLang(env.defaultLang);
     this.translate.setTranslation(undefined, {
       "access": {
         "refresh-token-expired": "Session has expired",

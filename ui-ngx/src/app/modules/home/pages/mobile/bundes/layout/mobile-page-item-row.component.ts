@@ -64,7 +64,7 @@ import {
   mobilePageTypeTranslations
 } from '@shared/models/mobile-app.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MatButton } from '@angular/material/button';
+import { MatIconButton } from '@angular/material/button';
 import { deepClone } from '@core/utils';
 import { TbPopoverService } from '@shared/components/popover.service';
 import { CustomMobilePagePanelComponent } from '@home/pages/mobile/bundes/layout/custom-mobile-page-panel.component';
@@ -231,7 +231,7 @@ export class MobilePageItemRowComponent implements ControlValueAccessor, OnInit,
     this.pageRemoved.emit();
   }
 
-  edit($event: Event, matButton: MatButton) {
+  edit($event: Event, matButton: MatIconButton) {
     if ($event) {
       $event.stopPropagation();
     }
