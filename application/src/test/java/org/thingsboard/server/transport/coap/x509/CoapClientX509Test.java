@@ -66,6 +66,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.eclipse.californium.core.config.CoapConfig.DEFAULT_BLOCKWISE_STATUS_LIFETIME_IN_SECONDS;
 import static org.eclipse.californium.scandium.config.DtlsConfig.DTLS_AUTO_HANDSHAKE_TIMEOUT;
 import static org.eclipse.californium.scandium.config.DtlsConfig.DTLS_CIPHER_SUITES;
@@ -86,6 +87,8 @@ import static org.eclipse.californium.scandium.config.DtlsConfig.MODULE;
 import static org.eclipse.californium.scandium.dtls.SignatureAndHashAlgorithm.SHA256_WITH_ECDSA;
 import static org.eclipse.californium.scandium.dtls.SignatureAndHashAlgorithm.SHA256_WITH_RSA;
 import static org.eclipse.californium.scandium.dtls.SignatureAndHashAlgorithm.SHA384_WITH_ECDSA;
+import static org.thingsboard.server.transport.AbstractTransportIntegrationTest.DEFAULT_WAIT_TIMEOUT_SECONDS;
+import static org.thingsboard.server.utils.PortFinder.isUDPPortAvailable;
 
 @Slf4j
 public class CoapClientX509Test {
@@ -97,6 +100,7 @@ public class CoapClientX509Test {
     private final Configuration config;
     private final CertPrivateKey certPrivateKey;
     private final String coapsBaseUrl;
+    private final Integer fixedPort;
 
     @Getter
     private CoAP.Type type = CoAP.Type.CON;
@@ -105,12 +109,22 @@ public class CoapClientX509Test {
         this.certPrivateKey = certPrivateKey;
         this.coapsBaseUrl = coapsBaseUrl;
         this.config = createConfiguration();
+        this.fixedPort = fixedPort;
         this.dtlsConnector = createDTLSConnector(fixedPort);
         this.clientX509 = createClient(getFeatureTokenUrl(featureType));
     }
     public void disconnect() {
         if (clientX509 != null) {
             clientX509.shutdown();
+        }
+        if (dtlsConnector != null) {
+            dtlsConnector.destroy();
+            if (fixedPort != null) {
+                log.debug("Awaiting releasing UDP fixedPort {}", fixedPort);
+                await("Await client UDP port " + fixedPort + " to disconnect")
+                        .atMost(DEFAULT_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                        .until(() -> isUDPPortAvailable(fixedPort));
+            }
         }
     }
 

@@ -82,6 +82,7 @@ import static org.thingsboard.server.msa.prototypes.DevicePrototypes.defaultDevi
 public class MqttNodeTest extends AbstractContainerTest {
 
     private static final String TOPIC = "tb/mqtt/device";
+    private static final String CONTAINER_MQTT_URL = "tcp://localhost:1883";
 
     private Device device;
 
@@ -116,7 +117,7 @@ public class MqttNodeTest extends AbstractContainerTest {
         responseClient.connect();
         responseClient.subscribe(TOPIC, messageListener);
 
-        MqttClient mqttClient = new MqttClient("tcp://localhost:1883", StringUtils.randomAlphanumeric(10), new MemoryPersistence());
+        MqttClient mqttClient = new MqttClient(CONTAINER_MQTT_URL, StringUtils.randomAlphanumeric(10), new MemoryPersistence());
         MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
         mqttConnectOptions.setUserName(deviceCredentials.getCredentialsId());
         mqttConnectOptions.setPassword(password.toCharArray());

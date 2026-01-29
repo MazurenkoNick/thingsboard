@@ -28,50 +28,30 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.actors.calculatedField;
+package org.thingsboard.server.msa;
 
 import lombok.extern.slf4j.Slf4j;
-import org.thingsboard.common.util.DebugModeUtil;
-import org.thingsboard.server.actors.ActorSystemContext;
-import org.thingsboard.server.actors.service.ContextAwareActor;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.msg.TbActorMsg;
-import org.thingsboard.server.common.msg.ToCalculatedFieldSystemMsg;
+
+import java.io.IOException;
+import java.net.DatagramSocket;
+import java.net.SocketException;
 
 @Slf4j
-public abstract class AbstractCalculatedFieldActor extends ContextAwareActor {
-
-    protected final TenantId tenantId;
-
-    public AbstractCalculatedFieldActor(ActorSystemContext systemContext, TenantId tenantId) {
-        super(systemContext);
-        this.tenantId = tenantId;
-    }
-
-    @Override
-    protected boolean doProcess(TbActorMsg msg) {
-        if (msg instanceof ToCalculatedFieldSystemMsg cfm) {
-            Exception cause;
-            try {
-                return doProcessCfMsg(cfm);
-            } catch (CalculatedFieldException cfe) {
-                if (DebugModeUtil.isDebugFailuresAvailable(cfe.getCtx().getCalculatedField())) {
-                    systemContext.persistCalculatedFieldDebugError(cfe);
-                }
-                cause = cfe.getCause();
-            } catch (Exception e) {
-                logProcessingException(e);
-                cause = e;
-            }
-            cfm.getCallback().onFailure(cause);
-            return true;
-        } else {
-            return false;
+public class PortFinder {
+    public static int findAvailableUdpPort() {
+        try (DatagramSocket socket = new DatagramSocket(0)) {
+            return socket.getLocalPort();
+        } catch (SocketException e) {
+            throw new IllegalStateException("No available UDP ports found", e);
         }
     }
 
-    abstract void logProcessingException(Exception e);
-
-    abstract boolean doProcessCfMsg(ToCalculatedFieldSystemMsg msg) throws CalculatedFieldException;
-
+    public static boolean isUDPPortAvailable(int port) {
+        try (DatagramSocket socket = new DatagramSocket(port)) {
+            return true;
+        } catch (IOException e) {
+            log.debug("Failed to open UDP port {}", port, e);
+            return false;
+        }
+    }
 }

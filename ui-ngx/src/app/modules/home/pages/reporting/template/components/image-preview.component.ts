@@ -33,7 +33,8 @@ import { AfterViewInit, Component, ElementRef, OnDestroy, viewChild, ViewEncapsu
 import { ImageReportComponentConfig } from '@shared/models/report-component.models';
 import { AbstractReportComponentPreview } from '@home/pages/reporting/template/components/report-component.component';
 import { getDataKey } from '@shared/models/widget-settings.models';
-import { keyImage } from '@home/pages/reporting/template/components/report-component.models';
+import { imagePlaceholder, keyImage } from '@home/pages/reporting/template/components/report-component.models';
+import { isNotEmptyStr } from '@core/utils';
 
 @Component({
   selector: 'tb-image-preview',
@@ -55,19 +56,27 @@ export class ImagePreviewComponent extends AbstractReportComponentPreview<ImageR
 
   imageAlign: string = 'center';
 
+  imagePlaceholder = imagePlaceholder;
+
+  triggerUpdate: number = 0;
+
   onComponentUpdated() {
     if (this.reportComponent.sourceType === 'entityKey') {
       const key = getDataKey(this.reportComponent.dataSources);
       if (key) {
         this.imageUrl = keyImage(key.name);
       } else {
-        this.imageUrl = '/assets/report/components/image-placeholder.svg';
+        this.imageUrl = this.imagePlaceholder;
       }
     } else {
-      if (this.reportComponent.imageUrl && this.reportComponent.imageUrl.trim().length) {
-        this.imageUrl = this.reportComponent.imageUrl;
+      if (isNotEmptyStr(this.reportComponent.imageUrl)) {
+        if (this.imageUrl === this.reportComponent.imageUrl) {
+          this.triggerUpdate +=1;
+        } else {
+          this.imageUrl = this.reportComponent.imageUrl;
+        }
       } else {
-        this.imageUrl = '/assets/report/components/image-placeholder.svg';
+        this.imageUrl = this.imagePlaceholder;
       }
     }
     this.imageWidth = '100%';
