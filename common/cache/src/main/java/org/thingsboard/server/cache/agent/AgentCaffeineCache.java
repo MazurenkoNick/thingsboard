@@ -13,32 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.dao.model.sql;
+package org.thingsboard.server.cache.agent;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cache.CacheManager;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.cache.CaffeineTbTransactionalCache;
+import org.thingsboard.server.common.data.CacheConstants;
 import org.thingsboard.server.common.data.agent.Agent;
 
-import static org.thingsboard.server.dao.model.ModelConstants.AGENT_TABLE_NAME;
+@ConditionalOnProperty(prefix = "cache", value = "type", havingValue = "caffeine", matchIfMissing = true)
+@Service("AgentCache")
+public class AgentCaffeineCache extends CaffeineTbTransactionalCache<AgentCacheKey, Agent> {
 
-@Data
-@EqualsAndHashCode(callSuper = true)
-@Entity
-@Table(name = AGENT_TABLE_NAME)
-public final class AgentEntity extends AbstractAgentEntity<Agent> {
-
-    public AgentEntity() {
-        super();
-    }
-
-    public AgentEntity(Agent agent) {
-        super(agent);
-    }
-
-    @Override
-    public Agent toData() {
-        return super.toAgent();
+    public AgentCaffeineCache(CacheManager cacheManager) {
+        super(cacheManager, CacheConstants.AGENT_CACHE);
     }
 }

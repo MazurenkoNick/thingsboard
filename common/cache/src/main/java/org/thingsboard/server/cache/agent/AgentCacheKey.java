@@ -13,32 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.dao.model.sql;
+package org.thingsboard.server.cache.agent;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import org.thingsboard.server.common.data.agent.Agent;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.thingsboard.server.common.data.id.TenantId;
 
-import static org.thingsboard.server.dao.model.ModelConstants.AGENT_TABLE_NAME;
+import java.io.Serial;
+import java.io.Serializable;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
-@Entity
-@Table(name = AGENT_TABLE_NAME)
-public final class AgentEntity extends AbstractAgentEntity<Agent> {
+@Getter
+@EqualsAndHashCode
+@RequiredArgsConstructor
+@Builder
+public class AgentCacheKey implements Serializable {
 
-    public AgentEntity() {
-        super();
-    }
+    @Serial
+    private static final long serialVersionUID = 7657100143498569699L;
 
-    public AgentEntity(Agent agent) {
-        super(agent);
-    }
+    private final TenantId tenantId;
+    private final String name;
 
     @Override
-    public Agent toData() {
-        return super.toAgent();
+    public String toString() {
+        return tenantId + "_" + name;
     }
 }

@@ -245,7 +245,7 @@ public class ModelConstants {
     /**
      * Agent constants.
      */
-    public static final String AGENT_TABLE_NAME = "asset_profile_name";
+    public static final String AGENT_TABLE_NAME = "agent";
 
     /**
      * Alarm constants.

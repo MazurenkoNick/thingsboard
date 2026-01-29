@@ -42,6 +42,8 @@ import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.TenantInfo;
 import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentInfo;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.device.profile.DeviceProfileData;
 import org.thingsboard.server.common.data.device.profile.MqttDeviceProfileTransportConfiguration;
@@ -55,6 +57,7 @@ import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainType;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.widget.WidgetsBundle;
+import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
@@ -62,7 +65,6 @@ import org.thingsboard.server.dao.device.DeviceProfileService;
 import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
-import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.dao.rpc.RpcService;
@@ -72,6 +74,7 @@ import org.thingsboard.server.dao.tenant.TenantProfileService;
 import org.thingsboard.server.dao.usagerecord.ApiUsageStateService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.dao.widget.WidgetsBundleService;
+import org.thingsboard.server.exception.DataValidationException;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -124,6 +127,8 @@ public class TenantServiceTest extends AbstractServiceTest {
     UserService userService;
     @Autowired
     WidgetsBundleService widgetsBundleService;
+    @Autowired
+    AgentService agentService;
 
     private final IdComparator<Tenant> idComparator = new IdComparator<>();
 
@@ -472,6 +477,7 @@ public class TenantServiceTest extends AbstractServiceTest {
         OtaPackage otaPackage = createAndSaveOtaPackageFor(tenant, deviceProfile);
         TbResource resource = createAndSaveResourceFor(tenant);
         Rpc rpc = createAndSaveRpcFor(tenant, device);
+        Agent agent = createAndSaveAgentFor(tenant);
 
         tenantService.deleteTenant(tenant.getId());
 
@@ -491,8 +497,19 @@ public class TenantServiceTest extends AbstractServiceTest {
         assertResourceIsDeleted(tenant, resource);
         assertOtaPackageIsDeleted(tenant, otaPackage);
         Assert.assertNull(rpcService.findById(tenant.getId(), rpc.getId()));
+        assertAgentIsDeleted(tenant, agent);
 
         tenantProfileService.deleteTenantProfile(TenantId.SYS_TENANT_ID, profile.getId());
+    }
+
+    private void assertAgentIsDeleted(Tenant tenant, Agent agent) {
+        assertThat(agentService.findAgentById(tenant.getId(), agent.getId()))
+                .as("agent").isNull();
+        PageLink pageLink = new PageLink(1);
+        PageData<AgentInfo> agents =
+                agentService.findAgentInfosByTenantId(tenant.getId(), pageLink);
+        Assert.assertEquals(0, agents.getTotalElements());
+
     }
 
     private void assertOtaPackageIsDeleted(Tenant tenant, OtaPackage otaPackage) {
@@ -607,6 +624,13 @@ public class TenantServiceTest extends AbstractServiceTest {
         rpc.setStatus(RpcStatus.QUEUED);
         rpc.setRequest(JacksonUtil.toJsonNode("{}"));
         return rpcService.save(rpc);
+    }
+
+    private Agent createAndSaveAgentFor(Tenant tenant) {
+        Agent agent = new Agent();
+        agent.setTenantId(tenant.getId());
+        agent.setName("Test Agent");
+        return agentService.saveAgent(agent);
     }
 
     private TbResource createAndSaveResourceFor(Tenant tenant) {

@@ -24,6 +24,7 @@ public final class CacheConstants {
     public static final String DEVICE_CACHE = "devices";
     public static final String SESSIONS_CACHE = "sessions";
     public static final String ASSET_CACHE = "assets";
+    public static final String AGENT_CACHE = "agents";
     public static final String CUSTOMER_CACHE = "customers";
     public static final String USER_CACHE = "users";
     public static final String ENTITY_VIEW_CACHE = "entityViews";

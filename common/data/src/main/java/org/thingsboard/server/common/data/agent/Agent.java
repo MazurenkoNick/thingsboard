@@ -27,6 +27,7 @@ import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.HasVersion;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.validation.Length;
 import org.thingsboard.server.common.data.validation.NoXss;
@@ -35,7 +36,7 @@ import org.thingsboard.server.common.data.validation.NoXss;
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter
-public class Agent extends BaseDataWithAdditionalInfo<AgentId> implements HasTenantId, HasCustomerId, HasVersion, HasName {
+public class Agent extends BaseDataWithAdditionalInfo<AgentId> implements HasId<AgentId>, HasTenantId, HasCustomerId, HasVersion, HasName {
 
     private TenantId tenantId;
     private CustomerId customerId;
@@ -45,8 +46,20 @@ public class Agent extends BaseDataWithAdditionalInfo<AgentId> implements HasTen
     @Getter
     private Long version;
 
+    public Agent() {
+        super();
+    }
+
     public Agent(AgentId id) {
         this.id = id;
+    }
+
+    public Agent(Agent agent) {
+        super(agent);
+        this.tenantId = agent.getTenantId();
+        this.customerId = agent.getCustomerId();
+        this.name = agent.getName();
+        this.version = agent.getVersion();
     }
 
     @Schema(description = "JSON object with the Agent Id. " +

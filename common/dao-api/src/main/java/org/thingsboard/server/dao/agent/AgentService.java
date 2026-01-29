@@ -16,11 +16,23 @@
 package org.thingsboard.server.dao.agent;
 
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentInfo;
 import org.thingsboard.server.common.data.id.AgentId;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.dao.entity.EntityDaoService;
 
-public interface AgentService {
+public interface AgentService extends EntityDaoService {
     Agent saveAgent(Agent agent);
     Agent findAgentById(TenantId tenantId, AgentId agentId);
+    AgentInfo findAgentInfoById(TenantId tenantId, AgentId agentId);
+    PageData<Agent> findAgentsByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId, PageLink pageLink);
+    PageData<AgentInfo> findAgentInfosByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId, PageLink pageLink);
+    PageData<Agent> findAgentsByTenantId(TenantId tenantId, PageLink pageLink);
+    PageData<AgentInfo> findAgentInfosByTenantId(TenantId tenantId, PageLink pageLink);
     void deleteAgent(TenantId tenantId, AgentId agentId);
+    void unassignCustomerAgents(TenantId tenantId, CustomerId customerId);
+    Agent unassignAgentFromCustomer(TenantId tenantId, AgentId agentId);
 }

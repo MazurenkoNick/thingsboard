@@ -13,31 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.cache.edge;
+package org.thingsboard.server.cache.agent;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.thingsboard.server.common.data.id.TenantId;
 
-import java.io.Serial;
-import java.io.Serializable;
-
-@Getter
-@EqualsAndHashCode
+@Data
 @RequiredArgsConstructor
-@Builder
-public class AgentCacheKey implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 7657100143498569699L;
+public class AgentCacheEvictEvent {
 
     private final TenantId tenantId;
-    private final String name;
+    private final String newName;
+    private final String oldName;
 
-    @Override
-    public String toString() {
-        return tenantId + "_" + name;
-    }
 }

@@ -38,6 +38,7 @@ import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.device.DeviceService;
@@ -86,6 +87,9 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
 
     @Autowired
     private DashboardService dashboardService;
+
+    @Autowired
+    private AgentService agentService;
 
     @Lazy
     @Autowired
@@ -224,6 +228,7 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
         edgeService.unassignCustomerEdges(customer.getTenantId(), customerId);
         userService.deleteCustomerUsers(customer.getTenantId(), customerId);
         apiUsageStateService.deleteApiUsageStateByEntityId(customerId);
+        agentService.unassignCustomerAgents(customer.getTenantId(), customerId);
         customerDao.removeById(tenantId, customerId.getId());
         publishEvictEvent(new CustomerCacheEvictEvent(customer.getTenantId(), customer.getTitle(), null));
         countService.publishCountEntityEvictEvent(tenantId, EntityType.CUSTOMER);
