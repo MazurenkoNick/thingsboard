@@ -213,6 +213,17 @@ public class BaseAgentService extends AbstractCachedEntityService<AgentCacheKey,
     }
 
     @Override
+    public Agent assignAgentToCustomer(TenantId tenantId, AgentId agentId, CustomerId customerId) {
+        Agent agent = findAgentById(tenantId, agentId);
+        if (customerId.equals(agent.getCustomerId())) {
+            return agent;
+        }
+        agent.setCustomerId(customerId);
+        return saveAgent(agent);
+
+    }
+
+    @Override
     public EntityType getEntityType() {
         return EntityType.AGENT;
     }

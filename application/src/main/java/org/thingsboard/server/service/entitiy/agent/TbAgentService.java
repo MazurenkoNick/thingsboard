@@ -15,9 +15,16 @@
  */
 package org.thingsboard.server.service.entitiy.agent;
 
+import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.AgentId;
+import org.thingsboard.server.common.data.id.TenantId;
 
 public interface TbAgentService {
     Agent save(Agent agent, User currentUser) throws Exception;
+    void delete(Agent agent, User user);
+    Agent assignAgentToCustomer(TenantId tenantId, AgentId agentId, Customer customer, User user) throws ThingsboardException;
+    Agent unassignAgentToCustomer(TenantId tenantId, AgentId agentId, Customer customer, User user) throws ThingsboardException;
 }

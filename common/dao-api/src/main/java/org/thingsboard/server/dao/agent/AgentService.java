@@ -35,4 +35,5 @@ public interface AgentService extends EntityDaoService {
     void deleteAgent(TenantId tenantId, AgentId agentId);
     void unassignCustomerAgents(TenantId tenantId, CustomerId customerId);
     Agent unassignAgentFromCustomer(TenantId tenantId, AgentId agentId);
+    Agent assignAgentToCustomer(TenantId tenantId, AgentId agentId, CustomerId customerId);
 }
