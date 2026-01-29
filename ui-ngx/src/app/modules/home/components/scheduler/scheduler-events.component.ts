@@ -139,7 +139,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
       this.cd.detectChanges();
     }
   }
-  @ViewChild('schedulerEventMenuTrigger', {static: true}) schedulerEventMenuTrigger: MatMenuTrigger;
+  @ViewChild('schedulerEventMenuTrigger') schedulerEventMenuTrigger: MatMenuTrigger;
 
   @Input() widgetMode: boolean;
   @Input() ctx: WidgetContext;
@@ -570,6 +570,9 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   private onEventClick(arg: EventClickArg): void {
     const schedulerEvent = this.schedulerEvents.find(event => event.id.id === arg.event.id);
     if (schedulerEvent) {
+      if (!schedulerEvent.typeName) {
+        schedulerEvent.typeName = arg.event.extendedProps?.type;
+      }
       this.openSchedulerEventContextMenu(arg.jsEvent, schedulerEvent);
     }
   }
