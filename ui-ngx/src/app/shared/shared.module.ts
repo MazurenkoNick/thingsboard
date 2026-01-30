@@ -288,7 +288,9 @@ import { RequestEdgeDialogComponent } from '@shared/components/dialog/request-ed
 import { RequestWhiteLabelingDialogComponent } from '@shared/components/dialog/request-white-labeling-dialog.component';
 import { RequestTrendzDialogComponent } from '@shared/components/dialog/request-trendz-dialog.component';
 import { RequestPlanUpgradeDialogComponent } from '@shared/components/dialog/request-plan-upgrade-dialog.component';
+import { MAT_BUTTON_TOGGLE_DEFAULT_OPTIONS } from '@angular/material/button-toggle';
 
+export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
 }
@@ -352,6 +354,13 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
       provide: MAT_TOOLTIP_DEFAULT_OPTIONS,
       useValue: {
         disableTooltipInteractivity: true
+      }
+    },
+    {
+      provide: MAT_BUTTON_TOGGLE_DEFAULT_OPTIONS,
+      useValue: {
+        hideSingleSelectionIndicator: true,
+        hideMultipleSelectionIndicator: true
       }
     },
     CountryData

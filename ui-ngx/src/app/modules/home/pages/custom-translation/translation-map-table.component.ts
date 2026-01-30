@@ -62,7 +62,7 @@ import {
 } from '@shared/models/custom-translation.model';
 import { hidePageSizePixelValue } from '@shared/models/constants';
 import { MatPaginator } from '@angular/material/paginator';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateStore } from '@ngx-translate/core';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { environment as env } from '@env/environment';
 
@@ -138,6 +138,7 @@ export class TranslationMapTableComponent extends PageComponent implements OnIni
               private router: Router,
               private route: ActivatedRoute,
               private translate: TranslateService,
+              private translateStore: TranslateStore,
               private zone: NgZone) {
     super(store);
     this.pageLink = new PageLink(this.defaultPageSize, 0, null, this.defaultSortOrder);
@@ -162,7 +163,7 @@ export class TranslationMapTableComponent extends PageComponent implements OnIni
   }
 
   ngOnInit() {
-    this.dataSource = new CustomTranslationMapDatasource(this.customTranslationService, this.localeCode, this.cd, this.translate);
+    this.dataSource = new CustomTranslationMapDatasource(this.customTranslationService, this.localeCode, this.cd, this.translate, this.translateStore);
     this.sort.active = this.pageLink.sortOrder.property;
     this.sort.direction = (this.pageLink.sortOrder.direction).toLowerCase() as SortDirection;
     this.paginator.pageIndex = this.pageLink.page;
@@ -485,7 +486,8 @@ export class CustomTranslationMapDatasource implements DataSource<CustomTranslat
   constructor(private customTranslationService: CustomTranslationService,
               private localeCode: string,
               private cd: ChangeDetectorRef,
-              private translate: TranslateService) {}
+              private translate: TranslateService,
+              private translateStore: TranslateStore) {}
 
   connect(): Observable<CustomTranslationEditInfo[] | ReadonlyArray<CustomTranslationEditInfo>> {
     return this.translationInfo.asObservable();
@@ -611,25 +613,19 @@ export class CustomTranslationMapDatasource implements DataSource<CustomTranslat
   }
 
   private updateKeyInTranslationService(key: string, translate?: string) {
-    if (!isDefinedAndNotNull(this.translate.translations[this.localeCode])) {
+    if (!this.translateStore.hasTranslationFor(this.localeCode)) {
       return;
     }
 
     if (isDefinedAndNotNull(translate)) {
-      setByPath(this.translate.translations[this.localeCode], key, translate);
+      setByPath(this.translateStore.getTranslations(this.localeCode), key, translate);
     } else {
-      unset(this.translate.translations[this.localeCode], key);
+      unset(this.translateStore.getTranslations(this.localeCode), key);
     }
 
-    if (this.translate.currentLang === this.localeCode) {
-      // @ts-ignore
-      this.translate.updateLangs();
-      this.translate.onTranslationChange.emit({
-        lang: this.localeCode,
-        translations: this.translate.translations[this.localeCode]
-      });
+    if (this.translate.getCurrentLang() === this.localeCode) {
+      this.translateStore.setTranslations(this.localeCode, this.translateStore.getTranslations(this.localeCode), false);
       this.cd.detectChanges();
     }
   }
 }
-
