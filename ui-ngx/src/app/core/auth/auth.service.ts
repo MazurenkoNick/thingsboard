@@ -473,7 +473,7 @@ export class AuthService {
             }
           );
         } else if (authPayload.authUser?.authority === Authority.PRE_VERIFICATION_TOKEN || authPayload.authUser?.authority === Authority.MFA_CONFIGURATION_TOKEN) {
-          updateUserLang(this.translate, this.document, authPayload.userDetails?.additionalInfo?.lang ?? null, authPayload.availableLocales, true);
+          updateUserLang(this.translate, this.translateStore, this.document, authPayload.userDetails?.additionalInfo?.lang ?? null, authPayload.availableLocales, true);
           loadUserSubject.next(authPayload);
           loadUserSubject.complete();
         } else if (authPayload.authUser?.userId) {
