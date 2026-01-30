@@ -45,20 +45,21 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'tb-integration-configuration',
-  templateUrl: './integration-configuration.component.html',
-  styleUrls: ['./integration-configuration.component.scss'],
-  encapsulation: ViewEncapsulation.None,
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => IntegrationConfigurationComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => IntegrationConfigurationComponent),
-    multi: true,
-  }]
+    selector: 'tb-integration-configuration',
+    templateUrl: './integration-configuration.component.html',
+    styleUrls: ['./integration-configuration.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => IntegrationConfigurationComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => IntegrationConfigurationComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class IntegrationConfigurationComponent implements ControlValueAccessor, Validator, OnDestroy {
 

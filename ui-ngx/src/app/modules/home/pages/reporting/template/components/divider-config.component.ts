@@ -43,10 +43,11 @@ import {
 } from '@shared/models/report-component.models';
 
 @Component({
-  selector: 'tb-report-divider-config',
-  templateUrl: './divider-config.component.html',
-  styleUrls: ['./report-component-config.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-report-divider-config',
+    templateUrl: './divider-config.component.html',
+    styleUrls: ['./report-component-config.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class DividerConfigComponent extends AbstractReportComponentConfig<DividerReportComponentConfig> {
 

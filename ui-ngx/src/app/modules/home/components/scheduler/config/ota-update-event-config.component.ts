@@ -53,18 +53,19 @@ import { EntityGroupInfo } from '@shared/models/entity-group.models';
 import { OtaUpdateType } from '@shared/models/ota-package.models';
 
 @Component({
-  selector: 'tb-ota-update-event-config',
-  templateUrl: './ota-update-event-config.component.html',
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => OtaUpdateEventConfigComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => OtaUpdateEventConfigComponent),
-    multi: true
-  }]
+    selector: 'tb-ota-update-event-config',
+    templateUrl: './ota-update-event-config.component.html',
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => OtaUpdateEventConfigComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => OtaUpdateEventConfigComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class OtaUpdateEventConfigComponent implements ControlValueAccessor, OnDestroy, OnInit, AfterViewInit, Validator {
 

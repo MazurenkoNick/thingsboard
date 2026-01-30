@@ -76,10 +76,11 @@ interface CustomTranslationMap {
 }
 
 @Component({
-  selector: 'tb-translation-map-table',
-  templateUrl: './translation-map-table.component.html',
-  styleUrls: ['../../components/entity/entities-table.component.scss', './translation-map-table.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'tb-translation-map-table',
+    templateUrl: './translation-map-table.component.html',
+    styleUrls: ['../../components/entity/entities-table.component.scss', './translation-map-table.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TranslationMapTableComponent extends PageComponent implements OnInit, OnDestroy {
 

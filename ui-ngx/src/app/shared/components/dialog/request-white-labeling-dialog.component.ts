@@ -45,10 +45,11 @@ import { Authority } from '@shared/models/authority.enum';
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 @Component({
-  selector: 'tb-request-white-labeling-dialog',
-  templateUrl: './request-white-labeling-dialog.component.html',
-  styleUrls: ['./request-feature-dialog-styles.scss', './request-white-labeling-dialog.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-request-white-labeling-dialog',
+    templateUrl: './request-white-labeling-dialog.component.html',
+    styleUrls: ['./request-feature-dialog-styles.scss', './request-white-labeling-dialog.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class RequestWhiteLabelingDialogComponent extends DialogComponent<RequestWhiteLabelingDialogComponent>{
 

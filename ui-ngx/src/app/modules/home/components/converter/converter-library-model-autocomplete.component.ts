@@ -39,15 +39,16 @@ import { debounceTime, map, switchMap, tap } from 'rxjs/operators';
 import { isDefinedAndNotNull, isEqual } from '@core/utils';
 
 @Component({
-  selector: 'tb-converter-library-model-autocomplete',
-  templateUrl: './converter-library-model-autocomplete.component.html',
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => ConverterLibraryModelAutocompleteComponent),
-      multi: true
-    }
-  ],
+    selector: 'tb-converter-library-model-autocomplete',
+    templateUrl: './converter-library-model-autocomplete.component.html',
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ConverterLibraryModelAutocompleteComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class ConverterLibraryModelAutocompleteComponent implements OnInit, ControlValueAccessor {
   @ViewChild('input', {static: true}) input: ElementRef;

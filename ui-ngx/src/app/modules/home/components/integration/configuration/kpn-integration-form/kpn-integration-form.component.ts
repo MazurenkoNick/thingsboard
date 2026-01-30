@@ -55,19 +55,20 @@ import { TranslateService } from '@ngx-translate/core';
 import { IntegrationForm } from '@home/components/integration/configuration/integration-form';
 
 @Component({
-  selector: 'tb-kpn-integration-form',
-  templateUrl: './kpn-integration-form.component.html',
-  styleUrls: ['./kpn-integration-form.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => KpnIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => KpnIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-kpn-integration-form',
+    templateUrl: './kpn-integration-form.component.html',
+    styleUrls: ['./kpn-integration-form.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => KpnIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => KpnIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class KpnIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator, OnInit {
 

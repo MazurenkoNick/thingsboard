@@ -60,14 +60,15 @@ import { ReportTemplateId } from '@shared/models/id/report-template-id';
 import { Router } from '@angular/router';
 
 @Component({
-  selector: 'tb-report-template-autocomplete',
-  templateUrl: './report-template-autocomplete.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => ReportTemplateAutocompleteComponent),
-    multi: true
-  }]
+    selector: 'tb-report-template-autocomplete',
+    templateUrl: './report-template-autocomplete.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ReportTemplateAutocompleteComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class ReportTemplateAutocompleteComponent implements ControlValueAccessor, OnInit {
 

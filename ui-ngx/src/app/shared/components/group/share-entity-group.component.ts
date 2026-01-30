@@ -40,14 +40,15 @@ import { RoleType } from '@shared/models/security.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-share-entity-group',
-  templateUrl: './share-entity-group.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => ShareEntityGroupComponent),
-    multi: true
-  }]
+    selector: 'tb-share-entity-group',
+    templateUrl: './share-entity-group.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ShareEntityGroupComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class ShareEntityGroupComponent implements ControlValueAccessor, OnInit {
 

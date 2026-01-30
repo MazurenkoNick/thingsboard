@@ -32,7 +32,8 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'tbCurrency'
+    name: 'tbCurrency',
+    standalone: false
 })
 export class TbCurrencyPipe implements PipeTransform {
 

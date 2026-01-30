@@ -75,10 +75,11 @@ import {
 import { alignment } from '@shared/models/widget-settings.models';
 
 @Component({
-  selector: 'tb-report-drop-block',
-  templateUrl: './report-drop-block.component.html',
-  styleUrls: ['./report-drop-block.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-report-drop-block',
+    templateUrl: './report-drop-block.component.html',
+    styleUrls: ['./report-drop-block.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class ReportDropBlockComponent implements IReportComponent, OnInit, OnChanges, AfterViewInit, OnDestroy {
 

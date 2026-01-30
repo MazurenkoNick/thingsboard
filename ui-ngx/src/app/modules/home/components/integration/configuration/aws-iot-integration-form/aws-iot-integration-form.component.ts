@@ -48,19 +48,20 @@ import { AwsIotIntegration, IntegrationCredentialType, MqttQos } from '@shared/m
 import { DEFAULT_MQTT_VERSION } from '@shared/models/mqtt.models';
 
 @Component({
-  selector: 'tb-aws-iot-integration-form',
-  templateUrl: './aws-iot-integration-form.component.html',
-  styleUrls: ['./aws-iot-integration-form.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => AwsIotIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => AwsIotIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-aws-iot-integration-form',
+    templateUrl: './aws-iot-integration-form.component.html',
+    styleUrls: ['./aws-iot-integration-form.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => AwsIotIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => AwsIotIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class AwsIotIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator {
 

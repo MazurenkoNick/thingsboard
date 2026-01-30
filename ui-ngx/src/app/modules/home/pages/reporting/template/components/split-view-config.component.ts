@@ -37,10 +37,11 @@ import { SplitViewReportComponentConfig } from '@shared/models/report-component.
 import { FormGroup, Validators } from '@angular/forms';
 
 @Component({
-  selector: 'tb-split-view-config',
-  templateUrl: './split-view-config.component.html',
-  styleUrls: ['./report-component-config.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-split-view-config',
+    templateUrl: './split-view-config.component.html',
+    styleUrls: ['./report-component-config.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class SplitViewConfigComponent extends AbstractReportComponentConfig<SplitViewReportComponentConfig> {
 

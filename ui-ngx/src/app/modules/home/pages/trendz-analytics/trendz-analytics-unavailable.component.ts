@@ -42,9 +42,10 @@ import { NotificationService } from '@core/http/notification.service';
 import { AddonType } from '@shared/models/subscription.models';
 
 @Component({
-  selector: 'tb-trendz-analytics-unavailable',
-  templateUrl: './trendz-analytics-unavailable.component.html',
-  styleUrls: ['./trendz-analytics-unavailable.component.scss']
+    selector: 'tb-trendz-analytics-unavailable',
+    templateUrl: './trendz-analytics-unavailable.component.html',
+    styleUrls: ['./trendz-analytics-unavailable.component.scss'],
+    standalone: false
 })
 export class TrendzAnalyticsUnavailableComponent extends DialogComponent<TrendzAnalyticsUnavailableComponent> {
 

@@ -93,11 +93,12 @@ type TestConverterResultData = {
 };
 
 @Component({
-  selector: 'tb-converter-test-dialog',
-  templateUrl: './converter-test-dialog.component.html',
-  providers: [{provide: ErrorStateMatcher, useExisting: ConverterTestDialogComponent}],
-  styleUrls: ['./converter-test-dialog.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-converter-test-dialog',
+    templateUrl: './converter-test-dialog.component.html',
+    providers: [{ provide: ErrorStateMatcher, useExisting: ConverterTestDialogComponent }],
+    styleUrls: ['./converter-test-dialog.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class ConverterTestDialogComponent extends DialogComponent<ConverterTestDialogComponent,
   string> implements AfterViewInit, ErrorStateMatcher {

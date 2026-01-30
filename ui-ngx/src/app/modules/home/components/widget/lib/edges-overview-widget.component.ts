@@ -65,9 +65,10 @@ interface EdgesOverviewWidgetSettings {
 }
 
 @Component({
-  selector: 'tb-edges-overview-widget',
-  templateUrl: './edges-overview-widget.component.html',
-  styleUrls: ['./edges-overview-widget.component.scss']
+    selector: 'tb-edges-overview-widget',
+    templateUrl: './edges-overview-widget.component.html',
+    styleUrls: ['./edges-overview-widget.component.scss'],
+    standalone: false
 })
 export class EdgesOverviewWidgetComponent extends PageComponent implements OnInit {
 

@@ -69,16 +69,17 @@ import { emptyPageData, PageData } from '@shared/models/page/page-data';
 import { EntityInfoData } from '@shared/models/entity.models';
 
 @Component({
-  selector: 'tb-edge-entity-group-list',
-  templateUrl: './edge-entity-group-list.component.html',
-  styleUrls: [],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => EdgeEntityGroupListComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-edge-entity-group-list',
+    templateUrl: './edge-entity-group-list.component.html',
+    styleUrls: [],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => EdgeEntityGroupListComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class EdgeEntityGroupListComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnChanges {
 

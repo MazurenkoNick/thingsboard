@@ -74,9 +74,10 @@ import { parseHttpErrorMessage } from '@core/utils';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
 
 @Component({
-  selector: 'tb-custom-menu-table',
-  templateUrl: './custom-menu-table.component.html',
-  styleUrls: ['./custom-menu-table.component.scss']
+    selector: 'tb-custom-menu-table',
+    templateUrl: './custom-menu-table.component.html',
+    styleUrls: ['./custom-menu-table.component.scss'],
+    standalone: false
 })
 export class CustomMenuTableComponent implements OnInit {
 

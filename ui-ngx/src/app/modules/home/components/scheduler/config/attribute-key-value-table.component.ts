@@ -48,16 +48,17 @@ import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'tb-attribute-key-value-table',
-  templateUrl: './attribute-key-value-table.component.html',
-  styleUrls: ['./attribute-key-value-table.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => AttributeKeyValueTableComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-attribute-key-value-table',
+    templateUrl: './attribute-key-value-table.component.html',
+    styleUrls: ['./attribute-key-value-table.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => AttributeKeyValueTableComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class AttributeKeyValueTableComponent extends PageComponent implements ControlValueAccessor, OnInit, OnDestroy {
 

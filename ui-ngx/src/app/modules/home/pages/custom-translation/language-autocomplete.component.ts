@@ -42,15 +42,16 @@ type AvailableLocale = [locelCode: string, localeLanguage: string];
 type AvailableLocales = Array<AvailableLocale>;
 
 @Component({
-  selector: 'tb-language-autocomplete',
-  templateUrl: './language-autocomplete.component.html',
-  styleUrls: ['./language-autocomplete.component.scss'],
-  encapsulation:  ViewEncapsulation.None,
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => LanguageAutocompleteComponent),
-    multi: true
-  }]
+    selector: 'tb-language-autocomplete',
+    templateUrl: './language-autocomplete.component.html',
+    styleUrls: ['./language-autocomplete.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => LanguageAutocompleteComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class LanguageAutocompleteComponent implements ControlValueAccessor, OnInit{
 

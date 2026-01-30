@@ -48,19 +48,20 @@ import { IntegrationCredentialType, MqttIntegration } from '@shared/models/integ
 import { DEFAULT_MQTT_VERSION } from '@shared/models/mqtt.models';
 
 @Component({
-  selector: 'tb-mqtt-integration-form',
-  templateUrl: './mqtt-integration-form.component.html',
-  styleUrls: ['./mqtt-integration-form.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => MqttIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => MqttIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-mqtt-integration-form',
+    templateUrl: './mqtt-integration-form.component.html',
+    styleUrls: ['./mqtt-integration-form.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => MqttIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => MqttIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class MqttIntegrationFormComponent extends IntegrationForm implements OnInit, ControlValueAccessor, Validator {
 

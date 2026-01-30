@@ -48,9 +48,10 @@ import {
 import { ValueType } from '@shared/models/constants';
 
 @Component({
-  selector: 'tb-single-switch-basic-config',
-  templateUrl: './single-switch-basic-config.component.html',
-  styleUrls: ['../basic-config.scss']
+    selector: 'tb-single-switch-basic-config',
+    templateUrl: './single-switch-basic-config.component.html',
+    styleUrls: ['../basic-config.scss'],
+    standalone: false
 })
 export class SingleSwitchBasicConfigComponent extends BasicWidgetConfigComponent {
 

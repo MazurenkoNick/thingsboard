@@ -53,9 +53,10 @@ import {
 import { mergeDeep } from '@core/utils';
 
 @Component({
-  selector: 'tb-report-template-form',
-  templateUrl: './report-template-form.component.html',
-  styleUrls: []
+    selector: 'tb-report-template-form',
+    templateUrl: './report-template-form.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class ReportTemplateFormComponent extends EntityComponent<ReportTemplate> {
 

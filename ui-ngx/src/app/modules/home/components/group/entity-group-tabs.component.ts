@@ -41,9 +41,10 @@ import { groupResourceByGroupType, Operation, Resource } from '@shared/models/se
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Component({
-  selector: 'tb-entity-group-tabs',
-  templateUrl: './entity-group-tabs.component.html',
-  styleUrls: []
+    selector: 'tb-entity-group-tabs',
+    templateUrl: './entity-group-tabs.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class EntityGroupTabsComponent extends EntityTabsComponent<EntityGroupInfo, PageLink, EntityGroupInfo, EntityGroupsTableConfig> {
 

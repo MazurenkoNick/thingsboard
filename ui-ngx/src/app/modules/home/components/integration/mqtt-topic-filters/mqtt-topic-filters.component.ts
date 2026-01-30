@@ -48,19 +48,20 @@ import { takeUntil } from 'rxjs/operators';
 import { isNumber } from '@core/utils';
 
 @Component({
-  selector: 'tb-mqtt-topic-filters',
-  templateUrl: './mqtt-topic-filters.component.html',
-  styleUrls: ['./mqtt-topic-filters.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => MqttTopicFiltersComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => MqttTopicFiltersComponent),
-    multi: true,
-  }]
+    selector: 'tb-mqtt-topic-filters',
+    templateUrl: './mqtt-topic-filters.component.html',
+    styleUrls: ['./mqtt-topic-filters.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => MqttTopicFiltersComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => MqttTopicFiltersComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class MqttTopicFiltersComponent implements ControlValueAccessor, Validator, OnDestroy, OnChanges {
 

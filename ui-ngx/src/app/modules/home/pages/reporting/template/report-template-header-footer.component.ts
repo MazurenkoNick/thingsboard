@@ -47,10 +47,11 @@ import { ReportComponentsComponent } from '@home/pages/reporting/template/compon
 import { ReportComponentContext } from '@home/pages/reporting/template/components/report-component.models';
 
 @Component({
-  selector: 'tb-report-template-header-footer',
-  templateUrl: './report-template-header-footer.component.html',
-  styleUrls: ['./report-template-header-footer.component.scss', './report-components-container.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-report-template-header-footer',
+    templateUrl: './report-template-header-footer.component.html',
+    styleUrls: ['./report-template-header-footer.component.scss', './report-components-container.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class ReportTemplateHeaderFooterComponent {
 

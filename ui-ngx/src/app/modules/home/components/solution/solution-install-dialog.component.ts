@@ -44,9 +44,10 @@ export interface SolutionInstallDialogData {
 }
 
 @Component({
-  selector: 'tb-solution-install-dialog',
-  templateUrl: './solution-install-dialog.component.html',
-  styleUrls: ['./solution-install-dialog.component.scss']
+    selector: 'tb-solution-install-dialog',
+    templateUrl: './solution-install-dialog.component.html',
+    styleUrls: ['./solution-install-dialog.component.scss'],
+    standalone: false
 })
 export class SolutionInstallDialogComponent extends
   DialogComponent<SolutionInstallDialogComponent> implements OnInit {

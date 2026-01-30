@@ -52,21 +52,22 @@ import { SubscriptSizing } from '@angular/material/form-field';
 import { isDefinedAndNotNull, isEqual } from '@core/utils';
 
 @Component({
-  selector: 'tb-key-val-map',
-  templateUrl: './kv-map.component.html',
-  styleUrls: ['./kv-map.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => KeyValMapComponent),
-      multi: true
-    },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => KeyValMapComponent),
-      multi: true,
-    }
-  ]
+    selector: 'tb-key-val-map',
+    templateUrl: './kv-map.component.html',
+    styleUrls: ['./kv-map.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => KeyValMapComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => KeyValMapComponent),
+            multi: true,
+        }
+    ],
+    standalone: false
 })
 export class KeyValMapComponent extends PageComponent implements ControlValueAccessor, OnInit, OnDestroy, Validator {
 

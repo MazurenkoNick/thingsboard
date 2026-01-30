@@ -47,10 +47,11 @@ export interface RequestPlanUpgradeDialogData {
 }
 
 @Component({
-  selector: 'tb-request-plan-upgrade-dialog',
-  templateUrl: './request-plan-upgrade-dialog.component.html',
-  styleUrls: ['./request-plan-upgrade-dialog.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-request-plan-upgrade-dialog',
+    templateUrl: './request-plan-upgrade-dialog.component.html',
+    styleUrls: ['./request-plan-upgrade-dialog.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class RequestPlanUpgradeDialogComponent extends DialogComponent<RequestPlanUpgradeDialogComponent> {
 
