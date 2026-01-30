@@ -36,7 +36,7 @@
   flex: 1 1 0;
   .tb-login-content {
     background-color: #eee;
-    --mdc-elevated-card-container-elevation: none;
+    --mat-card-elevated-container-elevation: none;
     .tb-login-form {
       @media #{$mat-gt-xs} {
         width: 480px !important;
@@ -52,8 +52,8 @@
       }
 
       .forgot-password {
-        --mat-text-button-horizontal-padding: 0;
-        --mdc-text-button-container-height: 20px;
+        --mat-button-text-horizontal-padding: 0;
+        --mat-button-text-container-height: 20px;
       }
 
       .tb-action-button{
@@ -85,7 +85,7 @@
       margin-bottom: 16px;
 
       .mat-divider-horizontal{
-        --mat-divider-color: var(--mdc-outlined-text-field-outline-color);
+        --mat-divider-color: var(--mat-form-field-outlined-outline-color);
       }
 
       .text {

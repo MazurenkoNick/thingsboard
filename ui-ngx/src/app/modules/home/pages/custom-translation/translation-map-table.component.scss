@@ -29,7 +29,7 @@
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
 :host {
-  background-color: var(--mdc-elevated-card-container-color, #fff);
+  background-color: var(--mat-card-elevated-container-color, #fff);
 
   .tb-entity-table.tb-form-panel {
     position: absolute;
@@ -43,12 +43,12 @@
     justify-content: center;
 
     .mat-mdc-standard-chip.mat-primary {
-      --mdc-chip-elevated-container-color: #0000000A;
-      --mdc-chip-label-text-color: #00000061;
+      --mat-chip-elevated-container-color: #0000000A;
+      --mat-chip-label-text-color: #00000061;
       &.mat-mdc-chip-selected {
-        --mdc-chip-elevated-container-color: var(--tb-primary-50);
-        --mdc-chip-label-text-color: var(--tb-primary-500);
-        --mdc-chip-with-icon-selected-icon-color: var(--tb-primary-500);
+        --mat-chip-elevated-container-color: var(--tb-primary-50);
+        --mat-chip-label-text-color: var(--tb-primary-500);
+        --mat-chip-with-icon-selected-icon-color: var(--tb-primary-500);
       }
     }
 
