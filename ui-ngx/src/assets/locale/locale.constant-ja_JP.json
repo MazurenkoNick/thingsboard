@@ -12577,6 +12577,7 @@
     "loading-calculation-field": "計算フィールドを読み込み中...",
     "loading-metric-explorer": "メトリクスエクスプローラーを読み込み中...",
     "loading-prediction-model": "予測モデルを読み込み中...",
+    "loading-views": "ビューを読み込み中...",
     "metric-explorer": "メトリクスエクスプローラー",
     "metric-explorer-description": "最近分析したメトリクスにすばやく移動",
     "no-anomaly-models-found": "異常検知モデルはまだありません",

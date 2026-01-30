@@ -61,7 +61,7 @@
   .mat-horizontal-stepper-header-container {
     display: none;
   }
-  .mat-horizontal-content-container {
+  mat-horizontal-stepper > .mat-horizontal-stepper-wrapper > .mat-horizontal-content-container {
     padding: 24px;
   }
 }

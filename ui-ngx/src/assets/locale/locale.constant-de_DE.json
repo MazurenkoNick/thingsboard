@@ -12577,6 +12577,7 @@
     "loading-calculation-field": "Berechnete Felder werden geladen...",
     "loading-metric-explorer": "Metrik-Explorer wird geladen...",
     "loading-prediction-model": "Prognosemodelle werden geladen...",
+    "loading-views": "Ansichten werden geladen...",
     "metric-explorer": "Metrik-Explorer",
     "metric-explorer-description": "Kürzlich analysierte Metriken zur schnellen Navigation",
     "no-anomaly-models-found": "Noch keine Anomalieerkennungsmodelle",

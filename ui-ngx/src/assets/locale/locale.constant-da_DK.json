@@ -12577,6 +12577,7 @@
     "loading-calculation-field": "Indlæser beregnede felter...",
     "loading-metric-explorer": "Indlæser metrikutforsker...",
     "loading-prediction-model": "Indlæser forudsigelsesmodeller...",
+    "loading-views": "Indlæser visninger...",
     "metric-explorer": "Metrikutforsker",
     "metric-explorer-description": "Senest analyserede metrikker til hurtig navigation",
     "no-anomaly-models-found": "Ingen anomalidetektionsmodeller endnu",
