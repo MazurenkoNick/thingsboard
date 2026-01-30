@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Inject, Injectable, Renderer2, RendererFactory2, RendererStyleFlags2 } from '@angular/core';
+import { Inject, Injectable, Renderer2, RendererFactory2, RendererStyleFlags2, DOCUMENT } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {
   checkWlParams,
@@ -58,7 +58,7 @@ import { ActionSettingsChangeWhiteLabeling } from '@core/settings/settings.actio
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import cssjs from '@core/css/css';
-import { DOCUMENT } from '@angular/common';
+
 import { defaultHttpOptionsFromConfig, RequestConfig } from '@core/http/http-utils';
 import { MailTemplatesSettings } from '@shared/models/settings.models';
 import { docPlatformPrefix } from '@shared/models/constants';

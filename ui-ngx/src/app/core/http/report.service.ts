@@ -29,13 +29,13 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Inject, Injectable } from '@angular/core';
+import { Inject, Injectable, DOCUMENT } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Report, ReportInfo, ReportQuery, ReportRequest } from '@shared/models/report.models';
 import { map } from 'rxjs/operators';
 import { WINDOW } from '@core/services/window.service';
-import { DOCUMENT } from '@angular/common';
+
 import { PageLink } from '@shared/models/page/page-link';
 import { defaultHttpOptionsFromConfig, RequestConfig } from '@core/http/http-utils';
 import { PageData } from '@shared/models/page/page-data';
