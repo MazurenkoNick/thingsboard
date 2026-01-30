@@ -33,10 +33,11 @@ import { ContentChildren, Directive, HostBinding, QueryList } from '@angular/cor
 import { NgControl } from '@angular/forms';
 
 @Directive({
-  selector: '[tbFormRow]',
-  host: {
-    'class': 'tb-form-row'
-  }
+    selector: '[tbFormRow]',
+    host: {
+        'class': 'tb-form-row'
+    },
+    standalone: false
 })
 export class FormRowDirective {
 

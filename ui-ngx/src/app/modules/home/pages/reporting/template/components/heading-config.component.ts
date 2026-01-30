@@ -37,10 +37,11 @@ import {
 import { Heading, HeadingReportComponentConfig } from '@shared/models/report-component.models';
 
 @Component({
-  selector: 'tb-report-heading-config',
-  templateUrl: './heading-config.component.html',
-  styleUrls: ['./report-component-config.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-report-heading-config',
+    templateUrl: './heading-config.component.html',
+    styleUrls: ['./report-component-config.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class HeadingConfigComponent extends AbstractReportComponentConfig<HeadingReportComponentConfig> {
 

@@ -36,9 +36,10 @@ import { AppState } from '@core/core.state';
 import { SecretStorage } from '@shared/models/secret-storage.models';
 
 @Component({
-  selector: 'tb-secret-storage-table-header',
-  templateUrl: './secret-storage-table-header.component.html',
-  styleUrls: []
+    selector: 'tb-secret-storage-table-header',
+    templateUrl: './secret-storage-table-header.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class SecretStorageTableHeaderComponent extends EntityTableHeaderComponent<SecretStorage> {
 

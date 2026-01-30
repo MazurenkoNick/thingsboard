@@ -60,9 +60,10 @@ export interface DeviceWizardDialogData {
 }
 
 @Component({
-  selector: 'tb-device-wizard',
-  templateUrl: './device-wizard-dialog.component.html',
-  styleUrls: ['./device-wizard-dialog.component.scss']
+    selector: 'tb-device-wizard',
+    templateUrl: './device-wizard-dialog.component.html',
+    styleUrls: ['./device-wizard-dialog.component.scss'],
+    standalone: false
 })
 export class DeviceWizardDialogComponent extends DialogComponent<DeviceWizardDialogComponent, Device> {
 

@@ -36,9 +36,10 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 
 @Component({
-  selector: 'tb-solution-template-video',
-  templateUrl: './solution-template-video.component.html',
-  styleUrls: ['./solution-template-video.component.scss']
+    selector: 'tb-solution-template-video',
+    templateUrl: './solution-template-video.component.html',
+    styleUrls: ['./solution-template-video.component.scss'],
+    standalone: false
 })
 export class SolutionTemplateVideoComponent extends PageComponent {
 

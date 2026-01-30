@@ -49,9 +49,10 @@ import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-sms-provider',
-  templateUrl: './sms-provider.component.html',
-  styleUrls: ['./sms-provider.component.scss', './settings-card.scss']
+    selector: 'tb-sms-provider',
+    templateUrl: './sms-provider.component.html',
+    styleUrls: ['./sms-provider.component.scss', './settings-card.scss'],
+    standalone: false
 })
 export class SmsProviderComponent extends PageComponent implements HasConfirmForm {
 

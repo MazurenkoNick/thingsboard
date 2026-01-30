@@ -120,10 +120,11 @@ import { AdditionalDebugActionConfig } from '@home/components/entity/debug/entit
 import { EventsDialogComponent } from '@home/dialogs/events-dialog.component';
 
 @Component({
-  selector: 'tb-rulechain-page',
-  templateUrl: './rulechain-page.component.html',
-  styleUrls: ['./rulechain-page.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-rulechain-page',
+    templateUrl: './rulechain-page.component.html',
+    styleUrls: ['./rulechain-page.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class RuleChainPageComponent extends PageComponent
   implements AfterViewInit, OnInit, OnDestroy, HasDirtyFlag, ISearchableComponent, AfterViewChecked {
@@ -1822,10 +1823,11 @@ export interface AddRuleNodeLinkDialogData {
 }
 
 @Component({
-  selector: 'tb-add-rule-node-link-dialog',
-  templateUrl: './add-rule-node-link-dialog.component.html',
-  providers: [{provide: ErrorStateMatcher, useExisting: AddRuleNodeLinkDialogComponent}],
-  styleUrls: ['./add-rule-node-link-dialog.component.scss']
+    selector: 'tb-add-rule-node-link-dialog',
+    templateUrl: './add-rule-node-link-dialog.component.html',
+    providers: [{ provide: ErrorStateMatcher, useExisting: AddRuleNodeLinkDialogComponent }],
+    styleUrls: ['./add-rule-node-link-dialog.component.scss'],
+    standalone: false
 })
 export class AddRuleNodeLinkDialogComponent extends DialogComponent<AddRuleNodeLinkDialogComponent, FcRuleEdge>
   implements OnInit, ErrorStateMatcher {
@@ -1886,10 +1888,11 @@ export interface AddRuleNodeDialogData {
 }
 
 @Component({
-  selector: 'tb-add-rule-node-dialog',
-  templateUrl: './add-rule-node-dialog.component.html',
-  providers: [{provide: ErrorStateMatcher, useExisting: AddRuleNodeDialogComponent}],
-  styleUrls: ['./add-rule-node-dialog.component.scss']
+    selector: 'tb-add-rule-node-dialog',
+    templateUrl: './add-rule-node-dialog.component.html',
+    providers: [{ provide: ErrorStateMatcher, useExisting: AddRuleNodeDialogComponent }],
+    styleUrls: ['./add-rule-node-dialog.component.scss'],
+    standalone: false
 })
 export class AddRuleNodeDialogComponent extends DialogComponent<AddRuleNodeDialogComponent, FcRuleNode>
   implements OnInit, ErrorStateMatcher {
@@ -1946,10 +1949,11 @@ export interface CreateNestedRuleChainDialogData {
 }
 
 @Component({
-  selector: 'tb-create-nested-rulechain-dialog',
-  templateUrl: './create-nested-rulechain-dialog.component.html',
-  providers: [{provide: ErrorStateMatcher, useExisting: CreateNestedRuleChainDialogComponent}],
-  styleUrls: []
+    selector: 'tb-create-nested-rulechain-dialog',
+    templateUrl: './create-nested-rulechain-dialog.component.html',
+    providers: [{ provide: ErrorStateMatcher, useExisting: CreateNestedRuleChainDialogComponent }],
+    styleUrls: [],
+    standalone: false
 })
 export class CreateNestedRuleChainDialogComponent extends DialogComponent<CreateNestedRuleChainDialogComponent, RuleChain>
   implements OnInit, ErrorStateMatcher {

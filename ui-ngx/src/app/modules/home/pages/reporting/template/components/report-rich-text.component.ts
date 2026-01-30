@@ -74,17 +74,18 @@ const findReportComponentCssLink = (): string => {
 }
 
 @Component({
-  selector: 'tb-report-rich-text',
-  templateUrl: './report-rich-text.component.html',
-  styleUrls: ['./report-component-config.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => ReportRichTextComponent),
-      multi: true
-    }
-  ],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-report-rich-text',
+    templateUrl: './report-rich-text.component.html',
+    styleUrls: ['./report-component-config.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ReportRichTextComponent),
+            multi: true
+        }
+    ],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class ReportRichTextComponent implements OnInit, ControlValueAccessor, OnChanges, OnDestroy {
 

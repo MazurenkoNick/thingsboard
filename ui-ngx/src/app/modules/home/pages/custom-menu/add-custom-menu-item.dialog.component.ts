@@ -45,9 +45,10 @@ export interface AddCustomMenuItemDialogData {
 }
 
 @Component({
-  selector: 'tb-add-custom-menu-item-dialog',
-  templateUrl: './add-custom-menu-item-dialog.component.html',
-  styleUrls: ['./add-custom-menu-item-dialog.component.scss']
+    selector: 'tb-add-custom-menu-item-dialog',
+    templateUrl: './add-custom-menu-item-dialog.component.html',
+    styleUrls: ['./add-custom-menu-item-dialog.component.scss'],
+    standalone: false
 })
 export class AddCustomMenuItemDialogComponent
   extends DialogComponent<AddCustomMenuItemDialogComponent, CustomMenuItem> implements OnInit, OnDestroy {

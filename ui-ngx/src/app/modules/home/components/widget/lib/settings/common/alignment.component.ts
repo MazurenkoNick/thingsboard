@@ -42,16 +42,17 @@ import {
 import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
-  selector: 'tb-alignment',
-  templateUrl: './alignment.component.html',
-  styleUrls: [],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => AlignmentComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-alignment',
+    templateUrl: './alignment.component.html',
+    styleUrls: [],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => AlignmentComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class AlignmentComponent implements ControlValueAccessor {
 

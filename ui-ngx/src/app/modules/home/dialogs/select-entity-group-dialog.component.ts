@@ -72,10 +72,11 @@ export interface SelectEntityGroupDialogData {
 }
 
 @Component({
-  selector: 'tb-select-entity-group-dialog',
-  templateUrl: './select-entity-group-dialog.component.html',
-  providers: [{provide: ErrorStateMatcher, useExisting: SelectEntityGroupDialogComponent}],
-  styleUrls: ['./select-entity-group-dialog.component.scss']
+    selector: 'tb-select-entity-group-dialog',
+    templateUrl: './select-entity-group-dialog.component.html',
+    providers: [{ provide: ErrorStateMatcher, useExisting: SelectEntityGroupDialogComponent }],
+    styleUrls: ['./select-entity-group-dialog.component.scss'],
+    standalone: false
 })
 export class SelectEntityGroupDialogComponent extends
   DialogComponent<SelectEntityGroupDialogComponent, SelectEntityGroupDialogResult> implements OnInit, ErrorStateMatcher {

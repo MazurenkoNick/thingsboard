@@ -36,9 +36,10 @@ import { EntityTableHeaderComponent } from '../../components/entity/entity-table
 import { CustomMenuInfo } from '@shared/models/custom-menu.models';
 
 @Component({
-  selector: 'tb-custom-menu-table-header',
-  templateUrl: './custom-menu-table-header.component.html',
-  styleUrls: ['./custom-menu-table-header.component.scss']
+    selector: 'tb-custom-menu-table-header',
+    templateUrl: './custom-menu-table-header.component.html',
+    styleUrls: ['./custom-menu-table-header.component.scss'],
+    standalone: false
 })
 export class CustomMenuTableHeaderComponent extends EntityTableHeaderComponent<CustomMenuInfo> implements OnInit {
 

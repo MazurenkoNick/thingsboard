@@ -37,10 +37,11 @@ import { imagePlaceholder, keyImage } from '@home/pages/reporting/template/compo
 import { isNotEmptyStr } from '@core/utils';
 
 @Component({
-  selector: 'tb-image-preview',
-  templateUrl: './image-preview.component.html',
-  styleUrls: ['./image-preview.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-image-preview',
+    templateUrl: './image-preview.component.html',
+    styleUrls: ['./image-preview.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class ImagePreviewComponent extends AbstractReportComponentPreview<ImageReportComponentConfig> implements AfterViewInit, OnDestroy {
 

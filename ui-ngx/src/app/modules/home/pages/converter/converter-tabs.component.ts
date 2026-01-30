@@ -39,9 +39,10 @@ import { ConverterComponent } from '@home/components/converter/converter.compone
 import { TranslateService } from '@ngx-translate/core';
 
 @Component({
-  selector: 'tb-converter-tabs',
-  templateUrl: './converter-tabs.component.html',
-  styleUrls: []
+    selector: 'tb-converter-tabs',
+    templateUrl: './converter-tabs.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class ConverterTabsComponent extends EntityTabsComponent<Converter> {
 

@@ -37,10 +37,11 @@ import {
 import { RichTextReportComponentConfig } from '@shared/models/report-component.models';
 
 @Component({
-  selector: 'tb-report-rich-text-config',
-  templateUrl: './rich-text-config.component.html',
-  styleUrls: ['./report-component-config.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-report-rich-text-config',
+    templateUrl: './rich-text-config.component.html',
+    styleUrls: ['./report-component-config.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class RichTextConfigComponent extends AbstractReportComponentConfig<RichTextReportComponentConfig> {
 

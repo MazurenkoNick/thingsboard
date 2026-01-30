@@ -45,9 +45,10 @@ import { EntityType } from '@shared/models/entity-type.models';
 import { EntityGroupsTableConfig } from '@home/components/group/entity-groups-table-config';
 
 @Component({
-  selector: 'tb-entity-group',
-  templateUrl: './entity-group.component.html',
-  styleUrls: ['./entity-group.component.scss']
+    selector: 'tb-entity-group',
+    templateUrl: './entity-group.component.html',
+    styleUrls: ['./entity-group.component.scss'],
+    standalone: false
 })
 export class EntityGroupComponent extends EntityComponent<EntityGroupInfo> {
 

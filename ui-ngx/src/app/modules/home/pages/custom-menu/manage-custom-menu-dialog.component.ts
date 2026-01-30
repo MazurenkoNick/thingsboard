@@ -78,9 +78,10 @@ export interface ManageCustomMenuDialogResult {
 }
 
 @Component({
-  selector: 'tb-manage-custom-menu-dialog',
-  templateUrl: './manage-custom-menu-dialog.component.html',
-  styleUrls: ['./manage-custom-menu-dialog.component.scss']
+    selector: 'tb-manage-custom-menu-dialog',
+    templateUrl: './manage-custom-menu-dialog.component.html',
+    styleUrls: ['./manage-custom-menu-dialog.component.scss'],
+    standalone: false
 })
 export class ManageCustomMenuDialogComponent
   extends DialogComponent<ManageCustomMenuDialogComponent, ManageCustomMenuDialogResult> implements OnInit, OnDestroy {

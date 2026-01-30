@@ -36,16 +36,17 @@ import { Heading } from '@shared/models/report-component.models';
 import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
-  selector: 'tb-report-heading',
-  templateUrl: './report-heading.component.html',
-  styleUrls: [],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => ReportHeadingComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-report-heading',
+    templateUrl: './report-heading.component.html',
+    styleUrls: [],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ReportHeadingComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class ReportHeadingComponent implements OnInit, ControlValueAccessor {
 

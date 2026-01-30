@@ -38,16 +38,17 @@ import { defaultSchedulerEventConfigTypes } from '@home/components/scheduler/sch
 import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
-  selector: 'tb-entity-filter-view',
-  templateUrl: './entity-filter-view.component.html',
-  styleUrls: ['./entity-filter-view.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => EntityFilterViewComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-entity-filter-view',
+    templateUrl: './entity-filter-view.component.html',
+    styleUrls: ['./entity-filter-view.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => EntityFilterViewComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class EntityFilterViewComponent implements ControlValueAccessor {
 

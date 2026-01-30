@@ -55,10 +55,11 @@ import { TbReportFormat } from '@shared/models/report.models';
 import { TranslateService } from '@ngx-translate/core';
 
 @Component({
-  selector: 'tb-report-component-library',
-  templateUrl: './report-component-library.component.html',
-  styleUrls: ['./report-component-library.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-report-component-library',
+    templateUrl: './report-component-library.component.html',
+    styleUrls: ['./report-component-library.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class ReportComponentLibraryComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
 

@@ -91,9 +91,10 @@ import { Operation, Resource } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Component({
-  selector: 'tb-converter',
-  templateUrl: './converter.component.html',
-  styleUrls: ['./converter.component.scss']
+    selector: 'tb-converter',
+    templateUrl: './converter.component.html',
+    styleUrls: ['./converter.component.scss'],
+    standalone: false
 })
 export class ConverterComponent extends EntityComponent<Converter> implements OnInit {
 

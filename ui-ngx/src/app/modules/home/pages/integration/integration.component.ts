@@ -54,9 +54,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { EventsDialogComponent, EventsDialogData } from '@home/dialogs/events-dialog.component';
 
 @Component({
-  selector: 'tb-integration',
-  templateUrl: './integration.component.html',
-  styleUrls: ['./integration.component.scss']
+    selector: 'tb-integration',
+    templateUrl: './integration.component.html',
+    styleUrls: ['./integration.component.scss'],
+    standalone: false
 })
 export class IntegrationComponent extends EntityComponent<Integration, PageLink, IntegrationInfo> implements OnInit {
 

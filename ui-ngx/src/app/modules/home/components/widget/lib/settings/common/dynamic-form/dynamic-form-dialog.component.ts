@@ -45,9 +45,10 @@ export interface DynamicFormDialogData<V> {
 }
 
 @Component({
-  selector: 'tb-dynamic-form-dialog',
-  templateUrl: './dynamic-form-dialog.component.html',
-  styleUrls: []
+    selector: 'tb-dynamic-form-dialog',
+    templateUrl: './dynamic-form-dialog.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class DynamicFormDialogComponent<V> extends DialogComponent<DynamicFormDialogComponent<V>, V> {
 

@@ -43,14 +43,15 @@ import { FloatLabelType } from '@angular/material/form-field';
 type IntegrationInfo = IntegrationTypeInfo & {type: IntegrationType};
 
 @Component({
-  selector: 'tb-integration-type-select',
-  templateUrl: 'integration-type-select.component.html',
-  styleUrls: ['integration-type-select.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => IntegrationTypeSelectComponent),
-    multi: true
-  }]
+    selector: 'tb-integration-type-select',
+    templateUrl: 'integration-type-select.component.html',
+    styleUrls: ['integration-type-select.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => IntegrationTypeSelectComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class IntegrationTypeSelectComponent implements ControlValueAccessor, OnInit {
 

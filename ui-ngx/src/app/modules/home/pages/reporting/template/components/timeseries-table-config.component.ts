@@ -57,10 +57,11 @@ import {
 import { FormProperty } from '@shared/models/dynamic-form.models';
 
 @Component({
-  selector: 'tb-timeseries-table-config',
-  templateUrl: './timeseries-table-config.component.html',
-  styleUrls: ['./report-component-config.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-timeseries-table-config',
+    templateUrl: './timeseries-table-config.component.html',
+    styleUrls: ['./report-component-config.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class TimeseriesTableConfigComponent extends AbstractReportComponentConfig<TimeseriesTableReportComponentConfig> {
 

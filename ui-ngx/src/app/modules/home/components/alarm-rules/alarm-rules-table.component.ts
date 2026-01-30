@@ -55,11 +55,12 @@ import { ActivatedRoute, Router } from "@angular/router";
 import { UserPermissionsService } from "@core/http/user-permissions.service";
 
 @Component({
-  selector: 'tb-alarm-rules-table',
-  templateUrl: './alarm-rules-table.component.html',
-  styleUrls: ['./alarm-rules-table.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [EntityDebugSettingsService]
+    selector: 'tb-alarm-rules-table',
+    templateUrl: './alarm-rules-table.component.html',
+    styleUrls: ['./alarm-rules-table.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [EntityDebugSettingsService],
+    standalone: false
 })
 export class AlarmRulesTableComponent {
 

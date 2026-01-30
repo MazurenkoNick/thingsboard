@@ -59,9 +59,10 @@ import { DeviceInfo } from '@shared/models/device.models';
 import { EntityService } from '@core/http/entity.service';
 
 @Component({
-  selector: 'tb-calculated-field',
-  templateUrl: './calculated-field.component.html',
-  styleUrls: ['./calculated-field.component.scss']
+    selector: 'tb-calculated-field',
+    templateUrl: './calculated-field.component.html',
+    styleUrls: ['./calculated-field.component.scss'],
+    standalone: false
 })
 export class CalculatedFieldComponent extends EntityComponent<CalculatedFieldsTableEntity> {
 

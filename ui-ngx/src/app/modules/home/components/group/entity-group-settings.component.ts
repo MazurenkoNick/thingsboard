@@ -47,14 +47,15 @@ import { pairwise } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 
 @Component({
-  selector: 'tb-entity-group-settings',
-  templateUrl: './entity-group-settings.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => EntityGroupSettingsComponent),
-    multi: true
-  }]
+    selector: 'tb-entity-group-settings',
+    templateUrl: './entity-group-settings.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => EntityGroupSettingsComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class EntityGroupSettingsComponent extends PageComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy {
 

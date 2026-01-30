@@ -66,14 +66,15 @@ import { UtilsService } from '@core/services/utils.service';
 
 // @dynamic
 @Component({
-  selector: 'tb-dashboard-select',
-  templateUrl: './dashboard-select.component.html',
-  styleUrls: ['./dashboard-select.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => DashboardSelectComponent),
-    multi: true
-  }]
+    selector: 'tb-dashboard-select',
+    templateUrl: './dashboard-select.component.html',
+    styleUrls: ['./dashboard-select.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => DashboardSelectComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class DashboardSelectComponent implements ControlValueAccessor, OnInit {
 

@@ -41,9 +41,10 @@ import {
 } from '@angular/core';
 
 @Directive({
-  // eslint-disable-next-line @angular-eslint/directive-selector
-  selector: '[tbComponentOutlet]',
-  exportAs: 'tbComponentOutlet'
+    // eslint-disable-next-line @angular-eslint/directive-selector
+    selector: '[tbComponentOutlet]',
+    exportAs: 'tbComponentOutlet',
+    standalone: false
 })
 export class TbComponentOutletDirective<_T = unknown> implements OnChanges {
   private componentRef: ComponentRef<any> | null = null;

@@ -79,9 +79,10 @@ import {
 import { Direction } from '@shared/models/page/sort-order';
 
 @Component({
-  selector: 'tb-secret-storage-table',
-  templateUrl: './secret-storage-table.component.html',
-  styleUrls: ['./secret-storage-table.component.scss']
+    selector: 'tb-secret-storage-table',
+    templateUrl: './secret-storage-table.component.html',
+    styleUrls: ['./secret-storage-table.component.scss'],
+    standalone: false
 })
 export class SecretStorageTableComponent implements OnInit {
 

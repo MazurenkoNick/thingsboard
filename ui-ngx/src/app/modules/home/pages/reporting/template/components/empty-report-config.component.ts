@@ -40,10 +40,11 @@ import {
 import { ReportComponentConfig } from '@shared/models/report-component.models';
 
 @Component({
-  selector: 'tb-empty-report-config',
-  templateUrl: './empty-report-config.component.html',
-  styleUrls: ['./empty-report-config.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-empty-report-config',
+    templateUrl: './empty-report-config.component.html',
+    styleUrls: ['./empty-report-config.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class EmptyReportConfigComponent extends AbstractReportComponentConfig {
 

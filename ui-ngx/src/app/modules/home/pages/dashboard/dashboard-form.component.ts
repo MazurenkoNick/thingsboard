@@ -44,9 +44,10 @@ import { EntityTableConfig } from '@home/models/entity/entities-table-config.mod
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Component({
-  selector: 'tb-dashboard-form',
-  templateUrl: './dashboard-form.component.html',
-  styleUrls: ['./dashboard-form.component.scss']
+    selector: 'tb-dashboard-form',
+    templateUrl: './dashboard-form.component.html',
+    styleUrls: ['./dashboard-form.component.scss'],
+    standalone: false
 })
 export class DashboardFormComponent extends GroupEntityComponent<DashboardInfo> {
 

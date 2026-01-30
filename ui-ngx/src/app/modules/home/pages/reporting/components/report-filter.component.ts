@@ -64,16 +64,17 @@ export interface ReportFilterData {
 
 // @dynamic
 @Component({
-  selector: 'tb-report-filter',
-  templateUrl: './report-filter.component.html',
-  styleUrls: ['./report-filter.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => ReportFilterComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-report-filter',
+    templateUrl: './report-filter.component.html',
+    styleUrls: ['./report-filter.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ReportFilterComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class ReportFilterComponent implements OnInit, ControlValueAccessor {
 

@@ -52,21 +52,22 @@ import { TranslateService } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-owner-entity-group-list',
-  templateUrl: './owner-entity-group-list.component.html',
-  styleUrls: ['./owner-entity-group-list.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => OwnerEntityGroupListComponent),
-      multi: true
-    },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => OwnerEntityGroupListComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-owner-entity-group-list',
+    templateUrl: './owner-entity-group-list.component.html',
+    styleUrls: ['./owner-entity-group-list.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => OwnerEntityGroupListComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => OwnerEntityGroupListComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class OwnerEntityGroupListComponent extends PageComponent implements OnInit, ControlValueAccessor, Validator {
 
