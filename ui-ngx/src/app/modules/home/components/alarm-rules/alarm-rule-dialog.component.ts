@@ -210,7 +210,7 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
         });
     } else {
       this.fieldFormGroup.get('name').markAsTouched();
-      this.entitySelect.entityAutocompleteMarkAsTouched();
+      this.entitySelect?.entityAutocompleteMarkAsTouched();
     }
   }
 
