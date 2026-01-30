@@ -246,6 +246,22 @@ public class ModelConstants {
      * Agent constants.
      */
     public static final String AGENT_TABLE_NAME = "agent";
+    public static final String AGENT_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String AGENT_CUSTOMER_ID_PROPERTY = CUSTOMER_ID_PROPERTY;
+    public static final String AGENT_NAME_PROPERTY = NAME_PROPERTY;
+    public static final String AGENT_ADDITIONAL_INFO_PROPERTY = ADDITIONAL_INFO_PROPERTY;
+
+    /**
+     * Agent application constants.
+     */
+    public static final String AGENT_APPLICATION_TABLE_NAME = "agent_application";
+    public static final String AGENT_APPLICATION_AGENT_ID_PROPERTY = "agent_id";
+    public static final String AGENT_APPLICATION_NAME_PROPERTY = "name";
+    public static final String AGENT_APPLICATION_TYPE_PROPERTY = "type";
+    public static final String AGENT_APPLICATION_TEMPLATE_VERSION_PROPERTY = "template_version";
+    public static final String AGENT_APPLICATION_PLACEHOLDERS_PROPERTY = "placeholders";
+    public static final String AGENT_APPLICATION_CONFIGURATION_PROPERTY = "configuration";
+    public static final String AGENT_APPLICATION_STEPS_PROPERTY = "steps";
 
     /**
      * Alarm constants.

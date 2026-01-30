@@ -19,6 +19,7 @@ import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -59,6 +60,10 @@ public class BaseAgentService extends AbstractCachedEntityService<AgentCacheKey,
 
     @Autowired
     private AgentDao agentDao;
+
+    @Lazy
+    @Autowired
+    private AgentApplicationService agentApplicationService;
 
     @Autowired
     private DataValidator<Agent> agentValidator;
@@ -187,6 +192,7 @@ public class BaseAgentService extends AbstractCachedEntityService<AgentCacheKey,
         if (agent == null) {
             return;
         }
+        agentApplicationService.deleteByAgentId(tenantId, agentId);
         agentDao.removeById(tenantId, agentId.getId());
 
         publishEvictEvent(new AgentCacheEvictEvent(agent.getTenantId(), agent.getName(), null));

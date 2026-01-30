@@ -21,6 +21,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.AgentInfo;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -28,9 +30,11 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.AbstractJpaDaoTest;
+import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentDao;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,6 +52,8 @@ public class JpaAgentDaoTest extends AbstractJpaDaoTest {
     
     @Autowired
     private AgentDao agentDao;
+    @Autowired
+    private AgentApplicationDao agentApplicationDao;
 
     @Before
     public void setUp() {
@@ -195,6 +201,40 @@ public class JpaAgentDaoTest extends AbstractJpaDaoTest {
         PageData<AgentInfo> agents1 = agentDao.findAgentInfosByTenantId(tenantId1, pageLink);
         // Should match AGENT_2, AGENT_20, AGENT_22, AGENT_24, AGENT_26, AGENT_28 (6 agents with even indices)
         assertEquals(6, agents1.getData().size());
+    }
+
+    @Test
+    public void testDeleteAgentRemovesAgentApplications() {
+        UUID agentId = Uuids.timeBased();
+        Agent agent = saveAgent(agentId, tenantId1, customerId1, "AGENT_FOR_APPS");
+        agents.add(agent);
+
+        AgentApplication app1 = new AgentApplication();
+        app1.setAgentId(new AgentId(agentId));
+        app1.setType(AgentApplicationType.GENERIC);
+        app1.setTemplateVersion("1.0");
+        app1.setPlaceholders(Collections.emptyMap());
+        app1.setConfiguration(Collections.emptyMap());
+        app1.setSteps(Collections.emptyList());
+        agentApplicationDao.save(TenantId.fromUUID(tenantId1), app1);
+
+        AgentApplication app2 = new AgentApplication();
+        app2.setAgentId(new AgentId(agentId));
+        app2.setType(AgentApplicationType.EDGE);
+        app2.setTemplateVersion("1.0");
+        app2.setPlaceholders(Collections.emptyMap());
+        app2.setConfiguration(Collections.emptyMap());
+        app2.setSteps(Collections.emptyList());
+        agentApplicationDao.save(TenantId.fromUUID(tenantId1), app2);
+
+        List<AgentApplication> before = agentApplicationDao.findByAgentId(TenantId.fromUUID(tenantId1), agentId);
+        assertEquals(2, before.size());
+
+        agentDao.removeById(TenantId.fromUUID(tenantId1), agentId);
+        agents.remove(agent);
+
+        List<AgentApplication> after = agentApplicationDao.findByAgentId(TenantId.fromUUID(tenantId1), agentId);
+        assertEquals(0, after.size());
     }
 
     private Agent saveAgent(UUID id, UUID tenantId, UUID customerId, String name) {

@@ -85,6 +85,7 @@ public class EntityIdFactory {
             case AI_MODEL -> new AiModelId(uuid);
             case API_KEY -> new ApiKeyId(uuid);
             case AGENT -> new AgentId(uuid);
+            case AGENT_APPLICATION -> new AgentApplicationId(uuid);
         };
     }
 
