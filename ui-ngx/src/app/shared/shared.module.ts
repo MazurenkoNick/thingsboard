@@ -291,7 +291,6 @@ import { RequestPlanUpgradeDialogComponent } from '@shared/components/dialog/req
 import { MAT_BUTTON_TOGGLE_DEFAULT_OPTIONS } from '@angular/material/button-toggle';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
-export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
 }
 
