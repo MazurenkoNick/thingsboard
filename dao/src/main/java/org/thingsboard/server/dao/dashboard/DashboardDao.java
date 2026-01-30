@@ -67,4 +67,5 @@ public interface DashboardDao extends Dao<Dashboard>, TenantEntityDao<Dashboard>
 
     void replaceWidgetTypeFullFqn(String oldLink, String newLink);
 
+    void setTrendzWidgetsTypeLatestBySystemFqn(String systemFqn);
 }

@@ -153,4 +153,9 @@ public class JpaDashboardDao extends JpaAbstractDao<DashboardEntity, Dashboard> 
         log.trace("replaceWidgetTypeFullFqn: Affected row count: {}", rowCount);
     }
 
+    @Override
+    public void setTrendzWidgetsTypeLatestBySystemFqn(String systemFqn) {
+        int rowCount = dashboardRepository.setTrendzWidgetsTypeLatestBySystemFqn(systemFqn);
+        log.trace("setTrendzWidgetsTypeLatestBySystemFqn: Affected row count: {}", rowCount);
+    }
 }
