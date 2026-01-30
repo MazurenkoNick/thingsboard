@@ -74,7 +74,7 @@ import { beautifyJs } from '@shared/models/beautify.models';
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
 import { ScriptLanguage } from '@shared/models/rule-node.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MatButton } from '@angular/material/button';
+import { MatIconButton } from '@angular/material/button';
 import { TbPopoverService } from '@shared/components/popover.service';
 import { UpdatedPayloadPanelComponent } from '@home/components/converter/updated-payload-panel.component';
 
@@ -411,7 +411,7 @@ export class ConverterTestDialogComponent extends DialogComponent<ConverterTestD
     });
   }
 
-  updateMsg($event: Event, matButton: MatButton) {
+  updateMsg($event: Event, matButton: MatIconButton) {
     if ($event) {
       $event.stopPropagation();
     }

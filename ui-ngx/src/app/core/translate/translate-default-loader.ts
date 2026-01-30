@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { TranslateLoader } from '@ngx-translate/core';
+import { TranslateLoader, TranslationObject } from '@ngx-translate/core';
 import { forkJoin, Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
@@ -47,15 +47,15 @@ export class TranslateDefaultLoader implements TranslateLoader {
 
   }
 
-  getTranslation(lang: string): Observable<object> {
-    let tasks: Array<Observable<object>>
+  getTranslation(lang: string): Observable<TranslationObject> {
+    let tasks: Array<Observable<TranslationObject>>
     if (this.isAuthenticated) {
-      tasks = [this.http.get(`/api/translation/full/${lang}`)];
+      tasks = [this.http.get<TranslationObject>(`/api/translation/full/${lang}`)];
     } else {
-      tasks = [this.http.get<object>(`/api/noauth/translation/login/${lang}`)];
+      tasks = [this.http.get<TranslationObject>(`/api/noauth/translation/login/${lang}`)];
     }
     if (!env.production && env.supportedLangs && env.supportedLangs.indexOf(lang) !== -1) {
-      tasks.push(this.http.get(`/assets/locale/locale.constant-${lang}.json`));
+      tasks.push(this.http.get<TranslationObject>(`/assets/locale/locale.constant-${lang}.json`));
     }
     const observe = forkJoin(tasks).pipe(
       map((results) => {
@@ -70,12 +70,12 @@ export class TranslateDefaultLoader implements TranslateLoader {
     );
   }
 
-  private loadSystemLang(lang: string): Observable<object> {
+  private loadSystemLang(lang: string): Observable<TranslationObject> {
     const tasks = [
-      this.http.get(`/assets/locale/locale.constant-${env.defaultLang}.json`)
+      this.http.get<TranslationObject>(`/assets/locale/locale.constant-${env.defaultLang}.json`)
     ];
     if (env.supportedLangs && env.supportedLangs.indexOf(lang) !== -1) {
-      tasks.push(this.http.get(`/assets/locale/locale.constant-${lang}.json`));
+      tasks.push(this.http.get<TranslationObject>(`/assets/locale/locale.constant-${lang}.json`));
     }
     return forkJoin(tasks).pipe(
       map((results) => {

@@ -356,6 +356,7 @@ export class WidgetContext {
   widgetTitleTooltip?: string;
   customHeaderActions?: Array<WidgetHeaderAction>;
   widgetActions?: Array<WidgetAction>;
+  widgetHeaderActionsPanel?: TemplateRef<any>
 
   servicesMap?: Map<string, Type<any>>;
 
@@ -599,6 +600,7 @@ export class LabelVariablePattern {
 export const widgetContextToken = new InjectionToken<WidgetContext>('widgetContext');
 export const widgetErrorMessagesToken = new InjectionToken<string[]>('errorMessages');
 export const widgetTitlePanelToken = new InjectionToken<TemplateRef<any>>('widgetTitlePanel');
+export const widgetHeaderActionsPanelToken = new InjectionToken<TemplateRef<any>>('widgetHeaderActionsPanel');
 
 export interface IDynamicWidgetComponent {
   readonly ctx: WidgetContext;

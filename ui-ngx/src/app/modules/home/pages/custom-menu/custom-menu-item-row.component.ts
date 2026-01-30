@@ -77,7 +77,7 @@ import { MenuSection, menuSectionMap } from '@core/services/menu.models';
 import { CustomTranslatePipe } from '@shared/pipe/custom-translate.pipe';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
-import { MatButton } from '@angular/material/button';
+import { MatButton, MatIconButton } from '@angular/material/button';
 import { deepClone } from '@core/utils';
 import { DefaultMenuItemPanelComponent } from '@home/pages/custom-menu/default-menu-item-panel.component';
 import {
@@ -290,7 +290,7 @@ export class CustomMenuItemRowComponent implements ControlValueAccessor, OnInit,
     return null;
   }
 
-  edit($event: Event, matButton: MatButton) {
+  edit($event: Event, matButton: MatIconButton) {
     if ($event) {
       $event.stopPropagation();
     }

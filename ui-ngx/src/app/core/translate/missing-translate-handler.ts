@@ -29,11 +29,12 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { MissingTranslationHandler, MissingTranslationHandlerParams } from '@ngx-translate/core';
+import { MissingTranslationHandler, MissingTranslationHandlerParams, StrictTranslation } from '@ngx-translate/core';
 import { customTranslationsPrefix } from '@app/shared/models/constants';
+import { Observable } from 'rxjs';
 
 export class TbMissingTranslationHandler implements MissingTranslationHandler {
-  handle(params: MissingTranslationHandlerParams) {
+  handle(params: MissingTranslationHandlerParams): StrictTranslation | Observable<StrictTranslation> {
     if (params.key && !params.key.startsWith(customTranslationsPrefix)) {
       console.warn('Translation for \'' + params.key + '\' doesn\'t exist');
       let translations: any;
@@ -47,7 +48,8 @@ export class TbMissingTranslationHandler implements MissingTranslationHandler {
         }
         translations = newTranslations;
       }
-      params.translateService.setTranslation(params.translateService.currentLang, translations, true);
+      params.translateService.setTranslation(params.translateService.getCurrentLang(), translations, true);
     }
+    return undefined;
   }
 }

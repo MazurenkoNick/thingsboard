@@ -31,7 +31,7 @@
 
 import { Component, forwardRef, Input, OnInit, Renderer2, ViewContainerRef } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { MatButton } from '@angular/material/button';
+import { MatIconButton } from '@angular/material/button';
 import { TbPopoverService } from '@shared/components/popover.service';
 import { deepClone } from '@core/utils';
 import { coerceBoolean } from '@shared/decorators/coercion';
@@ -116,7 +116,7 @@ export class TimeSeriesChartThresholdSettingsComponent implements OnInit, Contro
     this.modelValue = value;
   }
 
-  openThresholdSettingsPopup($event: Event, matButton: MatButton) {
+  openThresholdSettingsPopup($event: Event, matButton: MatIconButton) {
     if ($event) {
       $event.stopPropagation();
     }
