@@ -45,6 +45,7 @@ import org.thingsboard.server.dao.ExportableEntityDao;
 import org.thingsboard.server.dao.ImageContainerDao;
 import org.thingsboard.server.dao.ResourceContainerDao;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -126,4 +127,5 @@ public interface WidgetTypeDao extends Dao<WidgetTypeDetails>, ExportableEntityD
 
     void labelWidgetTypesAsDeprecatedByFqns(Set<String> fqns);
 
+    Set<String> findUniqueExternalHostsInAnalyticsBundleByFqns(Collection<String> fqns);
 }

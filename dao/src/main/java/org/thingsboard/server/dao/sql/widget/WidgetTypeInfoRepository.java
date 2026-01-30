@@ -252,4 +252,15 @@ public interface WidgetTypeInfoRepository extends JpaRepository<WidgetTypeInfoEn
     @Modifying
     void labelWidgetTypesAsDeprecatedByFqns(@Param("fqns") Collection<String> fqns);
 
+    @Query(nativeQuery = true,
+            value = """
+                    SELECT DISTINCT substring(raw_url FROM '^(https?://[^/]+)')
+                    FROM (
+                        SELECT CAST(wt.descriptor AS jsonb) -> 'resources' -> 0 ->> 'url' as raw_url
+                        FROM widget_type wt
+                        WHERE wt.fqn IN (:fqns)
+                    ) as extracted
+                    WHERE raw_url IS NOT NULL AND raw_url ~ '^https?://'
+                    """)
+    Set<String> findUniqueExternalHostsInAnalyticsBundleByFqns(@Param("fqns") Collection<String> fqns);
 }
