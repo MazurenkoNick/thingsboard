@@ -90,7 +90,7 @@
                      (blur)="passwordTooltip.onBlur()"/>
               <tb-toggle-password matSuffix></tb-toggle-password>
               <mat-icon matPrefix>lock</mat-icon>
-              <mat-error *ngIf="this.signup.get('fields.PASSWORD').errors">
+              <mat-error *ngIf="signup.get('fields.PASSWORD').errors">
                 {{ 'security.password-requirement.password-not-meet-requirements' | translate }}
               </mat-error>
             </mat-form-field>
