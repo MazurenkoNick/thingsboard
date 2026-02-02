@@ -28,17 +28,57 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.edge.rpc.utils;
+package org.thingsboard.edge.rpc;
 
-import lombok.extern.slf4j.Slf4j;
-import org.thingsboard.edge.rpc.EdgeVersionComparator;
 import org.thingsboard.server.gen.edge.v1.EdgeVersion;
 
-@Slf4j
-public final class EdgeVersionUtils {
+import java.util.Comparator;
 
-    public static boolean isEdgeVersionOlderThan(EdgeVersion currentVersion, EdgeVersion requiredVersion) {
-        return EdgeVersionComparator.INSTANCE.compare(currentVersion, requiredVersion) < 0;
+public class EdgeVersionComparator implements Comparator<EdgeVersion> {
+
+    public static final EdgeVersionComparator INSTANCE = new EdgeVersionComparator();
+
+    @Override
+    public int compare(EdgeVersion v1, EdgeVersion v2) {
+        return compareVersionParts(parseVersionParts(v1), parseVersionParts(v2));
+    }
+
+    public static EdgeVersion getNewestEdgeVersion() {
+        EdgeVersion newest = null;
+        for (EdgeVersion v : EdgeVersion.values()) {
+            if (v == EdgeVersion.V_LATEST || v == EdgeVersion.UNRECOGNIZED) {
+                continue;
+            }
+            if (newest == null || INSTANCE.compare(v, newest) > 0) {
+                newest = v;
+            }
+        }
+        return newest;
+    }
+
+    private static int[] parseVersionParts(EdgeVersion version) {
+        String name = version.name();
+        if (name.startsWith("V_")) {
+            name = name.substring(2);
+        }
+        String[] parts = name.split("_");
+        int[] result = new int[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            result[i] = Integer.parseInt(parts[i]);
+        }
+        return result;
+    }
+
+    private static int compareVersionParts(int[] a, int[] b) {
+        int maxLen = Math.max(a.length, b.length);
+        for (int i = 0; i < maxLen; i++) {
+            int partA = i < a.length ? a[i] : 0;
+            int partB = i < b.length ? b[i] : 0;
+            if (partA != partB) {
+                return Integer.compare(partA, partB);
+            }
+        }
+        return 0;
     }
 
 }
