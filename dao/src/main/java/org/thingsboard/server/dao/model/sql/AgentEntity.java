@@ -13,24 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.agent.msg.inbound;
+package org.thingsboard.server.dao.model.sql;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.thingsboard.server.service.agent.AgentInboundMsgCtx;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.thingsboard.server.common.data.agent.Agent;
 
-import java.util.List;
+import static org.thingsboard.server.dao.model.ModelConstants.AGENT_TABLE_NAME;
 
-@Service
-@RequiredArgsConstructor
-public class BaseAgentInboundMessageDispatcher implements AgentInboundMessageDispatcher {
+@Data
+@EqualsAndHashCode(callSuper = true)
+@Entity
+@Table(name = AGENT_TABLE_NAME)
+public final class AgentEntity extends AbstractAgentEntity<Agent> {
 
-    private final List<AgentInboundMessageHandler> agentInboundMessageHandlerList;
+    public AgentEntity() {
+        super();
+    }
+
+    public AgentEntity(Agent agent) {
+        super(agent);
+    }
 
     @Override
-    public void process(AgentInboundMsgCtx ctx) {
-        agentInboundMessageHandlerList.stream()
-                .filter(h -> h.canHandle(ctx))
-                .forEach(h -> h.handle(ctx));
+    public Agent toData() {
+        return super.toAgent();
     }
 }

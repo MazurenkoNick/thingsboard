@@ -201,7 +201,7 @@ public class EdgeGrpcClient implements EdgeRpcClient {
                 } catch (InterruptedException e) {
                     log.error("[{}] Got interruption during disconnect!", edgeKey, e);
                 }
-                onError.accept(new RuntimeException(t));
+                onError.accept(new EdgeConnectionException("Stream was terminated due to error", t));
             }
 
             @Override

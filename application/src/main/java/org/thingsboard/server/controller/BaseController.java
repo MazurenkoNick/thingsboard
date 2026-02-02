@@ -62,6 +62,7 @@ import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.TenantInfo;
 import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.ai.AiModel;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmComment;
@@ -77,6 +78,7 @@ import org.thingsboard.server.common.data.edge.EdgeInfo;
 import org.thingsboard.server.common.data.exception.EntityVersionMismatchException;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.AiModelId;
 import org.thingsboard.server.common.data.id.AlarmCommentId;
 import org.thingsboard.server.common.data.id.AlarmId;
@@ -134,6 +136,7 @@ import org.thingsboard.server.common.data.util.ThrowingBiFunction;
 import org.thingsboard.server.common.data.widget.WidgetTypeDetails;
 import org.thingsboard.server.common.data.widget.WidgetTypeInfo;
 import org.thingsboard.server.common.data.widget.WidgetsBundle;
+import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.ai.AiModelService;
 import org.thingsboard.server.dao.alarm.AlarmCommentService;
 import org.thingsboard.server.dao.asset.AssetProfileService;
@@ -393,6 +396,9 @@ public abstract class BaseController {
 
     @Autowired
     protected ApiKeyService apiKeyService;
+
+    @Autowired
+    protected AgentService agentService;
 
     @Value("${server.log_controller_error_stack_trace}")
     @Getter
@@ -656,6 +662,7 @@ public abstract class BaseController {
                 case CALCULATED_FIELD -> checkCalculatedFieldId(new CalculatedFieldId(entityId.getId()), operation);
                 case AI_MODEL -> checkAiModelId(new AiModelId(entityId.getId()), operation);
                 case API_KEY -> checkApiKeyId(new ApiKeyId(entityId.getId()), operation);
+                case AGENT -> checkAgentId(new AgentId(entityId.getId()), operation);
                 default -> (HasId<? extends EntityId>) checkEntityId(entityId, entitiesService::findEntityByTenantIdAndId, operation);
             };
         } catch (Exception e) {
@@ -865,6 +872,10 @@ public abstract class BaseController {
 
     ApiKey checkApiKeyId(ApiKeyId apiKeyId, Operation operation) throws ThingsboardException {
         return checkEntityId(apiKeyId, apiKeyService::findApiKeyById, operation);
+    }
+
+    Agent checkAgentId(AgentId agentId, Operation operation) throws ThingsboardException {
+        return checkEntityId(agentId, agentService::findAgentById, operation);
     }
 
     protected <I extends EntityId> I emptyId(EntityType entityType) {

@@ -13,9 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.agent.event;
+package org.thingsboard.server.cache.agent;
 
-public interface AgentEventProcessor {
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.thingsboard.server.common.data.id.TenantId;
 
-    void launchEventProcessor();
+@Data
+@RequiredArgsConstructor
+public class AgentCacheEvictEvent {
+
+    private final TenantId tenantId;
+    private final String newName;
+    private final String oldName;
+
 }

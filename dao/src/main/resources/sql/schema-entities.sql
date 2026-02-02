@@ -758,6 +758,17 @@ CREATE TABLE IF NOT EXISTS edge (
     CONSTRAINT edge_routing_key_unq_key UNIQUE (routing_key)
 );
 
+CREATE TABLE IF NOT EXISTS agent (
+    id uuid NOT NULL CONSTRAINT agent_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    additional_info varchar,
+    customer_id uuid,
+    name varchar(255),
+    tenant_id uuid,
+    version BIGINT DEFAULT 1,
+    CONSTRAINT agent_name_unq_key UNIQUE (tenant_id, name)
+);
+
 CREATE TABLE IF NOT EXISTS edge_event (
     seq_id INT GENERATED ALWAYS AS IDENTITY,
     id uuid NOT NULL,
