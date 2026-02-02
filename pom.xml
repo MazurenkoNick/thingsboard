@@ -163,6 +163,7 @@
         <module>msa</module>
         <module>rest-client</module>
         <module>monitoring</module>
+        <module>common/agent-api</module>
     </modules>
 
     <profiles>
@@ -968,6 +969,11 @@
             <dependency>
                 <groupId>org.thingsboard.common</groupId>
                 <artifactId>discovery-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.thingsboard.common</groupId>
+                <artifactId>agent-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
