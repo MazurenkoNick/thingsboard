@@ -783,6 +783,15 @@ CREATE TABLE IF NOT EXISTS agent_application (
     CONSTRAINT fk_agent_application_agent FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS agent_app_unit (
+    id uuid NOT NULL CONSTRAINT agent_app_unit_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    agent_application_id uuid NOT NULL,
+    identifier varchar(255) NOT NULL,
+    type varchar(255) NOT NULL,
+    CONSTRAINT fk_agent_app_unit_agent_application FOREIGN KEY (agent_application_id) REFERENCES agent_application(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS edge_event (
     seq_id INT GENERATED ALWAYS AS IDENTITY,
     id uuid NOT NULL,
