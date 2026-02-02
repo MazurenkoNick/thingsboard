@@ -39,11 +39,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.server.common.data.AdminSettings;
+import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.SecretType;
 import org.thingsboard.server.common.data.ShortCustomerInfo;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.alarm.AlarmSeverity;
@@ -57,6 +62,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.integration.AbstractIntegration;
 import org.thingsboard.server.common.data.integration.Integration;
+import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -64,7 +70,11 @@ import org.thingsboard.server.common.data.query.DynamicValue;
 import org.thingsboard.server.common.data.query.FilterPredicateValue;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
+import org.thingsboard.server.common.data.secret.Secret;
+import org.thingsboard.server.common.data.secret.SecretInfo;
 import org.thingsboard.server.common.data.security.Authority;
+import org.thingsboard.server.common.data.sync.vc.RepositoryAuthMethod;
+import org.thingsboard.server.common.data.sync.vc.RepositorySettings;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.customer.CustomerService;
@@ -86,6 +96,7 @@ import org.thingsboard.server.service.component.ComponentDiscoveryService;
 import org.thingsboard.server.service.component.RuleNodeClassInfo;
 import org.thingsboard.server.service.install.DbUpgradeExecutorService;
 import org.thingsboard.server.service.install.SystemDataLoaderService;
+import org.thingsboard.server.service.sync.vc.repository.DefaultTbRepositorySettingsService;
 import org.thingsboard.server.utils.TbNodeUpgradeUtils;
 
 import java.lang.reflect.Field;
@@ -96,6 +107,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -124,6 +136,10 @@ public class DefaultDataUpdateService implements DataUpdateService {
     private final SystemDataLoaderService systemDataLoaderService;
     private final ComponentDiscoveryService componentDiscoveryService;
     private final DbUpgradeExecutorService executorService;
+    private final AttributesService attributesService;
+    private final AdminSettingsService adminSettingsService;
+    private final SecretService secretService;
+    private final EncryptionService encryptionService;
 
     @Override
     public void updateData(boolean fromCe) throws Exception {
@@ -132,7 +148,9 @@ public class DefaultDataUpdateService implements DataUpdateService {
             updateDataFromCe();
         } else {
             //TODO: should be cleaned after each release
-
+            encryptionService.createEncryptionKey(TenantId.SYS_TENANT_ID);
+            migrateTenantAttributeSettingsToAdminSettings();
+            migrateSensitiveSettingsToUseSecrets();
         }
         log.info("Data updated.");
     }
@@ -148,6 +166,137 @@ public class DefaultDataUpdateService implements DataUpdateService {
         } else {
             systemDataLoaderService.updateMailTemplates(mailTemplatesSettings);
         }
+    }
+
+    private void migrateTenantAttributeSettingsToAdminSettings() {
+        log.info("Starting migration of tenant attribute settings to admin_settings...");
+        List<String> migratedKeys = List.of("mail", "sms", "jwt", "twoFaSettings");
+        PageDataIterable<TenantId> tenantIds = new PageDataIterable<>(tenantService::findTenantsIds, 1024);
+        for (TenantId tenantId : tenantIds) {
+            try {
+                List<AttributeKvEntry> attributeKvEntries = attributesService.find(tenantId, tenantId, AttributeScope.SERVER_SCOPE, migratedKeys).get(30, TimeUnit.SECONDS);
+
+                if (attributeKvEntries.isEmpty()) {
+                    continue;
+                }
+
+                List<String> migratedForTenant = new ArrayList<>(attributeKvEntries.size());
+                for (AttributeKvEntry entry : attributeKvEntries) {
+                    String key = entry.getKey();
+                    if (adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, key) != null) {
+                        log.debug("Skipping migration of [{}] for tenant {}: already exists", key, tenantId);
+                        continue;
+                    }
+                    try {
+                        JsonNode jsonValue = JacksonUtil.toJsonNode(entry.getValueAsString());
+                        AdminSettings adminSettings = new AdminSettings();
+                        adminSettings.setTenantId(tenantId);
+                        adminSettings.setKey(key);
+                        adminSettings.setJsonValue(jsonValue);
+                        adminSettingsService.saveAdminSettings(tenantId, adminSettings);
+                        migratedForTenant.add(key);
+                    } catch (Exception e) {
+                        log.warn("[{}] Failed to parse/migrate attribute [{}]", tenantId, key, e);
+                    }
+                }
+                if (!migratedForTenant.isEmpty()) {
+                    attributesService.removeAll(tenantId, tenantId, AttributeScope.SERVER_SCOPE, migratedForTenant).get(30, TimeUnit.SECONDS);
+                    log.info("[{}] tenant : migrated keys {}", tenantId, migratedForTenant);
+                }
+            } catch (Exception e) {
+                log.error("Failed to find attribute for tenant {}", tenantId, e);
+            }
+        }
+        log.info("Tenant attribute settings migration fully completed.");
+    }
+
+    private void migrateSensitiveSettingsToUseSecrets() {
+        migrateMailSettingsToSecrets(TenantId.SYS_TENANT_ID);
+        PageDataIterable<TenantId> tenantIds = new PageDataIterable<>(tenantService::findTenantsIds, 1024);
+        for (TenantId tenantId : tenantIds) {
+            migrateVersionControlSettingsToSecrets(tenantId);
+            migrateMailSettingsToSecrets(tenantId);
+        }
+        log.info("Tenant sensitive settings migration to secrets fully completed.");
+    }
+
+    private void migrateVersionControlSettingsToSecrets(TenantId tenantId) {
+        try {
+            var versionControl = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, DefaultTbRepositorySettingsService.SETTINGS_KEY);
+            if (versionControl == null) {
+                return;
+            }
+            RepositorySettings settings = JacksonUtil.convertValue(versionControl.getJsonValue(), RepositorySettings.class);
+            if (settings == null) {
+                return;
+            }
+
+            String description = "Auto-generated from version control settings.";
+            if (settings.getAuthMethod() == RepositoryAuthMethod.USERNAME_PASSWORD) {
+                if (!isSecretPlaceholder(settings.getPassword()) && StringUtils.isNotBlank(settings.getPassword())) {
+                    String password = createSecretAsPlaceholder(tenantId, "Git repository password", settings.getPassword(), SecretType.TEXT, description);
+                    settings.setPassword(password);
+                }
+            } else {
+                if (!isSecretPlaceholder(settings.getPrivateKeyPassword()) && StringUtils.isNotBlank(settings.getPrivateKeyPassword())) {
+                    String passphrase = createSecretAsPlaceholder(tenantId, "Git repository private key passphrase", settings.getPrivateKeyPassword(), SecretType.TEXT, description);
+                    settings.setPrivateKeyPassword(passphrase);
+                }
+
+                if (!isSecretPlaceholder(settings.getPrivateKey()) && StringUtils.isNotBlank(settings.getPrivateKey())) {
+                    String file = createSecretAsPlaceholder(tenantId, "Git repository private key", settings.getPrivateKey(), SecretType.TEXT_FILE, description);
+                    settings.setPrivateKey(file);
+                }
+            }
+            JsonNode jsonNode = JacksonUtil.valueToTree(settings);
+            versionControl.setJsonValue(jsonNode);
+            adminSettingsService.saveAdminSettings(tenantId, versionControl);
+
+        } catch (Exception e) {
+            log.error("Failed to migrate version control settings to secrets storage for tenant {}", tenantId, e);
+        }
+    }
+
+    private void migrateMailSettingsToSecrets(TenantId tenantId) {
+        try {
+            var mail = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, "mail");
+            if (mail == null) {
+                return;
+            }
+            ObjectNode config = JacksonUtil.asObject(mail.getJsonValue());
+            JsonNode password = config.get("password");
+            if (password != null && !password.isNull() && StringUtils.isNotBlank(password.asText()) && !isSecretPlaceholder(password.asText())) {
+                String description = "Auto-generated from mail settings.";
+                String placeholder = createSecretAsPlaceholder(tenantId, "Mail server password", password.asText(), SecretType.TEXT, description);
+                config.put("password", placeholder);
+                mail.setJsonValue(config);
+                adminSettingsService.saveAdminSettings(tenantId, mail);
+            }
+        } catch (Exception e) {
+            log.error("Failed to migrate mail settings to secrets storage for tenant {}", tenantId, e);
+        }
+    }
+
+    private String createSecretAsPlaceholder(TenantId tenantId, String baseName, String value, SecretType type, String description) {
+        String name = baseName;
+        int counter = 1;
+
+        while (secretService.findSecretInfoByName(tenantId, name) != null) {
+            name = baseName + " (" + counter++ + ")";
+        }
+
+        Secret secret = new Secret();
+        secret.setTenantId(tenantId);
+        secret.setName(name);
+        secret.setValue(value);
+        secret.setType(type);
+        secret.setDescription(description);
+        SecretInfo secretInfo = secretService.saveSecret(tenantId, secret);
+        return String.format("${secret:%s;type:%s}", secretInfo.getName(), secretInfo.getType());
+    }
+
+    private boolean isSecretPlaceholder(String value) {
+        return StringUtils.isNotBlank(value) && value.startsWith("${secret:") && value.endsWith("}");
     }
 
     @Override
