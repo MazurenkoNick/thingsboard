@@ -105,7 +105,7 @@ export const apiUsageDefaultSettings: ApiUsageWidgetSettings = {
     generateDataKey('{i18n:api-usage.alarms-created}', 'alarmApiState', 'createdAlarmsLimit', 'createdAlarmsCount'),
     generateDataKey('{i18n:api-usage.reports-created}', 'reportApiState', 'generatedReportsLimit', 'generatedReportsCount'),
     generateDataKey('{i18n:api-usage.emails}', 'emailApiState', 'emailLimit', 'emailCount'),
-    generateDataKey('{i18n:api-usage.sms}', 'notificationApiState', 'smsLimit', 'smsCount'),
+    generateDataKey('{i18n:api-usage.sms}', 'smsApiState', 'smsLimit', 'smsCount'),
   ],
   targetDashboardState: 'default',
   background: {

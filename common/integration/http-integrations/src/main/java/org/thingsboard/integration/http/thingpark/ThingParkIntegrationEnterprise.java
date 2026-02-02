@@ -112,14 +112,47 @@ public class ThingParkIntegrationEnterprise extends AbstractHttpIntegration<Thin
     public void init(TbIntegrationInitParams params) throws Exception {
         super.init(params);
         JsonNode json = configuration.getConfiguration();
-        if (downlinkConverter != null) {
-            this.securityAsId = json.get(AS_ID + "New").asText();
+        // Load security credentials for uplink validation and downlink security params
+        // Check which security mode is active: enableSecurityNew determines which AS ID field to use
+        boolean enableSecurityNew = json.has("enableSecurityNew") && json.get("enableSecurityNew").asBoolean();
+        if (enableSecurityNew) {
+            // New security mode: use asIdNew
+            if (json.hasNonNull(AS_ID + "New")) {
+                this.securityAsId = json.get(AS_ID + "New").asText();
+            }
+        } else {
+            // Old security mode: use asId
+            if (json.hasNonNull(AS_ID)) {
+                this.securityAsId = json.get(AS_ID).asText();
+            }
+        }
+        if (json.hasNonNull(AS_KEY)) {
             this.securityAsKey = json.get(AS_KEY).asText();
-            this.securityClientId = json.get("clientIdNew").asText();
-            this.securityClientSecret = json.get("clientSecret").asText();
-            this.downlinkUrl = json.has("downlinkUrl") ? json.get("downlinkUrl").asText() : DEFAULT_DOWNLINK_URL;
-            this.devEUiSent = json.has("devEUiSent") ? json.get("devEUiSent").asText() : DEFAULT_DEV_EUI_SENT;
-            this.devEUiSentPos = json.has("devEUiSentPos") ? json.get("devEUiSentPos").asText() : DEFAULT_DEV_EUI_SENT_POS;
+        }
+        // Load downlink configuration
+        if (downlinkConverter != null) {
+            // OAuth credentials for downlink token authentication (only in new security mode)
+            if (json.hasNonNull("clientIdNew")) {
+                this.securityClientId = json.get("clientIdNew").asText();
+            }
+            if (json.hasNonNull("clientSecret")) {
+                this.securityClientSecret = json.get("clientSecret").asText();
+            }
+            if (json.hasNonNull("downlinkUrl")) {
+                this.downlinkUrl = json.get("downlinkUrl").asText();
+            } else {
+                this.downlinkUrl = DEFAULT_DOWNLINK_URL;
+            }
+            if (json.hasNonNull("devEUiSent")) {
+                this.devEUiSent = json.get("devEUiSent").asText();
+            } else {
+                this.devEUiSent = DEFAULT_DEV_EUI_SENT;
+            }
+            if (json.hasNonNull("devEUiSentPos")) {
+                this.devEUiSentPos = json.get("devEUiSentPos").asText();
+            } else {
+                this.devEUiSentPos = DEFAULT_DEV_EUI_SENT_POS;
+            }
         }
     }
 
@@ -324,65 +357,70 @@ public class ThingParkIntegrationEnterprise extends AbstractHttpIntegration<Thin
     }
 
     private boolean checkSecurity(ThingParkIntegrationMsg msg) throws Exception {
+        ThingParkRequestParameters params = msg.getParams();
+        if (params == null) {
+            log.trace("Expected params: {}, actual: {}", "not null", params);
+            return false;
+        }
 
-            ThingParkRequestParameters params = msg.getParams();
-            if (params == null) {
-                log.trace("Expected params: {}, actual: {}", "not null", params);
-                return false;
-            }
+        // If securityAsId is not configured, treat as security disabled
+        if (securityAsId == null) {
+            return true;
+        }
 
-            if (!securityAsId.equalsIgnoreCase(params.getAsId())) {
-                log.trace("Expected securityAsId: {}, actual: {}", securityAsId, params.getAsId());
-                return false;
-            }
+        // Security is configured, validate the request
+        if (params.getAsId() == null || !securityAsId.equalsIgnoreCase(params.getAsId())) {
+            log.trace("Expected securityAsId: {}, actual: {}", securityAsId, params.getAsId());
+            return false;
+        }
 
-            if (params.getToken() == null || params.getToken().isEmpty()) {
-                log.trace("Expected Time: {}, actual: {}", "not null and not empty", params.getToken());
-                return false;
-            }
+        if (params.getToken() == null || params.getToken().isEmpty()) {
+            log.trace("Expected Time: {}, actual: {}", "not null and not empty", params.getToken());
+            return false;
+        }
 
-            if (params.getLrnDevEui() == null || params.getLrnDevEui().isEmpty()) {
-                log.trace("Expected LrnDevEui: {}, actual: {}", "not null and not empty", params.getLrnDevEui());
-                return false;
-            }
+        if (params.getLrnDevEui() == null || params.getLrnDevEui().isEmpty()) {
+            log.trace("Expected LrnDevEui: {}, actual: {}", "not null and not empty", params.getLrnDevEui());
+            return false;
+        }
 
-            if (params.getLrnFPort() == null || params.getLrnFPort().isEmpty()) {
-                log.trace("Expected LrnFPort: {}, actual: {}", "not null and not empty", params.getLrnFPort());
-                return false;
-            }
+        if (params.getLrnFPort() == null || params.getLrnFPort().isEmpty()) {
+            log.trace("Expected LrnFPort: {}, actual: {}", "not null and not empty", params.getLrnFPort());
+            return false;
+        }
 
-            if (params.getTime() == null || params.getTime().isEmpty()) {
-                log.trace("Expected Time: {}, actual: {}", "not null and not empty", params.getTime());
-                return false;
-            }
+        if (params.getTime() == null || params.getTime().isEmpty()) {
+            log.trace("Expected Time: {}, actual: {}", "not null and not empty", params.getTime());
+            return false;
+        }
 
 
-            if (!msg.getMsg().has("DevEUI_uplink") && !msg.getMsg().has(devEUiSent) ) {
-                log.trace("Expected DevEUI_uplink/sent: {}, actual: {}", true, false);
-                return false;
-            }
+        if (!msg.getMsg().has("DevEUI_uplink") && !msg.getMsg().has(devEUiSent) ) {
+            log.trace("Expected DevEUI_uplink/sent: {}, actual: {}", true, false);
+            return false;
+        }
 
-            if (msg.getMsg().has("DevEUI_uplink") && !msg.getMsg().get("DevEUI_uplink").has("DevEUI")) {
-                log.trace("Expected DevEUI: {}, actual: {}", true, false);
-                return false;
-            }
+        if (msg.getMsg().has("DevEUI_uplink") && !msg.getMsg().get("DevEUI_uplink").has("DevEUI")) {
+            log.trace("Expected DevEUI: {}, actual: {}", true, false);
+            return false;
+        }
 
-            if (msg.getMsg().has(devEUiSent) && !msg.getMsg().get(devEUiSent).has("DevEUI")) {
-                log.trace("Expected DevEUI/Sent: {}, actual: {}", true, false);
-                return false;
-            }
+        if (msg.getMsg().has(devEUiSent) && !msg.getMsg().get(devEUiSent).has("DevEUI")) {
+            log.trace("Expected DevEUI/Sent: {}, actual: {}", true, false);
+            return false;
+        }
 
-            if (msg.getMsg().has("DevEUI_uplink") && !msg.getMsg().get("DevEUI_uplink").has("FPort")) {
-                log.trace("Expected FPort: {}, actual: {}", true, false);
-                return false;
-            }
+        if (msg.getMsg().has("DevEUI_uplink") && !msg.getMsg().get("DevEUI_uplink").has("FPort")) {
+            log.trace("Expected FPort: {}, actual: {}", true, false);
+            return false;
+        }
 
-            if (msg.getMsg().has(devEUiSent) && !msg.getMsg().get(devEUiSent).has("FPort")) {
-                log.trace("Expected FPort/Sent: {}, actual: {}", true, false);
-                return false;
-            }
+        if (msg.getMsg().has(devEUiSent) && !msg.getMsg().get(devEUiSent).has("FPort")) {
+            log.trace("Expected FPort/Sent: {}, actual: {}", true, false);
+            return false;
+        }
 
-            log.trace("Validating request using following raw token: {}", true);
+        log.trace("Validating request using following raw token: {}", true);
         return true;
     }
 

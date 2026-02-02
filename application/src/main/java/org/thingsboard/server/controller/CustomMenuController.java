@@ -186,6 +186,7 @@ public class CustomMenuController extends BaseController {
     @GetMapping(value = "/customMenu/{customMenuId}/info")
     public CustomMenuInfo getCustomMenuInfoById(@Parameter(description = CUSTOM_MENU_ID_PARAM_DESCRIPTION)
                                                 @PathVariable(CUSTOM_MENU_ID) UUID id) throws ThingsboardException {
+        checkWhiteLabelingPermissions(Operation.READ);
         CustomMenuId customMenuId = new CustomMenuId(id);
         return checkCustomMenuInfoId(customMenuId, Operation.READ);
     }
@@ -197,6 +198,7 @@ public class CustomMenuController extends BaseController {
     @GetMapping(value = "/customMenu/{customMenuId}/assigneeList")
     public List<EntityInfo> getCustomMenuAssigneeList(@Parameter(description = CUSTOM_MENU_ID_PARAM_DESCRIPTION)
                                                       @PathVariable(CUSTOM_MENU_ID) UUID id) throws ThingsboardException {
+        checkWhiteLabelingPermissions(Operation.READ);
         CustomMenuId customMenuId = new CustomMenuId(id);
         CustomMenuInfo customMenuInfo = checkCustomMenuInfoId(customMenuId, Operation.READ);
         return customMenuService.findCustomMenuAssigneeList(customMenuInfo);
@@ -209,6 +211,7 @@ public class CustomMenuController extends BaseController {
     @GetMapping(value = "/customMenu/{customMenuId}/config")
     public CustomMenuConfig getCustomMenuConfig(@Parameter(description = CUSTOM_MENU_ID_PARAM_DESCRIPTION)
                                                 @PathVariable(CUSTOM_MENU_ID) UUID id) throws ThingsboardException {
+        checkWhiteLabelingPermissions(Operation.READ);
         CustomMenuId customMenuId = new CustomMenuId(id);
         return checkCustomMenuId(customMenuId, Operation.READ).getConfig();
     }
@@ -221,6 +224,7 @@ public class CustomMenuController extends BaseController {
                                              @PathVariable(CUSTOM_MENU_ID) UUID id,
                                              @Parameter(description = "A JSON value representing the custom menu configuration")
                                              @RequestBody @Valid CustomMenuConfig customMenuConfig) throws ThingsboardException {
+        checkWhiteLabelingPermissions(Operation.WRITE);
         CustomMenuId customMenuId = new CustomMenuId(id);
         CustomMenu customMenu = checkNotNull(checkCustomMenuId(customMenuId, Operation.WRITE));
         CustomMenu newCustomMenu = new CustomMenu(customMenu);
@@ -236,6 +240,7 @@ public class CustomMenuController extends BaseController {
                                      @PathVariable(CUSTOM_MENU_ID) UUID id,
                                      @Parameter(description = "New name of the custom menu")
                                      @RequestBody String name) throws ThingsboardException {
+        checkWhiteLabelingPermissions(Operation.WRITE);
         CustomMenuId customMenuId = new CustomMenuId(id);
         CustomMenu customMenu = checkNotNull(checkCustomMenuId(customMenuId, Operation.WRITE));
         CustomMenu newCustomMenu = new CustomMenu(customMenu);
@@ -278,6 +283,7 @@ public class CustomMenuController extends BaseController {
                                              @Parameter(description = "Use force if you want to override default menu")
                                              @RequestParam(name = "force", required = false) boolean force,
                                              @RequestBody(required = false) String[] assigneeList) throws ThingsboardException {
+        checkWhiteLabelingPermissions(Operation.WRITE);
         CustomMenuId customMenuId = new CustomMenuId(id);
         CustomMenu customMenu = checkCustomMenuId(customMenuId, Operation.WRITE);
         List<EntityId> assigneeIds = getAssigneeList(assigneeType, assigneeList);
@@ -296,6 +302,7 @@ public class CustomMenuController extends BaseController {
                                                                    @PathVariable(CUSTOM_MENU_ID) UUID id,
                                                                    @Parameter(description = "Force set to true will unassign menu before deletion")
                                                                    @RequestParam(name = "force", required = false) boolean force) throws ThingsboardException {
+        checkWhiteLabelingPermissions(Operation.WRITE);
         CustomMenuId customMenuId = new CustomMenuId(id);
         CustomMenu customMenu = checkNotNull(checkCustomMenuId(customMenuId, Operation.DELETE));
         CustomMenuDeleteResult result = tbCustomMenuService.deleteCustomMenu(customMenu, force);

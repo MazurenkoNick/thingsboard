@@ -34,7 +34,12 @@
   .request-trendz {
     width: 100%;
     height: 100%;
-    background-image: url(/assets/trendz/homepage.svg);
-    background-size: contain;
+    color: var(--tb-primary-500);
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
   }
 }

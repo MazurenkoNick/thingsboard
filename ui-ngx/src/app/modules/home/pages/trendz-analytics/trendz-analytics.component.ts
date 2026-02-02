@@ -65,14 +65,6 @@ export class TrendzAnalyticsComponent extends PageComponent implements OnInit {
               private dialog: DynamicMatDialog,
               private elementRef: ElementRef) {
     super();
-
-    if(this.trendzSynced) {
-      this.trendzService.getTrendzSummary().subscribe(trendzSummary => {
-        if (trendzSummary) {
-          this.trendzSummary = trendzSummary;
-        }
-      });
-    }
   }
 
   ngOnInit(): void {

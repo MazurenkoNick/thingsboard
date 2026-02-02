@@ -127,8 +127,8 @@ export class TaskManagerTableConfigResolver {
     this.config.onLoadAction = (activatedRoute) => this.onLoadAction(this.config, activatedRoute);
 
     this.config.handleRowClick = ($event, job) => {
-      const path: HTMLElement[] = ($event as any).path || ($event.composedPath && $event.composedPath());
-      const progressBarCell = path?.find(el => el.classList.contains('mat-column-progress'));
+      const target = $event.target as HTMLElement;
+      const progressBarCell = target.closest('.mat-column-progress');
       if (progressBarCell && job.status !== JobStatus.QUEUED && job.status !== JobStatus.PENDING) {
         this.openTaskInfo(progressBarCell, job);
         return true;
@@ -302,7 +302,7 @@ export class TaskManagerTableConfigResolver {
     return progress > 0 ? Math.round(progress / result.totalCount * 100) : (result.totalCount > 0 ? 0 : 100);
   }
 
-  private openTaskInfo(trigger: HTMLElement, job: Job): void {
+  private openTaskInfo(trigger: Element, job: Job): void {
     if (this.popoverService.hasPopover(trigger)) {
       this.popoverService.hidePopover(trigger);
     } else {

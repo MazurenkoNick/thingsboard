@@ -1,0 +1,21 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.25.1
+# ignores vulnerabilities until expiry date; change duration by modifying expiry date
+ignore:
+  SNYK-JS-ANGULARCOMPILER-14157154:
+    - '*':
+        reason: Patched manually
+        created: 2026-01-21T13:46:56.735Z
+  SNYK-JS-ANGULARCOMMON-14135651:
+    - '*':
+        reason: Patched manually
+        created: 2026-01-21T13:47:12.585Z
+  SNYK-JS-ANGULARCOMPILER-14908872:
+    - '*':
+        reason: Patched manually
+        created: 2026-01-22T13:46:56.735Z
+  SNYK-JS-ANGULARCORE-14908871:
+    - '*':
+        reason: Patched manually
+        created: 2026-01-22T13:47:12.585Z
+patch: {}

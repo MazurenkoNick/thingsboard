@@ -440,7 +440,7 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
                 try {
                     cfCtx.init();
                 } catch (Exception e) {
-                    throw CalculatedFieldException.builder().ctx(cfCtx).eventEntity(cf.getEntityId()).cause(e).errorMessage("Failed to initialize CF context").build();
+                    throw CalculatedFieldException.builder().ctx(cfCtx).eventEntity(cf.getEntityId()).cause(e).errorMessage(e.getMessage()).build();
                 }
                 calculatedFields.put(cf.getId(), cfCtx);
                 // We use copy on write lists to safely pass the reference to another actor for the iteration.
@@ -471,7 +471,7 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
                 try {
                     newCfCtx.init();
                 } catch (Exception e) {
-                    throw CalculatedFieldException.builder().ctx(newCfCtx).eventEntity(newCfCtx.getEntityId()).cause(e).errorMessage("Failed to initialize CF context").build();
+                    throw CalculatedFieldException.builder().ctx(newCfCtx).eventEntity(newCfCtx.getEntityId()).cause(e).errorMessage(e.getMessage()).build();
                 } finally {
                     calculatedFields.put(newCf.getId(), newCfCtx);
                     List<CalculatedFieldCtx> oldCfList = entityIdCalculatedFields.get(newCf.getEntityId());
@@ -834,7 +834,7 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
         try {
             cfCtx.init();
         } catch (Exception e) {
-            throw CalculatedFieldException.builder().ctx(cfCtx).eventEntity(cf.getEntityId()).cause(e).errorMessage("Failed to initialize CF context").build();
+            throw CalculatedFieldException.builder().ctx(cfCtx).eventEntity(cf.getEntityId()).cause(e).errorMessage(e.getMessage()).build();
         } finally {
             calculatedFields.put(cf.getId(), cfCtx);
             // We use copy on write lists to safely pass the reference to another actor for the iteration.
