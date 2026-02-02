@@ -34,7 +34,7 @@ set -euo pipefail
 
 # === Configuration ===
 TMP_DIR="/tmp/tb-release"
-RELEASE="4.3pe"
+RELEASE="4.3.0.1pe"
 S3_BUCKET="s3://cf-simple-s3-origin-tb-pe-cdn-156597721064/"
 
 # Clean & recreate temp dir
