@@ -45,9 +45,10 @@ export interface SignupDialogData {
 }
 
 @Component({
-  selector: 'tb-signup-dialog',
-  templateUrl: './signup-dialog.component.html',
-  styleUrls: ['./signup-dialog.component.scss']
+    selector: 'tb-signup-dialog',
+    templateUrl: './signup-dialog.component.html',
+    styleUrls: ['./signup-dialog.component.scss'],
+    standalone: false
 })
 export class SignupDialogComponent extends DialogComponent<SignupDialogComponent, boolean> implements OnInit {
 

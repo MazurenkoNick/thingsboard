@@ -54,19 +54,20 @@ import { TranslateService } from '@ngx-translate/core';
 import { IntegrationForm } from '@home/components/integration/configuration/integration-form';
 
 @Component({
-  selector: 'tb-chirp-stack-integration-form',
-  templateUrl: './chirp-stack-integration-form.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => ChirpStackIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => ChirpStackIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-chirp-stack-integration-form',
+    templateUrl: './chirp-stack-integration-form.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ChirpStackIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => ChirpStackIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class ChirpStackIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator, OnInit {
 

@@ -50,10 +50,11 @@ import { DataKey, Datasource, WidgetConfigMode } from '@shared/models/widget.mod
 import { alarmFields } from '@shared/models/alarm.models';
 
 @Component({
-  selector: 'tb-alarm-table-config',
-  templateUrl: './alarm-table-config.component.html',
-  styleUrls: ['./report-component-config.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-alarm-table-config',
+    templateUrl: './alarm-table-config.component.html',
+    styleUrls: ['./report-component-config.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class AlarmTableConfigComponent extends AbstractReportComponentConfig<AlarmTableReportComponentConfig> {
 

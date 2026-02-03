@@ -50,22 +50,23 @@ import { TranslateService } from '@ngx-translate/core';
 import { isDefinedAndNotNull } from '@core/utils';
 
 @Component({
-  selector: 'tb-mobile-registration-fields-row',
-  templateUrl: 'mobile-registration-fields-row.component.html',
-  styleUrls: ['./mobile-registration-fields-row.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => MobileRegistrationFieldsRowComponent),
-      multi: true
-    },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => MobileRegistrationFieldsRowComponent),
-      multi: true
-    }
-  ],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-mobile-registration-fields-row',
+    templateUrl: 'mobile-registration-fields-row.component.html',
+    styleUrls: ['./mobile-registration-fields-row.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => MobileRegistrationFieldsRowComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => MobileRegistrationFieldsRowComponent),
+            multi: true
+        }
+    ],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class MobileRegistrationFieldsRowComponent implements ControlValueAccessor, Validator {
 

@@ -48,9 +48,10 @@ import { UserPermissionsService } from '@core/http/user-permissions.service';
 import {EdgeService} from "@core/http/edge.service";
 
 @Component({
-  selector: 'tb-edge',
-  templateUrl: './edge.component.html',
-  styleUrls: ['./edge.component.scss']
+    selector: 'tb-edge',
+    templateUrl: './edge.component.html',
+    styleUrls: ['./edge.component.scss'],
+    standalone: false
 })
 export class EdgeComponent extends GroupEntityComponent<EdgeInfo> {
 

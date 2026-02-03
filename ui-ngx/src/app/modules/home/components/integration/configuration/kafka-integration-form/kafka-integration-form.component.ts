@@ -47,19 +47,20 @@ import { KafkaIntegration } from '@shared/models/integration.models';
 import { privateNetworkAddressValidator } from '@home/components/integration/integration.models';
 
 @Component({
-  selector: 'tb-kafka-integration-form',
-  templateUrl: './kafka-integration-form.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => KafkaIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => KafkaIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-kafka-integration-form',
+    templateUrl: './kafka-integration-form.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => KafkaIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => KafkaIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class KafkaIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator {
 

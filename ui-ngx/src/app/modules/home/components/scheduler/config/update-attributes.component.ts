@@ -53,19 +53,20 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'tb-update-attributes-event-config',
-  templateUrl: './update-attributes.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => UpdateAttributesComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => UpdateAttributesComponent),
-    multi: true
-  }]
+    selector: 'tb-update-attributes-event-config',
+    templateUrl: './update-attributes.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => UpdateAttributesComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => UpdateAttributesComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class UpdateAttributesComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy, Validator {
 

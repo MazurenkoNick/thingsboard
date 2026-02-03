@@ -50,9 +50,10 @@ import { PageLink } from '@shared/models/page/page-link';
 import { EntityType } from '@shared/models/entity-type.models';
 
 @Component({
-  selector: 'tb-integration',
-  templateUrl: './integration.component.html',
-  styleUrls: ['./integration.component.scss']
+    selector: 'tb-integration',
+    templateUrl: './integration.component.html',
+    styleUrls: ['./integration.component.scss'],
+    standalone: false
 })
 export class IntegrationComponent extends EntityComponent<Integration, PageLink, IntegrationInfo> implements OnInit {
 

@@ -43,11 +43,12 @@ import { Subject, takeUntil } from 'rxjs';
 type ColorMode = 'color' | 'primary' | 'accent';
 
 @Component({
-  selector: 'tb-color-picker-panel',
-  templateUrl: './color-picker-panel.component.html',
-  providers: [],
-  styleUrls: ['./color-picker-panel.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-color-picker-panel',
+    templateUrl: './color-picker-panel.component.html',
+    providers: [],
+    styleUrls: ['./color-picker-panel.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class ColorPickerPanelComponent extends PageComponent implements OnInit, OnDestroy{
 

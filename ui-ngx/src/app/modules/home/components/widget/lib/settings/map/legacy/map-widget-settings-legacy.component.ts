@@ -37,9 +37,10 @@ import { AppState } from '@core/core.state';
 import { defaultMapSettings } from 'src/app/modules/home/components/widget/lib/maps-legacy/map-models';
 
 @Component({
-  selector: 'tb-map-widget-settings-legacy',
-  templateUrl: './map-widget-settings-legacy.component.html',
-  styleUrls: ['./../../widget-settings.scss']
+    selector: 'tb-map-widget-settings-legacy',
+    templateUrl: './map-widget-settings-legacy.component.html',
+    styleUrls: ['./../../widget-settings.scss'],
+    standalone: false
 })
 export class MapWidgetSettingsLegacyComponent extends WidgetSettingsComponent {
 

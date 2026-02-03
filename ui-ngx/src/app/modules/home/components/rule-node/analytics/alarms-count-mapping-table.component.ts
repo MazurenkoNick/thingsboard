@@ -51,16 +51,17 @@ import {
 } from './alarms-count-mapping-dialog.component';
 
 @Component({
-  selector: 'tb-alarms-count-mapping-table',
-  templateUrl: './alarms-count-mapping-table.component.html',
-  styleUrls: ['./alarms-count-mapping-table.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => AlarmsCountMappingTableComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-alarms-count-mapping-table',
+    templateUrl: './alarms-count-mapping-table.component.html',
+    styleUrls: ['./alarms-count-mapping-table.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => AlarmsCountMappingTableComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class AlarmsCountMappingTableComponent extends PageComponent implements ControlValueAccessor, OnInit {
 

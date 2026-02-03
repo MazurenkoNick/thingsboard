@@ -70,10 +70,11 @@ import { EntityDetailsPanelComponent } from '@home/components/entity/entity-deta
 
 // @dynamic
 @Component({
-  selector: 'tb-group-entities-table',
-  templateUrl: './group-entities-table.component.html',
-  styleUrls: ['./group-entities-table.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'tb-group-entities-table',
+    templateUrl: './group-entities-table.component.html',
+    styleUrls: ['./group-entities-table.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class GroupEntitiesTableComponent extends PageComponent implements AfterViewInit, OnInit, OnDestroy, OnChanges {
 

@@ -52,10 +52,11 @@ export interface GroupPermissionDialogData {
 }
 
 @Component({
-  selector: 'tb-group-permission-dialog',
-  templateUrl: './group-permission-dialog.component.html',
-  providers: [{provide: ErrorStateMatcher, useExisting: GroupPermissionDialogComponent}],
-  styleUrls: ['./group-permission-dialog.component.scss']
+    selector: 'tb-group-permission-dialog',
+    templateUrl: './group-permission-dialog.component.html',
+    providers: [{ provide: ErrorStateMatcher, useExisting: GroupPermissionDialogComponent }],
+    styleUrls: ['./group-permission-dialog.component.scss'],
+    standalone: false
 })
 export class GroupPermissionDialogComponent
   extends DialogComponent<GroupPermissionDialogComponent, boolean | GroupPermission> implements OnInit, ErrorStateMatcher {

@@ -62,7 +62,7 @@ import { BranchAutocompleteComponent } from '@shared/components/vc/branch-autoco
 import { isNotEmptyStr } from '@core/utils';
 import { TbPopoverService } from '@shared/components/popover.service';
 import { EntityVersionCreateComponent } from '@home/components/vc/entity-version-create.component';
-import { MatButton } from '@angular/material/button';
+import { MatButton, MatIconButton } from '@angular/material/button';
 import { EntityVersionRestoreComponent } from '@home/components/vc/entity-version-restore.component';
 import { EntityVersionDiffComponent } from '@home/components/vc/entity-version-diff.component';
 import { ComplexVersionCreateComponent } from '@home/components/vc/complex-version-create.component';
@@ -75,9 +75,10 @@ import { Operation, Resource } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Component({
-  selector: 'tb-entity-versions-table',
-  templateUrl: './entity-versions-table.component.html',
-  styleUrls: ['./entity-versions-table.component.scss']
+    selector: 'tb-entity-versions-table',
+    templateUrl: './entity-versions-table.component.html',
+    styleUrls: ['./entity-versions-table.component.scss'],
+    standalone: false
 })
 export class EntityVersionsTableComponent extends PageComponent implements OnInit, AfterViewInit, OnDestroy {
 
@@ -302,7 +303,7 @@ export class EntityVersionsTableComponent extends PageComponent implements OnIni
     }
   }
 
-  toggleShowVersionDiff($event: Event, diffVersionButton: MatButton, entityVersion: EntityVersion) {
+  toggleShowVersionDiff($event: Event, diffVersionButton: MatIconButton, entityVersion: EntityVersion) {
     if ($event) {
       $event.stopPropagation();
     }
@@ -334,7 +335,7 @@ export class EntityVersionsTableComponent extends PageComponent implements OnIni
     }
   }
 
-  toggleRestoreEntityVersion($event: Event, restoreVersionButton: MatButton, entityVersion: EntityVersion) {
+  toggleRestoreEntityVersion($event: Event, restoreVersionButton: MatIconButton, entityVersion: EntityVersion) {
     if ($event) {
       $event.stopPropagation();
     }
@@ -370,7 +371,7 @@ export class EntityVersionsTableComponent extends PageComponent implements OnIni
     }
   }
 
-  toggleRestoreEntitiesVersion($event: Event, restoreEntitiesVersionButton: MatButton, entityVersion: EntityVersion) {
+  toggleRestoreEntitiesVersion($event: Event, restoreEntitiesVersionButton: MatIconButton, entityVersion: EntityVersion) {
     if ($event) {
       $event.stopPropagation();
     }

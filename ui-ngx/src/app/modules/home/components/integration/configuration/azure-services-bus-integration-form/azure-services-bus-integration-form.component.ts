@@ -45,19 +45,20 @@ import { IntegrationForm } from '@home/components/integration/configuration/inte
 import { AzureServicesBusIntegration } from '@shared/models/integration.models';
 
 @Component({
-  selector: 'tb-azure-services-bus-integration-form',
-  templateUrl: './azure-services-bus-integration-form.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => AzureServicesBusIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => AzureServicesBusIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-azure-services-bus-integration-form',
+    templateUrl: './azure-services-bus-integration-form.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => AzureServicesBusIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => AzureServicesBusIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class AzureServicesBusIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator{
 

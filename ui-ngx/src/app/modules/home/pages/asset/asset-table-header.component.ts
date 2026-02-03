@@ -40,9 +40,10 @@ import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Authority } from '@shared/models/authority.enum';
 
 @Component({
-  selector: 'tb-asset-table-header',
-  templateUrl: './asset-table-header.component.html',
-  styleUrls: []
+    selector: 'tb-asset-table-header',
+    templateUrl: './asset-table-header.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class AssetTableHeaderComponent extends EntityTableHeaderComponent<AssetInfo | Asset> implements OnInit {
 

@@ -37,9 +37,10 @@ import { Dashboard } from '@shared/models/dashboard.models';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
-  selector: 'tb-dashboard-view',
-  templateUrl: './dashboard-view.component.html',
-  styleUrls: ['./dashboard-view.component.scss']
+    selector: 'tb-dashboard-view',
+    templateUrl: './dashboard-view.component.html',
+    styleUrls: ['./dashboard-view.component.scss'],
+    standalone: false
 })
 export class DashboardViewComponent extends PageComponent {
 

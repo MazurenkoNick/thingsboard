@@ -40,9 +40,10 @@ import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Authority } from '@shared/models/authority.enum';
 
 @Component({
-  selector: 'tb-device-table-header',
-  templateUrl: './device-table-header.component.html',
-  styleUrls: []
+    selector: 'tb-device-table-header',
+    templateUrl: './device-table-header.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class DeviceTableHeaderComponent extends EntityTableHeaderComponent<DeviceInfo> implements OnInit {
 

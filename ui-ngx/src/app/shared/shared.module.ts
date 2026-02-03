@@ -278,6 +278,7 @@ import { SecretStorageDialogComponent } from '@shared/components/secret-storage/
 import { SecretAutocompleteComponent } from '@shared/components/secret-storage/secret-autocomplete.component';
 import { ReportTemplateAutocompleteComponent } from '@shared/components/report/report-template-autocomplete.component';
 import { FormRowDirective } from '@shared/directives/form-row.directive';
+import { MAT_BUTTON_TOGGLE_DEFAULT_OPTIONS } from '@angular/material/button-toggle';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -340,6 +341,13 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
       provide: MAT_TOOLTIP_DEFAULT_OPTIONS,
       useValue: {
         disableTooltipInteractivity: true
+      }
+    },
+    {
+      provide: MAT_BUTTON_TOGGLE_DEFAULT_OPTIONS,
+      useValue: {
+        hideSingleSelectionIndicator: true,
+        hideMultipleSelectionIndicator: true
       }
     },
     CountryData

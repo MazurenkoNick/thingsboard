@@ -53,10 +53,11 @@ import { Operation, Resource } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Component({
-  selector: 'tb-translation-table',
-  templateUrl: './translation-table.component.html',
-  styleUrls: ['../../components/entity/entities-table.component.scss', './translation-table.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'tb-translation-table',
+    templateUrl: './translation-table.component.html',
+    styleUrls: ['../../components/entity/entities-table.component.scss', './translation-table.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TranslationTableComponent extends PageComponent implements OnInit, OnDestroy {
 

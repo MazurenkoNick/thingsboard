@@ -53,9 +53,10 @@ import { Operation, Resource } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Component({
-  selector: 'tb-2fa-settings',
-  templateUrl: './two-factor-auth-settings.component.html',
-  styleUrls: [ './settings-card.scss', './two-factor-auth-settings.component.scss']
+    selector: 'tb-2fa-settings',
+    templateUrl: './two-factor-auth-settings.component.html',
+    styleUrls: ['./settings-card.scss', './two-factor-auth-settings.component.scss'],
+    standalone: false
 })
 export class TwoFactorAuthSettingsComponent extends PageComponent implements OnInit, HasConfirmForm, OnDestroy {
 

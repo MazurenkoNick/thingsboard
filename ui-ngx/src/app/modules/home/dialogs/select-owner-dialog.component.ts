@@ -51,10 +51,11 @@ export interface SelectOwnerDialogData {
 }
 
 @Component({
-  selector: 'tb-select-owner-dialog',
-  templateUrl: './select-owner-dialog.component.html',
-  providers: [{provide: ErrorStateMatcher, useExisting: SelectOwnerDialogComponent}],
-  styleUrls: []
+    selector: 'tb-select-owner-dialog',
+    templateUrl: './select-owner-dialog.component.html',
+    providers: [{ provide: ErrorStateMatcher, useExisting: SelectOwnerDialogComponent }],
+    styleUrls: [],
+    standalone: false
 })
 export class SelectOwnerDialogComponent extends
   DialogComponent<SelectOwnerDialogComponent, EntityId> implements OnInit, ErrorStateMatcher {

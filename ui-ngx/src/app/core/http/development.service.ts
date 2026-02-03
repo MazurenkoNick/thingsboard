@@ -29,11 +29,11 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Inject, Injectable, Renderer2, RendererFactory2, RendererStyleFlags2 } from '@angular/core';
+import { Inject, Injectable, Renderer2, RendererFactory2, RendererStyleFlags2, DOCUMENT } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { defaultHttpOptions } from '@core/http/http-utils';
-import { DOCUMENT } from '@angular/common';
+
 
 @Injectable({
   providedIn: 'root'

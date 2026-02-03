@@ -37,9 +37,10 @@ import { Job, JobFilter, TaskManagerConfig } from '@shared/models/job.models';
 import { TimePageLink } from '@shared/models/page/page-link';
 
 @Component({
-  selector: 'tb-task-manager-table-header',
-  templateUrl: './task-manager-header.component.html',
-  styleUrls: ['./task-manager-header.component.scss']
+    selector: 'tb-task-manager-table-header',
+    templateUrl: './task-manager-header.component.html',
+    styleUrls: ['./task-manager-header.component.scss'],
+    standalone: false
 })
 export class TaskManagerHeaderComponent extends EntityTableHeaderComponent<Job, TimePageLink> {
 

@@ -87,9 +87,10 @@ import { FormBuilder } from '@angular/forms';
 import { Subject } from 'rxjs';
 
 @Component({
-  selector: 'tb-entities-hierarchy-widget',
-  templateUrl: './entities-hierarchy-widget.component.html',
-  styleUrls: ['./entities-hierarchy-widget.component.scss']
+    selector: 'tb-entities-hierarchy-widget',
+    templateUrl: './entities-hierarchy-widget.component.html',
+    styleUrls: ['./entities-hierarchy-widget.component.scss'],
+    standalone: false
 })
 export class EntitiesHierarchyWidgetComponent extends PageComponent implements OnInit, AfterViewInit, OnDestroy {
 

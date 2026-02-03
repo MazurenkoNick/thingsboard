@@ -46,9 +46,10 @@ import { TranslateService } from '@ngx-translate/core';
 import { Subject } from 'rxjs';
 
 @Component({
-  selector: 'tb-solution-template-card',
-  templateUrl: './solution-template-card.component.html',
-  styleUrls: ['./solution-template-card.component.scss']
+    selector: 'tb-solution-template-card',
+    templateUrl: './solution-template-card.component.html',
+    styleUrls: ['./solution-template-card.component.scss'],
+    standalone: false
 })
 export class SolutionTemplateCardComponent extends PageComponent {
 

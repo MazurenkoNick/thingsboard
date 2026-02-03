@@ -54,19 +54,20 @@ import {
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'tb-tcp-integration-form',
-  templateUrl: './tcp-integration-form.component.html',
-  styleUrls: ['./tcp-integration-form.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => TcpIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => TcpIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-tcp-integration-form',
+    templateUrl: './tcp-integration-form.component.html',
+    styleUrls: ['./tcp-integration-form.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => TcpIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => TcpIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class TcpIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator {
 

@@ -46,9 +46,10 @@ import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { CMAssigneeType, CMScope } from '@shared/models/custom-menu.models';
 
 @Component({
-  selector: 'tb-customer',
-  templateUrl: './customer.component.html',
-  styleUrls: ['./customer.component.scss']
+    selector: 'tb-customer',
+    templateUrl: './customer.component.html',
+    styleUrls: ['./customer.component.scss'],
+    standalone: false
 })
 export class CustomerComponent extends GroupContactBasedComponent<CustomerInfo> {
 

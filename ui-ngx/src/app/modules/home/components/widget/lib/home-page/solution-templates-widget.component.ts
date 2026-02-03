@@ -46,9 +46,10 @@ import { Subscription } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
 
 @Component({
-  selector: 'tb-solution-templates-widget',
-  templateUrl: './solution-templates-widget.component.html',
-  styleUrls: ['./home-page-widget.scss', './solution-templates-widget.component.scss']
+    selector: 'tb-solution-templates-widget',
+    templateUrl: './solution-templates-widget.component.html',
+    styleUrls: ['./home-page-widget.scss', './solution-templates-widget.component.scss'],
+    standalone: false
 })
 export class SolutionTemplatesWidgetComponent extends PageComponent implements OnInit, OnDestroy {
 

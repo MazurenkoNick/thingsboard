@@ -42,8 +42,9 @@ export interface CancelTaskDialogData {
 }
 
 @Component({
-  selector: 'tb-confirm-dialog',
-  templateUrl: './cancel-task-dialog.component.html',
+    selector: 'tb-confirm-dialog',
+    templateUrl: './cancel-task-dialog.component.html',
+    standalone: false
 })
 export class CancelTaskDialogComponent extends DialogComponent<CancelTaskDialogComponent, boolean>{
   constructor(protected store: Store<AppState>,
