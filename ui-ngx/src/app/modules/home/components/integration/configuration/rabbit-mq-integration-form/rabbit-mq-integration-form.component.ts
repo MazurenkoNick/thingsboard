@@ -47,19 +47,20 @@ import { RabbitMqIntegration } from '@shared/models/integration.models';
 import { privateNetworkAddressValidator } from '@home/components/integration/integration.models';
 
 @Component({
-  selector: 'tb-rabbit-mq-integration-form',
-  templateUrl: './rabbit-mq-integration-form.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => RabbitMqIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => RabbitMqIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-rabbit-mq-integration-form',
+    templateUrl: './rabbit-mq-integration-form.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => RabbitMqIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => RabbitMqIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class RabbitMqIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator {
 

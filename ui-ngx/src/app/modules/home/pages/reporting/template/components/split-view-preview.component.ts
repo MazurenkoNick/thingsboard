@@ -39,10 +39,11 @@ import { ReportDropBlockComponent } from '@home/pages/reporting/template/compone
 import { alignment } from '@shared/models/widget-settings.models';
 
 @Component({
-  selector: 'tb-split-view-preview',
-  templateUrl: './split-view-preview.component.html',
-  styleUrls: ['./split-view-preview.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-split-view-preview',
+    templateUrl: './split-view-preview.component.html',
+    styleUrls: ['./split-view-preview.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class SplitViewPreviewComponent extends AbstractReportComponentPreviewContainer<SplitViewReportComponentConfig> implements AfterViewInit, OnDestroy {
 

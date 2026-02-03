@@ -36,9 +36,10 @@ import { entityGroupTypes } from '@app/shared/models/entity-group.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-transformation-node-duplicate-to-group-by-name-config',
-  templateUrl: './duplicate-to-group-by-name-config.component.html',
-  styleUrls: []
+    selector: 'tb-transformation-node-duplicate-to-group-by-name-config',
+    templateUrl: './duplicate-to-group-by-name-config.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class DuplicateToGroupByNameConfigComponent extends RuleNodeConfigurationComponent {
 

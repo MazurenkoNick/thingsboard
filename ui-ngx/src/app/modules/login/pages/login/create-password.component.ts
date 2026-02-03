@@ -40,9 +40,10 @@ import { PageComponent } from '@shared/components/page.component';
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 @Component({
-  selector: 'tb-create-password',
-  templateUrl: './create-password.component.html',
-  styleUrls: ['./password.component.scss']
+    selector: 'tb-create-password',
+    templateUrl: './create-password.component.html',
+    styleUrls: ['./password.component.scss'],
+    standalone: false
 })
 export class CreatePasswordComponent extends PageComponent {
 

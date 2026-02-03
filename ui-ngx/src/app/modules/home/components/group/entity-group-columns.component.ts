@@ -54,17 +54,18 @@ import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'tb-entity-group-columns',
-  templateUrl: './entity-group-columns.component.html',
-  styleUrls: ['./entity-group-columns.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => EntityGroupColumnsComponent),
-      multi: true
-    }
-  ],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-entity-group-columns',
+    templateUrl: './entity-group-columns.component.html',
+    styleUrls: ['./entity-group-columns.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => EntityGroupColumnsComponent),
+            multi: true
+        }
+    ],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class EntityGroupColumnsComponent extends PageComponent implements ControlValueAccessor, OnInit, OnDestroy {
 

@@ -40,16 +40,17 @@ import { EntityId } from '@shared/models/id/entity-id';
 import { BaseData } from '@shared/models/base-data';
 
 @Component({
-  selector: 'tb-target-entity',
-  templateUrl: './target-entity.component.html',
-  styleUrls: ['./target-entity.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => TargetEntityComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-target-entity',
+    templateUrl: './target-entity.component.html',
+    styleUrls: ['./target-entity.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => TargetEntityComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 
 export class TargetEntityComponent implements ControlValueAccessor, OnInit, OnDestroy {

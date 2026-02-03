@@ -50,16 +50,17 @@ import { coerceBoolean } from '@shared/decorators/coercion';
 import { deepTrim } from '@core/utils';
 
 @Component({
-  selector: 'tb-report-template-settings',
-  templateUrl: './report-template-settings.component.html',
-  styleUrls: [],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => ReportTemplateSettingsComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-report-template-settings',
+    templateUrl: './report-template-settings.component.html',
+    styleUrls: [],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ReportTemplateSettingsComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class ReportTemplateSettingsComponent implements OnInit, OnChanges, ControlValueAccessor {
 

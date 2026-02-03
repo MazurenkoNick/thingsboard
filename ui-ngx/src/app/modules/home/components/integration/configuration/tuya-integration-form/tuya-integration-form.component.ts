@@ -46,19 +46,20 @@ import { IntegrationForm } from '@home/components/integration/configuration/inte
 import { TuyaEnv, TuyaIntegration, TuyaRegion, TuyaRegionTranslation } from '@shared/models/integration.models';
 
 @Component({
-  selector: 'tb-tuya-integration-form',
-  templateUrl: './tuya-integration-form.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => TuyaIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => TuyaIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-tuya-integration-form',
+    templateUrl: './tuya-integration-form.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => TuyaIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => TuyaIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 
 export class TuyaIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator {

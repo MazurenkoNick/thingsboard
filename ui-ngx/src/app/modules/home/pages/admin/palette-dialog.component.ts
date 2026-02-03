@@ -47,9 +47,10 @@ export interface PaletteDialogData {
 }
 
 @Component({
-  selector: 'tb-palette-dialog',
-  templateUrl: './palette-dialog.component.html',
-  styleUrls: []
+    selector: 'tb-palette-dialog',
+    templateUrl: './palette-dialog.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class PaletteDialogComponent extends
   DialogComponent<PaletteDialogComponent, ColorPalette> implements OnInit {

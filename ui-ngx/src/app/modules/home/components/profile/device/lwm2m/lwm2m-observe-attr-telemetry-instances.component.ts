@@ -50,21 +50,22 @@ import { Subject, Subscription } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'tb-profile-lwm2m-observe-attr-telemetry-instances',
-  templateUrl: './lwm2m-observe-attr-telemetry-instances.component.html',
-  styleUrls: [ './lwm2m-observe-attr-telemetry-instances.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => Lwm2mObserveAttrTelemetryInstancesComponent),
-      multi: true
-    },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => Lwm2mObserveAttrTelemetryInstancesComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-profile-lwm2m-observe-attr-telemetry-instances',
+    templateUrl: './lwm2m-observe-attr-telemetry-instances.component.html',
+    styleUrls: ['./lwm2m-observe-attr-telemetry-instances.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => Lwm2mObserveAttrTelemetryInstancesComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => Lwm2mObserveAttrTelemetryInstancesComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 
 export class Lwm2mObserveAttrTelemetryInstancesComponent implements ControlValueAccessor, Validator, OnDestroy {

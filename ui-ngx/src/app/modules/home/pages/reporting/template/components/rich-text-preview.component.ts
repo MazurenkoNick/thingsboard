@@ -41,10 +41,11 @@ import {
 import { of } from 'rxjs';
 
 @Component({
-  selector: 'tb-rich-text-preview',
-  templateUrl: './rich-text-preview.component.html',
-  styleUrls: ['./rich-text-preview.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-rich-text-preview',
+    templateUrl: './rich-text-preview.component.html',
+    styleUrls: ['./rich-text-preview.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class RichTextPreviewComponent extends AbstractReportComponentPreview<RichTextReportComponentConfig> implements AfterViewInit, OnDestroy {
 

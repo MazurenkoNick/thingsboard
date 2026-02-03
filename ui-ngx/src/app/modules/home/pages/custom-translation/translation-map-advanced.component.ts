@@ -45,9 +45,10 @@ import { environment as env } from '@env/environment';
 import { Observable } from 'rxjs';
 
 @Component({
-  selector : 'tb-translation-map-advanced',
-  templateUrl: './translation-map-advanced.component.html',
-  styleUrls: ['./translation-map-advanced.component.scss'],
+    selector: 'tb-translation-map-advanced',
+    templateUrl: './translation-map-advanced.component.html',
+    styleUrls: ['./translation-map-advanced.component.scss'],
+    standalone: false
 })
 export class TranslationMapAdvancedComponent {
 

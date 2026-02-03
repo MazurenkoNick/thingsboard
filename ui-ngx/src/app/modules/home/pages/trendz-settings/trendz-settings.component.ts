@@ -57,9 +57,10 @@ import { DialogService } from '@core/services/dialog.service';
 import { ActionAuthUpdateAddons } from '@core/auth/auth.actions';
 
 @Component({
-  selector: 'tb-trendz-settings',
-  templateUrl: './trendz-settings.component.html',
-  styleUrls: ['./trendz-settings.component.scss', '../admin/settings-card.scss']
+    selector: 'tb-trendz-settings',
+    templateUrl: './trendz-settings.component.html',
+    styleUrls: ['./trendz-settings.component.scss', '../admin/settings-card.scss'],
+    standalone: false
 })
 export class TrendzSettingsComponent extends PageComponent implements OnInit {
   trendzSettingsForm: FormGroup;

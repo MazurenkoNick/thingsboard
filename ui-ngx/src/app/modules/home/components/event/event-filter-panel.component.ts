@@ -50,9 +50,10 @@ export interface FilterEntityColumn {
 
 
 @Component({
-  selector: 'tb-event-filter-panel',
-  templateUrl: './event-filter-panel.component.html',
-  styleUrls: ['./event-filter-panel.component.scss']
+    selector: 'tb-event-filter-panel',
+    templateUrl: './event-filter-panel.component.html',
+    styleUrls: ['./event-filter-panel.component.scss'],
+    standalone: false
 })
 export class EventFilterPanelComponent {
 

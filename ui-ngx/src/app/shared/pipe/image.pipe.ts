@@ -47,7 +47,8 @@ export interface UrlHolder {
 export type CustomImageUrlCallback = (url: string) => Observable<SafeUrl | string> | null;
 
 @Pipe({
-  name: 'image'
+    name: 'image',
+    standalone: false
 })
 export class ImagePipe implements PipeTransform {
 

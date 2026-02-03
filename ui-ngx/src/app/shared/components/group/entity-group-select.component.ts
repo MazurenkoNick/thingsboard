@@ -46,14 +46,15 @@ import { MatFormFieldAppearance } from '@angular/material/form-field';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-entity-group-select',
-  templateUrl: './entity-group-select.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => EntityGroupSelectComponent),
-    multi: true
-  }]
+    selector: 'tb-entity-group-select',
+    templateUrl: './entity-group-select.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => EntityGroupSelectComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class EntityGroupSelectComponent implements ControlValueAccessor, OnInit, AfterViewInit {
 

@@ -57,9 +57,10 @@ export interface ConverterData  {
 }
 
 @Component({
-  selector: 'tb-converter-dialog',
-  templateUrl: './converter-dialog.component.html',
-  styleUrls: ['./converter-dialog.component.scss']
+    selector: 'tb-converter-dialog',
+    templateUrl: './converter-dialog.component.html',
+    styleUrls: ['./converter-dialog.component.scss'],
+    standalone: false
 })
 export class ConverterDialogComponent extends DialogComponent<ConverterDialogComponent, BaseData<HasId>>
   implements OnInit, AfterViewInit {

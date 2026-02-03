@@ -50,14 +50,15 @@ import { IntegrationType } from '@shared/models/integration.models';
 import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
-  selector: 'tb-converter-autocomplete',
-  templateUrl: './converter-autocomplete.component.html',
-  styleUrls: ['./converter-autocomplete.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => ConverterAutocompleteComponent),
-    multi: true
-  }]
+    selector: 'tb-converter-autocomplete',
+    templateUrl: './converter-autocomplete.component.html',
+    styleUrls: ['./converter-autocomplete.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ConverterAutocompleteComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class ConverterAutocompleteComponent implements ControlValueAccessor, OnInit, OnChanges {
 

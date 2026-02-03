@@ -47,19 +47,20 @@ import { AwsSqsIntegration } from '@shared/models/integration.models';
 import { privateNetworkAddressValidator } from '@home/components/integration/integration.models';
 
 @Component({
-  selector: 'tb-aws-sqs-integration-form',
-  templateUrl: './aws-sqs-integration-form.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => AwsSqsIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => AwsSqsIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-aws-sqs-integration-form',
+    templateUrl: './aws-sqs-integration-form.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => AwsSqsIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => AwsSqsIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class AwsSqsIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator {
 

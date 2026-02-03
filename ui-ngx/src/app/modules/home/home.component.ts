@@ -52,9 +52,10 @@ import { TranslateService } from '@ngx-translate/core';
 import { isDefined, isDefinedAndNotNull } from '@core/utils';
 
 @Component({
-  selector: 'tb-home',
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
+    selector: 'tb-home',
+    templateUrl: './home.component.html',
+    styleUrls: ['./home.component.scss'],
+    standalone: false
 })
 export class HomeComponent extends PageComponent implements AfterViewInit, OnInit, OnDestroy {
 

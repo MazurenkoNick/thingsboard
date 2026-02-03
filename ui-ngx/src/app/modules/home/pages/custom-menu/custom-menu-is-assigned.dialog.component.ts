@@ -45,9 +45,10 @@ export interface CustomMenuIsAssignedDialogData {
 }
 
 @Component({
-  selector: 'tb-custom-menu-is-assigned-dialog',
-  templateUrl: './custom-menu-is-assigned-dialog.component.html',
-  styleUrls: ['./custom-menu-is-assigned-dialog.component.scss']
+    selector: 'tb-custom-menu-is-assigned-dialog',
+    templateUrl: './custom-menu-is-assigned-dialog.component.html',
+    styleUrls: ['./custom-menu-is-assigned-dialog.component.scss'],
+    standalone: false
 })
 export class CustomMenuIsAssignedDialogComponent extends
   DialogComponent<CustomMenuIsAssignedDialogComponent, boolean> implements OnInit {

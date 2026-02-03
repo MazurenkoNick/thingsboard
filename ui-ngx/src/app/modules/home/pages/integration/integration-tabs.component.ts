@@ -38,8 +38,9 @@ import { PageLink } from '@shared/models/page/page-link';
 import { DebugEventType, EventType } from '@shared/models/event.models';
 
 @Component({
-  selector: 'tb-integration-tabs',
-  templateUrl: './integration-tabs.component.html'
+    selector: 'tb-integration-tabs',
+    templateUrl: './integration-tabs.component.html',
+    standalone: false
 })
 export class IntegrationTabsComponent extends EntityTabsComponent<Integration, PageLink, IntegrationInfo> {
 

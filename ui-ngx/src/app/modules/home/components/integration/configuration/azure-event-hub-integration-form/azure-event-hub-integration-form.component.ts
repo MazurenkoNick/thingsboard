@@ -46,19 +46,20 @@ import { IntegrationForm } from '@home/components/integration/configuration/inte
 import { AzureEventHubIntegration } from '@shared/models/integration.models';
 
 @Component({
-  selector: 'tb-azure-event-hub-integration-form',
-  templateUrl: './azure-event-hub-integration-form.component.html',
-  styleUrls: ['./azure-event-hub-integration-form.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => AzureEventHubIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => AzureEventHubIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-azure-event-hub-integration-form',
+    templateUrl: './azure-event-hub-integration-form.component.html',
+    styleUrls: ['./azure-event-hub-integration-form.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => AzureEventHubIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => AzureEventHubIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class AzureEventHubIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator{
 

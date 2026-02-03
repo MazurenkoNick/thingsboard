@@ -51,10 +51,11 @@ import { isDefinedAndNotNull } from '@core/utils';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-default-menu-item-panel',
-  templateUrl: './default-menu-item-panel.component.html',
-  styleUrls: ['./default-menu-item-panel.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-default-menu-item-panel',
+    templateUrl: './default-menu-item-panel.component.html',
+    styleUrls: ['./default-menu-item-panel.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class DefaultMenuItemPanelComponent implements OnInit {
 

@@ -49,19 +49,20 @@ import { takeUntil } from 'rxjs/operators';
 import { defaultEmailConfig, EmailConfig } from '@home/components/scheduler/config/config.models';
 
 @Component({
-  selector: 'tb-email-config',
-  templateUrl: './email-config.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => EmailConfigComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => EmailConfigComponent),
-    multi: true
-  }]
+    selector: 'tb-email-config',
+    templateUrl: './email-config.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => EmailConfigComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => EmailConfigComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class EmailConfigComponent extends PageComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy, Validator {
 

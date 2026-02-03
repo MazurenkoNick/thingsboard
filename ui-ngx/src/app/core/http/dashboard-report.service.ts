@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Inject, Injectable } from '@angular/core';
+import { Inject, Injectable, DOCUMENT } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { UtilsService } from '@core/services/utils.service';
 import { DashboardReportParams, DashboardReportType } from '@shared/models/dashboard-report.models';
@@ -37,7 +37,7 @@ import { getDefaultTimezone, Timewindow } from '@shared/models/time/time.models'
 import { from, Observable, of, Subject } from 'rxjs';
 import { catchError, map, mergeMap, tap } from 'rxjs/operators';
 import { WINDOW } from '@core/services/window.service';
-import { DOCUMENT } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import {

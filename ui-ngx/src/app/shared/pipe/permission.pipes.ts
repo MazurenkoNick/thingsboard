@@ -35,7 +35,8 @@ import { Operation, Resource } from '@shared/models/security.models';
 import { EntityGroupInfo } from '@shared/models/entity-group.models';
 
 @Pipe({
-  name: 'hasGenericPermission'
+    name: 'hasGenericPermission',
+    standalone: false
 })
 export class HasGenericPermissionPipe implements PipeTransform {
 
@@ -47,7 +48,8 @@ export class HasGenericPermissionPipe implements PipeTransform {
 }
 
 @Pipe({
-  name: 'hasEntityGroupPermission'
+    name: 'hasEntityGroupPermission',
+    standalone: false
 })
 export class HasEntityGroupPermissionPipe implements PipeTransform {
 
@@ -59,7 +61,8 @@ export class HasEntityGroupPermissionPipe implements PipeTransform {
 }
 
 @Pipe({
-  name: 'hasGroupEntityPermission'
+    name: 'hasGroupEntityPermission',
+    standalone: false
 })
 export class HasGroupEntityPermissionPipe implements PipeTransform {
 
@@ -71,7 +74,8 @@ export class HasGroupEntityPermissionPipe implements PipeTransform {
 }
 
 @Pipe({
-  name: 'hasGroupEntityOrGenericPermission'
+    name: 'hasGroupEntityOrGenericPermission',
+    standalone: false
 })
 export class HasGroupEntityOrGenericPermissionPipe implements PipeTransform {
 

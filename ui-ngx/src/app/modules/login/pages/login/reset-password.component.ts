@@ -39,9 +39,10 @@ import { finalize } from 'rxjs/operators';
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 @Component({
-  selector: 'tb-reset-password',
-  templateUrl: './reset-password.component.html',
-  styleUrls: ['./password.component.scss']
+    selector: 'tb-reset-password',
+    templateUrl: './reset-password.component.html',
+    styleUrls: ['./password.component.scss'],
+    standalone: false
 })
 export class ResetPasswordComponent {
 

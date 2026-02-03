@@ -49,9 +49,10 @@ import { environment as env } from '@env/environment';
 import { UnitSystems } from '@shared/models/unit.models';
 
 @Component({
-  selector: 'tb-user',
-  templateUrl: './user.component.html',
-  styleUrls: ['./user.component.scss']
+    selector: 'tb-user',
+    templateUrl: './user.component.html',
+    styleUrls: ['./user.component.scss'],
+    standalone: false
 })
 export class UserComponent extends GroupEntityComponent<UserInfo>{
 

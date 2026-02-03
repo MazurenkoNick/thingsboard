@@ -38,10 +38,11 @@ import {
 } from '@home/pages/reporting/template/components/report-component.models';
 
 @Component({
-  selector: 'tb-report-component-library-groups',
-  templateUrl: './report-component-library-groups.component.html',
-  styleUrls: ['./report-component-library-groups.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-report-component-library-groups',
+    templateUrl: './report-component-library-groups.component.html',
+    styleUrls: ['./report-component-library-groups.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class ReportComponentLibraryGroupsComponent {
 

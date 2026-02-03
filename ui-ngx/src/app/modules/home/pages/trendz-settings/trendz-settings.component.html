@@ -53,12 +53,12 @@
                     </div>
                 </div>
                 <div class="flex gap-2">
-                  <button mat-button mat-raised-button color="primary" type="button" [disabled]="(isLoading$ | async) || !this.trendzEnabled" (click)="retryDiscovery()">
+                  <button mat-button mat-raised-button color="primary" type="button" [disabled]="(isLoading$ | async) || !trendzEnabled" (click)="retryDiscovery()">
                         <tb-icon matButtonIcon>refresh</tb-icon>
                         {{ 'trendz-analytics.retry-discovery' | translate }}
                     </button>
                     @if(trendzSyncInfo.syncStatus === TrendzSynchronizationStatus.SYNCED) {
-                      <button mat-stroked-button color="primary" type="button" [disabled]="(isLoading$ | async) || !this.trendzEnabled" (click)="retryHealthcheck()">
+                      <button mat-stroked-button color="primary" type="button" [disabled]="(isLoading$ | async) || !trendzEnabled" (click)="retryHealthcheck()">
                         {{ 'trendz-analytics.retry-healthcheck' | translate }}
                       </button>
                     }
@@ -100,7 +100,7 @@
                 </mat-form-field>
             </div>
             <div class="flex w-full flex-row flex-wrap items-center justify-end">
-                <button mat-button mat-raised-button color="primary" [disabled]="(isLoading$ | async) || trendzSettingsForm.invalid || !trendzSettingsForm.dirty || !this.trendzEnabled" (click)="save()">
+                <button mat-button mat-raised-button color="primary" [disabled]="(isLoading$ | async) || trendzSettingsForm.invalid || !trendzSettingsForm.dirty || !trendzEnabled" (click)="save()">
                   {{ 'trendz-analytics.save-configuration' | translate }}
                 </button>
               </div>

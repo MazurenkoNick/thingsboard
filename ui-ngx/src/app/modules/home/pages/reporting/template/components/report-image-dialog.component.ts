@@ -53,9 +53,10 @@ export interface ReportImageData {
 }
 
 @Component({
-  selector: 'tb-report-image-dialog',
-  templateUrl: './report-image-dialog.component.html',
-  styleUrls: ['./report-image-dialog.component.scss']
+    selector: 'tb-report-image-dialog',
+    templateUrl: './report-image-dialog.component.html',
+    styleUrls: ['./report-image-dialog.component.scss'],
+    standalone: false
 })
 export class ReportImageDialogComponent extends DialogComponent<ReportImageDialogComponent, ReportImageData> {
 

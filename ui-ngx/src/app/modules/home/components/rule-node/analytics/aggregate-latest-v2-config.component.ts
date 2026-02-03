@@ -35,9 +35,10 @@ import { RuleNodeConfiguration, RuleNodeConfigurationComponent } from '@shared/m
 import { EntitySearchDirection, entitySearchDirectionTranslations } from '@shared/models/relation.models';
 
 @Component({
-  selector: 'tb-analytics-node-aggregate-latest-v2-config',
-  templateUrl: './aggregate-latest-v2-config.component.html',
-  styleUrls: ['./aggregate-latest-v2-config.component.scss']
+    selector: 'tb-analytics-node-aggregate-latest-v2-config',
+    templateUrl: './aggregate-latest-v2-config.component.html',
+    styleUrls: ['./aggregate-latest-v2-config.component.scss'],
+    standalone: false
 })
 export class AggregateLatestV2ConfigComponent extends RuleNodeConfigurationComponent {
 

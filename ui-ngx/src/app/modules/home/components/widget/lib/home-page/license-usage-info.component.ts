@@ -43,10 +43,11 @@ import { TranslateService } from '@ngx-translate/core';
 import { MediaBreakpoints } from '@shared/models/constants';
 
 @Component({
-  selector: 'tb-license-usage-info',
-  templateUrl: './license-usage-info.component.html',
-  styleUrls: ['./license-usage-info.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'tb-license-usage-info',
+    templateUrl: './license-usage-info.component.html',
+    styleUrls: ['./license-usage-info.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LicenseUsageInfoComponent extends PageComponent implements OnInit, OnDestroy {
 

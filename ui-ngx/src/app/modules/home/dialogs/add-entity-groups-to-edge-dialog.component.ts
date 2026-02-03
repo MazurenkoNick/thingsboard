@@ -45,10 +45,11 @@ import { BroadcastService } from '@core/services/broadcast.service';
 import { AddEntityGroupsToEdgeDialogData } from '@home/dialogs/add-entity-groups-to-edge-dialog.models';
 
 @Component({
-  selector: 'tb-add-entity-groups-to-edge-dialog',
-  templateUrl: './add-entity-groups-to-edge-dialog.component.html',
-  providers: [{provide: ErrorStateMatcher, useExisting: AddEntityGroupsToEdgeDialogComponent}],
-  styleUrls: []
+    selector: 'tb-add-entity-groups-to-edge-dialog',
+    templateUrl: './add-entity-groups-to-edge-dialog.component.html',
+    providers: [{ provide: ErrorStateMatcher, useExisting: AddEntityGroupsToEdgeDialogComponent }],
+    styleUrls: [],
+    standalone: false
 })
 export class AddEntityGroupsToEdgeDialogComponent extends
   DialogComponent<AddEntityGroupsToEdgeDialogComponent> implements OnInit, ErrorStateMatcher {

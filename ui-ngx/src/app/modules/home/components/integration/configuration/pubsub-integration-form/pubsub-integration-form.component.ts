@@ -46,19 +46,20 @@ import { IntegrationForm } from '@home/components/integration/configuration/inte
 import { PubSubIntegration } from '@shared/models/integration.models';
 
 @Component({
-  selector: 'tb-pubsub-integration-form',
-  templateUrl: './pubsub-integration-form.component.html',
-  styleUrls: ['./pubsub-integration-form.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => PubSubIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => PubSubIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-pubsub-integration-form',
+    templateUrl: './pubsub-integration-form.component.html',
+    styleUrls: ['./pubsub-integration-form.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => PubSubIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => PubSubIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class PubSubIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator {
 

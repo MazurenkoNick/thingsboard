@@ -45,10 +45,11 @@ import { Authority } from '@shared/models/authority.enum';
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 @Component({
-  selector: 'tb-request-trendz-dialog',
-  templateUrl: './request-trendz-dialog.component.html',
-  styleUrls: ['./request-feature-dialog-styles.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-request-trendz-dialog',
+    templateUrl: './request-trendz-dialog.component.html',
+    styleUrls: ['./request-feature-dialog-styles.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class RequestTrendzDialogComponent extends DialogComponent<RequestTrendzDialogComponent>{
 
