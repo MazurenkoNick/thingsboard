@@ -21,6 +21,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -31,7 +32,9 @@ import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentDao;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -75,7 +78,8 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
         app.setType(AgentApplicationType.GENERIC);
         app.setTemplateVersion("1.0");
         app.setPlaceholders(Collections.emptyMap());
-        app.setConfiguration(Collections.emptyMap());
+        Map<String, AgentAppConfig> config = Map.of("queue_type", new AgentAppConfig(false, Collections.singletonList("IN_MEMORY")));
+        app.setConfiguration(config);
         app.setSteps(Collections.emptyList());
 
         AgentApplication saved = agentApplicationDao.save(TenantId.fromUUID(tenantId1), app);
@@ -85,10 +89,12 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
         assertNotNull(found);
         assertEquals(saved.getId(), found.getId());
         assertEquals(agentId1, found.getAgentId().getId());
+        assertEquals(config, found.getConfiguration());
 
         List<AgentApplication> byAgent = agentApplicationDao.findByAgentId(TenantId.fromUUID(tenantId1), agentId1);
         assertEquals(1, byAgent.size());
         assertEquals(saved.getId(), byAgent.get(0).getId());
+        assertEquals(config, byAgent.get(0).getConfiguration());
 
         agentApplicationDao.removeById(TenantId.fromUUID(tenantId1), saved.getId().getId());
     }

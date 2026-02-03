@@ -40,7 +40,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     private AgentApplicationType type;
     private String templateVersion;
     private Map<String, String> placeholders;
-    private Map<String, String> configuration;
+    private Map<String, AgentAppConfig> configuration;
     private List<String> steps;
     @Getter
     private Long version;
@@ -102,8 +102,8 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         return placeholders;
     }
 
-    @Schema(description = "Configuration key-value map")
-    public Map<String, String> getConfiguration() {
+    @Schema(description = "Configuration key-value map, e.g. {\"queue_type\": {\"multiSelect\": false, \"values\": [\"IN_MEMORY\"] }}")
+    public Map<String, AgentAppConfig> getConfiguration() {
         return configuration;
     }
 

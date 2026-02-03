@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
@@ -47,10 +48,11 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         Agent agent = createAgent("My agent");
         AgentApplication app = new AgentApplication();
         app.setAgentId(agent.getId());
-        app.setType(AgentApplicationType.GENERIC);
+        app.setType(AgentApplicationType.GATEWAY);
         app.setTemplateVersion("1.0");
         app.setPlaceholders(Map.of("key", "value"));
-        app.setConfiguration(Map.of("config", "val"));
+        Map<String, AgentAppConfig> config = Map.of("queue_type", new AgentAppConfig(false, Collections.singletonList("IN_MEMORY")));
+        app.setConfiguration(config);
         app.setSteps(List.of("step1", "step2"));
 
         AgentApplication saved = agentApplicationService.saveAgentApplication(tenantId, app);
@@ -58,10 +60,10 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         Assert.assertNotNull(saved.getId());
         Assert.assertTrue(saved.getCreatedTime() > 0);
         Assert.assertEquals(agent.getId(), saved.getAgentId());
-        Assert.assertEquals(AgentApplicationType.GENERIC, saved.getType());
+        Assert.assertEquals(AgentApplicationType.GATEWAY, saved.getType());
         Assert.assertEquals("1.0", saved.getTemplateVersion());
         Assert.assertEquals(Map.of("key", "value"), saved.getPlaceholders());
-        Assert.assertEquals(Map.of("config", "val"), saved.getConfiguration());
+        Assert.assertEquals(config, saved.getConfiguration());
         Assert.assertEquals(List.of("step1", "step2"), saved.getSteps());
 
         AgentApplication found = agentApplicationService.findAgentApplicationById(tenantId, saved.getId());
@@ -152,7 +154,7 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     @Test
     public void testFindAgentApplicationsByAgentId() {
         Agent agent = createAgent("Agent for list");
-        AgentApplication app1 = saveApplication(agent, AgentApplicationType.GENERIC, "app1");
+        AgentApplication app1 = saveApplication(agent, AgentApplicationType.GATEWAY, "app1");
         AgentApplication app2 = saveApplication(agent, AgentApplicationType.EDGE, "app2");
 
         List<AgentApplication> list = agentApplicationService.findAgentApplicationsByAgentId(tenantId, agent.getId());
@@ -166,7 +168,7 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     @Test
     public void testDeleteAgentApplication() {
         Agent agent = createAgent("Agent for delete");
-        AgentApplication app = saveApplication(agent, AgentApplicationType.GENERIC, "toDelete");
+        AgentApplication app = saveApplication(agent, AgentApplicationType.GATEWAY, "toDelete");
 
         agentApplicationService.deleteAgentApplication(tenantId, app.getId());
         AgentApplication found = agentApplicationService.findAgentApplicationById(tenantId, app.getId());
@@ -178,7 +180,7 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     @Test
     public void testDeleteByAgentId() {
         Agent agent = createAgent("Agent for deleteByAgentId");
-        saveApplication(agent, AgentApplicationType.GENERIC, "a1");
+        saveApplication(agent, AgentApplicationType.GATEWAY, "a1");
         saveApplication(agent, AgentApplicationType.EDGE, "a2");
 
         List<AgentApplication> before = agentApplicationService.findAgentApplicationsByAgentId(tenantId, agent.getId());
@@ -194,7 +196,7 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     @Test
     public void testUpdateAgentApplication() {
         Agent agent = createAgent("Agent for update");
-        AgentApplication app = saveApplication(agent, AgentApplicationType.GENERIC, "v1");
+        AgentApplication app = saveApplication(agent, AgentApplicationType.GATEWAY, "v1");
 
         app.setTemplateVersion("2.0");
         app.setSteps(List.of("step1", "step2", "step3"));
