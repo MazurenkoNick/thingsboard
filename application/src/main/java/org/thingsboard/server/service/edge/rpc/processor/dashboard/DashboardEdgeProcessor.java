@@ -50,6 +50,7 @@ import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.gen.edge.v1.DashboardUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.DownlinkMsg;
 import org.thingsboard.server.gen.edge.v1.EdgeVersion;
+import org.thingsboard.edge.rpc.EdgeVersionComparator;
 import org.thingsboard.server.gen.edge.v1.UpdateMsgType;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.edge.EdgeMsgConstructorUtils;
@@ -78,7 +79,7 @@ public class DashboardEdgeProcessor extends BaseDashboardProcessor implements Da
                         EntityGroupId entityGroupId = new EntityGroupId(
                                 new UUID(dashboardUpdateMsg.getEntityGroupIdMSB(), dashboardUpdateMsg.getEntityGroupIdLSB()));
                         edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, entityGroupId, dashboardId);
-                    } else if (edgeVersion.getNumber() >= EdgeVersion.V_4_3_0_VALUE) {
+                    } else if (EdgeVersionComparator.INSTANCE.compare(edgeVersion, EdgeVersion.V_4_3_0) >= 0) {
                         deleteDashboard(tenantId, edge, dashboardId);
                     } else {
                         removeDashboardFromEdgeAllDashboardGroup(tenantId, edge, dashboardId);

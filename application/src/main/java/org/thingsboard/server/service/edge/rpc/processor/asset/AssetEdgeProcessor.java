@@ -43,6 +43,7 @@ import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.edge.EdgeEvent;
 import org.thingsboard.server.common.data.edge.EdgeEventActionType;
 import org.thingsboard.server.common.data.edge.EdgeEventType;
+import org.thingsboard.edge.rpc.EdgeVersionComparator;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.AssetId;
@@ -82,7 +83,7 @@ public class AssetEdgeProcessor extends BaseAssetProcessor implements AssetProce
                         EntityGroupId entityGroupId = new EntityGroupId(
                                 new UUID(assetUpdateMsg.getEntityGroupIdMSB(), assetUpdateMsg.getEntityGroupIdLSB()));
                         edgeCtx.getEntityGroupService().removeEntityFromEntityGroup(tenantId, entityGroupId, assetId);
-                    } else if (edgeVersion.getNumber() >= EdgeVersion.V_4_3_0_VALUE) {
+                    } else if (EdgeVersionComparator.INSTANCE.compare(edgeVersion, EdgeVersion.V_4_3_0) >= 0) {
                         deleteAsset(tenantId, edge, assetId);
                     } else {
                         removeAssetFromEdgeAllAssetGroup(tenantId, edge, assetId);
