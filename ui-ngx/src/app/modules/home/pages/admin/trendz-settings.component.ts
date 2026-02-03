@@ -44,9 +44,10 @@ import { AppState } from "@core/core.state";
 import { ActionAuthUpdateTrendzSettings } from "@core/auth/auth.actions";
 
 @Component({
-  selector: 'tb-trendz-settings',
-  templateUrl: './trendz-settings.component.html',
-  styleUrls: ['./trendz-settings.component.scss', './settings-card.scss']
+    selector: 'tb-trendz-settings',
+    templateUrl: './trendz-settings.component.html',
+    styleUrls: ['./trendz-settings.component.scss', './settings-card.scss'],
+    standalone: false
 })
 export class TrendzSettingsComponent extends PageComponent implements OnInit, HasConfirmForm {
   readonly = !this.userPermissionsService.hasGenericPermission(Resource.ADMIN_SETTINGS, Operation.WRITE);

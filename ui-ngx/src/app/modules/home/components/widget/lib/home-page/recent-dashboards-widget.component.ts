@@ -68,9 +68,10 @@ import { Resource } from '@shared/models/security.models';
 import { EntityType } from '@shared/models/entity-type.models';
 
 @Component({
-  selector: 'tb-recent-dashboards-widget',
-  templateUrl: './recent-dashboards-widget.component.html',
-  styleUrls: ['./home-page-widget.scss', './recent-dashboards-widget.component.scss']
+    selector: 'tb-recent-dashboards-widget',
+    templateUrl: './recent-dashboards-widget.component.html',
+    styleUrls: ['./home-page-widget.scss', './recent-dashboards-widget.component.scss'],
+    standalone: false
 })
 export class RecentDashboardsWidgetComponent extends PageComponent implements OnInit, AfterViewInit, OnDestroy {
 

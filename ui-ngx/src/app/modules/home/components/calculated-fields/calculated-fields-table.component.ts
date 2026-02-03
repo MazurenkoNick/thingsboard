@@ -54,11 +54,12 @@ import { TbPopoverService } from '@shared/components/popover.service';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Component({
-  selector: 'tb-calculated-fields-table',
-  templateUrl: './calculated-fields-table.component.html',
-  styleUrls: ['./calculated-fields-table.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [EntityDebugSettingsService]
+    selector: 'tb-calculated-fields-table',
+    templateUrl: './calculated-fields-table.component.html',
+    styleUrls: ['./calculated-fields-table.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [EntityDebugSettingsService],
+    standalone: false
 })
 export class CalculatedFieldsTableComponent {
 

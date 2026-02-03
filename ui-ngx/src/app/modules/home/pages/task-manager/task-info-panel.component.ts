@@ -47,10 +47,11 @@ interface TaskError {
 }
 
 @Component({
-  selector: 'tb-task-info',
-  templateUrl: './task-info-panel.component.html',
-  styleUrls: ['./task-info-panel.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-task-info',
+    templateUrl: './task-info-panel.component.html',
+    styleUrls: ['./task-info-panel.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class TaskInfoPanelComponent implements OnInit {
 

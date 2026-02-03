@@ -54,19 +54,20 @@ import { TranslateService } from '@ngx-translate/core';
 import { IntegrationForm } from '@home/components/integration/configuration/integration-form';
 
 @Component({
-  selector: 'tb-thing-spark-integration-form',
-  templateUrl: './thing-park-integration-form.component.html',
-  styleUrls: ['./thing-park-integration-form.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => ThingParkIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => ThingParkIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-thing-spark-integration-form',
+    templateUrl: './thing-park-integration-form.component.html',
+    styleUrls: ['./thing-park-integration-form.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ThingParkIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => ThingParkIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class ThingParkIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator, OnInit {
 

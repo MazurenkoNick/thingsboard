@@ -73,21 +73,22 @@ import { NotificationTarget } from '@shared/models/notification.models';
 import { MatDialog } from '@angular/material/dialog';
 
 @Component({
-  selector: 'tb-mobile-self-registration',
-  templateUrl: './mobile-self-registration.component.html',
-  styleUrls: [],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => MobileSelfRegistrationComponent),
-      multi: true
-    },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => MobileSelfRegistrationComponent),
-      multi: true
-    }
-  ],
+    selector: 'tb-mobile-self-registration',
+    templateUrl: './mobile-self-registration.component.html',
+    styleUrls: [],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => MobileSelfRegistrationComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => MobileSelfRegistrationComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class MobileSelfRegistrationComponent implements ControlValueAccessor, Validator, OnChanges {
 

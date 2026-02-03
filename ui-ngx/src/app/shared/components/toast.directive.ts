@@ -53,7 +53,8 @@ import { MatButton } from '@angular/material/button';
 import Timeout = NodeJS.Timeout;
 
 @Directive({
-  selector: '[tb-toast]'
+    selector: '[tb-toast]',
+    standalone: false
 })
 export class ToastDirective implements AfterViewInit, OnDestroy {
 
@@ -287,10 +288,11 @@ export const toastAnimations: {
 export type ToastAnimationState = 'default' | 'opened' | 'closing';
 
 @Component({
-  selector: 'tb-snack-bar-component',
-  templateUrl: 'snack-bar-component.html',
-  styleUrls: ['snack-bar-component.scss'],
-  animations: [toastAnimations.showHideToast]
+    selector: 'tb-snack-bar-component',
+    templateUrl: 'snack-bar-component.html',
+    styleUrls: ['snack-bar-component.scss'],
+    animations: [toastAnimations.showHideToast],
+    standalone: false
 })
 export class TbSnackBarComponent implements AfterViewInit, OnDestroy {
 

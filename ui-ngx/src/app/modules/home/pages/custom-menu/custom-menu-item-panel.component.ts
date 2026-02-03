@@ -35,10 +35,11 @@ import { TbPopoverComponent } from '@shared/components/popover.component';
 import { UntypedFormBuilder, UntypedFormControl } from '@angular/forms';
 
 @Component({
-  selector: 'tb-custom-menu-item-panel',
-  templateUrl: './custom-menu-item-panel.component.html',
-  styleUrls: ['./custom-menu-item-panel.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-custom-menu-item-panel',
+    templateUrl: './custom-menu-item-panel.component.html',
+    styleUrls: ['./custom-menu-item-panel.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class CustomMenuItemPanelComponent implements OnInit {
 

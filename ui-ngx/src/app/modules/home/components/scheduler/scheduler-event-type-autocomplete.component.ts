@@ -53,18 +53,19 @@ interface SchedulerEventTypeInfo {
 }
 
 @Component({
-  selector: 'tb-scheduler-event-type-autocomplete',
-  templateUrl: './scheduler-event-type-autocomplete.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => SchedulerEventTypeAutocompleteComponent),
-    multi: true
-  }, {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => SchedulerEventTypeAutocompleteComponent),
-    multi: true
-  }]
+    selector: 'tb-scheduler-event-type-autocomplete',
+    templateUrl: './scheduler-event-type-autocomplete.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => SchedulerEventTypeAutocompleteComponent),
+            multi: true
+        }, {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => SchedulerEventTypeAutocompleteComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class SchedulerEventTypeAutocompleteComponent implements ControlValueAccessor, OnInit, Validator{
 

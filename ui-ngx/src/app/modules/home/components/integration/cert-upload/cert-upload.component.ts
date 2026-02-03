@@ -33,9 +33,10 @@ import { Component, Input } from '@angular/core';
 import { UntypedFormGroup } from '@angular/forms';
 
 @Component({
-  selector: 'tb-cert-upload',
-  templateUrl: './cert-upload.component.html',
-  styleUrls: []
+    selector: 'tb-cert-upload',
+    templateUrl: './cert-upload.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class CertUploadComponent {
 

@@ -51,9 +51,10 @@ export interface DeleteTimeseriesPanelResult {
 }
 
 @Component({
-  selector: 'tb-delete-timeseries-panel',
-  templateUrl: './delete-timeseries-panel.component.html',
-  styleUrls: ['./delete-timeseries-panel.component.scss']
+    selector: 'tb-delete-timeseries-panel',
+    templateUrl: './delete-timeseries-panel.component.html',
+    styleUrls: ['./delete-timeseries-panel.component.scss'],
+    standalone: false
 })
 export class DeleteTimeseriesPanelComponent implements OnInit, OnDestroy {
 

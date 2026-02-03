@@ -61,9 +61,10 @@ const initialButtonHeight = 60;
 const horizontalLayoutPadding = 10;
 
 @Component({
-  selector: 'tb-widget-button-toggle',
-  templateUrl: './widget-button-toggle.component.html',
-  styleUrls: ['./widget-button-toggle.component.scss']
+    selector: 'tb-widget-button-toggle',
+    templateUrl: './widget-button-toggle.component.html',
+    styleUrls: ['./widget-button-toggle.component.scss'],
+    standalone: false
 })
 export class WidgetButtonToggleComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
 

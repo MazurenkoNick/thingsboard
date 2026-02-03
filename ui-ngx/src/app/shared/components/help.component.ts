@@ -34,8 +34,9 @@ import { HelpLinks } from '@shared/models/constants';
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 @Component({
-  selector: '[tb-help]',
-  templateUrl: './help.component.html'
+    selector: '[tb-help]',
+    templateUrl: './help.component.html',
+    standalone: false
 })
 export class HelpComponent {
 

@@ -49,9 +49,10 @@ import { MobileService } from '@core/services/mobile.service';
 
 // @dynamic
 @Component({
-  selector: 'tb-entity-state-controller',
-  templateUrl: './entity-state-controller.component.html',
-  styleUrls: ['./entity-state-controller.component.scss']
+    selector: 'tb-entity-state-controller',
+    templateUrl: './entity-state-controller.component.html',
+    styleUrls: ['./entity-state-controller.component.scss'],
+    standalone: false
 })
 export class EntityStateControllerComponent extends StateControllerComponent implements OnInit, OnDestroy {
 

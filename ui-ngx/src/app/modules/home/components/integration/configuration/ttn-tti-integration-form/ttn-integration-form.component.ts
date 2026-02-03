@@ -55,19 +55,20 @@ import { IntegrationCredentialType, TtnIntegration, } from '@shared/models/integ
 import { DEFAULT_MQTT_VERSION, MqttVersion } from '@shared/models/mqtt.models';
 
 @Component({
-  selector: 'tb-ttn-integration-form',
-  templateUrl: './tts-integration-form.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => TtnIntegrationFormComponent),
-    multi: true
-  },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => TtnIntegrationFormComponent),
-      multi: true,
-    }]
+    selector: 'tb-ttn-integration-form',
+    templateUrl: './tts-integration-form.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => TtnIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => TtnIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class TtnIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator {
 

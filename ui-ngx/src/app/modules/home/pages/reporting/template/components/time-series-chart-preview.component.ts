@@ -77,11 +77,12 @@ import { reportComponentTypesData } from '@home/pages/reporting/template/compone
 import { TranslateService } from '@ngx-translate/core';
 
 @Component({
-  selector: 'tb-time-series-chart-preview',
-  templateUrl: './time-series-chart-preview.component.html',
-  styleUrls: ['./time-series-chart-preview.component.scss'],
-  encapsulation: ViewEncapsulation.None,
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'tb-time-series-chart-preview',
+    templateUrl: './time-series-chart-preview.component.html',
+    styleUrls: ['./time-series-chart-preview.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPreview<TimeseriesChartReportComponentConfig>
   implements AfterViewInit, OnDestroy, WidgetSubscriptionCallbacks {

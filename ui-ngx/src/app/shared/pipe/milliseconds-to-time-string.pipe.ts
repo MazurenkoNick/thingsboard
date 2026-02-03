@@ -34,7 +34,8 @@ import { TranslateService } from '@ngx-translate/core';
 import { DAY, HOUR, MINUTE, SECOND, YEAR } from '@shared/models/time/time.models';
 
 @Pipe({
-  name: 'milliSecondsToTimeString'
+    name: 'milliSecondsToTimeString',
+    standalone: false
 })
 export class MillisecondsToTimeStringPipe implements PipeTransform {
 

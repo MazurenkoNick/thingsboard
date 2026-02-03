@@ -45,8 +45,9 @@ export interface ActivationLinkDialogData {
 }
 
 @Component({
-  selector: 'tb-activation-link-dialog',
-  templateUrl: './activation-link-dialog.component.html'
+    selector: 'tb-activation-link-dialog',
+    templateUrl: './activation-link-dialog.component.html',
+    standalone: false
 })
 export class ActivationLinkDialogComponent extends DialogComponent<ActivationLinkDialogComponent, void> {
 

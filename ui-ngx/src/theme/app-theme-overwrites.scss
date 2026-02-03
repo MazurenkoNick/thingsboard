@@ -30,12 +30,7 @@
  */
 @use '@angular/material' as mat;
 @use '@angular/material/core/tokens/token-utils';
-@use '@angular/material/core/tokens/m2/mat/select' as tokens-mat-select;
-@use '@angular/material/core/tokens/m2/mdc/fab' as tokens-mdc-fab;
-@use '@angular/material/core/tokens/m2/mat/fab' as tokens-mat-fab;
-@use '@angular/material/core/tokens/m2/mdc/fab-small' as tokens-mdc-fab-small;
-@use '@angular/material/core/tokens/m2/mat/fab-small' as tokens-mat-fab-small;
-@use '@angular/material/core/tokens/m2/mdc/linear-progress' as tokens-mdc-linear-progress;
+@use '@angular/material/core/tokens/m2-utils';
 @use 'sass:meta';
 @use 'sass:color';
 
@@ -90,7 +85,7 @@
 @mixin _mat-button-overwrites($primary, $config-or-theme) {
   .mat-toolbar {
     .mat-mdc-outlined-button {
-      --mdc-outlined-button-outline-color: inherit;
+      --mat-button-outlined-outline-color: inherit;
       &:not(:disabled) {
         border-color: inherit;
       }
@@ -151,7 +146,8 @@
 @mixin _mat-progress-bar-overwrites($primary, $config-or-theme) {
   $config: mat.m2-get-color-config($config-or-theme);
   $accent: map_get($config, accent);
-  $background: map_get(map_get($config, background), background);
+  $system: m2-utils.get-system($config-or-theme);
+  $background: map_get($system, background);
 
   .mat-mdc-progress-bar {
 
@@ -164,43 +160,29 @@
 }
 
 @mixin _select-variant($foreground, $background) {
-  @include token-utils.create-token-values(tokens-mat-select.$prefix,
-    (
-      enabled-trigger-text-color: $foreground
-    ));
+  @include token-utils.values((
+    select-enabled-trigger-text-color: $foreground
+  ));
 }
 
 @mixin _fab-variant($foreground, $background) {
-  @include token-utils.create-token-values(tokens-mdc-fab.$prefix,
-    (
-      container-color: $background,
-      foreground-color: $foreground
-    ));
-  @include token-utils.create-token-values(tokens-mat-fab.$prefix,
-    (
-      container-color: $background,
-      foreground-color: $foreground
-    ));
+  @include token-utils.values((
+    fab-container-color: $background,
+    fab-foreground-color: $foreground
+  ));
 }
 
 @mixin _fab-small-variant($foreground, $background) {
-  @include token-utils.create-token-values(tokens-mdc-fab-small.$prefix,
-    (
-      container-color: $background,
-      foreground-color: $foreground
-    ));
-  @include token-utils.create-token-values(tokens-mat-fab-small.$prefix,
-    (
-      container-color: $background,
-      foreground-color: $foreground
-    ));
+  @include token-utils.values((
+    fab-small-container-color: $background,
+    fab-small-foreground-color: $foreground
+  ));
 }
 
 @mixin _progress-bar-palette-styles-overwrite($theme, $background) {
-  @include token-utils.create-token-values(tokens-mdc-linear-progress.$prefix,
-    (
-      track-color: _get-buffer-color($theme, $background)
-    ));
+  @include token-utils.values((
+    progress-bar-track-color: _get-buffer-color($theme, $background)
+  ));
 }
 
 @function _get-buffer-color($theme, $background) {

@@ -123,10 +123,11 @@ import { VersionControlComponent } from '@home/components/vc/version-control.com
 import { TbPopoverService } from '@shared/components/popover.service';
 
 @Component({
-  selector: 'tb-report-template-page',
-  templateUrl: './report-template-page.component.html',
-  styleUrls: ['./report-template-page.component.scss', './report-components-container.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-report-template-page',
+    templateUrl: './report-template-page.component.html',
+    styleUrls: ['./report-template-page.component.scss', './report-components-container.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class ReportTemplatePageComponent extends PageComponent
   implements OnInit, AfterViewInit, OnDestroy, HasDirtyFlag {

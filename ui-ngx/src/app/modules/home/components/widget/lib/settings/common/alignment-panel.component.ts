@@ -38,10 +38,11 @@ import {
 } from '@shared/models/widget-settings.models';
 
 @Component({
-  selector: 'tb-alignment-panel',
-  templateUrl: './alignment-panel.component.html',
-  styleUrls: ['./alignment-panel.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-alignment-panel',
+    templateUrl: './alignment-panel.component.html',
+    styleUrls: ['./alignment-panel.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class AlignmentPanelComponent implements OnInit {
 

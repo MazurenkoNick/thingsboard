@@ -55,15 +55,16 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'tb-originator-select',
-  templateUrl: './originator-select.component.html',
-  styleUrls: ['./originator-select.component.scss'],
-  encapsulation: ViewEncapsulation.None,
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => OriginatorSelectComponent),
-    multi: true
-  }]
+    selector: 'tb-originator-select',
+    templateUrl: './originator-select.component.html',
+    styleUrls: ['./originator-select.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => OriginatorSelectComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class OriginatorSelectComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy {
 

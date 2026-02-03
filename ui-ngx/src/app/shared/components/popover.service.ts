@@ -157,7 +157,7 @@ export class TbPopoverService {
       conf.componentRef.location.nativeElement
     );
     const originElementRef = new ElementRef(conf.trigger);
-    component.setOverlayOrigin(new CdkOverlayOrigin(originElementRef));
+    component.setOriginElement(originElementRef);
     component.tbPlacement = conf.preferredPlacement;
     component.tbComponent = conf.componentType;
     component.tbComponentInjector = conf.injector;
@@ -213,7 +213,7 @@ export class TbPopoverService {
       const originElementRef = new ElementRef(trigger);
       component.tbAnimationState = 'void';
       component.tbOverlayStyle = {...overlayStyle, opacity: '0' };
-      component.setOverlayOrigin(new CdkOverlayOrigin(originElementRef));
+      component.setOriginElement(originElementRef);
       component.tbPlacement = preferredPlacement;
       component.tbComponent = this.helpMarkdownComponent;
       component.tbComponentInjector = injector;

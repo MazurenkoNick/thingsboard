@@ -57,9 +57,10 @@ import { DialogService } from '@core/services/dialog.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-self-registration',
-  templateUrl: './self-registration.component.html',
-  styleUrls: ['./self-registration.component.scss', './settings-card.scss']
+    selector: 'tb-self-registration',
+    templateUrl: './self-registration.component.html',
+    styleUrls: ['./self-registration.component.scss', './settings-card.scss'],
+    standalone: false
 })
 export class SelfRegistrationComponent extends PageComponent implements OnInit, HasConfirmForm {
 

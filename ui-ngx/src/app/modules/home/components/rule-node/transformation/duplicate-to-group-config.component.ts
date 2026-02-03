@@ -35,9 +35,10 @@ import { RuleNodeConfiguration, RuleNodeConfigurationComponent } from '@shared/m
 import { allowedEntityGroupTypes } from '@home/components/rule-node/rule-node-config.models';
 
 @Component({
-  selector: 'tb-transformation-node-duplicate-to-group-config',
-  templateUrl: './duplicate-to-group-config.component.html',
-  styleUrls: ['./duplicate-to-group-config.component.scss']
+    selector: 'tb-transformation-node-duplicate-to-group-config',
+    templateUrl: './duplicate-to-group-config.component.html',
+    styleUrls: ['./duplicate-to-group-config.component.scss'],
+    standalone: false
 })
 
 export class DuplicateToGroupConfigComponent extends RuleNodeConfigurationComponent {

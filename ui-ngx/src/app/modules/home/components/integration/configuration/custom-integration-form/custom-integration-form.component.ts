@@ -47,19 +47,20 @@ import { isDefinedAndNotNull } from '@core/utils';
 import { CustomIntegration } from '@shared/models/integration.models';
 
 @Component({
-  selector: 'tb-custom-integration-form',
-  templateUrl: './custom-integration-form.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => CustomIntegrationFormComponent),
-    multi: true
-  },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => CustomIntegrationFormComponent),
-      multi: true,
-    }]
+    selector: 'tb-custom-integration-form',
+    templateUrl: './custom-integration-form.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => CustomIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => CustomIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class CustomIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator {
 

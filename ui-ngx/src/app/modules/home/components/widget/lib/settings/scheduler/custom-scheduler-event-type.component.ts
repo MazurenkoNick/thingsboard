@@ -61,16 +61,17 @@ export function customSchedulerEventTypeValidator(control: AbstractControl) {
 }
 
 @Component({
-  selector: 'tb-custom-scheduler-event-type',
-  templateUrl: './custom-scheduler-event-type.component.html',
-  styleUrls: ['./custom-scheduler-event-type.component.scss', './../widget-settings.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => CustomSchedulerEventTypeComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-custom-scheduler-event-type',
+    templateUrl: './custom-scheduler-event-type.component.html',
+    styleUrls: ['./custom-scheduler-event-type.component.scss', './../widget-settings.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => CustomSchedulerEventTypeComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class CustomSchedulerEventTypeComponent extends PageComponent implements OnInit, ControlValueAccessor {
 

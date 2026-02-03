@@ -57,14 +57,15 @@ import { MatFormFieldAppearance } from '@angular/material/form-field';
 import { coerceBoolean } from '@app/shared/decorators/coercion';
 
 @Component({
-  selector: 'tb-entity-group-autocomplete',
-  templateUrl: './entity-group-autocomplete.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => EntityGroupAutocompleteComponent),
-    multi: true
-  }]
+    selector: 'tb-entity-group-autocomplete',
+    templateUrl: './entity-group-autocomplete.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => EntityGroupAutocompleteComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class EntityGroupAutocompleteComponent implements ControlValueAccessor, OnInit, OnDestroy {
 

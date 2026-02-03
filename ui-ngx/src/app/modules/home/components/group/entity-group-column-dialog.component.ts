@@ -59,10 +59,11 @@ export interface EntityGroupColumnDialogData {
 }
 
 @Component({
-  selector: 'tb-entity-group-column-dialog',
-  templateUrl: './entity-group-column-dialog.component.html',
-  providers: [{provide: ErrorStateMatcher, useExisting: EntityGroupColumnDialogComponent}],
-  styleUrls: []
+    selector: 'tb-entity-group-column-dialog',
+    templateUrl: './entity-group-column-dialog.component.html',
+    providers: [{ provide: ErrorStateMatcher, useExisting: EntityGroupColumnDialogComponent }],
+    styleUrls: [],
+    standalone: false
 })
 export class EntityGroupColumnDialogComponent extends
   DialogComponent<EntityGroupColumnDialogComponent, EntityGroupColumn> implements OnInit, ErrorStateMatcher {

@@ -45,9 +45,10 @@ const intervalValidators = [Validators.required,
   Validators.min(1), Validators.max(2147483647)];
 
 @Component({
-  selector: 'tb-analytics-node-alarms-count-config',
-  templateUrl: './alarms-count-config.component.html',
-  styleUrls: ['./alarms-count-config.component.scss']
+    selector: 'tb-analytics-node-alarms-count-config',
+    templateUrl: './alarms-count-config.component.html',
+    styleUrls: ['./alarms-count-config.component.scss'],
+    standalone: false
 })
 export class AlarmsCountConfigComponent extends RuleNodeConfigurationComponent {
 

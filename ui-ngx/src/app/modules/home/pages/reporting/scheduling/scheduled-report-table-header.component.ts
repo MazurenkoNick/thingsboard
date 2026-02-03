@@ -36,9 +36,10 @@ import { EntityTableHeaderComponent } from '@home/components/entity/entity-table
 import { ReportFilter, ScheduledReportInfo } from '@shared/models/report.models';
 
 @Component({
-  selector: 'tb-scheduled-report-table-header',
-  templateUrl: './scheduled-report-table-header.component.html',
-  styleUrls: []
+    selector: 'tb-scheduled-report-table-header',
+    templateUrl: './scheduled-report-table-header.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class ScheduledReportTableHeaderComponent extends EntityTableHeaderComponent<ScheduledReportInfo> {
 

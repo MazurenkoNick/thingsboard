@@ -37,9 +37,10 @@ import { TranslateService } from '@ngx-translate/core';
 import { ReportTemplate } from '@shared/models/report.models';
 
 @Component({
-  selector: 'tb-report-template-tabs',
-  templateUrl: './report-template-tabs.component.html',
-  styleUrls: []
+    selector: 'tb-report-template-tabs',
+    templateUrl: './report-template-tabs.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class ReportTemplateTabsComponent extends EntityTabsComponent<ReportTemplate> {
 

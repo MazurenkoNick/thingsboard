@@ -52,9 +52,10 @@ import { Operation, Resource } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Component({
-  selector: 'tb-auto-commit-settings',
-  templateUrl: './auto-commit-settings.component.html',
-  styleUrls: ['./auto-commit-settings.component.scss', './../../pages/admin/settings-card.scss']
+    selector: 'tb-auto-commit-settings',
+    templateUrl: './auto-commit-settings.component.html',
+    styleUrls: ['./auto-commit-settings.component.scss', './../../pages/admin/settings-card.scss'],
+    standalone: false
 })
 export class AutoCommitSettingsComponent extends PageComponent implements OnInit {
 

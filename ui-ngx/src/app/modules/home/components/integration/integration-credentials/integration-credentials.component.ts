@@ -46,19 +46,20 @@ import { IntegrationCredentialType, IntegrationCredentialTypeTranslation } from 
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
 
 @Component({
-  selector: 'tb-integration-credentials',
-  templateUrl: 'integration-credentials.component.html',
-  styleUrls: ['integration-credentials.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => IntegrationCredentialsComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => IntegrationCredentialsComponent),
-    multi: true,
-  }]
+    selector: 'tb-integration-credentials',
+    templateUrl: 'integration-credentials.component.html',
+    styleUrls: ['integration-credentials.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => IntegrationCredentialsComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => IntegrationCredentialsComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class IntegrationCredentialsComponent implements ControlValueAccessor, Validator, OnInit, OnDestroy {
 
