@@ -257,8 +257,6 @@ public class ModelConstants {
     public static final String AGENT_APPLICATION_TABLE_NAME = "agent_application";
     public static final String AGENT_APPLICATION_AGENT_ID_PROPERTY = "agent_id";
     public static final String AGENT_APPLICATION_NAME_PROPERTY = "name";
-    public static final String AGENT_APPLICATION_TYPE_PROPERTY = "type";
-    public static final String AGENT_APPLICATION_TEMPLATE_VERSION_PROPERTY = "template_version";
     public static final String AGENT_APPLICATION_PLACEHOLDERS_PROPERTY = "placeholders";
     public static final String AGENT_APPLICATION_CONFIGURATION_PROPERTY = "configuration";
     public static final String AGENT_APPLICATION_STEPS_PROPERTY = "steps";

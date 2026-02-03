@@ -23,7 +23,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -63,7 +62,6 @@ class AgentApplicationDataValidatorTest {
     @Test
     void testValidateDataImpl_nullAgentId_thenException() {
         AgentApplication app = new AgentApplication();
-        app.setType(AgentApplicationType.GENERIC);
 
         DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, app));
@@ -77,7 +75,6 @@ class AgentApplicationDataValidatorTest {
 
         AgentApplication app = new AgentApplication();
         app.setAgentId(nonExistentAgentId);
-        app.setType(AgentApplicationType.GENERIC);
 
         DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, app));
@@ -85,76 +82,9 @@ class AgentApplicationDataValidatorTest {
     }
 
     @Test
-    void testValidateDataImpl_nullType_thenException() {
-        AgentApplication app = new AgentApplication();
-        app.setAgentId(agentId);
-
-        DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
-                () -> validator.validateDataImpl(tenantId, app));
-        assertThat(exception.getMessage()).contains("type");
-    }
-
-    @Test
     void testValidateDataImpl_valid_thenOK() {
         AgentApplication app = new AgentApplication();
         app.setAgentId(agentId);
-        app.setType(AgentApplicationType.EDGE);
-        app.setTemplateVersion("4.3.0");
-
-        validator.validateDataImpl(tenantId, app);
-    }
-
-    @Test
-    void testValidateDataImpl_genericWithoutTemplateVersion_thenOK() {
-        AgentApplication app = new AgentApplication();
-        app.setAgentId(agentId);
-        app.setType(AgentApplicationType.GENERIC);
-
-        validator.validateDataImpl(tenantId, app);
-    }
-
-    @Test
-    void testValidateDataImpl_genericWithoutTemplateVersion_thenException() {
-        AgentApplication app = new AgentApplication();
-        app.setAgentId(agentId);
-        app.setType(AgentApplicationType.GENERIC);
-        app.setTemplateVersion("");
-
-        DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
-                () -> validator.validateDataImpl(tenantId, app));
-        assertThat(exception.getMessage()).containsIgnoringCase("template version");
-        assertThat(exception.getMessage()).containsIgnoringCase("GENERIC");}
-
-    @Test
-    void testValidateDataImpl_edgeWithoutTemplateVersion_thenException() {
-        AgentApplication app = new AgentApplication();
-        app.setAgentId(agentId);
-        app.setType(AgentApplicationType.EDGE);
-
-        DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
-                () -> validator.validateDataImpl(tenantId, app));
-        assertThat(exception.getMessage()).containsIgnoringCase("template version");
-        assertThat(exception.getMessage()).containsIgnoringCase("GENERIC");
-    }
-
-    @Test
-    void testValidateDataImpl_gatewayWithoutTemplateVersion_thenException() {
-        AgentApplication app = new AgentApplication();
-        app.setAgentId(agentId);
-        app.setType(AgentApplicationType.GATEWAY);
-
-        DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
-                () -> validator.validateDataImpl(tenantId, app));
-        assertThat(exception.getMessage()).containsIgnoringCase("template version");
-        assertThat(exception.getMessage()).containsIgnoringCase("GENERIC");
-    }
-
-    @Test
-    void testValidateDataImpl_gatewayWithTemplateVersion_thenOK() {
-        AgentApplication app = new AgentApplication();
-        app.setAgentId(agentId);
-        app.setType(AgentApplicationType.GATEWAY);
-        app.setTemplateVersion("1.0");
 
         validator.validateDataImpl(tenantId, app);
     }
@@ -164,13 +94,11 @@ class AgentApplicationDataValidatorTest {
         AgentApplication oldApp = new AgentApplication();
         oldApp.setId(applicationId);
         oldApp.setAgentId(agentId);
-        oldApp.setType(AgentApplicationType.EDGE);
         willReturn(oldApp).given(agentApplicationDao).findById(eq(tenantId), eq(applicationId.getId()));
 
         AgentApplication newApp = new AgentApplication();
         newApp.setId(applicationId);
         newApp.setAgentId(agentId);
-        newApp.setType(AgentApplicationType.GATEWAY);
 
         AgentApplication result = validator.validateUpdate(tenantId, newApp);
         assertThat(result).isEqualTo(oldApp);
@@ -183,7 +111,6 @@ class AgentApplicationDataValidatorTest {
         AgentApplication app = new AgentApplication();
         app.setId(applicationId);
         app.setAgentId(agentId);
-        app.setType(AgentApplicationType.GENERIC);
 
         DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
                 () -> validator.validateUpdate(tenantId, app));

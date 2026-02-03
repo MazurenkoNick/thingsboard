@@ -17,10 +17,8 @@ package org.thingsboard.server.dao.service.validator;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentService;
@@ -54,17 +52,6 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
         }
         if (!agent.getTenantId().equals(tenantId)) {
             throw new DataValidationException("Agent application cannot be assigned to agent from different tenant!");
-        }
-        if (agentApplication.getType() == null) {
-            throw new DataValidationException("Agent application type is required!");
-        }
-        if (agentApplication.getType() != AgentApplicationType.GENERIC
-                && StringUtils.isBlank(agentApplication.getTemplateVersion())) {
-            throw new DataValidationException("Template version is required when agent application type is not GENERIC!");
-        }
-        if (agentApplication.getType() == AgentApplicationType.GENERIC
-                && agentApplication.getTemplateVersion() != null) {
-            throw new DataValidationException("Template version is not allowed for GENERIC agent application type");
         }
         if (agentApplication.getName() != null && agentApplication.getName().length() > 255) {
             throw new DataValidationException("Agent application name length must be equal or shorter than 255!");

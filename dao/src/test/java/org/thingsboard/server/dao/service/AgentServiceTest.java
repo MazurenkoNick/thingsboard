@@ -31,7 +31,6 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.customer.CustomerService;
@@ -425,14 +424,10 @@ public class AgentServiceTest extends AbstractServiceTest {
 
         AgentApplication app1 = new AgentApplication();
         app1.setAgentId(savedAgent.getId());
-        app1.setType(AgentApplicationType.GENERIC);
-        app1.setTemplateVersion("1.0");
         app1 = agentApplicationService.saveAgentApplication(tenantId, app1);
 
         AgentApplication app2 = new AgentApplication();
         app2.setAgentId(savedAgent.getId());
-        app2.setType(AgentApplicationType.EDGE);
-        app2.setTemplateVersion("1.0");
         app2 = agentApplicationService.saveAgentApplication(tenantId, app2);
 
         List<AgentApplication> applicationsBefore = agentApplicationService.findAgentApplicationsByAgentId(tenantId, savedAgent.getId());
@@ -461,8 +456,6 @@ public class AgentServiceTest extends AbstractServiceTest {
 
         AgentApplication app = new AgentApplication();
         app.setAgentId(agent.getId());
-        app.setType(AgentApplicationType.GENERIC);
-        app.setTemplateVersion("1.0");
         app = agentApplicationService.saveAgentApplication(tenantId, app);
 
         List<AgentApplication> afterCreate = agentApplicationService.findAgentApplicationsByAgentId(tenantId, agent.getId());

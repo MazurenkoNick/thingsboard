@@ -22,7 +22,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.AgentInfo;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -211,8 +210,6 @@ public class JpaAgentDaoTest extends AbstractJpaDaoTest {
 
         AgentApplication app1 = new AgentApplication();
         app1.setAgentId(new AgentId(agentId));
-        app1.setType(AgentApplicationType.GENERIC);
-        app1.setTemplateVersion("1.0");
         app1.setPlaceholders(Collections.emptyMap());
         app1.setConfiguration(Collections.emptyMap());
         app1.setSteps(Collections.emptyList());
@@ -220,8 +217,6 @@ public class JpaAgentDaoTest extends AbstractJpaDaoTest {
 
         AgentApplication app2 = new AgentApplication();
         app2.setAgentId(new AgentId(agentId));
-        app2.setType(AgentApplicationType.EDGE);
-        app2.setTemplateVersion("1.0");
         app2.setPlaceholders(Collections.emptyMap());
         app2.setConfiguration(Collections.emptyMap());
         app2.setSteps(Collections.emptyList());

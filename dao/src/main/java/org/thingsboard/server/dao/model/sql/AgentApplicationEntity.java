@@ -25,16 +25,12 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
-import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.BaseVersionedEntity;
 import org.thingsboard.server.dao.model.ModelConstants;
 import org.thingsboard.server.dao.util.mapping.JsonConverter;
 
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -48,12 +44,6 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
 
     @Column(name = ModelConstants.AGENT_APPLICATION_NAME_PROPERTY)
     private String name;
-
-    @Column(name = ModelConstants.AGENT_APPLICATION_TYPE_PROPERTY)
-    private String type;
-
-    @Column(name = ModelConstants.AGENT_APPLICATION_TEMPLATE_VERSION_PROPERTY)
-    private String templateVersion;
 
     @Convert(converter = JsonConverter.class)
     @Column(name = ModelConstants.AGENT_APPLICATION_PLACEHOLDERS_PROPERTY)
@@ -77,10 +67,6 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
             this.agentId = application.getAgentId().getId();
         }
         this.name = application.getName();
-        if (application.getType() != null) {
-            this.type = application.getType().name();
-        }
-        this.templateVersion = application.getTemplateVersion();
         this.placeholders = application.getPlaceholders() != null ? JacksonUtil.valueToTree(application.getPlaceholders()) : null;
         this.configuration = application.getConfiguration() != null ? JacksonUtil.valueToTree(application.getConfiguration()) : null;
         this.steps = application.getSteps() != null ? JacksonUtil.valueToTree(application.getSteps()) : null;
@@ -95,10 +81,6 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
             application.setAgentId(new AgentId(agentId));
         }
         application.setName(name);
-        if (type != null) {
-            application.setType(AgentApplicationType.valueOf(type));
-        }
-        application.setTemplateVersion(templateVersion);
         application.setPlaceholders(placeholders != null ? JacksonUtil.convertValue(placeholders, new TypeReference<>() {}) : null);
         application.setConfiguration(configuration != null ? JacksonUtil.convertValue(configuration, new TypeReference<>() {}) : null);
         application.setSteps(steps != null ? JacksonUtil.convertValue(steps, new TypeReference<>() {}) : null);

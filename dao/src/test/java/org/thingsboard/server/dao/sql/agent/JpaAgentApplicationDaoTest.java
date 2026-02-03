@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -32,7 +31,6 @@ import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentDao;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -75,8 +73,6 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
     public void testSaveFindByIdFindByAgentId() {
         AgentApplication app = new AgentApplication();
         app.setAgentId(new AgentId(agentId1));
-        app.setType(AgentApplicationType.GENERIC);
-        app.setTemplateVersion("1.0");
         app.setPlaceholders(Collections.emptyMap());
         Map<String, AgentAppConfig> config = Map.of("queue_type", new AgentAppConfig(false, Collections.singletonList("IN_MEMORY")));
         app.setConfiguration(config);
@@ -101,7 +97,7 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
 
     @Test
     public void testRemoveById() {
-        AgentApplication app = saveApplication(AgentApplicationType.EDGE, "v1");
+        AgentApplication app = saveApplication("v1");
         agentApplicationDao.removeById(TenantId.fromUUID(tenantId1), app.getId().getId());
         AgentApplication found = agentApplicationDao.findById(TenantId.fromUUID(tenantId1), app.getId().getId());
         assertNull(found);
@@ -109,8 +105,8 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
 
     @Test
     public void testRemoveByAgentId() {
-        saveApplication(AgentApplicationType.GENERIC, "a1");
-        saveApplication(AgentApplicationType.GATEWAY, "a2");
+        saveApplication("a1");
+        saveApplication("a2");
         List<AgentApplication> before = agentApplicationDao.findByAgentId(TenantId.fromUUID(tenantId1), agentId1);
         assertEquals(2, before.size());
 
@@ -121,8 +117,8 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
 
     @Test
     public void testDeleteAgentRemovesAgentApplications() {
-        saveApplication(AgentApplicationType.GENERIC, "cascade1");
-        saveApplication(AgentApplicationType.EDGE, "cascade2");
+        saveApplication("cascade1");
+        saveApplication("cascade2");
         List<AgentApplication> before = agentApplicationDao.findByAgentId(TenantId.fromUUID(tenantId1), agentId1);
         assertEquals(2, before.size());
 
@@ -142,11 +138,10 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
         return agentDao.save(TenantId.fromUUID(tenantId), agent);
     }
 
-    private AgentApplication saveApplication(AgentApplicationType type, String templateVersion) {
+    private AgentApplication saveApplication(String name) {
         AgentApplication app = new AgentApplication();
         app.setAgentId(new AgentId(agentId1));
-        app.setType(type);
-        app.setTemplateVersion(templateVersion);
+        app.setName(name);
         app.setPlaceholders(Collections.emptyMap());
         app.setConfiguration(Collections.emptyMap());
         app.setSteps(Collections.emptyList());

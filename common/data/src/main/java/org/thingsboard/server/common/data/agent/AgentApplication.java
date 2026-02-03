@@ -37,8 +37,6 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
 
     private AgentId agentId;
     private String name;
-    private AgentApplicationType type;
-    private String templateVersion;
     private Map<String, String> placeholders;
     private Map<String, AgentAppConfig> configuration;
     private List<String> steps;
@@ -57,8 +55,6 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         super(application);
         this.agentId = application.getAgentId();
         this.name = application.getName();
-        this.type = application.getType();
-        this.templateVersion = application.getTemplateVersion();
         this.placeholders = application.getPlaceholders();
         this.configuration = application.getConfiguration();
         this.steps = application.getSteps();
@@ -85,16 +81,6 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     @Schema(description = "Application name (not unique across tenant)")
     public String getName() {
         return name;
-    }
-
-    @Schema(description = "Application type: GENERIC, EDGE, or GATEWAY", requiredMode = Schema.RequiredMode.REQUIRED)
-    public AgentApplicationType getType() {
-        return type;
-    }
-
-    @Schema(description = "Template version")
-    public String getTemplateVersion() {
-        return templateVersion;
     }
 
     @Schema(description = "Placeholder key-value map")
