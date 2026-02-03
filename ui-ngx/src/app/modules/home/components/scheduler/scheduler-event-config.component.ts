@@ -48,19 +48,20 @@ import { jsonRequired } from '@shared/components/json-object-edit.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-scheduler-event-config',
-  templateUrl: './scheduler-event-config.component.html',
-  styleUrls: ['./scheduler-event-config.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => SchedulerEventConfigComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => SchedulerEventConfigComponent),
-    multi: true
-  }]
+    selector: 'tb-scheduler-event-config',
+    templateUrl: './scheduler-event-config.component.html',
+    styleUrls: ['./scheduler-event-config.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => SchedulerEventConfigComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => SchedulerEventConfigComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class SchedulerEventConfigComponent implements ControlValueAccessor, OnInit, OnChanges, Validator {
 

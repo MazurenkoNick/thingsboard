@@ -50,9 +50,10 @@ import { UserPasswordPolicy } from '@shared/models/settings.models';
 import { passwordStrengthValidator } from '@shared/models/password.models';
 
 @Component({
-  selector: 'tb-signup',
-  templateUrl: './signup.component.html',
-  styleUrls: ['./signup.component.scss']
+    selector: 'tb-signup',
+    templateUrl: './signup.component.html',
+    styleUrls: ['./signup.component.scss'],
+    standalone: false
 })
 export class SignupComponent {
 

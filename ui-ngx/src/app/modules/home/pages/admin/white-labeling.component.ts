@@ -60,9 +60,10 @@ import { DialogService } from '@core/services/dialog.service';
 import { TranslateService } from '@ngx-translate/core';
 
 @Component({
-  selector: 'tb-white-labeling',
-  templateUrl: './white-labeling.component.html',
-  styleUrls: ['./settings-card.scss']
+    selector: 'tb-white-labeling',
+    templateUrl: './white-labeling.component.html',
+    styleUrls: ['./settings-card.scss'],
+    standalone: false
 })
 export class WhiteLabelingComponent extends PageComponent implements OnInit, HasConfirmForm {
 

@@ -34,9 +34,10 @@ import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms
 import { RuleNodeConfiguration, RuleNodeConfigurationComponent } from '@shared/models/rule-node.models';
 
 @Component({
-  selector: 'tb-action-node-add-to-group-config',
-  templateUrl: './add-to-group-config.component.html',
-  styleUrls: []
+    selector: 'tb-action-node-add-to-group-config',
+    templateUrl: './add-to-group-config.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class AddToGroupConfigComponent extends RuleNodeConfigurationComponent {
 

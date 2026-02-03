@@ -49,9 +49,10 @@ import { Observable } from 'rxjs/internal/Observable';
 import { Authority } from '@shared/models/authority.enum';
 
 @Component({
-  selector: 'tb-home-settings',
-  templateUrl: './home-settings.component.html',
-  styleUrls: ['./home-settings.component.scss', './settings-card.scss']
+    selector: 'tb-home-settings',
+    templateUrl: './home-settings.component.html',
+    styleUrls: ['./home-settings.component.scss', './settings-card.scss'],
+    standalone: false
 })
 export class HomeSettingsComponent extends PageComponent implements OnInit, HasConfirmForm {
 

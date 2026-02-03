@@ -38,9 +38,10 @@ import { WhiteLabelingService } from '@core/http/white-labeling.service';
 import { first } from 'rxjs/operators';
 
 @Component({
-  selector: 'tb-email-verified',
-  templateUrl: './email-verified.component.html',
-  styleUrls: ['./email-verification.component.scss']
+    selector: 'tb-email-verified',
+    templateUrl: './email-verified.component.html',
+    styleUrls: ['./email-verification.component.scss'],
+    standalone: false
 })
 export class EmailVerifiedComponent {
 

@@ -71,10 +71,11 @@ import { ChartWidgetComponent } from '@home/components/widget/lib/chart/chart.mo
 import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
-  selector: 'tb-range-chart-widget',
-  templateUrl: './range-chart-widget.component.html',
-  styleUrls: ['./range-chart-widget.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-range-chart-widget',
+    templateUrl: './range-chart-widget.component.html',
+    styleUrls: ['./range-chart-widget.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class RangeChartWidgetComponent implements ChartWidgetComponent, OnInit, OnDestroy, AfterViewInit {
 

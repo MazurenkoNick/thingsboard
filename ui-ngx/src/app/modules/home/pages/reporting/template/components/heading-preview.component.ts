@@ -36,10 +36,11 @@ import { deepClone } from '@core/utils';
 import { AbstractReportComponentPreview } from '@home/pages/reporting/template/components/report-component.component';
 
 @Component({
-  selector: 'tb-report-heading-preview',
-  templateUrl: './heading-preview.component.html',
-  styleUrls: [],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-report-heading-preview',
+    templateUrl: './heading-preview.component.html',
+    styleUrls: [],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class HeadingPreviewComponent extends AbstractReportComponentPreview<HeadingReportComponentConfig> {
 

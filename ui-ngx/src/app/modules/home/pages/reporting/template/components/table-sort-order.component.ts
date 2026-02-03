@@ -36,16 +36,17 @@ import { TableSortOrder } from '@shared/models/report-component.models';
 import { Direction } from '@shared/models/page/sort-order';
 
 @Component({
-  selector: 'tb-table-sort-order',
-  templateUrl: './table-sort-order.component.html',
-  styleUrls: [],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => TableSortOrderComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-table-sort-order',
+    templateUrl: './table-sort-order.component.html',
+    styleUrls: [],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => TableSortOrderComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class TableSortOrderComponent implements OnInit, ControlValueAccessor, OnChanges {
 

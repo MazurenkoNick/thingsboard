@@ -63,9 +63,10 @@ export interface AlarmAssigneeSelectPanelData {
 }
 
 @Component({
-  selector: 'tb-alarm-assignee-select-panel',
-  templateUrl: './alarm-assignee-panel.component.html',
-  styleUrls: ['./alarm-assignee-panel.component.scss']
+    selector: 'tb-alarm-assignee-select-panel',
+    templateUrl: './alarm-assignee-panel.component.html',
+    styleUrls: ['./alarm-assignee-panel.component.scss'],
+    standalone: false
 })
 export class AlarmAssigneeSelectPanelComponent implements  OnInit, AfterViewInit, OnDestroy {
 

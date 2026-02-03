@@ -64,10 +64,11 @@ import {
 import { TbReportFormat } from '@shared/models/report.models';
 
 @Component({
-  selector: 'tb-report-components',
-  templateUrl: './report-components.component.html',
-  styleUrls: ['./report-components.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-report-components',
+    templateUrl: './report-components.component.html',
+    styleUrls: ['./report-components.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class ReportComponentsComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
 

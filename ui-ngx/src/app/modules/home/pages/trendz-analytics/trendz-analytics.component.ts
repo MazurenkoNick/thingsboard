@@ -38,9 +38,10 @@ import { TrendzAnalyticsUnavailableComponent } from './trendz-analytics-unavaila
 import { DynamicMatDialog } from '@app/shared/components/dialog/dynamic/dynamic-dialog';
 
 @Component({
-  selector: 'tb-trendz-analytics',
-  templateUrl: './trendz-analytics.component.html',
-  styleUrls: ['./trendz-analytics.component.scss']
+    selector: 'tb-trendz-analytics',
+    templateUrl: './trendz-analytics.component.html',
+    styleUrls: ['./trendz-analytics.component.scss'],
+    standalone: false
 })
 export class TrendzAnalyticsComponent extends PageComponent implements OnInit {
   trendzSummary: TrendzSummary;

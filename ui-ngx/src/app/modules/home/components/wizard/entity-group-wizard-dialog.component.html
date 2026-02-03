@@ -90,7 +90,7 @@
             color="primary"
             *ngIf="showNext"
             [disabled]="(isLoading$ | async)"
-            (click)="nextStep()">{{ 'action.next-with-label' | translate:{label: (getFormLabel(this.selectedIndex+1) | translate)} }}</button>
+            (click)="nextStep()">{{ 'action.next-with-label' | translate:{label: (getFormLabel(selectedIndex+1) | translate)} }}</button>
   </div>
   <mat-divider style="width: 100%"></mat-divider>
   <div class="flex flex-1 items-center justify-end gap-2 p-2">

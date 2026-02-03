@@ -51,10 +51,11 @@ import { alarmFields } from '@shared/models/alarm.models';
 import { pairwise, startWith } from 'rxjs';
 
 @Component({
-  selector: 'tb-alarm-table-config',
-  templateUrl: './alarm-table-config.component.html',
-  styleUrls: ['./report-component-config.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-alarm-table-config',
+    templateUrl: './alarm-table-config.component.html',
+    styleUrls: ['./report-component-config.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class AlarmTableConfigComponent extends AbstractReportComponentConfig<AlarmTableReportComponentConfig> {
 

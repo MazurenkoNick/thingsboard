@@ -77,7 +77,7 @@ import { MenuSection, menuSectionMap } from '@core/services/menu.models';
 import { CustomTranslatePipe } from '@shared/pipe/custom-translate.pipe';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
-import { MatButton } from '@angular/material/button';
+import { MatButton, MatIconButton } from '@angular/material/button';
 import { deepClone } from '@core/utils';
 import { DefaultMenuItemPanelComponent } from '@home/pages/custom-menu/default-menu-item-panel.component';
 import {
@@ -91,22 +91,23 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DisplayPopoverConfig } from '@shared/components/popover.models';
 
 @Component({
-  selector: 'tb-custom-menu-item-row',
-  templateUrl: './custom-menu-item-row.component.html',
-  styleUrls: ['./custom-menu-item-row.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => CustomMenuItemRowComponent),
-      multi: true
-    },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => CustomMenuItemRowComponent),
-      multi: true
-    }
-  ],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-custom-menu-item-row',
+    templateUrl: './custom-menu-item-row.component.html',
+    styleUrls: ['./custom-menu-item-row.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => CustomMenuItemRowComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => CustomMenuItemRowComponent),
+            multi: true
+        }
+    ],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class CustomMenuItemRowComponent implements ControlValueAccessor, OnInit, OnDestroy, Validator, OnChanges {
 
@@ -289,7 +290,7 @@ export class CustomMenuItemRowComponent implements ControlValueAccessor, OnInit,
     return null;
   }
 
-  edit($event: Event, matButton: MatButton) {
+  edit($event: Event, matButton: MatIconButton) {
     if ($event) {
       $event.stopPropagation();
     }

@@ -44,9 +44,10 @@ export interface AlertDialogData {
 }
 
 @Component({
-  selector: 'tb-alert-dialog',
-  templateUrl: './alert-dialog.component.html',
-  styleUrls: ['./alert-dialog.component.scss']
+    selector: 'tb-alert-dialog',
+    templateUrl: './alert-dialog.component.html',
+    styleUrls: ['./alert-dialog.component.scss'],
+    standalone: false
 })
 export class AlertDialogComponent extends DialogComponent<AlertDialogComponent, boolean>{
   constructor(protected store: Store<AppState>,

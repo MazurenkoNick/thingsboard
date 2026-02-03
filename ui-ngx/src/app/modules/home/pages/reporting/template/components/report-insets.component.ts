@@ -41,17 +41,18 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Insets } from '@shared/models/report.models';
 
 @Component({
-  selector: 'tb-report-insets',
-  templateUrl: './report-insets.component.html',
-  styleUrls: ['./report-insets.component.scss'],
-  encapsulation: ViewEncapsulation.None,
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => ReportInsetsComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-report-insets',
+    templateUrl: './report-insets.component.html',
+    styleUrls: ['./report-insets.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ReportInsetsComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class ReportInsetsComponent implements OnInit, ControlValueAccessor {
 

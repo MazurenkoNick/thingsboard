@@ -36,9 +36,10 @@ import { EntityTabsComponent } from '../../components/entity/entity-tabs.compone
 import { Role } from '@shared/models/role.models';
 
 @Component({
-  selector: 'tb-role-tabs',
-  templateUrl: './role-tabs.component.html',
-  styleUrls: []
+    selector: 'tb-role-tabs',
+    templateUrl: './role-tabs.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class RoleTabsComponent extends EntityTabsComponent<Role> {
 

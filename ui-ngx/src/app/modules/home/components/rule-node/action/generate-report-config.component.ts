@@ -34,9 +34,10 @@ import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms
 import { RuleNodeConfiguration, RuleNodeConfigurationComponent } from '@shared/models/rule-node.models';
 
 @Component({
-  selector: 'tb-action-node-generate-report-config',
-  templateUrl: './generate-report-config.component.html',
-  styleUrls: []
+    selector: 'tb-action-node-generate-report-config',
+    templateUrl: './generate-report-config.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class GenerateReportConfigComponent extends RuleNodeConfigurationComponent {
 

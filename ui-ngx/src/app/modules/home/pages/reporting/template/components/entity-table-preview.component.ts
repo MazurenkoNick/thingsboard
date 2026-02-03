@@ -41,10 +41,11 @@ import { ComponentStyle, dateFormatPreview } from '@shared/models/widget-setting
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-entity-table-preview',
-  templateUrl: './report-table-preview.component.html',
-  styleUrls: ['./report-table-preview.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-entity-table-preview',
+    templateUrl: './report-table-preview.component.html',
+    styleUrls: ['./report-table-preview.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class EntityTablePreviewComponent extends AbstractReportTablePreviewComponent<EntityTableReportComponentConfig> {
 

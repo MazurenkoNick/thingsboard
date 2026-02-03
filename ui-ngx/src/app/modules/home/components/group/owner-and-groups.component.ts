@@ -59,16 +59,17 @@ export interface OwnerAndGroupsData {
 }
 
 @Component({
-  selector: 'tb-owner-and-groups',
-  templateUrl: './owner-and-groups.component.html',
-  styleUrls: [],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => OwnerAndGroupsComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-owner-and-groups',
+    templateUrl: './owner-and-groups.component.html',
+    styleUrls: [],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => OwnerAndGroupsComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class OwnerAndGroupsComponent extends PageComponent implements OnInit, ControlValueAccessor {
 
