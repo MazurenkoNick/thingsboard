@@ -28,17 +28,29 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.edge.rpc.utils;
+package org.thingsboard.server.edge;
 
-import lombok.extern.slf4j.Slf4j;
+import org.junit.Assert;
+import org.junit.Test;
 import org.thingsboard.edge.rpc.EdgeVersionComparator;
 import org.thingsboard.server.gen.edge.v1.EdgeVersion;
 
-@Slf4j
-public final class EdgeVersionUtils {
+public class EdgeLatestVersionTest {
 
-    public static boolean isEdgeVersionOlderThan(EdgeVersion currentVersion, EdgeVersion requiredVersion) {
-        return EdgeVersionComparator.INSTANCE.compare(currentVersion, requiredVersion) < 0;
+    @Test
+    public void edgeLatestVersionIsSynchronizedTest() {
+        EdgeVersion currentHighestEdgeVersion = EdgeVersionComparator.getNewestEdgeVersion();
+
+        String projectVersion = EdgeLatestVersionTest.class.getPackage().getImplementationVersion();
+        if (projectVersion == null || projectVersion.isBlank()) {
+            projectVersion = System.getProperty("project.version", "UNKNOWN");
+        }
+
+        String projectVersionDigits = projectVersion.replaceAll("\\D", "");
+        String currentHighestEdgeVersionDigits = currentHighestEdgeVersion.name().replaceAll("\\D", "");
+
+        String msg = "EdgeVersion enum in edge.proto is out of sync. Please add respective " + projectVersionDigits + " to EdgeVersion";
+        Assert.assertEquals(msg, projectVersionDigits, currentHighestEdgeVersionDigits);
     }
 
 }
