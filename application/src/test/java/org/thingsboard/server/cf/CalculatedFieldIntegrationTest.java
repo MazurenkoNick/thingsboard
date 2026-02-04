@@ -40,11 +40,13 @@ import org.junit.Test;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.shaded.org.apache.commons.lang3.RandomStringUtils;
+import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.DeviceProfile;
 import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.EventInfo;
 import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetProfile;
@@ -77,6 +79,7 @@ import org.thingsboard.server.common.data.job.JobStatus;
 import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.task.CfReprocessingTaskResult;
 import org.thingsboard.server.common.data.job.task.TaskResult;
+import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.EntitySearchDirection;
 import org.thingsboard.server.common.data.relation.RelationPathLevel;
@@ -2163,6 +2166,93 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
             assertThat(cfReprocessingJob.getEntityId()).isEqualTo(testDevice.getId());
             assertThat(cfReprocessingJob.getEntityName()).isEqualTo(testDevice.getName());
         });
+    }
+
+    @Test
+    public void testCalculatedFieldsWhenOneIsInvalid() throws Exception {
+        Device testDevice = createDevice("Test device", "1234567890");
+        long now = System.currentTimeMillis();
+        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + AttributeScope.SERVER_SCOPE, JacksonUtil.toJsonNode(String.format("{\"ts\": %s, \"values\": {\"a\":5}}", now - TimeUnit.MINUTES.toMillis(3))));
+
+        // Script CF - invalid
+        CalculatedField invalidCF = new CalculatedField();
+        invalidCF.setEntityId(testDevice.getId());
+        invalidCF.setType(CalculatedFieldType.SCRIPT);
+        invalidCF.setName("Script CF");
+        invalidCF.setDebugSettings(DebugSettings.all());
+
+        ScriptCalculatedFieldConfiguration scriptConfig = new ScriptCalculatedFieldConfiguration();
+
+        ReferencedEntityKey refEntityKeyA = new ReferencedEntityKey("a", ArgumentType.TS_LATEST, null);
+        Argument argumentA = new Argument();
+        argumentA.setRefEntityKey(refEntityKeyA);
+        scriptConfig.setArguments(Map.of("a", argumentA));
+        scriptConfig.setExpression("""
+                return {
+                    "temperature": temp
+                };
+                """);
+
+        scriptConfig.setOutput(new TimeSeriesOutput());
+
+        invalidCF.setConfiguration(scriptConfig);
+
+        invalidCF = doPost("/api/calculatedField", invalidCF, CalculatedField.class);
+        CalculatedFieldId invalidCfId = invalidCF.getId();
+
+        await().alias("create invalid CF -> check error").atMost(TIMEOUT, TimeUnit.SECONDS)
+                .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    PageData<EventInfo> debugEvents = getDebugEvents(tenantId, invalidCfId, 1);
+                    if (!debugEvents.getData().isEmpty()) {
+                        EventInfo eventInfo = debugEvents.getData().get(0);
+                        assertThat(eventInfo.getBody().has("error")).isTrue();
+                    }
+                });
+
+        // Simple CF - valid
+        CalculatedField validCF = new CalculatedField();
+        validCF.setEntityId(testDevice.getId());
+        validCF.setType(CalculatedFieldType.SIMPLE);
+        validCF.setName("Simple CF");
+        validCF.setDebugSettings(DebugSettings.all());
+
+        SimpleCalculatedFieldConfiguration simpleConfig = new SimpleCalculatedFieldConfiguration();
+        simpleConfig.setArguments(Map.of("a", argumentA));
+        simpleConfig.setExpression("a+1");
+
+        TimeSeriesOutput simpleOutput = new TimeSeriesOutput();
+        simpleOutput.setName("a+1");
+        simpleOutput.setDecimalsByDefault(0);
+        simpleConfig.setOutput(simpleOutput);
+
+        validCF.setConfiguration(simpleConfig);
+
+        validCF = doPost("/api/calculatedField", validCF, CalculatedField.class);
+        CalculatedFieldId validCfId = validCF.getId();
+
+        await().alias("create CF -> check initial calculation").atMost(TIMEOUT, TimeUnit.SECONDS)
+                .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    PageData<EventInfo> debugEvents = getDebugEvents(tenantId, validCfId, 1);
+                    if (!debugEvents.getData().isEmpty()) {
+                        EventInfo eventInfo = debugEvents.getData().get(0);
+                        assertThat(eventInfo.getBody().has("error")).isFalse();
+                    }
+                    ObjectNode result = getLatestTelemetry(testDevice.getId(), "a+1");
+                    assertThat(result).isNotNull();
+                    assertThat(result.get("a+1").get(0).get("value").asText()).isEqualTo("6");
+                });
+
+        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + AttributeScope.SERVER_SCOPE, JacksonUtil.toJsonNode("{\"a\":6}"));
+
+        await().alias("update telemetry -> recalculate state").atMost(TIMEOUT, TimeUnit.SECONDS)
+                .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    ObjectNode result = getLatestTelemetry(testDevice.getId(), "a+1");
+                    assertThat(result).isNotNull();
+                    assertThat(result.get("a+1").get(0).get("value").asText()).isEqualTo("7");
+                });
     }
 
     private CalculatedField createCalculatedFieldWhenUseLatestTs(EntityId entityId) {

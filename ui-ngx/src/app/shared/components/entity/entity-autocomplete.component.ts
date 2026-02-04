@@ -48,14 +48,15 @@ import { ReportTemplateType } from '@shared/models/report.models';
 import { Router } from '@angular/router';
 
 @Component({
-  selector: 'tb-entity-autocomplete',
-  templateUrl: './entity-autocomplete.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => EntityAutocompleteComponent),
-    multi: true
-  }]
+    selector: 'tb-entity-autocomplete',
+    templateUrl: './entity-autocomplete.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => EntityAutocompleteComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit {
 

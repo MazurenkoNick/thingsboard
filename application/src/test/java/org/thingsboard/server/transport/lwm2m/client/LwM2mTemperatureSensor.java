@@ -184,6 +184,7 @@ public class LwM2mTemperatureSensor extends BaseInstanceEnabler implements Destr
 
     @Override
     public void destroy() {
+        this.leshanClient = null;
     }
 
     private void sendCollected() {

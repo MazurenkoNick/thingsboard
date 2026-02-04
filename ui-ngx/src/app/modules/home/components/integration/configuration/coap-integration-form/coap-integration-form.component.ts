@@ -49,19 +49,20 @@ import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 
 @Component({
-  selector: 'tb-coap-integration-form',
-  templateUrl: './coap-integration-form.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => CoapIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => CoapIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-coap-integration-form',
+    templateUrl: './coap-integration-form.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => CoapIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => CoapIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class CoapIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, OnInit, Validator {
 

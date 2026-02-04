@@ -55,7 +55,7 @@ import {
   CalculatedFieldGeofencingValue,
   GeofencingReportStrategyTranslations,
 } from '@shared/models/calculated-field.models';
-import { MatButton } from '@angular/material/button';
+import { MatIconButton } from '@angular/material/button';
 import { TbPopoverService } from '@shared/components/popover.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EntityId } from '@shared/models/id/entity-id';
@@ -76,21 +76,22 @@ import {
 } from '@home/components/calculated-fields/components/geofencing-configuration/calculated-field-geofencing-zone-groups-panel.component';
 
 @Component({
-  selector: 'tb-calculated-field-geofencing-zone-groups-table',
-  templateUrl: './calculated-field-geofencing-zone-groups-table.component.html',
-  styleUrls: [`../calculated-field-arguments/calculated-field-arguments-table.component.scss`],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => CalculatedFieldGeofencingZoneGroupsTableComponent),
-      multi: true
-    },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => CalculatedFieldGeofencingZoneGroupsTableComponent),
-      multi: true
-    }
-  ],
+    selector: 'tb-calculated-field-geofencing-zone-groups-table',
+    templateUrl: './calculated-field-geofencing-zone-groups-table.component.html',
+    styleUrls: [`../calculated-field-arguments/calculated-field-arguments-table.component.scss`],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => CalculatedFieldGeofencingZoneGroupsTableComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => CalculatedFieldGeofencingZoneGroupsTableComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class CalculatedFieldGeofencingZoneGroupsTableComponent implements ControlValueAccessor, Validator, AfterViewInit {
 
@@ -165,7 +166,7 @@ export class CalculatedFieldGeofencingZoneGroupsTableComponent implements Contro
     this.zoneGroupsFormArray.markAsDirty();
   }
 
-  manageZone($event: Event, matButton: MatButton, zone = {} as CalculatedFieldGeofencingValue, readonly: boolean = false): void {
+  manageZone($event: Event, matButton: MatIconButton, zone = {} as CalculatedFieldGeofencingValue, readonly: boolean = false): void {
     $event?.stopPropagation();
     if (this.popoverComponent && !this.popoverComponent.tbHidden) {
       this.popoverComponent.hide();

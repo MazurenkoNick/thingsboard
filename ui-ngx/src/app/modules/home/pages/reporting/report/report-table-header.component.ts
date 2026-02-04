@@ -36,9 +36,10 @@ import { EntityTableHeaderComponent } from '@home/components/entity/entity-table
 import { ReportFilter, ReportInfo } from '@shared/models/report.models';
 
 @Component({
-  selector: 'tb-report-table-header',
-  templateUrl: './report-table-header.component.html',
-  styleUrls: []
+    selector: 'tb-report-table-header',
+    templateUrl: './report-table-header.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class ReportTableHeaderComponent extends EntityTableHeaderComponent<ReportInfo> {
 

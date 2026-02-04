@@ -49,9 +49,10 @@ import { Operation, Resource } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Component({
-  selector: 'tb-notification-settings',
-  templateUrl: './notification-settings.component.html',
-  styleUrls: ['./notification-settings.component.scss']
+    selector: 'tb-notification-settings',
+    templateUrl: './notification-settings.component.html',
+    styleUrls: ['./notification-settings.component.scss'],
+    standalone: false
 })
 export class NotificationSettingsComponent extends PageComponent implements OnInit, HasConfirmForm {
 

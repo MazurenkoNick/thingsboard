@@ -37,9 +37,10 @@ import { AppState } from '@core/core.state';
 import { columnExportOptions } from '@home/components/widget/lib/table-widget.models';
 
 @Component({
-  selector: 'tb-timeseries-table-latest-key-settings',
-  templateUrl: './timeseries-table-latest-key-settings.component.html',
-  styleUrls: ['./../widget-settings.scss']
+    selector: 'tb-timeseries-table-latest-key-settings',
+    templateUrl: './timeseries-table-latest-key-settings.component.html',
+    styleUrls: ['./../widget-settings.scss'],
+    standalone: false
 })
 export class TimeseriesTableLatestKeySettingsComponent extends WidgetSettingsComponent {
 

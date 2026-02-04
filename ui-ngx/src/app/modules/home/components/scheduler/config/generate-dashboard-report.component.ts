@@ -47,19 +47,20 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'tb-generate-dashboard-report-event-config',
-  templateUrl: './generate-dashboard-report.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => GenerateDashboardReportComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => GenerateDashboardReportComponent),
-    multi: true
-  }]
+    selector: 'tb-generate-dashboard-report-event-config',
+    templateUrl: './generate-dashboard-report.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => GenerateDashboardReportComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => GenerateDashboardReportComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class GenerateDashboardReportComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy, Validator {
 

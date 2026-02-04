@@ -55,14 +55,15 @@ import { MatAutocomplete } from '@angular/material/autocomplete';
 import { MatFormFieldAppearance } from '@angular/material/form-field';
 
 @Component({
-  selector: 'tb-owner-autocomplete',
-  templateUrl: './owner-autocomplete.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => OwnerAutocompleteComponent),
-    multi: true
-  }]
+    selector: 'tb-owner-autocomplete',
+    templateUrl: './owner-autocomplete.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => OwnerAutocompleteComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class OwnerAutocompleteComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnChanges {
 

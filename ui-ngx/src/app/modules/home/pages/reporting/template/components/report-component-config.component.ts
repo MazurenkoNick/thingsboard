@@ -75,10 +75,11 @@ import { EntityType } from '@shared/models/entity-type.models';
 import { TbReportFormat } from '@shared/models/report.models';
 
 @Component({
-  selector: 'tb-report-component-config',
-  templateUrl: './report-component-config.component.html',
-  styleUrls: ['./report-component-config.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-report-component-config',
+    templateUrl: './report-component-config.component.html',
+    styleUrls: ['./report-component-config.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class ReportComponentConfigComponent implements OnInit, OnChanges {
 

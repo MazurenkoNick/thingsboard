@@ -48,7 +48,7 @@
           <mat-checkbox [class.hidden]="!entityDataInfo.hasPermissions" formControlName="loadPermissions" style="margin-bottom: 16px;">
             {{ 'version-control.load-roles' | translate }}
           </mat-checkbox>
-          <mat-checkbox [class.hidden]="!(entityDataInfo.hasCredentials || entityTypes.DEVICE === this.groupType)" formControlName="loadCredentials" style="margin-bottom: 16px;">
+          <mat-checkbox [class.hidden]="!(entityDataInfo.hasCredentials || entityTypes.DEVICE === groupType)" formControlName="loadCredentials" style="margin-bottom: 16px;">
             {{ 'version-control.load-credentials' | translate }}
           </mat-checkbox>
           <mat-checkbox [class.hidden]="internalEntityId.entityType !== entityTypes.INTEGRATION" formControlName="autoGenerateIntegrationKey" style="margin-bottom: 16px;">

@@ -59,8 +59,9 @@ export interface CustomDialogContainerData {
 }
 
 @Component({
-  selector: 'tb-custom-dialog-container-component',
-  template: ''
+    selector: 'tb-custom-dialog-container-component',
+    template: '',
+    standalone: false
 })
 export class CustomDialogContainerComponent extends DialogComponent<CustomDialogContainerComponent> implements OnDestroy {
 

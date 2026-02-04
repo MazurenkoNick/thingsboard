@@ -47,19 +47,20 @@ import { ApachePulsarIntegration, IntegrationCredentialType } from '@shared/mode
 import { privateNetworkAddressValidator } from '@home/components/integration/integration.models';
 
 @Component({
-  selector: 'tb-apache-pulsar-integration-form',
-  templateUrl: './apache-pulsar-integration-form.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => ApachePulsarIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => ApachePulsarIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-apache-pulsar-integration-form',
+    templateUrl: './apache-pulsar-integration-form.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ApachePulsarIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => ApachePulsarIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class ApachePulsarIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator {
 

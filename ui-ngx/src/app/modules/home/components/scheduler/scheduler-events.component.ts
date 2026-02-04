@@ -40,7 +40,6 @@ import {
   OnChanges,
   OnDestroy,
   OnInit,
-  Optional,
   Renderer2,
   SimpleChanges,
   ViewChild,
@@ -110,19 +109,19 @@ import { asRoughMs, rangeContainsMarker } from '@fullcalendar/core/internal';
 import _moment from 'moment';
 import { FormBuilder } from '@angular/forms';
 import { isValidPageStepCount, isValidPageStepIncrement } from '@home/components/widget/lib/table-widget.models';
-import { WidgetComponent } from '@home/components/widget/widget.component';
 import { VersionControlComponent } from '@home/components/vc/version-control.component';
-import { MatButton } from '@angular/material/button';
+import { MatIconButton } from '@angular/material/button';
 import { TbPopoverService } from '@shared/components/popover.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CustomTranslatePipe } from '@shared/pipe/custom-translate.pipe';
 import { DomSanitizer } from "@angular/platform-browser";
 
 @Component({
-  selector: 'tb-scheduler-events',
-  templateUrl: './scheduler-events.component.html',
-  styleUrls: ['./scheduler-events.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-scheduler-events',
+    templateUrl: './scheduler-events.component.html',
+    styleUrls: ['./scheduler-events.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class SchedulerEventsComponent extends PageComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy {
 
@@ -140,7 +139,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
       this.cd.detectChanges();
     }
   }
-  @ViewChild('schedulerEventMenuTrigger', {static: true}) schedulerEventMenuTrigger: MatMenuTrigger;
+  @ViewChild('schedulerEventMenuTrigger') schedulerEventMenuTrigger: MatMenuTrigger;
 
   @Input() widgetMode: boolean;
   @Input() ctx: WidgetContext;
@@ -205,8 +204,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     private popoverService: TbPopoverService,
     private viewContainerRef: ViewContainerRef,
     private destroyRef: DestroyRef,
-    private sanitizer: DomSanitizer,
-    @Optional() public widgetComponent: WidgetComponent
+    private sanitizer: DomSanitizer
   ) {
     super();
   }
@@ -572,6 +570,9 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   private onEventClick(arg: EventClickArg): void {
     const schedulerEvent = this.schedulerEvents.find(event => event.id.id === arg.event.id);
     if (schedulerEvent) {
+      if (!schedulerEvent.typeName) {
+        schedulerEvent.typeName = arg.event.extendedProps?.type;
+      }
       this.openSchedulerEventContextMenu(arg.jsEvent, schedulerEvent);
     }
   }
@@ -770,7 +771,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
       .subscribe(() => this.cd.detectChanges());
   }
 
-  public toggleVersionControl($event: Event, scheduled: SchedulerEventWithCustomerInfo, versionControlButton: MatButton): void {
+  public toggleVersionControl($event: Event, scheduled: SchedulerEventWithCustomerInfo, versionControlButton: MatIconButton): void {
     $event?.stopPropagation();
     const trigger = versionControlButton._elementRef.nativeElement;
     if (this.popoverService.hasPopover(trigger)) {

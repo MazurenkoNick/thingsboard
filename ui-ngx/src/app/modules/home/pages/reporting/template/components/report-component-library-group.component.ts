@@ -43,10 +43,11 @@ import {
 import { MatExpansionPanel } from '@angular/material/expansion';
 
 @Component({
-  selector: 'tb-report-component-library-group',
-  templateUrl: './report-component-library-group.component.html',
-  styleUrls: ['./report-component-library-group.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-report-component-library-group',
+    templateUrl: './report-component-library-group.component.html',
+    styleUrls: ['./report-component-library-group.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class ReportComponentLibraryGroupComponent implements OnChanges {
 

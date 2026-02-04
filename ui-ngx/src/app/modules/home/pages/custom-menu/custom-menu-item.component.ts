@@ -59,21 +59,22 @@ import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-custom-menu-item',
-  templateUrl: './custom-menu-item.component.html',
-  styleUrls: ['./custom-menu-item.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => CustomMenuItemComponent),
-      multi: true
-    },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => CustomMenuItemComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-custom-menu-item',
+    templateUrl: './custom-menu-item.component.html',
+    styleUrls: ['./custom-menu-item.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => CustomMenuItemComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => CustomMenuItemComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class CustomMenuItemComponent implements ControlValueAccessor, OnInit, Validator {
 

@@ -49,10 +49,11 @@ import { FormProperty } from '@shared/models/dynamic-form.models';
 import { pairwise, startWith } from 'rxjs';
 
 @Component({
-  selector: 'tb-entity-table-config',
-  templateUrl: './entity-table-config.component.html',
-  styleUrls: ['./report-component-config.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-entity-table-config',
+    templateUrl: './entity-table-config.component.html',
+    styleUrls: ['./report-component-config.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class EntityTableConfigComponent extends AbstractReportComponentConfig<EntityTableReportComponentConfig> {
 

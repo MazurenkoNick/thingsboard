@@ -45,9 +45,10 @@ import { allowedEntityGroupTypes } from '@home/components/rule-node/rule-node-co
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-action-node-generator-config',
-  templateUrl: './generator-config.component.html',
-  styleUrls: ['generator-config.component.scss']
+    selector: 'tb-action-node-generator-config',
+    templateUrl: './generator-config.component.html',
+    styleUrls: ['generator-config.component.scss'],
+    standalone: false
 })
 export class GeneratorConfigComponent extends RuleNodeConfigurationComponent {
 

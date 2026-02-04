@@ -46,9 +46,10 @@ export interface ReportTemplateSettingsDialogData {
 }
 
 @Component({
-  selector: 'tb-report-template-settings-dialog',
-  templateUrl: './report-template-settings-dialog.component.html',
-  styleUrls: []
+    selector: 'tb-report-template-settings-dialog',
+    templateUrl: './report-template-settings-dialog.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class ReportTemplateSettingsDialogComponent extends DialogComponent<ReportTemplateSettingsDialogComponent, ReportTemplateSettingsDialogData> {
 

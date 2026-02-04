@@ -48,9 +48,10 @@ import {
 type ButtonAppearanceType = 'checked' | 'unchecked';
 
 @Component({
-  selector: 'tb-toggle-button-basic-config',
-  templateUrl: './toggle-button-basic-config.component.html',
-  styleUrls: ['../basic-config.scss']
+    selector: 'tb-toggle-button-basic-config',
+    templateUrl: './toggle-button-basic-config.component.html',
+    styleUrls: ['../basic-config.scss'],
+    standalone: false
 })
 export class ToggleButtonBasicConfigComponent extends BasicWidgetConfigComponent {
 

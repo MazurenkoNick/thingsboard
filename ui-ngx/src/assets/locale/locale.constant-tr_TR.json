@@ -12577,6 +12577,7 @@
     "loading-calculation-field": "Hesaplama alanları yükleniyor...",
     "loading-metric-explorer": "Metrik keşif yükleniyor...",
     "loading-prediction-model": "Tahmin modelleri yükleniyor...",
+    "loading-views": "Görünümler yükleniyor...",
     "metric-explorer": "Metrik keşif",
     "metric-explorer-description": "Hızlı gezinme için son analiz edilen metrikler",
     "no-anomaly-models-found": "Henüz anomali tespiti modeli bulunamadı",

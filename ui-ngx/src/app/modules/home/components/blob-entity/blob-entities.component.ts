@@ -71,10 +71,11 @@ import { isValidPageStepCount, isValidPageStepIncrement } from '@home/components
 import { WidgetComponent } from "@home/components/widget/widget.component";
 
 @Component({
-  selector: 'tb-blob-entities',
-  templateUrl: './blob-entities.component.html',
-  styleUrls: ['./blob-entities.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-blob-entities',
+    templateUrl: './blob-entities.component.html',
+    styleUrls: ['./blob-entities.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class BlobEntitiesComponent extends PageComponent implements OnInit, AfterViewInit {
 

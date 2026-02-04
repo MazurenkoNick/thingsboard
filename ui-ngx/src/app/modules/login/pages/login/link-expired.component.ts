@@ -34,9 +34,10 @@ import { ActivatedRoute } from '@angular/router';
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 @Component({
-  selector: 'tb-link-expired',
-  templateUrl: './link-expired.component.html',
-  styleUrls: ['./link-expired.component.scss']
+    selector: 'tb-link-expired',
+    templateUrl: './link-expired.component.html',
+    styleUrls: ['./link-expired.component.scss'],
+    standalone: false
 })
 export class LinkExpiredComponent {
 

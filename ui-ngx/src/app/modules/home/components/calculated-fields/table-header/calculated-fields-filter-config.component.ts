@@ -73,16 +73,17 @@ export interface CalculatedFieldsFilterConfigData {
 }
 
 @Component({
-  selector: 'tb-calculated-fields-filter-config',
-  templateUrl: './calculated-fields-filter-config.component.html',
-  styleUrls: ['./calculated-fields-filter-config.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => CalculatedFieldsFilterConfigComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-calculated-fields-filter-config',
+    templateUrl: './calculated-fields-filter-config.component.html',
+    styleUrls: ['./calculated-fields-filter-config.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => CalculatedFieldsFilterConfigComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class CalculatedFieldsFilterConfigComponent implements OnInit, ControlValueAccessor {
 

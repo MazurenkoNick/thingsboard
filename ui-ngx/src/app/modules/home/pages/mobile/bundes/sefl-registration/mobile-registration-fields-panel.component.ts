@@ -44,22 +44,23 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 
 @Component({
-  selector: 'tb-mobile-registration-fields-panel',
-  templateUrl: './mobile-registration-fields-panel.component.html',
-  styleUrls: ['./mobile-registration-fields-panel.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => MobileRegistrationFieldsPanelComponent),
-      multi: true
-    },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => MobileRegistrationFieldsPanelComponent),
-      multi: true
-    }
-  ],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-mobile-registration-fields-panel',
+    templateUrl: './mobile-registration-fields-panel.component.html',
+    styleUrls: ['./mobile-registration-fields-panel.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => MobileRegistrationFieldsPanelComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => MobileRegistrationFieldsPanelComponent),
+            multi: true
+        }
+    ],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class MobileRegistrationFieldsPanelComponent implements ControlValueAccessor, Validator {
 

@@ -52,19 +52,20 @@ import { IntegrationForm } from '@home/components/integration/configuration/inte
 import { merge } from 'rxjs';
 
 @Component({
-  selector: 'tb-particle-integration-form',
-  templateUrl: './particle-integration-form.component.html',
-  styleUrls: ['./particle-integration-form.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => ParticleIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => ParticleIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-particle-integration-form',
+    templateUrl: './particle-integration-form.component.html',
+    styleUrls: ['./particle-integration-form.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ParticleIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => ParticleIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class ParticleIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator, OnInit {
 

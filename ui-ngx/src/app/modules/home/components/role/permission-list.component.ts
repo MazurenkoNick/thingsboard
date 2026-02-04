@@ -51,16 +51,17 @@ import { BreakpointObserver } from '@angular/cdk/layout';
 import { MediaBreakpoints } from '@app/shared/public-api';
 
 @Component({
-  selector: 'tb-permission-list',
-  templateUrl: './permission-list.component.html',
-  styleUrls: ['./permission-list.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => PermissionListComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-permission-list',
+    templateUrl: './permission-list.component.html',
+    styleUrls: ['./permission-list.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => PermissionListComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class PermissionListComponent extends PageComponent implements ControlValueAccessor, OnInit, OnDestroy {
 

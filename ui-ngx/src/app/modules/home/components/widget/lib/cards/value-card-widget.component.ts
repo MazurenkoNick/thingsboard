@@ -67,9 +67,10 @@ const squareLayoutSize = 160;
 const horizontalLayoutHeight = 80;
 
 @Component({
-  selector: 'tb-value-card-widget',
-  templateUrl: './value-card-widget.component.html',
-  styleUrls: ['./value-card-widget.component.scss']
+    selector: 'tb-value-card-widget',
+    templateUrl: './value-card-widget.component.html',
+    styleUrls: ['./value-card-widget.component.scss'],
+    standalone: false
 })
 export class ValueCardWidgetComponent implements OnInit, AfterViewInit, OnDestroy {
 

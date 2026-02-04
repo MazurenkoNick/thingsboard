@@ -67,10 +67,11 @@ export interface IntegrationWizardData<T> extends AddEntityDialogData<T>{
 }
 
 @Component({
-  selector: 'tb-integration-wizard',
-  templateUrl: './integration-wizard-dialog.component.html',
-  styleUrls: ['./integration-wizard-dialog.component.scss'],
-  providers: []
+    selector: 'tb-integration-wizard',
+    templateUrl: './integration-wizard-dialog.component.html',
+    styleUrls: ['./integration-wizard-dialog.component.scss'],
+    providers: [],
+    standalone: false
 })
 export class IntegrationWizardDialogComponent extends
   DialogComponent<IntegrationWizardDialogComponent, Integration> implements AfterViewInit {

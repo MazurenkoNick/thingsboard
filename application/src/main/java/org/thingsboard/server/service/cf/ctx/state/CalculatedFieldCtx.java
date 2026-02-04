@@ -741,6 +741,9 @@ public class CalculatedFieldCtx implements Closeable {
                 return true;
             }
         }
+        if (cfType == CalculatedFieldType.PROPAGATION && !propagationArgument.equals(other.propagationArgument)) {
+            return true;
+        }
         if (hasGeofencingZoneGroupConfigurationChanges(other)) {
             return true;
         }
@@ -816,7 +819,7 @@ public class CalculatedFieldCtx implements Closeable {
     }
 
     public String getSizeExceedsLimitMessage() {
-        return "Failed to init CF state. State size exceeds limit of " + (maxStateSize / 1024) + "Kb!";
+        return "State size exceeds limit of " + (maxStateSize / 1024) + "Kb!";
     }
 
     public boolean hasCurrentOwnerSourceArguments() {

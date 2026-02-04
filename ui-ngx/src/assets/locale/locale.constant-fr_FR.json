@@ -12577,6 +12577,7 @@
     "loading-calculation-field": "Chargement des champs calculés…",
     "loading-metric-explorer": "Chargement de l’explorateur de métriques…",
     "loading-prediction-model": "Chargement des modèles de prédiction…",
+    "loading-views": "Chargement des vues…",
     "metric-explorer": "Explorateur de métriques",
     "metric-explorer-description": "Métriques analysées récemment pour une navigation rapide",
     "no-anomaly-models-found": "Aucun modèle de détection d’anomalies pour le moment",

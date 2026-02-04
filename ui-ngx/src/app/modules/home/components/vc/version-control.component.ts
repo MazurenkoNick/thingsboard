@@ -42,9 +42,10 @@ import { TbPopoverComponent } from '@shared/components/popover.component';
 import { EntityType } from '@shared/models/entity-type.models';
 
 @Component({
-  selector: 'tb-version-control',
-  templateUrl: './version-control.component.html',
-  styleUrls: ['./version-control.component.scss']
+    selector: 'tb-version-control',
+    templateUrl: './version-control.component.html',
+    styleUrls: ['./version-control.component.scss'],
+    standalone: false
 })
 export class VersionControlComponent implements OnInit, HasConfirmForm {
 
