@@ -89,7 +89,7 @@ public class ApiKeyAuthenticationProvider extends AbstractAuthenticationProvider
         if (resolvedUser.isPublicCustomer()) {
             securityUser = super.authenticateByPublicId(resolvedUser.customerId().toString(), "Internal API key", null);
         } else {
-            securityUser = authenticateByUserId(resolvedUser.tenantId(), resolvedUser.userId(), apiKey.isInternal() ? apiKey.getPermissions() : null, true);
+            securityUser = authenticateByUserId(resolvedUser.tenantId(), resolvedUser.userId(), apiKey.isInternal() ? apiKey.getPermissions() : null, apiKey.isInternal());
         }
 
         return securityUser;

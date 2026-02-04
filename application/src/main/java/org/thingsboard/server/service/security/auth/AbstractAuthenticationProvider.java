@@ -105,12 +105,12 @@ public abstract class AbstractAuthenticationProvider implements AuthenticationPr
         return new SecurityUser(user, true, principal, userPermissions);
     }
 
-    protected SecurityUser authenticateByUserId(TenantId tenantId, UserId userId, AuthorityPermissionsInfo permissionsInfo, boolean apiKeyAuth) {
+    protected SecurityUser authenticateByUserId(TenantId tenantId, UserId userId, AuthorityPermissionsInfo permissionsInfo, boolean internalApiKeyAuth) {
         UserAuthDetails userAuthDetails = userAuthDetailsCache.getUserAuthDetails(tenantId, userId);
         if (userAuthDetails == null) {
             throw new UsernameNotFoundException("User with credentials not found");
         }
-        if (!userAuthDetails.credentialsEnabled() && !apiKeyAuth) {
+        if (!userAuthDetails.credentialsEnabled() && !internalApiKeyAuth) {
             throw new DisabledException("User is not active");
         }
 
