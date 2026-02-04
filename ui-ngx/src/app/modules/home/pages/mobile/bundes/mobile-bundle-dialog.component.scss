@@ -86,9 +86,11 @@
       }
       .mat-stepper-vertical {
         .mat-step:nth-child(4) {
-          .mat-vertical-stepper-content:not(.mat-vertical-stepper-content-inactive) {
-            .mat-vertical-content {
-              padding-left: 0;
+          .mat-vertical-content-container.mat-vertical-content-container-active {
+            .mat-vertical-stepper-content {
+              .mat-vertical-content {
+                padding-left: 0;
+              }
             }
           }
         }
