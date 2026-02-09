@@ -13,15 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.entitiy.agent;
+package org.thingsboard.server.common.data.agent.template;
 
-import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
-import org.thingsboard.server.common.data.agent.template.TemplateMergeRequest;
-import org.thingsboard.server.common.data.id.TenantId;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import org.thingsboard.server.common.data.StringUtils;
 
-public interface TbAgentApplicationService {
+@Data
+@Builder
+@AllArgsConstructor
+public class TemplateMergeCtx {
 
-    AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application,
-                                     AgentAppTemplate template, TemplateMergeRequest request);
+    private String selectedComposeType;
+
+    public boolean hasSelectedComposeType() {
+        return StringUtils.isNotEmpty(selectedComposeType);
+    }
 }

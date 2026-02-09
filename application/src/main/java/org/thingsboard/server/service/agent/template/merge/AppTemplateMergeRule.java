@@ -13,15 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.entitiy.agent;
+package org.thingsboard.server.service.agent.template.merge;
 
-import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
-import org.thingsboard.server.common.data.agent.template.TemplateMergeRequest;
-import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
 
-public interface TbAgentApplicationService {
+public interface AppTemplateMergeRule {
 
-    AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application,
-                                     AgentAppTemplate template, TemplateMergeRequest request);
+    /**
+     * Determines whether the merge is supported or not based on the provided arguments
+     */
+    boolean supports(AgentApplication agentApplication, AgentAppTemplate template, TemplateMergeCtx ctx);
+
+    /**
+     * Merges the template's configuration into the provided agentApplication
+     */
+    void apply(AgentApplication agentApplication, AgentAppTemplate template, TemplateMergeCtx ctx);
 }
