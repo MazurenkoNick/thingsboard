@@ -70,7 +70,7 @@ public class RefreshTokenAuthenticationProvider extends AbstractAuthenticationPr
 
         SecurityUser securityUser;
         if (principal.getType() == UserPrincipal.Type.USER_NAME) {
-            securityUser = authenticateByUserId(TenantId.SYS_TENANT_ID, unsafeUser.getId(), null);
+            securityUser = authenticateByUserId(TenantId.SYS_TENANT_ID, unsafeUser.getId(), null, false);
         } else {
             securityUser = authenticateByPublicId(principal.getValue());
         }
