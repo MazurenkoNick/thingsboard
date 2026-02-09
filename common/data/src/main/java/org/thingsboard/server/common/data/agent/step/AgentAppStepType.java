@@ -13,23 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.dao.agent;
+package org.thingsboard.server.common.data.agent.step;
 
-import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.dao.Dao;
-
-import java.util.List;
-import java.util.UUID;
-
-public interface AgentApplicationDao extends Dao<AgentApplication> {
-
-    List<AgentApplication> findByAgentId(TenantId tenantId, UUID agentId);
-
-    void removeByAgentId(TenantId tenantId, UUID agentId);
-
-    List<AgentApplication> findByTemplateId(TenantId tenantId, UUID templateId);
-
-    void removeByTemplateId(TenantId tenantId, UUID templateId);
-
+public enum AgentAppStepType {
+    COMPOSE_TYPE_CHOICE,
+    COMPOSE,
+    COMPOSE_MODIFY,
+    COMPOSE_START,
+    INFO
 }

@@ -20,17 +20,24 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentId;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.model.BaseVersionedEntity;
 import org.thingsboard.server.dao.model.ModelConstants;
 import org.thingsboard.server.dao.util.mapping.JsonConverter;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -39,23 +46,29 @@ import java.util.UUID;
 @Table(name = ModelConstants.AGENT_APPLICATION_TABLE_NAME)
 public final class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication> {
 
+    @Column(name = ModelConstants.AGENT_APPLICATION_TENANT_ID_PROPERTY)
+    private UUID tenantId;
+
     @Column(name = ModelConstants.AGENT_APPLICATION_AGENT_ID_PROPERTY)
     private UUID agentId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = ModelConstants.AGENT_APPLICATION_APP_TYPE_PROPERTY)
+    private AgentApplicationType appType;
 
     @Column(name = ModelConstants.AGENT_APPLICATION_NAME_PROPERTY)
     private String name;
 
-    @Convert(converter = JsonConverter.class)
-    @Column(name = ModelConstants.AGENT_APPLICATION_PLACEHOLDERS_PROPERTY)
-    private JsonNode placeholders;
+    @Column(name = ModelConstants.AGENT_APPLICATION_TEMPLATE_ID_PROPERTY)
+    private UUID templateId;
 
     @Convert(converter = JsonConverter.class)
-    @Column(name = ModelConstants.AGENT_APPLICATION_CONFIGURATION_PROPERTY)
-    private JsonNode configuration;
+    @Column(name = ModelConstants.AGENT_APPLICATION_INSTALL_STEPS_PROPERTY)
+    private JsonNode installSteps;
 
     @Convert(converter = JsonConverter.class)
-    @Column(name = ModelConstants.AGENT_APPLICATION_STEPS_PROPERTY)
-    private JsonNode steps;
+    @Column(name = ModelConstants.AGENT_APPLICATION_UPDATE_STEPS_PROPERTY)
+    private JsonNode updateSteps;
 
     public AgentApplicationEntity() {
         super();
@@ -63,13 +76,19 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
 
     public AgentApplicationEntity(AgentApplication application) {
         super(application);
+        if (application.getTenantId() != null) {
+            this.tenantId = application.getTenantId().getId();
+        }
         if (application.getAgentId() != null) {
             this.agentId = application.getAgentId().getId();
         }
+        this.appType = application.getAppType();
         this.name = application.getName();
-        this.placeholders = application.getPlaceholders() != null ? JacksonUtil.valueToTree(application.getPlaceholders()) : null;
-        this.configuration = application.getConfiguration() != null ? JacksonUtil.valueToTree(application.getConfiguration()) : null;
-        this.steps = application.getSteps() != null ? JacksonUtil.valueToTree(application.getSteps()) : null;
+        if (application.getTemplateId() != null) {
+            this.templateId = application.getTemplateId().getId();
+        }
+        this.installSteps = application.getInstallSteps() != null ? JacksonUtil.valueToTree(application.getInstallSteps()) : null;
+        this.updateSteps = application.getUpdateSteps() != null ? JacksonUtil.valueToTree(application.getUpdateSteps()) : null;
     }
 
     @Override
@@ -77,13 +96,19 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
         AgentApplication application = new AgentApplication(new AgentApplicationId(id));
         application.setCreatedTime(createdTime);
         application.setVersion(version);
+        if (tenantId != null) {
+            application.setTenantId(TenantId.fromUUID(tenantId));
+        }
         if (agentId != null) {
             application.setAgentId(new AgentId(agentId));
         }
+        application.setAppType(appType);
         application.setName(name);
-        application.setPlaceholders(placeholders != null ? JacksonUtil.convertValue(placeholders, new TypeReference<>() {}) : null);
-        application.setConfiguration(configuration != null ? JacksonUtil.convertValue(configuration, new TypeReference<>() {}) : null);
-        application.setSteps(steps != null ? JacksonUtil.convertValue(steps, new TypeReference<>() {}) : null);
+        if (templateId != null) {
+            application.setTemplateId(new AgentAppTemplateId(templateId));
+        }
+        application.setInstallSteps(installSteps != null ? JacksonUtil.convertValue(installSteps, new TypeReference<>() {}) : null);
+        application.setUpdateSteps(updateSteps != null ? JacksonUtil.convertValue(updateSteps, new TypeReference<>() {}) : null);
         return application;
     }
 }

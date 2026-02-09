@@ -58,7 +58,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
 
     @Override
     @Transactional
-    public AgentApplication saveAgentApplication(TenantId tenantId, AgentApplication agentApplication) {
+    public AgentApplication save(TenantId tenantId, AgentApplication agentApplication) {
         log.trace("Executing saveAgentApplication [{}]", agentApplication);
         AgentApplication old = agentApplicationValidator.validate(agentApplication, app -> tenantId);
         AgentApplication saved = agentApplicationDao.save(tenantId, agentApplication);
@@ -74,7 +74,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
     }
 
     @Override
-    public AgentApplication findAgentApplicationById(TenantId tenantId, AgentApplicationId agentApplicationId) {
+    public AgentApplication findById(TenantId tenantId, AgentApplicationId agentApplicationId) {
         log.trace("Executing findAgentApplicationById [{}]", agentApplicationId);
         validateId(agentApplicationId, id -> INCORRECT_AGENT_APPLICATION_ID + id);
         return cache.getAndPutInTransaction(AgentApplicationCacheKey.from(agentApplicationId),
@@ -82,7 +82,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
     }
 
     @Override
-    public List<AgentApplication> findAgentApplicationsByAgentId(TenantId tenantId, AgentId agentId) {
+    public List<AgentApplication> findAllByAgentId(TenantId tenantId, AgentId agentId) {
         log.trace("Executing findAgentApplicationsByAgentId, tenantId [{}], agentId [{}]", tenantId, agentId);
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validateId(agentId, id -> INCORRECT_AGENT_ID + id);
@@ -91,7 +91,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
 
     @Override
     @Transactional
-    public void deleteAgentApplication(TenantId tenantId, AgentApplicationId agentApplicationId) {
+    public void delete(TenantId tenantId, AgentApplicationId agentApplicationId) {
         log.trace("Executing deleteAgentApplication [{}]", agentApplicationId);
         validateId(agentApplicationId, id -> INCORRECT_AGENT_APPLICATION_ID + id);
         AgentApplication application = agentApplicationDao.findById(tenantId, agentApplicationId.getId());

@@ -63,6 +63,8 @@ import org.thingsboard.server.common.data.TenantInfo;
 import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
+import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.ai.AiModel;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmComment;
@@ -78,6 +80,8 @@ import org.thingsboard.server.common.data.edge.EdgeInfo;
 import org.thingsboard.server.common.data.exception.EntityVersionMismatchException;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.AgentAppTemplateId;
+import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.AiModelId;
 import org.thingsboard.server.common.data.id.AlarmCommentId;
@@ -136,6 +140,8 @@ import org.thingsboard.server.common.data.util.ThrowingBiFunction;
 import org.thingsboard.server.common.data.widget.WidgetTypeDetails;
 import org.thingsboard.server.common.data.widget.WidgetTypeInfo;
 import org.thingsboard.server.common.data.widget.WidgetsBundle;
+import org.thingsboard.server.dao.agent.AgentAppTemplateService;
+import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.ai.AiModelService;
 import org.thingsboard.server.dao.alarm.AlarmCommentService;
@@ -400,6 +406,12 @@ public abstract class BaseController {
     @Autowired
     protected AgentService agentService;
 
+    @Autowired
+    protected AgentApplicationService agentAppService;
+
+    @Autowired
+    protected AgentAppTemplateService agentAppTemplateService;
+
     @Value("${server.log_controller_error_stack_trace}")
     @Getter
     private boolean logControllerErrorStackTrace;
@@ -663,6 +675,8 @@ public abstract class BaseController {
                 case AI_MODEL -> checkAiModelId(new AiModelId(entityId.getId()), operation);
                 case API_KEY -> checkApiKeyId(new ApiKeyId(entityId.getId()), operation);
                 case AGENT -> checkAgentId(new AgentId(entityId.getId()), operation);
+                case AGENT_APPLICATION -> checkAgentAppId(new AgentApplicationId(entityId.getId()), operation);
+                case AGENT_APP_TEMPLATE -> checkAgentAppTemplateId(new AgentAppTemplateId(entityId.getId()), operation);
                 default -> (HasId<? extends EntityId>) checkEntityId(entityId, entitiesService::findEntityByTenantIdAndId, operation);
             };
         } catch (Exception e) {
@@ -876,6 +890,15 @@ public abstract class BaseController {
 
     Agent checkAgentId(AgentId agentId, Operation operation) throws ThingsboardException {
         return checkEntityId(agentId, agentService::findAgentById, operation);
+    }
+
+
+    AgentApplication checkAgentAppId(AgentApplicationId agentApplicationId, Operation operation) throws ThingsboardException {
+        return checkEntityId(agentApplicationId, agentAppService::findById, operation);
+    }
+
+    private AgentAppTemplate checkAgentAppTemplateId(AgentAppTemplateId agentAppTemplateId, Operation operation) throws ThingsboardException {
+        return checkEntityId(agentAppTemplateId, agentAppTemplateService::findById, operation);
     }
 
     protected <I extends EntityId> I emptyId(EntityType entityType) {

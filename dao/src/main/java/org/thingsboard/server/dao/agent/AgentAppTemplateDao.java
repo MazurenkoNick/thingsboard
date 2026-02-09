@@ -15,21 +15,21 @@
  */
 package org.thingsboard.server.dao.agent;
 
-import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.InstallationAppType;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.Dao;
 
 import java.util.List;
 import java.util.UUID;
 
-public interface AgentApplicationDao extends Dao<AgentApplication> {
+public interface AgentAppTemplateDao extends Dao<AgentAppTemplate> {
 
-    List<AgentApplication> findByAgentId(TenantId tenantId, UUID agentId);
+    AgentAppTemplate findByAppTypeAndInstallationTypeAndVersion(TenantId tenantId, AgentApplicationType appType,
+                                                                InstallationAppType installationType, String currentVersion);
 
-    void removeByAgentId(TenantId tenantId, UUID agentId);
+    List<AgentAppTemplate> findAll(TenantId tenantId);
 
-    List<AgentApplication> findByTemplateId(TenantId tenantId, UUID templateId);
-
-    void removeByTemplateId(TenantId tenantId, UUID templateId);
-
+    void removeById(TenantId tenantId, UUID id);
 }

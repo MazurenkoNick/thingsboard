@@ -761,7 +761,6 @@ CREATE TABLE IF NOT EXISTS edge (
 CREATE TABLE IF NOT EXISTS agent (
     id uuid NOT NULL CONSTRAINT agent_pkey PRIMARY KEY,
     created_time bigint NOT NULL,
-    additional_info varchar,
     customer_id uuid,
     name varchar(255),
     tenant_id uuid,
@@ -769,18 +768,33 @@ CREATE TABLE IF NOT EXISTS agent (
     CONSTRAINT agent_name_unq_key UNIQUE (tenant_id, name)
 );
 
+CREATE TABLE IF NOT EXISTS agent_app_template (
+    id uuid NOT NULL CONSTRAINT agent_app_template_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    tenant_id uuid,
+    app_type varchar(32) NOT NULL,
+    installation_type varchar(32) NOT NULL,
+    current_version varchar(255) NOT NULL,
+    previous_version varchar(255) NOT NULL,
+    next_version varchar(255),
+    install_steps varchar,
+    upgrade_steps varchar,
+    version BIGINT DEFAULT 1
+);
+
 CREATE TABLE IF NOT EXISTS agent_application (
     id uuid NOT NULL CONSTRAINT agent_application_pkey PRIMARY KEY,
     created_time bigint NOT NULL,
+    tenant_id uuid,
     agent_id uuid NOT NULL,
+    app_type varchar(255) NOT NULL,
     name varchar(255),
-    type varchar(32) NOT NULL,
-    template_version varchar(255),
-    placeholders varchar,
-    configuration varchar,
-    steps varchar,
+    template_id uuid,
+    install_steps varchar NOT NULL,
+    update_steps varchar,
     version BIGINT DEFAULT 1,
-    CONSTRAINT fk_agent_application_agent FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE CASCADE
+    CONSTRAINT fk_agent_application_agent FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE CASCADE,
+    CONSTRAINT fk_agent_application_template FOREIGN KEY (template_id) REFERENCES agent_app_template(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS edge_event (

@@ -13,23 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.dao.agent;
+package org.thingsboard.server.common.data.agent.step;
 
-import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.dao.Dao;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
-import java.util.List;
 import java.util.UUID;
 
-public interface AgentApplicationDao extends Dao<AgentApplication> {
+@Data
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class InfoStep extends AgentAppStep {
 
-    List<AgentApplication> findByAgentId(TenantId tenantId, UUID agentId);
+    private String message;
 
-    void removeByAgentId(TenantId tenantId, UUID agentId);
+    public InfoStep(UUID id, UUID nextId, String title, boolean templateOnly) {
+        super(nextId, id, title, templateOnly);
+    }
 
-    List<AgentApplication> findByTemplateId(TenantId tenantId, UUID templateId);
-
-    void removeByTemplateId(TenantId tenantId, UUID templateId);
-
+    @Override
+    public AgentAppStepType getType() {
+        return AgentAppStepType.INFO;
+    }
 }

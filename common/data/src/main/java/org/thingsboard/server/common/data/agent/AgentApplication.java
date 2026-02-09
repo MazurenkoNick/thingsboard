@@ -21,25 +21,30 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.thingsboard.server.common.data.BaseData;
+import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.HasVersion;
+import org.thingsboard.server.common.data.agent.step.AgentAppStep;
+import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.HasId;
+import org.thingsboard.server.common.data.id.TenantId;
 
 import java.util.List;
-import java.util.Map;
 
 @Schema
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter
-public class AgentApplication extends BaseData<AgentApplicationId> implements HasId<AgentApplicationId>, HasVersion {
+public class AgentApplication extends BaseData<AgentApplicationId> implements HasId<AgentApplicationId>, HasTenantId, HasVersion {
 
+    private TenantId tenantId;
     private AgentId agentId;
+    private AgentApplicationType appType;
     private String name;
-    private Map<String, String> placeholders;
-    private Map<String, AgentAppConfig> configuration;
-    private List<String> steps;
+    private AgentAppTemplateId templateId;
+    private List<AgentAppStep> installSteps;
+    private List<AgentAppStep> updateSteps;
     @Getter
     private Long version;
 
@@ -53,11 +58,13 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
 
     public AgentApplication(AgentApplication application) {
         super(application);
+        this.tenantId = application.getTenantId();
         this.agentId = application.getAgentId();
+        this.appType = application.getAppType();
         this.name = application.getName();
-        this.placeholders = application.getPlaceholders();
-        this.configuration = application.getConfiguration();
-        this.steps = application.getSteps();
+        this.templateId = application.getTemplateId();
+        this.installSteps = application.getInstallSteps();
+        this.updateSteps = application.getUpdateSteps();
         this.version = application.getVersion();
     }
 
@@ -73,9 +80,20 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         return super.getCreatedTime();
     }
 
+    @Schema(description = "JSON object with Tenant Id.", accessMode = Schema.AccessMode.READ_ONLY)
+    @Override
+    public TenantId getTenantId() {
+        return tenantId;
+    }
+
     @Schema(description = "Agent this application belongs to", requiredMode = Schema.RequiredMode.REQUIRED)
     public AgentId getAgentId() {
         return agentId;
+    }
+
+    @Schema(description = "Application type", requiredMode = Schema.RequiredMode.REQUIRED)
+    public AgentApplicationType getAppType() {
+        return appType;
     }
 
     @Schema(description = "Application name (not unique across tenant)")
@@ -83,18 +101,18 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         return name;
     }
 
-    @Schema(description = "Placeholder key-value map")
-    public Map<String, String> getPlaceholders() {
-        return placeholders;
+    @Schema(description = "Template this application is based on", requiredMode = Schema.RequiredMode.REQUIRED)
+    public AgentAppTemplateId getTemplateId() {
+        return templateId;
     }
 
-    @Schema(description = "Configuration key-value map, e.g. {\"queue_type\": {\"multiSelect\": false, \"values\": [\"IN_MEMORY\"] }}")
-    public Map<String, AgentAppConfig> getConfiguration() {
-        return configuration;
+    @Schema(description = "Application install steps with resolved configuration")
+    public List<AgentAppStep> getInstallSteps() {
+        return installSteps;
     }
 
-    @Schema(description = "List of step identifiers")
-    public List<String> getSteps() {
-        return steps;
+    @Schema(description = "Application update steps with resolved configuration")
+    public List<AgentAppStep> getUpdateSteps() {
+        return updateSteps;
     }
 }

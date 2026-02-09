@@ -21,14 +21,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentInfo;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.InstallationAppType;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.AbstractJpaDaoTest;
+import org.thingsboard.server.dao.agent.AgentAppTemplateDao;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentDao;
 
@@ -53,6 +57,8 @@ public class JpaAgentDaoTest extends AbstractJpaDaoTest {
     private AgentDao agentDao;
     @Autowired
     private AgentApplicationDao agentApplicationDao;
+    @Autowired
+    private AgentAppTemplateDao agentAppTemplateDao;
 
     @Before
     public void setUp() {
@@ -207,19 +213,22 @@ public class JpaAgentDaoTest extends AbstractJpaDaoTest {
         UUID agentId = Uuids.timeBased();
         Agent agent = saveAgent(agentId, tenantId1, customerId1, "AGENT_FOR_APPS");
         agents.add(agent);
+        AgentAppTemplate template = saveTemplate();
 
         AgentApplication app1 = new AgentApplication();
         app1.setAgentId(new AgentId(agentId));
-        app1.setPlaceholders(Collections.emptyMap());
-        app1.setConfiguration(Collections.emptyMap());
-        app1.setSteps(Collections.emptyList());
+        app1.setAppType(AgentApplicationType.EDGE);
+        app1.setTemplateId(template.getId());
+        app1.setInstallSteps(Collections.emptyList());
+        app1.setUpdateSteps(Collections.emptyList());
         agentApplicationDao.save(TenantId.fromUUID(tenantId1), app1);
 
         AgentApplication app2 = new AgentApplication();
         app2.setAgentId(new AgentId(agentId));
-        app2.setPlaceholders(Collections.emptyMap());
-        app2.setConfiguration(Collections.emptyMap());
-        app2.setSteps(Collections.emptyList());
+        app2.setAppType(AgentApplicationType.EDGE);
+        app2.setTemplateId(template.getId());
+        app2.setInstallSteps(Collections.emptyList());
+        app2.setUpdateSteps(Collections.emptyList());
         agentApplicationDao.save(TenantId.fromUUID(tenantId1), app2);
 
         List<AgentApplication> before = agentApplicationDao.findByAgentId(TenantId.fromUUID(tenantId1), agentId);
@@ -239,5 +248,17 @@ public class JpaAgentDaoTest extends AbstractJpaDaoTest {
         agent.setCustomerId(new CustomerId(customerId));
         agent.setName(name);
         return agentDao.save(TenantId.fromUUID(tenantId), agent);
+    }
+
+    private AgentAppTemplate saveTemplate() {
+        AgentAppTemplate template = new AgentAppTemplate();
+        template.setAppType(AgentApplicationType.GENERIC);
+        template.setType(InstallationAppType.DOCKER);
+        template.setCurrentVersion("1.0.0");
+        template.setPreviousVersion("0.9.0");
+        template.setNextVersion(null);
+        template.setInstallSteps(Collections.emptyList());
+        template.setUpgradeSteps(Collections.emptyList());
+        return agentAppTemplateDao.save(TenantId.SYS_TENANT_ID, template);
     }
 }

@@ -21,18 +21,20 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.server.common.data.agent.Agent;
-import org.thingsboard.server.common.data.agent.AgentAppConfig;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.InstallationAppType;
 import org.thingsboard.server.common.data.id.AgentId;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.dao.AbstractJpaDaoTest;
+import org.thingsboard.server.dao.agent.AgentAppTemplateDao;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentDao;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -50,6 +52,8 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
     private AgentDao agentDao;
     @Autowired
     private AgentApplicationDao agentApplicationDao;
+    @Autowired
+    private AgentAppTemplateDao agentAppTemplateDao;
 
     @Before
     public void setUp() {
@@ -71,12 +75,13 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
 
     @Test
     public void testSaveFindByIdFindByAgentId() {
+        AgentAppTemplate template = saveTemplate();
         AgentApplication app = new AgentApplication();
         app.setAgentId(new AgentId(agentId1));
-        app.setPlaceholders(Collections.emptyMap());
-        Map<String, AgentAppConfig> config = Map.of("queue_type", new AgentAppConfig(false, Collections.singletonList("IN_MEMORY")));
-        app.setConfiguration(config);
-        app.setSteps(Collections.emptyList());
+        app.setAppType(AgentApplicationType.EDGE);
+        app.setTemplateId(template.getId());
+        app.setInstallSteps(Collections.emptyList());
+        app.setUpdateSteps(Collections.emptyList());
 
         AgentApplication saved = agentApplicationDao.save(TenantId.fromUUID(tenantId1), app);
         assertNotNull(saved.getId());
@@ -85,12 +90,12 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
         assertNotNull(found);
         assertEquals(saved.getId(), found.getId());
         assertEquals(agentId1, found.getAgentId().getId());
-        assertEquals(config, found.getConfiguration());
+        assertEquals(template.getId(), found.getTemplateId());
 
         List<AgentApplication> byAgent = agentApplicationDao.findByAgentId(TenantId.fromUUID(tenantId1), agentId1);
         assertEquals(1, byAgent.size());
         assertEquals(saved.getId(), byAgent.get(0).getId());
-        assertEquals(config, byAgent.get(0).getConfiguration());
+        assertEquals(template.getId(), byAgent.get(0).getTemplateId());
 
         agentApplicationDao.removeById(TenantId.fromUUID(tenantId1), saved.getId().getId());
     }
@@ -113,6 +118,40 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
         agentApplicationDao.removeByAgentId(TenantId.fromUUID(tenantId1), agentId1);
         List<AgentApplication> after = agentApplicationDao.findByAgentId(TenantId.fromUUID(tenantId1), agentId1);
         assertTrue(after.isEmpty());
+    }
+
+    @Test
+    public void testFindByTemplateId() {
+        AgentAppTemplate template = saveTemplate();
+        AgentApplication app1 = saveApplicationWithTemplate("t1", template);
+        AgentApplication app2 = saveApplicationWithTemplate("t2", template);
+        // app with a different template – must not appear in the results
+        saveApplication("other");
+
+        List<AgentApplication> byTemplate = agentApplicationDao.findByTemplateId(TenantId.fromUUID(tenantId1), template.getId().getId());
+        assertEquals(2, byTemplate.size());
+        assertTrue(byTemplate.stream().anyMatch(a -> a.getId().equals(app1.getId())));
+        assertTrue(byTemplate.stream().anyMatch(a -> a.getId().equals(app2.getId())));
+    }
+
+    @Test
+    public void testRemoveByTemplateId() {
+        AgentAppTemplate template = saveTemplate();
+        saveApplicationWithTemplate("r1", template);
+        saveApplicationWithTemplate("r2", template);
+        AgentApplication other = saveApplication("keep");
+
+        List<AgentApplication> before = agentApplicationDao.findByTemplateId(TenantId.fromUUID(tenantId1), template.getId().getId());
+        assertEquals(2, before.size());
+
+        agentApplicationDao.removeByTemplateId(TenantId.fromUUID(tenantId1), template.getId().getId());
+
+        List<AgentApplication> after = agentApplicationDao.findByTemplateId(TenantId.fromUUID(tenantId1), template.getId().getId());
+        assertTrue(after.isEmpty());
+
+        // the application linked to a different template must survive
+        AgentApplication surviving = agentApplicationDao.findById(TenantId.fromUUID(tenantId1), other.getId().getId());
+        assertNotNull(surviving);
     }
 
     @Test
@@ -139,12 +178,29 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
     }
 
     private AgentApplication saveApplication(String name) {
+        return saveApplicationWithTemplate(name, saveTemplate());
+    }
+
+    private AgentApplication saveApplicationWithTemplate(String name, AgentAppTemplate template) {
         AgentApplication app = new AgentApplication();
         app.setAgentId(new AgentId(agentId1));
+        app.setAppType(AgentApplicationType.EDGE);
         app.setName(name);
-        app.setPlaceholders(Collections.emptyMap());
-        app.setConfiguration(Collections.emptyMap());
-        app.setSteps(Collections.emptyList());
+        app.setTemplateId(template.getId());
+        app.setInstallSteps(Collections.emptyList());
+        app.setUpdateSteps(Collections.emptyList());
         return agentApplicationDao.save(TenantId.fromUUID(tenantId1), app);
+    }
+
+    private AgentAppTemplate saveTemplate() {
+        AgentAppTemplate template = new AgentAppTemplate();
+        template.setAppType(AgentApplicationType.GENERIC);
+        template.setType(InstallationAppType.DOCKER);
+        template.setCurrentVersion("1.0.0");
+        template.setPreviousVersion("0.9.0");
+        template.setNextVersion(null);
+        template.setInstallSteps(Collections.emptyList());
+        template.setUpgradeSteps(Collections.emptyList());
+        return agentAppTemplateDao.save(TenantId.SYS_TENANT_ID, template);
     }
 }

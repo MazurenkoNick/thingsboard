@@ -249,17 +249,31 @@ public class ModelConstants {
     public static final String AGENT_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
     public static final String AGENT_CUSTOMER_ID_PROPERTY = CUSTOMER_ID_PROPERTY;
     public static final String AGENT_NAME_PROPERTY = NAME_PROPERTY;
-    public static final String AGENT_ADDITIONAL_INFO_PROPERTY = ADDITIONAL_INFO_PROPERTY;
 
     /**
      * Agent application constants.
      */
     public static final String AGENT_APPLICATION_TABLE_NAME = "agent_application";
+    public static final String AGENT_APPLICATION_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
     public static final String AGENT_APPLICATION_AGENT_ID_PROPERTY = "agent_id";
+    public static final String AGENT_APPLICATION_APP_TYPE_PROPERTY = "app_type";
     public static final String AGENT_APPLICATION_NAME_PROPERTY = "name";
-    public static final String AGENT_APPLICATION_PLACEHOLDERS_PROPERTY = "placeholders";
-    public static final String AGENT_APPLICATION_CONFIGURATION_PROPERTY = "configuration";
-    public static final String AGENT_APPLICATION_STEPS_PROPERTY = "steps";
+    public static final String AGENT_APPLICATION_TEMPLATE_ID_PROPERTY = "template_id";
+    public static final String AGENT_APPLICATION_INSTALL_STEPS_PROPERTY = "install_steps";
+    public static final String AGENT_APPLICATION_UPDATE_STEPS_PROPERTY = "update_steps";
+
+    /**
+     * Agent app template constants.
+     */
+    public static final String AGENT_APP_TEMPLATE_TABLE_NAME = "agent_app_template";
+    public static final String AGENT_APP_TEMPLATE_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String AGENT_APP_TEMPLATE_APP_TYPE_PROPERTY = "app_type";
+    public static final String AGENT_APP_TEMPLATE_INSTALLATION_TYPE_PROPERTY = "installation_type";
+    public static final String AGENT_APP_TEMPLATE_CURRENT_VERSION_PROPERTY = "current_version";
+    public static final String AGENT_APP_TEMPLATE_PREVIOUS_VERSION_PROPERTY = "previous_version";
+    public static final String AGENT_APP_TEMPLATE_NEXT_VERSION_PROPERTY = "next_version";
+    public static final String AGENT_APP_TEMPLATE_INSTALL_STEPS_PROPERTY = "install_steps";
+    public static final String AGENT_APP_TEMPLATE_UPGRADE_STEPS_PROPERTY = "upgrade_steps";
 
     /**
      * Alarm constants.

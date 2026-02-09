@@ -31,6 +31,8 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.step.InfoStep;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.customer.CustomerService;
@@ -39,6 +41,7 @@ import org.thingsboard.server.exception.DataValidationException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.thingsboard.server.dao.model.ModelConstants.NULL_UUID;
 
@@ -416,7 +419,7 @@ public class AgentServiceTest extends AbstractServiceTest {
     }
 
     @Test
-    public void testDeleteAgentRemovesAgentApplications() {
+    public void testDeleteAgentRemovesAgentApplications() throws Exception {
         Agent agent = new Agent();
         agent.setTenantId(tenantId);
         agent.setName("Agent with applications");
@@ -424,21 +427,25 @@ public class AgentServiceTest extends AbstractServiceTest {
 
         AgentApplication app1 = new AgentApplication();
         app1.setAgentId(savedAgent.getId());
-        app1 = agentApplicationService.saveAgentApplication(tenantId, app1);
+        app1.setAppType(AgentApplicationType.GENERIC);
+        app1.setInstallSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
+        app1 = agentApplicationService.save(tenantId, app1);
 
         AgentApplication app2 = new AgentApplication();
         app2.setAgentId(savedAgent.getId());
-        app2 = agentApplicationService.saveAgentApplication(tenantId, app2);
+        app2.setAppType(AgentApplicationType.GENERIC);
+        app2.setInstallSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
+        app2 = agentApplicationService.save(tenantId, app2);
 
-        List<AgentApplication> applicationsBefore = agentApplicationService.findAgentApplicationsByAgentId(tenantId, savedAgent.getId());
+        List<AgentApplication> applicationsBefore = agentApplicationService.findAllByAgentId(tenantId, savedAgent.getId());
         Assert.assertEquals(2, applicationsBefore.size());
 
         agentService.deleteAgent(tenantId, savedAgent.getId());
 
-        List<AgentApplication> applicationsAfter = agentApplicationService.findAgentApplicationsByAgentId(tenantId, savedAgent.getId());
+        List<AgentApplication> applicationsAfter = agentApplicationService.findAllByAgentId(tenantId, savedAgent.getId());
         Assert.assertTrue(applicationsAfter.isEmpty());
-        Assert.assertNull(agentApplicationService.findAgentApplicationById(tenantId, app1.getId()));
-        Assert.assertNull(agentApplicationService.findAgentApplicationById(tenantId, app2.getId()));
+        Assert.assertNull(agentApplicationService.findById(tenantId, app1.getId()));
+        Assert.assertNull(agentApplicationService.findById(tenantId, app2.getId()));
     }
 
     @Test
@@ -456,22 +463,24 @@ public class AgentServiceTest extends AbstractServiceTest {
 
         AgentApplication app = new AgentApplication();
         app.setAgentId(agent.getId());
-        app = agentApplicationService.saveAgentApplication(tenantId, app);
+        app.setAppType(AgentApplicationType.GENERIC);
+        app.setInstallSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
+        app = agentApplicationService.save(tenantId, app);
 
-        List<AgentApplication> afterCreate = agentApplicationService.findAgentApplicationsByAgentId(tenantId, agent.getId());
+        List<AgentApplication> afterCreate = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
         Assert.assertEquals(1, afterCreate.size());
 
         agentService.assignAgentToCustomer(tenantId, agent.getId(), customerId);
-        List<AgentApplication> afterAssign = agentApplicationService.findAgentApplicationsByAgentId(tenantId, agent.getId());
+        List<AgentApplication> afterAssign = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
         Assert.assertEquals(1, afterAssign.size());
         Assert.assertEquals(app.getId(), afterAssign.get(0).getId());
 
         agentService.unassignAgentFromCustomer(tenantId, agent.getId());
-        List<AgentApplication> afterUnassign = agentApplicationService.findAgentApplicationsByAgentId(tenantId, agent.getId());
+        List<AgentApplication> afterUnassign = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
         Assert.assertEquals(1, afterUnassign.size());
         Assert.assertEquals(app.getId(), afterUnassign.get(0).getId());
 
-        agentApplicationService.deleteAgentApplication(tenantId, app.getId());
+        agentApplicationService.delete(tenantId, app.getId());
         agentService.deleteAgent(tenantId, agent.getId());
         customerService.deleteCustomer(tenantId, customerId);
     }
