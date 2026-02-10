@@ -21,6 +21,7 @@ import org.springframework.util.CollectionUtils;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppTemplateDao;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
@@ -28,6 +29,8 @@ import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.agent.StepLinkedListUtils;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.exception.DataValidationException;
+
+import java.util.List;
 
 @Component
 @AllArgsConstructor
@@ -87,18 +90,28 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
         }
     }
 
-    private void validateSteps(AgentApplication agentApplication) {
+    private void validateSteps(AgentApplication agentApp) {
         try {
-            StepLinkedListUtils.validate(agentApplication.getStartSteps());
+            StepLinkedListUtils.validate(agentApp.getStartSteps());
+            validateNoTemplateSteps(agentApp.getStartSteps());
         } catch (IllegalStateException e) {
             throw new DataValidationException("Invalid install steps: " + e.getMessage());
         }
         try {
-            if (!CollectionUtils.isEmpty(agentApplication.getUpdateSteps())) {
-                StepLinkedListUtils.validate(agentApplication.getUpdateSteps());
+            if (!CollectionUtils.isEmpty(agentApp.getUpdateSteps())) {
+                StepLinkedListUtils.validate(agentApp.getUpdateSteps());
+                validateNoTemplateSteps(agentApp.getUpdateSteps());
             }
         } catch (IllegalStateException e) {
             throw new DataValidationException("Invalid update steps: " + e.getMessage());
+        }
+    }
+
+    private void validateNoTemplateSteps(List<AgentAppStep> steps) {
+        if (steps.stream().anyMatch(AgentAppStep::isTemplateOnly)) {
+            throw new DataValidationException(
+                    "Template-only step cannot be present in the agent application"
+            );
         }
     }
 }
