@@ -144,7 +144,7 @@ class AgentApplicationDataValidatorTest {
         app.setAgentId(agentId);
         app.setAppType(AgentApplicationType.EDGE);
         app.setTemplateId(templateId);
-        app.setInstallSteps(Collections.emptyList());
+        app.setStartSteps(Collections.emptyList());
 
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, app));
@@ -220,7 +220,7 @@ class AgentApplicationDataValidatorTest {
         InfoStep step2 = new InfoStep(id2, null, "Step 2", false);
 
         AgentApplication app = createValidApplication();
-        app.setInstallSteps(new ArrayList<>(List.of(step1, step2)));
+        app.setStartSteps(new ArrayList<>(List.of(step1, step2)));
 
         assertDoesNotThrow(() -> validator.validateDataImpl(tenantId, app));
     }
@@ -231,7 +231,7 @@ class AgentApplicationDataValidatorTest {
         stepWithNullId.setTitle("Step without ID");
 
         AgentApplication app = createValidApplication();
-        app.setInstallSteps(new ArrayList<>(List.of(stepWithNullId)));
+        app.setStartSteps(new ArrayList<>(List.of(stepWithNullId)));
 
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, app));
@@ -248,7 +248,7 @@ class AgentApplicationDataValidatorTest {
         InfoStep step2 = new InfoStep(id2, id1, "Step 2", false); // circular
 
         AgentApplication app = createValidApplication();
-        app.setInstallSteps(new ArrayList<>(List.of(step1, step2)));
+        app.setStartSteps(new ArrayList<>(List.of(step1, step2)));
 
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, app));
@@ -266,7 +266,7 @@ class AgentApplicationDataValidatorTest {
         InfoStep step3 = new InfoStep(id3, null, "Orphan", false); // orphaned
 
         AgentApplication app = createValidApplication();
-        app.setInstallSteps(new ArrayList<>(List.of(step1, step2, step3)));
+        app.setStartSteps(new ArrayList<>(List.of(step1, step2, step3)));
 
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, app));
@@ -336,7 +336,7 @@ class AgentApplicationDataValidatorTest {
         app.setAgentId(agentId);
         app.setAppType(AgentApplicationType.EDGE);
         app.setTemplateId(templateId);
-        app.setInstallSteps(new ArrayList<>(List.of(step)));
+        app.setStartSteps(new ArrayList<>(List.of(step)));
         return app;
     }
 }

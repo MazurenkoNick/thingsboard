@@ -96,7 +96,7 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), compose);
         AgentAppTemplate template = new AgentAppTemplate();
-        template.setInstallSteps(List.of(createInfoStep()));
+        template.setStartSteps(List.of(createInfoStep()));
         TemplateMergeCtx ctx = createCtx("monolith");
 
         rule.apply(app, template, ctx);
@@ -112,13 +112,13 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(createInfoStep()), null);
         AgentAppTemplate template = new AgentAppTemplate();
-        template.setInstallSteps(List.of(choiceStep));
+        template.setStartSteps(List.of(choiceStep));
         TemplateMergeCtx ctx = createCtx("monolith");
 
         rule.apply(app, template, ctx);
 
         // no exception, app steps unchanged
-        assertEquals(1, app.getInstallSteps().size());
+        assertEquals(1, app.getStartSteps().size());
     }
 
     @Test
@@ -128,7 +128,7 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), compose);
         AgentAppTemplate template = new AgentAppTemplate();
-        template.setInstallSteps(null);
+        template.setStartSteps(null);
         TemplateMergeCtx ctx = createCtx("monolith");
 
         rule.apply(app, template, ctx);
@@ -524,7 +524,7 @@ class MergeComposeStepRuleTest {
 
     private AgentApplication createAppWithCompose(List<AgentAppStep> installSteps, JsonNode compose) {
         AgentApplication app = new AgentApplication();
-        app.setInstallSteps(new ArrayList<>(installSteps));
+        app.setStartSteps(new ArrayList<>(installSteps));
         DockerComposeConfig config = new DockerComposeConfig();
         config.setCompose(compose);
         app.setConfig(config);
@@ -533,7 +533,7 @@ class MergeComposeStepRuleTest {
 
     private AgentAppTemplate createTemplate(List<AgentAppStep> installSteps) {
         AgentAppTemplate template = new AgentAppTemplate();
-        template.setInstallSteps(new ArrayList<>(installSteps));
+        template.setStartSteps(new ArrayList<>(installSteps));
         return template;
     }
 

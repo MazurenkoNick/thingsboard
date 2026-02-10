@@ -428,13 +428,13 @@ public class AgentServiceTest extends AbstractServiceTest {
         AgentApplication app1 = new AgentApplication();
         app1.setAgentId(savedAgent.getId());
         app1.setAppType(AgentApplicationType.GENERIC);
-        app1.setInstallSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
+        app1.setStartSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
         app1 = agentApplicationService.save(tenantId, app1);
 
         AgentApplication app2 = new AgentApplication();
         app2.setAgentId(savedAgent.getId());
         app2.setAppType(AgentApplicationType.GENERIC);
-        app2.setInstallSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
+        app2.setStartSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
         app2 = agentApplicationService.save(tenantId, app2);
 
         List<AgentApplication> applicationsBefore = agentApplicationService.findAllByAgentId(tenantId, savedAgent.getId());
@@ -464,7 +464,7 @@ public class AgentServiceTest extends AbstractServiceTest {
         AgentApplication app = new AgentApplication();
         app.setAgentId(agent.getId());
         app.setAppType(AgentApplicationType.GENERIC);
-        app.setInstallSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
+        app.setStartSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
         app = agentApplicationService.save(tenantId, app);
 
         List<AgentApplication> afterCreate = agentApplicationService.findAllByAgentId(tenantId, agent.getId());

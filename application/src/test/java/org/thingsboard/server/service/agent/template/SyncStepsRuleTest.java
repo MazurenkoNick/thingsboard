@@ -104,7 +104,7 @@ class SyncStepsRuleTest {
 
         syncStep.apply(app, template, ctx);
 
-        assertTrue(app.getInstallSteps().isEmpty());
+        assertTrue(app.getStartSteps().isEmpty());
         assertTrue(app.getUpdateSteps().isEmpty());
     }
 
@@ -121,8 +121,8 @@ class SyncStepsRuleTest {
 
         syncStep.apply(app, template, ctx);
 
-        assertEquals(1, app.getInstallSteps().size());
-        assertEquals(templateInstallStep.getId(), app.getInstallSteps().get(0).getId());
+        assertEquals(1, app.getStartSteps().size());
+        assertEquals(templateInstallStep.getId(), app.getStartSteps().get(0).getId());
         assertEquals(1, app.getUpdateSteps().size());
         assertEquals(templateUpgradeStep.getId(), app.getUpdateSteps().get(0).getId());
     }
@@ -136,8 +136,8 @@ class SyncStepsRuleTest {
 
         syncStep.apply(app, template, ctx);
 
-        assertEquals(1, app.getInstallSteps().size());
-        assertEquals(templateInstallStep.getId(), app.getInstallSteps().get(0).getId());
+        assertEquals(1, app.getStartSteps().size());
+        assertEquals(templateInstallStep.getId(), app.getStartSteps().get(0).getId());
     }
 
     // ==================== apply() - merge scenarios ====================
@@ -157,8 +157,8 @@ class SyncStepsRuleTest {
 
         syncStep.apply(app, template, ctx);
 
-        assertEquals(1, app.getInstallSteps().size());
-        InfoStep resultStep = (InfoStep) app.getInstallSteps().get(0);
+        assertEquals(1, app.getStartSteps().size());
+        InfoStep resultStep = (InfoStep) app.getStartSteps().get(0);
         assertEquals(sharedId, resultStep.getId());
         assertEquals("Implementation Step", resultStep.getTitle());
         assertEquals("Custom implementation message", resultStep.getMessage());
@@ -177,9 +177,9 @@ class SyncStepsRuleTest {
 
         syncStep.apply(app, template, ctx);
 
-        assertEquals(1, app.getInstallSteps().size());
-        assertEquals(templateStepId, app.getInstallSteps().get(0).getId());
-        assertEquals("New Template Step", app.getInstallSteps().get(0).getTitle());
+        assertEquals(1, app.getStartSteps().size());
+        assertEquals(templateStepId, app.getStartSteps().get(0).getId());
+        assertEquals("New Template Step", app.getStartSteps().get(0).getTitle());
     }
 
     @Test
@@ -202,16 +202,16 @@ class SyncStepsRuleTest {
 
         syncStep.apply(app, template, ctx);
 
-        assertEquals(3, app.getInstallSteps().size());
+        assertEquals(3, app.getStartSteps().size());
         // Order should match template's linked list
-        assertEquals(id1, app.getInstallSteps().get(0).getId());
-        assertEquals(id2, app.getInstallSteps().get(1).getId());
-        assertEquals(id3, app.getInstallSteps().get(2).getId());
+        assertEquals(id1, app.getStartSteps().get(0).getId());
+        assertEquals(id2, app.getStartSteps().get(1).getId());
+        assertEquals(id3, app.getStartSteps().get(2).getId());
         // Existing impl steps should preserve their titles
-        assertEquals("Impl Step 1", app.getInstallSteps().get(0).getTitle());
-        assertEquals("Impl Step 2", app.getInstallSteps().get(1).getTitle());
+        assertEquals("Impl Step 1", app.getStartSteps().get(0).getTitle());
+        assertEquals("Impl Step 2", app.getStartSteps().get(1).getTitle());
         // New step from template
-        assertEquals("Template Step 3", app.getInstallSteps().get(2).getTitle());
+        assertEquals("Template Step 3", app.getStartSteps().get(2).getTitle());
     }
 
     @Test
@@ -229,8 +229,8 @@ class SyncStepsRuleTest {
 
         syncStep.apply(app, template, ctx);
 
-        assertEquals(1, app.getInstallSteps().size());
-        assertEquals(keepId, app.getInstallSteps().get(0).getId());
+        assertEquals(1, app.getStartSteps().size());
+        assertEquals(keepId, app.getStartSteps().get(0).getId());
     }
 
     // ==================== apply() - update steps ====================
@@ -257,8 +257,8 @@ class SyncStepsRuleTest {
 
         syncStep.apply(app, template, ctx);
 
-        assertEquals(1, app.getInstallSteps().size());
-        assertEquals("Impl Install", app.getInstallSteps().get(0).getTitle());
+        assertEquals(1, app.getStartSteps().size());
+        assertEquals("Impl Install", app.getStartSteps().get(0).getTitle());
 
         assertEquals(1, app.getUpdateSteps().size());
         assertEquals("Impl Update", app.getUpdateSteps().get(0).getTitle());
@@ -287,11 +287,11 @@ class SyncStepsRuleTest {
         syncStep.apply(app, template, ctx);
 
         // Verify nextId is updated from template
-        assertEquals(id2, app.getInstallSteps().get(0).getNextId());
-        assertNull(app.getInstallSteps().get(1).getNextId());
+        assertEquals(id2, app.getStartSteps().get(0).getNextId());
+        assertNull(app.getStartSteps().get(1).getNextId());
         // Verify impl content is preserved
-        assertEquals("Custom message 1", ((InfoStep) app.getInstallSteps().get(0)).getMessage());
-        assertEquals("Custom message 2", ((InfoStep) app.getInstallSteps().get(1)).getMessage());
+        assertEquals("Custom message 1", ((InfoStep) app.getStartSteps().get(0)).getMessage());
+        assertEquals("Custom message 2", ((InfoStep) app.getStartSteps().get(1)).getMessage());
     }
 
     @Test
@@ -314,15 +314,15 @@ class SyncStepsRuleTest {
 
         syncStep.apply(app, template, ctx);
 
-        assertEquals(3, app.getInstallSteps().size());
+        assertEquals(3, app.getStartSteps().size());
         // Order follows template
-        assertEquals(id1, app.getInstallSteps().get(0).getId());
-        assertEquals(id2, app.getInstallSteps().get(1).getId());
-        assertEquals(id3, app.getInstallSteps().get(2).getId());
+        assertEquals(id1, app.getStartSteps().get(0).getId());
+        assertEquals(id2, app.getStartSteps().get(1).getId());
+        assertEquals(id3, app.getStartSteps().get(2).getId());
         // Impl steps preserve their titles, new step uses template title
-        assertEquals("Impl Step 1", app.getInstallSteps().get(0).getTitle());
-        assertEquals("New Template Step 2", app.getInstallSteps().get(1).getTitle());
-        assertEquals("Impl Step 3", app.getInstallSteps().get(2).getTitle());
+        assertEquals("Impl Step 1", app.getStartSteps().get(0).getTitle());
+        assertEquals("New Template Step 2", app.getStartSteps().get(1).getTitle());
+        assertEquals("Impl Step 3", app.getStartSteps().get(2).getTitle());
     }
 
     @Test
@@ -349,14 +349,14 @@ class SyncStepsRuleTest {
         syncStep.apply(app, template, ctx);
 
         // Order should follow template's linked list: 3 -> 1 -> 2
-        assertEquals(3, app.getInstallSteps().size());
-        assertEquals(id3, app.getInstallSteps().get(0).getId());
-        assertEquals(id1, app.getInstallSteps().get(1).getId());
-        assertEquals(id2, app.getInstallSteps().get(2).getId());
+        assertEquals(3, app.getStartSteps().size());
+        assertEquals(id3, app.getStartSteps().get(0).getId());
+        assertEquals(id1, app.getStartSteps().get(1).getId());
+        assertEquals(id2, app.getStartSteps().get(2).getId());
         // Impl titles preserved
-        assertEquals("Impl Step 3", app.getInstallSteps().get(0).getTitle());
-        assertEquals("Impl Step 1", app.getInstallSteps().get(1).getTitle());
-        assertEquals("Impl Step 2", app.getInstallSteps().get(2).getTitle());
+        assertEquals("Impl Step 3", app.getStartSteps().get(0).getTitle());
+        assertEquals("Impl Step 1", app.getStartSteps().get(1).getTitle());
+        assertEquals("Impl Step 2", app.getStartSteps().get(2).getTitle());
     }
 
     // ==================== apply() - error scenarios ====================
@@ -393,14 +393,14 @@ class SyncStepsRuleTest {
 
     private AgentApplication createApplication(List<AgentAppStep> installSteps, List<AgentAppStep> updateSteps) {
         AgentApplication app = new AgentApplication();
-        app.setInstallSteps(installSteps);
+        app.setStartSteps(installSteps);
         app.setUpdateSteps(updateSteps);
         return app;
     }
 
     private AgentAppTemplate createTemplate(List<AgentAppStep> installSteps, List<AgentAppStep> upgradeSteps) {
         AgentAppTemplate template = new AgentAppTemplate();
-        template.setInstallSteps(installSteps);
+        template.setStartSteps(installSteps);
         template.setUpgradeSteps(upgradeSteps);
         return template;
     }

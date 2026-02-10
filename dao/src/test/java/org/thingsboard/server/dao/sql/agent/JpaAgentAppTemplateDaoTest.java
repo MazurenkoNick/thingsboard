@@ -147,7 +147,7 @@ public class JpaAgentAppTemplateDaoTest extends AbstractJpaDaoTest {
         template.setCurrentVersion(version);
         template.setPreviousVersion("0.9.0");
         template.setNextVersion(null);
-        template.setInstallSteps(Collections.emptyList());
+        template.setStartSteps(Collections.emptyList());
         template.setUpgradeSteps(Collections.emptyList());
         AgentAppTemplate saved = agentAppTemplateDao.save(TenantId.SYS_TENANT_ID, template);
         savedIds.add(saved.getId());

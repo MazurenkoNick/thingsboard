@@ -61,7 +61,7 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
         } else {
             validateTemplate(agentApplication);
         }
-        if (CollectionUtils.isEmpty(agentApplication.getInstallSteps())) {
+        if (CollectionUtils.isEmpty(agentApplication.getStartSteps())) {
             throw new DataValidationException("Agent install steps can't be null nor empty!");
         }
         Agent agent = agentService.findAgentById(tenantId, agentApplication.getAgentId());
@@ -89,7 +89,7 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
 
     private void validateSteps(AgentApplication agentApplication) {
         try {
-            StepLinkedListUtils.validate(agentApplication.getInstallSteps());
+            StepLinkedListUtils.validate(agentApplication.getStartSteps());
         } catch (IllegalStateException e) {
             throw new DataValidationException("Invalid install steps: " + e.getMessage());
         }

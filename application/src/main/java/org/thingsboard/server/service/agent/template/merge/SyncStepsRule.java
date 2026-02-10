@@ -52,19 +52,19 @@ public class SyncStepsRule implements AppTemplateMergeRule {
 
     @Override
     public boolean supports(AgentApplication agentApplication, AgentAppTemplate template, TemplateMergeCtx ctx) {
-        boolean hasInstallSteps = !CollectionUtils.isEmpty(agentApplication.getInstallSteps())
-                || !CollectionUtils.isEmpty(template.getInstallSteps());
+        boolean hasStartSteps = !CollectionUtils.isEmpty(agentApplication.getStartSteps())
+                || !CollectionUtils.isEmpty(template.getStartSteps());
         boolean hasUpdateSteps = !CollectionUtils.isEmpty(agentApplication.getUpdateSteps())
                 || !CollectionUtils.isEmpty(template.getUpgradeSteps());
-        return hasInstallSteps || hasUpdateSteps;
+        return hasStartSteps || hasUpdateSteps;
     }
 
     @Override
     public void apply(AgentApplication agentApplication, AgentAppTemplate template, TemplateMergeCtx ctx) {
-        List<AgentAppStep> syncedInstallSteps = syncSteps(agentApplication.getInstallSteps(), template.getInstallSteps());
+        List<AgentAppStep> syncedStartSteps = syncSteps(agentApplication.getStartSteps(), template.getStartSteps());
         List<AgentAppStep> syncedUpdateSteps = syncSteps(agentApplication.getUpdateSteps(), template.getUpgradeSteps());
 
-        agentApplication.setInstallSteps(syncedInstallSteps);
+        agentApplication.setStartSteps(syncedStartSteps);
         agentApplication.setUpdateSteps(syncedUpdateSteps);
     }
 

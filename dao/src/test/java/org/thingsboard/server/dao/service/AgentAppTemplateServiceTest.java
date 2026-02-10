@@ -184,7 +184,7 @@ public class AgentAppTemplateServiceTest extends AbstractServiceTest {
         template.setCurrentVersion(version);
         template.setPreviousVersion("0.9.0");
         template.setNextVersion(null);
-        template.setInstallSteps(Collections.emptyList());
+        template.setStartSteps(Collections.emptyList());
         template.setUpgradeSteps(Collections.emptyList());
         return template;
     }

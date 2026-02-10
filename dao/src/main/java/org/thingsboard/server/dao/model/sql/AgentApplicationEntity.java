@@ -68,8 +68,8 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
     private JsonNode config;
 
     @Convert(converter = JsonConverter.class)
-    @Column(name = ModelConstants.AGENT_APPLICATION_INSTALL_STEPS_PROPERTY)
-    private JsonNode installSteps;
+    @Column(name = ModelConstants.AGENT_APPLICATION_START_STEPS_PROPERTY)
+    private JsonNode startSteps;
 
     @Convert(converter = JsonConverter.class)
     @Column(name = ModelConstants.AGENT_APPLICATION_UPDATE_STEPS_PROPERTY)
@@ -93,7 +93,7 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
             this.templateId = application.getTemplateId().getId();
         }
         this.config = application.getConfig() != null ? JacksonUtil.valueToTree(application.getConfig()) : null;
-        this.installSteps = application.getInstallSteps() != null ? JacksonUtil.valueToTree(application.getInstallSteps()) : null;
+        this.startSteps = application.getStartSteps() != null ? JacksonUtil.valueToTree(application.getStartSteps()) : null;
         this.updateSteps = application.getUpdateSteps() != null ? JacksonUtil.valueToTree(application.getUpdateSteps()) : null;
     }
 
@@ -114,7 +114,7 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
             application.setTemplateId(new AgentAppTemplateId(templateId));
         }
         application.setConfig(config != null ? JacksonUtil.treeToValue(config, AgentAppConfig.class) : null);
-        application.setInstallSteps(installSteps != null ? JacksonUtil.convertValue(installSteps, new TypeReference<>() {}) : null);
+        application.setStartSteps(startSteps != null ? JacksonUtil.convertValue(startSteps, new TypeReference<>() {}) : null);
         application.setUpdateSteps(updateSteps != null ? JacksonUtil.convertValue(updateSteps, new TypeReference<>() {}) : null);
         return application;
     }

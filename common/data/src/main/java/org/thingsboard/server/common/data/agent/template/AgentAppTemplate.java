@@ -46,7 +46,7 @@ public class AgentAppTemplate extends BaseData<AgentAppTemplateId> implements Ha
     private String currentVersion;
     private String previousVersion;
     private String nextVersion;
-    private List<AgentAppStep> installSteps;
+    private List<AgentAppStep> startSteps;
     private List<AgentAppStep> upgradeSteps;
     @Getter
     private Long version;
@@ -67,7 +67,7 @@ public class AgentAppTemplate extends BaseData<AgentAppTemplateId> implements Ha
         this.currentVersion = template.getCurrentVersion();
         this.previousVersion = template.getPreviousVersion();
         this.nextVersion = template.getNextVersion();
-        this.installSteps = template.getInstallSteps();
+        this.startSteps = template.getStartSteps();
         this.upgradeSteps = template.getUpgradeSteps();
         this.version = template.getVersion();
     }
@@ -120,9 +120,9 @@ public class AgentAppTemplate extends BaseData<AgentAppTemplateId> implements Ha
         return nextVersion;
     }
 
-    @Schema(description = "Install steps")
-    public List<AgentAppStep> getInstallSteps() {
-        return installSteps;
+    @Schema(description = "Start steps")
+    public List<AgentAppStep> getStartSteps() {
+        return startSteps;
     }
 
     @Schema(description = "Upgrade steps")

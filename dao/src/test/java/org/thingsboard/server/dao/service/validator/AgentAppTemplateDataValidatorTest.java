@@ -134,7 +134,7 @@ class AgentAppTemplateDataValidatorTest {
         InfoStep step2 = new InfoStep(id2, null, "Step 2", false);
 
         AgentAppTemplate template = createValidTemplate();
-        template.setInstallSteps(new ArrayList<>(List.of(step1, step2)));
+        template.setStartSteps(new ArrayList<>(List.of(step1, step2)));
 
         assertDoesNotThrow(() -> validator.validateDataImpl(tenantId, template));
     }
@@ -145,7 +145,7 @@ class AgentAppTemplateDataValidatorTest {
         stepWithNullId.setTitle("Step without ID");
 
         AgentAppTemplate template = createValidTemplate();
-        template.setInstallSteps(new ArrayList<>(List.of(stepWithNullId)));
+        template.setStartSteps(new ArrayList<>(List.of(stepWithNullId)));
 
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, template));
@@ -162,7 +162,7 @@ class AgentAppTemplateDataValidatorTest {
         InfoStep step2 = new InfoStep(id2, id1, "Step 2", false); // circular
 
         AgentAppTemplate template = createValidTemplate();
-        template.setInstallSteps(new ArrayList<>(List.of(step1, step2)));
+        template.setStartSteps(new ArrayList<>(List.of(step1, step2)));
 
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, template));
@@ -180,7 +180,7 @@ class AgentAppTemplateDataValidatorTest {
         InfoStep step3 = new InfoStep(id3, null, "Orphan", false); // orphaned
 
         AgentAppTemplate template = createValidTemplate();
-        template.setInstallSteps(new ArrayList<>(List.of(step1, step2, step3)));
+        template.setStartSteps(new ArrayList<>(List.of(step1, step2, step3)));
 
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, template));
@@ -195,7 +195,7 @@ class AgentAppTemplateDataValidatorTest {
         InfoStep step1 = new InfoStep(id1, nonExistentId, "Step 1", false);
 
         AgentAppTemplate template = createValidTemplate();
-        template.setInstallSteps(new ArrayList<>(List.of(step1)));
+        template.setStartSteps(new ArrayList<>(List.of(step1)));
 
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, template));
@@ -248,7 +248,7 @@ class AgentAppTemplateDataValidatorTest {
     @Test
     void testValidateDataImpl_emptySteps_thenOK() {
         AgentAppTemplate template = createValidTemplate();
-        template.setInstallSteps(null);
+        template.setStartSteps(null);
         template.setUpgradeSteps(null);
 
         assertDoesNotThrow(() -> validator.validateDataImpl(tenantId, template));

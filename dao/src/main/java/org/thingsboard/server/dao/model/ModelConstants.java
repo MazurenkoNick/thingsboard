@@ -260,7 +260,7 @@ public class ModelConstants {
     public static final String AGENT_APPLICATION_NAME_PROPERTY = "name";
     public static final String AGENT_APPLICATION_TEMPLATE_ID_PROPERTY = "template_id";
     public static final String AGENT_APPLICATION_CONFIG_PROPERTY = "config";
-    public static final String AGENT_APPLICATION_INSTALL_STEPS_PROPERTY = "install_steps";
+    public static final String AGENT_APPLICATION_START_STEPS_PROPERTY = "start_steps";
     public static final String AGENT_APPLICATION_UPDATE_STEPS_PROPERTY = "update_steps";
 
     /**
@@ -274,7 +274,7 @@ public class ModelConstants {
     public static final String AGENT_APP_TEMPLATE_PREVIOUS_VERSION_PROPERTY = "previous_version";
     public static final String AGENT_APP_TEMPLATE_NEXT_VERSION_PROPERTY = "next_version";
     public static final String AGENT_APP_TEMPLATE_CONFIG_PROPERTY = "config";
-    public static final String AGENT_APP_TEMPLATE_INSTALL_STEPS_PROPERTY = "install_steps";
+    public static final String AGENT_APP_TEMPLATE_START_STEPS_PROPERTY = "start_steps";
     public static final String AGENT_APP_TEMPLATE_UPGRADE_STEPS_PROPERTY = "upgrade_steps";
 
     /**

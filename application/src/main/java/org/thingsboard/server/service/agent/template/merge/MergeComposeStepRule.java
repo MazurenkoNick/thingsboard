@@ -50,10 +50,10 @@ public class MergeComposeStepRule implements AppTemplateMergeRule {
     @Override
     public void apply(AgentApplication agentApp, AgentAppTemplate template, TemplateMergeCtx ctx) {
         Optional<ComposeTypeChoiceStep> choiceStep = StepLinkedListUtils.getByType(
-                AgentAppStepType.COMPOSE_TYPE_CHOICE, ComposeTypeChoiceStep.class, template.getInstallSteps()
+                AgentAppStepType.COMPOSE_TYPE_CHOICE, ComposeTypeChoiceStep.class, template.getStartSteps()
         );
         Optional<ComposeStep> composeStep = StepLinkedListUtils.getByType(
-                AgentAppStepType.COMPOSE, ComposeStep.class, agentApp.getInstallSteps()
+                AgentAppStepType.COMPOSE, ComposeStep.class, agentApp.getStartSteps()
         );
         if (choiceStep.isEmpty() || composeStep.isEmpty()) {
             log.trace("Compose Choice Step from template or Compose Step from app couldn't be found: choice: {} compose: {}", choiceStep, composeStep);

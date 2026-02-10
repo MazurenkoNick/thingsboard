@@ -45,7 +45,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     private String name;
     private AgentAppTemplateId templateId;
     private AgentAppConfig config;
-    private List<AgentAppStep> installSteps; // todo: rename to startSteps
+    private List<AgentAppStep> startSteps;
     private List<AgentAppStep> updateSteps;
     @Getter
     private Long version;
@@ -65,7 +65,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         this.appType = application.getAppType();
         this.name = application.getName();
         this.templateId = application.getTemplateId();
-        this.installSteps = application.getInstallSteps();
+        this.startSteps = application.getStartSteps();
         this.updateSteps = application.getUpdateSteps();
         this.version = application.getVersion();
     }
@@ -113,9 +113,9 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         return templateId;
     }
 
-    @Schema(description = "Application install steps with resolved configuration")
-    public List<AgentAppStep> getInstallSteps() {
-        return installSteps;
+    @Schema(description = "Application start steps with resolved configuration")
+    public List<AgentAppStep> getStartSteps() {
+        return startSteps;
     }
 
     @Schema(description = "Application update steps with resolved configuration")

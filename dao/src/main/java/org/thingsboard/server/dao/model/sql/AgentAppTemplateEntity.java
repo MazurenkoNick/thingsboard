@@ -72,8 +72,8 @@ public final class AgentAppTemplateEntity extends BaseVersionedEntity<AgentAppTe
     private JsonNode config;
 
     @Convert(converter = JsonConverter.class)
-    @Column(name = ModelConstants.AGENT_APP_TEMPLATE_INSTALL_STEPS_PROPERTY)
-    private JsonNode installSteps;
+    @Column(name = ModelConstants.AGENT_APP_TEMPLATE_START_STEPS_PROPERTY)
+    private JsonNode startSteps;
 
     @Convert(converter = JsonConverter.class)
     @Column(name = ModelConstants.AGENT_APP_TEMPLATE_UPGRADE_STEPS_PROPERTY)
@@ -94,7 +94,7 @@ public final class AgentAppTemplateEntity extends BaseVersionedEntity<AgentAppTe
         this.previousVersion = template.getPreviousVersion();
         this.nextVersion = template.getNextVersion();
         this.config = template.getConfig() != null ? JacksonUtil.valueToTree(template.getConfig()) : null;
-        this.installSteps = template.getInstallSteps() != null ? JacksonUtil.valueToTree(template.getInstallSteps()) : null;
+        this.startSteps = template.getStartSteps() != null ? JacksonUtil.valueToTree(template.getStartSteps()) : null;
         this.upgradeSteps = template.getUpgradeSteps() != null ? JacksonUtil.valueToTree(template.getUpgradeSteps()) : null;
     }
 
@@ -112,7 +112,7 @@ public final class AgentAppTemplateEntity extends BaseVersionedEntity<AgentAppTe
         template.setPreviousVersion(previousVersion);
         template.setNextVersion(nextVersion);
         template.setConfig(config != null ? JacksonUtil.treeToValue(config, AgentAppConfig.class) : null);
-        template.setInstallSteps(installSteps != null ? JacksonUtil.convertValue(installSteps, new TypeReference<List<AgentAppStep>>() {}) : null);
+        template.setStartSteps(startSteps != null ? JacksonUtil.convertValue(startSteps, new TypeReference<List<AgentAppStep>>() {}) : null);
         template.setUpgradeSteps(upgradeSteps != null ? JacksonUtil.convertValue(upgradeSteps, new TypeReference<List<AgentAppStep>>() {}) : null);
         return template;
     }

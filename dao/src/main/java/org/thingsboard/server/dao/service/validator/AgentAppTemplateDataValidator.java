@@ -61,8 +61,8 @@ public class AgentAppTemplateDataValidator extends DataValidator<AgentAppTemplat
 
     private void validateSteps(AgentAppTemplate template) {
         try {
-            if (!CollectionUtils.isEmpty(template.getInstallSteps())) {
-                StepLinkedListUtils.validate(template.getInstallSteps());
+            if (!CollectionUtils.isEmpty(template.getStartSteps())) {
+                StepLinkedListUtils.validate(template.getStartSteps());
             }
         } catch (IllegalStateException e) {
             throw new DataValidationException("Invalid install steps: " + e.getMessage());

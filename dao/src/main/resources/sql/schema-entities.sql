@@ -778,7 +778,7 @@ CREATE TABLE IF NOT EXISTS agent_app_template (
     previous_version varchar(255) NOT NULL,
     next_version varchar(255),
     config varchar,
-    install_steps varchar,
+    start_steps varchar,
     upgrade_steps varchar,
     version BIGINT DEFAULT 1
 );
@@ -792,7 +792,7 @@ CREATE TABLE IF NOT EXISTS agent_application (
     name varchar(255),
     template_id uuid,
     config varchar,
-    install_steps varchar NOT NULL,
+    start_steps varchar NOT NULL,
     update_steps varchar,
     version BIGINT DEFAULT 1,
     CONSTRAINT fk_agent_application_agent FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE CASCADE,
