@@ -13,19 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent;
+package org.thingsboard.server.common.data.agent.config;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
+@JsonSubTypes({
+        @JsonSubTypes.Type(name = "DOCKER_COMPOSE", value = DockerComposeConfig.class)
+})
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class AgentAppConfig {
+public abstract class AgentAppConfig {
 
-    private boolean multiSelect;
-    private List<String> values;
+    public abstract AgentAppConfigType getType();
 }

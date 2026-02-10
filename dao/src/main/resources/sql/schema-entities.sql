@@ -777,6 +777,7 @@ CREATE TABLE IF NOT EXISTS agent_app_template (
     current_version varchar(255) NOT NULL,
     previous_version varchar(255) NOT NULL,
     next_version varchar(255),
+    config varchar,
     install_steps varchar,
     upgrade_steps varchar,
     version BIGINT DEFAULT 1
@@ -790,6 +791,7 @@ CREATE TABLE IF NOT EXISTS agent_application (
     app_type varchar(255) NOT NULL,
     name varchar(255),
     template_id uuid,
+    config varchar,
     install_steps varchar NOT NULL,
     update_steps varchar,
     version BIGINT DEFAULT 1,

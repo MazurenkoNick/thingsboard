@@ -23,6 +23,7 @@ import lombok.ToString;
 import org.thingsboard.server.common.data.BaseData;
 import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.HasVersion;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
@@ -43,7 +44,8 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     private AgentApplicationType appType;
     private String name;
     private AgentAppTemplateId templateId;
-    private List<AgentAppStep> installSteps;
+    private AgentAppConfig config;
+    private List<AgentAppStep> installSteps; // todo: rename to startSteps
     private List<AgentAppStep> updateSteps;
     @Getter
     private Long version;
@@ -99,6 +101,11 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     @Schema(description = "Application name (not unique across tenant)")
     public String getName() {
         return name;
+    }
+
+    @Schema(description = "Config (with compose field and type = 'DOCKER_COMPOSE' for EDGE/GATEWAY)")
+    public AgentAppConfig getConfig() {
+        return config;
     }
 
     @Schema(description = "Template this application is based on", requiredMode = Schema.RequiredMode.REQUIRED)

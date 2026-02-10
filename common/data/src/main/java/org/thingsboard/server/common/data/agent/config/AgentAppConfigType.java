@@ -13,19 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent.step;
+package org.thingsboard.server.common.data.agent.config;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+public enum AgentAppConfigType {
 
-@Data
-@NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class ComposeStep extends AgentAppStep {
-
-    @Override
-    public AgentAppStepType getType() {
-        return AgentAppStepType.COMPOSE;
-    }
+    DOCKER_COMPOSE;
 }

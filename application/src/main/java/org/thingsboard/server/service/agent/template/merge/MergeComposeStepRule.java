@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
+import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
 import org.thingsboard.server.common.data.agent.step.ComposeStep;
 import org.thingsboard.server.common.data.agent.step.ComposeTypeChoiceStep;
@@ -38,7 +40,7 @@ public class MergeComposeStepRule implements AppTemplateMergeRule {
 
     @Override
     public boolean supports(AgentApplication agentApp, AgentAppTemplate template, TemplateMergeCtx ctx) {
-        return hasSelectedComposeType(ctx);
+        return hasSelectedComposeType(ctx) && agentApp.getConfig() instanceof DockerComposeConfig;
     }
 
     private boolean hasSelectedComposeType(TemplateMergeCtx ctx) {
@@ -57,16 +59,21 @@ public class MergeComposeStepRule implements AppTemplateMergeRule {
             log.trace("Compose Choice Step from template or Compose Step from app couldn't be found: choice: {} compose: {}", choiceStep, composeStep);
             return;
         }
-        mergeComposeByType(ctx, choiceStep.get(), composeStep.get());
+        mergeComposeByType(ctx, choiceStep.get(), agentApp);
     }
 
-    private void mergeComposeByType(TemplateMergeCtx ctx, ComposeTypeChoiceStep choiceStep, ComposeStep composeStep) {
+    private void mergeComposeByType(TemplateMergeCtx ctx, ComposeTypeChoiceStep choiceStep, AgentApplication agentApp) {
         String selectedComposeType = ctx.getSelectedComposeType();
         JsonNode composeTemplate = getComposeTemplateByType(choiceStep, selectedComposeType);
-        JsonNode appCompose = composeStep.getCompose();
+        AgentAppConfig appConfig = agentApp.getConfig();
+
+        if (!(appConfig instanceof DockerComposeConfig appDockerConfig)) {
+            throw new IllegalStateException("Can't set compose to the non-compose configuration " + appConfig);
+        }
+        JsonNode appCompose = appDockerConfig.getCompose();
 
         if (appCompose == null || appCompose.isNull() || !appCompose.isObject()) {
-            composeStep.setCompose(composeTemplate.deepCopy());
+            appDockerConfig.setCompose(composeTemplate.deepCopy());
             return;
         }
         deepMerge((ObjectNode) appCompose, composeTemplate);

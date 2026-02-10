@@ -17,6 +17,7 @@ package org.thingsboard.server.dao.model.sql;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -29,6 +30,7 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.InstallationAppType;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -66,6 +68,10 @@ public final class AgentAppTemplateEntity extends BaseVersionedEntity<AgentAppTe
     private String nextVersion;
 
     @Convert(converter = JsonConverter.class)
+    @Column(name = ModelConstants.AGENT_APP_TEMPLATE_CONFIG_PROPERTY)
+    private JsonNode config;
+
+    @Convert(converter = JsonConverter.class)
     @Column(name = ModelConstants.AGENT_APP_TEMPLATE_INSTALL_STEPS_PROPERTY)
     private JsonNode installSteps;
 
@@ -87,6 +93,7 @@ public final class AgentAppTemplateEntity extends BaseVersionedEntity<AgentAppTe
         this.currentVersion = template.getCurrentVersion();
         this.previousVersion = template.getPreviousVersion();
         this.nextVersion = template.getNextVersion();
+        this.config = template.getConfig() != null ? JacksonUtil.valueToTree(template.getConfig()) : null;
         this.installSteps = template.getInstallSteps() != null ? JacksonUtil.valueToTree(template.getInstallSteps()) : null;
         this.upgradeSteps = template.getUpgradeSteps() != null ? JacksonUtil.valueToTree(template.getUpgradeSteps()) : null;
     }
@@ -104,6 +111,7 @@ public final class AgentAppTemplateEntity extends BaseVersionedEntity<AgentAppTe
         template.setCurrentVersion(currentVersion);
         template.setPreviousVersion(previousVersion);
         template.setNextVersion(nextVersion);
+        template.setConfig(config != null ? JacksonUtil.treeToValue(config, AgentAppConfig.class) : null);
         template.setInstallSteps(installSteps != null ? JacksonUtil.convertValue(installSteps, new TypeReference<List<AgentAppStep>>() {}) : null);
         template.setUpgradeSteps(upgradeSteps != null ? JacksonUtil.convertValue(upgradeSteps, new TypeReference<List<AgentAppStep>>() {}) : null);
         return template;

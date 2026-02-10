@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent.step;
+package org.thingsboard.server.common.data.agent.config;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -22,10 +23,12 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ComposeStep extends AgentAppStep {
+public class DockerComposeConfig extends AgentAppConfig {
+
+    private JsonNode compose;
 
     @Override
-    public AgentAppStepType getType() {
-        return AgentAppStepType.COMPOSE;
+    public AgentAppConfigType getType() {
+        return AgentAppConfigType.DOCKER_COMPOSE;
     }
 }

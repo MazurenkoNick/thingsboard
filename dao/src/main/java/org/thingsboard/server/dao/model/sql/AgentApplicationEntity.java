@@ -28,6 +28,7 @@ import lombok.EqualsAndHashCode;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
@@ -63,6 +64,10 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
     private UUID templateId;
 
     @Convert(converter = JsonConverter.class)
+    @Column(name = ModelConstants.AGENT_APPLICATION_CONFIG_PROPERTY)
+    private JsonNode config;
+
+    @Convert(converter = JsonConverter.class)
     @Column(name = ModelConstants.AGENT_APPLICATION_INSTALL_STEPS_PROPERTY)
     private JsonNode installSteps;
 
@@ -87,6 +92,7 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
         if (application.getTemplateId() != null) {
             this.templateId = application.getTemplateId().getId();
         }
+        this.config = application.getConfig() != null ? JacksonUtil.valueToTree(application.getConfig()) : null;
         this.installSteps = application.getInstallSteps() != null ? JacksonUtil.valueToTree(application.getInstallSteps()) : null;
         this.updateSteps = application.getUpdateSteps() != null ? JacksonUtil.valueToTree(application.getUpdateSteps()) : null;
     }
@@ -107,6 +113,7 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
         if (templateId != null) {
             application.setTemplateId(new AgentAppTemplateId(templateId));
         }
+        application.setConfig(config != null ? JacksonUtil.treeToValue(config, AgentAppConfig.class) : null);
         application.setInstallSteps(installSteps != null ? JacksonUtil.convertValue(installSteps, new TypeReference<>() {}) : null);
         application.setUpdateSteps(updateSteps != null ? JacksonUtil.convertValue(updateSteps, new TypeReference<>() {}) : null);
         return application;
