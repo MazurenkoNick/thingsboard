@@ -28,7 +28,7 @@ import java.util.UUID;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({
-        @JsonSubTypes.Type(name = "COMPOSE_TYPE_CHOICE", value = ComposeTypeChoiceStep.class),
+        @JsonSubTypes.Type(name = "COMPOSE_TEMPLATE", value = ComposeTypeChoiceStep.class),
         @JsonSubTypes.Type(name = "COMPOSE", value = ComposeStep.class),
         @JsonSubTypes.Type(name = "COMPOSE_START", value = ComposeStartStep.class),
         @JsonSubTypes.Type(name = "INFO", value = InfoStep.class)

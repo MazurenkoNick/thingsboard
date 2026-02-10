@@ -41,12 +41,12 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
 
     private TenantId tenantId;
     private AgentId agentId;
-    private AgentApplicationType appType;
     private String name;
     private AgentAppTemplateId templateId;
+    private AgentApplicationType appType;
     private AgentAppConfig config;
     private List<AgentAppStep> startSteps;
-    private List<AgentAppStep> updateSteps;
+    private List<AgentAppStep> updateSteps; // todo: to upgradeSteps!
     @Getter
     private Long version;
 

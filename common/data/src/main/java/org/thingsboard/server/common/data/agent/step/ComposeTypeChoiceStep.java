@@ -31,7 +31,6 @@ import java.util.UUID;
 @EqualsAndHashCode(callSuper = true)
 public class ComposeTypeChoiceStep extends AgentAppStep {
 
-    private List<String> composeTypes;
     private Map<String, JsonNode> composeTemplates;
 
     public ComposeTypeChoiceStep(UUID id, UUID nextId, String title) {
@@ -40,7 +39,7 @@ public class ComposeTypeChoiceStep extends AgentAppStep {
 
     @Override
     public AgentAppStepType getType() {
-        return AgentAppStepType.COMPOSE_TYPE_CHOICE;
+        return AgentAppStepType.COMPOSE_TEMPLATE;
     }
 
     public Optional<JsonNode> getTemplateByType(String composeType) {

@@ -16,7 +16,7 @@
 package org.thingsboard.server.common.data.agent.step;
 
 public enum AgentAppStepType {
-    COMPOSE_TYPE_CHOICE,
+    COMPOSE_TEMPLATE,
     COMPOSE,
     COMPOSE_MODIFY,
     COMPOSE_START,
