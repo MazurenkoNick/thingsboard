@@ -20,7 +20,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.InstallationAppType;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
+import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.AbstractJpaDaoTest;
@@ -52,7 +53,7 @@ public class JpaAgentAppTemplateDaoTest extends AbstractJpaDaoTest {
 
     @Test
     public void testSaveAndFindById() {
-        AgentAppTemplate template = saveTemplate(AgentApplicationType.EDGE, InstallationAppType.DOCKER, "1.0.0");
+        AgentAppTemplate template = saveTemplate(AgentApplicationType.EDGE, "1.0.0");
 
         assertNotNull(template.getId());
         assertTrue(template.getCreatedTime() > 0);
@@ -61,7 +62,6 @@ public class JpaAgentAppTemplateDaoTest extends AbstractJpaDaoTest {
         assertNotNull(found);
         assertEquals(template.getId(), found.getId());
         assertEquals(AgentApplicationType.EDGE, found.getAppType());
-        assertEquals(InstallationAppType.DOCKER, found.getType());
         assertEquals("1.0.0", found.getCurrentVersion());
         assertEquals("0.9.0", found.getPreviousVersion());
         assertNull(found.getNextVersion());
@@ -74,37 +74,53 @@ public class JpaAgentAppTemplateDaoTest extends AbstractJpaDaoTest {
     }
 
     @Test
-    public void testFindByAppTypeAndInstallationTypeAndVersion() {
-        AgentAppTemplate saved = saveTemplate(AgentApplicationType.GATEWAY, InstallationAppType.DOCKER, "2.0.0");
+    public void testFindByAppTypeAndConfigTypeAndVersion() {
+        AgentAppTemplate saved = saveTemplate(AgentApplicationType.GATEWAY, "2.0.0");
 
-        AgentAppTemplate found = agentAppTemplateDao.findByAppTypeAndInstallationTypeAndVersion(
-                TenantId.SYS_TENANT_ID, AgentApplicationType.GATEWAY, InstallationAppType.DOCKER, "2.0.0");
+        AgentAppTemplate found = agentAppTemplateDao.findByAppTypeAndConfigTypeAndVersion(
+                TenantId.SYS_TENANT_ID, AgentApplicationType.GATEWAY, AgentAppConfigType.DOCKER_COMPOSE, "2.0.0");
         assertNotNull(found);
         assertEquals(saved.getId(), found.getId());
     }
 
     @Test
-    public void testFindByAppTypeAndInstallationTypeAndVersionNoMatch() {
-        saveTemplate(AgentApplicationType.EDGE, InstallationAppType.DOCKER, "3.0.0");
+    public void testFindByAppTypeAndConfigTypeAndVersionNoMatch() {
+        saveTemplate(AgentApplicationType.EDGE, "3.0.0");
 
-        AgentAppTemplate found = agentAppTemplateDao.findByAppTypeAndInstallationTypeAndVersion(
-                TenantId.SYS_TENANT_ID, AgentApplicationType.EDGE, InstallationAppType.DOCKER, "999.0.0");
+        AgentAppTemplate found = agentAppTemplateDao.findByAppTypeAndConfigTypeAndVersion(
+                TenantId.SYS_TENANT_ID, AgentApplicationType.EDGE, AgentAppConfigType.DOCKER_COMPOSE, "999.0.0");
         assertNull(found);
     }
 
     @Test
-    public void testFindByAppTypeAndInstallationTypeAndVersionWrongAppType() {
-        saveTemplate(AgentApplicationType.EDGE, InstallationAppType.DOCKER, "4.0.0");
+    public void testFindByAppTypeAndConfigTypeAndVersionWrongAppType() {
+        saveTemplate(AgentApplicationType.EDGE, "4.0.0");
 
-        AgentAppTemplate found = agentAppTemplateDao.findByAppTypeAndInstallationTypeAndVersion(
-                TenantId.SYS_TENANT_ID, AgentApplicationType.GATEWAY, InstallationAppType.DOCKER, "4.0.0");
+        AgentAppTemplate found = agentAppTemplateDao.findByAppTypeAndConfigTypeAndVersion(
+                TenantId.SYS_TENANT_ID, AgentApplicationType.GATEWAY, AgentAppConfigType.DOCKER_COMPOSE, "4.0.0");
+        assertNull(found);
+    }
+
+    @Test
+    public void testFindByAppTypeAndConfigTypeAndVersionNoConfig() {
+        AgentAppTemplate template = new AgentAppTemplate();
+        template.setAppType(AgentApplicationType.EDGE);
+        template.setCurrentVersion("4.5.0");
+        template.setPreviousVersion("0.9.0");
+        template.setStartSteps(Collections.emptyList());
+        template.setUpgradeSteps(Collections.emptyList());
+        AgentAppTemplate saved = agentAppTemplateDao.save(TenantId.SYS_TENANT_ID, template);
+        savedIds.add(saved.getId());
+
+        AgentAppTemplate found = agentAppTemplateDao.findByAppTypeAndConfigTypeAndVersion(
+                TenantId.SYS_TENANT_ID, AgentApplicationType.EDGE, AgentAppConfigType.DOCKER_COMPOSE, "4.5.0");
         assertNull(found);
     }
 
     @Test
     public void testFindAll() {
-        AgentAppTemplate t1 = saveTemplate(AgentApplicationType.EDGE, InstallationAppType.DOCKER, "5.0.0");
-        AgentAppTemplate t2 = saveTemplate(AgentApplicationType.GATEWAY, InstallationAppType.DOCKER, "5.1.0");
+        AgentAppTemplate t1 = saveTemplate(AgentApplicationType.EDGE, "5.0.0");
+        AgentAppTemplate t2 = saveTemplate(AgentApplicationType.GATEWAY, "5.1.0");
 
         List<AgentAppTemplate> all = agentAppTemplateDao.findAll(TenantId.SYS_TENANT_ID);
         assertTrue(all.size() >= 2);
@@ -114,7 +130,7 @@ public class JpaAgentAppTemplateDaoTest extends AbstractJpaDaoTest {
 
     @Test
     public void testRemoveById() {
-        AgentAppTemplate saved = saveTemplate(AgentApplicationType.EDGE, InstallationAppType.DOCKER, "6.0.0");
+        AgentAppTemplate saved = saveTemplate(AgentApplicationType.EDGE, "6.0.0");
         UUID id = saved.getId().getId();
         savedIds.remove(saved.getId());
 
@@ -126,7 +142,7 @@ public class JpaAgentAppTemplateDaoTest extends AbstractJpaDaoTest {
 
     @Test
     public void testUpdate() {
-        AgentAppTemplate saved = saveTemplate(AgentApplicationType.EDGE, InstallationAppType.DOCKER, "7.0.0");
+        AgentAppTemplate saved = saveTemplate(AgentApplicationType.EDGE, "7.0.0");
 
         saved.setCurrentVersion("7.1.0");
         saved.setNextVersion("8.0.0");
@@ -140,10 +156,10 @@ public class JpaAgentAppTemplateDaoTest extends AbstractJpaDaoTest {
         assertEquals("7.0.0", found.getPreviousVersion());
     }
 
-    private AgentAppTemplate saveTemplate(AgentApplicationType appType, InstallationAppType installationType, String version) {
+    private AgentAppTemplate saveTemplate(AgentApplicationType appType, String version) {
         AgentAppTemplate template = new AgentAppTemplate();
         template.setAppType(appType);
-        template.setType(installationType);
+        template.setConfig(new DockerComposeConfig());
         template.setCurrentVersion(version);
         template.setPreviousVersion("0.9.0");
         template.setNextVersion(null);

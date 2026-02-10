@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.InstallationAppType;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppTemplateService;
@@ -47,9 +47,9 @@ public class DefaultTbAgentAppTemplateService implements TbAgentAppTemplateServi
     }
 
     @Override
-    public AgentAppTemplate findByAppTypeAndInstallationTypeAndCurrentVersion(AgentApplicationType appType,
-                                                                              InstallationAppType installationType,
-                                                                              String currentVersion) {
-        return agentAppTemplateService.findByAppTypeAndInstallTypeAndVersion(appType, installationType, currentVersion);
+    public AgentAppTemplate findByAppTypeAndConfigTypeAndCurrentVersion(AgentApplicationType appType,
+                                                                         AgentAppConfigType configType,
+                                                                         String currentVersion) {
+        return agentAppTemplateService.findByAppTypeAndConfigTypeAndVersion(appType, configType, currentVersion);
     }
 }

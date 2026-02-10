@@ -16,16 +16,19 @@
 package org.thingsboard.server.dao.sql.agent;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.InstallationAppType;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.thingsboard.server.dao.model.sql.AgentAppTemplateEntity;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface AgentAppTemplateRepository extends JpaRepository<AgentAppTemplateEntity, UUID> {
 
-    AgentAppTemplateEntity findFirstByAppTypeAndInstallationTypeAndCurrentVersion(AgentApplicationType appType,
-                                                                                  InstallationAppType installationType,
-                                                                                  String currentVersion);
+    @Query(value = "SELECT * FROM agent_app_template WHERE app_type = :appType " +
+            "AND config ->> 'type' = :configType AND current_version = :currentVersion LIMIT 1",
+            nativeQuery = true)
+    AgentAppTemplateEntity findFirstByAppTypeAndConfigTypeAndCurrentVersion(
+            @Param("appType") String appType,
+            @Param("configType") String configType,
+            @Param("currentVersion") String currentVersion);
 }

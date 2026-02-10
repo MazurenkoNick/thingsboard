@@ -25,6 +25,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.dialect.PostgreSQLJsonPGObjectJsonbType;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
@@ -64,15 +66,18 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
     private UUID templateId;
 
     @Convert(converter = JsonConverter.class)
-    @Column(name = ModelConstants.AGENT_APPLICATION_CONFIG_PROPERTY)
+    @JdbcType(PostgreSQLJsonPGObjectJsonbType.class)
+    @Column(name = ModelConstants.AGENT_APPLICATION_CONFIG_PROPERTY, columnDefinition = "jsonb")
     private JsonNode config;
 
     @Convert(converter = JsonConverter.class)
-    @Column(name = ModelConstants.AGENT_APPLICATION_START_STEPS_PROPERTY)
+    @JdbcType(PostgreSQLJsonPGObjectJsonbType.class)
+    @Column(name = ModelConstants.AGENT_APPLICATION_START_STEPS_PROPERTY, columnDefinition = "jsonb")
     private JsonNode startSteps;
 
     @Convert(converter = JsonConverter.class)
-    @Column(name = ModelConstants.AGENT_APPLICATION_UPDATE_STEPS_PROPERTY)
+    @JdbcType(PostgreSQLJsonPGObjectJsonbType.class)
+    @Column(name = ModelConstants.AGENT_APPLICATION_UPDATE_STEPS_PROPERTY, columnDefinition = "jsonb")
     private JsonNode updateSteps;
 
     public AgentApplicationEntity() {

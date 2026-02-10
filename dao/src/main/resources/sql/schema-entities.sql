@@ -773,13 +773,12 @@ CREATE TABLE IF NOT EXISTS agent_app_template (
     created_time bigint NOT NULL,
     tenant_id uuid,
     app_type varchar(32) NOT NULL,
-    installation_type varchar(32) NOT NULL,
     current_version varchar(255) NOT NULL,
     previous_version varchar(255) NOT NULL,
     next_version varchar(255),
-    config varchar,
-    start_steps varchar,
-    upgrade_steps varchar,
+    config jsonb,
+    start_steps jsonb,
+    upgrade_steps jsonb,
     version BIGINT DEFAULT 1
 );
 
@@ -791,9 +790,9 @@ CREATE TABLE IF NOT EXISTS agent_application (
     app_type varchar(255) NOT NULL,
     name varchar(255),
     template_id uuid,
-    config varchar,
-    start_steps varchar NOT NULL,
-    update_steps varchar,
+    config jsonb,
+    start_steps jsonb NOT NULL,
+    update_steps jsonb,
     version BIGINT DEFAULT 1,
     CONSTRAINT fk_agent_application_agent FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE CASCADE,
     CONSTRAINT fk_agent_application_template FOREIGN KEY (template_id) REFERENCES agent_app_template(id) ON DELETE CASCADE

@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.InstallationAppType;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.entity.AbstractEntityService;
@@ -70,10 +70,10 @@ public class BaseAgentAppTemplateService extends AbstractEntityService implement
     }
 
     @Override
-    public AgentAppTemplate findByAppTypeAndInstallTypeAndVersion(AgentApplicationType appType, InstallationAppType installationType, String currentVersion) {
-        log.trace("Executing findAgentAppTemplate appType [{}], installationType [{}], currentVersion [{}]",
-                appType, installationType, currentVersion);
-        return agentAppTemplateDao.findByAppTypeAndInstallationTypeAndVersion(TenantId.SYS_TENANT_ID, appType, installationType, currentVersion);
+    public AgentAppTemplate findByAppTypeAndConfigTypeAndVersion(AgentApplicationType appType, AgentAppConfigType configType, String currentVersion) {
+        log.trace("Executing findAgentAppTemplate appType [{}], configType [{}], currentVersion [{}]",
+                appType, configType, currentVersion);
+        return agentAppTemplateDao.findByAppTypeAndConfigTypeAndVersion(TenantId.SYS_TENANT_ID, appType, configType, currentVersion);
     }
 
     @Override

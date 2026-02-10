@@ -269,7 +269,6 @@ public class ModelConstants {
     public static final String AGENT_APP_TEMPLATE_TABLE_NAME = "agent_app_template";
     public static final String AGENT_APP_TEMPLATE_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
     public static final String AGENT_APP_TEMPLATE_APP_TYPE_PROPERTY = "app_type";
-    public static final String AGENT_APP_TEMPLATE_INSTALLATION_TYPE_PROPERTY = "installation_type";
     public static final String AGENT_APP_TEMPLATE_CURRENT_VERSION_PROPERTY = "current_version";
     public static final String AGENT_APP_TEMPLATE_PREVIOUS_VERSION_PROPERTY = "previous_version";
     public static final String AGENT_APP_TEMPLATE_NEXT_VERSION_PROPERTY = "next_version";

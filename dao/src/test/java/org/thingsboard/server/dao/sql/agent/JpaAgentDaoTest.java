@@ -25,7 +25,6 @@ import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentInfo;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.InstallationAppType;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -253,7 +252,6 @@ public class JpaAgentDaoTest extends AbstractJpaDaoTest {
     private AgentAppTemplate saveTemplate() {
         AgentAppTemplate template = new AgentAppTemplate();
         template.setAppType(AgentApplicationType.GENERIC);
-        template.setType(InstallationAppType.DOCKER);
         template.setCurrentVersion("1.0.0");
         template.setPreviousVersion("0.9.0");
         template.setNextVersion(null);

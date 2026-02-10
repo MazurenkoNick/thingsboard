@@ -21,7 +21,8 @@ import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.InstallationAppType;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
+import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppTemplateService;
@@ -39,14 +40,13 @@ public class AgentAppTemplateServiceTest extends AbstractServiceTest {
 
     @Test
     public void testSave() {
-        AgentAppTemplate template = createTemplate(AgentApplicationType.EDGE, InstallationAppType.DOCKER, "1.0.0");
+        AgentAppTemplate template = createTemplate(AgentApplicationType.EDGE, "1.0.0");
 
         AgentAppTemplate saved = agentAppTemplateService.save(TenantId.SYS_TENANT_ID, template);
         Assert.assertNotNull(saved);
         Assert.assertNotNull(saved.getId());
         Assert.assertTrue(saved.getCreatedTime() > 0);
         Assert.assertEquals(AgentApplicationType.EDGE, saved.getAppType());
-        Assert.assertEquals(InstallationAppType.DOCKER, saved.getType());
         Assert.assertEquals("1.0.0", saved.getCurrentVersion());
         Assert.assertEquals("0.9.0", saved.getPreviousVersion());
 
@@ -55,15 +55,7 @@ public class AgentAppTemplateServiceTest extends AbstractServiceTest {
 
     @Test
     public void testSaveWithNullAppType() {
-        AgentAppTemplate template = createTemplate(null, InstallationAppType.DOCKER, "1.0.0");
-
-        Assertions.assertThrows(DataValidationException.class, () ->
-                agentAppTemplateService.save(TenantId.SYS_TENANT_ID, template));
-    }
-
-    @Test
-    public void testSaveWithNullInstallationType() {
-        AgentAppTemplate template = createTemplate(AgentApplicationType.EDGE, null, "1.0.0");
+        AgentAppTemplate template = createTemplate(null, "1.0.0");
 
         Assertions.assertThrows(DataValidationException.class, () ->
                 agentAppTemplateService.save(TenantId.SYS_TENANT_ID, template));
@@ -71,7 +63,7 @@ public class AgentAppTemplateServiceTest extends AbstractServiceTest {
 
     @Test
     public void testSaveWithNullCurrentVersion() {
-        AgentAppTemplate template = createTemplate(AgentApplicationType.EDGE, InstallationAppType.DOCKER, null);
+        AgentAppTemplate template = createTemplate(AgentApplicationType.EDGE, null);
 
         Assertions.assertThrows(DataValidationException.class, () ->
                 agentAppTemplateService.save(TenantId.SYS_TENANT_ID, template));
@@ -80,7 +72,7 @@ public class AgentAppTemplateServiceTest extends AbstractServiceTest {
     @Test
     public void testFindById() {
         AgentAppTemplate saved = agentAppTemplateService.save(TenantId.SYS_TENANT_ID,
-                createTemplate(AgentApplicationType.EDGE, InstallationAppType.DOCKER, "2.0.0"));
+                createTemplate(AgentApplicationType.EDGE, "2.0.0"));
 
         AgentAppTemplate found = agentAppTemplateService.findById(TenantId.SYS_TENANT_ID, saved.getId());
         Assert.assertNotNull(found);
@@ -99,12 +91,12 @@ public class AgentAppTemplateServiceTest extends AbstractServiceTest {
     }
 
     @Test
-    public void testFindByAppTypeAndInstallTypeAndVersion() {
+    public void testFindByAppTypeAndConfigTypeAndVersion() {
         AgentAppTemplate saved = agentAppTemplateService.save(TenantId.SYS_TENANT_ID,
-                createTemplate(AgentApplicationType.GATEWAY, InstallationAppType.DOCKER, "3.0.0"));
+                createTemplate(AgentApplicationType.GATEWAY, "3.0.0"));
 
-        AgentAppTemplate found = agentAppTemplateService.findByAppTypeAndInstallTypeAndVersion(
-                AgentApplicationType.GATEWAY, InstallationAppType.DOCKER, "3.0.0");
+        AgentAppTemplate found = agentAppTemplateService.findByAppTypeAndConfigTypeAndVersion(
+                AgentApplicationType.GATEWAY, AgentAppConfigType.DOCKER_COMPOSE, "3.0.0");
         Assert.assertNotNull(found);
         Assert.assertEquals(saved.getId(), found.getId());
 
@@ -112,12 +104,12 @@ public class AgentAppTemplateServiceTest extends AbstractServiceTest {
     }
 
     @Test
-    public void testFindByAppTypeAndInstallTypeAndVersionNoMatch() {
+    public void testFindByAppTypeAndConfigTypeAndVersionNoMatch() {
         AgentAppTemplate saved = agentAppTemplateService.save(TenantId.SYS_TENANT_ID,
-                createTemplate(AgentApplicationType.EDGE, InstallationAppType.DOCKER, "4.0.0"));
+                createTemplate(AgentApplicationType.EDGE, "4.0.0"));
 
-        AgentAppTemplate found = agentAppTemplateService.findByAppTypeAndInstallTypeAndVersion(
-                AgentApplicationType.EDGE, InstallationAppType.DOCKER, "999.0.0");
+        AgentAppTemplate found = agentAppTemplateService.findByAppTypeAndConfigTypeAndVersion(
+                AgentApplicationType.EDGE, AgentAppConfigType.DOCKER_COMPOSE, "999.0.0");
         Assert.assertNull(found);
 
         agentAppTemplateService.delete(TenantId.SYS_TENANT_ID, saved.getId());
@@ -126,9 +118,9 @@ public class AgentAppTemplateServiceTest extends AbstractServiceTest {
     @Test
     public void testFindAll() {
         AgentAppTemplate t1 = agentAppTemplateService.save(TenantId.SYS_TENANT_ID,
-                createTemplate(AgentApplicationType.EDGE, InstallationAppType.DOCKER, "5.0.0"));
+                createTemplate(AgentApplicationType.EDGE, "5.0.0"));
         AgentAppTemplate t2 = agentAppTemplateService.save(TenantId.SYS_TENANT_ID,
-                createTemplate(AgentApplicationType.GATEWAY, InstallationAppType.DOCKER, "5.1.0"));
+                createTemplate(AgentApplicationType.GATEWAY, "5.1.0"));
 
         List<AgentAppTemplate> all = agentAppTemplateService.findAll(TenantId.SYS_TENANT_ID);
         Assert.assertTrue(all.size() >= 2);
@@ -142,7 +134,7 @@ public class AgentAppTemplateServiceTest extends AbstractServiceTest {
     @Test
     public void testDelete() {
         AgentAppTemplate saved = agentAppTemplateService.save(TenantId.SYS_TENANT_ID,
-                createTemplate(AgentApplicationType.EDGE, InstallationAppType.DOCKER, "6.0.0"));
+                createTemplate(AgentApplicationType.EDGE, "6.0.0"));
 
         agentAppTemplateService.delete(TenantId.SYS_TENANT_ID, saved.getId());
 
@@ -160,7 +152,7 @@ public class AgentAppTemplateServiceTest extends AbstractServiceTest {
     @Test
     public void testUpdate() {
         AgentAppTemplate saved = agentAppTemplateService.save(TenantId.SYS_TENANT_ID,
-                createTemplate(AgentApplicationType.EDGE, InstallationAppType.DOCKER, "7.0.0"));
+                createTemplate(AgentApplicationType.EDGE, "7.0.0"));
 
         saved.setCurrentVersion("7.1.0");
         saved.setNextVersion("8.0.0");
@@ -177,10 +169,10 @@ public class AgentAppTemplateServiceTest extends AbstractServiceTest {
         agentAppTemplateService.delete(TenantId.SYS_TENANT_ID, saved.getId());
     }
 
-    private AgentAppTemplate createTemplate(AgentApplicationType appType, InstallationAppType installationType, String version) {
+    private AgentAppTemplate createTemplate(AgentApplicationType appType, String version) {
         AgentAppTemplate template = new AgentAppTemplate();
         template.setAppType(appType);
-        template.setType(installationType);
+        template.setConfig(new DockerComposeConfig());
         template.setCurrentVersion(version);
         template.setPreviousVersion("0.9.0");
         template.setNextVersion(null);

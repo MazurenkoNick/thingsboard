@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.InstallationAppType;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.agent.AgentAppTemplateDao;
@@ -57,10 +57,10 @@ public class JpaAgentAppTemplateDao extends JpaAbstractDao<AgentAppTemplateEntit
     }
 
     @Override
-    public AgentAppTemplate findByAppTypeAndInstallationTypeAndVersion(TenantId tenantId, AgentApplicationType appType,
-                                                                       InstallationAppType installationType, String currentVersion) {
-        return DaoUtil.getData(agentAppTemplateRepository.findFirstByAppTypeAndInstallationTypeAndCurrentVersion(
-                appType, installationType, currentVersion));
+    public AgentAppTemplate findByAppTypeAndConfigTypeAndVersion(TenantId tenantId, AgentApplicationType appType,
+                                                                  AgentAppConfigType configType, String currentVersion) {
+        return DaoUtil.getData(agentAppTemplateRepository.findFirstByAppTypeAndConfigTypeAndCurrentVersion(
+                appType.name(), configType.name(), currentVersion));
     }
 
     @Override

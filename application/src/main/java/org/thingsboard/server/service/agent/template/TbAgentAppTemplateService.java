@@ -17,7 +17,7 @@ package org.thingsboard.server.service.agent.template;
 
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.InstallationAppType;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 
@@ -29,7 +29,7 @@ public interface TbAgentAppTemplateService {
 
     AgentAppTemplate findById(TenantId tenantId, AgentAppTemplateId templateId);
 
-    AgentAppTemplate findByAppTypeAndInstallationTypeAndCurrentVersion(AgentApplicationType appType,
-                                                                       InstallationAppType installationType,
-                                                                       String currentVersion);
+    AgentAppTemplate findByAppTypeAndConfigTypeAndCurrentVersion(AgentApplicationType appType,
+                                                                  AgentAppConfigType configType,
+                                                                  String currentVersion);
 }

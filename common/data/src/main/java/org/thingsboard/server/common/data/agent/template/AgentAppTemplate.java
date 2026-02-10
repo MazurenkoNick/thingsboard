@@ -24,7 +24,6 @@ import org.thingsboard.server.common.data.BaseData;
 import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.HasVersion;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.InstallationAppType;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
@@ -41,7 +40,6 @@ public class AgentAppTemplate extends BaseData<AgentAppTemplateId> implements Ha
 
     private TenantId tenantId;
     private AgentApplicationType appType;
-    private InstallationAppType type;
     private AgentAppConfig config;
     private String currentVersion;
     private String previousVersion;
@@ -63,7 +61,6 @@ public class AgentAppTemplate extends BaseData<AgentAppTemplateId> implements Ha
         super(template);
         this.tenantId = template.getTenantId();
         this.appType = template.getAppType();
-        this.type = template.getType();
         this.currentVersion = template.getCurrentVersion();
         this.previousVersion = template.getPreviousVersion();
         this.nextVersion = template.getNextVersion();
@@ -93,11 +90,6 @@ public class AgentAppTemplate extends BaseData<AgentAppTemplateId> implements Ha
     @Schema(description = "Application type", requiredMode = Schema.RequiredMode.REQUIRED)
     public AgentApplicationType getAppType() {
         return appType;
-    }
-
-    @Schema(description = "Installation type", requiredMode = Schema.RequiredMode.REQUIRED)
-    public InstallationAppType getType() {
-        return type;
     }
 
     @Schema(description = "Config (with compose field and type = 'DOCKER_COMPOSE' for EDGE/GATEWAY)")

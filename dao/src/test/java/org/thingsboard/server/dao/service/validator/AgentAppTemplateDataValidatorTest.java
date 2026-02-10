@@ -22,7 +22,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.InstallationAppType;
 import org.thingsboard.server.common.data.agent.step.InfoStep;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -64,16 +63,6 @@ class AgentAppTemplateDataValidatorTest {
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, template));
         assertThat(exception.getMessage()).containsIgnoringCase("app type");
-    }
-
-    @Test
-    void testValidateDataImpl_nullInstallationType_thenException() {
-        AgentAppTemplate template = createValidTemplate();
-        template.setType(null);
-
-        DataValidationException exception = assertThrows(DataValidationException.class,
-                () -> validator.validateDataImpl(tenantId, template));
-        assertThat(exception.getMessage()).containsIgnoringCase("installation type");
     }
 
     @Test
@@ -286,7 +275,6 @@ class AgentAppTemplateDataValidatorTest {
     private AgentAppTemplate createValidTemplate() {
         AgentAppTemplate template = new AgentAppTemplate();
         template.setAppType(AgentApplicationType.GENERIC);
-        template.setType(InstallationAppType.DOCKER);
         template.setCurrentVersion("1.0.0");
         template.setPreviousVersion("0.9.0");
         return template;

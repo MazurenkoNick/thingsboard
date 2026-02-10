@@ -17,7 +17,6 @@ package org.thingsboard.server.dao.model.sql;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -26,10 +25,11 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.dialect.PostgreSQLJsonPGObjectJsonbType;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.InstallationAppType;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
@@ -54,10 +54,6 @@ public final class AgentAppTemplateEntity extends BaseVersionedEntity<AgentAppTe
     @Column(name = ModelConstants.AGENT_APP_TEMPLATE_APP_TYPE_PROPERTY)
     private AgentApplicationType appType;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = ModelConstants.AGENT_APP_TEMPLATE_INSTALLATION_TYPE_PROPERTY)
-    private InstallationAppType installationType;
-
     @Column(name = ModelConstants.AGENT_APP_TEMPLATE_CURRENT_VERSION_PROPERTY)
     private String currentVersion;
 
@@ -68,15 +64,18 @@ public final class AgentAppTemplateEntity extends BaseVersionedEntity<AgentAppTe
     private String nextVersion;
 
     @Convert(converter = JsonConverter.class)
-    @Column(name = ModelConstants.AGENT_APP_TEMPLATE_CONFIG_PROPERTY)
+    @JdbcType(PostgreSQLJsonPGObjectJsonbType.class)
+    @Column(name = ModelConstants.AGENT_APP_TEMPLATE_CONFIG_PROPERTY, columnDefinition = "jsonb")
     private JsonNode config;
 
     @Convert(converter = JsonConverter.class)
-    @Column(name = ModelConstants.AGENT_APP_TEMPLATE_START_STEPS_PROPERTY)
+    @JdbcType(PostgreSQLJsonPGObjectJsonbType.class)
+    @Column(name = ModelConstants.AGENT_APP_TEMPLATE_START_STEPS_PROPERTY, columnDefinition = "jsonb")
     private JsonNode startSteps;
 
     @Convert(converter = JsonConverter.class)
-    @Column(name = ModelConstants.AGENT_APP_TEMPLATE_UPGRADE_STEPS_PROPERTY)
+    @JdbcType(PostgreSQLJsonPGObjectJsonbType.class)
+    @Column(name = ModelConstants.AGENT_APP_TEMPLATE_UPGRADE_STEPS_PROPERTY, columnDefinition = "jsonb")
     private JsonNode upgradeSteps;
 
     public AgentAppTemplateEntity() {
@@ -89,7 +88,6 @@ public final class AgentAppTemplateEntity extends BaseVersionedEntity<AgentAppTe
             this.tenantId = template.getTenantId().getId();
         }
         this.appType = template.getAppType();
-        this.installationType = template.getType();
         this.currentVersion = template.getCurrentVersion();
         this.previousVersion = template.getPreviousVersion();
         this.nextVersion = template.getNextVersion();
@@ -107,7 +105,6 @@ public final class AgentAppTemplateEntity extends BaseVersionedEntity<AgentAppTe
             template.setTenantId(TenantId.fromUUID(tenantId));
         }
         template.setAppType(appType);
-        template.setType(installationType);
         template.setCurrentVersion(currentVersion);
         template.setPreviousVersion(previousVersion);
         template.setNextVersion(nextVersion);

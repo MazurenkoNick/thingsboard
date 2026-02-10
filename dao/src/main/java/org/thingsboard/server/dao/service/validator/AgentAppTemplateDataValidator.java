@@ -47,9 +47,6 @@ public class AgentAppTemplateDataValidator extends DataValidator<AgentAppTemplat
         if (template.getAppType() == null) {
             throw new DataValidationException("Template app type should be specified!");
         }
-        if (template.getType() == null) {
-            throw new DataValidationException("Template installation type should be specified!");
-        }
         if (template.getCurrentVersion() == null || template.getCurrentVersion().isBlank()) {
             throw new DataValidationException("Template current version should be specified!");
         }
