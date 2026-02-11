@@ -53,4 +53,15 @@ public abstract class AgentAppStep {
     }
 
     public abstract AgentAppStepType getType();
+
+    public abstract AgentAppStep copy();
+
+    protected void copyBaseFields(AgentAppStep copy) {
+        copy.setId(this.id);
+        copy.setNextId(this.nextId);
+        copy.setTitle(this.title);
+        copy.setOptional(this.optional);
+        copy.setTemplateOnly(this.templateOnly);
+        copy.setEnabled(this.enabled);
+    }
 }

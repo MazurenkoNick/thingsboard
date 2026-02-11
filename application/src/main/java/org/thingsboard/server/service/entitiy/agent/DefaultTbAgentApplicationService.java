@@ -37,12 +37,11 @@ public class DefaultTbAgentApplicationService implements TbAgentApplicationServi
     private final AgentApplicationService agentApplicationService;
 
     @Override
-    public AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application,
-                                            AgentAppTemplate template, TemplateMergeRequest request) {
+    public AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application, AgentAppTemplate template) {
         log.trace("Executing mergeForPreview, tenantId [{}], applicationId [{}], templateId [{}]",
                 tenantId, application.getId(), template.getId());
 
-        TemplateMergeCtx ctx = new TemplateMergeCtx(request.getSelectedComposeType());
+        TemplateMergeCtx ctx = TemplateMergeCtx.empty();
         templateMergeOrchestrator.merge(application, template, ctx);
         return application;
     }

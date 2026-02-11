@@ -93,25 +93,15 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
     private void validateSteps(AgentApplication agentApp) {
         try {
             StepLinkedListUtils.validate(agentApp.getStartSteps());
-            validateNoTemplateSteps(agentApp.getStartSteps());
         } catch (IllegalStateException e) {
             throw new DataValidationException("Invalid install steps: " + e.getMessage());
         }
         try {
             if (!CollectionUtils.isEmpty(agentApp.getUpdateSteps())) {
                 StepLinkedListUtils.validate(agentApp.getUpdateSteps());
-                validateNoTemplateSteps(agentApp.getUpdateSteps());
             }
         } catch (IllegalStateException e) {
             throw new DataValidationException("Invalid update steps: " + e.getMessage());
-        }
-    }
-
-    private void validateNoTemplateSteps(List<AgentAppStep> steps) {
-        if (steps.stream().anyMatch(AgentAppStep::isTemplateOnly)) {
-            throw new DataValidationException(
-                    "Template-only step cannot be present in the agent application"
-            );
         }
     }
 }

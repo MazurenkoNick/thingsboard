@@ -16,12 +16,14 @@
 package org.thingsboard.server.common.data.agent.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class DockerComposeConfig extends AgentAppConfig {
 
@@ -31,4 +33,10 @@ public class DockerComposeConfig extends AgentAppConfig {
     public AgentAppConfigType getType() {
         return AgentAppConfigType.DOCKER_COMPOSE;
     }
+
+    @Override
+    public AgentAppConfig copy() {
+        return new DockerComposeConfig(compose.deepCopy());
+    }
 }
+

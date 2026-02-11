@@ -19,7 +19,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,13 +30,10 @@ import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.template.TemplateMergeRequest;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.agent.TbAgentApplicationService;
 import org.thingsboard.server.service.security.permission.Operation;
-
-import java.util.UUID;
 
 @RestController
 @TbCoreComponent
@@ -49,19 +45,21 @@ public class AgentApplicationController extends BaseController {
     private final TbAgentApplicationService tbAgentApplicationService;
 
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @PostMapping("/agent/app/merge/{agentAppTemplateId}/preview")
+    @PostMapping("/agent/app/merge/template/preview")
     @ResponseBody
-    public AgentApplication mergeForPreview(
-            @PathVariable UUID agentAppTemplateId,
-            @Valid @RequestBody TemplateMergeRequest req) throws ThingsboardException {
+    public AgentApplication mergeForPreview(@Valid @RequestBody TemplateMergeRequest req) throws ThingsboardException {
         TenantId tenantId = getCurrentUser().getTenantId();
+        AgentAppTemplate template = req.getTemplate();
+        checkEntityId(template.getId(), agentAppTemplateService::findById, Operation.READ);
 
-        AgentAppTemplateId templateId = new AgentAppTemplateId(agentAppTemplateId);
-        AgentAppTemplate agentAppTemplate = checkEntityId(templateId, agentAppTemplateService::findById, Operation.READ);
-
-        if (agentAppTemplate.getAppType() == AgentApplicationType.GENERIC) {
+        if (template.getAppType() == AgentApplicationType.GENERIC) {
             throw new ThingsboardException("Can't merge agent application with the template of the generic type", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
-        return tbAgentApplicationService.mergeForPreview(tenantId, req.getAgentApplication(), agentAppTemplate, req);
+        AgentApplication app = req.getApplication();
+        if (app == null) {
+            app = AgentApplication.fromTemplate(template);
+            app.setTenantId(tenantId);
+        }
+        return tbAgentApplicationService.mergeForPreview(tenantId, app, template);
     }
 }

@@ -22,6 +22,5 @@ import org.thingsboard.server.common.data.id.TenantId;
 
 public interface TbAgentApplicationService {
 
-    AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application,
-                                     AgentAppTemplate template, TemplateMergeRequest request);
+    AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application, AgentAppTemplate template);
 }

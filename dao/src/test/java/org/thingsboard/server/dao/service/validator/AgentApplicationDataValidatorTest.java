@@ -240,22 +240,6 @@ class AgentApplicationDataValidatorTest {
     }
 
     @Test
-    void testValidateDataImpl_installStepsContainTemplateOnly_thenException() {
-        UUID id1 = UUID.randomUUID();
-        UUID id2 = UUID.randomUUID();
-
-        InfoStep step1 = new InfoStep(id1, id2, "Step 1", true);
-        InfoStep step2 = new InfoStep(id2, null, "Step 2", true);
-
-        AgentApplication app = createValidApplication();
-        app.setStartSteps(new ArrayList<>(List.of(step1, step2)));
-
-        DataValidationException exception = assertThrows(DataValidationException.class,
-                () -> validator.validateDataImpl(tenantId, app));
-        assertThat(exception.getMessage()).contains("Template-only step");
-    }
-
-    @Test
     void testValidateDataImpl_installStepsWithCircularReference_thenException() {
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();

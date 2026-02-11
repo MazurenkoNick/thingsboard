@@ -20,6 +20,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,9 +33,10 @@ import java.util.UUID;
 public class ComposeTypeChoiceStep extends AgentAppStep {
 
     private Map<String, JsonNode> composeTemplates;
+    private String selectedComposeType;
 
     public ComposeTypeChoiceStep(UUID id, UUID nextId, String title) {
-        super(id, nextId, title, false);
+        super(id, nextId, title, true);
     }
 
     @Override
@@ -48,5 +50,18 @@ public class ComposeTypeChoiceStep extends AgentAppStep {
 
     public Set<String> getComposeTypes() {
         return composeTemplates.keySet();
+    }
+
+    @Override
+    public AgentAppStep copy() {
+        ComposeTypeChoiceStep copy = new ComposeTypeChoiceStep();
+        copyBaseFields(copy);
+        copy.setSelectedComposeType(this.selectedComposeType);
+        if (this.composeTemplates != null) {
+            Map<String, JsonNode> templatesCopy = new LinkedHashMap<>();
+            this.composeTemplates.forEach((key, value) -> templatesCopy.put(key, value.deepCopy()));
+            copy.setComposeTemplates(templatesCopy);
+        }
+        return copy;
     }
 }

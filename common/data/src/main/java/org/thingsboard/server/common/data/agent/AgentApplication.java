@@ -25,6 +25,7 @@ import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.HasVersion;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -32,6 +33,7 @@ import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.TenantId;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Schema
 @EqualsAndHashCode(callSuper = true)
@@ -68,6 +70,23 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         this.startSteps = application.getStartSteps();
         this.updateSteps = application.getUpdateSteps();
         this.version = application.getVersion();
+    }
+
+    public static AgentApplication fromTemplate(AgentAppTemplate template) {
+        AgentApplication app = new AgentApplication();
+        app.setTemplateId(template.getId());
+        app.setAppType(template.getAppType());
+        app.setConfig(template.getConfig() != null ? template.getConfig().copy() : null);
+        app.setStartSteps(copySteps(template.getStartSteps()));
+        app.setUpdateSteps(copySteps(template.getUpgradeSteps()));
+        return app;
+    }
+
+    private static List<AgentAppStep> copySteps(List<AgentAppStep> steps) {
+        if (steps == null) {
+            return null;
+        }
+        return steps.stream().map(AgentAppStep::copy).collect(Collectors.toList());
     }
 
     @Schema(description = "JSON object with the Agent Application Id.")

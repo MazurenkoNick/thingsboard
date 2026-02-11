@@ -18,16 +18,19 @@ package org.thingsboard.server.common.data.agent.template;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.agent.step.ComposeTypeChoiceStep;
 
 @Data
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class TemplateMergeCtx {
 
-    private String selectedComposeType;
+    private ComposeTypeChoiceStep composeTypeChoiceStep;
 
-    public boolean hasSelectedComposeType() {
-        return StringUtils.isNotEmpty(selectedComposeType);
+    public static TemplateMergeCtx empty() {
+        return new TemplateMergeCtx();
     }
 }

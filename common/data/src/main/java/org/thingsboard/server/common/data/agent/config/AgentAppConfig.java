@@ -32,4 +32,6 @@ import lombok.NoArgsConstructor;
 public abstract class AgentAppConfig {
 
     public abstract AgentAppConfigType getType();
+
+    public abstract AgentAppConfig copy();
 }

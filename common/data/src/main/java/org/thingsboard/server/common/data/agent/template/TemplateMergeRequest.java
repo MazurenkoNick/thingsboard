@@ -16,12 +16,9 @@
 package org.thingsboard.server.common.data.agent.template;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 
 @Data
@@ -29,13 +26,11 @@ import org.thingsboard.server.common.data.agent.AgentApplication;
 @AllArgsConstructor
 public class TemplateMergeRequest {
 
-    @Schema(description = "The value of selected compose type; applicable for templates with step type='compose-type-choice'")
-    @NotBlank
-    private String selectedComposeType;
-
     @Schema(description = "User-made agent application which is used during merge with the template")
-    @NotNull
-    private AgentApplication agentApplication;
+    // todo: if the agent application is null, then we will have to create a new one and merge with the existing template
+    private AgentApplication application;
 
+    @Schema(description = "Template with the pre-selected configuration to be merged into agent application")
+    private AgentAppTemplate template;
 }
 

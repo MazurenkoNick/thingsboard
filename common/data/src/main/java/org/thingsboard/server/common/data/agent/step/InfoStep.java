@@ -36,4 +36,12 @@ public class InfoStep extends AgentAppStep {
     public AgentAppStepType getType() {
         return AgentAppStepType.INFO;
     }
+
+    @Override
+    public AgentAppStep copy() {
+        InfoStep copy = new InfoStep();
+        copyBaseFields(copy);
+        copy.setMessage(this.message);
+        return copy;
+    }
 }
