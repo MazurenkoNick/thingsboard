@@ -802,7 +802,7 @@ updates:
 agent:
   appTemplates:
     sync:
-      enabled: "${AGENT_APP_TEMPLATE_SYNC_ENABLED:false}"
+      enabled: "${AGENT_APP_TEMPLATE_SYNC_ENABLED:true}"
       repoUri: "${AGENT_APP_TEMPLATE_SYNC_REPO_URI:}"
       branch: "${AGENT_APP_TEMPLATE_SYNC_BRANCH:main}"
       basePath: "${AGENT_APP_TEMPLATE_SYNC_BASE_PATH:templates}"

@@ -15,6 +15,7 @@
  */
 package org.thingsboard.server.common.data.agent.step;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -48,6 +49,7 @@ public class ComposeTypeChoiceStep extends AgentAppStep {
         return Optional.ofNullable(composeTemplates.get(composeType));
     }
 
+    @JsonIgnore
     public Set<String> getComposeTypes() {
         return composeTemplates.keySet();
     }
