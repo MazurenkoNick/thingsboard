@@ -17,10 +17,9 @@ package org.thingsboard.server.service.entitiy.agent;
 
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
-import org.thingsboard.server.common.data.agent.template.TemplateMergeRequest;
 import org.thingsboard.server.common.data.id.TenantId;
 
 public interface TbAgentApplicationService {
 
-    AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application, AgentAppTemplate template);
+    AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application, AgentAppTemplate template, String composeType);
 }

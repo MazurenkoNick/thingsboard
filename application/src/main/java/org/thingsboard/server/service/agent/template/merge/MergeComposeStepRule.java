@@ -41,12 +41,7 @@ public class MergeComposeStepRule implements AppTemplateMergeRule {
 
     @Override
     public boolean supports(AgentApplication agentApp, AgentAppTemplate template, TemplateMergeCtx ctx) {
-        return StepLinkedListUtils.getByType(AgentAppStepType.COMPOSE_TEMPLATE, ComposeTypeChoiceStep.class, template.getStartSteps())
-                .filter(s -> StringUtils.isNoneBlank(s.getSelectedComposeType()))
-                .map(s -> {
-                    ctx.setComposeTypeChoiceStep(s);
-                    return true;
-                }).orElse(false);
+        return ctx != null && StringUtils.isNoneBlank(ctx.getSelectedComposeType());
     }
 
     @Override
@@ -87,7 +82,7 @@ public class MergeComposeStepRule implements AppTemplateMergeRule {
     }
 
     private void mergeComposeBySelectedType(AgentApplication agentApp, ComposeTypeChoiceStep choiceStep, TemplateMergeCtx ctx) {
-        String selectedComposeType = ctx.getComposeTypeChoiceStep().getSelectedComposeType();
+        String selectedComposeType = ctx.getSelectedComposeType();
         JsonNode composeTemplate = getComposeTemplateByType(choiceStep, selectedComposeType);
         AgentAppConfig appConfig = agentApp.getConfig();
 

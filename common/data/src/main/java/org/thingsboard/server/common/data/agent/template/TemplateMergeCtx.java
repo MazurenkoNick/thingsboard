@@ -19,7 +19,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.step.ComposeTypeChoiceStep;
 
 @Data
@@ -28,7 +27,7 @@ import org.thingsboard.server.common.data.agent.step.ComposeTypeChoiceStep;
 @NoArgsConstructor
 public class TemplateMergeCtx {
 
-    private ComposeTypeChoiceStep composeTypeChoiceStep;
+    private String selectedComposeType;
 
     public static TemplateMergeCtx empty() {
         return new TemplateMergeCtx();

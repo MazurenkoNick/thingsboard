@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
-import org.thingsboard.server.common.data.agent.template.TemplateMergeRequest;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -37,11 +36,13 @@ public class DefaultTbAgentApplicationService implements TbAgentApplicationServi
     private final AgentApplicationService agentApplicationService;
 
     @Override
-    public AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application, AgentAppTemplate template) {
-        log.trace("Executing mergeForPreview, tenantId [{}], applicationId [{}], templateId [{}]",
-                tenantId, application.getId(), template.getId());
+    public AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application, AgentAppTemplate template, String composeType) {
+        log.trace("Executing mergeForPreview, tenantId [{}], applicationId [{}], templateId [{}], composeType [{}]",
+                tenantId, application.getId(), template.getId(), composeType);
 
-        TemplateMergeCtx ctx = TemplateMergeCtx.empty();
+        TemplateMergeCtx ctx = TemplateMergeCtx.builder()
+                .selectedComposeType(composeType)
+                .build();
         templateMergeOrchestrator.merge(application, template, ctx);
         return application;
     }
