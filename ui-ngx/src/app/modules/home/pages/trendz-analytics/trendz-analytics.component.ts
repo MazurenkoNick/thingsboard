@@ -53,7 +53,7 @@ export class TrendzAnalyticsComponent extends PageComponent implements OnInit {
   @ViewChild('replaceComponentAnchor', {static: true}) replaceComponentAnchor: TbAnchorComponent;
 
   authState = getCurrentAuthState(this.store);
-  trendzEnabled = this.authState.licenseVersion > 1 && this.authState.trendzEnabled;
+  trendzEnabled = this.authState.licenseVersion < 2 || this.authState.trendzEnabled;
 
   trendzSummary: TrendzSummary;
   trendzSynced = this.route.snapshot.data.trendzSynced;
