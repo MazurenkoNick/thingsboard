@@ -632,6 +632,9 @@ cache:
     edgeSessions:
       timeToLiveInMinutes: "${CACHE_SPECS_EDGE_SESSIONS_TTL:0}" # Edge Sessions cache TTL; no expiration time if set to '0'
       maxSize: "${CACHE_SPECS_EDGE_SESSIONS_MAX_SIZE:10000}" # 0 means the cache is disabled
+    agentSessions:
+      timeToLiveInMinutes: "${CACHE_SPECS_AGENT_SESSIONS_TTL:0}" # Agent Sessions cache TTL; no expiration time if set to '0'
+      maxSize: "${CACHE_SPECS_AGENT_SESSIONS_MAX_SIZE:10000}" # 0 means the cache is disabled
     relatedEdges:
       timeToLiveInMinutes: "${CACHE_SPECS_RELATED_EDGES_TTL:1440}" # Related Edges cache TTL
       maxSize: "${CACHE_SPECS_RELATED_EDGES_MAX_SIZE:10000}" # 0 means the cache is disabled

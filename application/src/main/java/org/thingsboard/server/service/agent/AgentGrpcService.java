@@ -77,7 +77,7 @@ public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBas
             public void onNext(AgentToServer msg) {
                 AgentSession session = sessionRef.get();
                 if (session == null) {
-                    tryInitSession(msg, responseObserver).ifPresent(s -> sessionRef.set(s));
+                    tryInitSession(msg, responseObserver).ifPresent(sessionRef::set);
                     session = sessionRef.get();
                 }
                 processInboundMessage(session, msg);

@@ -37,6 +37,7 @@ import org.thingsboard.server.common.msg.TbMsgDataType;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
 import org.thingsboard.server.common.msg.notification.NotificationRuleProcessor;
 import org.thingsboard.server.gen.agent.v1.Hello;
+import org.thingsboard.server.cache.TbTransactionalCache;
 import org.thingsboard.server.queue.discovery.TbServiceInfoProvider;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.agent.session.AgentSession;
@@ -59,7 +60,7 @@ public class AgentStateService {
 
     private final AgentSessionRegistry sessions;
     private final TbServiceInfoProvider serviceInfoProvider;
-//    private final TbTransactionalCache<AgentId, String> agentIdServiceIdCache; // todo: impl
+    private final TbTransactionalCache<AgentId, String> agentIdServiceIdCache;
     private final NotificationRuleProcessor notificationRuleProcessor; // todo: figure out the need of it here
     private final TelemetrySubscriptionService tsSubService;
     private final TbClusterService clusterService;
@@ -77,7 +78,7 @@ public class AgentStateService {
         AgentId agentId = agent.getId();
 
         sessions.registerOrReplace(agentId, tenantId, session); // todo: think about epochs
-//        agentIdServiceIdCache.put(agentId, serviceInfoProvider.getServiceId()); // todo:
+        agentIdServiceIdCache.put(agentId, serviceInfoProvider.getServiceId());
         log.info("[{}] agent [{}] connected successfully", tenantId, agentId);
         save(tenantId, agentId, ACTIVITY_STATE, true);
         long lastConnectTs = System.currentTimeMillis();
@@ -101,6 +102,7 @@ public class AgentStateService {
         AgentId agentId = agent.getId();
 
         sessions.removeIfSame(session);
+        agentIdServiceIdCache.evict(agentId);
         save(tenantId, agentId, ACTIVITY_STATE, false);
         long lastDisconnectTs = System.currentTimeMillis();
         save(tenantId, agentId, LAST_DISCONNECT_TIME, lastDisconnectTs);
