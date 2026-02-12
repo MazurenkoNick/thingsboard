@@ -52,6 +52,8 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     private List<AgentAppStep> updateSteps; // todo: to upgradeSteps!
     @Getter
     private Long version;
+    @Getter
+    private boolean pendingDeletion;
 
     public AgentApplication() {
         super();
@@ -71,6 +73,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         this.startSteps = application.getStartSteps();
         this.updateSteps = application.getUpdateSteps();
         this.version = application.getVersion();
+        this.pendingDeletion = application.isPendingDeletion();
     }
 
     public static AgentApplication fromTemplate(AgentAppTemplate template) {

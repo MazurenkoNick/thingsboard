@@ -119,6 +119,21 @@ public class AgentApplicationController extends BaseController {
         tbAgentApplicationService.delete(application, getCurrentUser());
     }
 
+    @ApiOperation(value = "Restart Agent Application (restartAgentApplication)",
+            notes = "Restarts the agent application by creating a RESTART event."
+                    + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PostMapping("/agent/app/{agentApplicationId}/restart")
+    @ResponseStatus(value = HttpStatus.OK)
+    public void restartAgentApplication(@Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
+                                        @PathVariable(AGENT_APP_ID) String strAgentAppId) throws Exception {
+        checkParameter(AGENT_APP_ID, strAgentAppId);
+        AgentApplicationId agentApplicationId = new AgentApplicationId(toUUID(strAgentAppId));
+        checkAgentAppId(agentApplicationId, Operation.WRITE);
+        TenantId tenantId = getCurrentUser().getTenantId();
+        tbAgentApplicationService.restart(tenantId, agentApplicationId, getCurrentUser());
+    }
+
     @ApiOperation(value = "Merge template into application for preview (mergeForPreview)",
             notes = "Merges the specified template into an agent application for preview purposes. " +
                     "If no application is provided in the body, a new one is created from the template. " +

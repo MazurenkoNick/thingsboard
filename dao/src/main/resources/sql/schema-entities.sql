@@ -793,10 +793,26 @@ CREATE TABLE IF NOT EXISTS agent_application (
     config jsonb,
     start_steps jsonb NOT NULL,
     update_steps jsonb,
+    pending_deletion boolean NOT NULL DEFAULT false,
     version BIGINT DEFAULT 1,
     CONSTRAINT fk_agent_application_agent FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE CASCADE,
     CONSTRAINT fk_agent_application_template FOREIGN KEY (template_id) REFERENCES agent_app_template(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS agent_app_event (
+    id uuid NOT NULL CONSTRAINT agent_app_event_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    tenant_id uuid NOT NULL,
+    application_id uuid NOT NULL,
+    action_type varchar(32) NOT NULL,
+    delivery_state varchar(32) NOT NULL DEFAULT 'PENDING',
+    status varchar(32),
+    current_step_id varchar(36),
+    total_steps int NOT NULL DEFAULT 0,
+    updated_time bigint NOT NULL,
+    CONSTRAINT fk_agent_app_event_application FOREIGN KEY (application_id) REFERENCES agent_application(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_agent_app_event_app_delivery ON agent_app_event(application_id, delivery_state);
 
 CREATE TABLE IF NOT EXISTS edge_event (
     seq_id INT GENERATED ALWAYS AS IDENTITY,

@@ -80,6 +80,9 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
     @Column(name = ModelConstants.AGENT_APPLICATION_UPDATE_STEPS_PROPERTY, columnDefinition = "jsonb")
     private JsonNode updateSteps;
 
+    @Column(name = ModelConstants.AGENT_APPLICATION_PENDING_DELETION_PROPERTY)
+    private boolean pendingDeletion;
+
     public AgentApplicationEntity() {
         super();
     }
@@ -100,6 +103,7 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
         this.config = application.getConfig() != null ? JacksonUtil.valueToTree(application.getConfig()) : null;
         this.startSteps = application.getStartSteps() != null ? JacksonUtil.valueToTree(application.getStartSteps()) : null;
         this.updateSteps = application.getUpdateSteps() != null ? JacksonUtil.valueToTree(application.getUpdateSteps()) : null;
+        this.pendingDeletion = application.isPendingDeletion();
     }
 
     @Override
@@ -121,6 +125,7 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
         application.setConfig(config != null ? JacksonUtil.treeToValue(config, AgentAppConfig.class) : null);
         application.setStartSteps(startSteps != null ? JacksonUtil.convertValue(startSteps, new TypeReference<>() {}) : null);
         application.setUpdateSteps(updateSteps != null ? JacksonUtil.convertValue(updateSteps, new TypeReference<>() {}) : null);
+        application.setPendingDeletion(pendingDeletion);
         return application;
     }
 }
