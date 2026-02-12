@@ -27,6 +27,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class DockerComposeConfig extends AgentAppConfig {
 
+    private String projectName;
     private JsonNode compose;
 
     @Override
@@ -36,7 +37,7 @@ public class DockerComposeConfig extends AgentAppConfig {
 
     @Override
     public AgentAppConfig copy() {
-        return new DockerComposeConfig(compose.deepCopy());
+        return new DockerComposeConfig(this.projectName, compose.deepCopy());
     }
 }
 

@@ -19,14 +19,10 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class ComposeStartStep extends AgentAppStep {
-
-    private String projectName;
 
     @Override
     public AgentAppStepType getType() {
@@ -37,7 +33,6 @@ public class ComposeStartStep extends AgentAppStep {
     public AgentAppStep copy() {
         ComposeStartStep copy = new ComposeStartStep();
         copyBaseFields(copy);
-        copy.setProjectName(this.projectName);
         return copy;
     }
 }
