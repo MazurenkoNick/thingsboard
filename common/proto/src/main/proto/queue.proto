@@ -1932,3 +1932,22 @@ message AlarmRuleStateProto {
   int64 firstEventTs = 3;
   int64 lastCheckTs = 4;
 }
+
+/**
+ * Agent notification messages
+ */
+message ToAgentNotificationMsg {
+  AgentAppEventNotificationProto agentAppEventNotification = 1;
+}
+
+message AgentAppEventNotificationProto {
+  int64 tenantIdMSB = 1;
+  int64 tenantIdLSB = 2;
+  int64 agentIdMSB = 3;
+  int64 agentIdLSB = 4;
+  int64 applicationIdMSB = 5;
+  int64 applicationIdLSB = 6;
+  int64 eventIdMSB = 7;
+  int64 eventIdLSB = 8;
+  string actionType = 9;
+}

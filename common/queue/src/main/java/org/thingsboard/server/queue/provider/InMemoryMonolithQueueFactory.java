@@ -232,6 +232,16 @@ public class InMemoryMonolithQueueFactory implements TbCoreQueueFactory, TbRuleE
     }
 
     @Override
+    public TbQueueConsumer<TbProtoQueueMsg<TransportProtos.ToAgentNotificationMsg>> createToAgentNotificationsMsgConsumer() {
+        return new InMemoryTbQueueConsumer<>(storage, topicService.getAgentNotificationsTopic(serviceInfoProvider.getServiceId()).getFullTopicName());
+    }
+
+    @Override
+    public TbQueueProducer<TbProtoQueueMsg<TransportProtos.ToAgentNotificationMsg>> createAgentNotificationsMsgProducer() {
+        return new InMemoryTbQueueProducer<>(storage, topicService.getAgentNotificationsTopic(serviceInfoProvider.getServiceId()).getFullTopicName());
+    }
+
+    @Override
     public TbQueueProducer<TbProtoQueueMsg<TransportProtos.ToEdgeEventNotificationMsg>> createEdgeEventMsgProducer() {
         return null;
     }

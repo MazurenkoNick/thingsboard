@@ -50,10 +50,14 @@ public class TopicService {
     @Value("${queue.calculated-fields.notifications-topic:calculated_field.notifications}")
     private String tbCalculatedFieldNotificationsTopic;
 
+    @Value("${queue.agent.notifications-topic:tb_agent.notifications}")
+    private String tbAgentNotificationsTopic;
+
     private final ConcurrentMap<String, TopicPartitionInfo> tbCoreNotificationTopics = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, TopicPartitionInfo> tbRuleEngineNotificationTopics = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, TopicPartitionInfo> tbEdgeNotificationTopics = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, TopicPartitionInfo> tbCalculatedFieldNotificationTopics = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, TopicPartitionInfo> tbAgentNotificationTopics = new ConcurrentHashMap<>();
     private final ConcurrentReferenceHashMap<EdgeId, TopicPartitionInfo> tbEdgeEventsNotificationTopics = new ConcurrentReferenceHashMap<>();
 
     /**
@@ -88,6 +92,10 @@ public class TopicService {
 
     private TopicPartitionInfo buildEdgeNotificationsTopicPartitionInfo(String serviceId) {
         return buildTopicPartitionInfo(buildNotificationTopicName(tbEdgeNotificationsTopic, serviceId), null, null, false);
+    }
+
+    public TopicPartitionInfo getAgentNotificationsTopic(String serviceId) {
+        return tbAgentNotificationTopics.computeIfAbsent(serviceId, id -> buildNotificationsTopicPartitionInfo(tbAgentNotificationsTopic, serviceId));
     }
 
     public TopicPartitionInfo getCalculatedFieldNotificationsTopic(String serviceId) {
