@@ -99,15 +99,10 @@ public class AgentApplicationController extends BaseController {
     @ResponseBody
     public AgentApplication saveAgentApplication(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "A JSON value representing the agent application.")
-            @RequestBody AgentApplication agentApplication) throws ThingsboardException {
-        TenantId tenantId = getCurrentUser().getTenantId();
-        agentApplication.setTenantId(tenantId);
-        if (agentApplication.getId() != null) {
-            checkAgentAppId(agentApplication.getId(), Operation.WRITE);
-        } else {
-            checkEntity(null, agentApplication, org.thingsboard.server.service.security.permission.Resource.AGENT_APPLICATION);
-        }
-        return checkNotNull(agentAppService.save(tenantId, agentApplication));
+            @RequestBody AgentApplication agentApplication) throws Exception {
+        agentApplication.setTenantId(getTenantId());
+        checkEntity(agentApplication.getId(), agentApplication, org.thingsboard.server.service.security.permission.Resource.AGENT_APPLICATION);
+        return tbAgentApplicationService.save(agentApplication, getCurrentUser());
     }
 
     @ApiOperation(value = "Delete Agent Application (deleteAgentApplication)",
@@ -120,9 +115,8 @@ public class AgentApplicationController extends BaseController {
                                        @PathVariable(AGENT_APP_ID) String strAgentAppId) throws ThingsboardException {
         checkParameter(AGENT_APP_ID, strAgentAppId);
         AgentApplicationId agentApplicationId = new AgentApplicationId(toUUID(strAgentAppId));
-        checkAgentAppId(agentApplicationId, Operation.DELETE);
-        TenantId tenantId = getCurrentUser().getTenantId();
-        agentAppService.delete(tenantId, agentApplicationId);
+        AgentApplication application = checkAgentAppId(agentApplicationId, Operation.DELETE);
+        tbAgentApplicationService.delete(application, getCurrentUser());
     }
 
     @ApiOperation(value = "Merge template into application for preview (mergeForPreview)",
@@ -150,8 +144,8 @@ public class AgentApplicationController extends BaseController {
         }
         if (application == null) {
             application = AgentApplication.fromTemplate(template);
-            application.setTenantId(tenantId);
         }
+        application.setTenantId(tenantId);
         return tbAgentApplicationService.mergeForPreview(tenantId, application, template, composeType);
     }
 }

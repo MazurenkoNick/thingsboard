@@ -897,7 +897,7 @@ public abstract class BaseController {
         return checkEntityId(agentApplicationId, agentAppService::findById, operation);
     }
 
-    private AgentAppTemplate checkAgentAppTemplateId(AgentAppTemplateId agentAppTemplateId, Operation operation) throws ThingsboardException {
+    AgentAppTemplate checkAgentAppTemplateId(AgentAppTemplateId agentAppTemplateId, Operation operation) throws ThingsboardException {
         return checkEntityId(agentAppTemplateId, agentAppTemplateService::findById, operation);
     }
 

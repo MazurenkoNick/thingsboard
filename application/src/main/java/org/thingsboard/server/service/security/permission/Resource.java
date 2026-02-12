@@ -56,7 +56,8 @@ public enum Resource {
     AI_MODEL(EntityType.AI_MODEL),
     API_KEY(EntityType.API_KEY),
     AGENT(EntityType.AGENT),
-    AGENT_APPLICATION(EntityType.AGENT_APPLICATION);
+    AGENT_APPLICATION(EntityType.AGENT_APPLICATION),
+    AGENT_APP_TEMPLATE(EntityType.AGENT_APP_TEMPLATE);
 
     private final Set<EntityType> entityTypes;
 

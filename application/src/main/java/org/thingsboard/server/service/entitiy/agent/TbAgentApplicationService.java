@@ -15,11 +15,16 @@
  */
 package org.thingsboard.server.service.entitiy.agent;
 
+import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.TenantId;
 
 public interface TbAgentApplicationService {
+
+    AgentApplication save(AgentApplication application, User user) throws Exception;
+
+    void delete(AgentApplication application, User user);
 
     AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application, AgentAppTemplate template, String composeType);
 }

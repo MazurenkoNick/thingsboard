@@ -57,6 +57,12 @@ public class JpaAgentAppTemplateDao extends JpaAbstractDao<AgentAppTemplateEntit
     }
 
     @Override
+    public AgentAppTemplate findLatestByAppTypeAndConfigType(TenantId tenantId, AgentApplicationType appType, AgentAppConfigType configType) {
+        return DaoUtil.getData(agentAppTemplateRepository.findLatestByAppTypeAndConfigType(
+                appType.name(), configType.name()));
+    }
+
+    @Override
     public AgentAppTemplate findByAppTypeAndConfigTypeAndVersion(TenantId tenantId, AgentApplicationType appType,
                                                                   AgentAppConfigType configType, String currentVersion) {
         return DaoUtil.getData(agentAppTemplateRepository.findFirstByAppTypeAndConfigTypeAndCurrentVersion(

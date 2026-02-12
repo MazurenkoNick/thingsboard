@@ -26,6 +26,8 @@ import java.util.UUID;
 
 public interface AgentAppTemplateDao extends Dao<AgentAppTemplate> {
 
+    AgentAppTemplate findLatestByAppTypeAndConfigType(TenantId tenantId, AgentApplicationType appType, AgentAppConfigType configType);
+
     AgentAppTemplate findByAppTypeAndConfigTypeAndVersion(TenantId tenantId, AgentApplicationType appType,
                                                           AgentAppConfigType configType, String currentVersion);
 

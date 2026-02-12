@@ -29,6 +29,8 @@ public interface AgentAppTemplateService {
 
     AgentAppTemplate findById(TenantId tenantId, AgentAppTemplateId templateId);
 
+    AgentAppTemplate findLatestByAppTypeAndConfigType(AgentApplicationType appType, AgentAppConfigType configType);
+
     AgentAppTemplate findByAppTypeAndConfigTypeAndVersion(AgentApplicationType appType, AgentAppConfigType configType, String currentVersion);
 
     List<AgentAppTemplate> findAll(TenantId tenantId);
