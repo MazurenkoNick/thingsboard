@@ -62,7 +62,7 @@ import {
 } from '@home/components/widget/lib/chart/range-chart-widget.models';
 import {
   lineSeriesStepTypes,
-  lineSeriesStepTypeTranslations, normalizeAxisLimit, updateLatestDataKeys
+  lineSeriesStepTypeTranslations, updateLatestDataKeys
 } from '@home/components/widget/lib/chart/time-series-chart.models';
 import {
   chartLabelPositions,
@@ -139,12 +139,6 @@ export class RangeChartBasicConfigComponent extends BasicWidgetConfigComponent {
     const settings: RangeChartWidgetSettings = mergeDeepIgnoreArray<RangeChartWidgetSettings>({} as RangeChartWidgetSettings,
       rangeChartDefaultSettings, configData.config.settings as RangeChartWidgetSettings);
     const iconSize = resolveCssSize(configData.config.iconSize);
-
-    const minConfig = normalizeAxisLimit(settings.yAxis.min);
-    const maxConfig = normalizeAxisLimit(settings.yAxis.max);
-    settings.yAxis.min = minConfig;
-    settings.yAxis.max = maxConfig;
-
     this.rangeChartWidgetConfigForm = this.fb.group({
       timewindowConfig: [getTimewindowConfig(configData.config), []],
       datasources: [configData.config.datasources, []],

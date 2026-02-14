@@ -222,8 +222,6 @@ export class TimeSeriesChartYAxesPanelComponent implements ControlValueAccessor,
     const axes: TimeSeriesChartYAxisSettings[] = this.yAxesFormGroup.get('axes').value;
     axis.id = getNextTimeSeriesYAxisId(axes);
     axis.order = axes.length;
-    axis.min = normalizeAxisLimit(axis.min);
-    axis.max = normalizeAxisLimit(axis.max);
     const axesArray = this.yAxesFormGroup.get('axes') as UntypedFormArray;
     const axisControl = this.fb.control(axis, [timeSeriesChartYAxisValidator]);
     axesArray.push(axisControl);

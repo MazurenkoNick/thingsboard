@@ -46,7 +46,7 @@ import {
   barChartWithLabelsDefaultSettings
 } from '@home/components/widget/lib/chart/bar-chart-with-labels-widget.models';
 import { getSourceTbUnitSymbol } from '@shared/models/unit.models';
-import { normalizeAxisLimit, updateLatestDataKeys } from '@home/components/widget/lib/chart/time-series-chart.models';
+import { updateLatestDataKeys } from '@home/components/widget/lib/chart/time-series-chart.models';
 
 @Component({
   selector: 'tb-bar-chart-with-labels-widget-settings',
@@ -89,12 +89,6 @@ export class BarChartWithLabelsWidgetSettingsComponent extends WidgetSettingsCom
   }
 
   protected onSettingsSet(settings: WidgetSettings) {
-
-    const minConfig = normalizeAxisLimit(settings.yAxis.min);
-    const maxConfig = normalizeAxisLimit(settings.yAxis.max);
-    settings.yAxis.min = minConfig;
-    settings.yAxis.max = maxConfig;
-
     this.barChartWidgetSettingsForm = this.fb.group({
 
       dataZoom: [settings.dataZoom, []],

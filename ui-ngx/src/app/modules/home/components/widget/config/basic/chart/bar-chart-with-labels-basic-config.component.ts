@@ -114,12 +114,6 @@ export class BarChartWithLabelsBasicConfigComponent extends BasicWidgetConfigCom
     const settings: BarChartWithLabelsWidgetSettings = mergeDeep<BarChartWithLabelsWidgetSettings>({} as BarChartWithLabelsWidgetSettings,
       barChartWithLabelsDefaultSettings, configData.config.settings as BarChartWithLabelsWidgetSettings);
     const iconSize = resolveCssSize(configData.config.iconSize);
-
-    const minConfig = normalizeAxisLimit(settings.yAxis.min);
-    const maxConfig = normalizeAxisLimit(settings.yAxis.max);
-    settings.yAxis.min = minConfig;
-    settings.yAxis.max = maxConfig;
-
     this.barChartWidgetConfigForm = this.fb.group({
       timewindowConfig: [getTimewindowConfig(configData.config), []],
       datasources: [configData.config.datasources, []],
