@@ -61,8 +61,7 @@ import {
   BarChartWithLabelsWidgetSettings
 } from '@home/components/widget/lib/chart/bar-chart-with-labels-widget.models';
 import {
-  normalizeAxisLimit,
-  TimeSeriesChartType,
+ normalizeAxisLimit, TimeSeriesChartType,
   updateLatestDataKeys
 } from '@home/components/widget/lib/chart/time-series-chart.models';
 import { getSourceTbUnitSymbol } from '@shared/models/unit.models';
