@@ -30,8 +30,6 @@
  */
 package org.thingsboard.server.edge;
 
-import com.google.protobuf.AbstractMessage;
-import org.awaitility.Awaitility;
 import org.junit.Assert;
 import org.junit.Test;
 import org.thingsboard.common.util.JacksonUtil;
@@ -51,9 +49,9 @@ import org.thingsboard.server.gen.edge.v1.UplinkMsg;
 import org.thingsboard.server.gen.edge.v1.UplinkResponseMsg;
 import org.thingsboard.server.service.edge.EdgeMsgConstructorUtils;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -70,19 +68,19 @@ public class ReportTemplateEdgeTest extends AbstractEdgeTest {
         edgeImitator.expectMessageAmount(1);
         ReportTemplate savedReportTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
         Assert.assertTrue(edgeImitator.waitForMessages());
-        compareExpectedAndActual(savedReportTemplate, edgeImitator.getLatestMessage(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE);
+        compareExpectedAndActual(savedReportTemplate, UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE);
 
         edgeImitator.expectMessageAmount(1);
         savedReportTemplate.setDescription("Edge Report Template Updated");
         savedReportTemplate = doPost("/api/reportTemplate", savedReportTemplate, ReportTemplate.class);
         Assert.assertTrue(edgeImitator.waitForMessages());
-        compareExpectedAndActual(savedReportTemplate, edgeImitator.getLatestMessage(), UpdateMsgType.ENTITY_UPDATED_RPC_MESSAGE);
+        compareExpectedAndActual(savedReportTemplate, UpdateMsgType.ENTITY_UPDATED_RPC_MESSAGE);
 
         edgeImitator.expectMessageAmount(1);
         doDelete("/api/reportTemplate/" + savedReportTemplate.getUuidId())
                 .andExpect(status().isOk());
         Assert.assertTrue(edgeImitator.waitForMessages());
-        compareDeletedExpectedAndActual(savedReportTemplate, edgeImitator.getLatestMessage());
+        compareDeletedExpectedAndActual(savedReportTemplate);
     }
 
     @Test
@@ -93,21 +91,21 @@ public class ReportTemplateEdgeTest extends AbstractEdgeTest {
         edgeImitator.expectMessageAmount(1);
         ReportTemplate savedReportTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
         Assert.assertTrue(edgeImitator.waitForMessages());
-        compareExpectedAndActual(savedReportTemplate, edgeImitator.getLatestMessage(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE);
+        compareExpectedAndActual(savedReportTemplate, UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE);
 
         edgeImitator.expectMessageAmount(1);
         savedReportTemplate.setName("Edge Customer Report Template Updated");
         savedReportTemplate = doPost("/api/reportTemplate", savedReportTemplate, ReportTemplate.class);
         Assert.assertTrue(edgeImitator.waitForMessages());
-        compareExpectedAndActual(savedReportTemplate, edgeImitator.getLatestMessage(), UpdateMsgType.ENTITY_UPDATED_RPC_MESSAGE);
+        compareExpectedAndActual(savedReportTemplate, UpdateMsgType.ENTITY_UPDATED_RPC_MESSAGE);
 
         edgeImitator.expectMessageAmount(1);
         doDelete("/api/reportTemplate/" + savedReportTemplate.getUuidId())
                 .andExpect(status().isOk());
         Assert.assertTrue(edgeImitator.waitForMessages());
-        compareDeletedExpectedAndActual(savedReportTemplate, edgeImitator.getLatestMessage());
+        compareDeletedExpectedAndActual(savedReportTemplate);
 
-        changeEdgeOwnerFromCustomerToTenant(savedCustomer, 0);
+        changeEdgeOwnerFromCustomerToTenant(savedCustomer, 2);
         doDelete("/api/customer/" + savedCustomer.getUuidId())
                 .andExpect(status().isOk());
     }
@@ -182,7 +180,7 @@ public class ReportTemplateEdgeTest extends AbstractEdgeTest {
             doGet("/api/reportTemplate/" + reportTemplate.getId().getId(), ReportTemplate.class, status().isNotFound());
         });
 
-        changeEdgeOwnerFromCustomerToTenant(savedCustomer, 0);
+        changeEdgeOwnerFromCustomerToTenant(savedCustomer, 2);
         doDelete("/api/customer/" + savedCustomer.getUuidId())
                 .andExpect(status().isOk());
     }
@@ -214,9 +212,10 @@ public class ReportTemplateEdgeTest extends AbstractEdgeTest {
         return reportTemplate;
     }
 
-    private void compareExpectedAndActual(ReportTemplate expected, AbstractMessage latestMessage, UpdateMsgType expectedMsgType) {
-        Assert.assertTrue(latestMessage instanceof ReportTemplateUpdateMsg);
-        ReportTemplateUpdateMsg actualMsg = (ReportTemplateUpdateMsg) latestMessage;
+    private void compareExpectedAndActual(ReportTemplate expected, UpdateMsgType expectedMsgType) {
+        Optional<ReportTemplateUpdateMsg> msgOpt = edgeImitator.findMessageByType(ReportTemplateUpdateMsg.class);
+        Assert.assertTrue(msgOpt.isPresent());
+        ReportTemplateUpdateMsg actualMsg = msgOpt.get();
         Assert.assertEquals(expectedMsgType, actualMsg.getMsgType());
         Assert.assertEquals(expected.getUuidId().getMostSignificantBits(), actualMsg.getIdMSB());
         Assert.assertEquals(expected.getUuidId().getLeastSignificantBits(), actualMsg.getIdLSB());
@@ -235,9 +234,10 @@ public class ReportTemplateEdgeTest extends AbstractEdgeTest {
         Assert.assertEquals(JacksonUtil.toString(expected.getConfiguration()), JacksonUtil.toString(actual.getConfiguration()));
     }
 
-    private void compareDeletedExpectedAndActual(ReportTemplate expected, AbstractMessage latestMessage) {
-        Assert.assertTrue(latestMessage instanceof ReportTemplateUpdateMsg);
-        ReportTemplateUpdateMsg actualMsg = (ReportTemplateUpdateMsg) latestMessage;
+    private void compareDeletedExpectedAndActual(ReportTemplate expected) {
+        Optional<ReportTemplateUpdateMsg> msgOpt = edgeImitator.findMessageByType(ReportTemplateUpdateMsg.class);
+        Assert.assertTrue(msgOpt.isPresent());
+        ReportTemplateUpdateMsg actualMsg = msgOpt.get();
         Assert.assertEquals(UpdateMsgType.ENTITY_DELETED_RPC_MESSAGE, actualMsg.getMsgType());
         Assert.assertEquals(expected.getUuidId().getMostSignificantBits(), actualMsg.getIdMSB());
         Assert.assertEquals(expected.getUuidId().getLeastSignificantBits(), actualMsg.getIdLSB());
