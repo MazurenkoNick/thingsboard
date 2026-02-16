@@ -409,10 +409,14 @@ public class EdgeMsgConstructorUtils {
                 .setType(edge.getType())
                 .setRoutingKey(edge.getRoutingKey())
                 .setSecret(edge.getSecret())
-                .setEdgeLicenseKey(edge.getEdgeLicenseKey())
-                .setCloudEndpoint(edge.getCloudEndpoint())
                 .setAdditionalInfo(JacksonUtil.toString(edge.getAdditionalInfo()))
                 .setCloudType("PE");
+        if (edge.getEdgeLicenseKey() != null) {
+            builder.setEdgeLicenseKey(edge.getEdgeLicenseKey());
+        }
+        if (edge.getCloudEndpoint() != null) {
+            builder.setCloudEndpoint(edge.getCloudEndpoint());
+        }
         if (edge.getCustomerId() != null) {
             builder.setCustomerIdMSB(edge.getCustomerId().getId().getMostSignificantBits())
                     .setCustomerIdLSB(edge.getCustomerId().getId().getLeastSignificantBits());
