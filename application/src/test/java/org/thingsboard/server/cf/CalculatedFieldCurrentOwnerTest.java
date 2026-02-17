@@ -85,6 +85,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractControllerTest {
                 .untilAsserted(() -> {
                     ObjectNode fahrenheitTemp = getLatestTelemetry(testDevice.getId(), "result");
                     assertThat(fahrenheitTemp).isNotNull();
+                    assertThat(fahrenheitTemp.get("result")).isNotNull();
                     assertThat(fahrenheitTemp.get("result").get(0).get("value").asText()).isEqualTo("105");
                 });
 
@@ -95,6 +96,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractControllerTest {
                 .untilAsserted(() -> {
                     ObjectNode fahrenheitTemp = getLatestTelemetry(testDevice.getId(), "result");
                     assertThat(fahrenheitTemp).isNotNull();
+                    assertThat(fahrenheitTemp.get("result")).isNotNull();
                     assertThat(fahrenheitTemp.get("result").get(0).get("value").asText()).isEqualTo("110");
                 });
     }
@@ -118,6 +120,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractControllerTest {
                 .untilAsserted(() -> {
                     ObjectNode fahrenheitTemp = getLatestTelemetry(testDevice.getId(), "result");
                     assertThat(fahrenheitTemp).isNotNull();
+                    assertThat(fahrenheitTemp.get("result")).isNotNull();
                     assertThat(fahrenheitTemp.get("result").get(0).get("value").asText()).isEqualTo("105");
                 });
 
@@ -128,6 +131,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractControllerTest {
                 .untilAsserted(() -> {
                     ObjectNode fahrenheitTemp = getLatestTelemetry(testDevice.getId(), "result");
                     assertThat(fahrenheitTemp).isNotNull();
+                    assertThat(fahrenheitTemp.get("result")).isNotNull();
                     assertThat(fahrenheitTemp.get("result").get(0).get("value").asText()).isEqualTo("150");
                 });
     }
@@ -157,11 +161,13 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractControllerTest {
                     // result of asset 1
                     ObjectNode result1 = getLatestTelemetry(asset1.getId(), "result");
                     assertThat(result1).isNotNull();
+                    assertThat(result1.get("result")).isNotNull();
                     assertThat(result1.get("result").get(0).get("value").asText()).isEqualTo("105");
 
                     //  result of asset 2
                     ObjectNode result2 = getLatestTelemetry(asset2.getId(), "result");
                     assertThat(result2).isNotNull();
+                    assertThat(result2.get("result")).isNotNull();
                     assertThat(result2.get("result").get(0).get("value").asText()).isEqualTo("150");
                 });
 
@@ -173,6 +179,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractControllerTest {
                     // result of asset 2
                     ObjectNode result2 = getLatestTelemetry(asset2.getId(), "result");
                     assertThat(result2).isNotNull();
+                    assertThat(result2.get("result")).isNotNull();
                     assertThat(result2.get("result").get(0).get("value").asText()).isEqualTo("105");
                 });
     }
@@ -218,6 +225,8 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractControllerTest {
                 .untilAsserted(() -> {
                     ObjectNode result = doGetAsync("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/values/timeseries?keys={keys}&startTs={startTs}&endTs={endTs}", ObjectNode.class, String.join(",", "result"), startTs, endTs);
                     assertThat(result).isNotNull();
+                    assertThat(result.get("result")).isNotNull();
+                    assertThat(result.get("result").size()).isEqualTo(3);
 
                     assertThat(result.get("result").get(0).get("ts").asText()).isEqualTo(Long.toString(a3Ts));
                     assertThat(result.get("result").get(0).get("value").asText()).isEqualTo("130");
@@ -230,6 +239,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractControllerTest {
 
                     ObjectNode resultLatest = getLatestTelemetry(testDevice.getId(), "result");
                     assertThat(resultLatest).isNotNull();
+                    assertThat(resultLatest.get("result")).isNotNull();
                     assertThat(resultLatest.get("result").get(0).get("value").asText()).isEqualTo("140"); // reprocessing result did not overwrite the actual latest value
                 });
 
