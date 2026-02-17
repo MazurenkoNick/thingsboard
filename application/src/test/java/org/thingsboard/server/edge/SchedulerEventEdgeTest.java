@@ -32,7 +32,6 @@ package org.thingsboard.server.edge;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.protobuf.AbstractMessage;
 import org.junit.Assert;
 import org.junit.Test;
 import org.thingsboard.common.util.JacksonUtil;
@@ -52,6 +51,7 @@ import org.thingsboard.server.gen.edge.v1.UplinkMsg;
 import org.thingsboard.server.gen.edge.v1.UplinkResponseMsg;
 import org.thingsboard.server.service.edge.EdgeMsgConstructorUtils;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -70,21 +70,21 @@ public class SchedulerEventEdgeTest extends AbstractEdgeTest {
         doPost("/api/edge/" + edge.getUuidId()
                 + "/schedulerEvent/" + savedSchedulerEvent.getUuidId(), SchedulerEventInfo.class);
         Assert.assertTrue(edgeImitator.waitForMessages());
-        compareExpectedAndActual(savedSchedulerEvent, edgeImitator.getLatestMessage(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE);
+        compareExpectedAndActual(savedSchedulerEvent, UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE);
 
         // update
         edgeImitator.expectMessageAmount(1);
         savedSchedulerEvent.setName("Edge Scheduler Event Updated");
         savedSchedulerEvent = doPost("/api/schedulerEvent", savedSchedulerEvent, SchedulerEvent.class);
         Assert.assertTrue(edgeImitator.waitForMessages());
-        compareExpectedAndActual(savedSchedulerEvent, edgeImitator.getLatestMessage(), UpdateMsgType.ENTITY_UPDATED_RPC_MESSAGE);
+        compareExpectedAndActual(savedSchedulerEvent, UpdateMsgType.ENTITY_UPDATED_RPC_MESSAGE);
 
         // unassign from edge
         edgeImitator.expectMessageAmount(1);
         doDelete("/api/edge/" + edge.getUuidId()
                 + "/schedulerEvent/" + savedSchedulerEvent.getUuidId(), SchedulerEventInfo.class);
         Assert.assertTrue(edgeImitator.waitForMessages());
-        compareDeletedExpectedAndActual(savedSchedulerEvent, edgeImitator.getLatestMessage());
+        compareDeletedExpectedAndActual(savedSchedulerEvent);
 
         // delete
         doDelete("/api/schedulerEvent/" + savedSchedulerEvent.getUuidId())
@@ -102,21 +102,21 @@ public class SchedulerEventEdgeTest extends AbstractEdgeTest {
         doPost("/api/edge/" + edge.getUuidId()
                 + "/schedulerEvent/" + savedSchedulerEvent.getUuidId(), SchedulerEventInfo.class);
         Assert.assertTrue(edgeImitator.waitForMessages());
-        compareExpectedAndActual(savedSchedulerEvent, edgeImitator.getLatestMessage(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE);
+        compareExpectedAndActual(savedSchedulerEvent, UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE);
 
         // update
         edgeImitator.expectMessageAmount(1);
         savedSchedulerEvent.setName("Edge Customer Scheduler Event Updated");
         savedSchedulerEvent = doPost("/api/schedulerEvent", savedSchedulerEvent, SchedulerEvent.class);
         Assert.assertTrue(edgeImitator.waitForMessages());
-        compareExpectedAndActual(savedSchedulerEvent,  edgeImitator.getLatestMessage(), UpdateMsgType.ENTITY_UPDATED_RPC_MESSAGE);
+        compareExpectedAndActual(savedSchedulerEvent, UpdateMsgType.ENTITY_UPDATED_RPC_MESSAGE);
 
         // unassign from edge
         edgeImitator.expectMessageAmount(1);
         doDelete("/api/edge/" + edge.getUuidId()
                 + "/schedulerEvent/" + savedSchedulerEvent.getUuidId(), SchedulerEventInfo.class);
         Assert.assertTrue(edgeImitator.waitForMessages());
-        compareDeletedExpectedAndActual(savedSchedulerEvent, edgeImitator.getLatestMessage());
+        compareDeletedExpectedAndActual(savedSchedulerEvent);
 
         // delete
         edgeImitator.expectMessageAmount(1);
@@ -262,9 +262,10 @@ public class SchedulerEventEdgeTest extends AbstractEdgeTest {
         return savedCustomer;
     }
 
-    private void compareExpectedAndActual(SchedulerEvent expected, AbstractMessage latestMessage, UpdateMsgType expectedMsgType) {
-        Assert.assertTrue(latestMessage instanceof SchedulerEventUpdateMsg);
-        SchedulerEventUpdateMsg actualMsg = (SchedulerEventUpdateMsg) latestMessage;
+    private void compareExpectedAndActual(SchedulerEvent expected, UpdateMsgType expectedMsgType) {
+        Optional<SchedulerEventUpdateMsg> msgOpt = edgeImitator.findMessageByType(SchedulerEventUpdateMsg.class);
+        Assert.assertTrue(msgOpt.isPresent());
+        SchedulerEventUpdateMsg actualMsg = msgOpt.get();
         Assert.assertEquals(expectedMsgType, actualMsg.getMsgType());
         Assert.assertEquals(expected.getUuidId().getMostSignificantBits(), actualMsg.getIdMSB());
         Assert.assertEquals(expected.getUuidId().getLeastSignificantBits(), actualMsg.getIdLSB());
@@ -282,9 +283,10 @@ public class SchedulerEventEdgeTest extends AbstractEdgeTest {
         Assert.assertEquals(expected.getCustomerId(), actual.getCustomerId());
     }
 
-    private void compareDeletedExpectedAndActual(SchedulerEvent expected, AbstractMessage latestMessage) {
-        Assert.assertTrue(latestMessage instanceof SchedulerEventUpdateMsg);
-        SchedulerEventUpdateMsg actualMsg = (SchedulerEventUpdateMsg) latestMessage;
+    private void compareDeletedExpectedAndActual(SchedulerEvent expected) {
+        Optional<SchedulerEventUpdateMsg> msgOpt = edgeImitator.findMessageByType(SchedulerEventUpdateMsg.class);
+        Assert.assertTrue(msgOpt.isPresent());
+        SchedulerEventUpdateMsg actualMsg = msgOpt.get();
         Assert.assertEquals(UpdateMsgType.ENTITY_DELETED_RPC_MESSAGE, actualMsg.getMsgType());
         Assert.assertEquals(expected.getUuidId().getMostSignificantBits(), actualMsg.getIdMSB());
         Assert.assertEquals(expected.getUuidId().getLeastSignificantBits(), actualMsg.getIdLSB());
