@@ -56,6 +56,10 @@ export class RgbaInputComponent {
   @Input()
   public suffixValue = '%';
 
+  @Input()
+  @coerceBoolean()
+  alpha: boolean;
+
   public get value() {
     return this.color.getRgba();
   }

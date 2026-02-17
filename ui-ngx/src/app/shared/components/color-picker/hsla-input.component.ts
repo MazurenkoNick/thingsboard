@@ -56,6 +56,10 @@ export class HslaInputComponent {
   @Input()
   public suffixValue = '%';
 
+  @Input()
+  @coerceBoolean()
+  public alpha = false;
+
   public get value() {
     return this.color.getHsla();
   }
