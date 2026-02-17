@@ -53,7 +53,7 @@ public enum EdgeEventType {
     TENANT_PROFILE(true, EntityType.TENANT_PROFILE),
     WIDGETS_BUNDLE(true, EntityType.WIDGETS_BUNDLE),
     WIDGET_TYPE(true, EntityType.WIDGET_TYPE),
-    ADMIN_SETTINGS(true, null),
+    ADMIN_SETTINGS(true, EntityType.ADMIN_SETTINGS),
     OTA_PACKAGE(true, EntityType.OTA_PACKAGE),
     QUEUE(true, EntityType.QUEUE),
     ENTITY_GROUP(false, EntityType.ENTITY_GROUP),
