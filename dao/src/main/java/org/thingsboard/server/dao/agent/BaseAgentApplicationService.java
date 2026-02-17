@@ -26,15 +26,17 @@ import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.entity.AbstractCachedEntityService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.service.DataValidator;
 
 import java.util.Collections;
-import java.util.List;
 
 import static org.thingsboard.server.dao.service.Validator.validateId;
+import static org.thingsboard.server.dao.service.Validator.validatePageLink;
 
 @Service("AgentApplicationDaoService")
 @Slf4j
@@ -82,11 +84,12 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
     }
 
     @Override
-    public List<AgentApplication> findAllByAgentId(TenantId tenantId, AgentId agentId) {
+    public PageData<AgentApplication> findByAgentId(TenantId tenantId, AgentId agentId, PageLink pageLink) {
         log.trace("Executing findAgentApplicationsByAgentId, tenantId [{}], agentId [{}]", tenantId, agentId);
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validateId(agentId, id -> INCORRECT_AGENT_ID + id);
-        return agentApplicationDao.findByAgentId(tenantId, agentId.getId());
+        validatePageLink(pageLink);
+        return agentApplicationDao.findByAgentId(tenantId, agentId.getId(), pageLink);
     }
 
     @Override

@@ -59,10 +59,7 @@ public final class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
     private AgentAppEventStatus status;
 
     @Column(name = ModelConstants.AGENT_APP_EVENT_CURRENT_STEP_ID_PROPERTY)
-    private String currentStepId;
-
-    @Column(name = ModelConstants.AGENT_APP_EVENT_TOTAL_STEPS_PROPERTY)
-    private int totalSteps;
+    private UUID currentStepId;
 
     @Column(name = ModelConstants.AGENT_APP_EVENT_UPDATED_TIME_PROPERTY)
     private long updatedTime;
@@ -83,7 +80,6 @@ public final class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
         this.deliveryState = event.getDeliveryState();
         this.status = event.getStatus();
         this.currentStepId = event.getCurrentStepId();
-        this.totalSteps = event.getTotalSteps();
         this.updatedTime = event.getUpdatedTime();
     }
 
@@ -101,7 +97,6 @@ public final class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
         event.setDeliveryState(deliveryState);
         event.setStatus(status);
         event.setCurrentStepId(currentStepId);
-        event.setTotalSteps(totalSteps);
         event.setUpdatedTime(updatedTime);
         return event;
     }

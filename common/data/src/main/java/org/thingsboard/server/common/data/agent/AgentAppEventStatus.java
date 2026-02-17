@@ -16,6 +16,7 @@
 package org.thingsboard.server.common.data.agent;
 
 public enum AgentAppEventStatus {
+    PENDING,
     QUEUED,
     PROCESSING,
     FINISHED,

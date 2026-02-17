@@ -29,15 +29,11 @@ public interface AgentAppEventDao extends Dao<AgentAppEvent> {
 
     boolean hasActiveEventForApplication(UUID applicationId);
 
-    List<AgentAppEvent> findPendingEventsByAgentId(UUID agentId);
+    Optional<AgentAppEvent> findActiveDeliveredByApplicationId(UUID applicationId);
 
     boolean markDelivered(UUID eventId);
 
-    void updateStatus(UUID eventId, AgentAppEventStatus status, String currentStepId);
-
-    List<AgentAppEvent> findStaleDeliveredEvents(long updatedTimeBefore);
-
-    void revertToPending(UUID eventId);
+    void updateStatus(UUID eventId, AgentAppEventStatus status, UUID currentStepId);
 
     void deleteAllPendingByApplicationId(UUID applicationId);
 }

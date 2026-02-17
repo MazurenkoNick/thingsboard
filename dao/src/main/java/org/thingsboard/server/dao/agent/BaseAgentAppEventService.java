@@ -29,6 +29,7 @@ import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.thingsboard.server.dao.service.Validator.validateId;
 
@@ -76,9 +77,8 @@ public class BaseAgentAppEventService implements AgentAppEventService {
     }
 
     @Override
-    public List<AgentAppEvent> findPendingEventsByAgentId(AgentId agentId) {
-        log.trace("Executing findPendingEventsByAgentId [{}]", agentId);
-        return agentAppEventDao.findPendingEventsByAgentId(agentId.getId());
+    public Optional<AgentAppEvent> findActiveDeliveredByApplicationId(AgentApplicationId applicationId) {
+        return agentAppEventDao.findActiveDeliveredByApplicationId(applicationId.getId());
     }
 
     @Override
@@ -88,20 +88,9 @@ public class BaseAgentAppEventService implements AgentAppEventService {
     }
 
     @Override
-    public void updateStatus(AgentAppEventId id, AgentAppEventStatus status, String currentStepId) {
+    public void updateStatus(AgentAppEventId id, AgentAppEventStatus status, UUID currentStepId) {
         log.trace("Executing updateStatus [{}] status [{}] stepId [{}]", id, status, currentStepId);
         agentAppEventDao.updateStatus(id.getId(), status, currentStepId);
-    }
-
-    @Override
-    public List<AgentAppEvent> findStaleDeliveredEvents(long updatedTimeBefore) {
-        return agentAppEventDao.findStaleDeliveredEvents(updatedTimeBefore);
-    }
-
-    @Override
-    public void revertToPending(AgentAppEventId id) {
-        log.trace("Executing revertToPending [{}]", id);
-        agentAppEventDao.revertToPending(id.getId());
     }
 
     @Override

@@ -26,6 +26,8 @@ import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.step.InfoStep;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.agent.AgentAppTemplateService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.agent.AgentService;
@@ -70,7 +72,7 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         Assert.assertNotNull(found);
         Assert.assertEquals(saved.getId(), found.getId());
 
-        List<AgentApplication> byAgent = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
+        List<AgentApplication> byAgent = agentApplicationService.findByAgentId(tenantId, agent.getId(), new PageLink(100)).getData();
         Assert.assertEquals(1, byAgent.size());
         Assert.assertEquals(saved.getId(), byAgent.get(0).getId());
 
@@ -103,7 +105,7 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         AgentApplication app1 = saveApplication(agent, "app1");
         AgentApplication app2 = saveApplication(agent, "app2");
 
-        List<AgentApplication> list = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
+        List<AgentApplication> list = agentApplicationService.findByAgentId(tenantId, agent.getId(), new PageLink(100)).getData();
         Assert.assertEquals(2, list.size());
 
         agentApplicationService.delete(tenantId, app1.getId());
@@ -129,11 +131,11 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         saveApplication(agent, "a1");
         saveApplication(agent, "a2");
 
-        List<AgentApplication> before = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
+        List<AgentApplication> before = agentApplicationService.findByAgentId(tenantId, agent.getId(), new PageLink(100)).getData();
         Assert.assertEquals(2, before.size());
 
         agentApplicationService.deleteByAgentId(tenantId, agent.getId());
-        List<AgentApplication> after = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
+        List<AgentApplication> after = agentApplicationService.findByAgentId(tenantId, agent.getId(), new PageLink(100)).getData();
         Assert.assertTrue(after.isEmpty());
 
         agentService.deleteAgent(tenantId, agent.getId());

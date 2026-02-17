@@ -30,41 +30,47 @@ import java.util.UUID;
 
 public interface AgentAppEventRepository extends JpaRepository<AgentAppEventEntity, UUID> {
 
-    @Query("SELECT e FROM AgentAppEventEntity e WHERE e.applicationId = :appId AND e.deliveryState = 'PENDING' ORDER BY e.createdTime ASC LIMIT 1")
+    @Query("""
+           SELECT e FROM AgentAppEventEntity e
+           WHERE e.applicationId = :appId AND e.deliveryState = 'PENDING'
+           ORDER BY e.createdTime ASC LIMIT 1
+           """)
     Optional<AgentAppEventEntity> findOldestPendingByApplicationId(@Param("appId") UUID applicationId);
 
-    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM AgentAppEventEntity e " +
-            "WHERE e.applicationId = :appId AND e.deliveryState = 'DELIVERED' " +
-            "AND (e.status IS NULL OR e.status NOT IN ('FINISHED', 'ERROR'))")
+    @Query("""
+           SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM AgentAppEventEntity e
+           WHERE e.applicationId = :appId AND e.deliveryState = 'DELIVERED'
+           AND (e.status IS NULL OR e.status NOT IN ('FINISHED', 'ERROR'))
+           """)
     boolean hasActiveEventForApplication(@Param("appId") UUID applicationId);
 
-    @Query("SELECT e FROM AgentAppEventEntity e JOIN AgentApplicationEntity a ON e.applicationId = a.id " +
-            "WHERE a.agentId = :agentId AND e.deliveryState = 'PENDING' ORDER BY e.createdTime ASC")
-    List<AgentAppEventEntity> findPendingEventsByAgentId(@Param("agentId") UUID agentId);
+    @Query("""
+           SELECT e FROM AgentAppEventEntity e
+           WHERE e.applicationId = :appId AND e.deliveryState = 'DELIVERED'
+           AND (e.status IS NULL OR e.status NOT IN ('FINISHED', 'ERROR'))
+           ORDER BY e.createdTime ASC LIMIT 1
+           """)
+    Optional<AgentAppEventEntity> findActiveDeliveredByApplicationId(@Param("appId") UUID applicationId);
 
     @Transactional
     @Modifying
-    @Query("UPDATE AgentAppEventEntity e SET e.deliveryState = 'DELIVERED', e.updatedTime = :now " +
-            "WHERE e.id = :eventId AND e.deliveryState = 'PENDING'")
+    @Query("""
+           UPDATE AgentAppEventEntity e SET e.deliveryState = 'DELIVERED', e.updatedTime = :now
+           WHERE e.id = :eventId AND e.deliveryState = 'PENDING'
+           """)
     int markDelivered(@Param("eventId") UUID eventId, @Param("now") long now);
 
     @Transactional
     @Modifying
-    @Query("UPDATE AgentAppEventEntity e SET e.status = :status, e.currentStepId = :stepId, e.updatedTime = :now " +
-            "WHERE e.id = :eventId")
+    @Query("""
+           UPDATE AgentAppEventEntity e SET
+                       e.status = COALESCE(:status, e.status),
+                       e.currentStepId = COALESCE(:stepId, e.currentStepId),
+                       e.updatedTime = :now
+           WHERE e.id = :eventId
+           """)
     void updateStatus(@Param("eventId") UUID eventId, @Param("status") AgentAppEventStatus status,
-                      @Param("stepId") String currentStepId, @Param("now") long now);
-
-    @Query("SELECT e FROM AgentAppEventEntity e WHERE e.deliveryState = 'DELIVERED' " +
-            "AND (e.status IS NULL OR e.status NOT IN ('FINISHED', 'ERROR')) " +
-            "AND e.updatedTime < :before")
-    List<AgentAppEventEntity> findStaleDeliveredEvents(@Param("before") long updatedTimeBefore);
-
-    @Transactional
-    @Modifying
-    @Query("UPDATE AgentAppEventEntity e SET e.deliveryState = 'PENDING', e.status = NULL, e.updatedTime = :now " +
-            "WHERE e.id = :eventId")
-    void revertToPending(@Param("eventId") UUID eventId, @Param("now") long now);
+                      @Param("stepId") UUID currentStepId, @Param("now") long now);
 
     @Transactional
     @Modifying

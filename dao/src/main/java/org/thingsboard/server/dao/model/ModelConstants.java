@@ -274,7 +274,6 @@ public class ModelConstants {
     public static final String AGENT_APP_EVENT_DELIVERY_STATE_PROPERTY = "delivery_state";
     public static final String AGENT_APP_EVENT_STATUS_PROPERTY = "status";
     public static final String AGENT_APP_EVENT_CURRENT_STEP_ID_PROPERTY = "current_step_id";
-    public static final String AGENT_APP_EVENT_TOTAL_STEPS_PROPERTY = "total_steps";
     public static final String AGENT_APP_EVENT_UPDATED_TIME_PROPERTY = "updated_time";
 
     /**

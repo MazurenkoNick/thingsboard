@@ -807,8 +807,7 @@ CREATE TABLE IF NOT EXISTS agent_app_event (
     action_type varchar(32) NOT NULL,
     delivery_state varchar(32) NOT NULL DEFAULT 'PENDING',
     status varchar(32),
-    current_step_id varchar(36),
-    total_steps int NOT NULL DEFAULT 0,
+    current_step_id uuid,
     updated_time bigint NOT NULL,
     CONSTRAINT fk_agent_app_event_application FOREIGN KEY (application_id) REFERENCES agent_application(id) ON DELETE CASCADE
 );

@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
@@ -38,13 +39,18 @@ import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.agent.TbAgentApplicationService;
 import org.thingsboard.server.service.security.permission.Operation;
 
-import java.util.List;
-
+import static org.thingsboard.server.controller.ControllerConstants.PAGE_DATA_PARAMETERS;
+import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 
 @RestController
@@ -77,18 +83,30 @@ public class AgentApplicationController extends BaseController {
     }
 
     @ApiOperation(value = "Get Agent Applications by Agent Id (getAgentApplicationsByAgentId)",
-            notes = "Returns a list of agent applications that belong to the specified agent."
-                    + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+            notes = "Returns a page of agent applications that belong to the specified agent. "
+                    + PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/agent/{agentId}/apps", method = RequestMethod.GET)
+    @RequestMapping(value = "/agent/{agentId}/apps", params = {"pageSize", "page"}, method = RequestMethod.GET)
     @ResponseBody
-    public List<AgentApplication> getAgentApplicationsByAgentId(@Parameter(description = AGENT_ID_PARAM_DESCRIPTION)
-                                                                @PathVariable(AGENT_ID) String strAgentId) throws ThingsboardException {
+    public PageData<AgentApplication> getAgentApplicationsByAgentId(
+            @Parameter(description = AGENT_ID_PARAM_DESCRIPTION)
+            @PathVariable(AGENT_ID) String strAgentId,
+            @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
+            @RequestParam int pageSize,
+            @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true)
+            @RequestParam int page,
+            @Parameter(description = "Optional String value representing application name")
+            @RequestParam(required = false) String textSearch,
+            @Parameter(description = SORT_PROPERTY_DESCRIPTION, schema = @Schema(allowableValues = {"createdTime", "name"}))
+            @RequestParam(required = false) String sortProperty,
+            @Parameter(description = SORT_ORDER_DESCRIPTION, schema = @Schema(allowableValues = {"ASC", "DESC"}))
+            @RequestParam(required = false) String sortOrder) throws ThingsboardException {
         checkParameter(AGENT_ID, strAgentId);
         AgentId agentId = new AgentId(toUUID(strAgentId));
         checkAgentId(agentId, Operation.READ);
         TenantId tenantId = getCurrentUser().getTenantId();
-        return checkNotNull(agentAppService.findAllByAgentId(tenantId, agentId));
+        PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
+        return checkNotNull(agentAppService.findByAgentId(tenantId, agentId, pageLink));
     }
 
     @ApiOperation(value = "Create Or Update Agent Application (saveAgentApplication)",

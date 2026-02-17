@@ -27,6 +27,8 @@ import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.TenantId;
 
+import java.util.UUID;
+
 @Schema
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -39,8 +41,7 @@ public class AgentAppEvent extends BaseData<AgentAppEventId> implements HasId<Ag
     private AgentAppEventActionType actionType;
     private AgentAppEventDeliveryState deliveryState;
     private AgentAppEventStatus status;
-    private String currentStepId;
-    private int totalSteps;
+    private UUID currentStepId;
     private long updatedTime;
 
     public AgentAppEvent() {
@@ -59,7 +60,6 @@ public class AgentAppEvent extends BaseData<AgentAppEventId> implements HasId<Ag
         this.deliveryState = event.getDeliveryState();
         this.status = event.getStatus();
         this.currentStepId = event.getCurrentStepId();
-        this.totalSteps = event.getTotalSteps();
         this.updatedTime = event.getUpdatedTime();
     }
 

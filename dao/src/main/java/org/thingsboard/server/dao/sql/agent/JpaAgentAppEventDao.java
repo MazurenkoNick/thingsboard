@@ -66,8 +66,8 @@ public class JpaAgentAppEventDao extends JpaAbstractDao<AgentAppEventEntity, Age
     }
 
     @Override
-    public List<AgentAppEvent> findPendingEventsByAgentId(UUID agentId) {
-        return DaoUtil.convertDataList(repository.findPendingEventsByAgentId(agentId));
+    public Optional<AgentAppEvent> findActiveDeliveredByApplicationId(UUID applicationId) {
+        return repository.findActiveDeliveredByApplicationId(applicationId).map(AgentAppEventEntity::toData);
     }
 
     @Override
@@ -76,18 +76,8 @@ public class JpaAgentAppEventDao extends JpaAbstractDao<AgentAppEventEntity, Age
     }
 
     @Override
-    public void updateStatus(UUID eventId, AgentAppEventStatus status, String currentStepId) {
+    public void updateStatus(UUID eventId, AgentAppEventStatus status, UUID currentStepId) {
         repository.updateStatus(eventId, status, currentStepId, System.currentTimeMillis());
-    }
-
-    @Override
-    public List<AgentAppEvent> findStaleDeliveredEvents(long updatedTimeBefore) {
-        return DaoUtil.convertDataList(repository.findStaleDeliveredEvents(updatedTimeBefore));
-    }
-
-    @Override
-    public void revertToPending(UUID eventId) {
-        repository.revertToPending(eventId, System.currentTimeMillis());
     }
 
     @Override

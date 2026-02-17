@@ -15,6 +15,8 @@
  */
 package org.thingsboard.server.dao.sql.agent;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -28,6 +30,12 @@ import java.util.UUID;
 public interface AgentApplicationRepository extends JpaRepository<AgentApplicationEntity, UUID> {
 
     List<AgentApplicationEntity> findByAgentId(UUID agentId);
+
+    @Query("SELECT e FROM AgentApplicationEntity e WHERE e.agentId = :agentId " +
+            "AND (:textSearch IS NULL OR ilike(e.name, CONCAT('%', :textSearch, '%')) = true)")
+    Page<AgentApplicationEntity> findByAgentId(@Param("agentId") UUID agentId,
+                                               @Param("textSearch") String textSearch,
+                                               Pageable pageable);
 
     List<AgentApplicationEntity> findByTemplateId(UUID templateId);
 

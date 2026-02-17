@@ -24,6 +24,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface AgentAppEventService {
 
@@ -35,15 +36,11 @@ public interface AgentAppEventService {
 
     boolean hasActiveEventForApplication(AgentApplicationId applicationId);
 
-    List<AgentAppEvent> findPendingEventsByAgentId(AgentId agentId);
+    Optional<AgentAppEvent> findActiveDeliveredByApplicationId(AgentApplicationId applicationId);
 
     boolean markDelivered(AgentAppEventId id);
 
-    void updateStatus(AgentAppEventId id, AgentAppEventStatus status, String currentStepId);
-
-    List<AgentAppEvent> findStaleDeliveredEvents(long updatedTimeBefore);
-
-    void revertToPending(AgentAppEventId id);
+    void updateStatus(AgentAppEventId id, AgentAppEventStatus status, UUID currentStepId);
 
     void deleteAllPendingByApplicationId(AgentApplicationId applicationId);
 }

@@ -22,6 +22,8 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.model.sql.AgentApplicationEntity;
@@ -58,6 +60,14 @@ public class JpaAgentApplicationDao extends JpaAbstractDao<AgentApplicationEntit
     @Override
     public List<AgentApplication> findByAgentId(TenantId tenantId, UUID agentId) {
         return DaoUtil.convertDataList(agentApplicationRepository.findByAgentId(agentId));
+    }
+
+    @Override
+    public PageData<AgentApplication> findByAgentId(TenantId tenantId, UUID agentId, PageLink pageLink) {
+        return DaoUtil.toPageData(agentApplicationRepository.findByAgentId(
+                agentId,
+                pageLink.getTextSearch(),
+                DaoUtil.toPageable(pageLink)));
     }
 
     @Override

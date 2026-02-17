@@ -17,6 +17,8 @@ package org.thingsboard.server.dao.agent;
 
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.Dao;
 
 import java.util.List;
@@ -25,6 +27,8 @@ import java.util.UUID;
 public interface AgentApplicationDao extends Dao<AgentApplication> {
 
     List<AgentApplication> findByAgentId(TenantId tenantId, UUID agentId);
+
+    PageData<AgentApplication> findByAgentId(TenantId tenantId, UUID agentId, PageLink pageLink);
 
     void removeByAgentId(TenantId tenantId, UUID agentId);
 

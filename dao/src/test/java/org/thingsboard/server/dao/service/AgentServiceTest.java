@@ -437,12 +437,12 @@ public class AgentServiceTest extends AbstractServiceTest {
         app2.setStartSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
         app2 = agentApplicationService.save(tenantId, app2);
 
-        List<AgentApplication> applicationsBefore = agentApplicationService.findAllByAgentId(tenantId, savedAgent.getId());
+        List<AgentApplication> applicationsBefore = agentApplicationService.findByAgentId(tenantId, savedAgent.getId(), new PageLink(100)).getData();
         Assert.assertEquals(2, applicationsBefore.size());
 
         agentService.deleteAgent(tenantId, savedAgent.getId());
 
-        List<AgentApplication> applicationsAfter = agentApplicationService.findAllByAgentId(tenantId, savedAgent.getId());
+        List<AgentApplication> applicationsAfter = agentApplicationService.findByAgentId(tenantId, savedAgent.getId(), new PageLink(100)).getData();
         Assert.assertTrue(applicationsAfter.isEmpty());
         Assert.assertNull(agentApplicationService.findById(tenantId, app1.getId()));
         Assert.assertNull(agentApplicationService.findById(tenantId, app2.getId()));
@@ -467,16 +467,16 @@ public class AgentServiceTest extends AbstractServiceTest {
         app.setStartSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
         app = agentApplicationService.save(tenantId, app);
 
-        List<AgentApplication> afterCreate = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
+        List<AgentApplication> afterCreate = agentApplicationService.findByAgentId(tenantId, agent.getId(), new PageLink(100)).getData();
         Assert.assertEquals(1, afterCreate.size());
 
         agentService.assignAgentToCustomer(tenantId, agent.getId(), customerId);
-        List<AgentApplication> afterAssign = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
+        List<AgentApplication> afterAssign = agentApplicationService.findByAgentId(tenantId, agent.getId(), new PageLink(100)).getData();
         Assert.assertEquals(1, afterAssign.size());
         Assert.assertEquals(app.getId(), afterAssign.get(0).getId());
 
         agentService.unassignAgentFromCustomer(tenantId, agent.getId());
-        List<AgentApplication> afterUnassign = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
+        List<AgentApplication> afterUnassign = agentApplicationService.findByAgentId(tenantId, agent.getId(), new PageLink(100)).getData();
         Assert.assertEquals(1, afterUnassign.size());
         Assert.assertEquals(app.getId(), afterUnassign.get(0).getId());
 
