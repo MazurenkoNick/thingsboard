@@ -20,14 +20,19 @@ import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.server.common.data.agent.Agent;
-import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
+import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
+import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
+import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.step.InfoStep;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
+import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.dao.agent.AgentAppEventService;
 import org.thingsboard.server.dao.agent.AgentAppTemplateService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.agent.AgentService;
@@ -47,6 +52,8 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     AgentApplicationService agentApplicationService;
     @Autowired
     AgentAppTemplateService agentAppTemplateService;
+    @Autowired
+    AgentAppEventService agentAppEventService;
 
     @Test
     public void testSave() {
@@ -158,6 +165,31 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         AgentApplication found = agentApplicationService.findById(tenantId, app.getId());
         Assert.assertEquals(1, found.getStartSteps().size());
         Assert.assertEquals(0, found.getUpdateSteps().size());
+
+        agentApplicationService.delete(tenantId, app.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testFindByEventId() {
+        Agent agent = createAgent("Agent for findByEventId");
+        AgentApplication app = saveApplication(agent, "eventApp");
+
+        AgentAppEvent event = new AgentAppEvent();
+        event.setTenantId(tenantId);
+        event.setApplicationId(app.getId());
+        event.setActionType(AgentAppEventActionType.INSTALL);
+        event.setDeliveryState(AgentAppEventDeliveryState.PENDING);
+        event.setStatus(AgentAppEventStatus.PENDING);
+        event.setUpdatedTime(System.currentTimeMillis());
+        AgentAppEvent savedEvent = agentAppEventService.save(tenantId, event);
+
+        AgentApplication found = agentApplicationService.findByEventId(tenantId, savedEvent.getId());
+        Assert.assertNotNull(found);
+        Assert.assertEquals(app.getId(), found.getId());
+
+        AgentApplication notFound = agentApplicationService.findByEventId(tenantId, new AgentAppEventId(UUID.randomUUID()));
+        Assert.assertNull(notFound);
 
         agentApplicationService.delete(tenantId, app.getId());
         agentService.deleteAgent(tenantId, agent.getId());

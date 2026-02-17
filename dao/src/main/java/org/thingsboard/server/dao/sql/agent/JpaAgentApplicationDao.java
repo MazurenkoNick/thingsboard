@@ -85,4 +85,9 @@ public class JpaAgentApplicationDao extends JpaAbstractDao<AgentApplicationEntit
         agentApplicationRepository.deleteByTemplateId(templateId);
     }
 
+    @Override
+    public AgentApplication findByEventId(TenantId tenantId, UUID eventId) {
+        return DaoUtil.getData(agentApplicationRepository.findByEventId(eventId));
+    }
+
 }
