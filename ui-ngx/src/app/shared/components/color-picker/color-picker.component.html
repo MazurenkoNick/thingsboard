@@ -52,12 +52,10 @@
         <mat-option [value]="2">{{ disableAlpha ? 'HSL' : 'HSLA' }}</mat-option>
       </mat-select>
       <div class="color-input" [ngSwitch]="presentations[presentationControl.value]">
-        <rgba-input-component *ngSwitchCase="'rgba'" label
-                              [alpha]="!disableAlpha"
-                              [(color)]="control.value"></rgba-input-component>
-        <hsla-input-component *ngSwitchCase="'hsla'" label
-                              [alpha]="!disableAlpha"
-                              [(color)]="control.value"></hsla-input-component>
+        <tb-rgba-input *ngSwitchCase="'rgba'" labelVisible [alpha]="!disableAlpha"
+                              [(color)]="control.value"></tb-rgba-input>
+        <tb-hsla-input *ngSwitchCase="'hsla'" labelVisible [alpha]="!disableAlpha"
+                              [(color)]="control.value"></tb-hsla-input>
         <tb-hex-input *ngSwitchCase="'hex'" [alpha]="!disableAlpha" [(color)]="control.value"></tb-hex-input>
       </div>
     </div>

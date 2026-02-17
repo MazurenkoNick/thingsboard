@@ -281,6 +281,9 @@ import { EntityLimitExceededDialogComponent } from '@shared/components/dialog/en
 import { PasswordRequirementsTooltipComponent } from '@shared/components/password-requirements-tooltip.component';
 import { DynamicMatDialogModule } from '@shared/components/dialog/dynamic/dynamic-dialog.module';
 import { MAT_BUTTON_TOGGLE_DEFAULT_OPTIONS } from '@angular/material/button-toggle';
+import { RgbaInputComponent } from '@shared/components/color-picker/rgba-input.component';
+import { HslaInputComponent } from '@shared/components/color-picker/hsla-input.component';
+import { InputChangeDirective } from '@shared/components/color-picker/input-change.directive';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -539,6 +542,10 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     ReportTemplateAutocompleteComponent,
     TimeUnitInputComponent,
     PasswordRequirementsTooltipComponent,
+    StringPatternAutocompleteComponent,
+    RgbaInputComponent,
+    HslaInputComponent,
+    InputChangeDirective
   ],
   imports: [
     CommonModule,
