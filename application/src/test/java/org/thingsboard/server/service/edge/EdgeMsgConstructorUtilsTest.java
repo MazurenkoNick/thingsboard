@@ -34,12 +34,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.thingsboard.common.util.JacksonUtil;
-import org.thingsboard.rule.engine.action.TbChangeOwnerNode;
-import org.thingsboard.rule.engine.action.TbChangeOwnerNodeConfiguration;
 import org.thingsboard.rule.engine.action.TbChangeOwnerNode;
 import org.thingsboard.rule.engine.action.TbSaveToCustomCassandraTableNode;
 import org.thingsboard.rule.engine.api.NodeConfiguration;
@@ -54,14 +53,19 @@ import org.thingsboard.rule.engine.rest.TbSendRestApiCallReplyNode;
 import org.thingsboard.rule.engine.telemetry.TbCalculatedFieldsNode;
 import org.thingsboard.rule.engine.telemetry.TbMsgAttributesNode;
 import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNode;
+import org.thingsboard.server.common.data.edge.Edge;
+import org.thingsboard.server.common.data.id.EdgeId;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleNode;
+import org.thingsboard.server.gen.edge.v1.EdgeConfiguration;
 import org.thingsboard.server.gen.edge.v1.EdgeVersion;
 import org.thingsboard.server.gen.edge.v1.UpdateMsgType;
 
 import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.thingsboard.server.service.edge.EdgeMsgConstructorUtils.EXCLUDED_NODES_BY_EDGE_VERSION;
@@ -141,6 +145,25 @@ public class EdgeMsgConstructorUtilsTest {
             checkUpdateNodeConfigurationsForLegacyEdge(ruleNode, edgeVersion);
             checkRemoveExcludedNodesForLegacyEdge(ruleNode, edgeVersion);
         });
+    }
+
+    @Test
+    @DisplayName("Test constructEdgeConfiguration with null edgeLicenseKey and cloudEndpoint")
+    public void testConstructEdgeConfigurationWithNulls() {
+        Edge edge = new Edge();
+        edge.setId(new EdgeId(UUID.randomUUID()));
+        edge.setTenantId(TenantId.fromUUID(UUID.randomUUID()));
+        edge.setName("Test Edge");
+        edge.setType("Test Type");
+        edge.setRoutingKey(UUID.randomUUID().toString());
+        edge.setSecret(UUID.randomUUID().toString());
+        edge.setEdgeLicenseKey(null);
+        edge.setCloudEndpoint(null);
+        edge.setAdditionalInfo(JacksonUtil.newObjectNode());
+
+        EdgeConfiguration edgeConfiguration = EdgeMsgConstructorUtils.constructEdgeConfiguration(edge);
+        Assertions.assertNotNull(edgeConfiguration);
+        Assertions.assertEquals(edge.getName(), edgeConfiguration.getName());
     }
 
     private List<RuleNode> sanitizeMetadataForLegacyEdgeVersion(EdgeVersion edgeVersion) {
