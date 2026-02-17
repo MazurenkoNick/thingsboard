@@ -49,6 +49,7 @@ import java.util.Optional;
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validatePageLink;
+import static org.thingsboard.server.dao.service.Validator.validateString;
 
 @Service("AgentDaoService")
 @Slf4j
@@ -108,6 +109,13 @@ public class BaseAgentService extends AbstractCachedEntityService<AgentCacheKey,
         log.trace("Executing findAgentById [{}]", agentId);
         validateId(agentId, id -> INCORRECT_AGENT_ID + id);
         return agentDao.findById(tenantId, agentId.getId());
+    }
+
+    @Override
+    public Agent findAgentByRoutingKey(TenantId tenantId, String routingKey) {
+        log.trace("Executing findAgentByRoutingKey [{}]", routingKey);
+        validateString(routingKey, "Incorrect agent routingKey for search request.");
+        return agentDao.findByRoutingKey(tenantId.getId(), routingKey);
     }
 
     @Override

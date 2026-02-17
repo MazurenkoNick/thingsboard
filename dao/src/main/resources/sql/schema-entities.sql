@@ -763,9 +763,12 @@ CREATE TABLE IF NOT EXISTS agent (
     created_time bigint NOT NULL,
     customer_id uuid,
     name varchar(255),
+    routing_key varchar(255),
+    secret varchar(255),
     tenant_id uuid,
     version BIGINT DEFAULT 1,
-    CONSTRAINT agent_name_unq_key UNIQUE (tenant_id, name)
+    CONSTRAINT agent_name_unq_key UNIQUE (tenant_id, name),
+    CONSTRAINT agent_routing_key_unq_key UNIQUE (routing_key)
 );
 
 CREATE TABLE IF NOT EXISTS agent_app_template (

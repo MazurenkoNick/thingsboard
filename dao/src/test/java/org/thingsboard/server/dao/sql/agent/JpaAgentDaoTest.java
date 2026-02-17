@@ -43,6 +43,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class JpaAgentDaoTest extends AbstractJpaDaoTest {
 
@@ -240,12 +241,35 @@ public class JpaAgentDaoTest extends AbstractJpaDaoTest {
         assertEquals(0, after.size());
     }
 
+    @Test
+    public void testFindByRoutingKey() {
+        UUID agentId = Uuids.timeBased();
+        String routingKey = "routing-key-" + agentId;
+        Agent agent = saveAgent(agentId, tenantId1, customerId1, "ROUTING_KEY_AGENT", routingKey, "test-secret");
+        agents.add(agent);
+
+        Agent found = agentDao.findByRoutingKey(tenantId1, routingKey);
+        assertNotNull(found);
+        assertEquals(agent.getId(), found.getId());
+        assertEquals(routingKey, found.getRoutingKey());
+        assertEquals("test-secret", found.getSecret());
+
+        Agent notFound = agentDao.findByRoutingKey(tenantId1, "non-existent-key");
+        assertNull(notFound);
+    }
+
     private Agent saveAgent(UUID id, UUID tenantId, UUID customerId, String name) {
+        return saveAgent(id, tenantId, customerId, name, UUID.randomUUID().toString(), UUID.randomUUID().toString());
+    }
+
+    private Agent saveAgent(UUID id, UUID tenantId, UUID customerId, String name, String routingKey, String secret) {
         Agent agent = new Agent();
         agent.setId(new AgentId(id));
         agent.setTenantId(TenantId.fromUUID(tenantId));
         agent.setCustomerId(new CustomerId(customerId));
         agent.setName(name);
+        agent.setRoutingKey(routingKey);
+        agent.setSecret(secret);
         return agentDao.save(TenantId.fromUUID(tenantId), agent);
     }
 

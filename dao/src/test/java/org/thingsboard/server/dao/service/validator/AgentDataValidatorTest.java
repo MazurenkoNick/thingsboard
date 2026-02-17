@@ -70,8 +70,7 @@ class AgentDataValidatorTest {
             "Gdy Pomorze nie pomoże, to pomoże może morze, a gdy morze nie pomoże, to pomoże może Gdańsk",
     })
     void testAgentName_thenOK(final String name) {
-        Agent agent = new Agent();
-        agent.setTenantId(tenantId);
+        Agent agent = validAgent();
         agent.setName(name);
         validator.validateDataImpl(tenantId, agent);
     }
@@ -83,20 +82,38 @@ class AgentDataValidatorTest {
             "\u0000F0929906", "F092\u00009906", "F0929906\u0000"
     })
     void testAgentName_thenDataValidationException(final String name) {
-        Agent agent = new Agent();
-        agent.setTenantId(tenantId);
+        Agent agent = validAgent();
         agent.setName(name);
 
-        DataValidationException exception = Assertions.assertThrows(DataValidationException.class, 
+        DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, agent));
         log.warn("Exception message: {}", exception.getMessage());
         assertThat(exception.getMessage()).as("message Agent name").containsPattern("Agent [Nn]ame .*");
     }
 
     @Test
+    void testValidateDataImpl_emptyRoutingKey_thenException() {
+        Agent agent = validAgent();
+        agent.setRoutingKey(null);
+
+        DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
+                () -> validator.validateDataImpl(tenantId, agent));
+        assertThat(exception.getMessage()).contains("routing key");
+    }
+
+    @Test
+    void testValidateDataImpl_emptySecret_thenException() {
+        Agent agent = validAgent();
+        agent.setSecret(null);
+
+        DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
+                () -> validator.validateDataImpl(tenantId, agent));
+        assertThat(exception.getMessage()).contains("secret");
+    }
+
+    @Test
     void testValidateDataImpl_nullTenantId_thenException() {
-        Agent agent = new Agent();
-        agent.setName("Test Agent");
+        Agent agent = validAgent();
         agent.setTenantId(null);
 
         DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
@@ -110,8 +127,7 @@ class AgentDataValidatorTest {
         TenantId nonExistentTenantId = TenantId.fromUUID(UUID.fromString("1ef79cdf-37a8-4119-b682-2e7ed4e018da"));
         willReturn(false).given(tenantService).tenantExists(nonExistentTenantId);
 
-        Agent agent = new Agent();
-        agent.setName("Test Agent");
+        Agent agent = validAgent();
         agent.setTenantId(nonExistentTenantId);
 
         DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
@@ -122,9 +138,7 @@ class AgentDataValidatorTest {
 
     @Test
     void testValidateDataImpl_nullCustomerId_thenSetToNullUuid() {
-        Agent agent = new Agent();
-        agent.setName("Test Agent");
-        agent.setTenantId(tenantId);
+        Agent agent = validAgent();
         agent.setCustomerId(null);
 
         validator.validateDataImpl(tenantId, agent);
@@ -142,9 +156,7 @@ class AgentDataValidatorTest {
 
         willReturn(customer).given(customerDao).findById(eq(tenantId), eq(customerId.getId()));
 
-        Agent agent = new Agent();
-        agent.setName("Test Agent");
-        agent.setTenantId(tenantId);
+        Agent agent = validAgent();
         agent.setCustomerId(customerId);
 
         validator.validateDataImpl(tenantId, agent);
@@ -154,9 +166,7 @@ class AgentDataValidatorTest {
     void testValidateDataImpl_nonExistentCustomer_thenException() {
         willReturn(null).given(customerDao).findById(eq(tenantId), any(UUID.class));
 
-        Agent agent = new Agent();
-        agent.setName("Test Agent");
-        agent.setTenantId(tenantId);
+        Agent agent = validAgent();
         agent.setCustomerId(customerId);
 
         DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
@@ -174,15 +184,22 @@ class AgentDataValidatorTest {
 
         willReturn(customer).given(customerDao).findById(eq(tenantId), eq(customerId.getId()));
 
-        Agent agent = new Agent();
-        agent.setName("Test Agent");
-        agent.setTenantId(tenantId);
+        Agent agent = validAgent();
         agent.setCustomerId(customerId);
 
         DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, agent));
         log.warn("Exception message: {}", exception.getMessage());
         assertThat(exception.getMessage()).contains("different tenant");
+    }
+
+    private Agent validAgent() {
+        Agent agent = new Agent();
+        agent.setTenantId(tenantId);
+        agent.setName("Test Agent");
+        agent.setRoutingKey(UUID.randomUUID().toString());
+        agent.setSecret(UUID.randomUUID().toString());
+        return agent;
     }
 
     @Test

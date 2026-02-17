@@ -19,6 +19,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
@@ -199,6 +200,8 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         Agent agent = new Agent();
         agent.setTenantId(tenantId);
         agent.setName(name);
+        agent.setRoutingKey(UUID.randomUUID().toString());
+        agent.setSecret(StringUtils.randomAlphanumeric(20));
         return agentService.saveAgent(agent);
     }
 

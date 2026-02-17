@@ -15,10 +15,10 @@
  */
 package org.thingsboard.server.dao.service.validator;
 
-import dev.langchain4j.agent.tool.P;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.Customer;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -50,6 +50,12 @@ public class AgentDataValidator extends DataValidator<Agent> {
     @Override
     protected void validateDataImpl(TenantId tenantId, Agent agent) {
         validateString("Agent name", agent.getName());
+        if (StringUtils.isEmpty(agent.getRoutingKey())) {
+            throw new DataValidationException("Agent routing key should be specified!");
+        }
+        if (StringUtils.isEmpty(agent.getSecret())) {
+            throw new DataValidationException("Agent secret should be specified!");
+        }
         if (agent.getTenantId() == null) {
             throw new DataValidationException("Agent should be assigned to tenant!");
         } else {

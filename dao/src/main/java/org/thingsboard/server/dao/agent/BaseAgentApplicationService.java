@@ -23,6 +23,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import org.thingsboard.server.cache.agent.AgentApplicationCacheEvictEvent;
 import org.thingsboard.server.cache.agent.AgentApplicationCacheKey;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -81,6 +82,13 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         validateId(agentApplicationId, id -> INCORRECT_AGENT_APPLICATION_ID + id);
         return cache.getAndPutInTransaction(AgentApplicationCacheKey.from(agentApplicationId),
                 () -> agentApplicationDao.findById(tenantId, agentApplicationId.getId()), true);
+    }
+
+    @Override
+    public AgentApplication findByEventId(TenantId tenantId, AgentAppEventId agentAppEventId) {
+        log.trace("Executing findAgentApplicationByEventId [{}]", agentAppEventId);
+        validateId(agentAppEventId, id -> "Incorrect agentAppEventId " + id);
+        return agentApplicationDao.findByEventId(tenantId, agentAppEventId.getId());
     }
 
     @Override

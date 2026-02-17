@@ -63,8 +63,8 @@ enum ConfigType {
 }
 
 message Hello {
-  int64 agentIdMSB = 1;
-  int64 agentIdLSB = 2;
+  string routingKey = 1;
+  string routingSecret = 2;
 }
 
 message HelloAck {

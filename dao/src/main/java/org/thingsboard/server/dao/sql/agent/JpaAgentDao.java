@@ -95,6 +95,11 @@ public class JpaAgentDao extends JpaAbstractDao<AgentEntity, Agent> implements A
     }
 
     @Override
+    public Agent findByRoutingKey(UUID tenantId, String routingKey) {
+        return DaoUtil.getData(agentRepository.findByRoutingKey(routingKey));
+    }
+
+    @Override
     public Long countByTenantId(TenantId tenantId) {
         return agentRepository.countByTenantId(tenantId.getId());
     }
