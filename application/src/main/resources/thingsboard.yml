@@ -805,10 +805,15 @@ updates:
 agent:
   appTemplates:
     sync:
+      # Enable/disable periodic synchronization of agent application templates from a Git repository
       enabled: "${AGENT_APP_TEMPLATE_SYNC_ENABLED:true}"
+      # Git repository URI to fetch agent application templates from
       repoUri: "${AGENT_APP_TEMPLATE_SYNC_REPO_URI:}"
+      # Git branch to use when fetching agent application templates
       branch: "${AGENT_APP_TEMPLATE_SYNC_BRANCH:main}"
+      # Base path within the Git repository where template files are located
       basePath: "${AGENT_APP_TEMPLATE_SYNC_BASE_PATH:templates}"
+      # How often to fetch updates from the Git repository, in milliseconds
       fetchFrequencyMs: "${AGENT_APP_TEMPLATE_SYNC_FETCH_FREQUENCY_MS:3600000}"
 
 # Spring CORS configuration parameters
