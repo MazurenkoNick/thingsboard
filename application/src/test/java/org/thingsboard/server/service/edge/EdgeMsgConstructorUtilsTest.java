@@ -165,7 +165,7 @@ public class EdgeMsgConstructorUtilsTest {
         edge.setCloudEndpoint(null);
         edge.setAdditionalInfo(JacksonUtil.newObjectNode());
 
-        EdgeConfiguration edgeConfiguration = EdgeMsgConstructorUtils.constructEdgeConfiguration(edge);
+        EdgeConfiguration edgeConfiguration = EdgeMsgConstructorUtils.constructEdgeConfiguration(edge, 1);
         Assertions.assertNotNull(edgeConfiguration);
         Assertions.assertEquals(edge.getName(), edgeConfiguration.getName());
     }
