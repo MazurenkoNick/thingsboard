@@ -23,6 +23,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import org.thingsboard.server.cache.agent.AgentApplicationCacheEvictEvent;
 import org.thingsboard.server.cache.agent.AgentApplicationCacheKey;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -64,6 +65,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
     public AgentApplication save(TenantId tenantId, AgentApplication agentApplication) {
         log.trace("Executing saveAgentApplication [{}]", agentApplication);
         AgentApplication old = agentApplicationValidator.validate(agentApplication, app -> tenantId);
+        resolveProjectName(agentApplication, old);
         AgentApplication saved = agentApplicationDao.save(tenantId, agentApplication);
         publishEvictEvent(new AgentApplicationCacheEvictEvent(saved.getId()));
         eventPublisher.publishEvent(SaveEntityEvent.builder()
@@ -132,4 +134,16 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
                 .entity(application)
                 .build());
     }
+
+    private void resolveProjectName(AgentApplication agentApplication, AgentApplication old) {
+        if (!(agentApplication.getConfig() instanceof DockerComposeConfig config)) {
+            return;
+        }
+        if (old != null && old.getConfig() instanceof DockerComposeConfig oldConfig) {
+            config.setProjectName(oldConfig.getProjectName());
+        } else {
+            config.setProjectName(DockerComposeConfig.generateProjectName());
+        }
+    }
+
 }
