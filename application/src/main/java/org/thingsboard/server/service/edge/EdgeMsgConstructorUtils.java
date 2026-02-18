@@ -467,8 +467,8 @@ public class EdgeMsgConstructorUtils {
                 .setType(edge.getType())
                 .setRoutingKey(edge.getRoutingKey())
                 .setSecret(edge.getSecret())
-                .setEdgeLicenseKey(edge.getEdgeLicenseKey())
-                .setCloudEndpoint(edge.getCloudEndpoint())
+                .setEdgeLicenseKey(edge.getEdgeLicenseKey() != null ? edge.getEdgeLicenseKey() : "")
+                .setCloudEndpoint(edge.getCloudEndpoint() != null ? edge.getCloudEndpoint() : "")
                 .setAdditionalInfo(JacksonUtil.toString(edge.getAdditionalInfo()))
                 .setCloudType("PE")
                 .setLicenseVersion(licenseVersion);

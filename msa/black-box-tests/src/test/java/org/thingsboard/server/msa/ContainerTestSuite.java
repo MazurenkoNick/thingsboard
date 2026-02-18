@@ -70,6 +70,8 @@ public class ContainerTestSuite {
     private static final String TB_JS_EXECUTOR_LOG_REGEXP = ".*template started.*";
     private static final String TB_EDQS_LOG_REGEXP = ".*All partitions processed.*";
     private static final String TB_REPORT_LOG_REGEXP = ".*Going to recalculate partitions.*";
+    private static final String TRENDZ_LOG_REGEXP = ".*Started TrendzApplication.*";
+    private static final String TRENDZ_PYTHON_EXECUTOR_LOG_REGEXP = ".*Started PythonExecutorApplication.*";
     private static final Duration CONTAINER_STARTUP_TIMEOUT = Duration.ofSeconds(400);
 
     private DockerComposeContainerImpl testContainer;
@@ -130,6 +132,7 @@ public class ContainerTestSuite {
                     new File(targetDir + "docker-compose.mosquitto.yml"),
                     new File(targetDir + "docker-compose.opc-ua.yml"),
                     new File(targetDir + "advanced/docker-compose.kafka.yml"),
+                    new File(targetDir + "advanced/docker-compose.trendz.yml"),
                     new File(targetDir + "advanced/" + resolveValkeyComposeFile()),
                     new File(targetDir + "advanced/" + resolveValkeyComposeVolumesFile()),
                     new File(targetDir + ("docker-selenium.yml"))
@@ -178,7 +181,9 @@ public class ContainerTestSuite {
                     .waitingFor("tb-edqs1", Wait.forLogMessage(TB_EDQS_LOG_REGEXP, 1).withStartupTimeout(CONTAINER_STARTUP_TIMEOUT))
                     .waitingFor("tb-edqs2", Wait.forLogMessage(TB_EDQS_LOG_REGEXP, 1).withStartupTimeout(CONTAINER_STARTUP_TIMEOUT))
                     .waitingFor("tb-report1", Wait.forLogMessage(TB_REPORT_LOG_REGEXP, 1).withStartupTimeout(CONTAINER_STARTUP_TIMEOUT))
-                    .waitingFor("tb-report2", Wait.forLogMessage(TB_REPORT_LOG_REGEXP, 1).withStartupTimeout(CONTAINER_STARTUP_TIMEOUT));
+                    .waitingFor("tb-report2", Wait.forLogMessage(TB_REPORT_LOG_REGEXP, 1).withStartupTimeout(CONTAINER_STARTUP_TIMEOUT))
+                    .waitingFor("trendz", Wait.forLogMessage(TRENDZ_LOG_REGEXP, 1).withStartupTimeout(CONTAINER_STARTUP_TIMEOUT))
+                    .waitingFor("trendz-python-executor", Wait.forLogMessage(TRENDZ_PYTHON_EXECUTOR_LOG_REGEXP, 1).withStartupTimeout(CONTAINER_STARTUP_TIMEOUT));
             testContainer.start();
             setActive(true);
         } catch (Exception e) {

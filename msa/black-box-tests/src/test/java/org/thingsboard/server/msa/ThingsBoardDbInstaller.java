@@ -76,6 +76,7 @@ public class ThingsBoardDbInstaller {
     private final static String TB_UDP_INTEGRATION_LOG_VOLUME = "tb-udp-integration-log-test-volume";
     private final static String TB_EDQS_LOG_VOLUME = "tb-edqs-log-test-volume";
     private final static String TB_REPORT_LOG_VOLUME = "tb-report-log-test-volume";
+    private final static String TRENDZ_LOG_VOLUME = "trendz-log-test-volume";
     private final static String JAVA_OPTS = "-Xmx512m";
 
     private final DockerComposeExecutor dockerCompose;
@@ -102,6 +103,7 @@ public class ThingsBoardDbInstaller {
     private final String tbUdpIntegrationLogVolume;
     private final String tbEdqsLogVolume;
     private final String tbReportLogVolume;
+    private final String trendzLogVolume;
 
     private final Map<String, String> env;
 
@@ -112,6 +114,8 @@ public class ThingsBoardDbInstaller {
         log.info("System property of blackBoxTests.hybridMode is {}", IS_HYBRID_MODE);
         List<File> composeFiles = new ArrayList<>(Arrays.asList(
                 new File(targetDir + "advanced/docker-compose.yml"),
+                new File(targetDir + "advanced/docker-compose.trendz.yml"),
+                new File(targetDir + "advanced/docker-compose.trendz.db-init.yml"),
                 new File(targetDir + "advanced/docker-compose.volumes.yml"),
                 IS_HYBRID_MODE
                         ? new File(targetDir + "advanced/docker-compose.hybrid.yml")
@@ -152,6 +156,7 @@ public class ThingsBoardDbInstaller {
         tbUdpIntegrationLogVolume = project + "_" + TB_UDP_INTEGRATION_LOG_VOLUME;
         tbEdqsLogVolume = project + "_" + TB_EDQS_LOG_VOLUME;
         tbReportLogVolume = project + "_" + TB_REPORT_LOG_VOLUME;
+        trendzLogVolume = project + "_" + TRENDZ_LOG_VOLUME;
 
         dockerCompose = new DockerComposeExecutor(composeFiles, project);
 
@@ -181,6 +186,7 @@ public class ThingsBoardDbInstaller {
         env.put("TB_UDP_INTEGRATION_VOLUME", tbUdpIntegrationLogVolume);
         env.put("TB_EDQS_LOG_VOLUME", tbEdqsLogVolume);
         env.put("TB_REPORT_LOG_VOLUME", tbReportLogVolume);
+        env.put("TRENDZ_LOG_VOLUME", trendzLogVolume);
 
         if (IS_VALKEY_CLUSTER) {
             for (int i = 0; i < 6; i++) {
@@ -285,6 +291,9 @@ public class ThingsBoardDbInstaller {
             dockerCompose.withCommand("volume create " + tbReportLogVolume);
             dockerCompose.invokeDocker();
 
+            dockerCompose.withCommand("volume create " + trendzLogVolume);
+            dockerCompose.invokeDocker();
+
             StringBuilder additionalServices = new StringBuilder();
             if (IS_HYBRID_MODE) {
                 additionalServices.append(" cassandra");
@@ -319,6 +328,12 @@ public class ThingsBoardDbInstaller {
             dockerCompose.withCommand("run --no-deps --rm -e INSTALL_TB=true -e LOAD_DEMO=true tb-core1");
             dockerCompose.invokeCompose();
 
+            dockerCompose.withCommand("run --no-deps --rm trendz-db-init");
+            dockerCompose.invokeCompose();
+
+            dockerCompose.withCommand("run --no-deps --rm -e INSTALL_TRENDZ=true trendz");
+            dockerCompose.invokeCompose();
+
         } finally {
             try {
                 dockerCompose.withCommand("down -v");
@@ -344,6 +359,7 @@ public class ThingsBoardDbInstaller {
         copyLogs(tbUdpIntegrationLogVolume, "./target/tb-udp_integration-logs/");
         copyLogs(tbEdqsLogVolume, "./target/tb-edqs-logs/");
         copyLogs(tbReportLogVolume, "./target/tb-report-logs/");
+        copyLogs(trendzLogVolume, "./target/trendz-logs/");
 
         StringJoiner rmVolumesCommand = new StringJoiner(" ")
                 .add("volume rm -f")
@@ -363,7 +379,8 @@ public class ThingsBoardDbInstaller {
                 .add(tbTcpIntegrationLogVolume)
                 .add(tbUdpIntegrationLogVolume)
                 .add(tbEdqsLogVolume)
-                .add(tbReportLogVolume);
+                .add(tbReportLogVolume)
+                .add(trendzLogVolume);
 
         if (IS_HYBRID_MODE) {
             rmVolumesCommand.add(cassandraDataVolume);

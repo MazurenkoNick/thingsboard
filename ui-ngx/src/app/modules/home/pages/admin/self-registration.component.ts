@@ -75,7 +75,7 @@ export class SelfRegistrationComponent extends PageComponent implements OnInit, 
   tinyMceOptions: Partial<EditorOptions> = {
     base_url: '/assets/tinymce',
     suffix: '.min',
-    plugins: ['link', 'table', 'image', 'imagetools', 'code', 'fullscreen', 'lists'],
+    plugins: ['link', 'table', 'image', 'code', 'fullscreen', 'lists'],
     menubar: 'edit insert tools view format table',
     toolbar_mode: 'sliding',
     toolbar: 'fontfamily fontsize | bold italic  strikethrough  forecolor backcolor ' +

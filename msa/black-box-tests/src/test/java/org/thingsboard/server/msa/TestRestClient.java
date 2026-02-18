@@ -108,6 +108,9 @@ import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.secret.Secret;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
+import org.thingsboard.server.common.data.trendz.TrendzHealthcheckResult;
+import org.thingsboard.server.common.data.trendz.TrendzSummary;
+import org.thingsboard.server.common.data.trendz.TrendzSynchronizationResult;
 
 import java.util.HashMap;
 import java.util.List;
@@ -1355,4 +1358,37 @@ public class TestRestClient {
                 .as(TenantProfile.class);
     }
 
+    public TrendzSynchronizationResult connectTrendz() {
+        return given().spec(requestSpec)
+                .post("/api/trendz/connect")
+                .then()
+                .statusCode(HTTP_OK)
+                .extract()
+                .as(TrendzSynchronizationResult.class);
+    }
+
+    public void enableUserCredentials(UserId userId) {
+        given().spec(requestSpec)
+                .post("/api/user/" + userId.getId() + "/userCredentialsEnabled")
+                .then()
+                .statusCode(HTTP_OK);
+    }
+
+    public TrendzHealthcheckResult trendzHealthcheck() {
+        return given().spec(requestSpec)
+                .get("/api/trendz/healthcheck")
+                .then()
+                .statusCode(HTTP_OK)
+                .extract()
+                .as(TrendzHealthcheckResult.class);
+    }
+
+    public TrendzSummary getTrendzSummary() {
+        return given().spec(requestSpec)
+                .get("/api/trendz/summary")
+                .then()
+                .statusCode(HTTP_OK)
+                .extract()
+                .as(TrendzSummary.class);
+    }
 }
