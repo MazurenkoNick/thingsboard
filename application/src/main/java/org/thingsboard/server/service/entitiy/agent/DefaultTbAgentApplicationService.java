@@ -78,7 +78,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
             AgentApplication savedApp = checkNotNull(agentApplicationService.save(tenantId, application));
 
             AgentAppEventActionType eventAction = isUpdate ? AgentAppEventActionType.UPDATE : AgentAppEventActionType.INSTALL;
-            List<AgentAppStep> steps = isUpdate ? savedApp.getUpdateSteps() : savedApp.getStartSteps();
+            List<AgentAppStep> steps = isUpdate ? savedApp.getUpgradeSteps() : savedApp.getStartSteps();
             createEvent(tenantId, savedApp.getId(), eventAction, steps);
 
             logEntityActionService.logEntityAction(tenantId, savedApp.getId(), savedApp, actionType, user);

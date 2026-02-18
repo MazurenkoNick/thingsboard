@@ -65,7 +65,7 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         app.setAppType(AgentApplicationType.EDGE);
         app.setTemplateId(template.getId());
         app.setStartSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
-        app.setUpdateSteps(Collections.emptyList());
+        app.setUpgradeSteps(Collections.emptyList());
 
         AgentApplication saved = agentApplicationService.save(tenantId, app);
         Assert.assertNotNull(saved);
@@ -74,7 +74,7 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         Assert.assertEquals(agent.getId(), saved.getAgentId());
         Assert.assertEquals(template.getId(), saved.getTemplateId());
         Assert.assertEquals(1, saved.getStartSteps().size());
-        Assert.assertEquals(Collections.emptyList(), saved.getUpdateSteps());
+        Assert.assertEquals(Collections.emptyList(), saved.getUpgradeSteps());
 
         AgentApplication found = agentApplicationService.findById(tenantId, saved.getId());
         Assert.assertNotNull(found);
@@ -158,14 +158,14 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         app.setTemplateId(template.getId());
         InfoStep updateStep = new InfoStep(UUID.randomUUID(), null, "updated step", false);
         app.setStartSteps(new ArrayList<>(List.of(updateStep)));
-        app.setUpdateSteps(Collections.emptyList());
+        app.setUpgradeSteps(Collections.emptyList());
         AgentApplication updated = agentApplicationService.save(tenantId, app);
         Assert.assertEquals(1, updated.getStartSteps().size());
-        Assert.assertEquals(0, updated.getUpdateSteps().size());
+        Assert.assertEquals(0, updated.getUpgradeSteps().size());
 
         AgentApplication found = agentApplicationService.findById(tenantId, app.getId());
         Assert.assertEquals(1, found.getStartSteps().size());
-        Assert.assertEquals(0, found.getUpdateSteps().size());
+        Assert.assertEquals(0, found.getUpgradeSteps().size());
 
         agentApplicationService.delete(tenantId, app.getId());
         agentService.deleteAgent(tenantId, agent.getId());
@@ -213,7 +213,7 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         app.setName(name);
         app.setTemplateId(template.getId());
         app.setStartSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
-        app.setUpdateSteps(Collections.emptyList());
+        app.setUpgradeSteps(Collections.emptyList());
         return agentApplicationService.save(tenantId, app);
     }
 

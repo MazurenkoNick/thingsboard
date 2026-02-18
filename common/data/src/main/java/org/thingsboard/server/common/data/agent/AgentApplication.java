@@ -50,7 +50,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     private AgentApplicationType appType;
     private AgentAppConfig config;
     private List<AgentAppStep> startSteps;
-    private List<AgentAppStep> updateSteps; // todo: add upgradeSteps!
+    private List<AgentAppStep> upgradeSteps;
     @Getter
     private Long version;
     @JsonIgnore
@@ -73,7 +73,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         this.name = application.getName();
         this.templateId = application.getTemplateId();
         this.startSteps = application.getStartSteps();
-        this.updateSteps = application.getUpdateSteps();
+        this.upgradeSteps = application.getUpgradeSteps();
         this.version = application.getVersion();
         this.pendingDeletion = application.isPendingDeletion();
     }
@@ -84,7 +84,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         app.setAppType(template.getAppType());
         app.setConfig(template.getConfig() != null ? template.getConfig().copy() : null);
         app.setStartSteps(copySteps(template.getStartSteps()));
-        app.setUpdateSteps(copySteps(template.getUpgradeSteps()));
+        app.setUpgradeSteps(copySteps(template.getUpgradeSteps()));
         return app;
     }
 
@@ -143,8 +143,8 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         return startSteps;
     }
 
-    @Schema(description = "Application update steps with resolved configuration")
-    public List<AgentAppStep> getUpdateSteps() {
-        return updateSteps;
+    @Schema(description = "Application upgrade steps with resolved configuration")
+    public List<AgentAppStep> getUpgradeSteps() {
+        return upgradeSteps;
     }
 }

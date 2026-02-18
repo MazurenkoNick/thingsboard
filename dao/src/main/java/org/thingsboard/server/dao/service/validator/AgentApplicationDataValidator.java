@@ -97,11 +97,11 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
             throw new DataValidationException("Invalid install steps: " + e.getMessage());
         }
         try {
-            if (!CollectionUtils.isEmpty(agentApp.getUpdateSteps())) {
-                StepLinkedListUtils.validate(agentApp.getUpdateSteps());
+            if (!CollectionUtils.isEmpty(agentApp.getUpgradeSteps())) {
+                StepLinkedListUtils.validate(agentApp.getUpgradeSteps());
             }
         } catch (IllegalStateException e) {
-            throw new DataValidationException("Invalid update steps: " + e.getMessage());
+            throw new DataValidationException("Invalid upgrade steps: " + e.getMessage());
         }
     }
 }

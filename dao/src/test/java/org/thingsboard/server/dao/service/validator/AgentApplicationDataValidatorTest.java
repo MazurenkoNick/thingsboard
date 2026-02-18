@@ -274,27 +274,27 @@ class AgentApplicationDataValidatorTest {
     }
 
     @Test
-    void testValidateDataImpl_updateStepWithNullId_thenException() {
+    void testValidateDataImpl_upgradeStepWithNullId_thenException() {
         InfoStep stepWithNullId = new InfoStep();
-        stepWithNullId.setTitle("Update step without ID");
+        stepWithNullId.setTitle("Upgrade step without ID");
 
         AgentApplication app = createValidApplication();
-        app.setUpdateSteps(new ArrayList<>(List.of(stepWithNullId)));
+        app.setUpgradeSteps(new ArrayList<>(List.of(stepWithNullId)));
 
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, app));
-        assertThat(exception.getMessage()).contains("Invalid update steps");
+        assertThat(exception.getMessage()).contains("Invalid upgrade steps");
         assertThat(exception.getMessage()).contains("null id");
     }
 
     @Test
-    void testValidateDataImpl_validUpdateSteps_thenOK() {
+    void testValidateDataImpl_validUpgradeSteps_thenOK() {
         UUID id1 = UUID.randomUUID();
 
-        InfoStep updateStep = new InfoStep(id1, null, "Update Step", false);
+        InfoStep upgradeStep = new InfoStep(id1, null, "Upgrade Step", false);
 
         AgentApplication app = createValidApplication();
-        app.setUpdateSteps(new ArrayList<>(List.of(updateStep)));
+        app.setUpgradeSteps(new ArrayList<>(List.of(upgradeStep)));
 
         assertDoesNotThrow(() -> validator.validateDataImpl(tenantId, app));
     }

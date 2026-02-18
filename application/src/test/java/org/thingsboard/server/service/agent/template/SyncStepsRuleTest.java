@@ -61,7 +61,7 @@ class SyncStepsRuleTest {
     }
 
     @Test
-    void supports_shouldReturnTrue_whenApplicationHasUpdateSteps() {
+    void supports_shouldReturnTrue_whenApplicationHasUpgradeSteps() {
         AgentApplication app = createApplication(null, List.of(createStep("step1")));
         AgentAppTemplate template = createTemplate(null, null);
 
@@ -105,7 +105,7 @@ class SyncStepsRuleTest {
         syncStep.apply(app, template, ctx);
 
         assertTrue(app.getStartSteps().isEmpty());
-        assertTrue(app.getUpdateSteps().isEmpty());
+        assertTrue(app.getUpgradeSteps().isEmpty());
     }
 
     @Test
@@ -123,8 +123,8 @@ class SyncStepsRuleTest {
 
         assertEquals(1, app.getStartSteps().size());
         assertEquals(templateInstallStep.getId(), app.getStartSteps().get(0).getId());
-        assertEquals(1, app.getUpdateSteps().size());
-        assertEquals(templateUpgradeStep.getId(), app.getUpdateSteps().get(0).getId());
+        assertEquals(1, app.getUpgradeSteps().size());
+        assertEquals(templateUpgradeStep.getId(), app.getUpgradeSteps().get(0).getId());
     }
 
     @Test
@@ -236,7 +236,7 @@ class SyncStepsRuleTest {
     // ==================== apply() - update steps ====================
 
     @Test
-    void apply_shouldSyncUpdateStepsSeparately() {
+    void apply_shouldSyncUpgradeStepsSeparately() {
         UUID installId = UUID.randomUUID();
         UUID updateId = UUID.randomUUID();
 
@@ -260,8 +260,8 @@ class SyncStepsRuleTest {
         assertEquals(1, app.getStartSteps().size());
         assertEquals("Impl Install", app.getStartSteps().get(0).getTitle());
 
-        assertEquals(1, app.getUpdateSteps().size());
-        assertEquals("Impl Update", app.getUpdateSteps().get(0).getTitle());
+        assertEquals(1, app.getUpgradeSteps().size());
+        assertEquals("Impl Update", app.getUpgradeSteps().get(0).getTitle());
     }
 
     // ==================== apply() - nextId handling ====================
@@ -391,10 +391,10 @@ class SyncStepsRuleTest {
 
     // ==================== Helper methods ====================
 
-    private AgentApplication createApplication(List<AgentAppStep> installSteps, List<AgentAppStep> updateSteps) {
+    private AgentApplication createApplication(List<AgentAppStep> installSteps, List<AgentAppStep> upgradeSteps) {
         AgentApplication app = new AgentApplication();
         app.setStartSteps(installSteps);
-        app.setUpdateSteps(updateSteps);
+        app.setUpgradeSteps(upgradeSteps);
         return app;
     }
 

@@ -795,7 +795,7 @@ CREATE TABLE IF NOT EXISTS agent_application (
     template_id uuid,
     config jsonb,
     start_steps jsonb NOT NULL,
-    update_steps jsonb,
+    upgrade_steps jsonb,
     pending_deletion boolean NOT NULL DEFAULT false,
     version BIGINT DEFAULT 1,
     CONSTRAINT fk_agent_application_agent FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE CASCADE,
