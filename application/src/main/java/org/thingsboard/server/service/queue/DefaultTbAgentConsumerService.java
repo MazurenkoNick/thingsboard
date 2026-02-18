@@ -91,8 +91,10 @@ public class DefaultTbAgentConsumerService extends AbstractConsumerService<ToAge
             if (notification.hasAgentAppEventNotification()) {
                 ctx.getAgentEventProcessor().onEventNotification(notification.getAgentAppEventNotification());
             }
+            callback.onSuccess();
         } catch (Exception e) {
             log.warn("Failed to process agent notification message", e);
+            callback.onFailure(e);
         }
     }
 
