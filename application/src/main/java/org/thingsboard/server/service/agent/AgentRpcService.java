@@ -13,23 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.agent.session;
+package org.thingsboard.server.service.agent;
 
-import io.grpc.Status;
-import org.thingsboard.server.common.data.id.AgentAppEventId;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.gen.agent.v1.ServerToAgent;
 
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+public interface AgentRpcService {
 
-public interface AgentSession {
-
-    AgentSessionState getState();
-    boolean push(ServerToAgent msg);
-    void onError(Status status);
-    void complete();
-    void closeSilently();
-    void drainIfPossible();
-    void scheduleEventWatchdog(AgentAppEventId eventId, ScheduledExecutorService scheduler, Runnable task, long delay, TimeUnit unit);
-    void cancelEventWatchdog(AgentAppEventId eventId);
+    boolean push(AgentId agentId, ServerToAgent msg) throws AgentSessionNotFoundException;
 }

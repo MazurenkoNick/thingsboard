@@ -90,7 +90,7 @@ message CommandProgress {
 }
 
 message CommandResult {
-  CommandId command_id = 1;
+  CommandId commandId = 1;
   bool success = 2;
   optional string message = 3;
   StepId step = 4;

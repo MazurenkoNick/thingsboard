@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent.step;
+package org.thingsboard.server.service.agent;
 
-public enum AgentAppStepType {
-    COMPOSE_TEMPLATE,
-    COMPOSE,
-    COMPOSE_MODIFY, // todo: use for update?
-    COMPOSE_START,
-    INFO
+import org.thingsboard.server.common.data.id.AgentId;
+
+public class AgentSessionNotFoundException extends Exception {
+
+    public AgentSessionNotFoundException(AgentId agentId) {
+        super("Couldn't find agent session by id: " + agentId);
+    }
 }

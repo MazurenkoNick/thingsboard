@@ -28,26 +28,27 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class StepLinkedListUtilsTest {
 
-    // ==================== findFirstStepId() tests ====================
+    // ==================== findFirstStep() tests ====================
 
     @Test
-    void findFirstStepId_shouldReturnNull_whenListIsEmpty() {
-        assertNull(StepLinkedListUtils.findFirstStepId(Collections.emptyList()));
-        assertNull(StepLinkedListUtils.findFirstStepId(null));
+    void findFirstStep_shouldReturnNull_whenListIsEmpty() {
+        assertNull(StepLinkedListUtils.findFirstStep(Collections.emptyList()));
+        assertNull(StepLinkedListUtils.findFirstStep(null));
     }
 
     @Test
-    void findFirstStepId_shouldReturnOnlyStep_whenSingleStep() {
+    void findFirstStep_shouldReturnOnlyStep_whenSingleStep() {
         UUID stepId = UUID.randomUUID();
         InfoStep step = createStep(stepId, null, "Only Step");
 
-        UUID firstId = StepLinkedListUtils.findFirstStepId(List.of(step));
+        AgentAppStep firstStep = StepLinkedListUtils.findFirstStep(List.of(step));
 
-        assertEquals(stepId, firstId);
+        assertNotNull(firstStep);
+        assertEquals(stepId, firstStep.getId());
     }
 
     @Test
-    void findFirstStepId_shouldFindFirstStep_inChain() {
+    void findFirstStep_shouldFindFirstStep_inChain() {
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();
         UUID id3 = UUID.randomUUID();
@@ -58,13 +59,14 @@ class StepLinkedListUtilsTest {
         InfoStep step3 = createStep(id3, null, "Third");
 
         // Provide in random order
-        UUID firstId = StepLinkedListUtils.findFirstStepId(List.of(step3, step1, step2));
+        AgentAppStep firstStep = StepLinkedListUtils.findFirstStep(List.of(step3, step1, step2));
 
-        assertEquals(id1, firstId);
+        assertNotNull(firstStep);
+        assertEquals(id1, firstStep.getId());
     }
 
     @Test
-    void findFirstStepId_shouldThrow_whenCircularReference() {
+    void findFirstStep_shouldThrow_whenCircularReference() {
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();
 
@@ -73,11 +75,11 @@ class StepLinkedListUtilsTest {
         InfoStep step2 = createStep(id2, id1, "Second");
 
         assertThrows(IllegalStateException.class,
-                () -> StepLinkedListUtils.findFirstStepId(List.of(step1, step2)));
+                () -> StepLinkedListUtils.findFirstStep(List.of(step1, step2)));
     }
 
     @Test
-    void findFirstStepId_shouldThrow_whenMultipleFirstSteps() {
+    void findFirstStep_shouldThrow_whenMultipleFirstSteps() {
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();
         UUID id3 = UUID.randomUUID();
@@ -88,7 +90,7 @@ class StepLinkedListUtilsTest {
         InfoStep step3 = createStep(id3, null, "First Chain End");
 
         assertThrows(IllegalStateException.class,
-                () -> StepLinkedListUtils.findFirstStepId(List.of(step1, step2, step3)));
+                () -> StepLinkedListUtils.findFirstStep(List.of(step1, step2, step3)));
     }
 
     // ==================== toOrderedList() tests ====================
@@ -215,6 +217,58 @@ class StepLinkedListUtilsTest {
                 () -> StepLinkedListUtils.validate(List.of(step)));
 
         assertTrue(ex.getMessage().contains("non-existent nextId"));
+    }
+
+    // ==================== getNextStep() tests ====================
+
+    @Test
+    void getNextStep_shouldReturnEmpty_whenCurrentStepIdIsNull() {
+        UUID id1 = UUID.randomUUID();
+        InfoStep step = createStep(id1, null, "Step");
+        assertTrue(StepLinkedListUtils.getNextStep(null, List.of(step)).isEmpty());
+    }
+
+    @Test
+    void getNextStep_shouldReturnEmpty_whenStepsIsEmpty() {
+        assertTrue(StepLinkedListUtils.getNextStep(UUID.randomUUID(), Collections.emptyList()).isEmpty());
+        assertTrue(StepLinkedListUtils.getNextStep(UUID.randomUUID(), null).isEmpty());
+    }
+
+    @Test
+    void getNextStep_shouldReturnEmpty_whenCurrentStepIsLast() {
+        UUID id1 = UUID.randomUUID();
+        InfoStep step = createStep(id1, null, "Last");
+        assertTrue(StepLinkedListUtils.getNextStep(id1, List.of(step)).isEmpty());
+    }
+
+    @Test
+    void getNextStep_shouldReturnNextStep_inChain() {
+        UUID id1 = UUID.randomUUID();
+        UUID id2 = UUID.randomUUID();
+        UUID id3 = UUID.randomUUID();
+
+        InfoStep step1 = createStep(id1, id2, "First");
+        InfoStep step2 = createStep(id2, id3, "Second");
+        InfoStep step3 = createStep(id3, null, "Third");
+
+        List<AgentAppStep> steps = List.of(step1, step2, step3);
+
+        AgentAppStep next = StepLinkedListUtils.getNextStep(id1, steps).orElse(null);
+        assertNotNull(next);
+        assertEquals(id2, next.getId());
+
+        next = StepLinkedListUtils.getNextStep(id2, steps).orElse(null);
+        assertNotNull(next);
+        assertEquals(id3, next.getId());
+
+        assertTrue(StepLinkedListUtils.getNextStep(id3, steps).isEmpty());
+    }
+
+    @Test
+    void getNextStep_shouldReturnEmpty_whenCurrentStepIdNotFound() {
+        UUID id1 = UUID.randomUUID();
+        InfoStep step = createStep(id1, null, "Step");
+        assertTrue(StepLinkedListUtils.getNextStep(UUID.randomUUID(), List.of(step)).isEmpty());
     }
 
     // ==================== Helper methods ====================

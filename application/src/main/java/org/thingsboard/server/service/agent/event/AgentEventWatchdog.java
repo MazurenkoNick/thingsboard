@@ -19,18 +19,15 @@ import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.gen.transport.TransportProtos.AgentAppEventNotificationProto;
 
-public interface AgentEventProcessor {
+import java.util.concurrent.ScheduledExecutorService;
 
-    void onEventNotification(AgentAppEventNotificationProto notification);
+public interface AgentEventWatchdog {
 
-    void resumeEventsOnReconnect(TenantId tenantId, AgentId agentId);
+    void schedule(AgentApplication application, AgentAppEvent event, AgentEventResender resender);
 
-    void processAfterError(TenantId tenantId, AgentId agentId, AgentAppEventId failedEvent);
+    void cancel(AgentId agentId, AgentAppEventId eventId);
 
-    void processNextEventForApp(TenantId tenantId, AgentId agentId, AgentApplication application);
+    ScheduledExecutorService getScheduler();
 
-    void processNextStepOrFinish(TenantId tenantId, AgentId agentId, AgentAppEvent event);
 }

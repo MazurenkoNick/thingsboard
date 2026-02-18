@@ -15,6 +15,7 @@
  */
 package org.thingsboard.server.common.data.agent;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -49,9 +50,10 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     private AgentApplicationType appType;
     private AgentAppConfig config;
     private List<AgentAppStep> startSteps;
-    private List<AgentAppStep> updateSteps; // todo: to upgradeSteps!
+    private List<AgentAppStep> updateSteps; // todo: add upgradeSteps!
     @Getter
     private Long version;
+    @JsonIgnore
     @Getter
     private boolean pendingDeletion;
 

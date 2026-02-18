@@ -20,20 +20,25 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.queue.util.TbCoreComponent;
 
+import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component
+@TbCoreComponent
 public class AgentSessionRegistry {
 
     private final ConcurrentHashMap<AgentId, AgentSession> sessionsByAgentId = new ConcurrentHashMap<>();
 
     public void registerOrReplace(AgentId agentId, TenantId tenantId, AgentSession session) {
-        if (hasByAgentId(agentId)) {
-            cleanUpExisting(agentId, tenantId);
+        AgentSession old = sessionsByAgentId.put(agentId, session);
+        if (old != null) {
+            log.info("[{}] Replacing old session for agent [{}]", tenantId, agentId);
+            old.onError(Status.ABORTED.withDescription("Session replaced by a newer connection for agentId=" + agentId));
         }
-        put(session);
     }
 
     public void removeIfSame(AgentSession session) {
@@ -44,24 +49,8 @@ public class AgentSessionRegistry {
         sessionsByAgentId.remove(session.getState().getAgentId(), session);
     }
 
-    private void cleanUpExisting(AgentId agentId, TenantId tenantId) {
-        var old = getByAgentId(agentId);
-        if (old != null) {
-            log.info("[{}] Replacing old session for agent [{}]", tenantId, agentId); // todo: test
-            old.onError(Status.ABORTED.withDescription("Session replaced by a newer connection for agentId=" + agentId));
-        }
-    }
 
-    private void put(AgentSession agentSession) {
-        AgentSessionState state = agentSession.getState();
-        sessionsByAgentId.put(state.getAgentId(), agentSession);
-    }
-
-    private AgentSession getByAgentId(AgentId agentId) {
+    public AgentSession getByAgentId(AgentId agentId) {
         return sessionsByAgentId.get(agentId);
-    }
-
-    private boolean hasByAgentId(AgentId agentId) {
-        return sessionsByAgentId.containsKey(agentId);
     }
 }

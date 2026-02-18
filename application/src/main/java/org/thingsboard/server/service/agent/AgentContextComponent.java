@@ -13,12 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent.step;
+package org.thingsboard.server.service.agent;
 
-public enum AgentAppStepType {
-    COMPOSE_TEMPLATE,
-    COMPOSE,
-    COMPOSE_MODIFY, // todo: use for update?
-    COMPOSE_START,
-    INFO
+import lombok.Getter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.agent.event.AgentEventProcessor;
+
+@Lazy
+@Getter
+@Component
+@TbCoreComponent
+public class AgentContextComponent {
+
+    @Autowired
+    private AgentEventProcessor agentEventProcessor;
 }

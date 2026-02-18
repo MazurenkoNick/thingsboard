@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent.step;
+package org.thingsboard.server.service.agent;
 
-public enum AgentAppStepType {
-    COMPOSE_TEMPLATE,
-    COMPOSE,
-    COMPOSE_MODIFY, // todo: use for update?
-    COMPOSE_START,
-    INFO
+import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
+import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.step.AgentAppStep;
+
+import java.util.List;
+
+public interface AgentAppEventStepsResolver {
+
+    List<AgentAppStep> resolveSteps(AgentApplication app, AgentAppEventActionType actionType);
 }

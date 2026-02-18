@@ -148,7 +148,6 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         event.setApplicationId(applicationId);
         event.setActionType(actionType);
         event.setDeliveryState(AgentAppEventDeliveryState.PENDING);
-        event.setTotalSteps(steps != null ? steps.size() : 0);
         event.setUpdatedTime(System.currentTimeMillis());
         return agentAppEventService.save(tenantId, event);
     }
