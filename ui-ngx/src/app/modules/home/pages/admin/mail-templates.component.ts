@@ -139,7 +139,7 @@ export class MailTemplatesComponent extends PageComponent implements OnInit, Has
         });
       };
     } else {
-      this.tinyMceOptions.plugins = ['link', 'table', 'image', 'imagetools', 'code', 'fullscreen', 'lists'];
+      this.tinyMceOptions.plugins = ['link', 'table', 'image', 'code', 'fullscreen', 'lists'];
       this.tinyMceOptions.menubar = 'edit insert tools view format table';
       this.tinyMceOptions.toolbar_mode = 'sliding';
       this.tinyMceOptions.toolbar = 'fontfamily fontsize | bold italic strikethrough forecolor backcolor ' +

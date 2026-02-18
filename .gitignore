@@ -39,3 +39,4 @@ rebuild-docker.sh
 .run/**
 .run
 instance-license.data
+.claude/
