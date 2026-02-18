@@ -151,6 +151,7 @@ public class EntityIdFactory {
             case SECRET -> new SecretId(uuid);
             case REPORT_TEMPLATE -> new ReportTemplateId(uuid);
             case AI_MODEL -> new AiModelId(uuid);
+            case ADMIN_SETTINGS -> new AdminSettingsId(uuid);
             default -> throw new IllegalArgumentException("EdgeEventType " + edgeEventType + " is not supported!");
         };
     }
