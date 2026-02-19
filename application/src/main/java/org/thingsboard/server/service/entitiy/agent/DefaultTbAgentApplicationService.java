@@ -25,7 +25,6 @@ import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
 import org.thingsboard.server.common.data.audit.ActionType;
@@ -39,8 +38,6 @@ import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.agent.template.merge.AgentAppTemplateMergeOrchestrator;
 import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
-
-import java.util.List;
 
 @TbCoreComponent
 @Service
@@ -77,9 +74,8 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
             }
             AgentApplication savedApp = checkNotNull(agentApplicationService.save(tenantId, application));
 
-            AgentAppEventActionType eventAction = isUpdate ? AgentAppEventActionType.UPDATE : AgentAppEventActionType.INSTALL;
-            List<AgentAppStep> steps = isUpdate ? savedApp.getUpgradeSteps() : savedApp.getStartSteps();
-            createEvent(tenantId, savedApp.getId(), eventAction, steps);
+            AgentAppEventActionType eventAction = getSaveEventActionType(isUpdate);
+            createEvent(tenantId, savedApp.getId(), eventAction);
 
             logEntityActionService.logEntityAction(tenantId, savedApp.getId(), savedApp, actionType, user);
             return savedApp;
@@ -98,7 +94,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         try {
             throwIfPendingForDelete(application);
             agentAppEventService.deleteAllPendingByApplicationId(applicationId);
-            createEvent(tenantId, applicationId, AgentAppEventActionType.DELETE, null);
+            createEvent(tenantId, applicationId, AgentAppEventActionType.DELETE);
 
             application.setPendingDeletion(true);
             agentApplicationService.save(tenantId, application);
@@ -118,7 +114,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         }
         AgentApplication application = checkNotNull(agentApplicationService.findById(tenantId, applicationId));
         throwIfPendingForDelete(application);
-        AgentAppEvent event = createEvent(tenantId, applicationId, AgentAppEventActionType.RESTART, application.getStartSteps());
+        AgentAppEvent event = createEvent(tenantId, applicationId, AgentAppEventActionType.RESTART);
 
         tbClusterService.onAgentAppEvent(tenantId, application.getAgentId(), event);
     }
@@ -141,8 +137,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         }
     }
 
-    private AgentAppEvent createEvent(TenantId tenantId, AgentApplicationId applicationId,
-                                      AgentAppEventActionType actionType, List<AgentAppStep> steps) {
+    private AgentAppEvent createEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventActionType actionType) {
         AgentAppEvent event = new AgentAppEvent();
         event.setTenantId(tenantId);
         event.setApplicationId(applicationId);
@@ -150,5 +145,9 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         event.setDeliveryState(AgentAppEventDeliveryState.PENDING);
         event.setUpdatedTime(System.currentTimeMillis());
         return agentAppEventService.save(tenantId, event);
+    }
+
+    private AgentAppEventActionType getSaveEventActionType(boolean isUpdate) {
+        return isUpdate ? AgentAppEventActionType.UPDATE : AgentAppEventActionType.INSTALL;
     }
 }

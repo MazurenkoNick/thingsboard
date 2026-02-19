@@ -157,7 +157,7 @@ public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBas
         Optional<Status> err = agentStateService.onConnected(session, msg.getHello());
         if (err.isPresent()) {
             StatusRuntimeException e = err.get().asRuntimeException();
-            log.error("The state couldn't be initialized", e);
+            log.warn("The state couldn't be initialized", e);
             observer.onError(e);
             return Optional.empty();
         }

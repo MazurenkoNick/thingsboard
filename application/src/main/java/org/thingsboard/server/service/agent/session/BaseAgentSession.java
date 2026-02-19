@@ -175,6 +175,7 @@ public class BaseAgentSession implements AgentSession {
 
     private void cancelAllWatchdogs() {
         eventWatchdogs.values().forEach(f -> f.cancel(false));
+        log.trace("[{}][{}] Clearing {} event watchdogs", state.getTenantId(), state.getAgentId(), eventWatchdogs.size());
         eventWatchdogs.clear();
     }
 
