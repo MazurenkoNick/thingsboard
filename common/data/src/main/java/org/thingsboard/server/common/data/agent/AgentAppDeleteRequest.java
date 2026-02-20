@@ -13,13 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent.step;
+package org.thingsboard.server.common.data.agent;
 
-public enum AgentAppStepType {
-    COMPOSE_TEMPLATE,
-    COMPOSE,
-    COMPOSE_MODIFY, // todo: use for update?
-    COMPOSE_START,
-    COMPOSE_DOWN,
-    INFO
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
+import lombok.Data;
+import org.thingsboard.server.common.data.agent.step.AgentAppStep;
+
+import java.util.List;
+
+@Data
+@Schema
+public class AgentAppDeleteRequest {
+
+    @Schema(description = "User-configured delete steps from the wizard.")
+    @NotEmpty
+    private List<AgentAppStep> steps;
+
 }

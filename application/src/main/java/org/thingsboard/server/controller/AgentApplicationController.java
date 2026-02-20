@@ -16,10 +16,13 @@
 package org.thingsboard.server.controller;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.thingsboard.server.common.data.agent.AgentAppDeleteRequest;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
@@ -73,7 +77,7 @@ public class AgentApplicationController extends BaseController {
             notes = "Fetch the Agent Application object based on the provided Agent Application Id."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/agent/app/{agentApplicationId}", method = RequestMethod.GET)
+    @GetMapping(value = "/agent/app/{agentApplicationId}")
     @ResponseBody
     public AgentApplication getAgentApplicationById(@Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
                                                     @PathVariable(AGENT_APP_ID) String strAgentAppId) throws ThingsboardException {
@@ -86,7 +90,7 @@ public class AgentApplicationController extends BaseController {
             notes = "Returns a page of agent applications that belong to the specified agent. "
                     + PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/agent/{agentId}/apps", params = {"pageSize", "page"}, method = RequestMethod.GET)
+    @GetMapping(value = "/agent/{agentId}/apps", params = {"pageSize", "page"})
     @ResponseBody
     public PageData<AgentApplication> getAgentApplicationsByAgentId(
             @Parameter(description = AGENT_ID_PARAM_DESCRIPTION)
@@ -124,17 +128,20 @@ public class AgentApplicationController extends BaseController {
     }
 
     @ApiOperation(value = "Delete Agent Application (deleteAgentApplication)",
-            notes = "Deletes the agent application. Referencing non-existing agent application Id will cause an error."
+            notes = "Deletes the agent application. Referencing non-existing agent application Id will cause an error. " +
+                    "Accepts the user-configured delete steps from the wizard (e.g. with removeVolumes set on ComposeDownStep)."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/agent/app/{agentApplicationId}", method = RequestMethod.DELETE)
+    @DeleteMapping(value = "/agent/app/{agentApplicationId}")
     @ResponseStatus(value = HttpStatus.OK)
     public void deleteAgentApplication(@Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
-                                       @PathVariable(AGENT_APP_ID) String strAgentAppId) throws ThingsboardException {
+                                       @PathVariable(AGENT_APP_ID) String strAgentAppId,
+                                       @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "User-configured delete steps from the wizard.")
+                                       @Valid @RequestBody AgentAppDeleteRequest deleteRequest) throws ThingsboardException {
         checkParameter(AGENT_APP_ID, strAgentAppId);
         AgentApplicationId agentApplicationId = new AgentApplicationId(toUUID(strAgentAppId));
         AgentApplication application = checkAgentAppId(agentApplicationId, Operation.DELETE);
-        tbAgentApplicationService.delete(application, getCurrentUser());
+        tbAgentApplicationService.delete(application, deleteRequest, getCurrentUser());
     }
 
     @ApiOperation(value = "Restart Agent Application (restartAgentApplication)",

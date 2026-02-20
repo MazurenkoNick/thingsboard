@@ -51,6 +51,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     private AgentAppConfig config;
     private List<AgentAppStep> startSteps;
     private List<AgentAppStep> upgradeSteps;
+    private List<AgentAppStep> deleteSteps;
     @Getter
     private Long version;
     @JsonIgnore
@@ -74,6 +75,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         this.templateId = application.getTemplateId();
         this.startSteps = application.getStartSteps();
         this.upgradeSteps = application.getUpgradeSteps();
+        this.deleteSteps = application.getDeleteSteps();
         this.version = application.getVersion();
         this.pendingDeletion = application.isPendingDeletion();
     }
@@ -85,6 +87,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         app.setConfig(template.getConfig() != null ? template.getConfig().copy() : null);
         app.setStartSteps(copySteps(template.getStartSteps()));
         app.setUpgradeSteps(copySteps(template.getUpgradeSteps()));
+        app.setDeleteSteps(copySteps(template.getDeleteSteps()));
         return app;
     }
 
@@ -146,5 +149,10 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     @Schema(description = "Application upgrade steps with resolved configuration")
     public List<AgentAppStep> getUpgradeSteps() {
         return upgradeSteps;
+    }
+
+    @Schema(description = "Application delete steps with resolved configuration")
+    public List<AgentAppStep> getDeleteSteps() {
+        return deleteSteps;
     }
 }

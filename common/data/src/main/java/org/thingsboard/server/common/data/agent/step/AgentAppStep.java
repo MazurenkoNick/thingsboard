@@ -31,6 +31,7 @@ import java.util.UUID;
         @JsonSubTypes.Type(name = "COMPOSE_TEMPLATE", value = ComposeTypeChoiceStep.class),
         @JsonSubTypes.Type(name = "COMPOSE", value = ComposeStep.class),
         @JsonSubTypes.Type(name = "COMPOSE_START", value = ComposeStartStep.class),
+        @JsonSubTypes.Type(name = "COMPOSE_DOWN", value = ComposeDownStep.class),
         @JsonSubTypes.Type(name = "INFO", value = InfoStep.class)
 })
 @Data

@@ -16,6 +16,7 @@
 package org.thingsboard.server.service.entitiy.agent;
 
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.agent.AgentAppDeleteRequest;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
@@ -25,7 +26,7 @@ public interface TbAgentApplicationService {
 
     AgentApplication save(AgentApplication application, User user) throws Exception;
 
-    void delete(AgentApplication application, User user);
+    void delete(AgentApplication application, AgentAppDeleteRequest deleteRequest, User user);
 
     void restart(TenantId tenantId, AgentApplicationId applicationId, User user) throws Exception;
 

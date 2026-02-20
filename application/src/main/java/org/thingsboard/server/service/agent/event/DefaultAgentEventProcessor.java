@@ -96,7 +96,6 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
 
     @Override
     public void processAfterError(TenantId tenantId, AgentId agentId, AgentAppEventId failedEventId) {
-        // todo: handle 'retry errors' logic
         log.trace("[{}][{}] Processing after error for event {}", tenantId, agentId, failedEventId);
         eventWatchdog.cancel(agentId, failedEventId);
 

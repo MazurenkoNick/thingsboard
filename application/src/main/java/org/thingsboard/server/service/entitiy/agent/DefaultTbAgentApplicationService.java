@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.agent.AgentAppDeleteRequest;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
@@ -87,20 +88,25 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
 
     @Transactional
     @Override
-    public void delete(AgentApplication application, User user) {
+    public void delete(AgentApplication application, AgentAppDeleteRequest deleteRequest, User user) {
         ActionType actionType = ActionType.DELETED;
         TenantId tenantId = application.getTenantId();
         AgentApplicationId applicationId = application.getId();
         try {
             throwIfPendingForDelete(application);
+            if (deleteRequest != null && deleteRequest.getSteps() != null) {
+                application.setDeleteSteps(deleteRequest.getSteps());
+            }
             agentAppEventService.deleteAllPendingByApplicationId(applicationId);
-            createEvent(tenantId, applicationId, AgentAppEventActionType.DELETE);
-
             application.setPendingDeletion(true);
+            // todo: enhance validation
             agentApplicationService.save(tenantId, application);
+
+            createEvent(tenantId, applicationId, AgentAppEventActionType.DELETE);
 
             logEntityActionService.logEntityAction(tenantId, applicationId, actionType, user, null, applicationId.toString());
         } catch (Exception e) {
+            // todo: revert pendingDeletion
             logEntityActionService.logEntityAction(tenantId, emptyId(EntityType.AGENT_APPLICATION), actionType, user, e, applicationId.toString());
             throw e;
         }

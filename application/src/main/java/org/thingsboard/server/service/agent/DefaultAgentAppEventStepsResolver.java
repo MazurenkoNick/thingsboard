@@ -29,7 +29,7 @@ public class DefaultAgentAppEventStepsResolver implements AgentAppEventStepsReso
     public List<AgentAppStep> resolveSteps(AgentApplication app, AgentAppEventActionType actionType) {
         List<AgentAppStep> steps = switch (actionType) {
             case INSTALL, RESTART, UPDATE -> app.getStartSteps(); // todo: add UPGRADE
-            case DELETE -> app.getStartSteps(); // todo: handle delete steps separately
+            case DELETE -> app.getDeleteSteps();
         };
         if (steps == null || steps.isEmpty()) {
             throw new IllegalStateException("No steps resolved for application " + app.getId() + " and action " + actionType);

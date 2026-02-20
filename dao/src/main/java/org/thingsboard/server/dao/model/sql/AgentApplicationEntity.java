@@ -80,6 +80,11 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
     @Column(name = ModelConstants.AGENT_APPLICATION_UPGRADE_STEPS_PROPERTY, columnDefinition = "jsonb")
     private JsonNode upgradeSteps;
 
+    @Convert(converter = JsonConverter.class)
+    @JdbcType(PostgreSQLJsonPGObjectJsonbType.class)
+    @Column(name = ModelConstants.AGENT_APPLICATION_DELETE_STEPS_PROPERTY, columnDefinition = "jsonb")
+    private JsonNode deleteSteps;
+
     @Column(name = ModelConstants.AGENT_APPLICATION_PENDING_DELETION_PROPERTY)
     private boolean pendingDeletion;
 
@@ -103,6 +108,7 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
         this.config = application.getConfig() != null ? JacksonUtil.valueToTree(application.getConfig()) : null;
         this.startSteps = application.getStartSteps() != null ? JacksonUtil.valueToTree(application.getStartSteps()) : null;
         this.upgradeSteps = application.getUpgradeSteps() != null ? JacksonUtil.valueToTree(application.getUpgradeSteps()) : null;
+        this.deleteSteps = application.getDeleteSteps() != null ? JacksonUtil.valueToTree(application.getDeleteSteps()) : null;
         this.pendingDeletion = application.isPendingDeletion();
     }
 
@@ -125,6 +131,7 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
         application.setConfig(config != null ? JacksonUtil.treeToValue(config, AgentAppConfig.class) : null);
         application.setStartSteps(startSteps != null ? JacksonUtil.convertValue(startSteps, new TypeReference<>() {}) : null);
         application.setUpgradeSteps(upgradeSteps != null ? JacksonUtil.convertValue(upgradeSteps, new TypeReference<>() {}) : null);
+        application.setDeleteSteps(deleteSteps != null ? JacksonUtil.convertValue(deleteSteps, new TypeReference<>() {}) : null);
         application.setPendingDeletion(pendingDeletion);
         return application;
     }
