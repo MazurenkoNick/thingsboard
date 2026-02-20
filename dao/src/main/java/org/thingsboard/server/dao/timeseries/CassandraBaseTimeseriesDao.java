@@ -67,6 +67,7 @@ import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.kv.TsKvEntryAggWrapper;
 import org.thingsboard.server.common.data.kv.TsKvQuery;
 import org.thingsboard.server.dao.model.ModelConstants;
+import org.thingsboard.server.dao.nosql.ResultSetSizeLimitExceededException;
 import org.thingsboard.server.dao.nosql.TbResultSet;
 import org.thingsboard.server.dao.nosql.TbResultSetFuture;
 import org.thingsboard.server.dao.sqlts.AggregationTimeseriesDao;
@@ -295,7 +296,8 @@ public class CassandraBaseTimeseriesDao extends AbstractCassandraBaseTimeseriesD
 
             @Override
             public void onFailure(Throwable t) {
-                log.error("[{}][{}] Failed to fetch partitions for interval {}-{}", entityId.getEntityType().name(), entityId.getId(), minPartition, maxPartition, t);
+                log.error("[{}][{}][{}] Failed to fetch partitions for interval {}-{}", tenantId, entityId.getEntityType(), entityId.getId(), minPartition, maxPartition, t);
+                resultFuture.setException(t);
             }
         }, readResultsProcessingExecutor);
         return resultFuture;
@@ -369,7 +371,8 @@ public class CassandraBaseTimeseriesDao extends AbstractCassandraBaseTimeseriesD
 
             @Override
             public void onFailure(Throwable t) {
-                log.error("[{}][{}] Failed to fetch partitions for interval {}-{}", entityId.getEntityType().name(), entityId.getId(), toPartitionTs(query.getStartTs()), toPartitionTs(query.getEndTs()), t);
+                log.error("[{}][{}][{}] Failed to fetch partitions for interval {}-{}", tenantId, entityId.getEntityType(), entityId.getId(), toPartitionTs(query.getStartTs()), toPartitionTs(query.getEndTs()), t);
+                resultFuture.setException(t);
             }
         }, readResultsProcessingExecutor);
 
@@ -411,8 +414,7 @@ public class CassandraBaseTimeseriesDao extends AbstractCassandraBaseTimeseriesD
                         cursor.addData(convertResultToTsKvEntryList(Collections.emptyList()));
                         findAllAsyncSequentiallyWithLimit(tenantId, cursor, resultFuture);
                     } else {
-                        Futures.addCallback(result.allRows(readResultsProcessingExecutor), new FutureCallback<List<Row>>() {
-
+                        Futures.addCallback(result.allRows(readResultsProcessingExecutor, maxResultSetSizeBytes), new FutureCallback<List<Row>>() {
                             @Override
                             public void onSuccess(@Nullable List<Row> result) {
                                 cursor.addData(convertResultToTsKvEntryList(result == null ? Collections.emptyList() : result));
@@ -421,7 +423,13 @@ public class CassandraBaseTimeseriesDao extends AbstractCassandraBaseTimeseriesD
 
                             @Override
                             public void onFailure(Throwable t) {
-                                log.error("[{}][{}] Failed to fetch data for query {}-{}", stmt, t);
+                                if (t instanceof ResultSetSizeLimitExceededException e) {
+                                    log.warn("[{}][{}][{}] Result set size limit exceeded for key [{}], query [{}]: {} bytes, limit {} bytes",
+                                            tenantId, cursor.getEntityType(), cursor.getEntityId(), cursor.getKey(), stmt.getPreparedStatement().getQuery(), e.getActualBytes(), e.getLimitBytes());
+                                } else {
+                                    log.error("[{}][{}][{}] Failed to fetch data for key [{}], query [{}]", tenantId, cursor.getEntityType(), cursor.getEntityId(), cursor.getKey(), stmt.getPreparedStatement().getQuery(), t);
+                                }
+                                resultFuture.setException(t);
                             }
                         }, readResultsProcessingExecutor);
 
@@ -431,7 +439,8 @@ public class CassandraBaseTimeseriesDao extends AbstractCassandraBaseTimeseriesD
 
                 @Override
                 public void onFailure(Throwable t) {
-                    log.error("[{}][{}] Failed to fetch data for query {}-{}", stmt, t);
+                    log.error("[{}][{}][{}] Failed to fetch data for key [{}], query [{}]", tenantId, cursor.getEntityType(), cursor.getEntityId(), cursor.getKey(), stmt.getPreparedStatement().getQuery(), t);
+                    resultFuture.setException(t);
                 }
             }, readResultsProcessingExecutor);
         }
@@ -464,7 +473,7 @@ public class CassandraBaseTimeseriesDao extends AbstractCassandraBaseTimeseriesD
         }
         if (!isUseTsKeyValuePartitioningOnRead()) {
             final long estimatedPartitionCount = estimatePartitionCount(minPartition, maxPartition);
-            if  (estimatedPartitionCount <= useTsKeyValuePartitioningOnReadMaxEstimatedPartitionCount) {
+            if (estimatedPartitionCount <= useTsKeyValuePartitioningOnReadMaxEstimatedPartitionCount) {
                 return Futures.immediateFuture(calculatePartitions(minPartition, maxPartition, (int) estimatedPartitionCount));
             }
         }
@@ -485,7 +494,7 @@ public class CassandraBaseTimeseriesDao extends AbstractCassandraBaseTimeseriesD
     }
 
     List<Long> calculatePartitions(long minPartition, long maxPartition) {
-       return calculatePartitions(minPartition, maxPartition, 0);
+        return calculatePartitions(minPartition, maxPartition, 0);
     }
 
     List<Long> calculatePartitions(long minPartition, long maxPartition, int estimatedPartitionCount) {
@@ -572,6 +581,7 @@ public class CassandraBaseTimeseriesDao extends AbstractCassandraBaseTimeseriesD
         public void onFailure(Throwable t) {
 
         }
+
     }
 
     private long computeTtl(long ttl) {
@@ -608,7 +618,8 @@ public class CassandraBaseTimeseriesDao extends AbstractCassandraBaseTimeseriesD
 
                 @Override
                 public void onFailure(Throwable t) {
-                    log.error("[{}][{}] Failed to delete data for query {}-{}", stmt, t);
+                    log.error("[{}][{}][{}] Failed to delete data for key [{}], query [{}]", tenantId, cursor.getEntityType(), cursor.getEntityId(), cursor.getKey(), stmt.getPreparedStatement().getQuery(), t);
+                    resultFuture.setException(t);
                 }
             }, readResultsProcessingExecutor);
         }
@@ -620,12 +631,12 @@ public class CassandraBaseTimeseriesDao extends AbstractCassandraBaseTimeseriesD
             try {
                 if (deleteStmt == null) {
                     deleteStmt = prepare("DELETE FROM " + ModelConstants.TS_KV_CF +
-                            " WHERE " + ModelConstants.ENTITY_TYPE_COLUMN + EQUALS_PARAM
-                            + "AND " + ModelConstants.ENTITY_ID_COLUMN + EQUALS_PARAM
-                            + "AND " + ModelConstants.KEY_COLUMN + EQUALS_PARAM
-                            + "AND " + ModelConstants.PARTITION_COLUMN + EQUALS_PARAM
-                            + "AND " + ModelConstants.TS_COLUMN + " >= ? "
-                            + "AND " + ModelConstants.TS_COLUMN + " < ?");
+                                         " WHERE " + ModelConstants.ENTITY_TYPE_COLUMN + EQUALS_PARAM
+                                         + "AND " + ModelConstants.ENTITY_ID_COLUMN + EQUALS_PARAM
+                                         + "AND " + ModelConstants.KEY_COLUMN + EQUALS_PARAM
+                                         + "AND " + ModelConstants.PARTITION_COLUMN + EQUALS_PARAM
+                                         + "AND " + ModelConstants.TS_COLUMN + " >= ? "
+                                         + "AND " + ModelConstants.TS_COLUMN + " < ?");
                 }
             } finally {
                 stmtCreationLock.unlock();
@@ -700,13 +711,13 @@ public class CassandraBaseTimeseriesDao extends AbstractCassandraBaseTimeseriesD
 
     private String getPreparedStatementQuery(DataType type) {
         return INSERT_INTO + ModelConstants.TS_KV_CF +
-                "(" + ModelConstants.ENTITY_TYPE_COLUMN +
-                "," + ModelConstants.ENTITY_ID_COLUMN +
-                "," + ModelConstants.KEY_COLUMN +
-                "," + ModelConstants.PARTITION_COLUMN +
-                "," + ModelConstants.TS_COLUMN +
-                "," + getColumnName(type) + ")" +
-                " VALUES(?, ?, ?, ?, ?, ?)";
+               "(" + ModelConstants.ENTITY_TYPE_COLUMN +
+               "," + ModelConstants.ENTITY_ID_COLUMN +
+               "," + ModelConstants.KEY_COLUMN +
+               "," + ModelConstants.PARTITION_COLUMN +
+               "," + ModelConstants.TS_COLUMN +
+               "," + getColumnName(type) + ")" +
+               " VALUES(?, ?, ?, ?, ?, ?)";
     }
 
     private String getPreparedStatementQueryWithTtl(DataType type) {
@@ -719,11 +730,11 @@ public class CassandraBaseTimeseriesDao extends AbstractCassandraBaseTimeseriesD
             try {
                 if (partitionInsertStmt == null) {
                     partitionInsertStmt = prepare(INSERT_INTO + ModelConstants.TS_KV_PARTITIONS_CF +
-                            "(" + ModelConstants.ENTITY_TYPE_COLUMN +
-                            "," + ModelConstants.ENTITY_ID_COLUMN +
-                            "," + ModelConstants.PARTITION_COLUMN +
-                            "," + ModelConstants.KEY_COLUMN + ")" +
-                            " VALUES(?, ?, ?, ?)");
+                                                  "(" + ModelConstants.ENTITY_TYPE_COLUMN +
+                                                  "," + ModelConstants.ENTITY_ID_COLUMN +
+                                                  "," + ModelConstants.PARTITION_COLUMN +
+                                                  "," + ModelConstants.KEY_COLUMN + ")" +
+                                                  " VALUES(?, ?, ?, ?)");
                 }
             } finally {
                 stmtCreationLock.unlock();
@@ -738,11 +749,11 @@ public class CassandraBaseTimeseriesDao extends AbstractCassandraBaseTimeseriesD
             try {
                 if (partitionInsertTtlStmt == null) {
                     partitionInsertTtlStmt = prepare(INSERT_INTO + ModelConstants.TS_KV_PARTITIONS_CF +
-                            "(" + ModelConstants.ENTITY_TYPE_COLUMN +
-                            "," + ModelConstants.ENTITY_ID_COLUMN +
-                            "," + ModelConstants.PARTITION_COLUMN +
-                            "," + ModelConstants.KEY_COLUMN + ")" +
-                            " VALUES(?, ?, ?, ?) USING TTL ?");
+                                                     "(" + ModelConstants.ENTITY_TYPE_COLUMN +
+                                                     "," + ModelConstants.ENTITY_ID_COLUMN +
+                                                     "," + ModelConstants.PARTITION_COLUMN +
+                                                     "," + ModelConstants.KEY_COLUMN + ")" +
+                                                     " VALUES(?, ?, ?, ?) USING TTL ?");
                 }
             } finally {
                 stmtCreationLock.unlock();
@@ -867,16 +878,17 @@ public class CassandraBaseTimeseriesDao extends AbstractCassandraBaseTimeseriesD
                 fetchStmts[type.ordinal()] = fetchStmts[Aggregation.SUM.ordinal()];
             } else {
                 fetchStmts[type.ordinal()] = prepare(SELECT_PREFIX +
-                        String.join(", ", ModelConstants.getFetchColumnNames(type)) + " FROM " + ModelConstants.TS_KV_CF
-                        + " WHERE " + ModelConstants.ENTITY_TYPE_COLUMN + EQUALS_PARAM
-                        + "AND " + ModelConstants.ENTITY_ID_COLUMN + EQUALS_PARAM
-                        + "AND " + ModelConstants.KEY_COLUMN + EQUALS_PARAM
-                        + "AND " + ModelConstants.PARTITION_COLUMN + EQUALS_PARAM
-                        + "AND " + ModelConstants.TS_COLUMN + " >= ? "
-                        + "AND " + ModelConstants.TS_COLUMN + " < ?"
-                        + (type == Aggregation.NONE ? " ORDER BY " + ModelConstants.TS_COLUMN + " " + orderBy + " LIMIT ?" : ""));
+                                                     String.join(", ", ModelConstants.getFetchColumnNames(type)) + " FROM " + ModelConstants.TS_KV_CF
+                                                     + " WHERE " + ModelConstants.ENTITY_TYPE_COLUMN + EQUALS_PARAM
+                                                     + "AND " + ModelConstants.ENTITY_ID_COLUMN + EQUALS_PARAM
+                                                     + "AND " + ModelConstants.KEY_COLUMN + EQUALS_PARAM
+                                                     + "AND " + ModelConstants.PARTITION_COLUMN + EQUALS_PARAM
+                                                     + "AND " + ModelConstants.TS_COLUMN + " >= ? "
+                                                     + "AND " + ModelConstants.TS_COLUMN + " < ?"
+                                                     + (type == Aggregation.NONE ? " ORDER BY " + ModelConstants.TS_COLUMN + " " + orderBy + " LIMIT ?" : ""));
             }
         }
         return fetchStmts;
     }
+
 }
