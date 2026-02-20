@@ -33,6 +33,7 @@ import org.thingsboard.server.gen.agent.v1.CommandProgress;
 import org.thingsboard.server.gen.agent.v1.CommandResult;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.agent.event.AgentEventProcessor;
+import org.thingsboard.server.service.agent.event.AgentEventWatchdog;
 
 import java.util.UUID;
 
@@ -45,6 +46,7 @@ public class CommandFeedbackHandler {
     private final AgentAppEventService agentAppEventService;
     private final AgentEventProcessor agentEventProcessor;
     private final AgentApplicationService appService;
+    private final AgentEventWatchdog agentEventWatchdog;
 
     public void onCommandAck(TenantId tenantId, AgentId agentId, CommandAck ack) {
         AgentAppEventId eventId = toEventId(ack.getCommandId());
@@ -54,6 +56,7 @@ public class CommandFeedbackHandler {
             agentAppEventService.updateStatus(eventId, AgentAppEventStatus.QUEUED, null);
         } else {
             agentAppEventService.updateStatus(eventId, AgentAppEventStatus.ERROR, null);
+            agentEventWatchdog.cancel(agentId, eventId);
             AgentApplication app = appService.findByEventId(tenantId, eventId);
             if (app != null) {
                 agentEventProcessor.processNextEventForApp(tenantId, agentId, app);
@@ -81,6 +84,7 @@ public class CommandFeedbackHandler {
             agentEventProcessor.processAfterError(tenantId, agentId, event.getId());
             return;
         }
+        agentAppEventService.updateStatus(eventId, AgentAppEventStatus.PROCESSING, null);
         agentEventProcessor.processNextStepOrFinish(tenantId, agentId, event);
     }
 

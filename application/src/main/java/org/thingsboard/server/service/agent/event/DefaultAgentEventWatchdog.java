@@ -36,7 +36,6 @@ import org.thingsboard.server.service.agent.AgentAppEventStepsResolver;
 import org.thingsboard.server.service.agent.session.AgentSession;
 import org.thingsboard.server.service.agent.session.AgentSessionRegistry;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -46,6 +45,8 @@ import java.util.concurrent.TimeUnit;
 @TbCoreComponent
 @RequiredArgsConstructor
 public class DefaultAgentEventWatchdog implements AgentEventWatchdog {
+
+    private static final int MAX_ERROR_RETRIES = 3;
 
     @Value("${agents.event.watchdog_initial_delay_ms:30000}")
     private long watchdogInitialDelayMs;
@@ -77,16 +78,23 @@ public class DefaultAgentEventWatchdog implements AgentEventWatchdog {
 
     @Override
     public void schedule(AgentApplication application, AgentAppEvent event, AgentEventResender resender) {
+        scheduleInternal(application, event.getId(), resender, 0);
+    }
+
+    private void scheduleInternal(AgentApplication application, AgentAppEventId eventId,
+                                  AgentEventResender resender, int errorRetryCount) {
         AgentSession session = agentSessionRegistry.getByAgentId(application.getAgentId());
         if (session == null) {
-            log.trace("[{}][{}] No active session found, skipping watchdog scheduling for event {}", application.getTenantId(), application.getAgentId(), event.getId());
+            log.trace("[{}][{}] No active session found, skipping watchdog scheduling for event {}",
+                    application.getTenantId(), application.getAgentId(), eventId);
             return;
         }
         long scheduledAt = System.currentTimeMillis();
-        log.trace("[{}][{}] Scheduling watchdog for event {} with delay {}ms", application.getTenantId(), application.getAgentId(), event.getId(), watchdogInitialDelayMs);
+        log.trace("[{}][{}] Scheduling watchdog for event {} with delay {}ms",
+                application.getTenantId(), application.getAgentId(), eventId, watchdogInitialDelayMs);
         session.scheduleEventWatchdog(
-                event.getId(), scheduler,
-                () -> checkStaleness(application, event.getId(), scheduledAt, resender),
+                eventId, scheduler,
+                () -> checkStalenessWithRetryCountCheck(application, eventId, scheduledAt, resender, errorRetryCount),
                 watchdogInitialDelayMs,
                 TimeUnit.MILLISECONDS
         );
@@ -104,9 +112,26 @@ public class DefaultAgentEventWatchdog implements AgentEventWatchdog {
         }
     }
 
-    private void checkStaleness(AgentApplication application, AgentAppEventId eventId,
-                                 long scheduledAt, AgentEventResender resender) {
-        log.trace("[{}][{}] Checking staleness for event {}, scheduledAt: {}", application.getTenantId(), application.getAgentId(), eventId, scheduledAt);
+    private void checkStalenessWithRetryCountCheck(AgentApplication application, AgentAppEventId eventId,
+                                                   long scheduledAt, AgentEventResender resender, int errorRetryCount) {
+        try {
+            checkStaleness(application, eventId, scheduledAt, resender);
+        } catch (Exception e) {
+            if (errorRetryCount < MAX_ERROR_RETRIES) {
+                log.warn("[{}][{}] Watchdog check failed for event {}, rescheduling (attempt {}/{})",
+                        application.getTenantId(), application.getAgentId(), eventId, errorRetryCount + 1, MAX_ERROR_RETRIES, e);
+                scheduleInternal(application, eventId, resender, errorRetryCount + 1);
+            } else {
+                log.error("[{}][{}] Watchdog check failed for event {} after {} retries, marking as ERROR",
+                        application.getTenantId(), application.getAgentId(), eventId, MAX_ERROR_RETRIES, e);
+                agentAppEventService.updateStatus(eventId, AgentAppEventStatus.ERROR, null);
+            }
+        }
+    }
+
+    private void checkStaleness(AgentApplication application, AgentAppEventId eventId, long scheduledAt, AgentEventResender resender) {
+        log.trace("[{}][{}] Checking staleness for event {}, scheduledAt: {}",
+                application.getTenantId(), application.getAgentId(), eventId, scheduledAt);
         AgentAppEvent current = agentAppEventService.findById(application.getTenantId(), eventId);
         if (current == null) {
             log.trace("[{}][{}] Event {} not found, skipping staleness check", application.getTenantId(), application.getAgentId(), eventId);
@@ -114,7 +139,8 @@ public class DefaultAgentEventWatchdog implements AgentEventWatchdog {
         }
         AgentAppEventStatus status = current.getStatus();
         if (status == AgentAppEventStatus.FINISHED || status == AgentAppEventStatus.ERROR) {
-            log.trace("[{}][{}] Event {} already in terminal status {}, skipping", application.getTenantId(), application.getAgentId(), eventId, status);
+            log.trace("[{}][{}] Event {} already in terminal status {}, skipping",
+                    application.getTenantId(), application.getAgentId(), eventId, status);
             return;
         }
         if (current.getUpdatedTime() > scheduledAt) {
