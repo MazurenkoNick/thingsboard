@@ -99,12 +99,31 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         // todo: handle 'retry errors' logic
         log.trace("[{}][{}] Processing after error for event {}", tenantId, agentId, failedEventId);
         eventWatchdog.cancel(agentId, failedEventId);
+
+        AgentAppEvent event = appEventService.findById(tenantId, failedEventId);
+        if (event != null && event.getActionType() == AgentAppEventActionType.DELETE) {
+            rollbackPendingDeletion(tenantId, event.getApplicationId());
+        }
+
         AgentApplication application = appService.findByEventId(tenantId, failedEventId);
         if (application == null) {
             log.warn("[{}][{}] Application not found for failed event {}, skipping next event dispatch", tenantId, agentId, failedEventId);
             return;
         }
         processNextEventForApp(tenantId, agentId, application);
+    }
+
+    private void rollbackPendingDeletion(TenantId tenantId, AgentApplicationId applicationId) {
+        try {
+            AgentApplication app = appService.findById(tenantId, applicationId);
+            if (app != null && app.isPendingDeletion()) {
+                app.setPendingDeletion(false);
+                appService.save(tenantId, app);
+                log.info("[{}] Rolled back pendingDeletion for application {}", tenantId, applicationId);
+            }
+        } catch (Exception e) {
+            log.error("[{}] Failed to rollback pendingDeletion for application {}", tenantId, applicationId, e);
+        }
     }
 
     @Override
@@ -133,7 +152,7 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
             log.error("[{}][{}] Failed to process next step for event {}, marking as ERROR",
                     tenantId, agentId, event.getId(), e);
             appEventService.updateStatus(event.getId(), AgentAppEventStatus.ERROR, event.getCurrentStepId());
-            eventWatchdog.cancel(agentId, event.getId());
+            processAfterError(tenantId, agentId, event.getId());
         }
     }
 
@@ -169,6 +188,7 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
                 log.error("[{}][{}] Failed to resume in-flight event {} for application {}, marking as ERROR",
                         tenantId, agentId, event.getId(), application.getId(), e);
                 appEventService.updateStatus(event.getId(), AgentAppEventStatus.ERROR, event.getCurrentStepId());
+                processAfterError(tenantId, agentId, event.getId());
             }
         });
         return inFlightEvent.isPresent();
@@ -207,6 +227,7 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         } catch (Exception e) {
             log.error("[{}][{}] Failed to dispatch event {}, marking as ERROR", tenantId, agentId, event.getId(), e);
             appEventService.updateStatus(event.getId(), AgentAppEventStatus.ERROR, null);
+            processAfterError(tenantId, agentId, event.getId());
         }
     }
 
@@ -215,13 +236,24 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
             log.trace("[{}][{}] Sending step {} for event {}", application.getTenantId(), application.getAgentId(), step.getId(), event.getId());
             ServerToAgent msg = AgentMsgConstructorUtils.buildAppCommand(event, application, step);
             appEventService.updateStatus(event.getId(), AgentAppEventStatus.PENDING, step.getId());
-            eventWatchdog.schedule(application, event, this::sendStep);
+            eventWatchdog.schedule(application, event, new AgentEventResender() {
+                @Override
+                public void resendCurrentStep(AgentAppEvent event, AgentApplication application, AgentAppStep step) {
+                    sendStep(event, application, step);
+                }
+
+                @Override
+                public void onError(AgentAppEventId eventId, AgentApplication application) {
+                    appEventService.updateStatus(eventId, AgentAppEventStatus.ERROR, null);
+                    processAfterError(application.getTenantId(), application.getAgentId(), event.getId());
+                }
+            });
             trySend(application, event, msg);
         } catch (Exception e) {
             log.error("[{}][{}] Failed to send step {} for event {}, marking as ERROR",
                     application.getTenantId(), application.getAgentId(), step.getId(), event.getId(), e);
             appEventService.updateStatus(event.getId(), AgentAppEventStatus.ERROR, step.getId());
-            eventWatchdog.cancel(application.getAgentId(), event.getId());
+            processAfterError(application.getTenantId(), application.getAgentId(), event.getId());
         }
     }
 

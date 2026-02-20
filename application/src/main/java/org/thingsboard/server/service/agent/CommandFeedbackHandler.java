@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
@@ -33,7 +34,6 @@ import org.thingsboard.server.gen.agent.v1.CommandProgress;
 import org.thingsboard.server.gen.agent.v1.CommandResult;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.agent.event.AgentEventProcessor;
-import org.thingsboard.server.service.agent.event.AgentEventWatchdog;
 
 import java.util.UUID;
 
@@ -43,48 +43,47 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CommandFeedbackHandler {
 
-    private final AgentAppEventService agentAppEventService;
+    private final AgentAppEventService appEventService;
     private final AgentEventProcessor agentEventProcessor;
     private final AgentApplicationService appService;
-    private final AgentEventWatchdog agentEventWatchdog;
 
     public void onCommandAck(TenantId tenantId, AgentId agentId, CommandAck ack) {
         AgentAppEventId eventId = toEventId(ack.getCommandId());
         log.trace("[{}][{}] Received CommandAck for event {}, status: {}", tenantId, agentId, eventId, ack.getStatus());
 
         if (ack.getStatus() == AckStatus.ACCEPTED) {
-            agentAppEventService.updateStatus(eventId, AgentAppEventStatus.QUEUED, null);
+            appEventService.updateStatus(eventId, AgentAppEventStatus.QUEUED, null);
         } else {
-            agentAppEventService.updateStatus(eventId, AgentAppEventStatus.ERROR, null);
-            agentEventWatchdog.cancel(agentId, eventId);
-            AgentApplication app = appService.findByEventId(tenantId, eventId);
-            if (app != null) {
-                agentEventProcessor.processNextEventForApp(tenantId, agentId, app);
-            }
+            appEventService.updateStatus(eventId, AgentAppEventStatus.ERROR, null);
+            agentEventProcessor.processAfterError(tenantId, agentId, eventId);
         }
     }
 
     public void onCommandProgress(TenantId tenantId, AgentId agentId, CommandProgress progress) {
         AgentAppEventId eventId = toEventId(progress.getCommandId());
         log.trace("[{}][{}] Received CommandProgress for event {}, stage: {}", tenantId, agentId, eventId, progress.getStage());
-        agentAppEventService.updateStatus(eventId, AgentAppEventStatus.PROCESSING, null);
+        appEventService.updateStatus(eventId, AgentAppEventStatus.PROCESSING, null);
     }
 
     public void onCommandResult(TenantId tenantId, AgentId agentId, CommandResult result) {
         AgentAppEventId eventId = toEventId(result.getCommandId());
         log.trace("[{}][{}] Received CommandResult for event {}, success: {}", tenantId, agentId, eventId, result.getSuccess());
 
-        AgentAppEvent event = agentAppEventService.findById(tenantId, eventId);
+        AgentAppEvent event = appEventService.findById(tenantId, eventId);
         if (event == null) {
             log.warn("[{}] Event not found for CommandResult: {}", tenantId, eventId);
             return;
         }
         if (!result.getSuccess()) {
-            agentAppEventService.updateStatus(eventId, AgentAppEventStatus.ERROR, event.getCurrentStepId());
+            appEventService.updateStatus(eventId, AgentAppEventStatus.ERROR, event.getCurrentStepId());
             agentEventProcessor.processAfterError(tenantId, agentId, event.getId());
             return;
         }
-        agentAppEventService.updateStatus(eventId, AgentAppEventStatus.PROCESSING, null);
+        if (event.getActionType() == AgentAppEventActionType.DELETE) {
+            appService.delete(tenantId, event.getApplicationId());
+            return;
+        }
+        appEventService.updateStatus(eventId, AgentAppEventStatus.PROCESSING, null);
         agentEventProcessor.processNextStepOrFinish(tenantId, agentId, event);
     }
 

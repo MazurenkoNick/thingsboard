@@ -94,7 +94,7 @@ public class DefaultAgentEventWatchdog implements AgentEventWatchdog {
                 application.getTenantId(), application.getAgentId(), eventId, watchdogInitialDelayMs);
         session.scheduleEventWatchdog(
                 eventId, scheduler,
-                () -> checkStalenessWithRetryCountCheck(application, eventId, scheduledAt, resender, errorRetryCount),
+                () -> checkStalenessWithRetry(application, eventId, scheduledAt, resender, errorRetryCount),
                 watchdogInitialDelayMs,
                 TimeUnit.MILLISECONDS
         );
@@ -112,8 +112,8 @@ public class DefaultAgentEventWatchdog implements AgentEventWatchdog {
         }
     }
 
-    private void checkStalenessWithRetryCountCheck(AgentApplication application, AgentAppEventId eventId,
-                                                   long scheduledAt, AgentEventResender resender, int errorRetryCount) {
+    private void checkStalenessWithRetry(AgentApplication application, AgentAppEventId eventId,
+                                         long scheduledAt, AgentEventResender resender, int errorRetryCount) {
         try {
             checkStaleness(application, eventId, scheduledAt, resender);
         } catch (Exception e) {
@@ -124,7 +124,7 @@ public class DefaultAgentEventWatchdog implements AgentEventWatchdog {
             } else {
                 log.error("[{}][{}] Watchdog check failed for event {} after {} retries, marking as ERROR",
                         application.getTenantId(), application.getAgentId(), eventId, MAX_ERROR_RETRIES, e);
-                agentAppEventService.updateStatus(eventId, AgentAppEventStatus.ERROR, null);
+                resender.onError(eventId, application);
             }
         }
     }
