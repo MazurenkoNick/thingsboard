@@ -28,26 +28,20 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.converter;
+package org.thingsboard.server.dao.nosql;
 
-import org.thingsboard.server.common.data.LibraryConvertersInfo;
-import org.thingsboard.server.common.data.integration.IntegrationType;
+import lombok.Getter;
 
-import java.util.List;
-import java.util.Map;
+@Getter
+public class ResultSetSizeLimitExceededException extends IllegalArgumentException {
 
-public interface ConverterLibraryService {
+    private final long limitBytes;
+    private final long actualBytes;
 
-    List<Vendor> getVendors(IntegrationType integrationType, String converterType, int page, int pageSize, boolean loadImages);
-
-    List<Model> getVendorModels(IntegrationType integrationType, String converterType, String vendorName, int page, int pageSize, boolean loadImages);
-
-    String getConverter(IntegrationType integrationType, String converterType, String vendorName, String model);
-
-    String getConverterMetadata(IntegrationType integrationType, String converterType, String vendorName, String model);
-
-    String getPayload(IntegrationType integrationType, String converterType, String vendorName, String model);
-
-    Map<String, LibraryConvertersInfo> getConvertersInfo();
+    public ResultSetSizeLimitExceededException(long limitBytes, long actualBytes) {
+        super("Result set size exceeds the maximum allowed limit. Please narrow your query");
+        this.limitBytes = limitBytes;
+        this.actualBytes = actualBytes;
+    }
 
 }

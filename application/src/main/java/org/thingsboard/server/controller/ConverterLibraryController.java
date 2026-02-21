@@ -62,8 +62,11 @@ public class ConverterLibraryController extends BaseController {
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/{integrationType}/vendors")
     public List<Vendor> getVendors(@PathVariable IntegrationType integrationType,
-                                   @RequestParam(required = false) String converterType) {
-        return converterLibraryService.getVendors(integrationType, converterType);
+                                   @RequestParam(required = false) String converterType,
+                                   @RequestParam(defaultValue = "0") int page,
+                                   @RequestParam(defaultValue = "2147483647") int pageSize,
+                                   @RequestParam(defaultValue = "true") boolean loadImages) {
+        return converterLibraryService.getVendors(integrationType, converterType, page, pageSize, loadImages);
     }
 
     @ApiOperation(value = "Get vendor models (getVendorModels)",
@@ -72,8 +75,11 @@ public class ConverterLibraryController extends BaseController {
     @GetMapping(value = "/{integrationType}/{vendorName}/models")
     public List<Model> getVendorModels(@PathVariable IntegrationType integrationType,
                                        @PathVariable String vendorName,
-                                       @RequestParam(required = false) String converterType) {
-        return converterLibraryService.getVendorModels(integrationType, converterType, vendorName);
+                                       @RequestParam(required = false) String converterType,
+                                       @RequestParam(defaultValue = "0") int page,
+                                       @RequestParam(defaultValue = "2147483647") int pageSize,
+                                       @RequestParam(defaultValue = "true") boolean loadImages) {
+        return converterLibraryService.getVendorModels(integrationType, converterType, vendorName, page, pageSize, loadImages);
     }
 
     @ApiOperation(value = "Get uplink converter (getUplinkConverter)",

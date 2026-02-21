@@ -89,7 +89,7 @@ public class DefaultConverterLibraryService implements ConverterLibraryService {
     }
 
     @Override
-    public List<Vendor> getVendors(IntegrationType integrationType, String converterType) {
+    public List<Vendor> getVendors(IntegrationType integrationType, String converterType, int page, int pageSize, boolean loadImages) {
         log.trace("Executing getVendors [{}]", integrationType);
         return listFiles("VENDORS", 1, true).stream()
                 .filter(vendorDir -> {
@@ -99,25 +99,37 @@ public class DefaultConverterLibraryService implements ConverterLibraryService {
                             .collect(Collectors.toSet());
                     return integrationTypes.contains(integrationType.getDirectory());
                 })
+                .sorted(Comparator.comparing(RepoFile::name))
+                .skip((long) page * pageSize)
+                .limit(pageSize)
                 .map(vendorDir -> {
-                    String logoFile = findFile(vendorDir.path(), 2, "logo");
-                    String logo = "data:image/svg+xml;base64," + Base64.getEncoder().encodeToString(gitSyncService.getFileContent(REPO_KEY, logoFile));
+                    String logo = null;
+                    if (loadImages) {
+                        String logoFile = findFile(vendorDir.path(), 2, "logo");
+                        logo = "data:image/svg+xml;base64," + Base64.getEncoder().encodeToString(gitSyncService.getFileContent(REPO_KEY, logoFile));
+                    }
                     return new Vendor(vendorDir.name(), logo);
                 })
                 .toList();
     }
 
     @Override
-    public List<Model> getVendorModels(IntegrationType integrationType, String converterType, String vendorName) {
+    public List<Model> getVendorModels(IntegrationType integrationType, String converterType, String vendorName, int page, int pageSize, boolean loadImages) {
         log.trace("Executing getVendorModels [{}][{}][{}]", integrationType, converterType, vendorName);
         return listFiles("VENDORS/" + vendorName, 3, true).stream()
                 .filter(integrationDir -> hasConverter(integrationDir, integrationType, converterType))
                 .map(integrationDir -> Path.of(integrationDir.path()).getParent())
+                .sorted(Comparator.comparing(Path::toString))
+                .skip((long) page * pageSize)
+                .limit(pageSize)
                 .map(modelPath -> {
                     String name = modelPath.getFileName().toString();
                     JsonNode modelInfo = JacksonUtil.toJsonNode(getFileContent(modelPath + "/info.json"));
-                    String photoFile = findFile(modelPath.toString(), 3, "photo");
-                    String photo = "data:image/png;base64," + Base64.getEncoder().encodeToString(gitSyncService.getFileContent(REPO_KEY, photoFile));
+                    String photo = null;
+                    if (loadImages) {
+                        String photoFile = findFile(modelPath.toString(), 3, "photo");
+                        photo = "data:image/png;base64," + Base64.getEncoder().encodeToString(gitSyncService.getFileContent(REPO_KEY, photoFile));
+                    }
                     return new Model(name, modelInfo, photo);
                 })
                 .toList();
