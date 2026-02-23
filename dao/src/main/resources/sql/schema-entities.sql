@@ -778,7 +778,6 @@ CREATE TABLE IF NOT EXISTS agent_application (
     template_version varchar(255),
     placeholders varchar,
     configuration varchar,
-    steps varchar,
     version BIGINT DEFAULT 1,
     CONSTRAINT fk_agent_application_agent FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE CASCADE
 );

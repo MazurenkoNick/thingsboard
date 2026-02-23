@@ -212,14 +212,12 @@ public class JpaAgentDaoTest extends AbstractJpaDaoTest {
         app1.setAgentId(new AgentId(agentId));
         app1.setPlaceholders(Collections.emptyMap());
         app1.setConfiguration(Collections.emptyMap());
-        app1.setSteps(Collections.emptyList());
         agentApplicationDao.save(TenantId.fromUUID(tenantId1), app1);
 
         AgentApplication app2 = new AgentApplication();
         app2.setAgentId(new AgentId(agentId));
         app2.setPlaceholders(Collections.emptyMap());
         app2.setConfiguration(Collections.emptyMap());
-        app2.setSteps(Collections.emptyList());
         agentApplicationDao.save(TenantId.fromUUID(tenantId1), app2);
 
         List<AgentApplication> before = agentApplicationDao.findByAgentId(TenantId.fromUUID(tenantId1), agentId);

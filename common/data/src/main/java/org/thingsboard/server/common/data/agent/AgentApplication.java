@@ -26,7 +26,6 @@ import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.HasId;
 
-import java.util.List;
 import java.util.Map;
 
 @Schema
@@ -39,7 +38,6 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     private String name;
     private Map<String, String> placeholders;
     private Map<String, AgentAppConfig> configuration;
-    private List<String> steps;
     @Getter
     private Long version;
 
@@ -57,7 +55,6 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         this.name = application.getName();
         this.placeholders = application.getPlaceholders();
         this.configuration = application.getConfiguration();
-        this.steps = application.getSteps();
         this.version = application.getVersion();
     }
 
@@ -91,10 +88,5 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     @Schema(description = "Configuration key-value map, e.g. {\"queue_type\": {\"multiSelect\": false, \"values\": [\"IN_MEMORY\"] }}")
     public Map<String, AgentAppConfig> getConfiguration() {
         return configuration;
-    }
-
-    @Schema(description = "List of step identifiers")
-    public List<String> getSteps() {
-        return steps;
     }
 }

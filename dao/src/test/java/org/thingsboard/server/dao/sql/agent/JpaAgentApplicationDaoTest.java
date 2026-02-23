@@ -76,7 +76,6 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
         app.setPlaceholders(Collections.emptyMap());
         Map<String, AgentAppConfig> config = Map.of("queue_type", new AgentAppConfig(false, Collections.singletonList("IN_MEMORY")));
         app.setConfiguration(config);
-        app.setSteps(Collections.emptyList());
 
         AgentApplication saved = agentApplicationDao.save(TenantId.fromUUID(tenantId1), app);
         assertNotNull(saved.getId());
@@ -144,7 +143,6 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
         app.setName(name);
         app.setPlaceholders(Collections.emptyMap());
         app.setConfiguration(Collections.emptyMap());
-        app.setSteps(Collections.emptyList());
         return agentApplicationDao.save(TenantId.fromUUID(tenantId1), app);
     }
 }

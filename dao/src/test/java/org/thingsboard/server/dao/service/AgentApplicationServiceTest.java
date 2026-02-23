@@ -31,7 +31,6 @@ import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 @DaoSqlTest
@@ -50,7 +49,6 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         app.setPlaceholders(Map.of("key", "value"));
         Map<String, AgentAppConfig> config = Map.of("queue_type", new AgentAppConfig(false, Collections.singletonList("IN_MEMORY")));
         app.setConfiguration(config);
-        app.setSteps(List.of("step1", "step2"));
 
         AgentApplication saved = agentApplicationService.saveAgentApplication(tenantId, app);
         Assert.assertNotNull(saved);
@@ -59,7 +57,6 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         Assert.assertEquals(agent.getId(), saved.getAgentId());
         Assert.assertEquals(Map.of("key", "value"), saved.getPlaceholders());
         Assert.assertEquals(config, saved.getConfiguration());
-        Assert.assertEquals(List.of("step1", "step2"), saved.getSteps());
 
         AgentApplication found = agentApplicationService.findAgentApplicationById(tenantId, saved.getId());
         Assert.assertNotNull(found);
@@ -135,12 +132,12 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         Agent agent = createAgent("Agent for update");
         AgentApplication app = saveApplication(agent, "v1");
 
-        app.setSteps(List.of("step1", "step2", "step3"));
+        app.setName("v2");
         AgentApplication updated = agentApplicationService.saveAgentApplication(tenantId, app);
-        Assert.assertEquals(3, updated.getSteps().size());
+        Assert.assertEquals("v2", updated.getName());
 
         AgentApplication found = agentApplicationService.findAgentApplicationById(tenantId, app.getId());
-        Assert.assertEquals(3, found.getSteps().size());
+        Assert.assertEquals("v2", found.getName());
 
         agentApplicationService.deleteAgentApplication(tenantId, app.getId());
         agentService.deleteAgent(tenantId, agent.getId());
@@ -159,7 +156,6 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         app.setName(name);
         app.setPlaceholders(Collections.emptyMap());
         app.setConfiguration(Collections.emptyMap());
-        app.setSteps(Collections.emptyList());
         return agentApplicationService.saveAgentApplication(tenantId, app);
     }
 }

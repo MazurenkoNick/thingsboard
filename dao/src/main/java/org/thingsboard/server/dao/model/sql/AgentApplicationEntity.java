@@ -53,10 +53,6 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
     @Column(name = ModelConstants.AGENT_APPLICATION_CONFIGURATION_PROPERTY)
     private JsonNode configuration;
 
-    @Convert(converter = JsonConverter.class)
-    @Column(name = ModelConstants.AGENT_APPLICATION_STEPS_PROPERTY)
-    private JsonNode steps;
-
     public AgentApplicationEntity() {
         super();
     }
@@ -69,7 +65,6 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
         this.name = application.getName();
         this.placeholders = application.getPlaceholders() != null ? JacksonUtil.valueToTree(application.getPlaceholders()) : null;
         this.configuration = application.getConfiguration() != null ? JacksonUtil.valueToTree(application.getConfiguration()) : null;
-        this.steps = application.getSteps() != null ? JacksonUtil.valueToTree(application.getSteps()) : null;
     }
 
     @Override
@@ -83,7 +78,6 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
         application.setName(name);
         application.setPlaceholders(placeholders != null ? JacksonUtil.convertValue(placeholders, new TypeReference<>() {}) : null);
         application.setConfiguration(configuration != null ? JacksonUtil.convertValue(configuration, new TypeReference<>() {}) : null);
-        application.setSteps(steps != null ? JacksonUtil.convertValue(steps, new TypeReference<>() {}) : null);
         return application;
     }
 }

@@ -259,7 +259,6 @@ public class ModelConstants {
     public static final String AGENT_APPLICATION_NAME_PROPERTY = "name";
     public static final String AGENT_APPLICATION_PLACEHOLDERS_PROPERTY = "placeholders";
     public static final String AGENT_APPLICATION_CONFIGURATION_PROPERTY = "configuration";
-    public static final String AGENT_APPLICATION_STEPS_PROPERTY = "steps";
 
     /**
      * Alarm constants.
