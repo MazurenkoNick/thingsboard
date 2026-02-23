@@ -100,6 +100,7 @@ public class BaseAgentService extends AbstractCachedEntityService<AgentCacheKey,
         } catch (Exception t) {
             handleEvictEvent(evictEvent);
             checkConstraintViolation(t, "agent_name_unq_key", "Agent with such name already exists!");
+            checkConstraintViolation(t, "agent_routing_key_unq_key", "Agent with such routing key already exists!");
             throw t;
         }
     }

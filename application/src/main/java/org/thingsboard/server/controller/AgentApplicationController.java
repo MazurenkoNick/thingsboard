@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -127,21 +128,38 @@ public class AgentApplicationController extends BaseController {
         return tbAgentApplicationService.save(agentApplication, getCurrentUser());
     }
 
+    @ApiOperation(value = "Update Delete Steps (updateDeleteSteps)",
+            notes = "Updates the delete steps configuration for the agent application. " +
+                    "These steps define how the application will be removed (e.g. with removeVolumes set on ComposeDownStep)."
+                    + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PutMapping(value = "/agent/app/{agentApplicationId}/deleteSteps")
+    @ResponseBody
+    public AgentApplication updateDeleteSteps(
+            @Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
+            @PathVariable(AGENT_APP_ID) String strAgentAppId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "User-configured delete steps from the wizard.")
+            @Valid @RequestBody AgentAppDeleteRequest deleteRequest) throws ThingsboardException {
+        checkParameter(AGENT_APP_ID, strAgentAppId);
+        AgentApplicationId agentApplicationId = new AgentApplicationId(toUUID(strAgentAppId));
+        checkAgentAppId(agentApplicationId, Operation.WRITE);
+        TenantId tenantId = getCurrentUser().getTenantId();
+        return tbAgentApplicationService.updateDeleteSteps(tenantId, agentApplicationId, deleteRequest.getSteps());
+    }
+
     @ApiOperation(value = "Delete Agent Application (deleteAgentApplication)",
-            notes = "Deletes the agent application. Referencing non-existing agent application Id will cause an error. " +
-                    "Accepts the user-configured delete steps from the wizard (e.g. with removeVolumes set on ComposeDownStep)."
+            notes = "Deletes the agent application using the delete steps already configured on it. " +
+                    "Referencing non-existing agent application Id will cause an error."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @DeleteMapping(value = "/agent/app/{agentApplicationId}")
     @ResponseStatus(value = HttpStatus.OK)
     public void deleteAgentApplication(@Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
-                                       @PathVariable(AGENT_APP_ID) String strAgentAppId,
-                                       @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "User-configured delete steps from the wizard.")
-                                       @Valid @RequestBody AgentAppDeleteRequest deleteRequest) throws ThingsboardException {
+                                       @PathVariable(AGENT_APP_ID) String strAgentAppId) throws ThingsboardException {
         checkParameter(AGENT_APP_ID, strAgentAppId);
         AgentApplicationId agentApplicationId = new AgentApplicationId(toUUID(strAgentAppId));
         AgentApplication application = checkAgentAppId(agentApplicationId, Operation.DELETE);
-        tbAgentApplicationService.delete(application, deleteRequest, getCurrentUser());
+        tbAgentApplicationService.delete(application, getCurrentUser());
     }
 
     @ApiOperation(value = "Restart Agent Application (restartAgentApplication)",

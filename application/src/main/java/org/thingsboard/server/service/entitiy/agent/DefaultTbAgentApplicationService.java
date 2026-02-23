@@ -21,8 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.User;
-import org.thingsboard.server.common.data.agent.AgentAppDeleteRequest;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentApplication;
@@ -39,6 +39,8 @@ import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.agent.template.merge.AgentAppTemplateMergeOrchestrator;
 import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
+
+import java.util.List;
 
 @TbCoreComponent
 @Service
@@ -86,20 +88,27 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         }
     }
 
+    @Override
+    public AgentApplication updateDeleteSteps(TenantId tenantId, AgentApplicationId applicationId, List<AgentAppStep> deleteSteps) {
+        AgentApplication application = agentApplicationService.findById(tenantId, applicationId);
+        throwIfPendingForDelete(application);
+        application.setDeleteSteps(deleteSteps);
+        return agentApplicationService.save(tenantId, application);
+    }
+
     @Transactional
     @Override
-    public void delete(AgentApplication application, AgentAppDeleteRequest deleteRequest, User user) {
+    public void delete(AgentApplication application, User user) {
         ActionType actionType = ActionType.DELETED;
         TenantId tenantId = application.getTenantId();
         AgentApplicationId applicationId = application.getId();
         try {
             throwIfPendingForDelete(application);
-            if (deleteRequest != null && deleteRequest.getSteps() != null) {
-                application.setDeleteSteps(deleteRequest.getSteps());
+            if (application.getDeleteSteps() == null || application.getDeleteSteps().isEmpty()) {
+                throw new DataValidationException("Delete steps must be configured before deleting the application");
             }
             agentAppEventService.deleteAllPendingByApplicationId(applicationId);
             application.setPendingDeletion(true);
-            // todo: enhance validation
             agentApplicationService.save(tenantId, application);
 
             createEvent(tenantId, applicationId, AgentAppEventActionType.DELETE);
@@ -143,6 +152,10 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         }
     }
 
+    private AgentAppEventActionType getSaveEventActionType(boolean isUpdate) {
+        return isUpdate ? AgentAppEventActionType.UPDATE : AgentAppEventActionType.INSTALL;
+    }
+
     private AgentAppEvent createEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventActionType actionType) {
         AgentAppEvent event = new AgentAppEvent();
         event.setTenantId(tenantId);
@@ -151,9 +164,5 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         event.setDeliveryState(AgentAppEventDeliveryState.PENDING);
         event.setUpdatedTime(System.currentTimeMillis());
         return agentAppEventService.save(tenantId, event);
-    }
-
-    private AgentAppEventActionType getSaveEventActionType(boolean isUpdate) {
-        return isUpdate ? AgentAppEventActionType.UPDATE : AgentAppEventActionType.INSTALL;
     }
 }

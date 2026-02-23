@@ -67,6 +67,9 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
         if (CollectionUtils.isEmpty(agentApplication.getStartSteps())) {
             throw new DataValidationException("Agent install steps can't be null nor empty!");
         }
+        if (CollectionUtils.isEmpty(agentApplication.getDeleteSteps())) {
+            throw new DataValidationException("Agent delete steps can't be null nor empty!");
+        }
         Agent agent = agentService.findAgentById(tenantId, agentApplication.getAgentId());
         if (agent == null) {
             throw new DataValidationException("Agent application is referencing non-existent agent!");
@@ -95,6 +98,11 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
             StepLinkedListUtils.validate(agentApp.getStartSteps());
         } catch (IllegalStateException e) {
             throw new DataValidationException("Invalid install steps: " + e.getMessage());
+        }
+        try {
+            StepLinkedListUtils.validate(agentApp.getDeleteSteps());
+        } catch (IllegalStateException e) {
+            throw new DataValidationException("Invalid delete steps: " + e.getMessage());
         }
         try {
             if (!CollectionUtils.isEmpty(agentApp.getUpgradeSteps())) {

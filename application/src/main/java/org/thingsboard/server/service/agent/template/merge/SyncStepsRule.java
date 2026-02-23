@@ -56,16 +56,20 @@ public class SyncStepsRule implements AppTemplateMergeRule {
                 || !CollectionUtils.isEmpty(template.getStartSteps());
         boolean hasUpgradeSteps = !CollectionUtils.isEmpty(agentApplication.getUpgradeSteps())
                 || !CollectionUtils.isEmpty(template.getUpgradeSteps());
-        return hasStartSteps || hasUpgradeSteps;
+        boolean hasDeleteSteps = !CollectionUtils.isEmpty(agentApplication.getDeleteSteps())
+                || !CollectionUtils.isEmpty(template.getDeleteSteps());
+        return hasStartSteps || hasUpgradeSteps || hasDeleteSteps;
     }
 
     @Override
     public void apply(AgentApplication agentApplication, AgentAppTemplate template, TemplateMergeCtx ctx) {
         List<AgentAppStep> syncedStartSteps = syncSteps(agentApplication.getStartSteps(), template.getStartSteps());
         List<AgentAppStep> syncedUpgradeSteps = syncSteps(agentApplication.getUpgradeSteps(), template.getUpgradeSteps());
+        List<AgentAppStep> syncedDeleteSteps = syncSteps(agentApplication.getDeleteSteps(), template.getDeleteSteps());
 
         agentApplication.setStartSteps(syncedStartSteps);
         agentApplication.setUpgradeSteps(syncedUpgradeSteps);
+        agentApplication.setDeleteSteps(syncedDeleteSteps);
     }
 
     private List<AgentAppStep> syncSteps(List<AgentAppStep> implSteps, List<AgentAppStep> templateSteps) {

@@ -140,15 +140,62 @@ class AgentApplicationDataValidatorTest {
 
     @Test
     void testValidateDataImpl_emptyInstallSteps_thenException() {
-        AgentApplication app = new AgentApplication();
-        app.setAgentId(agentId);
-        app.setAppType(AgentApplicationType.EDGE);
-        app.setTemplateId(templateId);
+        AgentApplication app = createValidApplication();
         app.setStartSteps(Collections.emptyList());
 
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, app));
         assertThat(exception.getMessage()).containsIgnoringCase("install steps");
+    }
+
+    @Test
+    void testValidateDataImpl_nullDeleteSteps_thenException() {
+        AgentApplication app = createValidApplication();
+        app.setDeleteSteps(null);
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> validator.validateDataImpl(tenantId, app));
+        assertThat(exception.getMessage()).containsIgnoringCase("delete steps");
+    }
+
+    @Test
+    void testValidateDataImpl_emptyDeleteSteps_thenException() {
+        AgentApplication app = createValidApplication();
+        app.setDeleteSteps(Collections.emptyList());
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> validator.validateDataImpl(tenantId, app));
+        assertThat(exception.getMessage()).containsIgnoringCase("delete steps");
+    }
+
+    @Test
+    void testValidateDataImpl_deleteStepWithNullId_thenException() {
+        InfoStep stepWithNullId = new InfoStep();
+        stepWithNullId.setTitle("Delete step without ID");
+
+        AgentApplication app = createValidApplication();
+        app.setDeleteSteps(new ArrayList<>(List.of(stepWithNullId)));
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> validator.validateDataImpl(tenantId, app));
+        assertThat(exception.getMessage()).contains("Invalid delete steps");
+        assertThat(exception.getMessage()).contains("null id");
+    }
+
+    @Test
+    void testValidateDataImpl_deleteStepsWithCircularReference_thenException() {
+        UUID id1 = UUID.randomUUID();
+        UUID id2 = UUID.randomUUID();
+
+        InfoStep step1 = new InfoStep(id1, id2, "Delete 1", false);
+        InfoStep step2 = new InfoStep(id2, id1, "Delete 2", false);
+
+        AgentApplication app = createValidApplication();
+        app.setDeleteSteps(new ArrayList<>(List.of(step1, step2)));
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> validator.validateDataImpl(tenantId, app));
+        assertThat(exception.getMessage()).contains("Invalid delete steps");
     }
 
     @Test
@@ -329,14 +376,18 @@ class AgentApplicationDataValidatorTest {
     // ==================== Helper methods ====================
 
     private AgentApplication createValidApplication() {
-        UUID stepId = UUID.randomUUID();
-        InfoStep step = new InfoStep(stepId, null, "Test Step", false);
+        UUID startStepId = UUID.randomUUID();
+        InfoStep startStep = new InfoStep(startStepId, null, "Test Step", false);
+
+        UUID deleteStepId = UUID.randomUUID();
+        InfoStep deleteStep = new InfoStep(deleteStepId, null, "Delete Step", false);
 
         AgentApplication app = new AgentApplication();
         app.setAgentId(agentId);
         app.setAppType(AgentApplicationType.EDGE);
         app.setTemplateId(templateId);
-        app.setStartSteps(new ArrayList<>(List.of(step)));
+        app.setStartSteps(new ArrayList<>(List.of(startStep)));
+        app.setDeleteSteps(new ArrayList<>(List.of(deleteStep)));
         return app;
     }
 }
