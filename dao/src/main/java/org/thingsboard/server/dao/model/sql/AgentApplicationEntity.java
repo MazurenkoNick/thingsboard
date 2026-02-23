@@ -70,16 +70,6 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
     @Column(name = ModelConstants.AGENT_APPLICATION_CONFIG_PROPERTY, columnDefinition = "jsonb")
     private JsonNode config;
 
-    @Convert(converter = JsonConverter.class)
-    @JdbcType(PostgreSQLJsonPGObjectJsonbType.class)
-    @Column(name = ModelConstants.AGENT_APPLICATION_START_STEPS_PROPERTY, columnDefinition = "jsonb")
-    private JsonNode startSteps;
-
-    @Convert(converter = JsonConverter.class)
-    @JdbcType(PostgreSQLJsonPGObjectJsonbType.class)
-    @Column(name = ModelConstants.AGENT_APPLICATION_UPDATE_STEPS_PROPERTY, columnDefinition = "jsonb")
-    private JsonNode updateSteps;
-
     public AgentApplicationEntity() {
         super();
     }
@@ -98,8 +88,6 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
             this.templateId = application.getTemplateId().getId();
         }
         this.config = application.getConfig() != null ? JacksonUtil.valueToTree(application.getConfig()) : null;
-        this.startSteps = application.getStartSteps() != null ? JacksonUtil.valueToTree(application.getStartSteps()) : null;
-        this.updateSteps = application.getUpdateSteps() != null ? JacksonUtil.valueToTree(application.getUpdateSteps()) : null;
     }
 
     @Override
@@ -119,8 +107,6 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
             application.setTemplateId(new AgentAppTemplateId(templateId));
         }
         application.setConfig(config != null ? JacksonUtil.treeToValue(config, AgentAppConfig.class) : null);
-        application.setStartSteps(startSteps != null ? JacksonUtil.convertValue(startSteps, new TypeReference<>() {}) : null);
-        application.setUpdateSteps(updateSteps != null ? JacksonUtil.convertValue(updateSteps, new TypeReference<>() {}) : null);
         return application;
     }
 }

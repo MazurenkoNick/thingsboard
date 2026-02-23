@@ -24,7 +24,6 @@ import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.step.InfoStep;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -34,9 +33,6 @@ import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.exception.DataValidationException;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -109,46 +105,13 @@ class AgentApplicationDataValidatorTest {
     }
 
     @Test
-    void testValidateDataImpl_genericWithTemplateId_thenException() {
+    void testValidateDataImpl_nullTemplateId_forAnyType_thenException() {
         AgentApplication app = createValidApplication();
-        app.setAppType(AgentApplicationType.GENERIC);
-
-        DataValidationException exception = assertThrows(DataValidationException.class,
-                () -> validator.validateDataImpl(tenantId, app));
-        assertThat(exception.getMessage()).containsIgnoringCase("must not have a template");
-    }
-
-    @Test
-    void testValidateDataImpl_nonGenericWithoutTemplateId_thenException() {
-        AgentApplication app = createValidApplication();
-        app.setAppType(AgentApplicationType.EDGE);
         app.setTemplateId(null);
 
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, app));
         assertThat(exception.getMessage()).containsIgnoringCase("assigned to template");
-    }
-
-    @Test
-    void testValidateDataImpl_genericWithoutTemplateId_thenOK() {
-        AgentApplication app = createValidApplication();
-        app.setAppType(AgentApplicationType.GENERIC);
-        app.setTemplateId(null);
-
-        assertDoesNotThrow(() -> validator.validateDataImpl(tenantId, app));
-    }
-
-    @Test
-    void testValidateDataImpl_emptyInstallSteps_thenException() {
-        AgentApplication app = new AgentApplication();
-        app.setAgentId(agentId);
-        app.setAppType(AgentApplicationType.EDGE);
-        app.setTemplateId(templateId);
-        app.setStartSteps(Collections.emptyList());
-
-        DataValidationException exception = assertThrows(DataValidationException.class,
-                () -> validator.validateDataImpl(tenantId, app));
-        assertThat(exception.getMessage()).containsIgnoringCase("install steps");
     }
 
     @Test
@@ -209,96 +172,6 @@ class AgentApplicationDataValidatorTest {
         assertDoesNotThrow(() -> validator.validateDataImpl(tenantId, app));
     }
 
-    // ==================== Step validation tests ====================
-
-    @Test
-    void testValidateDataImpl_validStepsWithNextId_thenOK() {
-        UUID id1 = UUID.randomUUID();
-        UUID id2 = UUID.randomUUID();
-
-        InfoStep step1 = new InfoStep(id1, id2, "Step 1", false);
-        InfoStep step2 = new InfoStep(id2, null, "Step 2", false);
-
-        AgentApplication app = createValidApplication();
-        app.setStartSteps(new ArrayList<>(List.of(step1, step2)));
-
-        assertDoesNotThrow(() -> validator.validateDataImpl(tenantId, app));
-    }
-
-    @Test
-    void testValidateDataImpl_installStepWithNullId_thenException() {
-        InfoStep stepWithNullId = new InfoStep();
-        stepWithNullId.setTitle("Step without ID");
-
-        AgentApplication app = createValidApplication();
-        app.setStartSteps(new ArrayList<>(List.of(stepWithNullId)));
-
-        DataValidationException exception = assertThrows(DataValidationException.class,
-                () -> validator.validateDataImpl(tenantId, app));
-        assertThat(exception.getMessage()).contains("Invalid install steps");
-        assertThat(exception.getMessage()).contains("null id");
-    }
-
-    @Test
-    void testValidateDataImpl_installStepsWithCircularReference_thenException() {
-        UUID id1 = UUID.randomUUID();
-        UUID id2 = UUID.randomUUID();
-
-        InfoStep step1 = new InfoStep(id1, id2, "Step 1", false);
-        InfoStep step2 = new InfoStep(id2, id1, "Step 2", false); // circular
-
-        AgentApplication app = createValidApplication();
-        app.setStartSteps(new ArrayList<>(List.of(step1, step2)));
-
-        DataValidationException exception = assertThrows(DataValidationException.class,
-                () -> validator.validateDataImpl(tenantId, app));
-        assertThat(exception.getMessage()).contains("Invalid install steps");
-    }
-
-    @Test
-    void testValidateDataImpl_installStepsWithOrphanedStep_thenException() {
-        UUID id1 = UUID.randomUUID();
-        UUID id2 = UUID.randomUUID();
-        UUID id3 = UUID.randomUUID();
-
-        InfoStep step1 = new InfoStep(id1, id2, "Step 1", false);
-        InfoStep step2 = new InfoStep(id2, null, "Step 2", false);
-        InfoStep step3 = new InfoStep(id3, null, "Orphan", false); // orphaned
-
-        AgentApplication app = createValidApplication();
-        app.setStartSteps(new ArrayList<>(List.of(step1, step2, step3)));
-
-        DataValidationException exception = assertThrows(DataValidationException.class,
-                () -> validator.validateDataImpl(tenantId, app));
-        assertThat(exception.getMessage()).contains("Invalid install steps");
-    }
-
-    @Test
-    void testValidateDataImpl_updateStepWithNullId_thenException() {
-        InfoStep stepWithNullId = new InfoStep();
-        stepWithNullId.setTitle("Update step without ID");
-
-        AgentApplication app = createValidApplication();
-        app.setUpdateSteps(new ArrayList<>(List.of(stepWithNullId)));
-
-        DataValidationException exception = assertThrows(DataValidationException.class,
-                () -> validator.validateDataImpl(tenantId, app));
-        assertThat(exception.getMessage()).contains("Invalid update steps");
-        assertThat(exception.getMessage()).contains("null id");
-    }
-
-    @Test
-    void testValidateDataImpl_validUpdateSteps_thenOK() {
-        UUID id1 = UUID.randomUUID();
-
-        InfoStep updateStep = new InfoStep(id1, null, "Update Step", false);
-
-        AgentApplication app = createValidApplication();
-        app.setUpdateSteps(new ArrayList<>(List.of(updateStep)));
-
-        assertDoesNotThrow(() -> validator.validateDataImpl(tenantId, app));
-    }
-
     // ==================== Update validation tests ====================
 
     @Test
@@ -329,14 +202,10 @@ class AgentApplicationDataValidatorTest {
     // ==================== Helper methods ====================
 
     private AgentApplication createValidApplication() {
-        UUID stepId = UUID.randomUUID();
-        InfoStep step = new InfoStep(stepId, null, "Test Step", false);
-
         AgentApplication app = new AgentApplication();
         app.setAgentId(agentId);
         app.setAppType(AgentApplicationType.EDGE);
         app.setTemplateId(templateId);
-        app.setStartSteps(new ArrayList<>(List.of(step)));
         return app;
     }
 }

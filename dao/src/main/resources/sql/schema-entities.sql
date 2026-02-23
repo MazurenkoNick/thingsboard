@@ -791,8 +791,6 @@ CREATE TABLE IF NOT EXISTS agent_application (
     name varchar(255),
     template_id uuid,
     config jsonb,
-    start_steps jsonb NOT NULL,
-    update_steps jsonb,
     version BIGINT DEFAULT 1,
     CONSTRAINT fk_agent_application_agent FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE CASCADE,
     CONSTRAINT fk_agent_application_template FOREIGN KEY (template_id) REFERENCES agent_app_template(id) ON DELETE CASCADE

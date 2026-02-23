@@ -25,14 +25,13 @@ import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.AgentInfo;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.step.InfoStep;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.customer.CustomerService;
@@ -41,7 +40,6 @@ import org.thingsboard.server.exception.DataValidationException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 import static org.thingsboard.server.dao.model.ModelConstants.NULL_UUID;
 
@@ -428,13 +426,11 @@ public class AgentServiceTest extends AbstractServiceTest {
         AgentApplication app1 = new AgentApplication();
         app1.setAgentId(savedAgent.getId());
         app1.setAppType(AgentApplicationType.GENERIC);
-        app1.setStartSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
         app1 = agentApplicationService.save(tenantId, app1);
 
         AgentApplication app2 = new AgentApplication();
         app2.setAgentId(savedAgent.getId());
         app2.setAppType(AgentApplicationType.GENERIC);
-        app2.setStartSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
         app2 = agentApplicationService.save(tenantId, app2);
 
         List<AgentApplication> applicationsBefore = agentApplicationService.findAllByAgentId(tenantId, savedAgent.getId());
@@ -464,7 +460,6 @@ public class AgentServiceTest extends AbstractServiceTest {
         AgentApplication app = new AgentApplication();
         app.setAgentId(agent.getId());
         app.setAppType(AgentApplicationType.GENERIC);
-        app.setStartSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
         app = agentApplicationService.save(tenantId, app);
 
         List<AgentApplication> afterCreate = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
