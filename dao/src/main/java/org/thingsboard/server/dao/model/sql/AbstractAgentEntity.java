@@ -31,26 +31,27 @@ import org.thingsboard.server.dao.util.mapping.JsonConverter;
 
 import java.util.UUID;
 
-import static org.thingsboard.server.dao.model.ModelConstants.ASSET_CUSTOMER_ID_PROPERTY;
-import static org.thingsboard.server.dao.model.ModelConstants.ASSET_NAME_PROPERTY;
-import static org.thingsboard.server.dao.model.ModelConstants.ASSET_TENANT_ID_PROPERTY;
+import static org.thingsboard.server.dao.model.ModelConstants.AGENT_ADDITIONAL_INFO_PROPERTY;
+import static org.thingsboard.server.dao.model.ModelConstants.AGENT_CUSTOMER_ID_PROPERTY;
+import static org.thingsboard.server.dao.model.ModelConstants.AGENT_NAME_PROPERTY;
+import static org.thingsboard.server.dao.model.ModelConstants.AGENT_TENANT_ID_PROPERTY;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 @MappedSuperclass
 public abstract class AbstractAgentEntity<T extends Agent> extends BaseVersionedEntity<T> {
 
-    @Column(name = ASSET_TENANT_ID_PROPERTY)
+    @Column(name = AGENT_TENANT_ID_PROPERTY)
     private UUID tenantId;
 
-    @Column(name = ASSET_CUSTOMER_ID_PROPERTY)
+    @Column(name = AGENT_CUSTOMER_ID_PROPERTY)
     private UUID customerId;
 
-    @Column(name = ASSET_NAME_PROPERTY)
+    @Column(name = AGENT_NAME_PROPERTY)
     private String name;
 
     @Convert(converter = JsonConverter.class)
-    @Column(name = ModelConstants.ADDITIONAL_INFO_PROPERTY)
+    @Column(name = AGENT_ADDITIONAL_INFO_PROPERTY)
     private JsonNode additionalInfo;
 
     public AbstractAgentEntity() {

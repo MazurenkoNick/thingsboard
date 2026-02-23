@@ -769,6 +769,19 @@ CREATE TABLE IF NOT EXISTS agent (
     CONSTRAINT agent_name_unq_key UNIQUE (tenant_id, name)
 );
 
+CREATE TABLE IF NOT EXISTS agent_application (
+    id uuid NOT NULL CONSTRAINT agent_application_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    agent_id uuid NOT NULL,
+    name varchar(255),
+    type varchar(32) NOT NULL,
+    template_version varchar(255),
+    placeholders varchar,
+    configuration varchar,
+    version BIGINT DEFAULT 1,
+    CONSTRAINT fk_agent_application_agent FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS edge_event (
     seq_id INT GENERATED ALWAYS AS IDENTITY,
     id uuid NOT NULL,
