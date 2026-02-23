@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @UtilityClass
@@ -186,5 +187,9 @@ public class StepLinkedListUtils {
                 .map(stepCls::cast)
                 .filter(s -> s.getType() == agentAppStepType)
                 .findFirst();
+    }
+
+    public static List<AgentAppStep> filter(List<AgentAppStep> steps, Predicate<AgentAppStep> predicate) {
+        return steps.stream().filter(predicate).collect(Collectors.toList());
     }
 }

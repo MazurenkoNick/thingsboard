@@ -17,20 +17,14 @@ package org.thingsboard.server.dao.service.validator;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppTemplateDao;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentService;
-import org.thingsboard.server.dao.agent.StepLinkedListUtils;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.exception.DataValidationException;
-
-import java.util.List;
 
 @Component
 @AllArgsConstructor
@@ -57,16 +51,7 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
         if (agentApplication.getAppType() == null) {
             throw new DataValidationException("Agent application type must not be null!");
         }
-        if (agentApplication.getAppType() == AgentApplicationType.GENERIC) {
-            if (agentApplication.getTemplateId() != null) {
-                throw new DataValidationException("Generic agent application must not have a template!");
-            }
-        } else {
-            validateTemplate(agentApplication);
-        }
-        if (CollectionUtils.isEmpty(agentApplication.getStartSteps())) {
-            throw new DataValidationException("Agent install steps can't be null nor empty!");
-        }
+        validateTemplate(agentApplication);
         Agent agent = agentService.findAgentById(tenantId, agentApplication.getAgentId());
         if (agent == null) {
             throw new DataValidationException("Agent application is referencing non-existent agent!");
@@ -77,7 +62,6 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
         if (agentApplication.getName() != null && agentApplication.getName().length() > 255) {
             throw new DataValidationException("Agent application name length must be equal or shorter than 255!");
         }
-        validateSteps(agentApplication);
     }
 
     private void validateTemplate(AgentApplication agentApplication) {
@@ -87,21 +71,6 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
         }
         if (agentAppTemplateDao.findById(TenantId.SYS_TENANT_ID, agentApplication.getTemplateId().getId()) == null) {
             throw new DataValidationException("Agent application is referencing non-existent template!");
-        }
-    }
-
-    private void validateSteps(AgentApplication agentApp) {
-        try {
-            StepLinkedListUtils.validate(agentApp.getStartSteps());
-        } catch (IllegalStateException e) {
-            throw new DataValidationException("Invalid install steps: " + e.getMessage());
-        }
-        try {
-            if (!CollectionUtils.isEmpty(agentApp.getUpgradeSteps())) {
-                StepLinkedListUtils.validate(agentApp.getUpgradeSteps());
-            }
-        } catch (IllegalStateException e) {
-            throw new DataValidationException("Invalid upgrade steps: " + e.getMessage());
         }
     }
 }

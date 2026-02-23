@@ -47,9 +47,7 @@ public class AgentAppTemplateController extends BaseController {
 
     private static final String TEMPLATE_ID = "templateId";
     private static final String TEMPLATE_ID_PARAM_DESCRIPTION = "A string value representing the agent app template id. For example, '784f394c-42b6-435a-983c-b7beff2784f9'";
-    private static final String APP_TYPE = "appType";
     private static final String APP_TYPE_PARAM_DESCRIPTION = "A string value representing the agent configuration type, e.g. 'EDGE', 'GATEWAY'";
-    private static final String CONFIG_TYPE = "configType";
     private static final String CONFIG_TYPE_PARAM_DESCRIPTION = "A string value representing the agent configuration type, e.g. 'DOCKER_COMPOSE'";
 
 
@@ -73,10 +71,8 @@ public class AgentAppTemplateController extends BaseController {
     @RequestMapping(value = "/agent/app/template/{appType}/{configType}/latest", method = RequestMethod.GET)
     @ResponseBody
     public AgentAppTemplate getLatestAgentAppTemplateByAppTypeAndConfigType(
-            @Parameter(description = APP_TYPE_PARAM_DESCRIPTION)
-            @PathVariable(APP_TYPE) AgentApplicationType appType,
-            @Parameter(description = CONFIG_TYPE_PARAM_DESCRIPTION)
-            @PathVariable(CONFIG_TYPE) AgentAppConfigType configType) throws ThingsboardException {
+            @PathVariable @Parameter(description = APP_TYPE_PARAM_DESCRIPTION) AgentApplicationType appType,
+            @PathVariable @Parameter(description = CONFIG_TYPE_PARAM_DESCRIPTION) AgentAppConfigType configType) throws ThingsboardException {
         return checkNotNull(agentAppTemplateService.findLatestByAppTypeAndConfigType(appType, configType));
     }
 

@@ -117,22 +117,6 @@ class MergeComposeStepRuleTest {
     }
 
     @Test
-    void apply_shouldAddComposeStepAndMergeConfig_whenAppHasNoComposeStep() {
-        ObjectNode templateCompose = MAPPER.createObjectNode().put("tb", "val");
-        ComposeTypeChoiceStep choiceStep = createChoiceStep(Map.of("monolith", templateCompose));
-
-        AgentApplication app = createAppWithCompose(List.of(createInfoStep()), null);
-        AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = createCtx("monolith");
-
-        rule.apply(app, template, ctx);
-
-        assertEquals(2, app.getStartSteps().size());
-        assertTrue(app.getStartSteps().stream().anyMatch(s -> s instanceof ComposeStep));
-        assertEquals("val", getAppCompose(app).get("tb").asText());
-    }
-
-    @Test
     void apply_shouldDoNothing_whenTemplateInstallStepsAreNull() {
         ComposeStep composeStep = createComposeStep();
         JsonNode compose = MAPPER.createObjectNode().put("key", "val");
@@ -537,7 +521,6 @@ class MergeComposeStepRuleTest {
 
     private AgentApplication createAppWithCompose(List<AgentAppStep> installSteps, JsonNode compose) {
         AgentApplication app = new AgentApplication();
-        app.setStartSteps(new ArrayList<>(installSteps));
         DockerComposeConfig config = new DockerComposeConfig();
         config.setCompose(compose);
         app.setConfig(config);

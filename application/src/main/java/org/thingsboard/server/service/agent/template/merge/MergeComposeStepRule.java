@@ -49,36 +49,12 @@ public class MergeComposeStepRule implements AppTemplateMergeRule {
         Optional<ComposeTypeChoiceStep> choiceStep = StepLinkedListUtils.getByType(
                 AgentAppStepType.COMPOSE_TEMPLATE, ComposeTypeChoiceStep.class, template.getStartSteps()
         );
-        Optional<ComposeStep> composeStep = StepLinkedListUtils.getByType(
-                AgentAppStepType.COMPOSE, ComposeStep.class, agentApp.getStartSteps()
-        );
         if (choiceStep.isEmpty()) {
-            log.trace("Compose Choice Step from template or Compose Step from app couldn't be found: choice: {} compose: {}", choiceStep, composeStep);
+            log.trace("Compose Choice Step from template or Compose Step from app couldn't be found: choice: {}", choiceStep);
             return;
         }
         ComposeTypeChoiceStep composeTypeChoiceStep = choiceStep.get();
-        swapComposeChoiceWithComposeStepInApp(agentApp, composeStep, composeTypeChoiceStep);
         mergeComposeBySelectedType(agentApp, composeTypeChoiceStep, ctx);
-    }
-
-    private void swapComposeChoiceWithComposeStepInApp(AgentApplication agentApp, Optional<ComposeStep> composeStep, ComposeTypeChoiceStep composeTypeChoiceStep) {
-        if (composeStep.isEmpty()) {
-            removeComposeChoiceStepFromAgentApp(agentApp);
-            addComposeStepToAgentApp(agentApp, composeTypeChoiceStep);
-        }
-    }
-
-    private void removeComposeChoiceStepFromAgentApp(AgentApplication agentApp) {
-        StepLinkedListUtils.getByType(
-                AgentAppStepType.COMPOSE_TEMPLATE, ComposeTypeChoiceStep.class, agentApp.getStartSteps()
-        ).ifPresent(s -> agentApp.getStartSteps().remove(s));
-    }
-
-    private void addComposeStepToAgentApp(AgentApplication app, ComposeTypeChoiceStep composeTypeChoiceStep) {
-        ComposeStep cs = new ComposeStep();
-        cs.setId(composeTypeChoiceStep.getId());
-        cs.setNextId(composeTypeChoiceStep.getNextId());
-        app.getStartSteps().add(cs);
     }
 
     private void mergeComposeBySelectedType(AgentApplication agentApp, ComposeTypeChoiceStep choiceStep, TemplateMergeCtx ctx) {

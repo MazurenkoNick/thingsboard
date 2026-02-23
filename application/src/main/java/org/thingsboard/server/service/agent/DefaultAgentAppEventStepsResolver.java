@@ -15,25 +15,39 @@
  */
 package org.thingsboard.server.service.agent;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.dao.agent.AgentAppTemplateService;
+import org.thingsboard.server.dao.agent.StepLinkedListUtils;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 @Component
+@RequiredArgsConstructor
 public class DefaultAgentAppEventStepsResolver implements AgentAppEventStepsResolver {
+
+    private final AgentAppTemplateService templateService;
 
     @Override
     public List<AgentAppStep> resolveSteps(AgentApplication app, AgentAppEventActionType actionType) {
+        AgentAppTemplate template = templateService.findById(TenantId.SYS_TENANT_ID, app.getTemplateId());
+        if (template == null) {
+            throw new IllegalStateException("Template not found for application " + app.getId());
+        }
         List<AgentAppStep> steps = switch (actionType) {
-            case INSTALL, RESTART, UPDATE -> app.getStartSteps(); // todo: add UPGRADE
-            case DELETE -> app.getStartSteps(); // todo: handle delete steps separately
+            case INSTALL, RESTART, UPDATE -> template.getStartSteps();
+            case DELETE -> template.getStartSteps(); // todo: handle delete steps separately
         };
         if (steps == null || steps.isEmpty()) {
             throw new IllegalStateException("No steps resolved for application " + app.getId() + " and action " + actionType);
         }
-        return steps;
+        Predicate<AgentAppStep> nonTemplateOnly = s -> !s.isTemplateOnly();
+        return StepLinkedListUtils.filter(steps, nonTemplateOnly);
     }
 }
