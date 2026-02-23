@@ -22,7 +22,6 @@ import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
-import org.thingsboard.server.common.data.agent.step.ComposeDownStep;
 import org.thingsboard.server.common.data.agent.step.InfoStep;
 import org.thingsboard.server.gen.agent.v1.AppCommand;
 import org.thingsboard.server.gen.agent.v1.AppCommandAction;
@@ -93,8 +92,8 @@ public class AgentMsgConstructorUtils {
             if (type == AgentAppStepType.COMPOSE && cfg.getCompose() != null) {
                 metadata.put("compose", cfg.getCompose().toString());
             }
-            if (type == AgentAppStepType.COMPOSE_DOWN && step instanceof ComposeDownStep s) {
-                metadata.put("removeVolumes", String.valueOf(s.isRemoveVolumes()));
+            if (type == AgentAppStepType.COMPOSE_DOWN) {
+                metadata.put("removeVolumes", String.valueOf(cfg.isRemoveVolumes()));
             }
         }
 

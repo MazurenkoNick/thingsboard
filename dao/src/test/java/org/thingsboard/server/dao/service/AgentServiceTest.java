@@ -25,14 +25,15 @@ import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentInfo;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.step.InfoStep;
+import org.thingsboard.server.dao.agent.AgentAppTemplateService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.customer.CustomerService;
@@ -52,6 +53,8 @@ public class AgentServiceTest extends AbstractServiceTest {
     AgentService agentService;
     @Autowired
     AgentApplicationService agentApplicationService;
+    @Autowired
+    AgentAppTemplateService agentAppTemplateService;
     @Autowired
     CustomerService customerService;
 
@@ -427,17 +430,18 @@ public class AgentServiceTest extends AbstractServiceTest {
     @Test
     public void testDeleteAgentRemovesAgentApplications() throws Exception {
         Agent savedAgent = agentService.saveAgent(newAgent("Agent with applications"));
+        AgentAppTemplate template = createTemplate();
 
         AgentApplication app1 = new AgentApplication();
         app1.setAgentId(savedAgent.getId());
         app1.setAppType(AgentApplicationType.GENERIC);
-        app1.setStartSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
+        app1.setTemplateId(template.getId());
         app1 = agentApplicationService.save(tenantId, app1);
 
         AgentApplication app2 = new AgentApplication();
         app2.setAgentId(savedAgent.getId());
         app2.setAppType(AgentApplicationType.GENERIC);
-        app2.setStartSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
+        app2.setTemplateId(template.getId());
         app2 = agentApplicationService.save(tenantId, app2);
 
         List<AgentApplication> applicationsBefore = agentApplicationService.findByAgentId(tenantId, savedAgent.getId(), new PageLink(100)).getData();
@@ -464,6 +468,17 @@ public class AgentServiceTest extends AbstractServiceTest {
         return agent;
     }
 
+    private AgentAppTemplate createTemplate() {
+        AgentAppTemplate template = new AgentAppTemplate();
+        template.setAppType(AgentApplicationType.GENERIC);
+        template.setCurrentVersion("1.0.0");
+        template.setPreviousVersion("0.9.0");
+        template.setNextVersion(null);
+        template.setStartSteps(Collections.emptyList());
+        template.setUpgradeSteps(Collections.emptyList());
+        return agentAppTemplateService.save(TenantId.SYS_TENANT_ID, template);
+    }
+
     @Test
     public void testAssignUnassignAgentApplicationsStillRetrieved() {
         Customer customer = new Customer();
@@ -473,11 +488,12 @@ public class AgentServiceTest extends AbstractServiceTest {
         CustomerId customerId = customer.getId();
 
         Agent agent = agentService.saveAgent(newAgent("Agent assign unassign"));
+        AgentAppTemplate template = createTemplate();
 
         AgentApplication app = new AgentApplication();
         app.setAgentId(agent.getId());
         app.setAppType(AgentApplicationType.GENERIC);
-        app.setStartSteps(new ArrayList<>(List.of(new InfoStep(UUID.randomUUID(), null, "step", false))));
+        app.setTemplateId(template.getId());
         app = agentApplicationService.save(tenantId, app);
 
         List<AgentApplication> afterCreate = agentApplicationService.findByAgentId(tenantId, agent.getId(), new PageLink(100)).getData();

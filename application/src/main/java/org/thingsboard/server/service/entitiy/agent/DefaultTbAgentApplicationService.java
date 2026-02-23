@@ -22,10 +22,10 @@ import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
-import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
 import org.thingsboard.server.common.data.audit.ActionType;
@@ -39,8 +39,6 @@ import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.agent.template.merge.AgentAppTemplateMergeOrchestrator;
 import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
-
-import java.util.List;
 
 @TbCoreComponent
 @Service
@@ -69,16 +67,13 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         ActionType actionType = isUpdate ? ActionType.UPDATED : ActionType.ADDED;
         TenantId tenantId = application.getTenantId();
         try {
-            if (isUpdate && agentAppEventService.hasActiveEventForApplication(application.getId())) {
-                throw new ThingsboardException("Cannot update application while an event is being processed", ThingsboardErrorCode.TOO_MANY_REQUESTS);
-            } else if (isUpdate) {
-                AgentApplication existing = agentApplicationService.findById(tenantId, application.getId());
-                throwIfPendingForDelete(existing);
-            }
+            AgentAppConfig oldConfig = isUpdate ? getOldConfig(tenantId, application.getId()) : null;
             AgentApplication savedApp = checkNotNull(agentApplicationService.save(tenantId, application));
 
-            AgentAppEventActionType eventAction = getSaveEventActionType(isUpdate);
-            createEvent(tenantId, savedApp.getId(), eventAction);
+            if (shouldCreateDeployEvent(isUpdate, oldConfig, savedApp.getConfig())) {
+                AgentAppEventActionType eventAction = getSaveEventActionType(isUpdate);
+                createEvent(tenantId, savedApp.getId(), eventAction);
+            }
 
             logEntityActionService.logEntityAction(tenantId, savedApp.getId(), savedApp, actionType, user);
             return savedApp;
@@ -86,14 +81,6 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
             logEntityActionService.logEntityAction(tenantId, emptyId(EntityType.AGENT_APPLICATION), application, actionType, user, e);
             throw e;
         }
-    }
-
-    @Override
-    public AgentApplication updateDeleteSteps(TenantId tenantId, AgentApplicationId applicationId, List<AgentAppStep> deleteSteps) {
-        AgentApplication application = agentApplicationService.findById(tenantId, applicationId);
-        throwIfPendingForDelete(application);
-        application.setDeleteSteps(deleteSteps);
-        return agentApplicationService.save(tenantId, application);
     }
 
     @Transactional
@@ -104,9 +91,6 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         AgentApplicationId applicationId = application.getId();
         try {
             throwIfPendingForDelete(application);
-            if (application.getDeleteSteps() == null || application.getDeleteSteps().isEmpty()) {
-                throw new DataValidationException("Delete steps must be configured before deleting the application");
-            }
             agentAppEventService.deleteAllPendingByApplicationId(applicationId);
             application.setPendingDeletion(true);
             agentApplicationService.save(tenantId, application);
@@ -150,6 +134,21 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         if (application.isPendingDeletion()) {
             throw new DataValidationException("Application is already pending for removal");
         }
+    }
+
+    private AgentAppConfig getOldConfig(TenantId tenantId, AgentApplicationId applicationId) {
+        AgentApplication existing = agentApplicationService.findById(tenantId, applicationId);
+        return existing != null ? existing.getConfig() : null;
+    }
+
+    private boolean shouldCreateDeployEvent(boolean isUpdate, AgentAppConfig oldConfig, AgentAppConfig newConfig) {
+        if (!isUpdate) {
+            return true;
+        }
+        if (oldConfig == null || newConfig == null) {
+            return oldConfig != newConfig;
+        }
+        return oldConfig.isDeployFieldsChanged(newConfig);
     }
 
     private AgentAppEventActionType getSaveEventActionType(boolean isUpdate) {

@@ -17,18 +17,13 @@ package org.thingsboard.server.service.entitiy.agent;
 
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.TenantId;
 
-import java.util.List;
-
 public interface TbAgentApplicationService {
 
     AgentApplication save(AgentApplication application, User user) throws Exception;
-
-    AgentApplication updateDeleteSteps(TenantId tenantId, AgentApplicationId applicationId, List<AgentAppStep> deleteSteps);
 
     void delete(AgentApplication application, User user);
 

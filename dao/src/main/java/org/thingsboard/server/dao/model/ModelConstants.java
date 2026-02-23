@@ -262,9 +262,6 @@ public class ModelConstants {
     public static final String AGENT_APPLICATION_NAME_PROPERTY = "name";
     public static final String AGENT_APPLICATION_TEMPLATE_ID_PROPERTY = "template_id";
     public static final String AGENT_APPLICATION_CONFIG_PROPERTY = "config";
-    public static final String AGENT_APPLICATION_START_STEPS_PROPERTY = "start_steps";
-    public static final String AGENT_APPLICATION_UPGRADE_STEPS_PROPERTY = "upgrade_steps";
-    public static final String AGENT_APPLICATION_DELETE_STEPS_PROPERTY = "delete_steps";
     public static final String AGENT_APPLICATION_PENDING_DELETION_PROPERTY = "pending_deletion";
 
     /**

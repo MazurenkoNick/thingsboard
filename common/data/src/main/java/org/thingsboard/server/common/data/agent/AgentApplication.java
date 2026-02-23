@@ -26,16 +26,12 @@ import org.thingsboard.server.common.data.HasName;
 import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.HasVersion;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
-import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.TenantId;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Schema
 @EqualsAndHashCode(callSuper = true)
@@ -49,9 +45,6 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     private AgentAppTemplateId templateId;
     private AgentApplicationType appType;
     private AgentAppConfig config;
-    private List<AgentAppStep> startSteps;
-    private List<AgentAppStep> upgradeSteps;
-    private List<AgentAppStep> deleteSteps;
     @Getter
     private Long version;
     @JsonIgnore
@@ -73,9 +66,6 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         this.appType = application.getAppType();
         this.name = application.getName();
         this.templateId = application.getTemplateId();
-        this.startSteps = application.getStartSteps();
-        this.upgradeSteps = application.getUpgradeSteps();
-        this.deleteSteps = application.getDeleteSteps();
         this.version = application.getVersion();
         this.pendingDeletion = application.isPendingDeletion();
     }
@@ -85,17 +75,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         app.setTemplateId(template.getId());
         app.setAppType(template.getAppType());
         app.setConfig(template.getConfig() != null ? template.getConfig().copy() : null);
-        app.setStartSteps(copySteps(template.getStartSteps()));
-        app.setUpgradeSteps(copySteps(template.getUpgradeSteps()));
-        app.setDeleteSteps(copySteps(template.getDeleteSteps()));
         return app;
-    }
-
-    private static List<AgentAppStep> copySteps(List<AgentAppStep> steps) {
-        if (steps == null) {
-            return null;
-        }
-        return steps.stream().map(AgentAppStep::copy).collect(Collectors.toList());
     }
 
     @Schema(description = "JSON object with the Agent Application Id.")
@@ -141,18 +121,4 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         return templateId;
     }
 
-    @Schema(description = "Application start steps with resolved configuration")
-    public List<AgentAppStep> getStartSteps() {
-        return startSteps;
-    }
-
-    @Schema(description = "Application upgrade steps with resolved configuration")
-    public List<AgentAppStep> getUpgradeSteps() {
-        return upgradeSteps;
-    }
-
-    @Schema(description = "Application delete steps with resolved configuration")
-    public List<AgentAppStep> getDeleteSteps() {
-        return deleteSteps;
-    }
 }

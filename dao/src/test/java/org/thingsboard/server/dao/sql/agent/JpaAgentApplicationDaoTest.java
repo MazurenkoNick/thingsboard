@@ -86,8 +86,6 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
         app.setAgentId(new AgentId(agentId1));
         app.setAppType(AgentApplicationType.EDGE);
         app.setTemplateId(template.getId());
-        app.setStartSteps(Collections.emptyList());
-        app.setUpgradeSteps(Collections.emptyList());
 
         AgentApplication saved = agentApplicationDao.save(TenantId.fromUUID(tenantId1), app);
         assertNotNull(saved.getId());
@@ -216,8 +214,6 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
         app.setAppType(AgentApplicationType.EDGE);
         app.setName(name);
         app.setTemplateId(template.getId());
-        app.setStartSteps(Collections.emptyList());
-        app.setUpgradeSteps(Collections.emptyList());
         return agentApplicationDao.save(TenantId.fromUUID(tenantId1), app);
     }
 

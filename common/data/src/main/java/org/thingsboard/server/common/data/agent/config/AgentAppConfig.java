@@ -34,4 +34,6 @@ public abstract class AgentAppConfig {
     public abstract AgentAppConfigType getType();
 
     public abstract AgentAppConfig copy();
+
+    public abstract boolean isDeployFieldsChanged(AgentAppConfig other);
 }

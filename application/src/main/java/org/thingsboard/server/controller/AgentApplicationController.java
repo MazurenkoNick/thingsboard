@@ -16,7 +16,6 @@
 package org.thingsboard.server.controller;
 
 import io.swagger.v3.oas.annotations.Parameter;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -34,7 +33,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.thingsboard.server.common.data.agent.AgentAppDeleteRequest;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
@@ -126,25 +124,6 @@ public class AgentApplicationController extends BaseController {
         agentApplication.setTenantId(getTenantId());
         checkEntity(agentApplication.getId(), agentApplication, org.thingsboard.server.service.security.permission.Resource.AGENT_APPLICATION);
         return tbAgentApplicationService.save(agentApplication, getCurrentUser());
-    }
-
-    @ApiOperation(value = "Update Delete Steps (updateDeleteSteps)",
-            notes = "Updates the delete steps configuration for the agent application. " +
-                    "These steps define how the application will be removed (e.g. with removeVolumes set on ComposeDownStep)."
-                    + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @PutMapping(value = "/agent/app/{agentApplicationId}/deleteSteps")
-    @ResponseBody
-    public AgentApplication updateDeleteSteps(
-            @Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
-            @PathVariable(AGENT_APP_ID) String strAgentAppId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "User-configured delete steps from the wizard.")
-            @Valid @RequestBody AgentAppDeleteRequest deleteRequest) throws ThingsboardException {
-        checkParameter(AGENT_APP_ID, strAgentAppId);
-        AgentApplicationId agentApplicationId = new AgentApplicationId(toUUID(strAgentAppId));
-        checkAgentAppId(agentApplicationId, Operation.WRITE);
-        TenantId tenantId = getCurrentUser().getTenantId();
-        return tbAgentApplicationService.updateDeleteSteps(tenantId, agentApplicationId, deleteRequest.getSteps());
     }
 
     @ApiOperation(value = "Delete Agent Application (deleteAgentApplication)",

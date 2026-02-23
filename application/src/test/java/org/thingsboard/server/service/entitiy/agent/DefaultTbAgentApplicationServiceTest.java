@@ -25,12 +25,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.User;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.step.AgentAppStep;
-import org.thingsboard.server.common.data.agent.step.ComposeDownStep;
-import org.thingsboard.server.common.data.agent.step.ComposeStep;
+import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -40,7 +39,6 @@ import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.service.agent.template.merge.AgentAppTemplateMergeOrchestrator;
 import org.thingsboard.server.service.entitiy.TbLogEntityActionService;
 
-import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -92,11 +90,17 @@ class DefaultTbAgentApplicationServiceTest {
     // ==================== save() - update ====================
 
     @Test
-    void save_update_createsUpdateEvent() throws Exception {
+    void save_update_deployFieldsChanged_createsUpdateEvent() throws Exception {
         AgentApplicationId appId = new AgentApplicationId(UUID.randomUUID());
 
+        DockerComposeConfig oldConfig = createDockerComposeConfig("old-compose");
+        DockerComposeConfig newConfig = createDockerComposeConfig("new-compose");
+
         AgentApplication existing = newApplication(appId);
+        existing.setConfig(oldConfig);
+
         AgentApplication updated = newApplication(appId);
+        updated.setConfig(newConfig);
 
         when(agentApplicationService.findById(TENANT_ID, appId)).thenReturn(existing);
         when(agentApplicationService.save(eq(TENANT_ID), eq(updated))).thenReturn(updated);
@@ -109,72 +113,45 @@ class DefaultTbAgentApplicationServiceTest {
     }
 
     @Test
-    void save_updateWithActiveEvent_throwsException() {
+    void save_update_onlyRemoveVolumesChanged_doesNotCreateEvent() throws Exception {
         AgentApplicationId appId = new AgentApplicationId(UUID.randomUUID());
-        AgentApplication updated = newApplication(appId);
 
-        when(agentAppEventService.hasActiveEventForApplication(appId)).thenReturn(true);
+        DockerComposeConfig oldConfig = createDockerComposeConfig("same-compose");
+        oldConfig.setRemoveVolumes(false);
 
-        assertThatThrownBy(() -> service.save(updated, USER))
-                .isInstanceOf(ThingsboardException.class)
-                .hasMessageContaining("Cannot update application while an event is being processed");
-    }
-
-    @Test
-    void save_updatePendingDeletion_throwsException() {
-        AgentApplicationId appId = new AgentApplicationId(UUID.randomUUID());
+        DockerComposeConfig newConfig = createDockerComposeConfig("same-compose");
+        newConfig.setRemoveVolumes(true);
 
         AgentApplication existing = newApplication(appId);
-        existing.setPendingDeletion(true);
+        existing.setConfig(oldConfig);
 
         AgentApplication updated = newApplication(appId);
+        updated.setConfig(newConfig);
 
         when(agentApplicationService.findById(TENANT_ID, appId)).thenReturn(existing);
+        when(agentApplicationService.save(eq(TENANT_ID), eq(updated))).thenReturn(updated);
 
-        assertThatThrownBy(() -> service.save(updated, USER))
-                .isInstanceOf(DataValidationException.class)
-                .hasMessageContaining("pending for removal");
-    }
+        service.save(updated, USER);
 
-    // ==================== updateDeleteSteps() ====================
-
-    @Test
-    void updateDeleteSteps_success() {
-        AgentApplicationId appId = new AgentApplicationId(UUID.randomUUID());
-        AgentApplication existing = newApplication(appId);
-        List<AgentAppStep> deleteSteps = List.of(createComposeDownStep(true));
-
-        when(agentApplicationService.findById(TENANT_ID, appId)).thenReturn(existing);
-        when(agentApplicationService.save(eq(TENANT_ID), any())).thenAnswer(i -> i.getArgument(1));
-
-        AgentApplication result = service.updateDeleteSteps(TENANT_ID, appId, deleteSteps);
-
-        assertThat(result.getDeleteSteps()).isEqualTo(deleteSteps);
-        verify(agentApplicationService).save(eq(TENANT_ID), any());
+        verify(agentAppEventService, org.mockito.Mockito.never()).save(any(), any());
     }
 
     @Test
-    void updateDeleteSteps_pendingDeletion_throwsException() {
+    void save_update_configUnchanged_doesNotCreateEvent() throws Exception {
         AgentApplicationId appId = new AgentApplicationId(UUID.randomUUID());
+
+        DockerComposeConfig config = createDockerComposeConfig("same-compose");
+
         AgentApplication existing = newApplication(appId);
-        existing.setPendingDeletion(true);
+        existing.setConfig(config);
+
+        AgentApplication updated = newApplication(appId);
+        updated.setConfig(createDockerComposeConfig("same-compose"));
 
         when(agentApplicationService.findById(TENANT_ID, appId)).thenReturn(existing);
+        when(agentApplicationService.save(eq(TENANT_ID), eq(updated))).thenReturn(updated);
 
-        assertThatThrownBy(() -> service.updateDeleteSteps(TENANT_ID, appId, List.of(createComposeDownStep(false))))
-                .isInstanceOf(DataValidationException.class)
-                .hasMessageContaining("pending for removal");
-    }
-
-    @Test
-    void updateDeleteSteps_doesNotCreateEvent() {
-        AgentApplicationId appId = new AgentApplicationId(UUID.randomUUID());
-        AgentApplication existing = newApplication(appId);
-
-        when(agentApplicationService.findById(TENANT_ID, appId)).thenReturn(existing);
-        when(agentApplicationService.save(eq(TENANT_ID), any())).thenAnswer(i -> i.getArgument(1));
-
-        service.updateDeleteSteps(TENANT_ID, appId, List.of(createComposeDownStep(true)));
+        service.save(updated, USER);
 
         verify(agentAppEventService, org.mockito.Mockito.never()).save(any(), any());
     }
@@ -185,7 +162,6 @@ class DefaultTbAgentApplicationServiceTest {
     void delete_success() {
         AgentApplicationId appId = new AgentApplicationId(UUID.randomUUID());
         AgentApplication app = newApplication(appId);
-        app.setDeleteSteps(List.of(createComposeDownStep(true)));
 
         service.delete(app, USER);
 
@@ -202,30 +178,10 @@ class DefaultTbAgentApplicationServiceTest {
     void delete_pendingDeletion_throwsException() {
         AgentApplication app = newApplication(new AgentApplicationId(UUID.randomUUID()));
         app.setPendingDeletion(true);
-        app.setDeleteSteps(List.of(createComposeDownStep(false)));
 
         assertThatThrownBy(() -> service.delete(app, USER))
                 .isInstanceOf(DataValidationException.class)
                 .hasMessageContaining("pending for removal");
-    }
-
-    @Test
-    void delete_noDeleteSteps_throwsValidationException() {
-        AgentApplication app = newApplication(new AgentApplicationId(UUID.randomUUID()));
-
-        assertThatThrownBy(() -> service.delete(app, USER))
-                .isInstanceOf(DataValidationException.class)
-                .hasMessageContaining("Delete steps must be configured");
-    }
-
-    @Test
-    void delete_emptyDeleteSteps_throwsValidationException() {
-        AgentApplication app = newApplication(new AgentApplicationId(UUID.randomUUID()));
-        app.setDeleteSteps(List.of());
-
-        assertThatThrownBy(() -> service.delete(app, USER))
-                .isInstanceOf(DataValidationException.class)
-                .hasMessageContaining("Delete steps must be configured");
     }
 
     // ==================== Helpers ====================
@@ -239,10 +195,10 @@ class DefaultTbAgentApplicationServiceTest {
         return app;
     }
 
-    private ComposeDownStep createComposeDownStep(boolean removeVolumes) {
-        ComposeDownStep step = new ComposeDownStep();
-        step.setId(UUID.randomUUID());
-        step.setRemoveVolumes(removeVolumes);
-        return step;
+    private DockerComposeConfig createDockerComposeConfig(String composeContent) {
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setProjectName("test-project");
+        config.setCompose(new ObjectMapper().valueToTree(composeContent));
+        return config;
     }
 }
