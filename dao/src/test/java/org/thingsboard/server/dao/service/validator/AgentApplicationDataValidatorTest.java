@@ -24,6 +24,7 @@ import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -171,6 +172,51 @@ class AgentApplicationDataValidatorTest {
     @Test
     void testValidateDataImpl_valid_thenOK() {
         AgentApplication app = createValidApplication();
+
+        assertDoesNotThrow(() -> validator.validateDataImpl(tenantId, app));
+    }
+
+    // ==================== Config validation tests ====================
+
+    @Test
+    void testValidateDataImpl_nullConfig_thenOK() {
+        AgentApplication app = createValidApplication();
+        app.setConfig(null);
+
+        assertDoesNotThrow(() -> validator.validateDataImpl(tenantId, app));
+    }
+
+    @Test
+    void testValidateDataImpl_dockerComposeConfig_nullProjectName_thenException() {
+        AgentApplication app = createValidApplication();
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setCompose(new com.fasterxml.jackson.databind.node.TextNode("version: '3'"));
+        app.setConfig(config);
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> validator.validateDataImpl(tenantId, app));
+        assertThat(exception.getMessage()).contains("project name");
+    }
+
+    @Test
+    void testValidateDataImpl_dockerComposeConfig_nullCompose_thenException() {
+        AgentApplication app = createValidApplication();
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setProjectName("my-project");
+        app.setConfig(config);
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> validator.validateDataImpl(tenantId, app));
+        assertThat(exception.getMessage()).contains("compose content");
+    }
+
+    @Test
+    void testValidateDataImpl_dockerComposeConfig_valid_thenOK() {
+        AgentApplication app = createValidApplication();
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setProjectName("my-project");
+        config.setCompose(new com.fasterxml.jackson.databind.node.TextNode("version: '3'"));
+        app.setConfig(config);
 
         assertDoesNotThrow(() -> validator.validateDataImpl(tenantId, app));
     }

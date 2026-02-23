@@ -99,7 +99,6 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
 
             logEntityActionService.logEntityAction(tenantId, applicationId, actionType, user, null, applicationId.toString());
         } catch (Exception e) {
-            // todo: revert pendingDeletion
             logEntityActionService.logEntityAction(tenantId, emptyId(EntityType.AGENT_APPLICATION), actionType, user, e, applicationId.toString());
             throw e;
         }

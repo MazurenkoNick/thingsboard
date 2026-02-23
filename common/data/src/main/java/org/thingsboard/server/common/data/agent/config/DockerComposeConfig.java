@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
@@ -44,6 +45,16 @@ public class DockerComposeConfig extends AgentAppConfig {
         copy.setCompose(this.compose != null ? this.compose.deepCopy() : null);
         copy.setRemoveVolumes(this.removeVolumes);
         return copy;
+    }
+
+    @Override
+    public void validate() {
+        if (projectName == null || projectName.isBlank()) {
+            throw new DataValidationException("Docker compose config project name must be specified!");
+        }
+        if (compose == null) {
+            throw new DataValidationException("Docker compose config compose content must be specified!");
+        }
     }
 
     @Override

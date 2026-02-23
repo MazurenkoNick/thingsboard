@@ -71,7 +71,9 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
         if (agentApplication.getName() != null && agentApplication.getName().length() > 255) {
             throw new DataValidationException("Agent application name length must be equal or shorter than 255!");
         }
-        // todo: validate config
+        if (agentApplication.getConfig() != null) {
+            agentApplication.getConfig().validate();
+        }
     }
 
     private void validateTemplate(AgentApplication agentApplication) {
