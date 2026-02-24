@@ -144,7 +144,7 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
             List<AgentAppStep> steps = resolveSteps(application, event.getActionType());
             Optional<AgentAppStep> nextStep = StepLinkedListUtils.getNextStep(event.getCurrentStepId(), steps);
             nextStep.ifPresentOrElse(
-                    step -> sendStep(event, application, step),
+                    step -> sendStep(event, application, step, steps.size()),
                     () -> finishEvent(tenantId, agentId, event, application)
             );
         } catch (Exception e) {
@@ -181,8 +181,9 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         inFlightEvent.ifPresent(event -> {
             log.info("[{}][{}] Resuming in-flight event {} for application {}", tenantId, agentId, event.getId(), application.getId());
             try {
-                AgentAppStep currentStep = resolveCurrentStep(application, event);
-                sendStep(event, application, currentStep);
+                List<AgentAppStep> steps = resolveSteps(application, event.getActionType());
+                AgentAppStep currentStep = resolveCurrentStep(steps, event);
+                sendStep(event, application, currentStep, steps.size());
             } catch (Exception e) {
                 log.error("[{}][{}] Failed to resume in-flight event {} for application {}, marking as ERROR",
                         tenantId, agentId, event.getId(), application.getId(), e);
@@ -193,8 +194,7 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         return inFlightEvent.isPresent();
     }
 
-    private AgentAppStep resolveCurrentStep(AgentApplication application, AgentAppEvent event) {
-        List<AgentAppStep> steps = resolveSteps(application, event.getActionType());
+    private AgentAppStep resolveCurrentStep(List<AgentAppStep> steps, AgentAppEvent event) {
         return Optional.ofNullable(StepLinkedListUtils.findByStepId(steps, event.getCurrentStepId()))
                 .orElseGet(() -> StepLinkedListUtils.findFirstStep(steps));
     }
@@ -222,7 +222,7 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
             List<AgentAppStep> steps = resolveSteps(application, event.getActionType());
             AgentAppStep firstStep = StepLinkedListUtils.findFirstStep(steps);
             log.trace("[{}][{}] Resolved {} steps for event {}, first step: {}", tenantId, agentId, steps.size(), event.getId(), firstStep.getId());
-            sendStep(event, application, firstStep);
+            sendStep(event, application, firstStep, steps.size());
         } catch (Exception e) {
             log.error("[{}][{}] Failed to dispatch event {}, marking as ERROR", tenantId, agentId, event.getId(), e);
             appEventService.updateStatus(event.getId(), AgentAppEventStatus.ERROR, null);
@@ -230,15 +230,15 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         }
     }
 
-    private void sendStep(AgentAppEvent event, AgentApplication application, AgentAppStep step) {
+    private void sendStep(AgentAppEvent event, AgentApplication application, AgentAppStep step, int totalSteps) {
         try {
             log.trace("[{}][{}] Sending step {} for event {}", application.getTenantId(), application.getAgentId(), step.getId(), event.getId());
-            ServerToAgent msg = AgentMsgConstructorUtils.buildAppCommand(event, application, step);
+            ServerToAgent msg = AgentMsgConstructorUtils.buildAppCommand(event, application, step, totalSteps);
             appEventService.updateStatus(event.getId(), AgentAppEventStatus.PENDING, step.getId());
             eventWatchdog.schedule(application, event, new AgentEventResender() {
                 @Override
                 public void resendCurrentStep(AgentAppEvent event, AgentApplication application, AgentAppStep step) {
-                    sendStep(event, application, step);
+                    sendStep(event, application, step, totalSteps);
                 }
 
                 @Override

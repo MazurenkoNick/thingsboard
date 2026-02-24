@@ -49,6 +49,7 @@ message AppCommand {
   string appName = 4;
   ConfigType configType = 5;
   map<string, string> metadata = 6;
+  int64 totalSteps = 7;
 }
 
 enum AppCommandAction {

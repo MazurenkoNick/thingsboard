@@ -43,7 +43,7 @@ public class AgentMsgConstructorUtils {
                 .build();
     }
 
-    public static ServerToAgent buildAppCommand(AgentAppEvent event, AgentApplication application, AgentAppStep step) {
+    public static ServerToAgent buildAppCommand(AgentAppEvent event, AgentApplication application, AgentAppStep step, int totalSteps) {
         AppCommand.Builder builder = AppCommand.newBuilder()
                 .setCommandId(CommandId.newBuilder()
                         .setIdMSB(event.getId().getId().getMostSignificantBits())
@@ -51,7 +51,8 @@ public class AgentMsgConstructorUtils {
                         .build())
                 .setAction(mapAction(event.getActionType()))
                 .setAppName(application.getName() != null ? application.getName() : "")
-                .setConfigType(mapConfigType(application.getConfig().getType()));
+                .setConfigType(mapConfigType(application.getConfig().getType()))
+                .setTotalSteps(totalSteps);
 
         if (step != null) {
             builder.putAllMetadata(buildStepMetadata(step, application));
