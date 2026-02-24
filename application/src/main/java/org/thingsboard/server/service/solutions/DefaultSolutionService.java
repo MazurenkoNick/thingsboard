@@ -39,6 +39,7 @@ import jakarta.annotation.PreDestroy;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -122,8 +123,8 @@ import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.grouppermission.GroupPermissionService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rule.RuleChainService;
-import org.thingsboard.server.dao.subscription.SubscriptionService;
 import org.thingsboard.server.dao.scheduler.SchedulerEventService;
+import org.thingsboard.server.dao.subscription.SubscriptionService;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.exception.ThingsboardRuntimeException;
@@ -574,13 +575,13 @@ public class DefaultSolutionService implements SolutionService {
             }
 
             return new SolutionInstallResponse(ctx.getSolutionInstructions(), true);
-        } catch (SubscriptionException se) {
-            log.error("[{}][{}] Failed to provision", tenantId, solutionId, se);
-            rollback(tenantId, solutionId, ctx, se);
-            throw se;
         } catch (Throwable e) {
             log.error("[{}][{}] Failed to provision", tenantId, solutionId, e);
             rollback(tenantId, solutionId, ctx, e);
+            Throwable cause = ExceptionUtils.getRootCause(e);
+            if (cause instanceof SubscriptionException se) {
+                throw se;
+            }
             return new SolutionInstallResponse(ctx.getSolutionInstructions(), false);
         }
     }
