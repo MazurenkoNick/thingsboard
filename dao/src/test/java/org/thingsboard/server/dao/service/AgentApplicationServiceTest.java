@@ -38,6 +38,9 @@ import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.exception.DataValidationException;
 
+import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -181,6 +184,64 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         Assert.assertNull(notFound);
 
         agentApplicationService.delete(tenantId, app.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testSaveWithDockerComposeConfig_projectNameIsGenerated() {
+        Agent agent = createAgent("Agent for compose config");
+        AgentAppTemplate template = createTemplate();
+
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setCompose(JacksonUtil.newObjectNode().put("version", "3"));
+        // projectName is intentionally NOT set — it must be resolved by the service
+
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.EDGE);
+        app.setTemplateId(template.getId());
+        app.setConfig(config);
+
+        AgentApplication saved = agentApplicationService.save(tenantId, app);
+        Assert.assertNotNull(saved);
+        Assert.assertNotNull("Project name should be auto-generated on create",
+                ((DockerComposeConfig) saved.getConfig()).getProjectName());
+        Assert.assertFalse(((DockerComposeConfig) saved.getConfig()).getProjectName().isBlank());
+
+        agentApplicationService.delete(tenantId, saved.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testUpdateWithDockerComposeConfig_projectNameIsPreserved() {
+        Agent agent = createAgent("Agent for compose update");
+        AgentAppTemplate template = createTemplate();
+
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setCompose(JacksonUtil.newObjectNode().put("version", "3"));
+
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.EDGE);
+        app.setTemplateId(template.getId());
+        app.setConfig(config);
+
+        AgentApplication saved = agentApplicationService.save(tenantId, app);
+        String originalProjectName = ((DockerComposeConfig) saved.getConfig()).getProjectName();
+        Assert.assertNotNull(originalProjectName);
+
+        // Update the app with a new compose content but no projectName
+        DockerComposeConfig updatedConfig = new DockerComposeConfig();
+        updatedConfig.setCompose(JacksonUtil.newObjectNode().put("version", "3.8"));
+
+        saved.setConfig(updatedConfig);
+        saved.setName("updated-name");
+        AgentApplication updated = agentApplicationService.save(tenantId, saved);
+
+        String updatedProjectName = ((DockerComposeConfig) updated.getConfig()).getProjectName();
+        Assert.assertEquals("Project name should be preserved on update", originalProjectName, updatedProjectName);
+
+        agentApplicationService.delete(tenantId, updated.getId());
         agentService.deleteAgent(tenantId, agent.getId());
     }
 

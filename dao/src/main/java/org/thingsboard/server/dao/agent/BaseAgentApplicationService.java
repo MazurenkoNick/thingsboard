@@ -64,8 +64,11 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
     @Transactional
     public AgentApplication save(TenantId tenantId, AgentApplication agentApplication) {
         log.trace("Executing saveAgentApplication [{}]", agentApplication);
-        AgentApplication old = agentApplicationValidator.validate(agentApplication, app -> tenantId);
+        AgentApplication old = agentApplication.getId() != null
+                ? agentApplicationDao.findById(tenantId, agentApplication.getUuidId())
+                : null;
         resolveProjectName(agentApplication, old);
+        agentApplicationValidator.validate(agentApplication, app -> tenantId);
         AgentApplication saved = agentApplicationDao.save(tenantId, agentApplication);
         publishEvictEvent(new AgentApplicationCacheEvictEvent(saved.getId()));
         eventPublisher.publishEvent(SaveEntityEvent.builder()
