@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.server.actors.ActorSystemContext;
 import org.thingsboard.server.common.msg.queue.ServiceType;
 import org.thingsboard.server.common.msg.queue.TbCallback;
+import org.thingsboard.server.gen.transport.TransportProtos.AgentAppEventNotificationProto;
 import org.thingsboard.server.gen.transport.TransportProtos.ToAgentNotificationMsg;
 import org.thingsboard.server.queue.TbQueueConsumer;
 import org.thingsboard.server.queue.common.TbProtoQueueMsg;
@@ -89,13 +90,18 @@ public class DefaultTbAgentConsumerService extends AbstractConsumerService<ToAge
         try {
             ToAgentNotificationMsg notification = msg.getValue();
             if (notification.hasAgentAppEventNotification()) {
-                ctx.getAgentEventProcessor().onEventNotification(notification.getAgentAppEventNotification());
+                processAgentEventApp(notification);
             }
             callback.onSuccess();
         } catch (Exception e) {
             log.warn("Failed to process agent notification message", e);
             callback.onFailure(e);
         }
+    }
+
+    private void processAgentEventApp(ToAgentNotificationMsg notification) {
+        AgentAppEventNotificationProto agentAppEventNotification = notification.getAgentAppEventNotification();
+        ctx.getAgentEventProcessor().onEventNotification(agentAppEventNotification);
     }
 
     @Override

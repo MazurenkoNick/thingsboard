@@ -39,6 +39,7 @@ import org.thingsboard.server.common.data.ResourceType;
 import org.thingsboard.server.common.data.TbResourceInfo;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.TenantProfile;
+import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.edge.EdgeEventActionType;
@@ -767,6 +768,7 @@ public class DefaultTbClusterService implements TbClusterService {
                         .setEventIdMSB(event.getId().getId().getMostSignificantBits())
                         .setEventIdLSB(event.getId().getId().getLeastSignificantBits())
                         .setActionType(event.getActionType().name())
+                        .setDelivered(event.getDeliveryState() == AgentAppEventDeliveryState.DELIVERED)
                         .build();
                 ToAgentNotificationMsg msg = ToAgentNotificationMsg.newBuilder()
                         .setAgentAppEventNotification(proto)

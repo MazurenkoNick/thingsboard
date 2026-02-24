@@ -28,11 +28,4 @@ public class ComposeStartStep extends AgentAppStep {
     public AgentAppStepType getType() {
         return AgentAppStepType.COMPOSE_START;
     }
-
-    @Override
-    public AgentAppStep copy() {
-        ComposeStartStep copy = new ComposeStartStep();
-        copyBaseFields(copy);
-        return copy;
-    }
 }

@@ -51,16 +51,4 @@ public class ComposeTypeChoiceStep extends AgentAppStep {
     public Set<String> getComposeTypes() {
         return composeTemplates.keySet();
     }
-
-    @Override
-    public AgentAppStep copy() {
-        ComposeTypeChoiceStep copy = new ComposeTypeChoiceStep();
-        copyBaseFields(copy);
-        if (this.composeTemplates != null) {
-            Map<String, JsonNode> templatesCopy = new LinkedHashMap<>();
-            this.composeTemplates.forEach((key, value) -> templatesCopy.put(key, value.deepCopy()));
-            copy.setComposeTemplates(templatesCopy);
-        }
-        return copy;
-    }
 }

@@ -24,6 +24,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.ErrorOrigin;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
@@ -65,6 +66,7 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
     private final AgentApplicationService appService;
     private final AgentEventWatchdog eventWatchdog;
     private final AgentAppEventStepsResolver eventStepsResolver;
+    private final AgentEventErrorHandler eventErrorHandler;
 
     @Override
     public void onEventNotification(AgentAppEventNotificationProto notification) {
@@ -74,6 +76,10 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         AgentApplication application = appService.findById(tenantId, applicationId);
 
         log.trace("[{}][{}] Processing agent app event notification for application {}", tenantId, agentId, application);
+        if (notification.getDelivered()) {
+            resumeEventOrProcessNext(tenantId, agentId, application);
+            return;
+        }
         processNextEventForApp(tenantId, agentId, application);
     }
 
@@ -82,46 +88,19 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         log.trace("[{}] Resuming events on reconnect for agent", agentId);
         forEachApplication(tenantId, agentId, app -> {
             try {
-                log.trace("[{}][{}] Checking in-flight events for application {}", tenantId, agentId, app.getId());
-                boolean resumed = resumeInFlightEvent(tenantId, agentId, app);
-                if (!resumed) {
-                    log.trace("[{}][{}] No in-flight event found, dispatching next event for application {}", tenantId, agentId, app.getId());
-                    dispatchNextEventIfPossible(tenantId, agentId, app);
-                }
+                resumeEventOrProcessNext(tenantId, agentId, app);
             } catch (Exception e) {
                 log.warn("[{}][{}] Failed to resume events on agent reconnection for application {}", tenantId, agentId, app.getId(), e);
             }
         });
     }
 
-    @Override
-    public void processAfterError(TenantId tenantId, AgentId agentId, AgentAppEventId failedEventId) {
-        log.trace("[{}][{}] Processing after error for event {}", tenantId, agentId, failedEventId);
-        eventWatchdog.cancel(agentId, failedEventId);
-
-        AgentAppEvent event = appEventService.findById(tenantId, failedEventId);
-        if (event != null && event.getActionType() == AgentAppEventActionType.DELETE) {
-            rollbackPendingDeletion(tenantId, event.getApplicationId());
-        }
-
-        AgentApplication application = appService.findByEventId(tenantId, failedEventId);
-        if (application == null) {
-            log.warn("[{}][{}] Application not found for failed event {}, skipping next event dispatch", tenantId, agentId, failedEventId);
-            return;
-        }
-        processNextEventForApp(tenantId, agentId, application);
-    }
-
-    private void rollbackPendingDeletion(TenantId tenantId, AgentApplicationId applicationId) {
-        try {
-            AgentApplication app = appService.findById(tenantId, applicationId);
-            if (app != null && app.isPendingDeletion()) {
-                app.setPendingDeletion(false);
-                appService.save(tenantId, app);
-                log.info("[{}] Rolled back pendingDeletion for application {}", tenantId, applicationId);
-            }
-        } catch (Exception e) {
-            log.error("[{}] Failed to rollback pendingDeletion for application {}", tenantId, applicationId, e);
+    private void resumeEventOrProcessNext(TenantId tenantId, AgentId agentId, AgentApplication app) {
+        log.trace("[{}][{}] Checking in-flight events for application {}", tenantId, agentId, app.getId());
+        boolean resumed = resumeInFlightEvent(tenantId, agentId, app);
+        if (!resumed) {
+            log.trace("[{}][{}] No in-flight event found, dispatching next event for application {}", tenantId, agentId, app.getId());
+            dispatchNextEventIfPossible(tenantId, agentId, app);
         }
     }
 
@@ -150,8 +129,7 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         } catch (Exception e) {
             log.error("[{}][{}] Failed to process next step for event {}, marking as ERROR",
                     tenantId, agentId, event.getId(), e);
-            appEventService.updateStatus(event.getId(), AgentAppEventStatus.ERROR, event.getCurrentStepId());
-            processAfterError(tenantId, agentId, event.getId());
+            eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.SERVER);
         }
     }
 
@@ -166,16 +144,6 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         processNextEventForApp(tenantId, agentId, application);
     }
 
-    private void forEachApplication(TenantId tenantId, AgentId agentId, Consumer<AgentApplication> action) {
-        PageLink pageLink = new PageLink(100);
-        PageData<AgentApplication> pageData;
-        do {
-            pageData = appService.findByAgentId(tenantId, agentId, pageLink);
-            pageData.getData().forEach(action);
-            pageLink = pageLink.nextPageLink();
-        } while (pageData.hasNext());
-    }
-
     private boolean resumeInFlightEvent(TenantId tenantId, AgentId agentId, AgentApplication application) {
         var inFlightEvent = appEventService.findActiveDeliveredByApplicationId(application.getId());
         inFlightEvent.ifPresent(event -> {
@@ -187,8 +155,7 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
             } catch (Exception e) {
                 log.error("[{}][{}] Failed to resume in-flight event {} for application {}, marking as ERROR",
                         tenantId, agentId, event.getId(), application.getId(), e);
-                appEventService.updateStatus(event.getId(), AgentAppEventStatus.ERROR, event.getCurrentStepId());
-                processAfterError(tenantId, agentId, event.getId());
+                eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.SERVER);
             }
         });
         return inFlightEvent.isPresent();
@@ -225,8 +192,7 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
             sendStep(event, application, firstStep, steps.size());
         } catch (Exception e) {
             log.error("[{}][{}] Failed to dispatch event {}, marking as ERROR", tenantId, agentId, event.getId(), e);
-            appEventService.updateStatus(event.getId(), AgentAppEventStatus.ERROR, null);
-            processAfterError(tenantId, agentId, event.getId());
+            eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.SERVER);
         }
     }
 
@@ -235,24 +201,12 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
             log.trace("[{}][{}] Sending step {} for event {}", application.getTenantId(), application.getAgentId(), step.getId(), event.getId());
             ServerToAgent msg = AgentMsgConstructorUtils.buildAppCommand(event, application, step, totalSteps);
             appEventService.updateStatus(event.getId(), AgentAppEventStatus.PENDING, step.getId());
-            eventWatchdog.schedule(application, event, new AgentEventResender() {
-                @Override
-                public void resendCurrentStep(AgentAppEvent event, AgentApplication application, AgentAppStep step) {
-                    sendStep(event, application, step, totalSteps);
-                }
-
-                @Override
-                public void onError(AgentAppEventId eventId, AgentApplication application) {
-                    appEventService.updateStatus(eventId, AgentAppEventStatus.ERROR, null);
-                    processAfterError(application.getTenantId(), application.getAgentId(), event.getId());
-                }
-            });
+            eventWatchdog.schedule(application, event, new DefaultAgentEventResender(totalSteps, event));
             trySend(application, event, msg);
         } catch (Exception e) {
             log.error("[{}][{}] Failed to send step {} for event {}, marking as ERROR",
                     application.getTenantId(), application.getAgentId(), step.getId(), event.getId(), e);
-            appEventService.updateStatus(event.getId(), AgentAppEventStatus.ERROR, step.getId());
-            processAfterError(application.getTenantId(), application.getAgentId(), event.getId());
+            eventErrorHandler.onFailure(application.getTenantId(), application.getAgentId(), event.getId(), ErrorOrigin.SERVER);
         }
     }
 
@@ -286,5 +240,35 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
 
     private List<AgentAppStep> resolveSteps(AgentApplication application, AgentAppEventActionType actionType) {
         return eventStepsResolver.resolveSteps(application, actionType);
+    }
+
+    private void forEachApplication(TenantId tenantId, AgentId agentId, Consumer<AgentApplication> action) {
+        PageLink pageLink = new PageLink(100);
+        PageData<AgentApplication> pageData;
+        do {
+            pageData = appService.findByAgentId(tenantId, agentId, pageLink);
+            pageData.getData().forEach(action);
+            pageLink = pageLink.nextPageLink();
+        } while (pageData.hasNext());
+    }
+
+    private class DefaultAgentEventResender implements AgentEventResender {
+        private final int totalSteps;
+        private final AgentAppEvent event;
+
+        public DefaultAgentEventResender(int totalSteps, AgentAppEvent event) {
+            this.totalSteps = totalSteps;
+            this.event = event;
+        }
+
+        @Override
+        public void resendCurrentStep(AgentAppEvent event, AgentApplication application, AgentAppStep step) {
+            sendStep(event, application, step, totalSteps);
+        }
+
+        @Override
+        public void onError(AgentAppEventId eventId, AgentApplication application) {
+            eventErrorHandler.onFailure(application.getTenantId(), application.getAgentId(), event.getId(), ErrorOrigin.SERVER);
+        }
     }
 }

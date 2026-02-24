@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
-import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.ErrorOrigin;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -33,6 +33,7 @@ import org.thingsboard.server.gen.agent.v1.CommandId;
 import org.thingsboard.server.gen.agent.v1.CommandProgress;
 import org.thingsboard.server.gen.agent.v1.CommandResult;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.agent.event.AgentEventErrorHandler;
 import org.thingsboard.server.service.agent.event.AgentEventProcessor;
 
 import java.util.UUID;
@@ -45,6 +46,7 @@ public class CommandFeedbackHandler {
 
     private final AgentAppEventService appEventService;
     private final AgentEventProcessor agentEventProcessor;
+    private final AgentEventErrorHandler eventErrorHandler;
     private final AgentApplicationService appService;
 
     public void onCommandAck(TenantId tenantId, AgentId agentId, CommandAck ack) {
@@ -54,8 +56,7 @@ public class CommandFeedbackHandler {
         if (ack.getStatus() == AckStatus.ACCEPTED) {
             appEventService.updateStatus(eventId, AgentAppEventStatus.QUEUED, null);
         } else {
-            appEventService.updateStatus(eventId, AgentAppEventStatus.ERROR, null);
-            agentEventProcessor.processAfterError(tenantId, agentId, eventId);
+            eventErrorHandler.onFailure(tenantId, agentId, eventId, ErrorOrigin.AGENT);
         }
     }
 
@@ -75,8 +76,7 @@ public class CommandFeedbackHandler {
             return;
         }
         if (!result.getSuccess()) {
-            appEventService.updateStatus(eventId, AgentAppEventStatus.ERROR, event.getCurrentStepId());
-            agentEventProcessor.processAfterError(tenantId, agentId, event.getId());
+            eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.AGENT);
             return;
         }
         if (event.getActionType() == AgentAppEventActionType.DELETE) {
