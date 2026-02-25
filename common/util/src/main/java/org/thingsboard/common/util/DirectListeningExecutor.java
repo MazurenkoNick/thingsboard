@@ -28,15 +28,16 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.rule.engine;
+package org.thingsboard.common.util;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import org.thingsboard.common.util.ListeningExecutor;
 
 import java.util.concurrent.Callable;
 
-public class TestDbCallbackExecutor implements ListeningExecutor {
+public enum DirectListeningExecutor implements ListeningExecutor {
+
+    INSTANCE;
 
     @Override
     public <T> ListenableFuture<T> executeAsync(Callable<T> task) {
