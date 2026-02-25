@@ -51,6 +51,8 @@ public class CommandFeedbackHandler {
     private final AgentApplicationService appService;
     private final AgentContextComponent agentCtx;
 
+    // todo: handle errors for each onCommand*
+
     public void onCommandAck(TenantId tenantId, AgentId agentId, CommandAck ack) {
         AgentAppEventId eventId = toEventId(ack.getCommandId());
         log.trace("[{}][{}] Received CommandAck for event {}, status: {}", tenantId, agentId, eventId, ack.getStatus());

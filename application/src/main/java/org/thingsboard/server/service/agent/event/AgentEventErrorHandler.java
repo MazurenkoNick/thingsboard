@@ -26,6 +26,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.ErrorOrigin;
+import org.thingsboard.server.common.data.agent.RollbackEventMeta;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -117,7 +118,9 @@ public class AgentEventErrorHandler {
         rollbackEvent.setApplicationId(failedEvent.getApplicationId());
         rollbackEvent.setActionType(AgentAppEventActionType.ROLLBACK);
         rollbackEvent.setDeliveryState(AgentAppEventDeliveryState.DELIVERED);
+        rollbackEvent.setStatus(AgentAppEventStatus.PENDING);
         rollbackEvent.setUpdatedTime(System.currentTimeMillis());
+        rollbackEvent.setMetadata(new RollbackEventMeta(failedEvent.getId()));
         return rollbackEvent;
     }
 }

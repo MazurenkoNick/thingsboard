@@ -26,6 +26,7 @@ import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
+import org.thingsboard.server.dao.service.DataValidator;
 
 import java.util.List;
 import java.util.Optional;
@@ -43,11 +44,15 @@ public class BaseAgentAppEventService implements AgentAppEventService {
     private AgentAppEventDao agentAppEventDao;
 
     @Autowired
+    private DataValidator<AgentAppEvent> agentAppEventValidator;
+
+    @Autowired
     private ApplicationEventPublisher eventPublisher;
 
     @Override
     public AgentAppEvent save(TenantId tenantId, AgentAppEvent event) {
         log.trace("Executing saveAgentAppEvent [{}]", event);
+        agentAppEventValidator.validate(event, AgentAppEvent::getTenantId);
         AgentAppEvent saved = agentAppEventDao.save(event.getTenantId(), event);
         eventPublisher.publishEvent(SaveEntityEvent.builder()
                 .tenantId(saved.getTenantId())

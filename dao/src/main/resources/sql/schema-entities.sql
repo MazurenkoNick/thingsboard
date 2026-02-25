@@ -811,6 +811,7 @@ CREATE TABLE IF NOT EXISTS agent_app_event (
     status varchar(32),
     current_step_id uuid,
     updated_time bigint NOT NULL,
+    metadata jsonb,
     CONSTRAINT fk_agent_app_event_application FOREIGN KEY (application_id) REFERENCES agent_application(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS idx_agent_app_event_app_delivery ON agent_app_event(application_id, delivery_state);

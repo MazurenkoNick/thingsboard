@@ -18,6 +18,7 @@ package org.thingsboard.server.service.agent;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.RollbackEventMeta;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
@@ -60,6 +61,9 @@ public class AgentMsgConstructorUtils {
                     .setIdMSB(step.getId().getMostSignificantBits())
                     .setIdLSB(step.getId().getLeastSignificantBits())
                     .build());
+        }
+        if (event.getMetadata() instanceof RollbackEventMeta rollbackMeta && rollbackMeta.getFailedEventId() != null) {
+            builder.putMetadata("failedCommandId", rollbackMeta.getFailedEventId().getId().toString());
         }
         return ServerToAgent.newBuilder()
                 .setAppCommand(builder.build())

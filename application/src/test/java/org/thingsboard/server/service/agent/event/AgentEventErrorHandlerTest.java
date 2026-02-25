@@ -15,18 +15,21 @@
  */
 package org.thingsboard.server.service.agent.event;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.ErrorOrigin;
+import org.thingsboard.server.common.data.agent.RollbackEventMeta;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -39,6 +42,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -54,9 +58,18 @@ class AgentEventErrorHandlerTest {
     private AgentEventWatchdog eventWatchdog;
     @Mock
     private AgentEventProcessor agentEventProcessor;
+    @Mock
+    private TransactionTemplate transactionTemplate;
 
     @InjectMocks
     private AgentEventErrorHandler errorHandler;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(transactionTemplate.execute(any())).thenAnswer(invocation ->
+                invocation.<org.springframework.transaction.support.TransactionCallback<?>>getArgument(0)
+                        .doInTransaction(null));
+    }
 
     private static final TenantId TENANT_ID = TenantId.fromUUID(UUID.randomUUID());
     private static final AgentId AGENT_ID = new AgentId(UUID.randomUUID());
@@ -187,6 +200,9 @@ class AgentEventErrorHandlerTest {
         assertThat(rollback.getApplicationId()).isEqualTo(APP_ID);
         assertThat(rollback.getActionType()).isEqualTo(AgentAppEventActionType.ROLLBACK);
         assertThat(rollback.getDeliveryState()).isEqualTo(AgentAppEventDeliveryState.DELIVERED);
+        assertThat(rollback.getStatus()).isEqualTo(AgentAppEventStatus.PENDING);
+        assertThat(rollback.getMetadata()).isInstanceOf(RollbackEventMeta.class);
+        assertThat(((RollbackEventMeta) rollback.getMetadata()).getFailedEventId()).isEqualTo(EVENT_ID);
     }
 
     @Test

@@ -43,6 +43,7 @@ public class AgentAppEvent extends BaseData<AgentAppEventId> implements HasId<Ag
     private AgentAppEventStatus status;
     private UUID currentStepId;
     private long updatedTime;
+    private AgentAppEventMeta metadata;
 
     public AgentAppEvent() {
         super();
@@ -61,6 +62,7 @@ public class AgentAppEvent extends BaseData<AgentAppEventId> implements HasId<Ag
         this.status = event.getStatus();
         this.currentStepId = event.getCurrentStepId();
         this.updatedTime = event.getUpdatedTime();
+        this.metadata = event.getMetadata();
     }
 
     @Schema(description = "JSON object with the Agent App Event Id.")
