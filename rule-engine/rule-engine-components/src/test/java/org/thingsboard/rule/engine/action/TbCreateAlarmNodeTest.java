@@ -44,7 +44,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.ListeningExecutor;
-import org.thingsboard.rule.engine.TestDbCallbackExecutor;
+import org.thingsboard.common.util.DirectListeningExecutor;
 import org.thingsboard.rule.engine.api.RuleEngineAlarmService;
 import org.thingsboard.rule.engine.api.ScriptEngine;
 import org.thingsboard.rule.engine.api.TbContext;
@@ -114,7 +114,7 @@ class TbCreateAlarmNodeTest {
 
     @BeforeEach
     void before() {
-        dbExecutor = new TestDbCallbackExecutor();
+        dbExecutor = DirectListeningExecutor.INSTANCE;
         metadata = new TbMsgMetaData();
         config = new TbCreateAlarmNodeConfiguration();
 
