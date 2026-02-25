@@ -15,10 +15,12 @@
  */
 package org.thingsboard.server.service.agent;
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
 import jakarta.annotation.PostConstruct;
@@ -39,6 +41,7 @@ import org.thingsboard.server.service.agent.session.BaseAgentSession;
 
 import java.util.Optional;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Service
@@ -51,7 +54,7 @@ public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBas
     private int writePoolSize;
 
     private final AgentInboundMessageDispatcher inboundMessageDispatcher;
-    private final AgentStateService agentStateService; // todo: finish
+    private final AgentStateService agentStateService;
     private final AgentSessionRegistry sessions;
 
     private ListeningExecutorService writer;
@@ -74,16 +77,21 @@ public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBas
                 (ServerCallStreamObserver<ServerToAgent>) responseObserver;
         
         AtomicReference<AgentSession> sessionRef = new AtomicReference<>();
-        
+        AtomicBoolean initializing = new AtomicBoolean(false);
+
         StreamObserver<AgentToServer> requestObserver = new StreamObserver<>() {
             @Override
             public void onNext(AgentToServer msg) {
                 AgentSession session = sessionRef.get();
-                if (session == null) {
-                    tryInitSession(msg, responseObserver).ifPresent(sessionRef::set);
-                    session = sessionRef.get();
+                if (session != null) {
+                    processInboundMessage(session, msg);
+                    return;
                 }
-                processInboundMessage(session, msg);
+                if (initializing.compareAndSet(false, true)) {
+                    tryInitSession(msg, serverCallStreamObserver, sessionRef, initializing);
+                } else {
+                    log.trace("Dropping message while session is initializing");
+                }
             }
 
             @Override
@@ -145,23 +153,60 @@ public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBas
                 .build());
     }
 
-    private Optional<BaseAgentSession> tryInitSession(AgentToServer msg, StreamObserver<ServerToAgent> observer) {
+    private void tryInitSession(AgentToServer msg, ServerCallStreamObserver<ServerToAgent> responseObserver,
+                                AtomicReference<AgentSession> sessionRef, AtomicBoolean initializing) {
         if (!msg.hasHello()) {
-            observer.onError(Status.UNAUTHENTICATED
+            initializing.set(false);
+            responseObserver.onError(Status.UNAUTHENTICATED
                     .withDescription("Hello Message must come before any other message")
                     .asRuntimeException());
-            return Optional.empty();
+            return;
         }
-        BaseAgentSession session = new BaseAgentSession(writer, (ServerCallStreamObserver<ServerToAgent>) observer);
+        ensureStateInit(msg, responseObserver, sessionRef, initializing);
+    }
 
-        Optional<Status> err = agentStateService.onConnected(session, msg.getHello());
-        if (err.isPresent()) {
-            StatusRuntimeException e = err.get().asRuntimeException();
-            log.warn("The state couldn't be initialized", e);
-            observer.onError(e);
-            return Optional.empty();
+    private void ensureStateInit(AgentToServer msg, ServerCallStreamObserver<ServerToAgent> responseObserver,
+                                 AtomicReference<AgentSession> sessionRef, AtomicBoolean initializing) {
+        BaseAgentSession session = new BaseAgentSession(writer, responseObserver);
+        ListenableFuture<Optional<Status>> future;
+        try {
+            future = agentStateService.onConnected(session, msg.getHello());
+        } catch (Exception e) {
+            handleInitFailure(initializing, responseObserver, e);
+            return;
         }
+        Futures.addCallback(future, new FutureCallback<>() {
+            @Override
+            public void onSuccess(Optional<Status> optErr) {
+                handleInitSuccess(responseObserver, sessionRef, session, optErr, initializing);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                handleInitFailure(initializing, responseObserver, t);
+            }
+        }, MoreExecutors.directExecutor());
+    }
+
+    private void handleInitSuccess(ServerCallStreamObserver<ServerToAgent> responseObserver,
+                                   AtomicReference<AgentSession> sessionRef, BaseAgentSession session,
+                                   Optional<Status> optErr, AtomicBoolean initializing) {
+        if (optErr.isPresent()) {
+            log.warn("The state couldn't be initialized: {}", optErr.get());
+            initializing.set(false);
+            responseObserver.onError(optErr.get().asRuntimeException());
+            return;
+        }
+        sessionRef.set(session);
         session.push(AgentMsgConstructorUtils.helloSuccessResponse());
-        return Optional.of(session);
+    }
+
+    private void handleInitFailure(AtomicBoolean initializing, StreamObserver<ServerToAgent> responseObserver, Throwable t) {
+        log.error("Failed to initialize agent session", t);
+        initializing.set(false);
+        responseObserver.onError(Status.INTERNAL
+                .withDescription("Failed to initialize session")
+                .withCause(t)
+                .asRuntimeException());
     }
 }

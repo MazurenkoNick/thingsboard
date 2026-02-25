@@ -15,6 +15,7 @@
  */
 package org.thingsboard.server.service.agent;
 
+import com.google.common.util.concurrent.ListeningExecutorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -48,6 +49,7 @@ public class CommandFeedbackHandler {
     private final AgentEventProcessor agentEventProcessor;
     private final AgentEventErrorHandler eventErrorHandler;
     private final AgentApplicationService appService;
+    private final AgentContextComponent agentCtx;
 
     public void onCommandAck(TenantId tenantId, AgentId agentId, CommandAck ack) {
         AgentAppEventId eventId = toEventId(ack.getCommandId());
@@ -56,7 +58,7 @@ public class CommandFeedbackHandler {
         if (ack.getStatus() == AckStatus.ACCEPTED) {
             appEventService.updateStatus(eventId, AgentAppEventStatus.QUEUED, null);
         } else {
-            eventErrorHandler.onFailure(tenantId, agentId, eventId, ErrorOrigin.AGENT);
+            getExecutor().submit(() -> eventErrorHandler.onFailure(tenantId, agentId, eventId, ErrorOrigin.AGENT));
         }
     }
 
@@ -76,7 +78,7 @@ public class CommandFeedbackHandler {
             return;
         }
         if (!result.getSuccess()) {
-            eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.AGENT);
+            getExecutor().submit(() -> eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.AGENT));
             return;
         }
         if (event.getActionType() == AgentAppEventActionType.DELETE) {
@@ -84,7 +86,11 @@ public class CommandFeedbackHandler {
             return;
         }
         appEventService.updateStatus(eventId, AgentAppEventStatus.PROCESSING, null);
-        agentEventProcessor.processNextStepOrFinish(tenantId, agentId, event);
+        getExecutor().submit(() -> agentEventProcessor.processNextStepOrFinish(tenantId, agentId, event));
+    }
+
+    private ListeningExecutorService getExecutor() {
+        return agentCtx.getAgentEventExecutor();
     }
 
     private AgentAppEventId toEventId(CommandId commandId) {

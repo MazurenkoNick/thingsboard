@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
@@ -43,25 +43,40 @@ public class AgentEventErrorHandler {
     private final AgentAppEventService appEventService;
     private final AgentApplicationService appService;
     private final AgentEventWatchdog eventWatchdog;
-
     @Lazy
     private final AgentEventProcessor agentEventProcessor;
+    private final TransactionTemplate transactionTemplate;
 
-    @Transactional
     public void onFailure(TenantId tenantId, AgentId agentId, AgentAppEventId failedEventId, ErrorOrigin errorOrigin) {
-        log.trace("[{}][{}] Processing after error for event {}", tenantId, agentId, failedEventId);
-        markEventErrorAndCancelWatchdog(agentId, failedEventId);
-
-        AgentAppEvent event = appEventService.findById(tenantId, failedEventId);
-
-        if (shouldRollbackPendingDeletion(event)) {
-            rollbackPendingDeletion(tenantId, event.getApplicationId());
-        } else if (shouldEnqueueRollbackEvent(event, errorOrigin)) {
-            AgentAppEvent rollbackEvent = buildRollbackEvent(tenantId, event);
-            appEventService.save(tenantId, rollbackEvent);
-            return;
+        try {
+            boolean shouldDispatchNext = doOnFailure(tenantId, agentId, failedEventId, errorOrigin);
+            eventWatchdog.cancel(agentId, failedEventId);
+            if (shouldDispatchNext) {
+                dispatchNextIfAppExists(tenantId, agentId, failedEventId);
+            }
+        } catch (Exception e) {
+            appEventService.updateStatus(failedEventId, AgentAppEventStatus.ERROR, null);
+            log.error("[{}][{}] Failed to process error for event {}", tenantId, agentId, failedEventId, e);
         }
-        dispatchNextIfAppExists(tenantId, agentId, failedEventId);
+    }
+
+    private boolean doOnFailure(TenantId tenantId, AgentId agentId, AgentAppEventId failedEventId, ErrorOrigin errorOrigin) {
+        return Boolean.TRUE.equals(transactionTemplate.execute(status -> {
+            log.trace("[{}][{}] Processing after error for event {}", tenantId, agentId, failedEventId);
+
+            appEventService.updateStatus(failedEventId, AgentAppEventStatus.ERROR, null);
+            boolean dispatchNextEvent = true;
+
+            AgentAppEvent event = appEventService.findById(tenantId, failedEventId);
+            if (shouldRollbackPendingDeletion(event)) {
+                rollbackPendingDeletion(tenantId, event.getApplicationId());
+            } else if (shouldEnqueueRollbackEvent(event, errorOrigin)) {
+                appEventService.save(tenantId, buildRollbackEvent(tenantId, event));
+                dispatchNextEvent = false;
+            }
+
+            return dispatchNextEvent;
+        }));
     }
 
     private boolean shouldEnqueueRollbackEvent(AgentAppEvent event, ErrorOrigin errorOrigin) {
@@ -94,11 +109,6 @@ public class AgentEventErrorHandler {
         } catch (Exception e) {
             log.error("[{}] Failed to rollback pendingDeletion for application {}", tenantId, applicationId, e);
         }
-    }
-
-    private void markEventErrorAndCancelWatchdog(AgentId agentId, AgentAppEventId failedEventId) {
-        appEventService.updateStatus(failedEventId, AgentAppEventStatus.ERROR, null);
-        eventWatchdog.cancel(agentId, failedEventId);
     }
 
     private AgentAppEvent buildRollbackEvent(TenantId tenantId, AgentAppEvent failedEvent) {
