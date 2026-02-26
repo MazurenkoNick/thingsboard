@@ -30,10 +30,8 @@ import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
 import org.thingsboard.server.dao.agent.StepLinkedListUtils;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Optional;
-import java.util.Set;
 
 @Component
 @Slf4j
@@ -75,33 +73,24 @@ public class MergeComposeStepRule implements AppTemplateMergeRule {
     }
 
     /**
-     * Recursively syncs the structure of {@code appNode} to match {@code templateNode}:
+     * Recursively merges {@code templateNode} into {@code appNode}:
      * <ul>
      *   <li>Keys in template but not in app → added (deep-copied from template)</li>
-     *   <li>Keys in app but not in template → removed</li>
+     *   <li>Keys in app but not in template → preserved (user customizations kept)</li>
      *   <li>Keys in both, both objects → recurse</li>
      *   <li>Keys in both, different or non-object types → app value preserved</li>
      * </ul>
      */
     private void deepMerge(ObjectNode appNode, JsonNode templateNode) {
-        Set<String> templateKeys = new HashSet<>();
-        templateNode.fieldNames().forEachRemaining(templateKeys::add);
-
         // Add missing keys from template; recurse into shared object keys
-        for (String key : templateKeys) {
+        Iterator<String> templateFields = templateNode.fieldNames();
+        while (templateFields.hasNext()) {
+            String key = templateFields.next();
             JsonNode templateValue = templateNode.get(key);
             if (!appNode.has(key)) {
                 appNode.set(key, templateValue.deepCopy());
             } else if (appNode.get(key).isObject() && templateValue.isObject()) {
                 deepMerge((ObjectNode) appNode.get(key), templateValue);
-            }
-        }
-
-        // Remove keys from app that are not in template
-        Iterator<String> appKeys = appNode.fieldNames();
-        while (appKeys.hasNext()) {
-            if (!templateKeys.contains(appKeys.next())) {
-                appKeys.remove();
             }
         }
     }

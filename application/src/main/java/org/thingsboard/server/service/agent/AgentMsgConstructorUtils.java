@@ -77,6 +77,7 @@ public class AgentMsgConstructorUtils {
             case DELETE -> AppCommandAction.APP_DELETE;
             case RESTART -> AppCommandAction.APP_RESTART;
             case ROLLBACK -> AppCommandAction.APP_ROLLBACK;
+            case UPGRADE -> AppCommandAction.APP_UPGRADE;
         };
     }
 
