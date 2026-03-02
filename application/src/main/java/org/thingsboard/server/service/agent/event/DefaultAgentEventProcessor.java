@@ -38,7 +38,7 @@ import org.thingsboard.server.dao.agent.StepLinkedListUtils;
 import org.thingsboard.server.gen.agent.v1.ServerToAgent;
 import org.thingsboard.server.gen.transport.TransportProtos.AgentAppEventNotificationProto;
 import org.thingsboard.server.queue.util.TbCoreComponent;
-import org.thingsboard.server.service.agent.AgentAppEventStepsResolver;
+import org.thingsboard.server.dao.agent.AgentAppEventStepsResolver;
 import org.thingsboard.server.service.agent.AgentMsgConstructorUtils;
 import org.thingsboard.server.service.agent.AgentRpcService;
 import org.thingsboard.server.service.agent.AgentSessionNotFoundException;

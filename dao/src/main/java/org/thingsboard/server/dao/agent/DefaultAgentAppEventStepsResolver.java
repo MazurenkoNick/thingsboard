@@ -13,20 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.agent;
+package org.thingsboard.server.dao.agent;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
-import org.thingsboard.server.common.data.agent.step.RollBackStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.dao.agent.AgentAppTemplateService;
-import org.thingsboard.server.dao.agent.StepLinkedListUtils;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -43,9 +39,10 @@ public class DefaultAgentAppEventStepsResolver implements AgentAppEventStepsReso
             throw new IllegalStateException("Template not found for application " + app.getId());
         }
         List<AgentAppStep> steps = switch (actionType) {
-            case INSTALL, RESTART, UPDATE -> template.getStartSteps(); // todo: add UPGDRADE
+            case INSTALL, RESTART, UPDATE -> template.getStartSteps();
+            case UPGRADE -> template.getUpgradeSteps();
             case DELETE -> template.getDeleteSteps();
-            case ROLLBACK -> Collections.singletonList(RollBackStep.INSTANCE);
+            case ROLLBACK -> template.getRollbackSteps();
         };
         if (steps == null || steps.isEmpty()) {
             throw new IllegalStateException("No steps resolved for application " + app.getId() + " and action " + actionType);

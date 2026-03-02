@@ -32,7 +32,7 @@ import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
 import org.thingsboard.server.dao.agent.StepLinkedListUtils;
 import org.thingsboard.server.queue.util.TbCoreComponent;
-import org.thingsboard.server.service.agent.AgentAppEventStepsResolver;
+import org.thingsboard.server.dao.agent.AgentAppEventStepsResolver;
 import org.thingsboard.server.service.agent.session.AgentSession;
 import org.thingsboard.server.service.agent.session.AgentSessionRegistry;
 
