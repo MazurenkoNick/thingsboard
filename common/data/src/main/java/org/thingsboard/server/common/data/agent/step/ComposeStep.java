@@ -18,6 +18,14 @@ package org.thingsboard.server.common.data.agent.step;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.jspecify.annotations.Nullable;
+import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
+import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
+import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
+
+import java.util.Collections;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -25,7 +33,21 @@ import lombok.NoArgsConstructor;
 public class ComposeStep extends AgentAppStep {
 
     @Override
+    public @Nullable AgentAppStepState getState() {
+        return null;
+    }
+
+    @Override
     public AgentAppStepType getType() {
         return AgentAppStepType.COMPOSE;
+    }
+
+    @Override
+    public Map<String, String> getCommandMetadata(AgentApplication application, @Nullable AgentAppStepState resolvedState) {
+        AgentAppConfig config = application.getConfig();
+        if (config instanceof DockerComposeConfig d && d.getCompose() != null) {
+            return Map.of("compose", d.getCompose().toString());
+        }
+        return Collections.emptyMap();
     }
 }

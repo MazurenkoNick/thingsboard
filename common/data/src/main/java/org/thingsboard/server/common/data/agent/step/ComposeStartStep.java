@@ -18,11 +18,18 @@ package org.thingsboard.server.common.data.agent.step;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.jspecify.annotations.Nullable;
+import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class ComposeStartStep extends AgentAppStep {
+
+    @Override
+    public @Nullable AgentAppStepState getState() {
+        return null;
+    }
 
     @Override
     public AgentAppStepType getType() {
