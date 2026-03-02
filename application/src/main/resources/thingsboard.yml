@@ -529,6 +529,12 @@ actors:
       # The Generate Report node also adheres to this forced acknowledgment, as it operates similarly to a REST API call.
       # Enqueue the result of external node processing as a separate message to the rule engine.
       force_ack: "${ACTORS_RULE_EXTERNAL_NODE_FORCE_ACK:false}"
+      # Enable Server-Side Request Forgery (SSRF) protection for external HTTP rule nodes (rest api call).
+      # When enabled, requests to private/internal network addresses are blocked.
+      ssrf_protection_enabled: "${SSRF_PROTECTION_ENABLED:false}"
+      # Comma-separated list of additional blocked destinations (IPs, CIDR subnets, or hostnames).
+      # Example: "198.51.100.0/24,metadata.tencentyun.com,rancher-metadata"
+      ssrf_additional_blocked_hosts: "${SSRF_ADDITIONAL_BLOCKED_HOSTS:}"
   rpc:
     # Maximum number of persistent RPC call retries in case of failed request delivery.
     max_retries: "${ACTORS_RPC_MAX_RETRIES:5}"

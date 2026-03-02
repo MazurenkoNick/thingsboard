@@ -210,6 +210,10 @@ service:
     base_url: "${TB_CORE_BASE_URL:http://localhost:8080}"
 
 reports:
+  # Enable/disable SSRF protection for report image resolution. When enabled, blocks file://, private IPs, cloud metadata endpoints, etc.
+  ssrf_protection_enabled: "${SSRF_PROTECTION_ENABLED:false}"
+  # Comma-separated list of additional blocked hosts/CIDRs for SSRF protection (e.g. "evil.corp,203.0.113.0/24")
+  ssrf_additional_blocked_hosts: "${SSRF_ADDITIONAL_BLOCKED_HOSTS:}"
   web_report:
     # Report server endpoint
     base_url: "${REPORTS_SERVER_ENDPOINT_URL:http://localhost:8383}"
