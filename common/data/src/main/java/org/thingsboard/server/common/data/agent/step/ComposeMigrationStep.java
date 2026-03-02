@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.util.CollectionUtils;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
@@ -12,6 +13,7 @@ import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -19,8 +21,7 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 public class ComposeMigrationStep extends AgentAppStep {
 
-    private String serviceImageName;
-    private String entrypoint;
+    private List<ServiceOverride> serviceOverrides;
 
     @Override
     public @Nullable AgentAppStepState getState() {
@@ -38,8 +39,8 @@ public class ComposeMigrationStep extends AgentAppStep {
             return Collections.emptyMap();
         }
         JsonNode compose = d.getCompose().deepCopy();
-        if (serviceImageName != null && entrypoint != null) {
-            injectEntrypoint(compose);
+        if (!CollectionUtils.isEmpty(serviceOverrides)) {
+            applyOverrides(compose);
         }
         return Map.of(
                 "compose", compose.toString(),
@@ -47,25 +48,37 @@ public class ComposeMigrationStep extends AgentAppStep {
         );
     }
 
-    private void injectEntrypoint(JsonNode compose) {
+    private void applyOverrides(JsonNode compose) {
         JsonNode services = compose.get("services");
         if (services == null || !services.isObject() || services.isEmpty()) {
             throw new IllegalStateException("Compose has no services defined");
         }
+        for (ServiceOverride override : serviceOverrides) {
+            applyOverride(services, override);
+        }
+    }
+
+    private void applyOverride(JsonNode services, ServiceOverride override) {
         boolean found = false;
         Iterator<Map.Entry<String, JsonNode>> it = services.fields();
         while (it.hasNext()) {
-            Map.Entry<String, JsonNode> entry = it.next();
-            JsonNode service = entry.getValue();
+            JsonNode service = it.next().getValue();
             if (service.isObject() && service.has("image")
-                    && serviceImageName.equals(service.get("image").asText())) {
-                ((ObjectNode) service).put("entrypoint", entrypoint);
+                    && service.get("image").asText().startsWith(override.getServiceImageName())) {
+                override.getProperties().forEach(((ObjectNode) service)::put);
                 found = true;
                 break;
             }
         }
         if (!found) {
-            throw new IllegalStateException("Service with image '" + serviceImageName + "' not found in compose");
+            throw new IllegalStateException("Service with image '" + override.getServiceImageName() + "' not found in compose");
         }
+    }
+
+    @Data
+    @NoArgsConstructor
+    public static class ServiceOverride {
+        private String serviceImageName;
+        private Map<String, String> properties;
     }
 }

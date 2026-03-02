@@ -17,8 +17,6 @@ package org.thingsboard.server.service.agent;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import io.grpc.Status;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -70,18 +68,18 @@ public class AgentStateService {
     private final AgentEventProcessor agentEventProcessor;
     private final AgentContextComponent agentCtx;
 
-    public ListenableFuture<Optional<Status>> onConnected(AgentSession session, Hello msg) {
+    public Optional<Status> onConnected(AgentSession session, Hello msg) {
         AgentSessionState state = session.getState();
         Agent agent;
         try {
             agent = findAgentByRoutingKeyAndSecret(msg.getRoutingKey(), msg.getRoutingSecret());
         } catch (SecurityException e) {
             log.warn("Agent authentication failed, routingKey={}: {}", msg.getRoutingKey(), e.getMessage());
-            return Futures.immediateFuture(Optional.of(Status.UNAUTHENTICATED.withDescription(e.getMessage())));
+            return Optional.of(Status.UNAUTHENTICATED.withDescription(e.getMessage()));
         }
         if (agent == null) {
             log.trace("Agent not found, routingKey={}", msg.getRoutingKey());
-            return Futures.immediateFuture(Optional.of(Status.NOT_FOUND.withDescription("Failed to find the agent. Routing key: " + msg.getRoutingKey())));
+            return Optional.of(Status.NOT_FOUND.withDescription("Failed to find the agent. Routing key: " + msg.getRoutingKey()));
         }
         state.setAgent(agent);
         TenantId tenantId = agent.getTenantId();
@@ -95,9 +93,15 @@ public class AgentStateService {
         save(tenantId, agentId, LAST_CONNECT_TIME, System.currentTimeMillis());
         pushRuleEngineMessage(tenantId, session.getState().getAgent(), lastConnectTs, TbMsgType.CONNECT_EVENT);
 
-        return agentCtx.getAgentEventExecutor().submit(() -> {
+        return Optional.empty();
+    }
+
+    public void resumeEvents(AgentSession session) {
+        var agent = session.getState().getAgent();
+        TenantId tenantId = agent.getTenantId();
+        AgentId agentId = agent.getId();
+        agentCtx.getAgentEventExecutor().submit(() -> {
             agentEventProcessor.resumeEventsOnReconnect(tenantId, agentId);
-            return Optional.empty();
         });
     }
 
