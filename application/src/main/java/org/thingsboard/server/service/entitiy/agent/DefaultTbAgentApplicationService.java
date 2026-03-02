@@ -18,14 +18,13 @@ package org.thingsboard.server.service.entitiy.agent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
+import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
 import org.thingsboard.server.common.data.audit.ActionType;
@@ -48,33 +47,22 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
     private final AgentAppTemplateMergeOrchestrator templateMergeOrchestrator;
     private final AgentApplicationService agentApplicationService;
     private final AgentAppEventService agentAppEventService;
-    private final TbClusterService tbClusterService;
 
     public DefaultTbAgentApplicationService(AgentAppTemplateMergeOrchestrator templateMergeOrchestrator,
                                             AgentApplicationService agentApplicationService,
-                                            AgentAppEventService agentAppEventService,
-                                            TbClusterService tbClusterService) {
+                                            AgentAppEventService agentAppEventService) {
         this.templateMergeOrchestrator = templateMergeOrchestrator;
         this.agentApplicationService = agentApplicationService;
         this.agentAppEventService = agentAppEventService;
-        this.tbClusterService = tbClusterService;
     }
 
-    @Transactional
     @Override
     public AgentApplication save(AgentApplication application, User user) throws Exception {
         boolean isUpdate = application.getId() != null;
         ActionType actionType = isUpdate ? ActionType.UPDATED : ActionType.ADDED;
         TenantId tenantId = application.getTenantId();
         try {
-            AgentAppConfig oldConfig = isUpdate ? getOldConfig(tenantId, application.getId()) : null;
             AgentApplication savedApp = checkNotNull(agentApplicationService.save(tenantId, application));
-
-            if (shouldCreateDeployEvent(isUpdate, oldConfig, savedApp.getConfig())) {
-                AgentAppEventActionType eventAction = getSaveEventActionType(isUpdate);
-                createEvent(tenantId, savedApp.getId(), eventAction);
-            }
-
             logEntityActionService.logEntityAction(tenantId, savedApp.getId(), savedApp, actionType, user);
             return savedApp;
         } catch (Exception e) {
@@ -85,36 +73,53 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
 
     @Transactional
     @Override
-    public void delete(AgentApplication application, User user) {
-        ActionType actionType = ActionType.DELETED;
-        TenantId tenantId = application.getTenantId();
-        AgentApplicationId applicationId = application.getId();
-        try {
-            throwIfPendingForDelete(application);
+    public AgentApplication execInstallEvent(TenantId tenantId, AgentAppEventRequest request, User user) throws Exception {
+        AgentApplication application = request.getApplication();
+        if (application == null) {
+            throw new DataValidationException("Install request must include an application");
+        }
+        application.setId(null);
+        application.setTenantId(tenantId);
+        AgentApplication savedApp = checkNotNull(agentApplicationService.save(tenantId, application));
+
+        saveEvent(tenantId, savedApp.getId(), AgentAppEventActionType.INSTALL, request);
+
+        logEntityActionService.logEntityAction(tenantId, savedApp.getId(), savedApp, ActionType.ADDED, user);
+        return savedApp;
+    }
+
+    @Transactional
+    @Override
+    public void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, User user) throws Exception {
+        AgentAppEventActionType actionType = request.getActionType();
+        if (actionType == null) {
+            throw new DataValidationException("Action type must not be null");
+        }
+        if (actionType == AgentAppEventActionType.INSTALL) {
+            throw new DataValidationException("Use the install endpoint for INSTALL events");
+        }
+        if (agentAppEventService.hasActiveEventForApplication(applicationId)) {
+            throw new ThingsboardException("Cannot create event while another event is being processed", ThingsboardErrorCode.TOO_MANY_REQUESTS);
+        }
+
+        AgentApplication application = checkNotNull(agentApplicationService.findById(tenantId, applicationId));
+        throwIfPendingForDelete(application);
+
+        if (actionType == AgentAppEventActionType.DELETE) {
             agentAppEventService.deleteAllPendingByApplicationId(applicationId);
             application.setPendingDeletion(true);
             agentApplicationService.save(tenantId, application);
-
-            createEvent(tenantId, applicationId, AgentAppEventActionType.DELETE);
-
-            logEntityActionService.logEntityAction(tenantId, applicationId, actionType, user, null, applicationId.toString());
-        } catch (Exception e) {
-            logEntityActionService.logEntityAction(tenantId, emptyId(EntityType.AGENT_APPLICATION), actionType, user, e, applicationId.toString());
-            throw e;
+        } else if (actionType == AgentAppEventActionType.UPGRADE) {
+            AgentApplication upgradedApp = request.getApplication();
+            if (upgradedApp == null) {
+                throw new DataValidationException("Upgrade request must include an application");
+            }
+            upgradedApp.setId(applicationId);
+            upgradedApp.setTenantId(tenantId);
+            agentApplicationService.save(tenantId, upgradedApp);
         }
-    }
 
-
-    @Override
-    public void restart(TenantId tenantId, AgentApplicationId applicationId, User user) throws Exception {
-        if (agentAppEventService.hasActiveEventForApplication(applicationId)) {
-            throw new ThingsboardException("Cannot restart application while an event is being processed", ThingsboardErrorCode.TOO_MANY_REQUESTS);
-        }
-        AgentApplication application = checkNotNull(agentApplicationService.findById(tenantId, applicationId));
-        throwIfPendingForDelete(application);
-        AgentAppEvent event = createEvent(tenantId, applicationId, AgentAppEventActionType.RESTART);
-
-        tbClusterService.onAgentAppEvent(tenantId, application.getAgentId(), event);
+        saveEvent(tenantId, applicationId, actionType, request);
     }
 
     @Override
@@ -135,32 +140,14 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         }
     }
 
-    private AgentAppConfig getOldConfig(TenantId tenantId, AgentApplicationId applicationId) {
-        AgentApplication existing = agentApplicationService.findById(tenantId, applicationId);
-        return existing != null ? existing.getConfig() : null;
-    }
-
-    private boolean shouldCreateDeployEvent(boolean isUpdate, AgentAppConfig oldConfig, AgentAppConfig newConfig) {
-        if (!isUpdate) {
-            return true;
-        }
-        if (oldConfig == null || newConfig == null) {
-            return oldConfig != newConfig;
-        }
-        return oldConfig.isDeployFieldsChanged(newConfig);
-    }
-
-    private AgentAppEventActionType getSaveEventActionType(boolean isUpdate) {
-        return isUpdate ? AgentAppEventActionType.UPDATE : AgentAppEventActionType.INSTALL;
-    }
-
-    private AgentAppEvent createEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventActionType actionType) {
+    private void saveEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventActionType actionType, AgentAppEventRequest request) {
         AgentAppEvent event = new AgentAppEvent();
         event.setTenantId(tenantId);
         event.setApplicationId(applicationId);
         event.setActionType(actionType);
         event.setDeliveryState(AgentAppEventDeliveryState.PENDING);
         event.setUpdatedTime(System.currentTimeMillis());
-        return agentAppEventService.save(tenantId, event);
+        event.setStepStates(request.getStepInputs());
+        agentAppEventService.save(tenantId, event);
     }
 }
