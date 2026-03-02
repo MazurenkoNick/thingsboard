@@ -15,6 +15,7 @@
  */
 package org.thingsboard.server.service.entitiy.agent;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,13 +24,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.User;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
+import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
+import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
+import org.thingsboard.server.common.data.agent.step.state.ComposeDownStepState;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -39,12 +41,14 @@ import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.service.agent.template.merge.AgentAppTemplateMergeOrchestrator;
 import org.thingsboard.server.service.entitiy.TbLogEntityActionService;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -58,14 +62,13 @@ class DefaultTbAgentApplicationServiceTest {
     @Mock
     private AgentAppEventService agentAppEventService;
     @Mock
-    private TbClusterService tbClusterService;
-    @Mock
     private TbLogEntityActionService logEntityActionService;
 
     @InjectMocks
     private DefaultTbAgentApplicationService service;
 
     private static final TenantId TENANT_ID = TenantId.fromUUID(UUID.randomUUID());
+    private static final AgentApplicationId APP_ID = new AgentApplicationId(UUID.randomUUID());
     private static final User USER = new User();
 
     @BeforeEach
@@ -73,113 +76,192 @@ class DefaultTbAgentApplicationServiceTest {
         ReflectionTestUtils.setField(service, "logEntityActionService", logEntityActionService);
     }
 
-    // ==================== save() - new application ====================
+    // ==================== save() - pure CRUD ====================
 
     @Test
-    void save_newApplication_createsInstallEvent() throws Exception {
+    void save_newApplication_noEventCreated() throws Exception {
         AgentApplication app = newApplication(null);
         when(agentApplicationService.save(eq(TENANT_ID), eq(app))).thenReturn(app);
 
         service.save(app, USER);
 
-        ArgumentCaptor<AgentAppEvent> eventCaptor = ArgumentCaptor.forClass(AgentAppEvent.class);
-        verify(agentAppEventService).save(eq(TENANT_ID), eventCaptor.capture());
-        assertThat(eventCaptor.getValue().getActionType()).isEqualTo(AgentAppEventActionType.INSTALL);
-    }
-
-    // ==================== save() - update ====================
-
-    @Test
-    void save_update_deployFieldsChanged_createsUpdateEvent() throws Exception {
-        AgentApplicationId appId = new AgentApplicationId(UUID.randomUUID());
-
-        DockerComposeConfig oldConfig = createDockerComposeConfig("old-compose");
-        DockerComposeConfig newConfig = createDockerComposeConfig("new-compose");
-
-        AgentApplication existing = newApplication(appId);
-        existing.setConfig(oldConfig);
-
-        AgentApplication updated = newApplication(appId);
-        updated.setConfig(newConfig);
-
-        when(agentApplicationService.findById(TENANT_ID, appId)).thenReturn(existing);
-        when(agentApplicationService.save(eq(TENANT_ID), eq(updated))).thenReturn(updated);
-
-        service.save(updated, USER);
-
-        ArgumentCaptor<AgentAppEvent> eventCaptor = ArgumentCaptor.forClass(AgentAppEvent.class);
-        verify(agentAppEventService).save(eq(TENANT_ID), eventCaptor.capture());
-        assertThat(eventCaptor.getValue().getActionType()).isEqualTo(AgentAppEventActionType.UPDATE);
+        verify(agentAppEventService, never()).save(any(), any());
     }
 
     @Test
-    void save_update_onlyRemoveVolumesChanged_doesNotCreateEvent() throws Exception {
-        AgentApplicationId appId = new AgentApplicationId(UUID.randomUUID());
+    void save_updateApplication_noEventCreated() throws Exception {
+        AgentApplication app = newApplication(APP_ID);
+        when(agentApplicationService.save(eq(TENANT_ID), eq(app))).thenReturn(app);
 
-        DockerComposeConfig oldConfig = createDockerComposeConfig("same-compose");
-        oldConfig.setRemoveVolumes(false);
+        service.save(app, USER);
 
-        DockerComposeConfig newConfig = createDockerComposeConfig("same-compose");
-        newConfig.setRemoveVolumes(true);
+        verify(agentAppEventService, never()).save(any(), any());
+    }
 
-        AgentApplication existing = newApplication(appId);
-        existing.setConfig(oldConfig);
+    // ==================== installEvent() ====================
 
-        AgentApplication updated = newApplication(appId);
-        updated.setConfig(newConfig);
+    @Test
+    void execInstallEvent_createsAppAndEvent() throws Exception {
+        AgentApplication app = newApplication(null);
+        AgentApplication savedApp = newApplication(APP_ID);
+        when(agentApplicationService.save(eq(TENANT_ID), eq(app))).thenReturn(savedApp);
 
-        when(agentApplicationService.findById(TENANT_ID, appId)).thenReturn(existing);
-        when(agentApplicationService.save(eq(TENANT_ID), eq(updated))).thenReturn(updated);
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.INSTALL);
+        request.setApplication(app);
 
-        service.save(updated, USER);
+        AgentApplication result = service.execInstallEvent(TENANT_ID, request, USER);
 
-        verify(agentAppEventService, org.mockito.Mockito.never()).save(any(), any());
+        assertThat(result.getId()).isEqualTo(APP_ID);
+
+        ArgumentCaptor<AgentAppEvent> captor = ArgumentCaptor.forClass(AgentAppEvent.class);
+        verify(agentAppEventService).save(eq(TENANT_ID), captor.capture());
+        AgentAppEvent event = captor.getValue();
+        assertThat(event.getActionType()).isEqualTo(AgentAppEventActionType.INSTALL);
+        assertThat(event.getApplicationId()).isEqualTo(APP_ID);
+        assertThat(event.getDeliveryState()).isEqualTo(AgentAppEventDeliveryState.PENDING);
     }
 
     @Test
-    void save_update_configUnchanged_doesNotCreateEvent() throws Exception {
-        AgentApplicationId appId = new AgentApplicationId(UUID.randomUUID());
+    void execInstallEvent_noApplication_throws() {
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.INSTALL);
 
-        DockerComposeConfig config = createDockerComposeConfig("same-compose");
-
-        AgentApplication existing = newApplication(appId);
-        existing.setConfig(config);
-
-        AgentApplication updated = newApplication(appId);
-        updated.setConfig(createDockerComposeConfig("same-compose"));
-
-        when(agentApplicationService.findById(TENANT_ID, appId)).thenReturn(existing);
-        when(agentApplicationService.save(eq(TENANT_ID), eq(updated))).thenReturn(updated);
-
-        service.save(updated, USER);
-
-        verify(agentAppEventService, org.mockito.Mockito.never()).save(any(), any());
+        assertThatThrownBy(() -> service.execInstallEvent(TENANT_ID, request, USER))
+                .isInstanceOf(DataValidationException.class)
+                .hasMessageContaining("application");
     }
 
-    // ==================== delete() ====================
+    // ==================== createEvent() ====================
 
     @Test
-    void delete_success() {
-        AgentApplicationId appId = new AgentApplicationId(UUID.randomUUID());
-        AgentApplication app = newApplication(appId);
+    void execActionEvent_update_createsEvent() throws Exception {
+        AgentApplication app = newApplication(APP_ID);
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
 
-        service.delete(app, USER);
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.UPDATE);
 
-        verify(agentAppEventService).deleteAllPendingByApplicationId(appId);
-        verify(agentApplicationService).save(TENANT_ID, app);
+        service.execActionEvent(TENANT_ID, APP_ID, request, USER);
+
+        ArgumentCaptor<AgentAppEvent> captor = ArgumentCaptor.forClass(AgentAppEvent.class);
+        verify(agentAppEventService).save(eq(TENANT_ID), captor.capture());
+        assertThat(captor.getValue().getActionType()).isEqualTo(AgentAppEventActionType.UPDATE);
+    }
+
+    @Test
+    void execActionEvent_delete_setsPendingDeletion() throws Exception {
+        AgentApplication app = newApplication(APP_ID);
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
+
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.DELETE);
+
+        service.execActionEvent(TENANT_ID, APP_ID, request, USER);
+
         assertThat(app.isPendingDeletion()).isTrue();
+        verify(agentApplicationService).save(TENANT_ID, app);
+        verify(agentAppEventService).deleteAllPendingByApplicationId(APP_ID);
 
-        ArgumentCaptor<AgentAppEvent> eventCaptor = ArgumentCaptor.forClass(AgentAppEvent.class);
-        verify(agentAppEventService).save(eq(TENANT_ID), eventCaptor.capture());
-        assertThat(eventCaptor.getValue().getActionType()).isEqualTo(AgentAppEventActionType.DELETE);
+        ArgumentCaptor<AgentAppEvent> captor = ArgumentCaptor.forClass(AgentAppEvent.class);
+        verify(agentAppEventService).save(eq(TENANT_ID), captor.capture());
+        assertThat(captor.getValue().getActionType()).isEqualTo(AgentAppEventActionType.DELETE);
     }
 
     @Test
-    void delete_pendingDeletion_throwsException() {
-        AgentApplication app = newApplication(new AgentApplicationId(UUID.randomUUID()));
-        app.setPendingDeletion(true);
+    void execActionEvent_restart_createsEvent() throws Exception {
+        AgentApplication app = newApplication(APP_ID);
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
 
-        assertThatThrownBy(() -> service.delete(app, USER))
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.RESTART);
+
+        service.execActionEvent(TENANT_ID, APP_ID, request, USER);
+
+        ArgumentCaptor<AgentAppEvent> captor = ArgumentCaptor.forClass(AgentAppEvent.class);
+        verify(agentAppEventService).save(eq(TENANT_ID), captor.capture());
+        assertThat(captor.getValue().getActionType()).isEqualTo(AgentAppEventActionType.RESTART);
+    }
+
+    @Test
+    void execActionEvent_withStepInputs_setsStepStates() throws Exception {
+        AgentApplication app = newApplication(APP_ID);
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
+
+        UUID stepId = UUID.randomUUID();
+        ComposeDownStepState stepState = new ComposeDownStepState();
+        stepState.setRemoveVolumes(true);
+
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.DELETE);
+        request.setStepInputs(Map.of(stepId, stepState));
+
+        service.execActionEvent(TENANT_ID, APP_ID, request, USER);
+
+        ArgumentCaptor<AgentAppEvent> captor = ArgumentCaptor.forClass(AgentAppEvent.class);
+        verify(agentAppEventService).save(eq(TENANT_ID), captor.capture());
+        assertThat(captor.getValue().getStepStates()).containsKey(stepId);
+    }
+
+    @Test
+    void execActionEvent_upgrade_savesUpdatedApplication() throws Exception {
+        AgentApplication app = newApplication(APP_ID);
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
+
+        AgentApplication upgradedApp = new AgentApplication();
+        upgradedApp.setConfig(createDockerComposeConfig("new-compose"));
+
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.UPGRADE);
+        request.setApplication(upgradedApp);
+
+        service.execActionEvent(TENANT_ID, APP_ID, request, USER);
+
+        verify(agentApplicationService).save(eq(TENANT_ID), eq(upgradedApp));
+        assertThat(upgradedApp.getId()).isEqualTo(APP_ID);
+        assertThat(upgradedApp.getTenantId()).isEqualTo(TENANT_ID);
+    }
+
+    @Test
+    void execActionEvent_install_rejected() {
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.INSTALL);
+
+        assertThatThrownBy(() -> service.execActionEvent(TENANT_ID, APP_ID, request, USER))
+                .isInstanceOf(DataValidationException.class)
+                .hasMessageContaining("install endpoint");
+    }
+
+    @Test
+    void execActionEvent_nullActionType_throws() {
+        AgentAppEventRequest request = new AgentAppEventRequest();
+
+        assertThatThrownBy(() -> service.execActionEvent(TENANT_ID, APP_ID, request, USER))
+                .isInstanceOf(DataValidationException.class)
+                .hasMessageContaining("Action type");
+    }
+
+    @Test
+    void execActionEvent_activeEventExists_throws() {
+        when(agentAppEventService.hasActiveEventForApplication(APP_ID)).thenReturn(true);
+
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.RESTART);
+
+        assertThatThrownBy(() -> service.execActionEvent(TENANT_ID, APP_ID, request, USER))
+                .isInstanceOf(ThingsboardException.class);
+    }
+
+    @Test
+    void execActionEvent_pendingDeletion_throws() {
+        AgentApplication app = newApplication(APP_ID);
+        app.setPendingDeletion(true);
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
+
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.RESTART);
+
+        assertThatThrownBy(() -> service.execActionEvent(TENANT_ID, APP_ID, request, USER))
                 .isInstanceOf(DataValidationException.class)
                 .hasMessageContaining("pending for removal");
     }

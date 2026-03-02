@@ -25,7 +25,7 @@ import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.agent.step.ComposeStep;
 import org.thingsboard.server.common.data.agent.step.ComposeTypeChoiceStep;
-import org.thingsboard.server.common.data.agent.step.InfoStep;
+import org.thingsboard.server.common.data.agent.step.ComposeStartStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
 import org.thingsboard.server.service.agent.template.merge.MergeComposeStepRule;
@@ -63,7 +63,7 @@ class MergeComposeStepRuleTest {
     void supports_shouldReturnFalse_whenTemplateHasNoComposeTypeChoiceStep() {
         AgentApplication app = createAppWithCompose(List.of(), null);
         AgentAppTemplate template = new AgentAppTemplate();
-        template.setStartSteps(List.of(createInfoStep()));
+        template.setStartSteps(List.of(createNonComposeStep()));
         TemplateMergeCtx ctx = TemplateMergeCtx.empty();
 
         assertFalse(rule.supports(app, template, ctx));
@@ -108,7 +108,7 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), compose);
         AgentAppTemplate template = new AgentAppTemplate();
-        template.setStartSteps(List.of(createInfoStep()));
+        template.setStartSteps(List.of(createNonComposeStep()));
         TemplateMergeCtx ctx = TemplateMergeCtx.empty();
 
         rule.apply(app, template, ctx);
@@ -513,10 +513,10 @@ class MergeComposeStepRuleTest {
         return step;
     }
 
-    private InfoStep createInfoStep() {
-        InfoStep step = new InfoStep();
+    private ComposeStartStep createNonComposeStep() {
+        ComposeStartStep step = new ComposeStartStep();
         step.setId(UUID.randomUUID());
-        step.setTitle("Info");
+        step.setTitle("Non-compose step");
         return step;
     }
 

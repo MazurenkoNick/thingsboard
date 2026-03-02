@@ -25,16 +25,22 @@ import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.RollbackEventMeta;
+import org.thingsboard.server.common.data.agent.step.RollBackStep;
+import org.thingsboard.server.common.data.agent.step.state.RollBackStepState;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.dao.agent.AgentAppEventStepsResolver;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.exception.DataValidationException;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -45,8 +51,12 @@ class AgentAppEventDataValidatorTest {
     @Mock
     private AgentApplicationDao agentApplicationDao;
 
+    @Mock
+    private AgentAppEventStepsResolver stepsResolver;
+
     @InjectMocks
     private AgentAppEventDataValidator validator;
+
 
     private static final TenantId TENANT_ID = TenantId.fromUUID(UUID.randomUUID());
     private static final AgentApplicationId APP_ID = new AgentApplicationId(UUID.randomUUID());
@@ -124,22 +134,33 @@ class AgentAppEventDataValidatorTest {
     }
 
     @Test
-    void validate_rollbackWithoutMetadata_throws() {
+    void validate_rollbackWithoutStepStates_throws() {
         AgentAppEvent event = validEvent();
         event.setActionType(AgentAppEventActionType.ROLLBACK);
-        event.setMetadata(null);
+        event.setStepStates(null);
         when(agentApplicationDao.findById(any(), eq(APP_ID.getId()))).thenReturn(new AgentApplication());
+        when(stepsResolver.resolveSteps(any(), eq(AgentAppEventActionType.ROLLBACK))).thenReturn(List.of(new RollBackStep()));
 
         assertThatThrownBy(() -> validator.validate(event, AgentAppEvent::getTenantId))
-                .isInstanceOf(DataValidationException.class)
-                .hasMessageContaining("failedEventId");
+                .isInstanceOf(DataValidationException.class);
+    }
+
+    @Test
+    void validate_rollbackWithoutStepStatesAndTemplateWithoutSteps_ok() {
+        AgentAppEvent event = validEvent();
+        event.setActionType(AgentAppEventActionType.ROLLBACK);
+        event.setStepStates(null);
+        when(agentApplicationDao.findById(any(), eq(APP_ID.getId()))).thenReturn(new AgentApplication());
+        when(stepsResolver.resolveSteps(any(), eq(AgentAppEventActionType.ROLLBACK))).thenReturn(List.of());
+
+        assertDoesNotThrow(() -> validator.validate(event, AgentAppEvent::getTenantId));
     }
 
     @Test
     void validate_rollbackWithNullFailedEventId_throws() {
         AgentAppEvent event = validEvent();
         event.setActionType(AgentAppEventActionType.ROLLBACK);
-        event.setMetadata(new RollbackEventMeta());
+        event.setStepStates(Map.of(UUID.randomUUID(), new RollBackStepState()));
         when(agentApplicationDao.findById(any(), eq(APP_ID.getId()))).thenReturn(new AgentApplication());
 
         assertThatThrownBy(() -> validator.validate(event, AgentAppEvent::getTenantId))
@@ -151,7 +172,7 @@ class AgentAppEventDataValidatorTest {
     void validate_rollbackWithFailedEventId_passes() {
         AgentAppEvent event = validEvent();
         event.setActionType(AgentAppEventActionType.ROLLBACK);
-        event.setMetadata(new RollbackEventMeta(new AgentAppEventId(UUID.randomUUID())));
+        event.setStepStates(Map.of(UUID.randomUUID(), new RollBackStepState(new AgentAppEventId(UUID.randomUUID()))));
         when(agentApplicationDao.findById(any(), eq(APP_ID.getId()))).thenReturn(new AgentApplication());
 
         validator.validate(event, AgentAppEvent::getTenantId);

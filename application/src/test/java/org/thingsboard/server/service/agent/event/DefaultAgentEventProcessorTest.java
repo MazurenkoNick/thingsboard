@@ -18,7 +18,6 @@ package org.thingsboard.server.service.agent.event;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -31,6 +30,7 @@ import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.ErrorOrigin;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
+import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -40,11 +40,10 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.gen.agent.v1.ServerToAgent;
-import org.thingsboard.server.service.agent.AgentAppEventStepsResolver;
+import org.thingsboard.server.dao.agent.AgentAppEventStepsResolver;
 import org.thingsboard.server.service.agent.AgentMsgConstructorUtils;
 import org.thingsboard.server.service.agent.AgentRpcService;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -341,8 +340,13 @@ class DefaultAgentEventProcessorTest {
     private AgentAppStep newStep(UUID id, UUID nextId) {
         return new AgentAppStep(nextId, id, "Step " + id, false) {
             @Override
+            public AgentAppStepState getState() {
+                return null;
+            }
+
+            @Override
             public AgentAppStepType getType() {
-                return AgentAppStepType.INFO;
+                return AgentAppStepType.COMPOSE_START;
             }
         };
     }
