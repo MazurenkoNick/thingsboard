@@ -783,6 +783,7 @@ CREATE TABLE IF NOT EXISTS agent_app_template (
     start_steps jsonb,
     upgrade_steps jsonb,
     delete_steps jsonb,
+    rollback_steps jsonb,
     version BIGINT DEFAULT 1
 );
 
@@ -811,7 +812,7 @@ CREATE TABLE IF NOT EXISTS agent_app_event (
     status varchar(32),
     current_step_id uuid,
     updated_time bigint NOT NULL,
-    metadata jsonb,
+    step_states jsonb,
     CONSTRAINT fk_agent_app_event_application FOREIGN KEY (application_id) REFERENCES agent_application(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS idx_agent_app_event_app_delivery ON agent_app_event(application_id, delivery_state);

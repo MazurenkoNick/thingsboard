@@ -83,6 +83,11 @@ public final class AgentAppTemplateEntity extends BaseVersionedEntity<AgentAppTe
     @Column(name = ModelConstants.AGENT_APP_TEMPLATE_DELETE_STEPS_PROPERTY, columnDefinition = "jsonb")
     private JsonNode deleteSteps;
 
+    @Convert(converter = JsonConverter.class)
+    @JdbcType(PostgreSQLJsonPGObjectJsonbType.class)
+    @Column(name = ModelConstants.AGENT_APP_TEMPLATE_ROLLBACK_STEPS_PROPERTY, columnDefinition = "jsonb")
+    private JsonNode rollbackSteps;
+
     public AgentAppTemplateEntity() {
         super();
     }
@@ -100,6 +105,7 @@ public final class AgentAppTemplateEntity extends BaseVersionedEntity<AgentAppTe
         this.startSteps = template.getStartSteps() != null ? JacksonUtil.valueToTree(template.getStartSteps()) : null;
         this.upgradeSteps = template.getUpgradeSteps() != null ? JacksonUtil.valueToTree(template.getUpgradeSteps()) : null;
         this.deleteSteps = template.getDeleteSteps() != null ? JacksonUtil.valueToTree(template.getDeleteSteps()) : null;
+        this.rollbackSteps = template.getRollbackSteps() != null ? JacksonUtil.valueToTree(template.getRollbackSteps()) : null;
     }
 
     @Override
@@ -118,6 +124,7 @@ public final class AgentAppTemplateEntity extends BaseVersionedEntity<AgentAppTe
         template.setStartSteps(startSteps != null ? JacksonUtil.convertValue(startSteps, new TypeReference<List<AgentAppStep>>() {}) : null);
         template.setUpgradeSteps(upgradeSteps != null ? JacksonUtil.convertValue(upgradeSteps, new TypeReference<List<AgentAppStep>>() {}) : null);
         template.setDeleteSteps(deleteSteps != null ? JacksonUtil.convertValue(deleteSteps, new TypeReference<List<AgentAppStep>>() {}) : null);
+        template.setRollbackSteps(rollbackSteps != null ? JacksonUtil.convertValue(rollbackSteps, new TypeReference<List<AgentAppStep>>() {}) : null);
         return template;
     }
 }

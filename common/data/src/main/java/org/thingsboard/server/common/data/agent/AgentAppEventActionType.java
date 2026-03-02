@@ -20,5 +20,6 @@ public enum AgentAppEventActionType {
     UPDATE,
     DELETE,
     RESTART,
-    ROLLBACK
+    ROLLBACK,
+    UPGRADE
 }
