@@ -91,6 +91,12 @@ import _moment from 'moment';
 import * as momentTz from 'moment-timezone';
 import * as tslib from 'tslib';
 
+import * as dayGridPlugin from '@fullcalendar/daygrid';
+import * as listPlugin from '@fullcalendar/list';
+import * as timeGridPlugin from '@fullcalendar/timegrid';
+import * as momentPlugin from '@fullcalendar/moment';
+import * as interactionPlugin from '@fullcalendar/interaction';
+import * as FullCalendar from '@fullcalendar/angular';
 import * as CanvasGauges from 'canvas-gauges';
 import * as NgxHmCarousel from 'ngx-hm-carousel';
 
@@ -472,6 +478,12 @@ class ModulesMap implements IModulesMap {
     'moment-timezone': momentTz,
     tslib,
 
+    '@fullcalendar/daygrid': dayGridPlugin,
+    '@fullcalendar/list': listPlugin,
+    '@fullcalendar/timegrid': timeGridPlugin,
+    '@fullcalendar/moment': momentPlugin,
+    '@fullcalendar/interaction': interactionPlugin,
+    '@fullcalendar/angular': FullCalendar,
     'canvas-gauges': CanvasGauges,
     'ngx-hm-carousel': NgxHmCarousel,
 
