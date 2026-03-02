@@ -26,14 +26,21 @@ import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.ErrorOrigin;
-import org.thingsboard.server.common.data.agent.RollbackEventMeta;
+import org.thingsboard.server.common.data.agent.step.AgentAppStep;
+import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
+import org.thingsboard.server.common.data.agent.step.state.RollBackStepState;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
+import org.thingsboard.server.dao.agent.AgentAppEventStepsResolver;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 @TbCoreComponent
@@ -43,6 +50,7 @@ public class AgentEventErrorHandler {
 
     private final AgentAppEventService appEventService;
     private final AgentApplicationService appService;
+    private final AgentAppEventStepsResolver stepsResolver;
     private final AgentEventWatchdog eventWatchdog;
     @Lazy
     private final AgentEventProcessor agentEventProcessor;
@@ -83,7 +91,9 @@ public class AgentEventErrorHandler {
     private boolean shouldEnqueueRollbackEvent(AgentAppEvent event, ErrorOrigin errorOrigin) {
         return errorOrigin == ErrorOrigin.SERVER
                 && event != null
-                && event.getActionType() == AgentAppEventActionType.UPDATE;
+                &&
+                (event.getActionType() == AgentAppEventActionType.UPDATE
+                        || event.getActionType() == AgentAppEventActionType.UPGRADE);
     }
 
     private boolean shouldRollbackPendingDeletion(AgentAppEvent event) {
@@ -120,7 +130,16 @@ public class AgentEventErrorHandler {
         rollbackEvent.setDeliveryState(AgentAppEventDeliveryState.DELIVERED);
         rollbackEvent.setStatus(AgentAppEventStatus.PENDING);
         rollbackEvent.setUpdatedTime(System.currentTimeMillis());
-        rollbackEvent.setMetadata(new RollbackEventMeta(failedEvent.getId()));
+
+        AgentApplication app = appService.findById(tenantId, failedEvent.getApplicationId());
+        List<AgentAppStep> rollbackSteps = stepsResolver.resolveSteps(app, AgentAppEventActionType.ROLLBACK);
+        UUID rollbackStepId = rollbackSteps.stream()
+                .filter(s -> s.getType() == AgentAppStepType.ROLLBACK)
+                .findFirst()
+                .map(AgentAppStep::getId)
+                .orElseThrow(() -> new IllegalStateException("No rollback step found in template for application " + app.getId()));
+
+        rollbackEvent.setStepStates(Map.of(rollbackStepId, new RollBackStepState(failedEvent.getId())));
         return rollbackEvent;
     }
 }

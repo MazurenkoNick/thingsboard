@@ -24,7 +24,6 @@ import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
-import org.thingsboard.server.common.data.agent.step.ComposeStep;
 import org.thingsboard.server.common.data.agent.step.ComposeTypeChoiceStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
