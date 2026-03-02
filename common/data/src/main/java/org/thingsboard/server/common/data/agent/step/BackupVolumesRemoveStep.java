@@ -13,27 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent;
+package org.thingsboard.server.common.data.agent.step;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.id.AgentAppEventId;
+import javax.annotation.Nullable;
+import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
+
+import static org.thingsboard.server.common.data.agent.step.AgentAppStepType.BACKUP_VOLUME_REMOVE;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class RollbackEventMeta extends AgentAppEventMeta {
+@EqualsAndHashCode(callSuper = true)
+public class BackupVolumesRemoveStep extends AgentAppStep {
 
-    private AgentAppEventId failedEventId;
-
-    public RollbackEventMeta(AgentAppEventId failedEventId) {
-        this.failedEventId = failedEventId;
+    @Override
+    public @Nullable AgentAppStepState getState() {
+        return null;
     }
 
     @Override
-    public AgentAppEventMetaType getType() {
-        return AgentAppEventMetaType.ROLLBACK;
+    public AgentAppStepType getType() {
+        return BACKUP_VOLUME_REMOVE;
     }
-
 }

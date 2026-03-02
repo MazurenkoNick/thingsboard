@@ -13,22 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent;
+package org.thingsboard.server.common.data.agent.step.state;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import lombok.Data;
+import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
+import org.thingsboard.server.exception.DataValidationException;
+
+import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({
-        @JsonSubTypes.Type(name = "ROLLBACK", value = RollbackEventMeta.class)
+        @Type(name = "COMPOSE_DOWN", value = ComposeDownStepState.class),
+        @Type(name = "ROLLBACK", value = RollBackStepState.class),
+        @Type(name = "BACKUP_VOLUME", value = BackupVolumesStepState.class),
 })
 @Data
-public abstract class AgentAppEventMeta {
+public abstract class AgentAppStepState {
 
-    public abstract AgentAppEventMetaType getType();
+    public abstract AgentAppStepType getType();
+
+    public abstract void validate() throws DataValidationException;
+
+    @JsonIgnore
+    public abstract Map<String, String> getCommandMetadata();
 
 }

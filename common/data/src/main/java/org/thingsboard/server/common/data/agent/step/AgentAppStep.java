@@ -15,14 +15,19 @@
  */
 package org.thingsboard.server.common.data.agent.step;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 
+import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -33,7 +38,8 @@ import java.util.UUID;
         @JsonSubTypes.Type(name = "COMPOSE_START", value = ComposeStartStep.class),
         @JsonSubTypes.Type(name = "COMPOSE_DOWN", value = ComposeDownStep.class),
         @JsonSubTypes.Type(name = "ROLLBACK", value = RollBackStep.class),
-        @JsonSubTypes.Type(name = "INFO", value = InfoStep.class)
+        @JsonSubTypes.Type(name = "BACKUP_VOLUME", value = BackupVolumesStep.class),
+        @JsonSubTypes.Type(name = "BACKUP_VOLUME_REMOVE", value = BackupVolumesRemoveStep.class),
 })
 @Data
 @NoArgsConstructor
@@ -51,5 +57,14 @@ public abstract class AgentAppStep {
         this.templateOnly = templateOnly;
     }
 
+    public abstract @Nullable AgentAppStepState getState();
     public abstract AgentAppStepType getType();
+
+    @JsonIgnore
+    public Map<String, String> getCommandMetadata(AgentApplication application, @Nullable AgentAppStepState resolvedState) {
+        if (resolvedState != null) {
+            return resolvedState.getCommandMetadata();
+        }
+        return Collections.emptyMap();
+    }
 }

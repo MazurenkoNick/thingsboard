@@ -15,24 +15,19 @@
  */
 package org.thingsboard.server.common.data.agent.step;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.util.UUID;
+import org.thingsboard.server.common.data.agent.step.state.RollBackStepState;
 
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class RollBackStep extends AgentAppStep {
 
-    private static final UUID ID = UUID.fromString("232cfd18-71ca-410c-aecb-d1151e9c936e");
-
-    public static final RollBackStep INSTANCE = new RollBackStep();
-
-    private RollBackStep() {
-        this.id = ID;
-        this.title = "Rollback Step After Server Exception";
-    }
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
+    private RollBackStepState state;
 
     @Override
     public AgentAppStepType getType() {

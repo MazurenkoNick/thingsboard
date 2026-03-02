@@ -15,12 +15,22 @@
  */
 package org.thingsboard.server.common.data.agent.step;
 
-public enum AgentAppStepType {
-    COMPOSE_TEMPLATE,
-    COMPOSE,
-    COMPOSE_START,
-    COMPOSE_DOWN,
-    ROLLBACK,
-    BACKUP_VOLUME,
-    BACKUP_VOLUME_REMOVE,
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.agent.step.state.BackupVolumesStepState;
+
+@Data
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class BackupVolumesStep extends AgentAppStep {
+
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
+    private BackupVolumesStepState state;
+
+    @Override
+    public AgentAppStepType getType() {
+        return AgentAppStepType.BACKUP_VOLUME;
+    }
 }

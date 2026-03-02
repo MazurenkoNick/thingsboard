@@ -15,6 +15,16 @@
  */
 package org.thingsboard.server.common.data.agent;
 
-public enum AgentAppEventMetaType {
-    ROLLBACK
+import lombok.Data;
+import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
+
+import java.util.Map;
+import java.util.UUID;
+
+@Data
+public class AgentAppEventRequest {
+
+    private AgentAppEventActionType actionType;
+    private AgentApplication application;
+    private Map<UUID, AgentAppStepState> stepInputs;
 }
