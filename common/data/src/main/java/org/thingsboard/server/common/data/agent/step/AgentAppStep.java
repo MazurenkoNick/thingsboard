@@ -37,6 +37,7 @@ import java.util.UUID;
         @JsonSubTypes.Type(name = "COMPOSE", value = ComposeStep.class),
         @JsonSubTypes.Type(name = "COMPOSE_START", value = ComposeStartStep.class),
         @JsonSubTypes.Type(name = "COMPOSE_DOWN", value = ComposeDownStep.class),
+        @JsonSubTypes.Type(name = "COMPOSE_MIGRATION", value = ComposeMigrationStep.class),
         @JsonSubTypes.Type(name = "ROLLBACK", value = RollBackStep.class),
         @JsonSubTypes.Type(name = "BACKUP_VOLUME", value = BackupVolumesStep.class),
         @JsonSubTypes.Type(name = "BACKUP_VOLUME_REMOVE", value = BackupVolumesRemoveStep.class),

@@ -23,4 +23,5 @@ public enum AgentAppStepType {
     ROLLBACK,
     BACKUP_VOLUME,
     BACKUP_VOLUME_REMOVE,
+    COMPOSE_MIGRATION,
 }

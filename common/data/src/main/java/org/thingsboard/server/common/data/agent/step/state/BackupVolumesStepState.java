@@ -38,11 +38,7 @@ public class BackupVolumesStepState extends AgentAppStepState {
     }
 
     @Override
-    public void validate() throws DataValidationException {
-        if (CollectionUtils.isEmpty(backupVolumes)) {
-            throw new DataValidationException("Backup volumes can't be null!");
-        }
-    }
+    public void validate() throws DataValidationException {}
 
     @Override
     public Map<String, String> getCommandMetadata() {
