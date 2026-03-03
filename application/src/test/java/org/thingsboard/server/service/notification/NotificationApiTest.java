@@ -554,7 +554,7 @@ public class NotificationApiTest extends AbstractNotificationApiTest {
 
         login(ukrainianUser.getEmail(), "password");
         Notification ukrainianNotification = getMyNotifications(true, 1).get(0);
-        assertThat(ukrainianNotification.getSubject()).isEqualTo("Welcome on board"); // fallback to english
+        assertThat(ukrainianNotification.getSubject()).isEqualTo("Ласкаво просимо");
         assertThat(ukrainianNotification.getText()).isEqualTo("Добрий день, Вячеслав! Прогляньте нашу документацію: https://thingsboard.io");
     }
 
