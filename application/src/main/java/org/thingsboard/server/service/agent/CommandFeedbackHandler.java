@@ -51,44 +51,66 @@ public class CommandFeedbackHandler {
     private final AgentApplicationService appService;
     private final AgentContextComponent agentCtx;
 
-    // todo: handle errors for each onCommand*
-
     public void onCommandAck(TenantId tenantId, AgentId agentId, CommandAck ack) {
         AgentAppEventId eventId = toEventId(ack.getCommandId());
         log.trace("[{}][{}] Received CommandAck for event {}, status: {}", tenantId, agentId, eventId, ack.getStatus());
 
-        if (ack.getStatus() == AckStatus.ACCEPTED) {
-            appEventService.updateStatus(eventId, AgentAppEventStatus.QUEUED, null);
-        } else {
-            getExecutor().submit(() -> eventErrorHandler.onFailure(tenantId, agentId, eventId, ErrorOrigin.AGENT));
-        }
+        getExecutor().submit(() -> doOnCommandAck(tenantId, agentId, ack, eventId));
+    }
+
+    private void doOnCommandAck(TenantId tenantId, AgentId agentId, CommandAck ack, AgentAppEventId eventId) {
+        doWithFallback(tenantId, agentId, eventId, () -> {
+            if (ack.getStatus() == AckStatus.ACCEPTED) {
+                appEventService.updateStatus(eventId, AgentAppEventStatus.QUEUED, null);
+            } else {
+                eventErrorHandler.onFailure(tenantId, agentId, eventId, ErrorOrigin.AGENT);
+            }
+        });
     }
 
     public void onCommandProgress(TenantId tenantId, AgentId agentId, CommandProgress progress) {
         AgentAppEventId eventId = toEventId(progress.getCommandId());
         log.trace("[{}][{}] Received CommandProgress for event {}, stage: {}", tenantId, agentId, eventId, progress.getStage());
-        appEventService.updateStatus(eventId, AgentAppEventStatus.PROCESSING, null);
+        getExecutor().submit(() ->
+                doWithFallback(tenantId, agentId, eventId, () ->
+                        appEventService.updateStatus(eventId, AgentAppEventStatus.PROCESSING, null))
+        );
     }
 
     public void onCommandResult(TenantId tenantId, AgentId agentId, CommandResult result) {
         AgentAppEventId eventId = toEventId(result.getCommandId());
         log.trace("[{}][{}] Received CommandResult for event {}, success: {}", tenantId, agentId, eventId, result.getSuccess());
 
-        AgentAppEvent event = appEventService.findById(tenantId, eventId);
-        if (event == null) {
-            log.warn("[{}] Event not found for CommandResult: {}", tenantId, eventId);
-            return;
+        getExecutor().submit(() -> doOnCommandResult(tenantId, agentId, result, eventId));
+    }
+
+    private void doOnCommandResult(TenantId tenantId, AgentId agentId, CommandResult result, AgentAppEventId eventId) {
+        doWithFallback(tenantId, agentId, eventId, () -> {
+            AgentAppEvent event = appEventService.findById(tenantId, eventId);
+            if (event == null) {
+                log.warn("[{}] Event not found for CommandResult: {}", tenantId, eventId);
+                return;
+            }
+            if (!result.getSuccess()) {
+                eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.AGENT);
+                return;
+            }
+            if (event.getActionType() == AgentAppEventActionType.DELETE) {
+                appService.delete(tenantId, event.getApplicationId());
+                return;
+            }
+            appEventService.updateStatus(eventId, AgentAppEventStatus.PROCESSING, null);
+            agentEventProcessor.processNextStepOrFinish(tenantId, agentId, event);
+        });
+    }
+
+    private void doWithFallback(TenantId tenantId, AgentId agentId, AgentAppEventId eventId, Runnable runnable) {
+        try {
+            runnable.run();
+        } catch (Exception e) {
+            log.error("[{}][{}] Failed to process feedback for event {}", tenantId, agentId, eventId, e);
+            eventErrorHandler.onFailure(tenantId, agentId, eventId, ErrorOrigin.SERVER);
         }
-        if (!result.getSuccess()) {
-            getExecutor().submit(() -> eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.AGENT));
-            return;
-        }
-        if (event.getActionType() == AgentAppEventActionType.DELETE) {
-            appService.delete(tenantId, event.getApplicationId());
-            return;
-        }
-        appEventService.updateStatus(eventId, AgentAppEventStatus.PROCESSING, null);
-        getExecutor().submit(() -> agentEventProcessor.processNextStepOrFinish(tenantId, agentId, event));
     }
 
     private ListeningExecutorService getExecutor() {
