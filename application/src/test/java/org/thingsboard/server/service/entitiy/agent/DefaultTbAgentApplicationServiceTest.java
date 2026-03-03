@@ -29,12 +29,16 @@ import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
+import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.state.ComposeDownStepState;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.exception.DataValidationException;
@@ -62,6 +66,8 @@ class DefaultTbAgentApplicationServiceTest {
     @Mock
     private AgentAppEventService agentAppEventService;
     @Mock
+    private TbClusterService tbClusterService;
+    @Mock
     private TbLogEntityActionService logEntityActionService;
 
     @InjectMocks
@@ -69,6 +75,8 @@ class DefaultTbAgentApplicationServiceTest {
 
     private static final TenantId TENANT_ID = TenantId.fromUUID(UUID.randomUUID());
     private static final AgentApplicationId APP_ID = new AgentApplicationId(UUID.randomUUID());
+    private static final AgentAppEventId EVENT_ID = new AgentAppEventId(UUID.randomUUID());
+    private static final AgentId AGENT_ID = new AgentId(UUID.randomUUID());
     private static final User USER = new User();
 
     @BeforeEach
@@ -264,6 +272,57 @@ class DefaultTbAgentApplicationServiceTest {
         assertThatThrownBy(() -> service.execActionEvent(TENANT_ID, APP_ID, request, USER))
                 .isInstanceOf(DataValidationException.class)
                 .hasMessageContaining("pending for removal");
+    }
+
+    // ==================== cancelEvent() ====================
+
+    @Test
+    void cancelEvent_success() throws Exception {
+        AgentAppEvent event = new AgentAppEvent(EVENT_ID);
+        event.setTenantId(TENANT_ID);
+        event.setApplicationId(APP_ID);
+        event.setStatus(AgentAppEventStatus.PROCESSING);
+        when(agentAppEventService.findById(TENANT_ID, EVENT_ID)).thenReturn(event);
+
+        AgentApplication app = newApplication(APP_ID);
+        app.setAgentId(AGENT_ID);
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
+
+        service.cancelEvent(TENANT_ID, EVENT_ID);
+
+        verify(tbClusterService).onAgentAppEventCancelled(TENANT_ID, AGENT_ID, event);
+    }
+
+    @Test
+    void cancelEvent_alreadyFinished_throws() {
+        AgentAppEvent event = new AgentAppEvent(EVENT_ID);
+        event.setTenantId(TENANT_ID);
+        event.setStatus(AgentAppEventStatus.FINISHED);
+        when(agentAppEventService.findById(TENANT_ID, EVENT_ID)).thenReturn(event);
+
+        assertThatThrownBy(() -> service.cancelEvent(TENANT_ID, EVENT_ID))
+                .isInstanceOf(ThingsboardException.class)
+                .hasMessageContaining("terminal state");
+    }
+
+    @Test
+    void cancelEvent_alreadyError_throws() {
+        AgentAppEvent event = new AgentAppEvent(EVENT_ID);
+        event.setTenantId(TENANT_ID);
+        event.setStatus(AgentAppEventStatus.ERROR);
+        when(agentAppEventService.findById(TENANT_ID, EVENT_ID)).thenReturn(event);
+
+        assertThatThrownBy(() -> service.cancelEvent(TENANT_ID, EVENT_ID))
+                .isInstanceOf(ThingsboardException.class)
+                .hasMessageContaining("terminal state");
+    }
+
+    @Test
+    void cancelEvent_eventNotFound_throws() {
+        when(agentAppEventService.findById(TENANT_ID, EVENT_ID)).thenReturn(null);
+
+        assertThatThrownBy(() -> service.cancelEvent(TENANT_ID, EVENT_ID))
+                .isInstanceOf(ThingsboardException.class);
     }
 
     // ==================== Helpers ====================

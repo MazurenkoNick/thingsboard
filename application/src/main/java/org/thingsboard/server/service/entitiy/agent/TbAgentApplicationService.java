@@ -19,6 +19,7 @@ import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
+import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.TenantId;
 
@@ -29,6 +30,8 @@ public interface TbAgentApplicationService {
     AgentApplication execInstallEvent(TenantId tenantId, AgentAppEventRequest request, User user) throws Exception;
 
     void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, User user) throws Exception;
+
+    void cancelEvent(TenantId tenantId, AgentAppEventId eventId) throws Exception;
 
     AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application, AgentAppTemplate template, String composeType);
 }

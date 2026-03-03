@@ -146,4 +146,5 @@ public interface TbClusterService extends TbQueueClusterService {
 
     void onAgentAppEvent(TenantId tenantId, AgentId agentId, AgentAppEvent event);
 
+    void onAgentAppEventCancelled(TenantId tenantId, AgentId agentId, AgentAppEvent event);
 }

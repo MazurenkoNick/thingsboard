@@ -15,21 +15,25 @@
  */
 package org.thingsboard.server.service.entitiy.agent;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
+import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
@@ -42,19 +46,13 @@ import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
 @TbCoreComponent
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class DefaultTbAgentApplicationService extends AbstractTbEntityService implements TbAgentApplicationService {
 
     private final AgentAppTemplateMergeOrchestrator templateMergeOrchestrator;
     private final AgentApplicationService agentApplicationService;
     private final AgentAppEventService agentAppEventService;
-
-    public DefaultTbAgentApplicationService(AgentAppTemplateMergeOrchestrator templateMergeOrchestrator,
-                                            AgentApplicationService agentApplicationService,
-                                            AgentAppEventService agentAppEventService) {
-        this.templateMergeOrchestrator = templateMergeOrchestrator;
-        this.agentApplicationService = agentApplicationService;
-        this.agentAppEventService = agentAppEventService;
-    }
+    private final TbClusterService tbClusterService;
 
     @Override
     public AgentApplication save(AgentApplication application, User user) throws Exception {
@@ -120,6 +118,20 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         }
 
         saveEvent(tenantId, applicationId, actionType, request);
+    }
+
+    @Override
+    public void cancelEvent(TenantId tenantId, AgentAppEventId eventId) throws Exception {
+        AgentAppEvent event = agentAppEventService.findById(tenantId, eventId);
+        if (event == null) {
+            throw new ThingsboardException("Agent app event not found", ThingsboardErrorCode.ITEM_NOT_FOUND);
+        }
+        AgentAppEventStatus status = event.getStatus();
+        if (status == AgentAppEventStatus.FINISHED || status == AgentAppEventStatus.ERROR) {
+            throw new ThingsboardException("Cannot cancel event in terminal state: " + status, ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        }
+        AgentApplication application = checkNotNull(agentApplicationService.findById(tenantId, event.getApplicationId()));
+        tbClusterService.onAgentAppEventCancelled(tenantId, application.getAgentId(), event);
     }
 
     @Override

@@ -36,6 +36,7 @@ import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -65,6 +66,8 @@ public class AgentApplicationController extends BaseController {
     private static final String TEMPLATE_ID_PARAM_DESCRIPTION = "A string value representing the agent app template id. For example, '784f394c-42b6-435a-983c-b7beff2784f9'";
     private static final String AGENT_APP_ID = "agentApplicationId";
     private static final String AGENT_APP_ID_PARAM_DESCRIPTION = "A string value representing the agent application id. For example, '784f394c-42b6-435a-983c-b7beff2784f9'";
+    private static final String AGENT_APP_EVENT_ID = "agentAppEventId";
+    private static final String AGENT_APP_EVENT_ID_PARAM_DESCRIPTION = "A string value representing the agent app event id. For example, '784f394c-42b6-435a-983c-b7beff2784f9'";
     private static final String AGENT_ID = "agentId";
     private static final String AGENT_ID_PARAM_DESCRIPTION = "A string value representing the agent id. For example, '784f394c-42b6-435a-983c-b7beff2784f9'";
 
@@ -155,6 +158,24 @@ public class AgentApplicationController extends BaseController {
         checkAgentAppId(agentApplicationId, Operation.WRITE);
         TenantId tenantId = getCurrentUser().getTenantId();
         tbAgentApplicationService.execActionEvent(tenantId, agentApplicationId, request, getCurrentUser());
+    }
+
+    @ApiOperation(value = "Cancel Agent Application Event (cancelAgentAppEvent)",
+            notes = "Force-cancels an in-flight or pending agent application event, marking it as ERROR. "
+                    + "Cannot cancel events that are already in a terminal state (FINISHED or ERROR)."
+                    + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PostMapping("/agent/app/{agentApplicationId}/event/{agentAppEventId}/cancel")
+    @ResponseStatus(value = HttpStatus.OK)
+    public void cancelAgentAppEvent(
+            @Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
+            @PathVariable(AGENT_APP_ID) String strAgentAppId,
+            @Parameter(description = AGENT_APP_EVENT_ID_PARAM_DESCRIPTION)
+            @PathVariable(AGENT_APP_EVENT_ID) String strAgentAppEventId) throws Exception {
+        checkParameter(AGENT_APP_EVENT_ID, strAgentAppEventId);
+        AgentAppEventId agentAppEventId = new AgentAppEventId(toUUID(strAgentAppEventId));
+        TenantId tenantId = getCurrentUser().getTenantId();
+        tbAgentApplicationService.cancelEvent(tenantId, agentAppEventId);
     }
 
     @ApiOperation(value = "Merge template into application for preview (mergeForPreview)",

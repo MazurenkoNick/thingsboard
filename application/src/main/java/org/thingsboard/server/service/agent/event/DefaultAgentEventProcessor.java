@@ -73,6 +73,14 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         TenantId tenantId = TenantId.fromUUID(new UUID(notification.getTenantIdMSB(), notification.getTenantIdLSB()));
         AgentId agentId = AgentId.fromMsgAndLsb(notification.getAgentIdMSB(), notification.getAgentIdLSB());
         AgentApplicationId applicationId = AgentApplicationId.fromMsgAndLsb(notification.getApplicationIdMSB(), notification.getApplicationIdLSB());
+
+        if (notification.getCancelled()) {
+            AgentAppEventId eventId = new AgentAppEventId(new UUID(notification.getEventIdMSB(), notification.getEventIdLSB()));
+            log.trace("[{}][{}] Processing cancel notification for event {}", tenantId, agentId, eventId);
+            eventErrorHandler.onFailure(tenantId, agentId, eventId, ErrorOrigin.SERVER);
+            return;
+        }
+
         AgentApplication application = appService.findById(tenantId, applicationId);
 
         log.trace("[{}][{}] Processing agent app event notification for application {}", tenantId, agentId, application);

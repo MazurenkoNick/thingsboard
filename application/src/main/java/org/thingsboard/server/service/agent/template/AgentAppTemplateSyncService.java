@@ -118,6 +118,7 @@ public class AgentAppTemplateSyncService {
                 template.setStartSteps(parsedFile.getStartSteps());
                 template.setUpgradeSteps(parsedFile.getUpgradeSteps());
                 template.setDeleteSteps(parsedFile.getDeleteSteps());
+                template.setRollbackSteps(parsedFile.getRollbackSteps());
 
                 agentAppTemplateService.save(TenantId.SYS_TENANT_ID, template);
             } catch (Exception e) {
