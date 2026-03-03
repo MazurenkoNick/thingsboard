@@ -122,13 +122,17 @@ public class PdfReportUserAgent extends ITextUserAgent {
             }
             if (url == null) {
                 try {
-                    SsrfProtectionValidator.validateUri(new URI(uri));
+                    URI parsedUri = new URI(uri);
+                    String scheme = parsedUri.getScheme();
+                    if (scheme != null && !scheme.equalsIgnoreCase("jar")) {
+                        SsrfProtectionValidator.validateUri(parsedUri);
+                    }
                 } catch (URISyntaxException e) {
                     XRLog.exception("Invalid URI: " + uri, e);
-                    return null;
+                    throw new PdfReportImageException(uri, "Invalid URI syntax", null, e);
                 } catch (RuntimeException e) {
                     XRLog.exception(e.getMessage());
-                    return null;
+                    throw new PdfReportImageException(uri, "URI is invalid", null, e);
                 }
                 return super.resolveAndOpenStream(uri);
             }
@@ -285,7 +289,7 @@ public class PdfReportUserAgent extends ITextUserAgent {
         return null;
     }
 
-    static class PdfReportImageException extends Exception {
+    static class PdfReportImageException extends RuntimeException {
 
         private final String uri;
         private final String uriString;
