@@ -84,6 +84,9 @@ public class AgentEventErrorHandler {
                 appEventService.save(tenantId, buildRollbackEvent(tenantId, event));
                 dispatchNextEvent = false;
             }
+            if (shouldClearDesiredTemplateId(event, errorOrigin)) {
+                clearDesiredTemplateId(tenantId, event.getApplicationId());
+            }
 
             return dispatchNextEvent;
         }));
@@ -96,6 +99,20 @@ public class AgentEventErrorHandler {
     private boolean shouldEnqueueRollbackEvent(AgentAppEvent event, ErrorOrigin errorOrigin) {
         return errorOrigin == ErrorOrigin.SERVER && event != null
                 && (event.hasActionType(AgentAppEventActionType.UPDATE) || event.hasActionType(AgentAppEventActionType.UPGRADE));
+    }
+
+    private boolean shouldClearDesiredTemplateId(AgentAppEvent event, ErrorOrigin errorOrigin) {
+        return errorOrigin == ErrorOrigin.AGENT && event != null
+                && (event.hasActionType(AgentAppEventActionType.UPGRADE) || event.hasActionType(AgentAppEventActionType.ROLLBACK));
+    }
+
+    private void clearDesiredTemplateId(TenantId tenantId, AgentApplicationId applicationId) {
+        AgentApplication app = appService.findById(tenantId, applicationId);
+        if (app != null && app.getDesiredTemplateId() != null) {
+            log.info("[{}] Clearing desiredTemplateId for application {} after agent error", tenantId, applicationId);
+            app.setDesiredTemplateId(null);
+            appService.save(tenantId, app);
+        }
     }
 
     private void dispatchNextIfAppExists(TenantId tenantId, AgentId agentId, AgentAppEventId failedEventId) {
