@@ -241,9 +241,5 @@ class TbAddToGroupNodeTest {
         when(ctxMock.getDbCallbackExecutor()).thenReturn(dbCallbackExecutor);
         when(peContextMock.getEntityGroupService()).thenReturn(entityGroupServiceMock);
         when(peContextMock.getDeviceGroupOtaPackageService()).thenReturn(deviceGroupOtaPackageService);
-        EntityGroup entityGroup = new EntityGroup(groupId);
-        entityGroup.setType(EntityType.DEVICE);
-        when(entityGroupServiceMock.findEntityGroupById(TENANT_ID, groupId))
-                .thenReturn(entityGroup);
     }
 }

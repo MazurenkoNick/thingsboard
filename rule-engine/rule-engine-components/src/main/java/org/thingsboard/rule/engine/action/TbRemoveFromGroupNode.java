@@ -36,7 +36,6 @@ import org.thingsboard.rule.engine.api.TbNodeConfiguration;
 import org.thingsboard.rule.engine.api.TbNodeException;
 import org.thingsboard.rule.engine.api.util.TbNodeUtils;
 import org.thingsboard.server.common.data.EntityType;
-import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -76,15 +75,12 @@ public class TbRemoveFromGroupNode extends TbAbstractGroupActionNode<TbRemoveFro
         EntityId originatorId = msg.getOriginator();
         ctx.getPeContext().getEntityGroupService().removeEntityFromEntityGroup(ctx.getTenantId(), entityGroupId, originatorId);
         if (originatorId.getEntityType().equals(EntityType.DEVICE)) {
-            EntityGroup entityGroup = ctx.getPeContext().getEntityGroupService().findEntityGroupById(ctx.getTenantId(), entityGroupId);
-            if (EntityType.DEVICE.equals(entityGroup.getType())) {
-                DeviceGroupOtaPackage fw =
-                        ctx.getPeContext().getDeviceGroupOtaPackageService().findDeviceGroupOtaPackageByGroupIdAndType(entityGroupId, OtaPackageType.FIRMWARE);
-                DeviceGroupOtaPackage sw =
-                        ctx.getPeContext().getDeviceGroupOtaPackageService().findDeviceGroupOtaPackageByGroupIdAndType(entityGroupId, OtaPackageType.SOFTWARE);
-                if (fw != null || sw != null) {
-                    ctx.getOtaPackageStateService().update(ctx.getTenantId(), List.of((DeviceId) originatorId), fw != null, sw != null);
-                }
+            DeviceGroupOtaPackage fw =
+                    ctx.getPeContext().getDeviceGroupOtaPackageService().findDeviceGroupOtaPackageByGroupIdAndType(entityGroupId, OtaPackageType.FIRMWARE);
+            DeviceGroupOtaPackage sw =
+                    ctx.getPeContext().getDeviceGroupOtaPackageService().findDeviceGroupOtaPackageByGroupIdAndType(entityGroupId, OtaPackageType.SOFTWARE);
+            if (fw != null || sw != null) {
+                ctx.getOtaPackageStateService().update(ctx.getTenantId(), List.of((DeviceId) originatorId), fw != null, sw != null);
             }
         }
     }

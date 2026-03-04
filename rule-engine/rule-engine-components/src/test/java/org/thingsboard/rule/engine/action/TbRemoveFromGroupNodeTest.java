@@ -110,6 +110,7 @@ class TbRemoveFromGroupNodeTest {
         initMocks();
         when(entityGroupServiceMock.findEntityGroupByTypeAndNameAsync(any(), any(), any(), any()))
                 .thenReturn(Futures.immediateFuture(Optional.of(new EntityGroup(entityGroupId))));
+        when(peContextMock.getDeviceGroupOtaPackageService()).thenReturn(deviceGroupOtaPackageServiceMock);
 
         TbMsg msg = TbMsg.newMsg()
                 .type(TbMsgType.POST_TELEMETRY_REQUEST)
@@ -122,8 +123,10 @@ class TbRemoveFromGroupNodeTest {
         verify(peContextMock).getOwner(TENANT_ID, DEVICE_ID);
         verify(entityGroupServiceMock).findEntityGroupByTypeAndNameAsync(TENANT_ID, TENANT_ID, EntityType.DEVICE, "Device Group");
         verify(entityGroupServiceMock).removeEntityFromEntityGroup(TENANT_ID, entityGroupId, DEVICE_ID);
+        verify(deviceGroupOtaPackageServiceMock).findDeviceGroupOtaPackageByGroupIdAndType(entityGroupId, OtaPackageType.FIRMWARE);
+        verify(deviceGroupOtaPackageServiceMock).findDeviceGroupOtaPackageByGroupIdAndType(entityGroupId, OtaPackageType.SOFTWARE);
         verify(ctxMock).tellNext(msg, TbNodeConnectionType.SUCCESS);
-        verifyNoMoreInteractions(ctxMock, peContextMock, entityGroupServiceMock);
+        verifyNoMoreInteractions(ctxMock, peContextMock, entityGroupServiceMock, deviceGroupOtaPackageServiceMock);
     }
 
     @Test
@@ -171,7 +174,6 @@ class TbRemoveFromGroupNodeTest {
         when(peContextMock.getDeviceGroupOtaPackageService()).thenReturn(deviceGroupOtaPackageServiceMock);
         EntityGroup entityGroup = new EntityGroup(ENTITY_GROUP_ID);
         entityGroup.setType(EntityType.DEVICE);
-        when(entityGroupServiceMock.findEntityGroupById(TENANT_ID, ENTITY_GROUP_ID)).thenReturn(entityGroup);
         when(deviceGroupOtaPackageServiceMock.findDeviceGroupOtaPackageByGroupIdAndType(ENTITY_GROUP_ID, OtaPackageType.FIRMWARE))
                 .thenReturn(new DeviceGroupOtaPackage());
         when(deviceGroupOtaPackageServiceMock.findDeviceGroupOtaPackageByGroupIdAndType(ENTITY_GROUP_ID, OtaPackageType.SOFTWARE))
@@ -189,7 +191,6 @@ class TbRemoveFromGroupNodeTest {
         verify(peContextMock).getOwner(TENANT_ID, DEVICE_ID);
         verify(entityGroupServiceMock).findEntityGroupByTypeAndNameAsync(TENANT_ID, TENANT_ID, EntityType.DEVICE, "Device Group");
         verify(entityGroupServiceMock).removeEntityFromEntityGroup(TENANT_ID, ENTITY_GROUP_ID, DEVICE_ID);
-        verify(entityGroupServiceMock).findEntityGroupById(TENANT_ID, ENTITY_GROUP_ID);
         verify(deviceGroupOtaPackageServiceMock).findDeviceGroupOtaPackageByGroupIdAndType(ENTITY_GROUP_ID, OtaPackageType.FIRMWARE);
         verify(deviceGroupOtaPackageServiceMock).findDeviceGroupOtaPackageByGroupIdAndType(ENTITY_GROUP_ID, OtaPackageType.SOFTWARE);
         verify(otaPackageStateServiceMock).update(TENANT_ID, List.of(DEVICE_ID), true, true);
