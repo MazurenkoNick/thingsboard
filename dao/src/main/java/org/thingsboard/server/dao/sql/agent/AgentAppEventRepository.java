@@ -68,6 +68,7 @@ public interface AgentAppEventRepository extends JpaRepository<AgentAppEventEnti
                        e.currentStepId = COALESCE(:stepId, e.currentStepId),
                        e.updatedTime = :now
            WHERE e.id = :eventId
+           AND (e.status IS NULL OR e.status NOT IN ('FINISHED', 'ERROR'))
            """)
     void updateStatus(@Param("eventId") UUID eventId, @Param("status") AgentAppEventStatus status,
                       @Param("stepId") UUID currentStepId, @Param("now") long now);
