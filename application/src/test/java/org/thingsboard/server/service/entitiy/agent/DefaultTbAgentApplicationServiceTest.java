@@ -35,6 +35,7 @@ import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.state.ComposeDownStepState;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
+import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -213,11 +214,16 @@ class DefaultTbAgentApplicationServiceTest {
 
     @Test
     void execActionEvent_upgrade_savesUpdatedApplication() throws Exception {
+        AgentAppTemplateId oldTemplateId = new AgentAppTemplateId(UUID.randomUUID());
+        AgentAppTemplateId newTemplateId = new AgentAppTemplateId(UUID.randomUUID());
+
         AgentApplication app = newApplication(APP_ID);
+        app.setTemplateId(oldTemplateId);
         when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
 
         AgentApplication upgradedApp = new AgentApplication();
         upgradedApp.setConfig(createDockerComposeConfig("new-compose"));
+        upgradedApp.setTemplateId(newTemplateId);
 
         AgentAppEventRequest request = new AgentAppEventRequest();
         request.setActionType(AgentAppEventActionType.UPGRADE);
@@ -228,6 +234,8 @@ class DefaultTbAgentApplicationServiceTest {
         verify(agentApplicationService).save(eq(TENANT_ID), eq(upgradedApp));
         assertThat(upgradedApp.getId()).isEqualTo(APP_ID);
         assertThat(upgradedApp.getTenantId()).isEqualTo(TENANT_ID);
+        assertThat(upgradedApp.getTemplateId()).isEqualTo(oldTemplateId);
+        assertThat(upgradedApp.getDesiredTemplateId()).isEqualTo(newTemplateId);
     }
 
     @Test

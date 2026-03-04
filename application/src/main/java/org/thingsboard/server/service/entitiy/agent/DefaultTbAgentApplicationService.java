@@ -50,8 +50,8 @@ import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
 public class DefaultTbAgentApplicationService extends AbstractTbEntityService implements TbAgentApplicationService {
 
     private final AgentAppTemplateMergeOrchestrator templateMergeOrchestrator;
-    private final AgentApplicationService agentApplicationService;
-    private final AgentAppEventService agentAppEventService;
+    private final AgentApplicationService applicationService;
+    private final AgentAppEventService appEventService;
     private final TbClusterService tbClusterService;
 
     @Override
@@ -60,7 +60,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         ActionType actionType = isUpdate ? ActionType.UPDATED : ActionType.ADDED;
         TenantId tenantId = application.getTenantId();
         try {
-            AgentApplication savedApp = checkNotNull(agentApplicationService.save(tenantId, application));
+            AgentApplication savedApp = checkNotNull(applicationService.save(tenantId, application));
             logEntityActionService.logEntityAction(tenantId, savedApp.getId(), savedApp, actionType, user);
             return savedApp;
         } catch (Exception e) {
@@ -78,7 +78,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         }
         application.setId(null);
         application.setTenantId(tenantId);
-        AgentApplication savedApp = checkNotNull(agentApplicationService.save(tenantId, application));
+        AgentApplication savedApp = checkNotNull(applicationService.save(tenantId, application));
 
         saveEvent(tenantId, savedApp.getId(), AgentAppEventActionType.INSTALL, request);
 
@@ -96,17 +96,18 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         if (actionType == AgentAppEventActionType.INSTALL) {
             throw new DataValidationException("Use the install endpoint for INSTALL events");
         }
-        if (agentAppEventService.hasActiveEventForApplication(applicationId)) {
+        if (appEventService.hasActiveEventForApplication(applicationId)) {
             throw new ThingsboardException("Cannot create event while another event is being processed", ThingsboardErrorCode.TOO_MANY_REQUESTS);
         }
 
-        AgentApplication application = checkNotNull(agentApplicationService.findById(tenantId, applicationId));
+        AgentApplication application = checkNotNull(applicationService.findById(tenantId, applicationId));
         throwIfPendingForDelete(application);
 
+        application.setDesiredTemplateId(null);
+
         if (actionType == AgentAppEventActionType.DELETE) {
-            agentAppEventService.deleteAllPendingByApplicationId(applicationId);
+            appEventService.deleteAllPendingByApplicationId(applicationId);
             application.setPendingDeletion(true);
-            agentApplicationService.save(tenantId, application);
         } else if (actionType == AgentAppEventActionType.UPGRADE) {
             AgentApplication upgradedApp = request.getApplication();
             if (upgradedApp == null) {
@@ -114,15 +115,19 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
             }
             upgradedApp.setId(applicationId);
             upgradedApp.setTenantId(tenantId);
-            agentApplicationService.save(tenantId, upgradedApp);
+            upgradedApp.setVersion(application.getVersion());
+            upgradedApp.setDesiredTemplateId(upgradedApp.getTemplateId());
+            upgradedApp.setTemplateId(application.getTemplateId());
+            application = upgradedApp;
         }
 
+        applicationService.save(tenantId, application);
         saveEvent(tenantId, applicationId, actionType, request);
     }
 
     @Override
     public void cancelEvent(TenantId tenantId, AgentAppEventId eventId) throws Exception {
-        AgentAppEvent event = agentAppEventService.findById(tenantId, eventId);
+        AgentAppEvent event = appEventService.findById(tenantId, eventId);
         if (event == null) {
             throw new ThingsboardException("Agent app event not found", ThingsboardErrorCode.ITEM_NOT_FOUND);
         }
@@ -130,7 +135,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         if (status == AgentAppEventStatus.FINISHED || status == AgentAppEventStatus.ERROR) {
             throw new ThingsboardException("Cannot cancel event in terminal state: " + status, ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
-        AgentApplication application = checkNotNull(agentApplicationService.findById(tenantId, event.getApplicationId()));
+        AgentApplication application = checkNotNull(applicationService.findById(tenantId, event.getApplicationId()));
         tbClusterService.onAgentAppEventCancelled(tenantId, application.getAgentId(), event);
     }
 
@@ -160,6 +165,6 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         event.setDeliveryState(AgentAppEventDeliveryState.PENDING);
         event.setUpdatedTime(System.currentTimeMillis());
         event.setStepStates(request.getStepInputs());
-        agentAppEventService.save(tenantId, event);
+        appEventService.save(tenantId, event);
     }
 }

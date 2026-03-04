@@ -22,9 +22,9 @@ import lombok.Setter;
 import lombok.ToString;
 import org.thingsboard.server.common.data.BaseData;
 import org.thingsboard.server.common.data.HasTenantId;
+import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
-import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.TenantId;
 
@@ -77,5 +77,9 @@ public class AgentAppEvent extends BaseData<AgentAppEventId> implements HasId<Ag
     @Override
     public long getCreatedTime() {
         return super.getCreatedTime();
+    }
+
+    public boolean hasActionType(AgentAppEventActionType type) {
+        return actionType != null && actionType == type;
     }
 }

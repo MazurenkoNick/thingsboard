@@ -148,6 +148,15 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         if (event.getActionType() == AgentAppEventActionType.DELETE) {
             log.trace("[{}][{}] Deleting application {} after DELETE event", tenantId, agentId, application.getId());
             appService.delete(tenantId, event.getApplicationId());
+        } else if (event.getActionType() == AgentAppEventActionType.UPGRADE && application.getDesiredTemplateId() != null) {
+            log.trace("[{}][{}] Promoting desiredTemplateId to templateId for application {}", tenantId, agentId, application.getId());
+            application.setTemplateId(application.getDesiredTemplateId());
+            application.setDesiredTemplateId(null);
+            appService.save(tenantId, application);
+        } else if (event.getActionType() == AgentAppEventActionType.ROLLBACK && application.getDesiredTemplateId() != null) {
+            log.trace("[{}][{}] Clearing desiredTemplateId after rollback for application {}", tenantId, agentId, application.getId());
+            application.setDesiredTemplateId(null);
+            appService.save(tenantId, application);
         }
         processNextEventForApp(tenantId, agentId, application);
     }

@@ -77,9 +77,10 @@ public class AgentEventErrorHandler {
             boolean dispatchNextEvent = true;
 
             AgentAppEvent event = appEventService.findById(tenantId, failedEventId);
-            if (shouldRollbackPendingDeletion(event)) {
+            if (isDelete(event)) {
                 rollbackPendingDeletion(tenantId, event.getApplicationId());
-            } else if (shouldEnqueueRollbackEvent(event, errorOrigin)) {
+            }
+            if (shouldEnqueueRollbackEvent(event, errorOrigin)) {
                 appEventService.save(tenantId, buildRollbackEvent(tenantId, event));
                 dispatchNextEvent = false;
             }
@@ -88,16 +89,13 @@ public class AgentEventErrorHandler {
         }));
     }
 
-    private boolean shouldEnqueueRollbackEvent(AgentAppEvent event, ErrorOrigin errorOrigin) {
-        return errorOrigin == ErrorOrigin.SERVER
-                && event != null
-                &&
-                (event.getActionType() == AgentAppEventActionType.UPDATE
-                        || event.getActionType() == AgentAppEventActionType.UPGRADE);
+    private boolean isDelete(AgentAppEvent event) {
+        return event != null && event.hasActionType(AgentAppEventActionType.DELETE);
     }
 
-    private boolean shouldRollbackPendingDeletion(AgentAppEvent event) {
-        return event != null && event.getActionType() == AgentAppEventActionType.DELETE;
+    private boolean shouldEnqueueRollbackEvent(AgentAppEvent event, ErrorOrigin errorOrigin) {
+        return errorOrigin == ErrorOrigin.SERVER && event != null
+                && (event.hasActionType(AgentAppEventActionType.UPDATE) || event.hasActionType(AgentAppEventActionType.UPGRADE));
     }
 
     private void dispatchNextIfAppExists(TenantId tenantId, AgentId agentId, AgentAppEventId failedEventId) {

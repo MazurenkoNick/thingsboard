@@ -62,6 +62,9 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
     @Column(name = ModelConstants.AGENT_APPLICATION_TEMPLATE_ID_PROPERTY)
     private UUID templateId;
 
+    @Column(name = ModelConstants.AGENT_APPLICATION_DESIRED_TEMPLATE_ID_PROPERTY)
+    private UUID desiredTemplateId;
+
     @Convert(converter = JsonConverter.class)
     @JdbcType(PostgreSQLJsonPGObjectJsonbType.class)
     @Column(name = ModelConstants.AGENT_APPLICATION_CONFIG_PROPERTY, columnDefinition = "jsonb")
@@ -87,6 +90,9 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
         if (application.getTemplateId() != null) {
             this.templateId = application.getTemplateId().getId();
         }
+        if (application.getDesiredTemplateId() != null) {
+            this.desiredTemplateId = application.getDesiredTemplateId().getId();
+        }
         this.config = application.getConfig() != null ? JacksonUtil.valueToTree(application.getConfig()) : null;
         this.pendingDeletion = application.isPendingDeletion();
     }
@@ -106,6 +112,9 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
         application.setName(name);
         if (templateId != null) {
             application.setTemplateId(new AgentAppTemplateId(templateId));
+        }
+        if (desiredTemplateId != null) {
+            application.setDesiredTemplateId(new AgentAppTemplateId(desiredTemplateId));
         }
         application.setConfig(config != null ? JacksonUtil.treeToValue(config, AgentAppConfig.class) : null);
         application.setPendingDeletion(pendingDeletion);

@@ -21,6 +21,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
+import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 
 import java.util.List;
@@ -34,7 +35,8 @@ public class DefaultAgentAppEventStepsResolver implements AgentAppEventStepsReso
 
     @Override
     public List<AgentAppStep> resolveSteps(AgentApplication app, AgentAppEventActionType actionType) {
-        AgentAppTemplate template = templateService.findById(TenantId.SYS_TENANT_ID, app.getTemplateId());
+        AgentAppTemplateId templateId = resolveTemplateId(app, actionType);
+        AgentAppTemplate template = templateService.findById(TenantId.SYS_TENANT_ID, templateId);
         if (template == null) {
             throw new IllegalStateException("Template not found for application " + app.getId());
         }
@@ -49,5 +51,13 @@ public class DefaultAgentAppEventStepsResolver implements AgentAppEventStepsReso
         }
         Predicate<AgentAppStep> nonTemplateOnly = s -> !s.isTemplateOnly();
         return StepLinkedListUtils.filter(steps, nonTemplateOnly);
+    }
+
+    private AgentAppTemplateId resolveTemplateId(AgentApplication app, AgentAppEventActionType actionType) {
+        if ((actionType == AgentAppEventActionType.UPGRADE || actionType == AgentAppEventActionType.ROLLBACK)
+                && app.getDesiredTemplateId() != null) {
+            return app.getDesiredTemplateId();
+        }
+        return app.getTemplateId();
     }
 }

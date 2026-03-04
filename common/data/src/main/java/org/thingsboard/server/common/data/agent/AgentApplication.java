@@ -43,6 +43,9 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     private AgentId agentId;
     private String name;
     private AgentAppTemplateId templateId;
+    @JsonIgnore
+    @Getter
+    private AgentAppTemplateId desiredTemplateId;
     private AgentApplicationType appType;
     private AgentAppConfig config;
     @Getter
@@ -66,6 +69,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         this.appType = application.getAppType();
         this.name = application.getName();
         this.templateId = application.getTemplateId();
+        this.desiredTemplateId = application.getDesiredTemplateId();
         this.version = application.getVersion();
         this.pendingDeletion = application.isPendingDeletion();
     }
