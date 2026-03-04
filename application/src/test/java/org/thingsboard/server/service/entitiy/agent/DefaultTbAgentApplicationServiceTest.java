@@ -31,7 +31,6 @@ import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.state.ComposeDownStepState;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -145,7 +144,7 @@ class DefaultTbAgentApplicationServiceTest {
     @Test
     void execActionEvent_update_createsEvent() throws Exception {
         AgentApplication app = newApplication(APP_ID);
-        when(agentApplicationService.findInfoById(TENANT_ID, APP_ID)).thenReturn(newApplicationInfo(app));
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
 
         AgentAppEventRequest request = new AgentAppEventRequest();
         request.setActionType(AgentAppEventActionType.UPDATE);
@@ -160,7 +159,7 @@ class DefaultTbAgentApplicationServiceTest {
     @Test
     void execActionEvent_delete_setsPendingDeletion() throws Exception {
         AgentApplication app = newApplication(APP_ID);
-        when(agentApplicationService.findInfoById(TENANT_ID, APP_ID)).thenReturn(newApplicationInfo(app));
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
 
         AgentAppEventRequest request = new AgentAppEventRequest();
         request.setActionType(AgentAppEventActionType.DELETE);
@@ -180,7 +179,7 @@ class DefaultTbAgentApplicationServiceTest {
     @Test
     void execActionEvent_restart_createsEvent() throws Exception {
         AgentApplication app = newApplication(APP_ID);
-        when(agentApplicationService.findInfoById(TENANT_ID, APP_ID)).thenReturn(newApplicationInfo(app));
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
 
         AgentAppEventRequest request = new AgentAppEventRequest();
         request.setActionType(AgentAppEventActionType.RESTART);
@@ -195,7 +194,7 @@ class DefaultTbAgentApplicationServiceTest {
     @Test
     void execActionEvent_withStepInputs_setsStepStates() throws Exception {
         AgentApplication app = newApplication(APP_ID);
-        when(agentApplicationService.findInfoById(TENANT_ID, APP_ID)).thenReturn(newApplicationInfo(app));
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
 
         UUID stepId = UUID.randomUUID();
         ComposeDownStepState stepState = new ComposeDownStepState();
@@ -219,8 +218,7 @@ class DefaultTbAgentApplicationServiceTest {
 
         AgentApplication app = newApplication(APP_ID);
         app.setTemplateId(oldTemplateId);
-        AgentApplicationInfo appInfo = new AgentApplicationInfo(app, "1.0", null, "2.0");
-        when(agentApplicationService.findInfoById(TENANT_ID, APP_ID)).thenReturn(appInfo);
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
 
         AgentApplication upgradedApp = new AgentApplication();
         upgradedApp.setConfig(createDockerComposeConfig("new-compose"));
@@ -302,10 +300,6 @@ class DefaultTbAgentApplicationServiceTest {
     }
 
     // ==================== Helpers ====================
-
-    private AgentApplicationInfo newApplicationInfo(AgentApplication app) {
-        return new AgentApplicationInfo(app, null, null, null);
-    }
 
     private AgentApplication newApplication(AgentApplicationId id) {
         AgentApplication app = new AgentApplication();

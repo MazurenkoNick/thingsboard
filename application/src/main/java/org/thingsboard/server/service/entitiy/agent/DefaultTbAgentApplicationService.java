@@ -28,7 +28,6 @@ import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
 import org.thingsboard.server.common.data.audit.ActionType;
@@ -92,7 +91,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
             throw new ThingsboardException("Cannot create event while another event is being processed", ThingsboardErrorCode.TOO_MANY_REQUESTS);
         }
 
-        AgentApplication application = checkNotNull(applicationService.findInfoById(tenantId, applicationId));
+        AgentApplication application = checkNotNull(applicationService.findById(tenantId, applicationId));
         application.setDesiredTemplateId(null);
 
         if (actionType == AgentAppEventActionType.DELETE) {
