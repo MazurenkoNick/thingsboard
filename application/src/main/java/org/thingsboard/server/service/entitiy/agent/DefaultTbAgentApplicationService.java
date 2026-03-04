@@ -28,6 +28,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
 import org.thingsboard.server.common.data.audit.ActionType;
@@ -73,9 +74,6 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
     @Override
     public AgentApplication execInstallEvent(TenantId tenantId, AgentAppEventRequest request, User user) throws Exception {
         AgentApplication application = request.getApplication();
-        if (application == null) {
-            throw new DataValidationException("Install request must include an application");
-        }
         application.setId(null);
         application.setTenantId(tenantId);
         AgentApplication savedApp = checkNotNull(applicationService.save(tenantId, application));
@@ -90,19 +88,11 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
     @Override
     public void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, User user) throws Exception {
         AgentAppEventActionType actionType = request.getActionType();
-        if (actionType == null) {
-            throw new DataValidationException("Action type must not be null");
-        }
-        if (actionType == AgentAppEventActionType.INSTALL) {
-            throw new DataValidationException("Use the install endpoint for INSTALL events");
-        }
         if (appEventService.hasActiveEventForApplication(applicationId)) {
             throw new ThingsboardException("Cannot create event while another event is being processed", ThingsboardErrorCode.TOO_MANY_REQUESTS);
         }
 
-        AgentApplication application = checkNotNull(applicationService.findById(tenantId, applicationId));
-        throwIfPendingForDelete(application);
-
+        AgentApplication application = checkNotNull(applicationService.findInfoById(tenantId, applicationId));
         application.setDesiredTemplateId(null);
 
         if (actionType == AgentAppEventActionType.DELETE) {
@@ -149,12 +139,6 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
                 .build();
         templateMergeOrchestrator.merge(application, template, ctx);
         return application;
-    }
-
-    private void throwIfPendingForDelete(AgentApplication application) {
-        if (application.isPendingDeletion()) {
-            throw new DataValidationException("Application is already pending for removal");
-        }
     }
 
     private void saveEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventActionType actionType, AgentAppEventRequest request) {

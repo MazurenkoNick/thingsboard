@@ -23,6 +23,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.dao.model.sql.AgentApplicationEntity;
+import org.thingsboard.server.dao.model.sql.AgentApplicationInfoEntity;
 
 import java.util.List;
 import java.util.UUID;
@@ -51,5 +52,20 @@ public interface AgentApplicationRepository extends JpaRepository<AgentApplicati
 
     @Query("SELECT app FROM AgentApplicationEntity app JOIN AgentAppEventEntity evt ON app.id = evt.applicationId WHERE evt.id = :eventId")
     AgentApplicationEntity findByEventId(@Param("eventId") UUID eventId);
+
+    @Query("SELECT new org.thingsboard.server.dao.model.sql.AgentApplicationInfoEntity(a, t.currentVersion, t.previousVersion, t.nextVersion) " +
+            "FROM AgentApplicationEntity a " +
+            "LEFT JOIN AgentAppTemplateEntity t ON a.templateId = t.id " +
+            "WHERE a.id = :id")
+    AgentApplicationInfoEntity findInfoById(@Param("id") UUID id);
+
+    @Query("SELECT new org.thingsboard.server.dao.model.sql.AgentApplicationInfoEntity(a, t.currentVersion, t.previousVersion, t.nextVersion) " +
+            "FROM AgentApplicationEntity a " +
+            "LEFT JOIN AgentAppTemplateEntity t ON a.templateId = t.id " +
+            "WHERE a.agentId = :agentId " +
+            "AND (:textSearch IS NULL OR ilike(a.name, CONCAT('%', :textSearch, '%')) = true)")
+    Page<AgentApplicationInfoEntity> findInfosByAgentId(@Param("agentId") UUID agentId,
+                                                        @Param("textSearch") String textSearch,
+                                                        Pageable pageable);
 
 }

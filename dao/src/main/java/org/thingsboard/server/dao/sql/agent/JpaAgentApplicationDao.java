@@ -21,16 +21,17 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.model.sql.AgentApplicationEntity;
+import org.thingsboard.server.dao.model.sql.AgentApplicationInfoEntity;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -90,4 +91,16 @@ public class JpaAgentApplicationDao extends JpaAbstractDao<AgentApplicationEntit
         return DaoUtil.getData(agentApplicationRepository.findByEventId(eventId));
     }
 
+    @Override
+    public AgentApplicationInfo findInfoById(TenantId tenantId, UUID id) {
+        AgentApplicationInfoEntity entity = agentApplicationRepository.findInfoById(id);
+        return entity != null ? entity.toData() : null;
+    }
+
+    @Override
+    public PageData<AgentApplicationInfo> findInfosByAgentId(TenantId tenantId, UUID agentId, PageLink pageLink) {
+        return DaoUtil.pageToPageData(agentApplicationRepository.findInfosByAgentId(
+                agentId, pageLink.getTextSearch(), DaoUtil.toPageable(pageLink))
+                .map(AgentApplicationInfoEntity::toData));
+    }
 }

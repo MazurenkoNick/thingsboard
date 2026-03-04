@@ -664,6 +664,7 @@
                         <argLine>
                             -XX:+UseStringDeduplication -XX:MaxGCPauseMillis=20
                             --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+                            -Dnet.bytebuddy.experimental=true <!-- temp fix -->
                         </argLine>
                     </configuration>
                 </plugin>

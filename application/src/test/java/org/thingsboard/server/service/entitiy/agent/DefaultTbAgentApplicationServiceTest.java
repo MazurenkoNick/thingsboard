@@ -31,6 +31,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.state.ComposeDownStepState;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -42,7 +43,6 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
-import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.service.agent.template.merge.AgentAppTemplateMergeOrchestrator;
 import org.thingsboard.server.service.entitiy.TbLogEntityActionService;
 
@@ -137,8 +137,7 @@ class DefaultTbAgentApplicationServiceTest {
         request.setActionType(AgentAppEventActionType.INSTALL);
 
         assertThatThrownBy(() -> service.execInstallEvent(TENANT_ID, request, USER))
-                .isInstanceOf(DataValidationException.class)
-                .hasMessageContaining("application");
+                .isInstanceOf(NullPointerException.class);
     }
 
     // ==================== createEvent() ====================
@@ -146,7 +145,7 @@ class DefaultTbAgentApplicationServiceTest {
     @Test
     void execActionEvent_update_createsEvent() throws Exception {
         AgentApplication app = newApplication(APP_ID);
-        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
+        when(agentApplicationService.findInfoById(TENANT_ID, APP_ID)).thenReturn(newApplicationInfo(app));
 
         AgentAppEventRequest request = new AgentAppEventRequest();
         request.setActionType(AgentAppEventActionType.UPDATE);
@@ -161,15 +160,16 @@ class DefaultTbAgentApplicationServiceTest {
     @Test
     void execActionEvent_delete_setsPendingDeletion() throws Exception {
         AgentApplication app = newApplication(APP_ID);
-        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
+        when(agentApplicationService.findInfoById(TENANT_ID, APP_ID)).thenReturn(newApplicationInfo(app));
 
         AgentAppEventRequest request = new AgentAppEventRequest();
         request.setActionType(AgentAppEventActionType.DELETE);
 
         service.execActionEvent(TENANT_ID, APP_ID, request, USER);
 
-        assertThat(app.isPendingDeletion()).isTrue();
-        verify(agentApplicationService).save(TENANT_ID, app);
+        ArgumentCaptor<AgentApplication> appCaptor = ArgumentCaptor.forClass(AgentApplication.class);
+        verify(agentApplicationService).save(eq(TENANT_ID), appCaptor.capture());
+        assertThat(appCaptor.getValue().isPendingDeletion()).isTrue();
         verify(agentAppEventService).deleteAllPendingByApplicationId(APP_ID);
 
         ArgumentCaptor<AgentAppEvent> captor = ArgumentCaptor.forClass(AgentAppEvent.class);
@@ -180,7 +180,7 @@ class DefaultTbAgentApplicationServiceTest {
     @Test
     void execActionEvent_restart_createsEvent() throws Exception {
         AgentApplication app = newApplication(APP_ID);
-        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
+        when(agentApplicationService.findInfoById(TENANT_ID, APP_ID)).thenReturn(newApplicationInfo(app));
 
         AgentAppEventRequest request = new AgentAppEventRequest();
         request.setActionType(AgentAppEventActionType.RESTART);
@@ -195,7 +195,7 @@ class DefaultTbAgentApplicationServiceTest {
     @Test
     void execActionEvent_withStepInputs_setsStepStates() throws Exception {
         AgentApplication app = newApplication(APP_ID);
-        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
+        when(agentApplicationService.findInfoById(TENANT_ID, APP_ID)).thenReturn(newApplicationInfo(app));
 
         UUID stepId = UUID.randomUUID();
         ComposeDownStepState stepState = new ComposeDownStepState();
@@ -219,7 +219,8 @@ class DefaultTbAgentApplicationServiceTest {
 
         AgentApplication app = newApplication(APP_ID);
         app.setTemplateId(oldTemplateId);
-        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
+        AgentApplicationInfo appInfo = new AgentApplicationInfo(app, "1.0", null, "2.0");
+        when(agentApplicationService.findInfoById(TENANT_ID, APP_ID)).thenReturn(appInfo);
 
         AgentApplication upgradedApp = new AgentApplication();
         upgradedApp.setConfig(createDockerComposeConfig("new-compose"));
@@ -239,25 +240,6 @@ class DefaultTbAgentApplicationServiceTest {
     }
 
     @Test
-    void execActionEvent_install_rejected() {
-        AgentAppEventRequest request = new AgentAppEventRequest();
-        request.setActionType(AgentAppEventActionType.INSTALL);
-
-        assertThatThrownBy(() -> service.execActionEvent(TENANT_ID, APP_ID, request, USER))
-                .isInstanceOf(DataValidationException.class)
-                .hasMessageContaining("install endpoint");
-    }
-
-    @Test
-    void execActionEvent_nullActionType_throws() {
-        AgentAppEventRequest request = new AgentAppEventRequest();
-
-        assertThatThrownBy(() -> service.execActionEvent(TENANT_ID, APP_ID, request, USER))
-                .isInstanceOf(DataValidationException.class)
-                .hasMessageContaining("Action type");
-    }
-
-    @Test
     void execActionEvent_activeEventExists_throws() {
         when(agentAppEventService.hasActiveEventForApplication(APP_ID)).thenReturn(true);
 
@@ -266,20 +248,6 @@ class DefaultTbAgentApplicationServiceTest {
 
         assertThatThrownBy(() -> service.execActionEvent(TENANT_ID, APP_ID, request, USER))
                 .isInstanceOf(ThingsboardException.class);
-    }
-
-    @Test
-    void execActionEvent_pendingDeletion_throws() {
-        AgentApplication app = newApplication(APP_ID);
-        app.setPendingDeletion(true);
-        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
-
-        AgentAppEventRequest request = new AgentAppEventRequest();
-        request.setActionType(AgentAppEventActionType.RESTART);
-
-        assertThatThrownBy(() -> service.execActionEvent(TENANT_ID, APP_ID, request, USER))
-                .isInstanceOf(DataValidationException.class)
-                .hasMessageContaining("pending for removal");
     }
 
     // ==================== cancelEvent() ====================
@@ -334,6 +302,10 @@ class DefaultTbAgentApplicationServiceTest {
     }
 
     // ==================== Helpers ====================
+
+    private AgentApplicationInfo newApplicationInfo(AgentApplication app) {
+        return new AgentApplicationInfo(app, null, null, null);
+    }
 
     private AgentApplication newApplication(AgentApplicationId id) {
         AgentApplication app = new AgentApplication();
