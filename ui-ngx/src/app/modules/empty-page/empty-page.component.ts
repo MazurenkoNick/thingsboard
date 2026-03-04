@@ -32,8 +32,9 @@
 import { Component } from '@angular/core';
 
 @Component({
-  selector: 'tb-empty-page',
-  template: ''
+    selector: 'tb-empty-page',
+    template: '',
+    standalone: false
 })
 export class EmptyPageComponent {
 }

@@ -31,5 +31,5 @@
 
 -->
 <div class="tb-image-preview" [style.justify-content]="imageAlign">
-  <img #image [src]="imageUrl | image | async" [style.width]="imageWidth" [style.min-width]="imageWidth"/>
+  <img #image [src]="imageUrl | image: {emptyUrl: imagePlaceholder}: triggerUpdate | async" [style.width]="imageWidth" [style.min-width]="imageWidth"/>
 </div>

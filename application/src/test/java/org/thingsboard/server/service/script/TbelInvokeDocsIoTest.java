@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.service.script;
 
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.script.api.tbel.TbDate;
@@ -794,7 +795,7 @@ class TbelInvokeDocsIoTest extends AbstractTbelInvokeTest {
         assertEquals(expected.toString(), actual.toString());
     }
 
-     @Test
+    @Test
     public void setsCreateNewSetFromCreateSetTbMethod_Test() throws ExecutionException, InterruptedException {
         msgStr = """
                 {"list": ["B", "A", "C", "A"]}
@@ -815,7 +816,7 @@ class TbelInvokeDocsIoTest extends AbstractTbelInvokeTest {
         assertEquals(expected.toString(), actual.toString());
     }
 
-     @Test
+    @Test
     public void setsForeachForLoop_Test() throws ExecutionException, InterruptedException {
         msgStr = """
                 {"list": ["A", "B", "C"]}
@@ -990,13 +991,13 @@ class TbelInvokeDocsIoTest extends AbstractTbelInvokeTest {
         ArrayList<Object> listSortDesc = new ArrayList<>(List.of("hello", "C", "B", "A", 34567, 34));
         Set<Object> expectedDesc = new LinkedHashSet<>(listSortDesc);
         Object actual = invokeScript(evalScript(decoderStr), msgStr);
-        assertEquals(expectedAsc.toString(), ((LinkedHashMap<?, ?>)actual).get("set1").toString());
-        assertEquals(expectedAsc.toString(), ((LinkedHashMap<?, ?>)actual).get("set1_asc").toString());
-        assertEquals(expectedDesc.toString(), ((LinkedHashMap<?, ?>)actual).get("set1_desc").toString());
-        assertEquals(expected.toString(), ((LinkedHashMap<?, ?>)actual).get("set2").toString());
-        assertEquals(expectedAsc.toString(), ((LinkedHashMap<?, ?>)actual).get("set3").toString());
-        assertEquals(expectedAsc.toString(), ((LinkedHashMap<?, ?>)actual).get("set3_asc").toString());
-        assertEquals(expectedDesc.toString(), ((LinkedHashMap<?, ?>)actual).get("set3_desc").toString());
+        assertEquals(expectedAsc.toString(), ((LinkedHashMap<?, ?>) actual).get("set1").toString());
+        assertEquals(expectedAsc.toString(), ((LinkedHashMap<?, ?>) actual).get("set1_asc").toString());
+        assertEquals(expectedDesc.toString(), ((LinkedHashMap<?, ?>) actual).get("set1_desc").toString());
+        assertEquals(expected.toString(), ((LinkedHashMap<?, ?>) actual).get("set2").toString());
+        assertEquals(expectedAsc.toString(), ((LinkedHashMap<?, ?>) actual).get("set3").toString());
+        assertEquals(expectedAsc.toString(), ((LinkedHashMap<?, ?>) actual).get("set3_asc").toString());
+        assertEquals(expectedDesc.toString(), ((LinkedHashMap<?, ?>) actual).get("set3_desc").toString());
     }
 
     @Test
@@ -1017,9 +1018,9 @@ class TbelInvokeDocsIoTest extends AbstractTbelInvokeTest {
         List<Object> listOrigin = new ArrayList<>(List.of("C", "B", "A", 34567, "B", "C", "hello", 34));
         Set<Object> expectedSet = new LinkedHashSet<>(listOrigin);
         Object actual = invokeScript(evalScript(decoderStr), msgStr);
-        assertEquals(expectedSet.toString(), ((LinkedHashMap<?, ?>)actual).get("set1").toString());
-        assertEquals(true, ((LinkedHashMap<?, ?>)actual).get("result1"));
-        assertEquals(false, ((LinkedHashMap<?, ?>)actual).get("result2"));
+        assertEquals(expectedSet.toString(), ((LinkedHashMap<?, ?>) actual).get("set1").toString());
+        assertEquals(true, ((LinkedHashMap<?, ?>) actual).get("result1"));
+        assertEquals(false, ((LinkedHashMap<?, ?>) actual).get("result2"));
     }
 
     @Test
@@ -1040,9 +1041,9 @@ class TbelInvokeDocsIoTest extends AbstractTbelInvokeTest {
         Set<Object> expectedSet = new LinkedHashSet<>(listOrigin);
         List<Object> expectedToList = new ArrayList<>(expectedSet);
         Object actual = invokeScript(evalScript(decoderStr), msgStr);
-        assertEquals(listOrigin.toString(), ((LinkedHashMap<?, ?>)actual).get("list").toString());
-        assertEquals(expectedSet.toString(), ((LinkedHashMap<?, ?>)actual).get("set1").toString());
-        assertEquals(expectedToList.toString(), ((LinkedHashMap<?, ?>)actual).get("tolist").toString());
+        assertEquals(listOrigin.toString(), ((LinkedHashMap<?, ?>) actual).get("list").toString());
+        assertEquals(expectedSet.toString(), ((LinkedHashMap<?, ?>) actual).get("set1").toString());
+        assertEquals(expectedToList.toString(), ((LinkedHashMap<?, ?>) actual).get("tolist").toString());
     }
 
     @Test
@@ -1728,7 +1729,7 @@ class TbelInvokeDocsIoTest extends AbstractTbelInvokeTest {
         assertEquals(expected, actual);
     }
 
-    @Test
+    @RepeatedTest(value = 3, name = "{displayName} {currentRepetition}/{totalRepetitions}")
     public void parseBytes_Test() throws ExecutionException, InterruptedException {
         byte[] bytesExecutionArrayList = new byte[]{(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0xDD};
         msgStr = "{}";
@@ -2836,5 +2837,6 @@ class TbelInvokeDocsIoTest extends AbstractTbelInvokeTest {
         }
         return list;
     }
+
 }
 

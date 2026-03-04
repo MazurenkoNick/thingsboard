@@ -72,15 +72,16 @@ abstract class ScadaSymbolPanelComponent implements AfterViewInit {
 }
 
 @Component({
-  template: `<div class="tb-scada-symbol-tooltip-panel">
+    template: `<div class="tb-scada-symbol-tooltip-panel">
     <span>{{ symbolElement?.element?.type }}{{ symbolElement?.invisible ? ' (' + ('scada.hidden' | translate) + ')' : '' }}</span>
     <button mat-stroked-button color="primary" (click)="onAddTag()">
       <mat-icon>add</mat-icon>
       <span translate>scada.tag.add-tag</span>
     </button>
   </div>`,
-  styleUrls: ['./scada-symbol-tooltip.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    styleUrls: ['./scada-symbol-tooltip.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 class ScadaSymbolAddTagPanelComponent extends ScadaSymbolPanelComponent {
 
@@ -98,7 +99,7 @@ class ScadaSymbolAddTagPanelComponent extends ScadaSymbolPanelComponent {
 }
 
 @Component({
-  template: `<div class="tb-scada-symbol-tooltip-panel">
+    template: `<div class="tb-scada-symbol-tooltip-panel">
     <span>{{ (isAdd ? 'scada.tag.enter-tag' : 'scada.tag.update-tag' ) | translate }}:</span>
     <mat-form-field class="tb-inline-field" appearance="outline" subscriptSizing="dynamic">
       <input #tagField matInput [(ngModel)]="tag" (keydown)="tagEnter($event)" (blur)="onBlur()"
@@ -118,8 +119,9 @@ class ScadaSymbolAddTagPanelComponent extends ScadaSymbolPanelComponent {
       <mat-icon>close</mat-icon>
     </button>
   </div>`,
-  styleUrls: ['./scada-symbol-tooltip.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    styleUrls: ['./scada-symbol-tooltip.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 class ScadaSymbolTagInputPanelComponent extends ScadaSymbolPanelComponent implements AfterViewInit, OnDestroy {
 
@@ -196,7 +198,7 @@ class ScadaSymbolTagInputPanelComponent extends ScadaSymbolPanelComponent implem
 }
 
 @Component({
-  template: `<div class="tb-scada-symbol-tooltip-panel">
+    template: `<div class="tb-scada-symbol-tooltip-panel">
     <span>{{ symbolElement?.element?.type }}{{ symbolElement?.invisible ? ' (' + ('scada.hidden' | translate) + ')' : '' }}:</span>
     <span><b>{{ symbolElement?.tag }}</b></span>
     <button *ngIf="!symbolElement?.readonly" type="button" mat-icon-button class="tb-mat-20"
@@ -221,8 +223,9 @@ class ScadaSymbolTagInputPanelComponent extends ScadaSymbolPanelComponent implem
       <mat-icon>delete</mat-icon>
     </button>
   </div>`,
-  styleUrls: ['./scada-symbol-tooltip.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    styleUrls: ['./scada-symbol-tooltip.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 class ScadaSymbolTagPanelComponent extends ScadaSymbolPanelComponent implements OnInit, AfterViewInit {
 
@@ -320,7 +323,7 @@ class ScadaSymbolTagPanelComponent extends ScadaSymbolPanelComponent implements 
 }
 
 @Component({
-  template: `<div class="tooltipster-content tb-scada-symbol-tooltip-panel column">
+    template: `<div class="tooltipster-content tb-scada-symbol-tooltip-panel column">
     <div class="tb-confirm-text" [innerHTML]="deleteText"></div>
     <div class="tb-scada-symbol-tooltip-panel">
       <button mat-stroked-button color="primary" (click)="onCancel()">
@@ -334,8 +337,9 @@ class ScadaSymbolTagPanelComponent extends ScadaSymbolPanelComponent implements 
       </button>
     </div>
   </div>`,
-  styleUrls: ['./scada-symbol-tooltip.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    styleUrls: ['./scada-symbol-tooltip.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 class ScadaSymbolRemoveTagConfirmComponent extends ScadaSymbolPanelComponent implements OnInit, AfterViewInit {
 
@@ -370,7 +374,7 @@ class ScadaSymbolRemoveTagConfirmComponent extends ScadaSymbolPanelComponent imp
 }
 
 @Component({
-  template: `<div class="tooltipster-content tb-scada-symbol-tooltip-panel column flex-start">
+    template: `<div class="tooltipster-content tb-scada-symbol-tooltip-panel column flex-start">
     <div *ngIf="!symbolElement?.readonly || hasStateRenderFunction" translate>scada.state-render-function</div>
     <button *ngIf="hasStateRenderFunction"
             mat-stroked-button
@@ -402,8 +406,9 @@ class ScadaSymbolRemoveTagConfirmComponent extends ScadaSymbolPanelComponent imp
       <span translate>action.add</span>
     </button>
   </div>`,
-  styleUrls: ['./scada-symbol-tooltip.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    styleUrls: ['./scada-symbol-tooltip.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 class ScadaSymbolTagSettingsComponent extends ScadaSymbolPanelComponent implements OnInit, AfterViewInit {
 

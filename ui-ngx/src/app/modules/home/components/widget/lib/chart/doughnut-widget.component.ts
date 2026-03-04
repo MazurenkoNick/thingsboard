@@ -48,10 +48,11 @@ import { coerceBoolean } from '@shared/decorators/coercion';
 import { ChartWidgetComponent } from '@home/components/widget/lib/chart/chart.models';
 
 @Component({
-  selector: 'tb-doughnut-widget',
-  templateUrl: './latest-chart-widget.component.html',
-  styleUrls: [],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-doughnut-widget',
+    templateUrl: './latest-chart-widget.component.html',
+    styleUrls: [],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class DoughnutWidgetComponent implements OnInit, ChartWidgetComponent {
 

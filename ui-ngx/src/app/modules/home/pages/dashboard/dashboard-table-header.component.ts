@@ -38,9 +38,10 @@ import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Authority } from '@shared/models/authority.enum';
 
 @Component({
-  selector: 'tb-dashboard-table-header',
-  templateUrl: './dashboard-table-header.component.html',
-  styleUrls: []
+    selector: 'tb-dashboard-table-header',
+    templateUrl: './dashboard-table-header.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class DashboardTableHeaderComponent extends EntityTableHeaderComponent<DashboardInfo | Dashboard> implements OnInit {
 

@@ -69,9 +69,10 @@ type ReferencedEntities = {[type: string]: {[id: string]: HolderReferencedEntiti
 type ReferencedEntitiesEntry = [EntityId, HolderReferencedEntities];
 
 @Component({
-  selector: 'tb-image-references',
-  templateUrl: './image-references.component.html',
-  styleUrls: ['./image-references.component.scss']
+    selector: 'tb-image-references',
+    templateUrl: './image-references.component.html',
+    styleUrls: ['./image-references.component.scss'],
+    standalone: false
 })
 export class ImageReferencesComponent implements OnInit {
 

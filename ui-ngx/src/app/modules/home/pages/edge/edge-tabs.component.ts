@@ -36,9 +36,10 @@ import { Edge } from '@shared/models/edge.models';
 import { EntityTabsComponent } from '@home/components/entity/entity-tabs.component';
 
 @Component({
-  selector: 'tb-edge-tabs',
-  templateUrl: './edge-tabs.component.html',
-  styleUrls: []
+    selector: 'tb-edge-tabs',
+    templateUrl: './edge-tabs.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class EdgeTabsComponent extends EntityTabsComponent<Edge> {
 

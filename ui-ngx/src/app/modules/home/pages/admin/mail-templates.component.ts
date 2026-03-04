@@ -47,9 +47,10 @@ import { isDefinedAndNotNull } from '@core/utils';
 import { EditorOptions } from 'tinymce';
 
 @Component({
-  selector: 'tb-mail-templates',
-  templateUrl: './mail-templates.component.html',
-  styleUrls: ['./mail-templates.component.scss', './settings-card.scss']
+    selector: 'tb-mail-templates',
+    templateUrl: './mail-templates.component.html',
+    styleUrls: ['./mail-templates.component.scss', './settings-card.scss'],
+    standalone: false
 })
 export class MailTemplatesComponent extends PageComponent implements OnInit, HasDirtyFlag {
 
@@ -138,7 +139,7 @@ export class MailTemplatesComponent extends PageComponent implements OnInit, Has
         });
       };
     } else {
-      this.tinyMceOptions.plugins = ['link', 'table', 'image', 'imagetools', 'code', 'fullscreen', 'lists'];
+      this.tinyMceOptions.plugins = ['link', 'table', 'image', 'code', 'fullscreen', 'lists'];
       this.tinyMceOptions.menubar = 'edit insert tools view format table';
       this.tinyMceOptions.toolbar_mode = 'sliding';
       this.tinyMceOptions.toolbar = 'fontfamily fontsize | bold italic strikethrough forecolor backcolor ' +

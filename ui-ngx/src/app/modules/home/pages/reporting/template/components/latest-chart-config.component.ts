@@ -64,10 +64,11 @@ import {
 } from '@home/components/widget/lib/chart/doughnut-widget.models';
 
 @Component({
-  selector: 'tb-latest-chart-config',
-  templateUrl: './latest-chart-config.component.html',
-  styleUrls: ['./report-component-config.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-latest-chart-config',
+    templateUrl: './latest-chart-config.component.html',
+    styleUrls: ['./report-component-config.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class LatestChartConfigComponent extends AbstractReportComponentConfig<LatestChartReportComponentConfig> {
 

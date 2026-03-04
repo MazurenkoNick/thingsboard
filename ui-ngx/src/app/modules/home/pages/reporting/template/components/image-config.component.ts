@@ -49,10 +49,11 @@ import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { getDataKey, updateDataKeys } from '@shared/models/widget-settings.models';
 
 @Component({
-  selector: 'tb-image-config',
-  templateUrl: './image-config.component.html',
-  styleUrls: ['./report-component-config.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-image-config',
+    templateUrl: './image-config.component.html',
+    styleUrls: ['./report-component-config.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class ImageConfigComponent extends AbstractReportComponentConfig<ImageReportComponentConfig> {
 

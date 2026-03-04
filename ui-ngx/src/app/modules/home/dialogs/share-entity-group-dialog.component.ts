@@ -46,9 +46,10 @@ export interface ShareEntityGroupDialogData {
 }
 
 @Component({
-  selector: 'tb-share-entity-group-dialog',
-  templateUrl: './share-entity-group-dialog.component.html',
-  providers: [{provide: ErrorStateMatcher, useExisting: ShareEntityGroupDialogComponent}]
+    selector: 'tb-share-entity-group-dialog',
+    templateUrl: './share-entity-group-dialog.component.html',
+    providers: [{ provide: ErrorStateMatcher, useExisting: ShareEntityGroupDialogComponent }],
+    standalone: false
 })
 export class ShareEntityGroupDialogComponent extends
   DialogComponent<ShareEntityGroupDialogComponent, boolean> implements OnInit, ErrorStateMatcher {

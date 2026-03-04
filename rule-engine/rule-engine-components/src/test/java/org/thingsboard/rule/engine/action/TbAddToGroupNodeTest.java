@@ -36,9 +36,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.thingsboard.common.util.DirectListeningExecutor;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.ListeningExecutor;
-import org.thingsboard.rule.engine.TestDbCallbackExecutor;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbNodeConfiguration;
 import org.thingsboard.rule.engine.api.TbNodeException;
@@ -78,7 +78,7 @@ class TbAddToGroupNodeTest {
     private final TenantId TENANT_ID = TenantId.fromUUID(UUID.fromString("b744dd76-79ea-442c-a7b8-c06c7f568488"));
     private final DeviceId DEVICE_ID = new DeviceId(UUID.fromString("48641148-1f52-4d9e-ad74-238515365df5"));
     private final EntityGroupId ENTITY_GROUP_ID = new EntityGroupId(UUID.fromString("dc91a98a-055c-4493-aae9-2de393f4f5ab"));
-    private final ListeningExecutor dbCallbackExecutor = new TestDbCallbackExecutor();
+    private final ListeningExecutor dbCallbackExecutor = DirectListeningExecutor.INSTANCE;
 
     private TbAddToGroupNode node;
     private TbAddToGroupConfiguration config;

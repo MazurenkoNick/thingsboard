@@ -50,7 +50,7 @@ import {
 } from '@shared/models/widget-settings.models';
 import { TranslateService } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
-import { MatButton } from '@angular/material/button';
+import { MatIconButton } from '@angular/material/button';
 import { TbPopoverService } from '@shared/components/popover.service';
 import { deepClone, mergeDeep } from '@core/utils';
 import {
@@ -63,21 +63,22 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-date-format-select',
-  templateUrl: './date-format-select.component.html',
-  styleUrls: [],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => DateFormatSelectComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-date-format-select',
+    templateUrl: './date-format-select.component.html',
+    styleUrls: [],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => DateFormatSelectComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class DateFormatSelectComponent implements OnInit, ControlValueAccessor {
 
   @ViewChild('customFormatButton', {static: false})
-  customFormatButton: MatButton;
+  customFormatButton: MatIconButton;
 
   @Input()
   disabled: boolean;
@@ -192,7 +193,7 @@ export class DateFormatSelectComponent implements OnInit, ControlValueAccessor {
     }
   }
 
-  openDateFormatSettingsPopup($event: Event, matButton: MatButton) {
+  openDateFormatSettingsPopup($event: Event, matButton: MatIconButton) {
     if ($event) {
       $event.stopPropagation();
     }
@@ -223,7 +224,7 @@ export class DateFormatSelectComponent implements OnInit, ControlValueAccessor {
     }
   }
 
-  openAutoFormatSettingsPopup($event: Event, matButton: MatButton) {
+  openAutoFormatSettingsPopup($event: Event, matButton: MatIconButton) {
     if ($event) {
       $event.stopPropagation();
     }

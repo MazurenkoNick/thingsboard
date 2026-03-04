@@ -38,19 +38,20 @@ import { TranslateService } from '@ngx-translate/core';
 import { IntegrationType } from '@shared/models/integration.models';
 
 @Component({
-  selector: 'tb-sigfox-integration-form',
-  templateUrl: './http-integration-form.component.html',
-  styleUrls: ['./http-integration-form.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => SigfoxIntegrationFormComponent),
-    multi: true
-  },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => SigfoxIntegrationFormComponent),
-      multi: true,
-    }]
+    selector: 'tb-sigfox-integration-form',
+    templateUrl: './http-integration-form.component.html',
+    styleUrls: ['./http-integration-form.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => SigfoxIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => SigfoxIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class SigfoxIntegrationFormComponent extends HttpIntegrationFormComponent {
 

@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Inject, Injectable } from '@angular/core';
+import { Inject, Injectable, DOCUMENT } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { defaultHttpOptionsFromConfig, RequestConfig } from '@core/http/http-utils';
 import { Observable } from 'rxjs';
@@ -37,7 +37,7 @@ import { BlobEntityInfo, BlobEntityWithCustomerInfo } from '@shared/models/blob-
 import { TimePageLink } from '@shared/models/page/page-link';
 import { PageData } from '@shared/models/page/page-data';
 import { map } from 'rxjs/operators';
-import { DOCUMENT } from '@angular/common';
+
 import { WINDOW } from '@core/services/window.service';
 import { sortEntitiesByIds } from '@shared/models/base-data';
 import { getFilenameFromHttpHeader, isDefinedAndNotNull } from '@core/utils';

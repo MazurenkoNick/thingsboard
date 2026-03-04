@@ -35,8 +35,9 @@ import { ConverterMsg } from '@shared/models/converter.models';
 import { TbPopoverComponent } from '@shared/components/popover.component';
 
 @Component({
-  selector: 'tb-update-payload-panel',
-  templateUrl: './updated-payload-panel.component.html'
+    selector: 'tb-update-payload-panel',
+    templateUrl: './updated-payload-panel.component.html',
+    standalone: false
 })
 export class UpdatedPayloadPanelComponent implements OnInit {
 

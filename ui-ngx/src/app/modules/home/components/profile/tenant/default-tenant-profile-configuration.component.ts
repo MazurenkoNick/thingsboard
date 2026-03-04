@@ -35,20 +35,21 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@app/core/core.state';
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { DefaultTenantProfileConfiguration, TenantProfileConfiguration } from '@shared/models/tenant.model';
-import { isDefinedAndNotNull } from '@core/utils';
+import { isDefinedAndNotNull, isUndefinedOrNull} from '@core/utils';
 import { RateLimitsType } from './rate-limits/rate-limits.models';
 import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 
 @Component({
-  selector: 'tb-default-tenant-profile-configuration',
-  templateUrl: './default-tenant-profile-configuration.component.html',
-  styleUrls: ['./default-tenant-profile-configuration.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => DefaultTenantProfileConfigurationComponent),
-    multi: true
-  }]
+    selector: 'tb-default-tenant-profile-configuration',
+    templateUrl: './default-tenant-profile-configuration.component.html',
+    styleUrls: ['./default-tenant-profile-configuration.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => DefaultTenantProfileConfigurationComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class DefaultTenantProfileConfigurationComponent implements ControlValueAccessor, OnInit, OnDestroy {
 
@@ -203,6 +204,9 @@ export class DefaultTenantProfileConfigurationComponent implements ControlValueA
 
   writeValue(value: DefaultTenantProfileConfiguration | null): void {
     if (isDefinedAndNotNull(value)) {
+      if (isUndefinedOrNull(value.smsEnabled)) {
+        value.smsEnabled = true;
+      }
       this.maxSmsValidation(value.smsEnabled);
       this.defaultTenantProfileConfigurationFormGroup.patchValue(value, {emitEvent: false});
     }

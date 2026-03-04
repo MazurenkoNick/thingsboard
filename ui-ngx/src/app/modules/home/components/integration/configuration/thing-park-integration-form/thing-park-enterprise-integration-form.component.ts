@@ -40,19 +40,20 @@ import {
 } from '@home/components/integration/configuration/thing-park-integration-form/thing-park-integration-form.component';
 
 @Component({
-  selector: 'tb-thing-spark-enterprise-integration-form',
-  templateUrl: './thing-park-integration-form.component.html',
-  styleUrls: ['./thing-park-integration-form.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => ThingParkEnterpriseIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => ThingParkEnterpriseIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-thing-spark-enterprise-integration-form',
+    templateUrl: './thing-park-integration-form.component.html',
+    styleUrls: ['./thing-park-integration-form.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ThingParkEnterpriseIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => ThingParkEnterpriseIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class ThingParkEnterpriseIntegrationFormComponent extends ThingParkIntegrationFormComponent {
 

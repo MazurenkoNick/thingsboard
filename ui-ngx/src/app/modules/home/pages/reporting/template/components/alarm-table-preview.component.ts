@@ -42,10 +42,11 @@ import { alarmFields } from '@shared/models/alarm.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-alarm-table-preview',
-  templateUrl: './report-table-preview.component.html',
-  styleUrls: ['./report-table-preview.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-alarm-table-preview',
+    templateUrl: './report-table-preview.component.html',
+    styleUrls: ['./report-table-preview.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class AlarmTablePreviewComponent extends AbstractReportTablePreviewComponent<AlarmTableReportComponentConfig> {
 

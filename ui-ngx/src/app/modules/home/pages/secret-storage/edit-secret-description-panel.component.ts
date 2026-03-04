@@ -35,10 +35,11 @@ import { TbPopoverComponent } from '@shared/components/popover.component';
 import { SecretStorageService } from '@core/http/secret-storage.service';
 
 @Component({
-  selector: 'tb-edit-secret-description-panel',
-  templateUrl: './edit-secret-description-panel.component.html',
-  styleUrls: ['./edit-secret-description-panel.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-edit-secret-description-panel',
+    templateUrl: './edit-secret-description-panel.component.html',
+    styleUrls: ['./edit-secret-description-panel.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class EditSecretDescriptionPanelComponent implements OnInit {
 

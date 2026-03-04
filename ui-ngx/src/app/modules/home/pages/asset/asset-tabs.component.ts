@@ -36,9 +36,10 @@ import { EntityTabsComponent } from '../../components/entity/entity-tabs.compone
 import { Asset } from '@app/shared/models/asset.models';
 
 @Component({
-  selector: 'tb-asset-tabs',
-  templateUrl: './asset-tabs.component.html',
-  styleUrls: []
+    selector: 'tb-asset-tabs',
+    templateUrl: './asset-tabs.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class AssetTabsComponent extends EntityTabsComponent<Asset> {
 

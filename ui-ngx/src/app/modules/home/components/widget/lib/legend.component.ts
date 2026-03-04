@@ -34,9 +34,10 @@ import { LegendConfig, LegendData, LegendDirection, LegendKey, LegendPosition } 
 import { UtilsService } from '@core/services/utils.service';
 
 @Component({
-  selector: 'tb-legend',
-  templateUrl: './legend.component.html',
-  styleUrls: ['./legend.component.scss']
+    selector: 'tb-legend',
+    templateUrl: './legend.component.html',
+    styleUrls: ['./legend.component.scss'],
+    standalone: false
 })
 export class LegendComponent implements OnInit {
 

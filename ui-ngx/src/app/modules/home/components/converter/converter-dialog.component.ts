@@ -57,9 +57,10 @@ export interface ConverterData  {
 }
 
 @Component({
-  selector: 'tb-converter-dialog',
-  templateUrl: './converter-dialog.component.html',
-  styleUrls: ['./converter-dialog.component.scss']
+    selector: 'tb-converter-dialog',
+    templateUrl: './converter-dialog.component.html',
+    styleUrls: ['./converter-dialog.component.scss'],
+    standalone: false
 })
 export class ConverterDialogComponent extends DialogComponent<ConverterDialogComponent, BaseData<HasId>>
   implements OnInit, AfterViewInit {
@@ -77,7 +78,7 @@ export class ConverterDialogComponent extends DialogComponent<ConverterDialogCom
               private converterService: ConverterService) {
     super(store, router, dialogRef);
     this.isEdit = this.data.isEdit;
-    this.dialogTitle = this.isEdit ? 'converter.edit' : entityTypeTranslations.get(EntityType.CONVERTER).add; 
+    this.dialogTitle = this.isEdit ? 'converter.edit' : entityTypeTranslations.get(EntityType.CONVERTER).add;
   }
 
   ngOnInit() {
@@ -91,7 +92,6 @@ export class ConverterDialogComponent extends DialogComponent<ConverterDialogCom
       if (isNotEmptyStr(this.data.convertor.integrationType) || this.data.convertor.disabledIntegrationType) {
         this.converterComponent.entityForm.get('integrationType').disable({emitEvent: false});
       }
-      this.converterComponent.entityForm.patchValue(this.converter);
     }, 0);
   }
 

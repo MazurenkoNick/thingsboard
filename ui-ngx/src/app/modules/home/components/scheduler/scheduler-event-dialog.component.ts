@@ -52,10 +52,11 @@ export interface SchedulerEventDialogData {
 }
 
 @Component({
-  selector: 'tb-scheduler-event-dialog',
-  templateUrl: './scheduler-event-dialog.component.html',
-  providers: [{provide: ErrorStateMatcher, useExisting: SchedulerEventDialogComponent}],
-  styleUrls: ['./scheduler-event-dialog.component.scss']
+    selector: 'tb-scheduler-event-dialog',
+    templateUrl: './scheduler-event-dialog.component.html',
+    providers: [{ provide: ErrorStateMatcher, useExisting: SchedulerEventDialogComponent }],
+    styleUrls: ['./scheduler-event-dialog.component.scss'],
+    standalone: false
 })
 export class SchedulerEventDialogComponent extends DialogComponent<SchedulerEventDialogComponent, boolean>
   implements OnInit, ErrorStateMatcher {

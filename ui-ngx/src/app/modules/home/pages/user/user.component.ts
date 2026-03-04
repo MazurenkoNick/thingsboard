@@ -47,9 +47,10 @@ import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { CMAssigneeType, CMScope } from '@shared/models/custom-menu.models';
 
 @Component({
-  selector: 'tb-user',
-  templateUrl: './user.component.html',
-  styleUrls: ['./user.component.scss']
+    selector: 'tb-user',
+    templateUrl: './user.component.html',
+    styleUrls: ['./user.component.scss'],
+    standalone: false
 })
 export class UserComponent extends GroupEntityComponent<UserInfo>{
 

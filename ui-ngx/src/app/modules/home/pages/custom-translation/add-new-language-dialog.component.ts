@@ -45,9 +45,10 @@ export interface AddNewLanguageDialogData {
 }
 
 @Component({
-  selector: 'tb-add-new-language-dialog',
-  templateUrl: './add-new-language-dialog.component.html',
-  styleUrls: ['./add-new-language-dialog.component.scss']
+    selector: 'tb-add-new-language-dialog',
+    templateUrl: './add-new-language-dialog.component.html',
+    styleUrls: ['./add-new-language-dialog.component.scss'],
+    standalone: false
 })
 export class AddNewLanguageDialogComponent extends
   DialogComponent<AddNewLanguageDialogComponent> implements OnInit, OnDestroy{

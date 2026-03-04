@@ -37,9 +37,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.thingsboard.common.util.DirectListeningExecutor;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.ListeningExecutor;
-import org.thingsboard.rule.engine.TestDbCallbackExecutor;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbNodeConfiguration;
 import org.thingsboard.rule.engine.api.TbNodeException;
@@ -77,8 +77,8 @@ class TbRemoveFromGroupNodeTest {
 
     private final TenantId TENANT_ID = TenantId.fromUUID(UUID.fromString("cb27b618-e85b-4a65-b270-edc4b59fc01f"));
     private final DeviceId DEVICE_ID = new DeviceId(UUID.fromString("961167a0-c6a7-44a9-ac2b-f1f40102ba97"));
+    private final ListeningExecutor dbCallbackExecutor = DirectListeningExecutor.INSTANCE;
     private final EntityGroupId ENTITY_GROUP_ID = new EntityGroupId(UUID.fromString("bf14ba3f-cf37-4b26-b292-79aba01effd7"));
-    private final ListeningExecutor dbCallbackExecutor = new TestDbCallbackExecutor();
 
     private TbRemoveFromGroupNode node;
     private TbRemoveFromGroupConfiguration config;

@@ -41,9 +41,10 @@ import {
 import { buildPageStepSizeValues } from '@home/components/widget/lib/table-widget.models';
 
 @Component({
-  selector: 'tb-scheduler-events-widget-settings',
-  templateUrl: './scheduler-events-widget-settings.component.html',
-  styleUrls: ['./../widget-settings.scss']
+    selector: 'tb-scheduler-events-widget-settings',
+    templateUrl: './scheduler-events-widget-settings.component.html',
+    styleUrls: ['./../widget-settings.scss'],
+    standalone: false
 })
 export class SchedulerEventsWidgetSettingsComponent extends WidgetSettingsComponent {
 

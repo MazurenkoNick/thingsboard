@@ -51,15 +51,16 @@ import { emptyPageData } from '@shared/models/page/page-data';
 import { Direction } from '@shared/models/page/sort-order';
 
 @Component({
-  selector: 'tb-secret-autocomplete',
-  templateUrl: './secret-autocomplete.component.html',
-  styleUrls: ['./secret-autocomplete.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => SecretAutocompleteComponent),
-    multi: true
-  }],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-secret-autocomplete',
+    templateUrl: './secret-autocomplete.component.html',
+    styleUrls: ['./secret-autocomplete.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => SecretAutocompleteComponent),
+            multi: true
+        }],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class SecretAutocompleteComponent implements ControlValueAccessor, OnInit {
 

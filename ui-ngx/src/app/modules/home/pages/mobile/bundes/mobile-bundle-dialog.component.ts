@@ -64,9 +64,10 @@ export interface MobileBundleDialogData {
 }
 
 @Component({
-  selector: 'tb-mobile-bundle-dialog',
-  templateUrl: './mobile-bundle-dialog.component.html',
-  styleUrls: ['./mobile-bundle-dialog.component.scss']
+    selector: 'tb-mobile-bundle-dialog',
+    templateUrl: './mobile-bundle-dialog.component.html',
+    styleUrls: ['./mobile-bundle-dialog.component.scss'],
+    standalone: false
 })
 export class MobileBundleDialogComponent extends DialogComponent<MobileBundleDialogComponent, MobileAppBundle> {
 

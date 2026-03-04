@@ -35,7 +35,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.thingsboard</groupId>
-        <version>4.2.1.2PE-SNAPSHOT</version>
+        <version>4.2.2PE-SNAPSHOT</version>
         <artifactId>msa</artifactId>
     </parent>
 
@@ -137,7 +137,7 @@
             </activation>
             <properties>
                 <docker.lts.tag>4.2.1-latest</docker.lts.tag>
-                <docker.skip.latest.tag>false</docker.skip.latest.tag>
+                <docker.skip.latest.tag>true</docker.skip.latest.tag>
             </properties>
             <build>
                 <plugins>

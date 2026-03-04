@@ -47,7 +47,7 @@ import {
   UntypedFormGroup,
   Validators
 } from '@angular/forms';
-import { MatButton } from '@angular/material/button';
+import { MatIconButton } from '@angular/material/button';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   CirclesDataLayerSettings,
@@ -72,17 +72,18 @@ import {
 import { MapSettingsContext } from '@home/components/widget/lib/settings/common/map/map-settings.component.models';
 
 @Component({
-  selector: 'tb-map-data-layer-row',
-  templateUrl: './map-data-layer-row.component.html',
-  styleUrls: ['./map-data-layer-row.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => MapDataLayerRowComponent),
-      multi: true
-    }
-  ],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-map-data-layer-row',
+    templateUrl: './map-data-layer-row.component.html',
+    styleUrls: ['./map-data-layer-row.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => MapDataLayerRowComponent),
+            multi: true
+        }
+    ],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class MapDataLayerRowComponent implements ControlValueAccessor, OnInit {
 
@@ -258,7 +259,7 @@ export class MapDataLayerRowComponent implements ControlValueAccessor, OnInit {
     );
   }
 
-  editDataLayer($event: Event, matButton: MatButton) {
+  editDataLayer($event: Event, matButton: MatIconButton) {
     if ($event) {
       $event.stopPropagation();
     }

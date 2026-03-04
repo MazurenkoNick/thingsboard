@@ -57,9 +57,10 @@ import { PageLink } from '@shared/models/page/page-link';
 import { coerceBoolean } from '@app/shared/decorators/coercion';
 
 @Component({
-  selector: 'tb-client',
-  templateUrl: './client.component.html',
-  styleUrls: ['./client.component.scss']
+    selector: 'tb-client',
+    templateUrl: './client.component.html',
+    styleUrls: ['./client.component.scss'],
+    standalone: false
 })
 export class ClientComponent extends EntityComponent<OAuth2Client, PageLink, OAuth2ClientInfo> implements OnDestroy {
 

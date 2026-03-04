@@ -62,23 +62,24 @@ import { Converter, ConverterLibraryInfo, ConverterType, Model, Vendor } from '@
 import { isDefinedAndNotNull, isEmptyStr, isNotEmptyStr } from '@core/utils';
 
 @Component({
-  selector: 'tb-converter-library',
-  templateUrl: './converter-library.component.html',
-  styleUrls: ['./converter-library.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => ConverterLibraryComponent),
-      multi: true
-    },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => ConverterLibraryComponent),
-      multi: true
-    }
-  ],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-converter-library',
+    templateUrl: './converter-library.component.html',
+    styleUrls: ['./converter-library.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ConverterLibraryComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => ConverterLibraryComponent),
+            multi: true
+        }
+    ],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class ConverterLibraryComponent implements ControlValueAccessor, Validator, OnChanges, OnDestroy, OnInit {
 

@@ -34,10 +34,11 @@ import { Color } from '@iplab/ngx-color-picker';
 import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
-  selector: `tb-hex-input`,
-  templateUrl: `./hex-input.component.html`,
-  styleUrls: ['./hex-input.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: `tb-hex-input`,
+    templateUrl: `./hex-input.component.html`,
+    styleUrls: ['./hex-input.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class HexInputComponent {
 
