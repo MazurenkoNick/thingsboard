@@ -96,7 +96,6 @@ public enum Table {
     ASSET_PROFILE("asset_profile"),
     ASSET("asset"),
     CALCULATED_FIELD("calculated_field"),
-    CALCULATED_FIELD_LINK("calculated_field_link"),
     ENTITY_VIEW("entity_view"),
     ALARM("alarm"),
     ENTITY_ALARM("entity_alarm", List.of("created_time", "entity_id")),
