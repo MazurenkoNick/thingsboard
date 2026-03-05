@@ -108,7 +108,7 @@ class TbAddToGroupNodeTest {
         var configuration = new TbNodeConfiguration(JacksonUtil.valueToTree(config));
         node.init(ctxMock, configuration);
 
-        initMocks(ENTITY_GROUP_ID);
+        initMocks();
         when(entityGroupServiceMock.findEntityGroupByTypeAndNameAsync(any(), any(), any(), any()))
                 .thenReturn(Futures.immediateFuture(Optional.of(new EntityGroup(ENTITY_GROUP_ID))));
 
@@ -134,7 +134,7 @@ class TbAddToGroupNodeTest {
         var configuration = new TbNodeConfiguration(JacksonUtil.valueToTree(config));
         node.init(ctxMock, configuration);
 
-        initMocks(ENTITY_GROUP_ID);
+        initMocks();
         when(entityGroupServiceMock.findEntityGroupByTypeAndNameAsync(any(), any(), any(), any()))
                 .thenReturn(Futures.immediateFuture(Optional.empty()));
         when(entityGroupServiceMock.saveEntityGroup(any(), any(), any())).thenReturn(new EntityGroup(ENTITY_GROUP_ID));
@@ -169,7 +169,7 @@ class TbAddToGroupNodeTest {
         var configuration = new TbNodeConfiguration(JacksonUtil.valueToTree(config));
         node.init(ctxMock, configuration);
 
-        initMocks(newEntityGroupId);
+        initMocks();
         when(entityGroupServiceMock.findEntityGroupByTypeAndNameAsync(any(), any(), any(), any()))
                 .thenReturn(Futures.immediateFuture(Optional.of(new EntityGroup(newEntityGroupId))));
         when(entityGroupServiceMock.findEntityGroupsForEntityAsync(any(), any()))
@@ -209,7 +209,7 @@ class TbAddToGroupNodeTest {
         var configuration = new TbNodeConfiguration(JacksonUtil.valueToTree(config));
         node.init(ctxMock, configuration);
 
-        initMocks(ENTITY_GROUP_ID);
+        initMocks();
         when(entityGroupServiceMock.findEntityGroupByTypeAndNameAsync(any(), any(), any(), any()))
                 .thenReturn(Futures.immediateFuture(Optional.of(new EntityGroup(ENTITY_GROUP_ID))));
         when(ctxMock.getOtaPackageStateService()).thenReturn(otaPackageStateService);
@@ -234,7 +234,7 @@ class TbAddToGroupNodeTest {
         verifyNoMoreInteractions(ctxMock, peContextMock, entityGroupServiceMock, deviceGroupOtaPackageService, otaPackageStateService);
     }
 
-    private void initMocks(EntityGroupId groupId) {
+    private void initMocks() {
         when(ctxMock.getPeContext()).thenReturn(peContextMock);
         when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
         when(peContextMock.getOwner(any(), any())).thenReturn(TENANT_ID);
