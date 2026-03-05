@@ -42,11 +42,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+@ResourceLock("SsrfProtectionValidatorTest") // some tests mutate static additional-blocked-hosts
 public class SsrfProtectionValidatorTest {
-
-    // JUnit 5 @ResourceLock ensures that tests modifying SsrfProtectionValidator's static
-    // additional blocked hosts never run concurrently with each other (parallel execution is enabled).
-    private static final String SYNC_LOCK = "SsrfProtectionValidatorTest";
 
     @ParameterizedTest
     @ValueSource(strings = {
@@ -222,7 +219,6 @@ public class SsrfProtectionValidatorTest {
     }
 
     @Test
-    @ResourceLock(SYNC_LOCK)
     void testAdditionalBlockedSingleIp() {
         try {
             SsrfProtectionValidator.setAdditionalBlockedHosts(List.of("8.8.8.8"));
@@ -237,7 +233,6 @@ public class SsrfProtectionValidatorTest {
     }
 
     @Test
-    @ResourceLock(SYNC_LOCK)
     void testAdditionalBlockedCidrSlash10() {
         try {
             // Use 44.0.0.0/10 (not blocked by default) to verify CIDR /10 matching
@@ -258,7 +253,6 @@ public class SsrfProtectionValidatorTest {
     }
 
     @Test
-    @ResourceLock(SYNC_LOCK)
     void testAdditionalBlockedCidrSlash24() {
         try {
             SsrfProtectionValidator.setAdditionalBlockedHosts(List.of("198.51.100.0/24"));
@@ -276,7 +270,6 @@ public class SsrfProtectionValidatorTest {
     }
 
     @Test
-    @ResourceLock(SYNC_LOCK)
     void testAdditionalBlockedHostnameViaValidateUri() {
         try {
             SsrfProtectionValidator.setAdditionalBlockedHosts(List.of("evil.corp"));
@@ -290,7 +283,6 @@ public class SsrfProtectionValidatorTest {
     }
 
     @Test
-    @ResourceLock(SYNC_LOCK)
     void testAdditionalBlockedHostnameCaseInsensitive() {
         try {
             SsrfProtectionValidator.setAdditionalBlockedHosts(List.of("My-Service.Corp"));
@@ -304,7 +296,6 @@ public class SsrfProtectionValidatorTest {
     }
 
     @Test
-    @ResourceLock(SYNC_LOCK)
     void testSetAdditionalBlockedHostsEmptyAndNull() {
         // Should not throw
         SsrfProtectionValidator.setAdditionalBlockedHosts(Collections.emptyList());
@@ -322,7 +313,6 @@ public class SsrfProtectionValidatorTest {
     }
 
     @Test
-    @ResourceLock(SYNC_LOCK)
     void testAdditionalBlockedCidrViaValidateUri() {
         // 203.0.113.0/24 (TEST-NET-3) is not blocked by default
         URI uri = URI.create("http://203.0.113.1");
@@ -338,7 +328,6 @@ public class SsrfProtectionValidatorTest {
     }
 
     @Test
-    @ResourceLock(SYNC_LOCK)
     void testAdditionalBlockedMixedConfig() {
         try {
             SsrfProtectionValidator.setAdditionalBlockedHosts(List.of("203.0.113.0/24", "evil.corp", "8.8.8.8"));
