@@ -39,7 +39,9 @@ import {
   ɵCssSelectorList,
   ɵNG_COMP_DEF,
   ɵNG_MOD_DEF,
+  ɵNG_PIPE_DEF,
   ɵNgModuleDef,
+  ɵPipeDef,
   DOCUMENT
 } from '@angular/core';
 
@@ -309,6 +311,12 @@ export class ResourcesService {
               const component: ɵComponentDef<any> = decl[ɵNG_COMP_DEF];
               if (isUndefined(component.standalone) || component.standalone) {
                 (component as any).standalone = false;
+              }
+            }
+            if (ɵNG_PIPE_DEF in decl) {
+              const pipe: ɵPipeDef<any> = decl[ɵNG_PIPE_DEF];
+              if (isUndefined(pipe.standalone) || pipe.standalone) {
+                (pipe as any).standalone = false;
               }
             }
           }
