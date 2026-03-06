@@ -15,8 +15,19 @@
  */
 package org.thingsboard.server.common.data.agent;
 
+import lombok.Getter;
+
+import java.util.regex.Pattern;
+
 public enum AgentApplicationType {
-    GENERIC,
-    EDGE,
-    GATEWAY
+    GENERIC(null),
+    EDGE("thingsboard/tb-edge:.+"),
+    GATEWAY("thingsboard/tb-gateway:.+");
+
+    @Getter
+    private final Pattern mainImagePattern;
+
+    AgentApplicationType(String mainImageRegex) {
+        this.mainImagePattern = mainImageRegex != null ? Pattern.compile(mainImageRegex) : null;
+    }
 }

@@ -32,7 +32,14 @@ message AgentToServer {
     CommandAck commandAck = 2;
     CommandProgress progress = 3;
     CommandResult result = 4;
+    ComposeStateSync composeSync = 5;
   }
+}
+
+message ComposeStateSync {
+  ConfigType configType = 1;
+  string projectName = 2;
+  string composeJson = 3;
 }
 
 message ServerToAgent {
