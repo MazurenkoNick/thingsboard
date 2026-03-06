@@ -75,7 +75,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         return agentId;
     }
 
-    @Schema(description = "Application name (not unique across tenant)")
+    @Schema(description = "Application name")
     public String getName() {
         return name;
     }
