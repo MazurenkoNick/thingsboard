@@ -295,6 +295,14 @@ public class ModelConstants {
     public static final String AGENT_APP_TEMPLATE_ROLLBACK_STEPS_PROPERTY = "rollback_steps";
 
     /**
+     * Agent app unit constants.
+     */
+    public static final String AGENT_APP_UNIT_TABLE_NAME = "agent_app_unit";
+    public static final String AGENT_APP_UNIT_AGENT_APPLICATION_ID_PROPERTY = "agent_application_id";
+    public static final String AGENT_APP_UNIT_IDENTIFIER_PROPERTY = "identifier";
+    public static final String AGENT_APP_UNIT_TYPE_PROPERTY = "type";
+
+    /**
      * Alarm constants.
      */
     public static final String ENTITY_ALARM_TABLE_NAME = "entity_alarm";
