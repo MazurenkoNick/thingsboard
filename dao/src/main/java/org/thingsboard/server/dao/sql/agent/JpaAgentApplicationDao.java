@@ -87,6 +87,11 @@ public class JpaAgentApplicationDao extends JpaAbstractDao<AgentApplicationEntit
     }
 
     @Override
+    public AgentApplication findByProjectName(TenantId tenantId, String projectName) {
+        return DaoUtil.getData(agentApplicationRepository.findByProjectName(projectName));
+    }
+
+    @Override
     public AgentApplication findByEventId(TenantId tenantId, UUID eventId) {
         return DaoUtil.getData(agentApplicationRepository.findByEventId(eventId));
     }

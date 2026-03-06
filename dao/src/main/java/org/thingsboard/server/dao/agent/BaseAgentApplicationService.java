@@ -24,7 +24,6 @@ import org.thingsboard.server.cache.agent.AgentApplicationCacheEvictEvent;
 import org.thingsboard.server.cache.agent.AgentApplicationCacheKey;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
-import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -98,6 +97,12 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
     }
 
     @Override
+    public AgentApplication findByProjectName(TenantId tenantId, String projectName) {
+        log.trace("Executing findAgentApplicationByProjectName [{}]", projectName);
+        return agentApplicationDao.findByProjectName(tenantId, projectName);
+    }
+
+    @Override
     public AgentApplication findByEventId(TenantId tenantId, AgentAppEventId agentAppEventId) {
         log.trace("Executing findAgentApplicationByEventId [{}]", agentAppEventId);
         validateId(agentAppEventId, id -> "Incorrect agentAppEventId " + id);
@@ -156,13 +161,10 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
     }
 
     private void resolveProjectName(AgentApplication agentApplication, AgentApplication old) {
-        if (!(agentApplication.getConfig() instanceof DockerComposeConfig config)) {
-            return;
-        }
-        if (old != null && old.getConfig() instanceof DockerComposeConfig oldConfig) {
-            config.setProjectName(oldConfig.getProjectName());
-        } else {
-            config.setProjectName(DockerComposeConfig.generateProjectName());
+        if (old != null && old.getProjectName() != null) {
+            agentApplication.setProjectName(old.getProjectName());
+        } else if (agentApplication.getProjectName() == null) {
+            agentApplication.setProjectName(AgentApplication.generateProjectName());
         }
     }
 

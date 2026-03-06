@@ -29,6 +29,7 @@ public interface AgentApplicationService {
     AgentApplication save(TenantId tenantId, AgentApplication agentApplication);
     AgentApplication findById(TenantId tenantId, AgentApplicationId agentApplicationId);
     AgentApplicationInfo findInfoById(TenantId tenantId, AgentApplicationId agentApplicationId);
+    AgentApplication findByProjectName(TenantId tenantId, String projectName);
     AgentApplication findByEventId(TenantId tenantId, AgentAppEventId agentAppEventId);
     PageData<AgentApplication> findByAgentId(TenantId tenantId, AgentId agentId, PageLink pageLink);
     PageData<AgentApplicationInfo> findInfosByAgentId(TenantId tenantId, AgentId agentId, PageLink pageLink);

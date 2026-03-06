@@ -312,7 +312,6 @@ class DefaultTbAgentApplicationServiceTest {
 
     private DockerComposeConfig createDockerComposeConfig(String composeContent) {
         DockerComposeConfig config = new DockerComposeConfig();
-        config.setProjectName("test-project");
         config.setCompose(new ObjectMapper().valueToTree(composeContent));
         return config;
     }

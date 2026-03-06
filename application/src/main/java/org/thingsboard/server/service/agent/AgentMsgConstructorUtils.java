@@ -20,7 +20,6 @@ import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
-import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 import org.thingsboard.server.gen.agent.v1.AppCommand;
@@ -87,10 +86,8 @@ public class AgentMsgConstructorUtils {
         metadata.put("stepTitle", step.getTitle() != null ? step.getTitle() : "");
         metadata.put("stepType", step.getType() != null ? step.getType().name() : "");
 
-        if (application.getConfig() instanceof DockerComposeConfig cfg) {
-            if (cfg.getProjectName() != null) {
-                metadata.put("projectName", cfg.getProjectName());
-            }
+        if (application.getProjectName() != null) {
+            metadata.put("projectName", application.getProjectName());
         }
 
         AgentAppStepState resolvedState = CollectionUtils.isEmpty(stateSteps) ? null : stateSteps.get(step.getId());

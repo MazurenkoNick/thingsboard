@@ -70,6 +70,9 @@ public class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication
     @Column(name = ModelConstants.AGENT_APPLICATION_CONFIG_PROPERTY, columnDefinition = "jsonb")
     private JsonNode config;
 
+    @Column(name = ModelConstants.AGENT_APPLICATION_PROJECT_NAME_PROPERTY)
+    private String projectName;
+
     @Column(name = ModelConstants.AGENT_APPLICATION_PENDING_DELETION_PROPERTY)
     private boolean pendingDeletion;
 
@@ -94,6 +97,7 @@ public class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication
             this.desiredTemplateId = application.getDesiredTemplateId().getId();
         }
         this.config = application.getConfig() != null ? JacksonUtil.valueToTree(application.getConfig()) : null;
+        this.projectName = application.getProjectName();
         this.pendingDeletion = application.isPendingDeletion();
     }
 
@@ -117,6 +121,7 @@ public class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication
             application.setDesiredTemplateId(new AgentAppTemplateId(desiredTemplateId));
         }
         application.setConfig(config != null ? JacksonUtil.treeToValue(config, AgentAppConfig.class) : null);
+        application.setProjectName(projectName);
         application.setPendingDeletion(pendingDeletion);
         return application;
     }
