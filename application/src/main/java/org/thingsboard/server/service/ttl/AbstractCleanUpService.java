@@ -47,4 +47,8 @@ public abstract class AbstractCleanUpService {
         return partitionService.resolve(ServiceType.TB_CORE, TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID).isMyPartition();
     }
 
+    protected boolean isTenantPartitionMine(TenantId tenantId) {
+        return partitionService.resolve(ServiceType.TB_CORE, tenantId, tenantId).isMyPartition();
+    }
+
 }
