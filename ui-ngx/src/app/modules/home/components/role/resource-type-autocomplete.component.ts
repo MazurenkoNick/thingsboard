@@ -56,14 +56,15 @@ interface ResourceTypeInfo {
 }
 
 @Component({
-  selector: 'tb-resource-type-autocomplete',
-  templateUrl: './resource-type-autocomplete.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => ResourceTypeAutocompleteComponent),
-    multi: true
-  }]
+    selector: 'tb-resource-type-autocomplete',
+    templateUrl: './resource-type-autocomplete.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ResourceTypeAutocompleteComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class ResourceTypeAutocompleteComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy {
 

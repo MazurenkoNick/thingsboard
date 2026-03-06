@@ -59,15 +59,16 @@ import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { Operation, Resource } from '@shared/models/security.models';
 
 @Component({
-  selector: 'tb-widgets-bundle-select',
-  templateUrl: './widgets-bundle-select.component.html',
-  styleUrls: ['./widgets-bundle-select.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => WidgetsBundleSelectComponent),
-    multi: true
-  }],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-widgets-bundle-select',
+    templateUrl: './widgets-bundle-select.component.html',
+    styleUrls: ['./widgets-bundle-select.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => WidgetsBundleSelectComponent),
+            multi: true
+        }],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class WidgetsBundleSelectComponent implements ControlValueAccessor, OnInit, OnChanges {
 

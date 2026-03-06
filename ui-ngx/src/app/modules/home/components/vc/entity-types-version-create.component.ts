@@ -61,21 +61,22 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { entityGroupTypes } from '@shared/models/entity-group.models';
 
 @Component({
-  selector: 'tb-entity-types-version-create',
-  templateUrl: './entity-types-version-create.component.html',
-  styleUrls: ['./entity-types-version.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => EntityTypesVersionCreateComponent),
-      multi: true
-    },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => EntityTypesVersionCreateComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-entity-types-version-create',
+    templateUrl: './entity-types-version-create.component.html',
+    styleUrls: ['./entity-types-version.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => EntityTypesVersionCreateComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => EntityTypesVersionCreateComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class EntityTypesVersionCreateComponent extends PageComponent implements OnInit, ControlValueAccessor, Validator {
 

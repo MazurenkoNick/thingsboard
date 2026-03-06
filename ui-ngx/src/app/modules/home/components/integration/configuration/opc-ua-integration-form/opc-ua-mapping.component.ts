@@ -47,19 +47,20 @@ import { isDefinedAndNotNull } from '@core/utils';
 import { OpcMappingType, OpcMappingTypeTranslation, OpcUaMapping } from '@shared/models/integration.models';
 
 @Component({
-  selector: 'tb-opc-ua-mapping',
-  templateUrl: './opc-ua-mapping.component.html',
-  styleUrls: ['opc-ua-mapping.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => OpcUaMappingComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => OpcUaMappingComponent),
-    multi: true,
-  }]
+    selector: 'tb-opc-ua-mapping',
+    templateUrl: './opc-ua-mapping.component.html',
+    styleUrls: ['opc-ua-mapping.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => OpcUaMappingComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => OpcUaMappingComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class OpcUaMappingComponent implements ControlValueAccessor, Validator, OnDestroy {
 

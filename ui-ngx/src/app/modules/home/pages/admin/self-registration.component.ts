@@ -57,9 +57,10 @@ import { DialogService } from '@core/services/dialog.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-self-registration',
-  templateUrl: './self-registration.component.html',
-  styleUrls: ['./self-registration.component.scss', './settings-card.scss']
+    selector: 'tb-self-registration',
+    templateUrl: './self-registration.component.html',
+    styleUrls: ['./self-registration.component.scss', './settings-card.scss'],
+    standalone: false
 })
 export class SelfRegistrationComponent extends PageComponent implements OnInit, HasConfirmForm {
 
@@ -74,7 +75,7 @@ export class SelfRegistrationComponent extends PageComponent implements OnInit, 
   tinyMceOptions: Partial<EditorOptions> = {
     base_url: '/assets/tinymce',
     suffix: '.min',
-    plugins: ['link', 'table', 'image', 'imagetools', 'code', 'fullscreen', 'lists'],
+    plugins: ['link', 'table', 'image', 'code', 'fullscreen', 'lists'],
     menubar: 'edit insert tools view format table',
     toolbar_mode: 'sliding',
     toolbar: 'fontfamily fontsize | bold italic  strikethrough  forecolor backcolor ' +

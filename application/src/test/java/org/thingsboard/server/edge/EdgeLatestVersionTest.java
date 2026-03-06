@@ -28,28 +28,29 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.rule.engine;
+package org.thingsboard.server.edge;
 
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import org.thingsboard.common.util.ListeningExecutor;
+import org.junit.Assert;
+import org.junit.Test;
+import org.thingsboard.edge.rpc.EdgeVersionComparator;
+import org.thingsboard.server.gen.edge.v1.EdgeVersion;
 
-import java.util.concurrent.Callable;
+public class EdgeLatestVersionTest {
 
-public class TestDbCallbackExecutor implements ListeningExecutor {
+    @Test
+    public void edgeLatestVersionIsSynchronizedTest() {
+        EdgeVersion currentHighestEdgeVersion = EdgeVersionComparator.getNewestEdgeVersion();
 
-    @Override
-    public <T> ListenableFuture<T> executeAsync(Callable<T> task) {
-        try {
-            return Futures.immediateFuture(task.call());
-        } catch (Exception e) {
-            return Futures.immediateFailedFuture(e);
+        String projectVersion = EdgeLatestVersionTest.class.getPackage().getImplementationVersion();
+        if (projectVersion == null || projectVersion.isBlank()) {
+            projectVersion = System.getProperty("project.version", "UNKNOWN");
         }
-    }
 
-    @Override
-    public void execute(Runnable command) {
-        command.run();
+        String projectVersionDigits = projectVersion.replaceAll("\\D", "");
+        String currentHighestEdgeVersionDigits = currentHighestEdgeVersion.name().replaceAll("\\D", "");
+
+        String msg = "EdgeVersion enum in edge.proto is out of sync. Please add respective " + projectVersionDigits + " to EdgeVersion";
+        Assert.assertEquals(msg, projectVersionDigits, currentHighestEdgeVersionDigits);
     }
 
 }

@@ -48,19 +48,20 @@ import { privateNetworkAddressValidator } from '@home/components/integration/int
 import { DEFAULT_MQTT_VERSION, MqttVersion } from '@shared/models/mqtt.models';
 
 @Component({
-  selector: 'tb-azure-iot-hub-integration-form',
-  templateUrl: './azure-iot-hub-integration-form.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => AzureIotHubIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => AzureIotHubIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-azure-iot-hub-integration-form',
+    templateUrl: './azure-iot-hub-integration-form.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => AzureIotHubIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => AzureIotHubIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class AzureIotHubIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator {
 

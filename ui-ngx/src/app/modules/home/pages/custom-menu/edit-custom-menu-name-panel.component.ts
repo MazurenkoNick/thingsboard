@@ -35,10 +35,11 @@ import { TbPopoverComponent } from '@shared/components/popover.component';
 import { CustomMenuService } from '@core/http/custom-menu.service';
 
 @Component({
-  selector: 'tb-edit-custom-menu-name-panel',
-  templateUrl: './edit-custom-menu-name-panel.component.html',
-  styleUrls: ['./edit-custom-menu-name-panel.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-edit-custom-menu-name-panel',
+    templateUrl: './edit-custom-menu-name-panel.component.html',
+    styleUrls: ['./edit-custom-menu-name-panel.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class EditCustomMenuNamePanelComponent implements OnInit {
 

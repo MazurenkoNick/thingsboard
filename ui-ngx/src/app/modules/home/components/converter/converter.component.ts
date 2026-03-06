@@ -86,9 +86,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StringItemsOption } from '@shared/components/string-items-list.component';
 
 @Component({
-  selector: 'tb-converter',
-  templateUrl: './converter.component.html',
-  styleUrls: ['./converter.component.scss']
+    selector: 'tb-converter',
+    templateUrl: './converter.component.html',
+    styleUrls: ['./converter.component.scss'],
+    standalone: false
 })
 export class ConverterComponent extends EntityComponent<Converter> implements OnInit {
 

@@ -127,8 +127,8 @@ export class TaskManagerTableConfigResolver {
     this.config.onLoadAction = (activatedRoute) => this.onLoadAction(this.config, activatedRoute);
 
     this.config.handleRowClick = ($event, job) => {
-      const path: HTMLElement[] = ($event as any).path || ($event.composedPath && $event.composedPath());
-      const progressBarCell = path?.find(el => el.classList.contains('mat-column-progress'));
+      const target = $event.target as HTMLElement;
+      const progressBarCell = target.closest('.mat-column-progress');
       if (progressBarCell && job.status !== JobStatus.QUEUED && job.status !== JobStatus.PENDING) {
         this.openTaskInfo(progressBarCell, job);
         return true;
@@ -282,15 +282,15 @@ export class TaskManagerTableConfigResolver {
   private progressBarStyle(jobStatus: JobStatus): object {
     const style: Record<string, any> = {
       borderRadius: '6px',
-      '--mdc-linear-progress-active-indicator-height': '12px',
-      '--mdc-linear-progress-track-height': '12px',
-      '--mdc-linear-progress-track-color': 'var(--tb-primary-50)',
-      '--mdc-linear-progress-active-indicator-color': 'rgba(from var(--tb-primary-500) r g b / 0.5)'
+      '--mat-progress-bar-active-indicator-height': '12px',
+      '--mat-progress-bar-track-height': '12px',
+      '--mat-progress-bar-track-color': 'var(--tb-primary-50)',
+      '--mat-progress-bar-active-indicator-color': 'rgba(from var(--tb-primary-500) r g b / 0.5)'
     };
     if (jobStatus === JobStatus.CANCELLED) {
-      style['--mdc-linear-progress-active-indicator-color'] = 'rgba(0, 0, 0, 0.12)';
+      style['--mat-progress-bar-active-indicator-color'] = 'rgba(0, 0, 0, 0.12)';
     } else if (jobStatus === JobStatus.FAILED) {
-      style['--mdc-linear-progress-active-indicator-color'] = 'rgba(209, 39, 48, 0.40)';
+      style['--mat-progress-bar-active-indicator-color'] = 'rgba(209, 39, 48, 0.40)';
     } else if (jobStatus === JobStatus.PENDING || jobStatus === JobStatus.QUEUED) {
       style.visibility = 'hidden';
     }
@@ -302,7 +302,7 @@ export class TaskManagerTableConfigResolver {
     return progress > 0 ? Math.round(progress / result.totalCount * 100) : (result.totalCount > 0 ? 0 : 100);
   }
 
-  private openTaskInfo(trigger: HTMLElement, job: Job): void {
+  private openTaskInfo(trigger: Element, job: Job): void {
     if (this.popoverService.hasPopover(trigger)) {
       this.popoverService.hidePopover(trigger);
     } else {

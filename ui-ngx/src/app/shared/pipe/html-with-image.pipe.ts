@@ -41,7 +41,8 @@ export type SetImageSrcCallback = (image: HTMLImageElement,
                                    origUrl: string, newUrl: string) => void;
 
 @Pipe({
-  name: 'htmlWithImage'
+    name: 'htmlWithImage',
+    standalone: false
 })
 export class HtmlWithImagePipe implements PipeTransform {
 

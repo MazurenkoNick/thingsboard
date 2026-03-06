@@ -69,10 +69,11 @@ import { WidgetInfo, WidgetWithInfo } from '@home/models/widget-component.models
 import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
-  selector: 'tb-time-series-chart-config',
-  templateUrl: './time-series-chart-config.component.html',
-  styleUrls: ['./report-component-config.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-time-series-chart-config',
+    templateUrl: './time-series-chart-config.component.html',
+    styleUrls: ['./report-component-config.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfig<TimeseriesChartReportComponentConfig> {
 

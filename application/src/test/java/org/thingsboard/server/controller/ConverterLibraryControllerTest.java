@@ -42,9 +42,9 @@ import org.thingsboard.server.service.converter.ConverterLibraryService;
 import org.thingsboard.server.service.converter.Model;
 import org.thingsboard.server.service.converter.Vendor;
 
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -73,46 +73,50 @@ public class ConverterLibraryControllerTest extends AbstractControllerTest {
     }
 
     private void validateConverters(String converterType, String expectedType) throws Exception {
-        Map<IntegrationType, List<Vendor>> vendorsMap = new HashMap<>();
+        Set<String> seenModels = new HashSet<>();
         for (IntegrationType integrationType : IntegrationType.values()) {
-            List<Vendor> vendors = doGetTyped(
-                    "/api/converter/library/" + integrationType + "/vendors?converterType=" + converterType,
-                    new TypeReference<>() {});
-            if (!vendors.isEmpty()) {
-                vendorsMap.put(integrationType, vendors);
-            }
-        }
+            for (int vendorPage = 0; ; vendorPage++) {
+                List<Vendor> vendors = doGetTyped(
+                        "/api/converter/library/" + integrationType + "/vendors?converterType=" + converterType
+                        + "&page=" + vendorPage + "&pageSize=10&loadImages=false",
+                        new TypeReference<>() {});
+                if (vendors.isEmpty()) {
+                    break;
+                }
 
-        for (Map.Entry<IntegrationType, List<Vendor>> entry : vendorsMap.entrySet()) {
-            IntegrationType integrationType = entry.getKey();
-            List<Vendor> vendors = entry.getValue();
+                for (Vendor vendor : vendors) {
+                    assertThat(vendor.name()).as(vendor.name() + " vendor name").isNotBlank();
 
-            for (Vendor vendor : vendors) {
-                assertThat(vendor.name()).as(vendor.name() + " vendor name").isNotBlank();
-                assertThat(vendor.logo()).as(vendor.name() + " vendor logo").isNotBlank();
+                    for (int modelPage = 0; ; modelPage++) {
+                        List<Model> models = doGetTyped(
+                                "/api/converter/library/" + integrationType + "/" + vendor.name() + "/models?converterType=" + converterType
+                                + "&page=" + modelPage + "&pageSize=10&loadImages=false",
+                                new TypeReference<>() {});
+                        if (models.isEmpty()) {
+                            break;
+                        }
 
-                List<Model> models = doGetTyped(
-                        "/api/converter/library/" + integrationType + "/" + vendor.name() + "/models?converterType=" + converterType, new TypeReference<>() {});
+                        for (Model model : models) {
+                            String modelUrl = integrationType + "/" + vendor.name() + "/" + model.name();
+                            assertThat(seenModels.add(modelUrl)).as("duplicate model from pagination: " + modelUrl).isTrue();
 
-                for (Model model : models) {
-                    String modelUrl = integrationType + "/" + vendor.name() + "/" + model.name();
+                            assertThat(model.name()).as("name for " + modelUrl).isNotBlank();
+                            assertThat(model.info().toString()).as("info for " + modelUrl).isNotBlank().isNotEqualTo("{}");
 
-                    assertThat(model.name()).as("name for " + modelUrl).isNotBlank();
-                    assertThat(model.photo()).as("photo for " + modelUrl).isNotBlank();
-                    assertThat(model.info().toString()).as("info for " + modelUrl).isNotBlank().isNotEqualTo("{}");
+                            ObjectNode converter = doGet("/api/converter/library/" + modelUrl + "/" + converterType, ObjectNode.class);
+                            if (converter.isEmpty()) {
+                                return;
+                            }
+                            assertThat(converter.get("type").asText()).as(modelUrl + " " + converterType + " converter type").isEqualTo(expectedType);
 
-                    ObjectNode converter = doGet("/api/converter/library/" + modelUrl + "/" + converterType, ObjectNode.class);
-                    if (converter.isEmpty()) {
-                        return;
+                            ObjectNode converterMetadata = doGet("/api/converter/library/" + modelUrl + "/" + converterType + "/metadata", ObjectNode.class);
+                            assertThat(converterMetadata).as(converterType + " converter metadata for " + modelUrl).isNotEmpty();
+                            assertThat(converterMetadata.has("integrationName")).as(converterType + " converter metadata integrationName for " + modelUrl).isTrue();
+
+                            String payload = doGet("/api/converter/library/" + modelUrl + "/" + converterType + "/payload", String.class);
+                            assertThat(payload).as(converterType + " payload for " + modelUrl).isNotBlank().isNotEqualTo("{}");
+                        }
                     }
-                    assertThat(converter.get("type").asText()).as(modelUrl + " " + converterType + " converter type").isEqualTo(expectedType);
-
-                    ObjectNode converterMetadata = doGet("/api/converter/library/" + modelUrl + "/" + converterType + "/metadata", ObjectNode.class);
-                    assertThat(converterMetadata).as(converterType + " converter metadata for " + modelUrl).isNotEmpty();
-                    assertThat(converterMetadata.has("integrationName")).as(converterType + " converter metadata integrationName for " + modelUrl).isTrue();
-
-                    String payload = doGet("/api/converter/library/" + modelUrl + "/" + converterType + "/payload", String.class);
-                    assertThat(payload).as(converterType + " payload for " + modelUrl).isNotBlank().isNotEqualTo("{}");
                 }
             }
         }

@@ -47,10 +47,11 @@ import { ChartWidgetComponent } from '@home/components/widget/lib/chart/chart.mo
 import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
-  selector: 'tb-bar-chart-widget',
-  templateUrl: './latest-chart-widget.component.html',
-  styleUrls: [],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-bar-chart-widget',
+    templateUrl: './latest-chart-widget.component.html',
+    styleUrls: [],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class BarChartWidgetComponent implements OnInit, ChartWidgetComponent {
 

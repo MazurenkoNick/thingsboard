@@ -30,12 +30,12 @@
 ///
 
 import { environment as env } from '@env/environment';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateStore } from '@ngx-translate/core';
 import { mergeMap } from 'rxjs/operators';
 import _moment from 'moment';
 import { Observable } from 'rxjs';
 
-export function updateUserLang(translate: TranslateService, document: Document, userLang: string,
+export function updateUserLang(translate: TranslateService, translateStore: TranslateStore, document: Document, userLang: string,
                                translations = env.supportedLangs, reload = false): Observable<any> {
   let targetLang = userLang;
   if (!translations) {
@@ -57,13 +57,13 @@ export function updateUserLang(translate: TranslateService, document: Document, 
   document.documentElement.lang = detectedSupportedLang.replace('_', '-');
   _moment.locale([detectedSupportedLang]);
   if (reload) {
-    translate.addLangs(translations);
-    if (translate.translations[detectedSupportedLang]) {
+    translateStore.addLanguages(translations);
+    if (translateStore.hasTranslationFor(detectedSupportedLang)) {
       return translate.currentLoader.getTranslation(detectedSupportedLang).pipe(
         mergeMap((value) => {
           translate.setTranslation(detectedSupportedLang, value, true);
-          if (translate.currentLang !== detectedSupportedLang) {
-            const currentLanguage = translate.currentLang;
+          if (translate.getCurrentLang() !== detectedSupportedLang) {
+            const currentLanguage = translate.getCurrentLang();
             translate.currentLoader.getTranslation(currentLanguage).subscribe(currentLangValue => {
               translate.setTranslation(currentLanguage, currentLangValue, true);
             });
@@ -75,7 +75,7 @@ export function updateUserLang(translate: TranslateService, document: Document, 
       return translate.use(detectedSupportedLang);
     }
   } else {
-    if (detectedSupportedLang === env.defaultLang && translate.translations[detectedSupportedLang]) {
+    if (detectedSupportedLang === env.defaultLang && translateStore.hasTranslationFor(detectedSupportedLang)) {
       return translate.currentLoader.getTranslation(detectedSupportedLang).pipe(
         mergeMap((value) => {
           translate.setTranslation(detectedSupportedLang, value, true);

@@ -38,9 +38,10 @@ import { SolutionTemplateInfo, TenantSolutionTemplateInfo } from '@shared/models
 import { SolutionsService } from '@core/http/solutions.service';
 
 @Component({
-  selector: 'tb-solution-templates',
-  templateUrl: './solution-templates.component.html',
-  styleUrls: ['./solution-templates.component.scss']
+    selector: 'tb-solution-templates',
+    templateUrl: './solution-templates.component.html',
+    styleUrls: ['./solution-templates.component.scss'],
+    standalone: false
 })
 export class SolutionTemplatesComponent extends PageComponent implements OnInit {
 

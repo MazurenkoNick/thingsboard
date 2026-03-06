@@ -44,9 +44,10 @@ export interface ViewRoleDialogData {
 }
 
 @Component({
-  selector: 'tb-view-role-dialog',
-  templateUrl: './view-role-dialog.component.html',
-  styleUrls: []
+    selector: 'tb-view-role-dialog',
+    templateUrl: './view-role-dialog.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class ViewRoleDialogComponent
   extends DialogComponent<ViewRoleDialogComponent> implements OnInit {

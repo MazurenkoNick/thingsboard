@@ -49,9 +49,10 @@ import { SignupDialogComponent, SignupDialogData } from '@modules/signup/pages/s
 import { from } from 'rxjs';
 
 @Component({
-  selector: 'tb-signup',
-  templateUrl: './signup.component.html',
-  styleUrls: ['./signup.component.scss']
+    selector: 'tb-signup',
+    templateUrl: './signup.component.html',
+    styleUrls: ['./signup.component.scss'],
+    standalone: false
 })
 export class SignupComponent extends PageComponent {
 

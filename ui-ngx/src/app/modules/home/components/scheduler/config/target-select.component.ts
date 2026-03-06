@@ -59,14 +59,15 @@ interface FormValue {
 }
 
 @Component({
-  selector: 'tb-target-select',
-  templateUrl: './target-select.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => TargetSelectComponent),
-    multi: true
-  }]
+    selector: 'tb-target-select',
+    templateUrl: './target-select.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => TargetSelectComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class TargetSelectComponent implements ControlValueAccessor, OnDestroy {
 

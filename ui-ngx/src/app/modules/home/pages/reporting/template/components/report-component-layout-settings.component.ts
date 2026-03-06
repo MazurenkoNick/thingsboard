@@ -41,16 +41,17 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReportComponentLayoutSettings } from '@shared/models/report-component.models';
 
 @Component({
-  selector: 'tb-report-component-layout-settings',
-  templateUrl: './report-component-layout-settings.component.html',
-  styleUrls: [],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => ReportComponentLayoutSettingsComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-report-component-layout-settings',
+    templateUrl: './report-component-layout-settings.component.html',
+    styleUrls: [],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ReportComponentLayoutSettingsComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class ReportComponentLayoutSettingsComponent implements OnInit, ControlValueAccessor {
 

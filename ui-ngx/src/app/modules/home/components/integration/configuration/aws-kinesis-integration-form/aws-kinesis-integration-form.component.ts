@@ -50,19 +50,20 @@ import {
 } from '@shared/models/integration.models';
 
 @Component({
-  selector: 'tb-aws-kinesis-integration-form',
-  templateUrl: './aws-kinesis-integration-form.component.html',
-  styleUrls: ['./aws-kinesis-integration-form.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => AwsKinesisIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => AwsKinesisIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-aws-kinesis-integration-form',
+    templateUrl: './aws-kinesis-integration-form.component.html',
+    styleUrls: ['./aws-kinesis-integration-form.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => AwsKinesisIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => AwsKinesisIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class AwsKinesisIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator {
 

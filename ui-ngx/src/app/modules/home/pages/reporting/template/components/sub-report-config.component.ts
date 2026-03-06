@@ -40,10 +40,11 @@ import { SubReportReportComponentConfig } from '@shared/models/report-component.
 import { WidgetConfigMode } from '@shared/models/widget.models';
 
 @Component({
-  selector: 'tb-sub-report-config',
-  templateUrl: './sub-report-config.component.html',
-  styleUrls: ['./report-component-config.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-sub-report-config',
+    templateUrl: './sub-report-config.component.html',
+    styleUrls: ['./report-component-config.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class SubReportConfigComponent extends AbstractReportComponentConfig<SubReportReportComponentConfig> {
 

@@ -69,10 +69,11 @@ export interface EntityGroupWizardDialogResult {
 }
 
 @Component({
-  selector: 'tb-entity-group-wizard',
-  templateUrl: './entity-group-wizard-dialog.component.html',
-  providers: [],
-  styleUrls: ['./entity-group-wizard-dialog.component.scss']
+    selector: 'tb-entity-group-wizard',
+    templateUrl: './entity-group-wizard-dialog.component.html',
+    providers: [],
+    styleUrls: ['./entity-group-wizard-dialog.component.scss'],
+    standalone: false
 })
 export class EntityGroupWizardDialogComponent extends
   DialogComponent<EntityGroupWizardDialogComponent, EntityGroupWizardDialogResult> implements OnDestroy, ErrorStateMatcher {

@@ -46,9 +46,10 @@ export interface SendTestSmsDialogData {
 }
 
 @Component({
-  selector: 'tb-send-test-sms-dialog',
-  templateUrl: './send-test-sms-dialog.component.html',
-  styleUrls: []
+    selector: 'tb-send-test-sms-dialog',
+    templateUrl: './send-test-sms-dialog.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class SendTestSmsDialogComponent extends
   DialogComponent<SendTestSmsDialogComponent> implements OnInit {

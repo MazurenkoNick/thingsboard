@@ -59,16 +59,17 @@ interface OperationTypeInfo {
 }
 
 @Component({
-  selector: 'tb-operation-type-list',
-  templateUrl: './operation-type-list.component.html',
-  styleUrls: [],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => OperationTypeListComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-operation-type-list',
+    templateUrl: './operation-type-list.component.html',
+    styleUrls: [],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => OperationTypeListComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class OperationTypeListComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnChanges {
 

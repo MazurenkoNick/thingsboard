@@ -54,9 +54,10 @@ export interface AggregateLatestMappingDialogData {
 }
 
 @Component({
-  selector: 'tb-agg-latest-mapping-dialog',
-  templateUrl: './aggregate-latest-mapping-dialog.component.html',
-  styleUrls: []
+    selector: 'tb-agg-latest-mapping-dialog',
+    templateUrl: './aggregate-latest-mapping-dialog.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class AggregateLatestMappingDialogComponent
   extends DialogComponent<AggregateLatestMappingDialogComponent, AggLatestMapping> implements OnInit {

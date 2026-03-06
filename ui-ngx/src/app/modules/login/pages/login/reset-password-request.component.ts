@@ -41,9 +41,10 @@ import { WhiteLabelingService } from '@core/http/white-labeling.service';
 import { validateEmail } from '@app/core/utils';
 
 @Component({
-  selector: 'tb-reset-password-request',
-  templateUrl: './reset-password-request.component.html',
-  styleUrls: ['./reset-password-request.component.scss']
+    selector: 'tb-reset-password-request',
+    templateUrl: './reset-password-request.component.html',
+    styleUrls: ['./reset-password-request.component.scss'],
+    standalone: false
 })
 export class ResetPasswordRequestComponent extends PageComponent implements OnInit {
 

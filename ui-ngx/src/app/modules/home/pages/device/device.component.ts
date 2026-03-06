@@ -58,9 +58,10 @@ import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 @Component({
-  selector: 'tb-device',
-  templateUrl: './device.component.html',
-  styleUrls: ['./device.component.scss']
+    selector: 'tb-device',
+    templateUrl: './device.component.html',
+    styleUrls: ['./device.component.scss'],
+    standalone: false
 })
 export class DeviceComponent extends GroupEntityComponent<DeviceInfo> {
 

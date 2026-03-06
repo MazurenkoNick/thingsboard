@@ -63,14 +63,15 @@ import { deepClone } from '@core/utils';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-entity-group-column',
-  templateUrl: './entity-group-column.component.html',
-  styleUrls: ['./entity-group-column.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => EntityGroupColumnComponent),
-    multi: true
-  }]
+    selector: 'tb-entity-group-column',
+    templateUrl: './entity-group-column.component.html',
+    styleUrls: ['./entity-group-column.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => EntityGroupColumnComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class EntityGroupColumnComponent extends PageComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy {
 
