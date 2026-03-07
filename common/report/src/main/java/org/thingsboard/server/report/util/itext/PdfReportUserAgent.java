@@ -34,8 +34,8 @@ import com.lowagie.text.BadElementException;
 import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.PdfReader;
 import org.apache.commons.lang3.StringUtils;
+import org.thingsboard.common.util.SsrfProtectionValidator;
 import org.thingsboard.server.common.data.DataConstants;
-import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
 import org.thingsboard.server.report.util.ImageUtils;
@@ -121,19 +121,29 @@ public class PdfReportUserAgent extends ITextUserAgent {
                 url = PdfReportUserAgent.class.getResource("/public" + uri);
             }
             if (url == null) {
+                try {
+                    URI parsedUri = new URI(uri);
+                    String scheme = parsedUri.getScheme();
+                    if (scheme != null && !scheme.equalsIgnoreCase("jar")) {
+                        SsrfProtectionValidator.validateUri(parsedUri);
+                    }
+                } catch (URISyntaxException e) {
+                    XRLog.exception("Invalid URI: " + uri, e);
+                    throw new PdfReportImageException(uri, "Invalid URI syntax", null, e);
+                } catch (RuntimeException e) {
+                    XRLog.exception(e.getMessage());
+                    throw new PdfReportImageException(uri, "URI is invalid", null, e);
+                }
                 return super.resolveAndOpenStream(uri);
             }
         }
         try {
             is = url.openStream();
-        }
-        catch (java.net.MalformedURLException e) {
+        } catch (java.net.MalformedURLException e) {
             XRLog.exception("bad URL given: " + uri, e);
-        }
-        catch (java.io.FileNotFoundException e) {
+        } catch (java.io.FileNotFoundException e) {
             XRLog.exception("item at URI " + uri + " not found");
-        }
-        catch (java.io.IOException e) {
+        } catch (java.io.IOException e) {
             XRLog.exception("IO problem for " + uri, e);
         }
         return is;
@@ -226,7 +236,7 @@ public class PdfReportUserAgent extends ITextUserAgent {
     }
 
     private ImageResource errorLoadImageFromUriResource(final String uri, Exception exception) {
-        return errorImageResource(uri,  "Failed to load image.", null, exception);
+        return errorImageResource(uri, "Failed to load image.", null, exception);
     }
 
     private ImageResource errorImageResource(PdfReportImageException exception) {
@@ -274,12 +284,12 @@ public class PdfReportUserAgent extends ITextUserAgent {
         var parts = uri.split("/");
         if (parts.length >= 5) {
             String publicKey = parts[4];
-           return this._dataService.downloadPublicImage(publicKey, this._ctx);
+            return this._dataService.downloadPublicImage(publicKey, this._ctx);
         }
         return null;
     }
 
-    static class PdfReportImageException extends Exception {
+    static class PdfReportImageException extends RuntimeException {
 
         private final String uri;
         private final String uriString;
@@ -291,4 +301,5 @@ public class PdfReportUserAgent extends ITextUserAgent {
         }
 
     }
+
 }

@@ -38,6 +38,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.util.CollectionUtils;
+import org.thingsboard.common.util.ListeningExecutor;
 import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.EntitySubtype;
 import org.thingsboard.server.common.data.EntityType;
@@ -47,7 +48,6 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.dao.model.ToData;
-import org.thingsboard.server.dao.sql.JpaExecutorService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -207,7 +207,7 @@ public final class DaoUtil {
 
     public static <T> ListenableFuture<List<T>> getEntitiesByTenantIdAndIdIn(List<UUID> entityIds,
                                                                              Function<List<UUID>, Collection<? extends ToData<T>>> daoConsumer,
-                                                                             JpaExecutorService service) {
+                                                                             ListeningExecutor service) {
         int size = entityIds.size();
         List<ListenableFuture<List<T>>> resultList = new ArrayList<>();
         if (size > MAX_IN_VALUE) {

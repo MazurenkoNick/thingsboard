@@ -43,9 +43,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
+import org.thingsboard.common.util.DirectListeningExecutor;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.ListeningExecutor;
-import org.thingsboard.rule.engine.TestDbCallbackExecutor;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbNodeConfiguration;
 import org.thingsboard.rule.engine.api.TbNodeException;
@@ -90,7 +90,7 @@ class TbDuplicateMsgToGroupNodeTest {
     final DeviceId ORIGINATOR_ID = new DeviceId(UUID.fromString("b0b69592-ae0e-4496-a5c7-b4ef81a4461b"));
     final TenantId TENANT_ID = TenantId.fromUUID(UUID.fromString("ffce9463-8b23-429b-9c0f-322ff12c2cc3"));
 
-    final ListeningExecutor dbCallbackExecutor = new TestDbCallbackExecutor();
+    final ListeningExecutor dbCallbackExecutor = DirectListeningExecutor.INSTANCE;
 
     TbDuplicateMsgToGroupNode node;
     TbDuplicateMsgToGroupNodeConfiguration config;

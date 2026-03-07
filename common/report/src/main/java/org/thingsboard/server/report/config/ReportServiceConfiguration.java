@@ -28,28 +28,32 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.rule.engine;
+package org.thingsboard.server.report.config;
 
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import org.thingsboard.common.util.ListeningExecutor;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Configuration;
+import org.thingsboard.common.util.SsrfProtectionValidator;
 
-import java.util.concurrent.Callable;
+import java.util.List;
 
-public class TestDbCallbackExecutor implements ListeningExecutor {
+@Slf4j
+@Configuration
+@ConditionalOnProperty(name = "service.type", havingValue = "tb-report")
+public class ReportServiceConfiguration {
 
-    @Override
-    public <T> ListenableFuture<T> executeAsync(Callable<T> task) {
-        try {
-            return Futures.immediateFuture(task.call());
-        } catch (Exception e) {
-            return Futures.immediateFailedFuture(e);
-        }
-    }
+    @Value("${reports.ssrf_protection_enabled:false}")
+    private boolean ssrfProtectionEnabled;
 
-    @Override
-    public void execute(Runnable command) {
-        command.run();
+    @Value("${reports.ssrf_additional_blocked_hosts:}")
+    private List<String> ssrfAdditionalBlockedHosts;
+
+    @PostConstruct
+    public void init() {
+        SsrfProtectionValidator.setEnabled(ssrfProtectionEnabled);
+        SsrfProtectionValidator.setAdditionalBlockedHosts(ssrfAdditionalBlockedHosts);
     }
 
 }
