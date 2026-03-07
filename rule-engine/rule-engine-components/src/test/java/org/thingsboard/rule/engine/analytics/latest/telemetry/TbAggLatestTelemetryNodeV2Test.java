@@ -44,10 +44,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
+import org.thingsboard.common.util.DirectListeningExecutor;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.ListeningExecutor;
 import org.thingsboard.rule.engine.AbstractRuleNodeUpgradeTest;
-import org.thingsboard.rule.engine.TestDbCallbackExecutor;
 import org.thingsboard.rule.engine.analytics.incoming.MathFunction;
 import org.thingsboard.rule.engine.api.ScriptEngine;
 import org.thingsboard.rule.engine.api.TbContext;
@@ -126,7 +126,7 @@ class TbAggLatestTelemetryNodeV2Test extends AbstractRuleNodeUpgradeTest {
     @Mock
     ScriptEngine scriptEngine;
 
-    ListeningExecutor executor = new TestDbCallbackExecutor();
+    ListeningExecutor executor = DirectListeningExecutor.INSTANCE;
     TbAggLatestTelemetryNodeV2 node;
     TenantId tenantId;
     AssetId assetId;

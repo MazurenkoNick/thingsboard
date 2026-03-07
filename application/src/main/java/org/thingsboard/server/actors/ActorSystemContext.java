@@ -49,6 +49,7 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.common.util.DebugModeUtil;
 import org.thingsboard.common.util.EventUtil;
 import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.common.util.SsrfProtectionValidator;
 import org.thingsboard.rule.engine.api.DashboardReportService;
 import org.thingsboard.rule.engine.api.DeviceStateManager;
 import org.thingsboard.rule.engine.api.JobManager;
@@ -186,6 +187,7 @@ import org.thingsboard.server.service.transport.TbCoreToTransportService;
 import org.thingsboard.server.utils.DebugModeRateLimitsConfig;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -733,9 +735,17 @@ public class ActorSystemContext {
     @Getter
     private boolean localCacheType;
 
+    @Value("${actors.rule.external.ssrf_protection_enabled:false}")
+    private boolean ssrfProtectionEnabled;
+
+    @Value("${actors.rule.external.ssrf_additional_blocked_hosts:}")
+    private List<String> ssrfAdditionalBlockedHosts;
+
     @PostConstruct
     public void init() {
         this.localCacheType = "caffeine".equals(cacheType);
+        SsrfProtectionValidator.setEnabled(ssrfProtectionEnabled);
+        SsrfProtectionValidator.setAdditionalBlockedHosts(ssrfAdditionalBlockedHosts);
     }
 
     @Value("${actors.tenant.create_components_on_init:true}")
@@ -1024,7 +1034,7 @@ public class ActorSystemContext {
 
     private boolean checkLimits(TenantId tenantId) {
         if (debugModeRateLimitsConfig.isCalculatedFieldDebugPerTenantLimitsEnabled() &&
-                !rateLimitService.checkRateLimit(LimitedApi.CALCULATED_FIELD_DEBUG_EVENTS, (Object) tenantId, debugModeRateLimitsConfig.getCalculatedFieldDebugPerTenantLimitsConfiguration())) {
+            !rateLimitService.checkRateLimit(LimitedApi.CALCULATED_FIELD_DEBUG_EVENTS, (Object) tenantId, debugModeRateLimitsConfig.getCalculatedFieldDebugPerTenantLimitsConfiguration())) {
             log.trace("[{}] Calculated field debug event limits exceeded!", tenantId);
             return false;
         }
