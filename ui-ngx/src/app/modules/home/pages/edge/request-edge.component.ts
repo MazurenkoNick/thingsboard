@@ -34,9 +34,10 @@ import { RequestEdgeDialogComponent } from '@shared/components/dialog/request-ed
 import { DynamicMatDialog } from '@shared/components/dialog/dynamic/dynamic-dialog';
 
 @Component({
-  selector: 'tb-request-edge',
-  templateUrl: './request-edge.component.html',
-  styleUrls: ['./request-edge.component.scss']
+    selector: 'tb-request-edge',
+    templateUrl: './request-edge.component.html',
+    styleUrls: ['./request-edge.component.scss'],
+    standalone: false
 })
 export class RequestEdgeComponent implements OnInit {
 

@@ -35,7 +35,8 @@ import { MillisecondsToTimeStringPipe } from '@shared/pipe/milliseconds-to-time-
 import { isDefined } from '@core/utils';
 
 @Pipe({
-  name: 'dateExpiration'
+    name: 'dateExpiration',
+    standalone: false
 })
 export class DateExpirationPipe implements PipeTransform {
 

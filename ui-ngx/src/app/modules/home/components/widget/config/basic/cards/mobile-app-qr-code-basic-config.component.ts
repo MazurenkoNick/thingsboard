@@ -50,9 +50,10 @@ import { Operation, Resource } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Component({
-  selector: 'tb-mobile-app-qr-code-basic-config',
-  templateUrl: './mobile-app-qr-code-basic-config.component.html',
-  styleUrls: ['../basic-config.scss']
+    selector: 'tb-mobile-app-qr-code-basic-config',
+    templateUrl: './mobile-app-qr-code-basic-config.component.html',
+    styleUrls: ['../basic-config.scss'],
+    standalone: false
 })
 export class MobileAppQrCodeBasicConfigComponent extends BasicWidgetConfigComponent {
 

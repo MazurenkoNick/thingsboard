@@ -37,16 +37,17 @@ import { AppState } from '@core/core.state';
 import { GroupPermission } from '@shared/models/group-permission.models';
 
 @Component({
-  selector: 'tb-registration-permissions',
-  templateUrl: './registration-permissions.component.html',
-  styleUrls: ['./registration-permissions.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => RegistrationPermissionsComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-registration-permissions',
+    templateUrl: './registration-permissions.component.html',
+    styleUrls: ['./registration-permissions.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => RegistrationPermissionsComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class RegistrationPermissionsComponent extends PageComponent implements ControlValueAccessor, OnInit {
 

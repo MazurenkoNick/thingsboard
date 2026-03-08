@@ -288,6 +288,10 @@ import { RequestEdgeDialogComponent } from '@shared/components/dialog/request-ed
 import { RequestWhiteLabelingDialogComponent } from '@shared/components/dialog/request-white-labeling-dialog.component';
 import { RequestTrendzDialogComponent } from '@shared/components/dialog/request-trendz-dialog.component';
 import { RequestPlanUpgradeDialogComponent } from '@shared/components/dialog/request-plan-upgrade-dialog.component';
+import { MAT_BUTTON_TOGGLE_DEFAULT_OPTIONS } from '@angular/material/button-toggle';
+import { RgbaInputComponent } from '@shared/components/color-picker/rgba-input.component';
+import { HslaInputComponent } from '@shared/components/color-picker/hsla-input.component';
+import { InputChangeDirective } from '@shared/components/color-picker/input-change.directive';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -352,6 +356,13 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
       provide: MAT_TOOLTIP_DEFAULT_OPTIONS,
       useValue: {
         disableTooltipInteractivity: true
+      }
+    },
+    {
+      provide: MAT_BUTTON_TOGGLE_DEFAULT_OPTIONS,
+      useValue: {
+        hideSingleSelectionIndicator: true,
+        hideMultipleSelectionIndicator: true
       }
     },
     CountryData
@@ -548,6 +559,10 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     ReportTemplateAutocompleteComponent,
     TimeUnitInputComponent,
     PasswordRequirementsTooltipComponent,
+    StringPatternAutocompleteComponent,
+    RgbaInputComponent,
+    HslaInputComponent,
+    InputChangeDirective
   ],
   imports: [
     CommonModule,

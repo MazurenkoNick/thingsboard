@@ -59,10 +59,11 @@ export interface ManageOwnerAndGroupsDialogData {
 }
 
 @Component({
-  selector: 'tb-manage-owner-and-groups-dialog',
-  templateUrl: './manage-owner-and-groups-dialog.component.html',
-  providers: [{provide: ErrorStateMatcher, useExisting: ManageOwnerAndGroupsDialogComponent}],
-  styleUrls: []
+    selector: 'tb-manage-owner-and-groups-dialog',
+    templateUrl: './manage-owner-and-groups-dialog.component.html',
+    providers: [{ provide: ErrorStateMatcher, useExisting: ManageOwnerAndGroupsDialogComponent }],
+    styleUrls: [],
+    standalone: false
 })
 export class ManageOwnerAndGroupsDialogComponent extends
   DialogComponent<ManageOwnerAndGroupsDialogComponent, boolean> implements OnInit, ErrorStateMatcher {

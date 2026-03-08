@@ -47,9 +47,10 @@ import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 @Component({
-  selector: 'tb-mobile-qr-code-widget',
-  templateUrl: './mobile-qr-code-widget-settings.component.html',
-  styleUrls: ['mobile-qr-code-widget-settings.component.scss', '../../admin/settings-card.scss']
+    selector: 'tb-mobile-qr-code-widget',
+    templateUrl: './mobile-qr-code-widget-settings.component.html',
+    styleUrls: ['mobile-qr-code-widget-settings.component.scss', '../../admin/settings-card.scss'],
+    standalone: false
 })
 export class MobileQrCodeWidgetSettingsComponent extends PageComponent implements HasConfirmForm {
 

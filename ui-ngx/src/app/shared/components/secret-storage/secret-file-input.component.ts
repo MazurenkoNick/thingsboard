@@ -66,16 +66,17 @@ import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Authority } from '@shared/models/authority.enum';
 
 @Component({
-  selector: 'tb-secret-file-input',
-  templateUrl: './secret-file-input.component.html',
-  styleUrls: ['./secret-file-input.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => SecretFileInputComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-secret-file-input',
+    templateUrl: './secret-file-input.component.html',
+    styleUrls: ['./secret-file-input.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => SecretFileInputComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class SecretFileInputComponent extends PageComponent implements OnInit, ControlValueAccessor, OnChanges {
 

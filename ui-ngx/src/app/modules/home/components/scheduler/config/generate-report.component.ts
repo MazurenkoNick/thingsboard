@@ -47,19 +47,20 @@ import { takeUntil } from 'rxjs/operators';
 import { ReportConfig } from '@shared/models/report.models';
 
 @Component({
-  selector: 'tb-generate-report-event-config',
-  templateUrl: './generate-report.component.html',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => GenerateReportComponent),
-    multi: true
-  },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => GenerateReportComponent),
-      multi: true
-    }]
+    selector: 'tb-generate-report-event-config',
+    templateUrl: './generate-report.component.html',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => GenerateReportComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => GenerateReportComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class GenerateReportComponent implements ControlValueAccessor, AfterViewInit, OnDestroy, Validator {
 

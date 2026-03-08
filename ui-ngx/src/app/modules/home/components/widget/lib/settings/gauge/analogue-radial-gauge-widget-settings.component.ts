@@ -39,9 +39,10 @@ import {
 } from '@home/components/widget/lib/settings/gauge/analogue-gauge-widget-settings.component';
 
 @Component({
-  selector: 'tb-analogue-radial-gauge-widget-settings',
-  templateUrl: './analogue-gauge-widget-settings.component.html',
-  styleUrls: ['./../widget-settings.scss']
+    selector: 'tb-analogue-radial-gauge-widget-settings',
+    templateUrl: './analogue-gauge-widget-settings.component.html',
+    styleUrls: ['./../widget-settings.scss'],
+    standalone: false
 })
 export class AnalogueRadialGaugeWidgetSettingsComponent extends AnalogueGaugeWidgetSettingsComponent {
 

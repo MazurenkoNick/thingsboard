@@ -85,7 +85,7 @@ public class TbTwilioSmsNode implements TbNode {
                     ok -> {
                         log.trace("[{}][{}] Successfully processed msg: {}", ctx.getTenantId().getId(), ctx.getSelfId().getId(), tbMsg);
                         if (forceAck) {
-                            ctx.enqueueForTellNext(tbMsg.copyWithNewCtx(), TbNodeConnectionType.SUCCESS);
+                            ctx.enqueueForTellNext(tbMsg.copyWithNewCtx().build(), TbNodeConnectionType.SUCCESS);
                         } else {
                             ctx.tellNext(tbMsg, TbNodeConnectionType.SUCCESS);
                         }
@@ -93,7 +93,7 @@ public class TbTwilioSmsNode implements TbNode {
                     fail -> {
                         logFailure(ctx, tbMsg, fail);
                         if (forceAck) {
-                            ctx.enqueueForTellFailure(tbMsg.copyWithNewCtx(), fail);
+                            ctx.enqueueForTellFailure(tbMsg.copyWithNewCtx().build(), fail);
                         } else {
                             ctx.tellFailure(tbMsg, fail);
                         }
@@ -107,7 +107,7 @@ public class TbTwilioSmsNode implements TbNode {
     private TbMsg ackIfNeeded(TbContext ctx, TbMsg msg) {
         if (forceAck) {
             ctx.ack(msg);
-            return msg.copyWithNewCtx();
+            return msg.copyWithNewCtx().build();
         } else {
             return msg;
         }

@@ -54,12 +54,15 @@ import org.thingsboard.rule.engine.rest.TbSendRestApiCallReplyNode;
 import org.thingsboard.rule.engine.telemetry.TbCalculatedFieldsNode;
 import org.thingsboard.rule.engine.telemetry.TbMsgAttributesNode;
 import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNode;
+import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.edge.EdgeEvent;
 import org.thingsboard.server.common.data.edge.EdgeEventActionType;
 import org.thingsboard.server.common.data.edge.EdgeEventType;
+import org.thingsboard.server.common.data.id.EdgeId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleNode;
+import org.thingsboard.server.gen.edge.v1.EdgeConfiguration;
 import org.thingsboard.server.gen.edge.v1.EdgeVersion;
 import org.thingsboard.server.gen.edge.v1.UpdateMsgType;
 
@@ -146,6 +149,25 @@ public class EdgeMsgConstructorUtilsTest {
             checkUpdateNodeConfigurationsForLegacyEdge(ruleNode, edgeVersion);
             checkRemoveExcludedNodesForLegacyEdge(ruleNode, edgeVersion);
         });
+    }
+
+    @Test
+    @DisplayName("Test constructEdgeConfiguration with null edgeLicenseKey and cloudEndpoint")
+    public void testConstructEdgeConfigurationWithNulls() {
+        Edge edge = new Edge();
+        edge.setId(new EdgeId(UUID.randomUUID()));
+        edge.setTenantId(TenantId.fromUUID(UUID.randomUUID()));
+        edge.setName("Test Edge");
+        edge.setType("Test Type");
+        edge.setRoutingKey(UUID.randomUUID().toString());
+        edge.setSecret(UUID.randomUUID().toString());
+        edge.setEdgeLicenseKey(null);
+        edge.setCloudEndpoint(null);
+        edge.setAdditionalInfo(JacksonUtil.newObjectNode());
+
+        EdgeConfiguration edgeConfiguration = EdgeMsgConstructorUtils.constructEdgeConfiguration(edge, 1);
+        Assertions.assertNotNull(edgeConfiguration);
+        Assertions.assertEquals(edge.getName(), edgeConfiguration.getName());
     }
 
     private List<RuleNode> sanitizeMetadataForLegacyEdgeVersion(EdgeVersion edgeVersion) {
@@ -295,4 +317,5 @@ public class EdgeMsgConstructorUtilsTest {
         edgeEvent.setBody(body);
         return edgeEvent;
     }
+
 }

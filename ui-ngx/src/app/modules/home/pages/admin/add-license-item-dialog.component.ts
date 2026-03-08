@@ -45,9 +45,10 @@ export interface AddLicenseItemDialogData {
 }
 
 @Component({
-  selector: 'tb-add-license-item-dialog',
-  templateUrl: './add-license-item-dialog.component.html',
-  styleUrls: ['./add-license-item-dialog.component.scss']
+    selector: 'tb-add-license-item-dialog',
+    templateUrl: './add-license-item-dialog.component.html',
+    styleUrls: ['./add-license-item-dialog.component.scss'],
+    standalone: false
 })
 export class AddLicenseItemDialogComponent extends DialogComponent<AddLicenseItemDialogComponent, boolean> {
 

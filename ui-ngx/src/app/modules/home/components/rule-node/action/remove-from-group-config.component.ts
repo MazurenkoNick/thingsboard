@@ -34,9 +34,10 @@ import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms
 import { RuleNodeConfiguration, RuleNodeConfigurationComponent } from '@app/shared/models/rule-node.models';
 
 @Component({
-  selector: 'tb-action-node-remove-from-group-config',
-  templateUrl: './remove-from-group-config.component.html',
-  styleUrls: []
+    selector: 'tb-action-node-remove-from-group-config',
+    templateUrl: './remove-from-group-config.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class RemoveFromGroupConfigComponent extends RuleNodeConfigurationComponent {
 

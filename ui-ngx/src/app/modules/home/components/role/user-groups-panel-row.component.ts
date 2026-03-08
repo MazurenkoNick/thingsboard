@@ -49,22 +49,23 @@ import { EntityType } from '@shared/models/entity-type.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Component({
-  selector: 'tb-user-groups-panel-row',
-  templateUrl: './user-groups-panel-row.component.html',
-  styleUrls: ['./user-groups-panel-row.component.scss'],
-  encapsulation: ViewEncapsulation.None,
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: UserGroupsPanelRowComponent,
-      multi: true
-    },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: UserGroupsPanelRowComponent,
-      multi: true
-    }
-  ]
+    selector: 'tb-user-groups-panel-row',
+    templateUrl: './user-groups-panel-row.component.html',
+    styleUrls: ['./user-groups-panel-row.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: UserGroupsPanelRowComponent,
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: UserGroupsPanelRowComponent,
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class UserGroupsPanelRowComponent implements ControlValueAccessor, Validator {
 

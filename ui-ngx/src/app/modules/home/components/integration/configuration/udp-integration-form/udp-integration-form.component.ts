@@ -50,19 +50,20 @@ import {
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'tb-udp-integration-form',
-  templateUrl: './udp-integration-form.component.html',
-  styleUrls: ['./udp-integration-form.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => UdpIntegrationFormComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => UdpIntegrationFormComponent),
-    multi: true,
-  }]
+    selector: 'tb-udp-integration-form',
+    templateUrl: './udp-integration-form.component.html',
+    styleUrls: ['./udp-integration-form.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => UdpIntegrationFormComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => UdpIntegrationFormComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class UdpIntegrationFormComponent extends IntegrationForm implements ControlValueAccessor, Validator {
 

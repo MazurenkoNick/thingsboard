@@ -47,19 +47,20 @@ import { isDefinedAndNotNull } from '@core/utils';
 import { OpcUaSubscription } from '@shared/models/integration.models';
 
 @Component({
-  selector: 'tb-opc-ua-subscription',
-  templateUrl: './opc-ua-subscription.component.html',
-  styleUrls: ['./opc-ua-subscription.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => OpcUaSubscriptionComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => OpcUaSubscriptionComponent),
-    multi: true,
-  }]
+    selector: 'tb-opc-ua-subscription',
+    templateUrl: './opc-ua-subscription.component.html',
+    styleUrls: ['./opc-ua-subscription.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => OpcUaSubscriptionComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => OpcUaSubscriptionComponent),
+            multi: true,
+        }],
+    standalone: false
 })
 export class OpcUaSubscriptionComponent implements ControlValueAccessor, Validator, OnDestroy {
 

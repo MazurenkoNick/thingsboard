@@ -87,19 +87,20 @@ export class EndsOnDateErrorStateMatcher implements ErrorStateMatcher {
 }
 
 @Component({
-  selector: 'tb-scheduler-event-schedule',
-  templateUrl: './scheduler-event-schedule.component.html',
-  styleUrls: ['./scheduler-event-schedule.component.scss'],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => SchedulerEventScheduleComponent),
-    multi: true
-  },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => SchedulerEventScheduleComponent),
-    multi: true
-  }]
+    selector: 'tb-scheduler-event-schedule',
+    templateUrl: './scheduler-event-schedule.component.html',
+    styleUrls: ['./scheduler-event-schedule.component.scss'],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => SchedulerEventScheduleComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => SchedulerEventScheduleComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class SchedulerEventScheduleComponent extends PageComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy, Validator {
 

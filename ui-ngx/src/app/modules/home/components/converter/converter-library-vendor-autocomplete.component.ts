@@ -39,15 +39,16 @@ import { IntegrationType } from '@shared/models/integration.models';
 import { isDefinedAndNotNull, isEqual } from '@core/utils';
 
 @Component({
-  selector: 'tb-converter-library-vendor-autocomplete',
-  templateUrl: './converter-library-vendor-autocomplete.component.html',
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => ConverterLibraryVendorAutocompleteComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-converter-library-vendor-autocomplete',
+    templateUrl: './converter-library-vendor-autocomplete.component.html',
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ConverterLibraryVendorAutocompleteComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class ConverterLibraryVendorAutocompleteComponent implements OnInit, ControlValueAccessor {
   @ViewChild('input', {static: true}) input: ElementRef;

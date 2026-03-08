@@ -70,9 +70,10 @@ import { hidePageSizePixelValue } from '@shared/models/constants';
 import { FormBuilder } from '@angular/forms';
 
 @Component({
-  selector: 'tb-group-permissions',
-  templateUrl: './group-permissions.component.html',
-  styleUrls: ['./group-permissions.component.scss']
+    selector: 'tb-group-permissions',
+    templateUrl: './group-permissions.component.html',
+    styleUrls: ['./group-permissions.component.scss'],
+    standalone: false
 })
 export class GroupPermissionsComponent extends PageComponent implements AfterViewInit, OnInit, OnDestroy {
 

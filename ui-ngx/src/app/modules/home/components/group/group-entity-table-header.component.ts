@@ -42,9 +42,10 @@ import { UtilsService } from '@core/services/utils.service';
 import { TranslateService } from '@ngx-translate/core';
 
 @Component({
-  selector: 'tb-group-entity-table-header',
-  templateUrl: './group-entity-table-header.component.html',
-  styleUrls: ['./group-entity-table-header.component.scss']
+    selector: 'tb-group-entity-table-header',
+    templateUrl: './group-entity-table-header.component.html',
+    styleUrls: ['./group-entity-table-header.component.scss'],
+    standalone: false
 })
 export class GroupEntityTableHeaderComponent<T extends BaseData<HasId>>
   extends EntityTableHeaderComponent<T, PageLink, ShortEntityView, GroupEntityTableConfig<T>> {

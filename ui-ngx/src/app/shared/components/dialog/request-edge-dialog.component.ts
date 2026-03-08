@@ -43,10 +43,11 @@ import { AddonType, addonTypeTranslationMap } from '@shared/models/subscription.
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 @Component({
-  selector: 'tb-request-edge-dialog',
-  templateUrl: './request-edge-dialog.component.html',
-  styleUrls: ['./request-feature-dialog-styles.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-request-edge-dialog',
+    templateUrl: './request-edge-dialog.component.html',
+    styleUrls: ['./request-feature-dialog-styles.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class RequestEdgeDialogComponent extends DialogComponent<RequestEdgeDialogComponent>{
 

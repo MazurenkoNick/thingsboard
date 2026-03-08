@@ -65,10 +65,11 @@ enum ReprocessingState {
 }
 
 @Component({
-  selector: 'tb-calculated-field-reprocessing-panel',
-  templateUrl: './calculated-field-reprocessing-panel.component.html',
-  styleUrls: ['./calculated-field-reprocessing-panel.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-calculated-field-reprocessing-panel',
+    templateUrl: './calculated-field-reprocessing-panel.component.html',
+    styleUrls: ['./calculated-field-reprocessing-panel.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class CalculatedFieldReprocessingPanelComponent implements OnInit {
 

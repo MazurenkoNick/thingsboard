@@ -61,20 +61,21 @@ import { TranslateService } from '@ngx-translate/core';
 import { coerceBoolean } from "@shared/decorators/coercion";
 
 @Component({
-  selector: 'tb-entity-key-autocomplete',
-  templateUrl: './entity-key-autocomplete.component.html',
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => EntityKeyAutocompleteComponent),
-      multi: true
-    },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => EntityKeyAutocompleteComponent),
-      multi: true
-    }
-  ],
+    selector: 'tb-entity-key-autocomplete',
+    templateUrl: './entity-key-autocomplete.component.html',
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => EntityKeyAutocompleteComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => EntityKeyAutocompleteComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class EntityKeyAutocompleteComponent implements ControlValueAccessor, Validator, OnChanges {
 
@@ -159,8 +160,10 @@ export class EntityKeyAutocompleteComponent implements ControlValueAccessor, Val
       changes.dataKeyType.currentValue !== changes.dataKeyType.previousValue;
 
     if (filterChanged || keyScopeChanged || keyTypeChanged) {
-      this.keyControl.setValue('', {emitEvent: false});
       this.cachedResult = null;
+      if (!this.keyControl.disabled) {
+        this.keyControl.setValue('', {emitEvent: false});
+      }
     }
   }
 

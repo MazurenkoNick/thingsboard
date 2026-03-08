@@ -60,13 +60,17 @@ import {
   barChartWithLabelsDefaultSettings,
   BarChartWithLabelsWidgetSettings
 } from '@home/components/widget/lib/chart/bar-chart-with-labels-widget.models';
-import { TimeSeriesChartType } from '@home/components/widget/lib/chart/time-series-chart.models';
+import {
+ normalizeAxisLimit, TimeSeriesChartType,
+  updateLatestDataKeys
+} from '@home/components/widget/lib/chart/time-series-chart.models';
 import { getSourceTbUnitSymbol } from '@shared/models/unit.models';
 
 @Component({
-  selector: 'tb-bar-chart-with-labels-basic-config',
-  templateUrl: './bar-chart-with-labels-basic-config.component.html',
-  styleUrls: ['../basic-config.scss']
+    selector: 'tb-bar-chart-with-labels-basic-config',
+    templateUrl: './bar-chart-with-labels-basic-config.component.html',
+    styleUrls: ['../basic-config.scss'],
+    standalone: false
 })
 export class BarChartWithLabelsBasicConfigComponent extends BasicWidgetConfigComponent {
 
@@ -90,7 +94,7 @@ export class BarChartWithLabelsBasicConfigComponent extends BasicWidgetConfigCom
   tooltipDatePreviewFn = this._tooltipDatePreviewFn.bind(this);
 
   predefinedValues = widgetTitleAutocompleteValues;
-  
+
   constructor(protected store: Store<AppState>,
               protected widgetConfigComponent: WidgetConfigComponent,
               private $injector: Injector,
@@ -179,6 +183,11 @@ export class BarChartWithLabelsBasicConfigComponent extends BasicWidgetConfigCom
 
       actions: [configData.config.actions || {}, []]
     });
+  }
+
+  protected onConfigChanged(widgetConfig: WidgetConfigComponentData) {
+    updateLatestDataKeys([widgetConfig.config.settings.yAxis], this.datasource, this.callbacks);
+    super.onConfigChanged(widgetConfig);
   }
 
   protected prepareOutputConfig(config: any): WidgetConfigComponentData {

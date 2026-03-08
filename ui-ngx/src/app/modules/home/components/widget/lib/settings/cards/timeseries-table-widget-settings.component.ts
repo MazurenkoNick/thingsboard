@@ -39,9 +39,10 @@ import { Direction } from '@shared/models/page/sort-order';
 import { entityFields } from '@shared/models/entity.models';
 
 @Component({
-  selector: 'tb-timeseries-table-widget-settings',
-  templateUrl: './timeseries-table-widget-settings.component.html',
-  styleUrls: ['./../widget-settings.scss']
+    selector: 'tb-timeseries-table-widget-settings',
+    templateUrl: './timeseries-table-widget-settings.component.html',
+    styleUrls: ['./../widget-settings.scss'],
+    standalone: false
 })
 export class TimeseriesTableWidgetSettingsComponent extends WidgetSettingsComponent {
 

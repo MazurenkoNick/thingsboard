@@ -48,9 +48,10 @@ export interface PublicDashboardLinkDialogData {
 }
 
 @Component({
-  selector: 'tb-public-dashboard-link-dialog',
-  templateUrl: './public-dashboard-link.dialog.component.html',
-  styleUrls: []
+    selector: 'tb-public-dashboard-link-dialog',
+    templateUrl: './public-dashboard-link.dialog.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class PublicDashboardLinkDialogComponent extends DialogComponent<PublicDashboardLinkDialogComponent> implements OnInit {
 

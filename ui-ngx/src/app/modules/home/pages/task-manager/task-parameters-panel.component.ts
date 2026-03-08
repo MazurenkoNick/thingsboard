@@ -46,10 +46,11 @@ import { getAce, updateEditorSize } from '@shared/models/ace/ace.models';
 import { deepClone } from '@core/utils';
 
 @Component({
-  selector: 'tb-task-parameters-panel',
-  templateUrl: './task-parameters-panel.component.html',
-  styleUrls: ['./task-parameters-panel.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-task-parameters-panel',
+    templateUrl: './task-parameters-panel.component.html',
+    styleUrls: ['./task-parameters-panel.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class TaskParametersPanelComponent implements OnInit, OnDestroy {
 

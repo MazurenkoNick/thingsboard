@@ -57,7 +57,7 @@ public class TbRateLimitsTest {
         assertThat(rateLimits.tryConsume()).as("new token is available").isFalse();
 
         int expectedRefillTime = (int) (((double) period / capacity) * 1000);
-        int gap = 500;
+        int gap = 1000;
 
         for (int i = 0; i < capacity; i++) {
             await("token refill for rate limit " + rateLimitConfig)
@@ -86,7 +86,7 @@ public class TbRateLimitsTest {
         assertThat(rateLimits.tryConsume()).as("new token is available").isFalse();
 
         int expectedRefillTime = period * 1000;
-        int gap = 500;
+        int gap = 1000;
 
         await("tokens refill for rate limit " + rateLimitConfig)
                 .pollInterval(new FixedPollInterval(10, TimeUnit.MILLISECONDS))

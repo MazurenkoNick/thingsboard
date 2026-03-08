@@ -44,9 +44,10 @@ import { Operation, Resource } from "@shared/models/security.models";
 import { UserPermissionsService } from "@core/http/user-permissions.service";
 
 @Component({
-  selector: 'tb-device-profile-tabs',
-  templateUrl: './device-profile-tabs.component.html',
-  styleUrls: []
+    selector: 'tb-device-profile-tabs',
+    templateUrl: './device-profile-tabs.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class DeviceProfileTabsComponent extends EntityTabsComponent<DeviceProfile> implements OnInit {
 

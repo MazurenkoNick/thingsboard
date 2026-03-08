@@ -65,19 +65,20 @@ import { map, tap } from 'rxjs/operators';
 import { OtaUpdateEventConfigComponent } from '@home/components/scheduler/config/ota-update-event-config.component';
 
 @Component({
-  selector: 'tb-scheduler-event-template-config',
-  template: '<ng-container #configContent></ng-container>',
-  styleUrls: [],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => SchedulerEventTemplateConfigComponent),
-    multi: true
-  },
-  {
-    provide: NG_ASYNC_VALIDATORS,
-    useExisting: forwardRef(() => SchedulerEventTemplateConfigComponent),
-    multi: true
-  }]
+    selector: 'tb-scheduler-event-template-config',
+    template: '<ng-container #configContent></ng-container>',
+    styleUrls: [],
+    providers: [{
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => SchedulerEventTemplateConfigComponent),
+            multi: true
+        },
+        {
+            provide: NG_ASYNC_VALIDATORS,
+            useExisting: forwardRef(() => SchedulerEventTemplateConfigComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class SchedulerEventTemplateConfigComponent implements ControlValueAccessor,
   OnInit, AfterViewInit, OnChanges, OnDestroy, AsyncValidator {

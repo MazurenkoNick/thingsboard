@@ -30,19 +30,17 @@
  */
 @use '@angular/material' as mat;
 @use './app-theme-overwrites' as overwrites;
+@use '@angular/material/core/tokens/m2-utils';
 @import './datepicker-theme';
 @import './theme-constants';
 
-@include mat.core();
+@include mat.elevation-classes();
+@include mat.app-background();
 
 $tb-primary: mat.m2-define-palette($mat-tb-primary);
 $tb-accent: mat.m2-define-palette($mat-tb-accent);
 
-$background: (background: map_get(mat.$m2-grey-palette, 200));
-
-$tb-theme-background: map_merge(mat.$m2-light-theme-background-palette, $background);
-
-$tb-theme: mat.m2-define-light-theme((
+$tb-mat-theme: mat.m2-define-light-theme((
   color: (
     primary: $tb-primary,
     accent: $tb-accent
@@ -53,10 +51,9 @@ $tb-theme: mat.m2-define-light-theme((
   density: 0
 ));
 
-$color: map_get($tb-theme, color);
-$color: map_merge($color, (background: $tb-theme-background));
-$tb-theme: map_merge($tb-theme, (color: $color));
-$tb-theme: map_merge($tb-theme, $color);
+$tb-theme-system: m2-utils.get-system($tb-mat-theme);
+$tb-theme-system: map_merge($tb-theme-system, ( background: map_get(mat.$m2-grey-palette, 200) ));
+$tb-theme: map_merge($tb-mat-theme, (_mat-system: $tb-theme-system));
 
 .tb-default {
   @include mat.all-component-themes($tb-theme);

@@ -42,9 +42,10 @@ import {
 import { DebugRuleNodeEventBody } from '@shared/models/event.models';
 
 @Component({
-  selector: 'tb-transformation-node-script-config',
-  templateUrl: './script-config.component.html',
-  styleUrls: []
+    selector: 'tb-transformation-node-script-config',
+    templateUrl: './script-config.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class TransformScriptConfigComponent extends RuleNodeConfigurationComponent {
 

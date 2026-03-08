@@ -45,16 +45,17 @@ import {
 import { AggMathFunction, aggMathFunctionTranslations } from '@home/components/rule-node/rule-node-config.models';
 
 @Component({
-  selector: 'tb-agg-latest-mapping-table',
-  templateUrl: './aggregate-latest-mapping-table.component.html',
-  styleUrls: ['./aggregate-latest-mapping-table.component.scss'],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => AggregateLatestMappingTableComponent),
-      multi: true
-    }
-  ]
+    selector: 'tb-agg-latest-mapping-table',
+    templateUrl: './aggregate-latest-mapping-table.component.html',
+    styleUrls: ['./aggregate-latest-mapping-table.component.scss'],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => AggregateLatestMappingTableComponent),
+            multi: true
+        }
+    ],
+    standalone: false
 })
 export class AggregateLatestMappingTableComponent extends PageComponent implements ControlValueAccessor, OnInit {
 

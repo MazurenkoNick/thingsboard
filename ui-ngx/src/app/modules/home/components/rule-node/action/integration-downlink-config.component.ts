@@ -35,9 +35,10 @@ import { EntityType } from '@shared/models/entity-type.models';
 import { RuleNodeConfiguration, RuleNodeConfigurationComponent } from '@shared/models/rule-node.models';
 
 @Component({
-  selector: 'tb-action-node-integration-downlink-config',
-  templateUrl: './integration-downlink-config.component.html',
-  styleUrls: []
+    selector: 'tb-action-node-integration-downlink-config',
+    templateUrl: './integration-downlink-config.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class IntegrationDownlinkConfigComponent extends RuleNodeConfigurationComponent {
 

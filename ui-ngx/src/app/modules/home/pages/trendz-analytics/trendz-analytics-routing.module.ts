@@ -47,7 +47,7 @@ export const TrendzSyncInfoResolver: ResolveFn<boolean> = (
   store: Store<AppState> = inject(Store<AppState>),
   trendzService = inject(TrendzService)) => {
     const authState = getCurrentAuthState(store);
-    if (authState.licenseVersion > 1 && authState.trendzEnabled) {
+    if (authState.licenseVersion < 2 || authState.trendzEnabled) {
       return trendzService.performTrendzHealthcheck()
       .pipe(map(result => result.status === TrendzSynchronizationStatus.SYNCED));
     } else {

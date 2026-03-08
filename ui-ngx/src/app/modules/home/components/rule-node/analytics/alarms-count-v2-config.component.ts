@@ -36,9 +36,10 @@ import { TimeUnit, timeUnitTranslations } from '../rule-node-config.models';
 import { EntityType } from '@app/shared/models/entity-type.models';
 
 @Component({
-  selector: 'tb-analytics-node-alarms-count-v2-config',
-  templateUrl: './alarms-count-v2-config.component.html',
-  styleUrls: ['./alarms-count-v2-config.component.scss']
+    selector: 'tb-analytics-node-alarms-count-v2-config',
+    templateUrl: './alarms-count-v2-config.component.html',
+    styleUrls: ['./alarms-count-v2-config.component.scss'],
+    standalone: false
 })
 export class AlarmsCountV2ConfigComponent extends RuleNodeConfigurationComponent {
 

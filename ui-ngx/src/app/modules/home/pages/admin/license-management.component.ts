@@ -43,9 +43,10 @@ import { TranslateService } from '@ngx-translate/core';
 import { ActionAuthUpdateAddons } from '@core/auth/auth.actions';
 
 @Component({
-  selector: 'tb-license-management',
-  templateUrl: './license-management.component.html',
-  styleUrls: ['./license-management.component.scss', './settings-card.scss']
+    selector: 'tb-license-management',
+    templateUrl: './license-management.component.html',
+    styleUrls: ['./license-management.component.scss', './settings-card.scss'],
+    standalone: false
 })
 export class LicenseManagementComponent extends PageComponent implements OnInit {
 

@@ -42,10 +42,11 @@ import { ReportTemplatePageComponent } from '@home/pages/reporting/template/repo
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'tb-timeseries-table-preview',
-  templateUrl: './report-table-preview.component.html',
-  styleUrls: ['./report-table-preview.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-timeseries-table-preview',
+    templateUrl: './report-table-preview.component.html',
+    styleUrls: ['./report-table-preview.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class TimeseriesTablePreviewComponent extends AbstractReportTablePreviewComponent<TimeseriesTableReportComponentConfig> {
 

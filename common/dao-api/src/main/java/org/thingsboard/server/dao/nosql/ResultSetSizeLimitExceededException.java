@@ -28,28 +28,20 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.rule.engine;
+package org.thingsboard.server.dao.nosql;
 
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import org.thingsboard.common.util.ListeningExecutor;
+import lombok.Getter;
 
-import java.util.concurrent.Callable;
+@Getter
+public class ResultSetSizeLimitExceededException extends IllegalArgumentException {
 
-public class TestDbCallbackExecutor implements ListeningExecutor {
+    private final long limitBytes;
+    private final long actualBytes;
 
-    @Override
-    public <T> ListenableFuture<T> executeAsync(Callable<T> task) {
-        try {
-            return Futures.immediateFuture(task.call());
-        } catch (Exception e) {
-            return Futures.immediateFailedFuture(e);
-        }
-    }
-
-    @Override
-    public void execute(Runnable command) {
-        command.run();
+    public ResultSetSizeLimitExceededException(long limitBytes, long actualBytes) {
+        super("Result set size exceeds the maximum allowed limit. Please narrow your query");
+        this.limitBytes = limitBytes;
+        this.actualBytes = actualBytes;
     }
 
 }

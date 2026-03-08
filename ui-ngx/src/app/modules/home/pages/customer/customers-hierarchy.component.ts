@@ -89,9 +89,10 @@ const groupTypes: EntityType[] = [
 ];
 
 @Component({
-  selector: 'tb-customers-hierarchy',
-  templateUrl: './customers-hierarchy.component.html',
-  styleUrls: ['./customers-hierarchy.component.scss']
+    selector: 'tb-customers-hierarchy',
+    templateUrl: './customers-hierarchy.component.html',
+    styleUrls: ['./customers-hierarchy.component.scss'],
+    standalone: false
 })
 export class CustomersHierarchyComponent extends PageComponent implements OnInit {
 

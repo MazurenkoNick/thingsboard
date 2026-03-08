@@ -63,10 +63,11 @@ import { coerceBoolean } from '@shared/decorators/coercion';
 import { ChartWidgetComponent } from '@home/components/widget/lib/chart/chart.models';
 
 @Component({
-  selector: 'tb-time-series-chart-widget',
-  templateUrl: './time-series-chart-widget.component.html',
-  styleUrls: ['./time-series-chart-widget.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-time-series-chart-widget',
+    templateUrl: './time-series-chart-widget.component.html',
+    styleUrls: ['./time-series-chart-widget.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class TimeSeriesChartWidgetComponent implements ChartWidgetComponent, OnInit, OnDestroy, AfterViewInit {
 

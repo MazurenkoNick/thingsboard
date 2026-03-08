@@ -55,10 +55,11 @@ export interface SelectDashboardStateDialogData {
 
 // @dynamic
 @Component({
-  selector: 'tb-select-dashboard-state-dialog',
-  templateUrl: './select-dashboard-state-dialog.component.html',
-  styleUrls: ['./select-dashboard-state-dialog.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-select-dashboard-state-dialog',
+    templateUrl: './select-dashboard-state-dialog.component.html',
+    styleUrls: ['./select-dashboard-state-dialog.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class SelectDashboardStateDialogComponent extends DialogComponent<SelectDashboardStateDialogComponent, string>
   implements OnInit, OnDestroy, AfterViewInit {

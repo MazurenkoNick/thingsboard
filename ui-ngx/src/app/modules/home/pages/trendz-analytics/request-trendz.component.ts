@@ -35,9 +35,10 @@ import { RequestTrendzDialogComponent } from '@shared/components/dialog/request-
 import { DynamicMatDialog } from '@shared/components/dialog/dynamic/dynamic-dialog';
 
 @Component({
-  selector: 'tb-request-trendz',
-  templateUrl: './request-trendz.component.html',
-  styleUrls: ['./request-trendz.component.scss']
+    selector: 'tb-request-trendz',
+    templateUrl: './request-trendz.component.html',
+    styleUrls: ['./request-trendz.component.scss'],
+    standalone: false
 })
 export class RequestTrendzComponent extends PageComponent implements OnInit {
 

@@ -158,10 +158,10 @@ $enabled-color: #198038;
           .mat-mdc-progress-bar {
             width: 200px;
             border-radius: 6px;
-            --mdc-linear-progress-track-height: 8px;
-            --mdc-linear-progress-active-indicator-height: 8px;
-            --mdc-linear-progress-track-color: #{rgba($enabled-color, 0.06)};
-            --mdc-linear-progress-active-indicator-color: #{$enabled-color};
+            --mat-progress-bar-track-height: 8px;
+            --mat-progress-bar-active-indicator-height: 8px;
+            --mat-progress-bar-track-color: #{rgba($enabled-color, 0.06)};
+            --mat-progress-bar-active-indicator-color: #{$enabled-color};
           }
           .usage-count {
             min-width: 120px;
@@ -196,8 +196,8 @@ $enabled-color: #198038;
           }
           .usage-row {
             .mat-mdc-progress-bar {
-              --mdc-linear-progress-track-color: rgba(209, 39, 48, 0.06);
-              --mdc-linear-progress-active-indicator-color: #D12730;
+              --mat-progress-bar-track-color: rgba(209, 39, 48, 0.06);
+              --mat-progress-bar-active-indicator-color: #D12730;
             }
             .value {
               color: #D12730;

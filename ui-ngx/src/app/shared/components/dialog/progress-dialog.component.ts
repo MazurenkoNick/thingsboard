@@ -39,9 +39,10 @@ export interface ProgressDialogData<T> {
 }
 
 @Component({
-  selector: 'tb-progress-dialog',
-  templateUrl: './progress-dialog.component.html',
-  styleUrls: []
+    selector: 'tb-progress-dialog',
+    templateUrl: './progress-dialog.component.html',
+    styleUrls: [],
+    standalone: false
 })
 export class ProgressDialogComponent<T> {
 

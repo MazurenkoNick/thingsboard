@@ -60,10 +60,11 @@ import { MediaBreakpoints } from '@shared/models/constants';
 import { Subject, Subscription } from 'rxjs';
 
 @Component({
-  selector: 'tb-custom-menu-config',
-  templateUrl: './custom-menu-config.component.html',
-  styleUrls: ['./custom-menu-config.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-custom-menu-config',
+    templateUrl: './custom-menu-config.component.html',
+    styleUrls: ['./custom-menu-config.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class CustomMenuConfigComponent extends PageComponent implements OnInit, OnDestroy, HasDirtyFlag {
 

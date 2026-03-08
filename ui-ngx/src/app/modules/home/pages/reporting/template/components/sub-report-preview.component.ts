@@ -41,10 +41,11 @@ import { EntityType } from '@shared/models/entity-type.models';
 import { Router } from '@angular/router';
 
 @Component({
-  selector: 'tb-sub-report-preview',
-  templateUrl: './sub-report-preview.component.html',
-  styleUrls: ['./sub-report-preview.component.scss'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'tb-sub-report-preview',
+    templateUrl: './sub-report-preview.component.html',
+    styleUrls: ['./sub-report-preview.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class SubReportPreviewComponent extends AbstractReportComponentPreview<SubReportReportComponentConfig> {
 

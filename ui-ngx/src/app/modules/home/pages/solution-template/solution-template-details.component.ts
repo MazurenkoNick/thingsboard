@@ -46,9 +46,10 @@ import { TranslateService } from '@ngx-translate/core';
 import { Subject } from 'rxjs';
 
 @Component({
-  selector: 'tb-solution-template-details',
-  templateUrl: './solution-template-details.component.html',
-  styleUrls: ['./solution-template-details.component.scss']
+    selector: 'tb-solution-template-details',
+    templateUrl: './solution-template-details.component.html',
+    styleUrls: ['./solution-template-details.component.scss'],
+    standalone: false
 })
 export class SolutionTemplateDetailsComponent extends PageComponent implements OnInit {
 
