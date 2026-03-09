@@ -45,7 +45,9 @@ public class ComposeProjectSyncMessageHandler implements AgentInboundMessageHand
     @Override
     public boolean canHandle(AgentInboundMsgCtx msgCtx) {
         var msg = msgCtx.msg();
-        return msg.hasProjectSync() && msg.getProjectSync().hasCompose();
+        return msg.hasProjectSync()
+                && msg.getProjectSync().hasCompose()
+                && !msg.getProjectSync().getRemoved();
     }
 
     @Override

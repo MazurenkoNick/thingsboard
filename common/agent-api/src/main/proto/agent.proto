@@ -38,8 +38,9 @@ message AgentToServer {
 
 message ProjectStateSync {
   string projectName = 1;
+  bool removed = 2;
   oneof state {
-    ComposeState compose = 2;
+    ComposeState compose = 3;
   }
 }
 
