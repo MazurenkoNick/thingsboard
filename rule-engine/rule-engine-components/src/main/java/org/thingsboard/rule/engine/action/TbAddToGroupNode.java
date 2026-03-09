@@ -125,15 +125,30 @@ public class TbAddToGroupNode extends TbAbstractGroupActionNode<TbAddToGroupConf
     }
 
     private void process(TbContext ctx, TbMsg msg, EntityGroupId entityGroupId, List<EntityGroupContainer> containerList, EntityGroupId groupAllId) {
+        boolean hadFirmware = false;
+        boolean hadSoftware = false;
         for (EntityGroupContainer group : containerList) {
             if (!group.isGroupAll() && !group.getEntityGroupIds().isEmpty()) {
                 for (EntityGroupId groupId : group.getEntityGroupIds()) {
                     if (!groupId.equals(entityGroupId) && !groupId.equals(groupAllId)) {
                         ctx.getPeContext().getEntityGroupService()
                                 .removeEntityFromEntityGroup(ctx.getTenantId(), groupId, msg.getOriginator());
+                        if (msg.getOriginator().getEntityType().equals(EntityType.DEVICE)) {
+                            if (!hadFirmware) {
+                                hadFirmware = ctx.getPeContext().getDeviceGroupOtaPackageService()
+                                        .findDeviceGroupOtaPackageByGroupIdAndType(groupId, OtaPackageType.FIRMWARE) != null;
+                            }
+                            if (!hadSoftware) {
+                                hadSoftware = ctx.getPeContext().getDeviceGroupOtaPackageService()
+                                        .findDeviceGroupOtaPackageByGroupIdAndType(groupId, OtaPackageType.SOFTWARE) != null;
+                            }
+                        }
                     }
                 }
             }
+        }
+        if ((hadFirmware || hadSoftware) && msg.getOriginator().getEntityType().equals(EntityType.DEVICE)) {
+            ctx.getOtaPackageStateService().update(ctx.getTenantId(), List.of((DeviceId) msg.getOriginator()), hadFirmware, hadSoftware);
         }
     }
 

@@ -198,6 +198,53 @@ class TbAddToGroupNodeTest {
     }
 
     @Test
+    void givenDeviceInOtaGroupAndRemoveFromCurrentGroups_whenNewGroupHasNoOta_thenOtaStateIsUpdatedAfterRemoval() throws TbNodeException {
+        EntityGroupId oldGroupId = new EntityGroupId(UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"));
+        EntityGroupId groupAllId = new EntityGroupId(UUID.fromString("11111111-2222-3333-4444-555555555555"));
+        EntityGroupId newGroupId = ENTITY_GROUP_ID;
+
+        Device device = new Device(DEVICE_ID);
+        device.setTenantId(TENANT_ID);
+
+        config.setGroupNamePattern("${groupName}");
+        config.setRemoveFromCurrentGroups(true);
+        var configuration = new TbNodeConfiguration(JacksonUtil.valueToTree(config));
+        node.init(ctxMock, configuration);
+
+        initMocks();
+        // Target new group found by name
+        when(entityGroupServiceMock.findEntityGroupByTypeAndNameAsync(any(), any(), any(), any()))
+                .thenReturn(Futures.immediateFuture(Optional.of(new EntityGroup(newGroupId))));
+        // "All" group is separate
+        when(entityGroupServiceMock.findEntityGroupByTypeAndNameAsync(any(), any(), any(), eq(EntityGroup.GROUP_ALL_NAME)))
+                .thenReturn(Futures.immediateFuture(Optional.of(new EntityGroup(groupAllId))));
+        when(entityGroupServiceMock.findEntityGroupsForEntityAsync(any(), any()))
+                .thenReturn(Futures.immediateFuture(List.of(oldGroupId)));
+        when(ctxMock.getDeviceService()).thenReturn(deviceServiceMock);
+        when(deviceServiceMock.findDeviceById(any(), any())).thenReturn(device);
+        // Old group has firmware OTA, but no software OTA
+        when(deviceGroupOtaPackageService.findDeviceGroupOtaPackageByGroupIdAndType(oldGroupId, OtaPackageType.FIRMWARE))
+                .thenReturn(new DeviceGroupOtaPackage());
+        // New group has no OTA packages (default mock returns null)
+        when(ctxMock.getOtaPackageStateService()).thenReturn(otaPackageStateService);
+
+        TbMsg msg = TbMsg.newMsg()
+                .type(TbMsgType.POST_TELEMETRY_REQUEST)
+                .originator(DEVICE_ID)
+                .copyMetaData(new TbMsgMetaData(Map.of("groupName", "New Device Group")))
+                .data(TbMsg.EMPTY_JSON_OBJECT)
+                .build();
+        node.onMsg(ctxMock, msg);
+
+        verify(entityGroupServiceMock).removeEntityFromEntityGroup(TENANT_ID, oldGroupId, DEVICE_ID);
+        verify(entityGroupServiceMock).addEntityToEntityGroup(TENANT_ID, newGroupId, DEVICE_ID);
+        // OTA state must be recalculated after removal from the old group that had firmware OTA,
+        // even though the new group has no OTA packages
+        verify(otaPackageStateService).update(TENANT_ID, List.of(DEVICE_ID), true, false);
+        verify(ctxMock).tellNext(msg, TbNodeConnectionType.SUCCESS);
+    }
+
+    @Test
     public void givenDefaultConfig_whenInit_thenOk() {
         var configuration = new TbNodeConfiguration(JacksonUtil.valueToTree(config));
         assertThatNoException().isThrownBy(() -> node.init(ctxMock, configuration));
