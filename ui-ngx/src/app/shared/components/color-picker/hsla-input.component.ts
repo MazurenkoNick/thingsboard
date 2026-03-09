@@ -60,7 +60,7 @@ export class HslaInputComponent {
   @coerceBoolean()
   public alpha = false;
 
-  public get value() {
+  public get value(): ReturnType<Color['getHsla']> {
     return this.color.getHsla();
   }
 
