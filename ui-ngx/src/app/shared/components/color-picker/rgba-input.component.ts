@@ -60,7 +60,7 @@ export class RgbaInputComponent {
   @coerceBoolean()
   alpha: boolean;
 
-  public get value() {
+  public get value(): ReturnType<Color['getRgba']> {
     return this.color.getRgba();
   }
 
