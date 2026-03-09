@@ -19,6 +19,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppEventDao;
 import org.thingsboard.server.dao.agent.AgentAppTemplateDao;
@@ -49,6 +50,9 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
                 agentAppEventDao.hasActiveEventForApplication(agentApplication.getId().getId())) {
             throw new DataValidationException("Cannot update application while an event is being processed");
         }
+        if (agentApplication.getDesiredTemplateId() != null) {
+            validateUpgradeVersion(old, agentApplication);
+        }
         return old;
     }
 
@@ -73,6 +77,21 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
         }
         if (agentApplication.getConfig() != null) {
             agentApplication.getConfig().validate();
+        }
+    }
+
+    private void validateUpgradeVersion(AgentApplication old, AgentApplication agentApplication) {
+        AgentAppTemplate currentTemplate = agentAppTemplateDao.findById(TenantId.SYS_TENANT_ID, old.getTemplateId().getId());
+        if (currentTemplate == null || currentTemplate.getNextVersion() == null) {
+            throw new DataValidationException("No next version available for upgrade");
+        }
+        AgentAppTemplate desiredTemplate = agentAppTemplateDao.findById(TenantId.SYS_TENANT_ID, agentApplication.getDesiredTemplateId().getId());
+        if (desiredTemplate == null) {
+            throw new DataValidationException("Desired template not found: " + agentApplication.getDesiredTemplateId());
+        }
+        if (!currentTemplate.getNextVersion().equals(desiredTemplate.getCurrentVersion())) {
+            throw new DataValidationException("Desired template version " + desiredTemplate.getCurrentVersion()
+                    + " does not match the next available version " + currentTemplate.getNextVersion());
         }
     }
 

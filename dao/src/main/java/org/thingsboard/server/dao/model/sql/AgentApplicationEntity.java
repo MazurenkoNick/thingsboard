@@ -44,7 +44,7 @@ import java.util.UUID;
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = ModelConstants.AGENT_APPLICATION_TABLE_NAME)
-public final class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication> {
+public class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication> {
 
     @Column(name = ModelConstants.AGENT_APPLICATION_TENANT_ID_PROPERTY)
     private UUID tenantId;

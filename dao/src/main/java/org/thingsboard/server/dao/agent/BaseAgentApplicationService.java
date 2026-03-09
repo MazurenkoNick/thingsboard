@@ -24,6 +24,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import org.thingsboard.server.cache.agent.AgentApplicationCacheEvictEvent;
 import org.thingsboard.server.cache.agent.AgentApplicationCacheKey;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
@@ -95,6 +96,13 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
     }
 
     @Override
+    public AgentApplicationInfo findInfoById(TenantId tenantId, AgentApplicationId agentApplicationId) {
+        log.trace("Executing findAgentApplicationInfoById [{}]", agentApplicationId);
+        validateId(agentApplicationId, id -> INCORRECT_AGENT_APPLICATION_ID + id);
+        return agentApplicationDao.findInfoById(tenantId, agentApplicationId.getId());
+    }
+
+    @Override
     public AgentApplication findByEventId(TenantId tenantId, AgentAppEventId agentAppEventId) {
         log.trace("Executing findAgentApplicationByEventId [{}]", agentAppEventId);
         validateId(agentAppEventId, id -> "Incorrect agentAppEventId " + id);
@@ -108,6 +116,15 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         validateId(agentId, id -> INCORRECT_AGENT_ID + id);
         validatePageLink(pageLink);
         return agentApplicationDao.findByAgentId(tenantId, agentId.getId(), pageLink);
+    }
+
+    @Override
+    public PageData<AgentApplicationInfo> findInfosByAgentId(TenantId tenantId, AgentId agentId, PageLink pageLink) {
+        log.trace("Executing findAgentApplicationInfosByAgentId, tenantId [{}], agentId [{}]", tenantId, agentId);
+        validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
+        validateId(agentId, id -> INCORRECT_AGENT_ID + id);
+        validatePageLink(pageLink);
+        return agentApplicationDao.findInfosByAgentId(tenantId, agentId.getId(), pageLink);
     }
 
     @Override

@@ -364,7 +364,7 @@ class AgentAppTemplateSyncServiceTest {
 
         UUID stepId = UUID.randomUUID();
         String infoStepJson = """
-                [{"type": "INFO", "id": "%s", "title": "Upgrade info", "message": "Follow upgrade guide"}]
+                [{"type": "COMPOSE_START", "id": "%s", "title": "Upgrade info"}]
                 """.formatted(stepId);
         when(gitSyncService.getFileContent("agent-app-templates", file.path()))
                 .thenReturn(templateJson("DOCKER_COMPOSE", "0.9.0", null, "[]", infoStepJson));

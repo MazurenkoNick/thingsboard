@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
@@ -137,6 +138,9 @@ public class AgentApplicationController extends BaseController {
     public AgentApplication installAgentApp(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "A JSON value representing the install event request with the application.")
             @RequestBody AgentAppEventRequest request) throws Exception {
+        if (request.getApplication() == null) {
+            throw new ThingsboardException("Install request must include an application", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        }
         TenantId tenantId = getCurrentUser().getTenantId();
         return tbAgentApplicationService.execInstallEvent(tenantId, request, getCurrentUser());
     }
@@ -154,6 +158,13 @@ public class AgentApplicationController extends BaseController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "A JSON value representing the event request.")
             @RequestBody AgentAppEventRequest request) throws Exception {
         checkParameter(AGENT_APP_ID, strAgentAppId);
+        AgentAppEventActionType actionType = request.getActionType();
+        if (actionType == null) {
+            throw new ThingsboardException("Action type must not be null", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        }
+        if (actionType == AgentAppEventActionType.INSTALL) {
+            throw new ThingsboardException("Use the install endpoint for INSTALL events", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        }
         AgentApplicationId agentApplicationId = new AgentApplicationId(toUUID(strAgentAppId));
         checkAgentAppId(agentApplicationId, Operation.WRITE);
         TenantId tenantId = getCurrentUser().getTenantId();

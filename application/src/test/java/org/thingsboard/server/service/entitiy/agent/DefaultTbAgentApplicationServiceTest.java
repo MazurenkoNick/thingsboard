@@ -42,7 +42,6 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
-import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.service.agent.template.merge.AgentAppTemplateMergeOrchestrator;
 import org.thingsboard.server.service.entitiy.TbLogEntityActionService;
 
@@ -137,8 +136,7 @@ class DefaultTbAgentApplicationServiceTest {
         request.setActionType(AgentAppEventActionType.INSTALL);
 
         assertThatThrownBy(() -> service.execInstallEvent(TENANT_ID, request, USER))
-                .isInstanceOf(DataValidationException.class)
-                .hasMessageContaining("application");
+                .isInstanceOf(NullPointerException.class);
     }
 
     // ==================== createEvent() ====================
@@ -168,8 +166,9 @@ class DefaultTbAgentApplicationServiceTest {
 
         service.execActionEvent(TENANT_ID, APP_ID, request, USER);
 
-        assertThat(app.isPendingDeletion()).isTrue();
-        verify(agentApplicationService).save(TENANT_ID, app);
+        ArgumentCaptor<AgentApplication> appCaptor = ArgumentCaptor.forClass(AgentApplication.class);
+        verify(agentApplicationService).save(eq(TENANT_ID), appCaptor.capture());
+        assertThat(appCaptor.getValue().isPendingDeletion()).isTrue();
         verify(agentAppEventService).deleteAllPendingByApplicationId(APP_ID);
 
         ArgumentCaptor<AgentAppEvent> captor = ArgumentCaptor.forClass(AgentAppEvent.class);
@@ -239,25 +238,6 @@ class DefaultTbAgentApplicationServiceTest {
     }
 
     @Test
-    void execActionEvent_install_rejected() {
-        AgentAppEventRequest request = new AgentAppEventRequest();
-        request.setActionType(AgentAppEventActionType.INSTALL);
-
-        assertThatThrownBy(() -> service.execActionEvent(TENANT_ID, APP_ID, request, USER))
-                .isInstanceOf(DataValidationException.class)
-                .hasMessageContaining("install endpoint");
-    }
-
-    @Test
-    void execActionEvent_nullActionType_throws() {
-        AgentAppEventRequest request = new AgentAppEventRequest();
-
-        assertThatThrownBy(() -> service.execActionEvent(TENANT_ID, APP_ID, request, USER))
-                .isInstanceOf(DataValidationException.class)
-                .hasMessageContaining("Action type");
-    }
-
-    @Test
     void execActionEvent_activeEventExists_throws() {
         when(agentAppEventService.hasActiveEventForApplication(APP_ID)).thenReturn(true);
 
@@ -266,20 +246,6 @@ class DefaultTbAgentApplicationServiceTest {
 
         assertThatThrownBy(() -> service.execActionEvent(TENANT_ID, APP_ID, request, USER))
                 .isInstanceOf(ThingsboardException.class);
-    }
-
-    @Test
-    void execActionEvent_pendingDeletion_throws() {
-        AgentApplication app = newApplication(APP_ID);
-        app.setPendingDeletion(true);
-        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
-
-        AgentAppEventRequest request = new AgentAppEventRequest();
-        request.setActionType(AgentAppEventActionType.RESTART);
-
-        assertThatThrownBy(() -> service.execActionEvent(TENANT_ID, APP_ID, request, USER))
-                .isInstanceOf(DataValidationException.class)
-                .hasMessageContaining("pending for removal");
     }
 
     // ==================== cancelEvent() ====================

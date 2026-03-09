@@ -257,6 +257,7 @@ class AgentApplicationDataValidatorTest {
 
         AgentApplication newApp = createValidApplication();
         newApp.setId(applicationId);
+        newApp.setPendingDeletion(true);
 
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> validator.validateUpdate(tenantId, newApp));
@@ -276,6 +277,107 @@ class AgentApplicationDataValidatorTest {
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> validator.validateUpdate(tenantId, newApp));
         assertThat(exception.getMessage()).contains("event is being processed");
+    }
+
+    // ==================== Upgrade version validation tests ====================
+
+    @Test
+    void testValidateUpdate_upgradeVersion_noNextVersion_thenException() {
+        AgentApplication oldApp = createValidApplication();
+        oldApp.setId(applicationId);
+        willReturn(oldApp).given(agentApplicationDao).findById(eq(tenantId), eq(applicationId.getId()));
+
+        AgentAppTemplate currentTemplate = new AgentAppTemplate();
+        currentTemplate.setId(templateId);
+        currentTemplate.setCurrentVersion("1.0");
+        currentTemplate.setNextVersion(null);
+        willReturn(currentTemplate).given(agentAppTemplateDao).findById(eq(TenantId.SYS_TENANT_ID), eq(templateId.getId()));
+
+        AgentAppTemplateId desiredTemplateId = new AgentAppTemplateId(UUID.randomUUID());
+        AgentApplication newApp = createValidApplication();
+        newApp.setId(applicationId);
+        newApp.setDesiredTemplateId(desiredTemplateId);
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> validator.validateUpdate(tenantId, newApp));
+        assertThat(exception.getMessage()).contains("No next version");
+    }
+
+    @Test
+    void testValidateUpdate_upgradeVersion_desiredTemplateNotFound_thenException() {
+        AgentApplication oldApp = createValidApplication();
+        oldApp.setId(applicationId);
+        willReturn(oldApp).given(agentApplicationDao).findById(eq(tenantId), eq(applicationId.getId()));
+
+        AgentAppTemplate currentTemplate = new AgentAppTemplate();
+        currentTemplate.setId(templateId);
+        currentTemplate.setCurrentVersion("1.0");
+        currentTemplate.setNextVersion("2.0");
+        willReturn(currentTemplate).given(agentAppTemplateDao).findById(eq(TenantId.SYS_TENANT_ID), eq(templateId.getId()));
+
+        AgentAppTemplateId desiredTemplateId = new AgentAppTemplateId(UUID.randomUUID());
+        willReturn(null).given(agentAppTemplateDao).findById(eq(TenantId.SYS_TENANT_ID), eq(desiredTemplateId.getId()));
+
+        AgentApplication newApp = createValidApplication();
+        newApp.setId(applicationId);
+        newApp.setDesiredTemplateId(desiredTemplateId);
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> validator.validateUpdate(tenantId, newApp));
+        assertThat(exception.getMessage()).contains("Desired template not found");
+    }
+
+    @Test
+    void testValidateUpdate_upgradeVersion_versionMismatch_thenException() {
+        AgentApplication oldApp = createValidApplication();
+        oldApp.setId(applicationId);
+        willReturn(oldApp).given(agentApplicationDao).findById(eq(tenantId), eq(applicationId.getId()));
+
+        AgentAppTemplate currentTemplate = new AgentAppTemplate();
+        currentTemplate.setId(templateId);
+        currentTemplate.setCurrentVersion("1.0");
+        currentTemplate.setNextVersion("2.0");
+        willReturn(currentTemplate).given(agentAppTemplateDao).findById(eq(TenantId.SYS_TENANT_ID), eq(templateId.getId()));
+
+        AgentAppTemplateId desiredTemplateId = new AgentAppTemplateId(UUID.randomUUID());
+        AgentAppTemplate desiredTemplate = new AgentAppTemplate();
+        desiredTemplate.setId(desiredTemplateId);
+        desiredTemplate.setCurrentVersion("3.0");
+        willReturn(desiredTemplate).given(agentAppTemplateDao).findById(eq(TenantId.SYS_TENANT_ID), eq(desiredTemplateId.getId()));
+
+        AgentApplication newApp = createValidApplication();
+        newApp.setId(applicationId);
+        newApp.setDesiredTemplateId(desiredTemplateId);
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> validator.validateUpdate(tenantId, newApp));
+        assertThat(exception.getMessage()).contains("does not match the next available version");
+    }
+
+    @Test
+    void testValidateUpdate_upgradeVersion_valid_thenOK() {
+        AgentApplication oldApp = createValidApplication();
+        oldApp.setId(applicationId);
+        willReturn(oldApp).given(agentApplicationDao).findById(eq(tenantId), eq(applicationId.getId()));
+
+        AgentAppTemplate currentTemplate = new AgentAppTemplate();
+        currentTemplate.setId(templateId);
+        currentTemplate.setCurrentVersion("1.0");
+        currentTemplate.setNextVersion("2.0");
+        willReturn(currentTemplate).given(agentAppTemplateDao).findById(eq(TenantId.SYS_TENANT_ID), eq(templateId.getId()));
+
+        AgentAppTemplateId desiredTemplateId = new AgentAppTemplateId(UUID.randomUUID());
+        AgentAppTemplate desiredTemplate = new AgentAppTemplate();
+        desiredTemplate.setId(desiredTemplateId);
+        desiredTemplate.setCurrentVersion("2.0");
+        willReturn(desiredTemplate).given(agentAppTemplateDao).findById(eq(TenantId.SYS_TENANT_ID), eq(desiredTemplateId.getId()));
+
+        AgentApplication newApp = createValidApplication();
+        newApp.setId(applicationId);
+        newApp.setDesiredTemplateId(desiredTemplateId);
+
+        AgentApplication result = validator.validateUpdate(tenantId, newApp);
+        assertThat(result).isEqualTo(oldApp);
     }
 
     // ==================== Helper methods ====================
