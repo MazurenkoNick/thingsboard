@@ -22,7 +22,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.step.InfoStep;
+import org.thingsboard.server.common.data.agent.step.ComposeStartStep;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppTemplateDao;
@@ -119,8 +119,8 @@ class AgentAppTemplateDataValidatorTest {
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();
 
-        InfoStep step1 = new InfoStep(id1, id2, "Step 1", false);
-        InfoStep step2 = new InfoStep(id2, null, "Step 2", false);
+        ComposeStartStep step1 = createStep(id1, id2, "Step 1", false);
+        ComposeStartStep step2 = createStep(id2, null, "Step 2", false);
 
         AgentAppTemplate template = createValidTemplate();
         template.setStartSteps(new ArrayList<>(List.of(step1, step2)));
@@ -130,7 +130,7 @@ class AgentAppTemplateDataValidatorTest {
 
     @Test
     void testValidateDataImpl_installStepWithNullId_thenException() {
-        InfoStep stepWithNullId = new InfoStep();
+        ComposeStartStep stepWithNullId = new ComposeStartStep();
         stepWithNullId.setTitle("Step without ID");
 
         AgentAppTemplate template = createValidTemplate();
@@ -147,8 +147,8 @@ class AgentAppTemplateDataValidatorTest {
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();
 
-        InfoStep step1 = new InfoStep(id1, id2, "Step 1", false);
-        InfoStep step2 = new InfoStep(id2, id1, "Step 2", false); // circular
+        ComposeStartStep step1 = createStep(id1, id2, "Step 1", false);
+        ComposeStartStep step2 = createStep(id2, id1, "Step 2", false); // circular
 
         AgentAppTemplate template = createValidTemplate();
         template.setStartSteps(new ArrayList<>(List.of(step1, step2)));
@@ -164,9 +164,9 @@ class AgentAppTemplateDataValidatorTest {
         UUID id2 = UUID.randomUUID();
         UUID id3 = UUID.randomUUID();
 
-        InfoStep step1 = new InfoStep(id1, id2, "Step 1", false);
-        InfoStep step2 = new InfoStep(id2, null, "Step 2", false);
-        InfoStep step3 = new InfoStep(id3, null, "Orphan", false); // orphaned
+        ComposeStartStep step1 = createStep(id1, id2, "Step 1", false);
+        ComposeStartStep step2 = createStep(id2, null, "Step 2", false);
+        ComposeStartStep step3 = createStep(id3, null, "Orphan", false); // orphaned
 
         AgentAppTemplate template = createValidTemplate();
         template.setStartSteps(new ArrayList<>(List.of(step1, step2, step3)));
@@ -181,7 +181,7 @@ class AgentAppTemplateDataValidatorTest {
         UUID id1 = UUID.randomUUID();
         UUID nonExistentId = UUID.randomUUID();
 
-        InfoStep step1 = new InfoStep(id1, nonExistentId, "Step 1", false);
+        ComposeStartStep step1 = createStep(id1, nonExistentId, "Step 1", false);
 
         AgentAppTemplate template = createValidTemplate();
         template.setStartSteps(new ArrayList<>(List.of(step1)));
@@ -194,7 +194,7 @@ class AgentAppTemplateDataValidatorTest {
 
     @Test
     void testValidateDataImpl_upgradeStepWithNullId_thenException() {
-        InfoStep stepWithNullId = new InfoStep();
+        ComposeStartStep stepWithNullId = new ComposeStartStep();
         stepWithNullId.setTitle("Upgrade step without ID");
 
         AgentAppTemplate template = createValidTemplate();
@@ -211,8 +211,8 @@ class AgentAppTemplateDataValidatorTest {
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();
 
-        InfoStep step1 = new InfoStep(id1, id2, "Upgrade Step 1", false);
-        InfoStep step2 = new InfoStep(id2, id1, "Upgrade Step 2", false); // circular
+        ComposeStartStep step1 = createStep(id1, id2, "Upgrade Step 1", false);
+        ComposeStartStep step2 = createStep(id2, id1, "Upgrade Step 2", false); // circular
 
         AgentAppTemplate template = createValidTemplate();
         template.setUpgradeSteps(new ArrayList<>(List.of(step1, step2)));
@@ -226,7 +226,7 @@ class AgentAppTemplateDataValidatorTest {
     void testValidateDataImpl_validUpgradeSteps_thenOK() {
         UUID id1 = UUID.randomUUID();
 
-        InfoStep upgradeStep = new InfoStep(id1, null, "Upgrade Step", false);
+        ComposeStartStep upgradeStep = createStep(id1, null, "Upgrade Step", false);
 
         AgentAppTemplate template = createValidTemplate();
         template.setUpgradeSteps(new ArrayList<>(List.of(upgradeStep)));
@@ -271,6 +271,15 @@ class AgentAppTemplateDataValidatorTest {
     }
 
     // ==================== Helper methods ====================
+
+    private ComposeStartStep createStep(UUID id, UUID nextId, String title, boolean templateOnly) {
+        ComposeStartStep step = new ComposeStartStep();
+        step.setId(id);
+        step.setNextId(nextId);
+        step.setTitle(title);
+        step.setTemplateOnly(templateOnly);
+        return step;
+    }
 
     private AgentAppTemplate createValidTemplate() {
         AgentAppTemplate template = new AgentAppTemplate();

@@ -13,27 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent.step;
+package org.thingsboard.server.common.data.agent.step.state;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
+import org.thingsboard.server.exception.DataValidationException;
 
-import java.util.UUID;
+import java.util.Map;
 
 @Data
-@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class InfoStep extends AgentAppStep {
+@NoArgsConstructor
+public class ComposeDownStepState extends AgentAppStepState {
 
-    private String message;
+    private boolean removeVolumes;
 
-    public InfoStep(UUID id, UUID nextId, String title, boolean templateOnly) {
-        super(nextId, id, title, templateOnly);
+    public ComposeDownStepState(boolean removeVolumes) {
+        this.removeVolumes = removeVolumes;
     }
 
     @Override
     public AgentAppStepType getType() {
-        return AgentAppStepType.INFO;
+        return AgentAppStepType.COMPOSE_DOWN;
     }
+
+    @Override
+    public void validate() throws DataValidationException {}
+
+    @Override
+    public Map<String, String> getCommandMetadata() {
+        return Map.of("removeVolumes", String.valueOf(removeVolumes));
+    }
+
 }

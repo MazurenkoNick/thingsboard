@@ -26,10 +26,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLJsonPGObjectJsonbType;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
-import org.thingsboard.server.common.data.agent.AgentAppEventMeta;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
+import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
@@ -39,6 +40,7 @@ import org.thingsboard.server.dao.model.BaseSqlEntity;
 import org.thingsboard.server.dao.model.ModelConstants;
 import org.thingsboard.server.dao.util.mapping.JsonConverter;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -73,8 +75,8 @@ public final class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
 
     @Convert(converter = JsonConverter.class)
     @JdbcType(PostgreSQLJsonPGObjectJsonbType.class)
-    @Column(name = ModelConstants.AGENT_APP_EVENT_METADATA_PROPERTY, columnDefinition = "jsonb")
-    private JsonNode metadata;
+    @Column(name = ModelConstants.AGENT_APP_EVENT_STEP_STATES_PROPERTY, columnDefinition = "jsonb")
+    private JsonNode stepStates;
 
     public AgentAppEventEntity() {
         super();
@@ -93,7 +95,7 @@ public final class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
         this.status = event.getStatus();
         this.currentStepId = event.getCurrentStepId();
         this.updatedTime = event.getUpdatedTime();
-        this.metadata = JacksonUtil.convertValue(event.getMetadata(), JsonNode.class);
+        this.stepStates = JacksonUtil.convertValue(event.getStepStates(), JsonNode.class);
     }
 
     @Override
@@ -111,7 +113,7 @@ public final class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
         event.setStatus(status);
         event.setCurrentStepId(currentStepId);
         event.setUpdatedTime(updatedTime);
-        event.setMetadata(JacksonUtil.convertValue(metadata, AgentAppEventMeta.class));
+        event.setStepStates(stepStates != null ? JacksonUtil.convertValue(stepStates, new TypeReference<Map<UUID, AgentAppStepState>>() {}) : null);
         return event;
     }
 }

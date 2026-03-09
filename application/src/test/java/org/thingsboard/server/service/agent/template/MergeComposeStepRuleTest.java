@@ -25,7 +25,7 @@ import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.agent.step.ComposeStep;
 import org.thingsboard.server.common.data.agent.step.ComposeTypeChoiceStep;
-import org.thingsboard.server.common.data.agent.step.InfoStep;
+import org.thingsboard.server.common.data.agent.step.ComposeStartStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
 import org.thingsboard.server.service.agent.template.merge.MergeComposeStepRule;
@@ -63,7 +63,7 @@ class MergeComposeStepRuleTest {
     void supports_shouldReturnFalse_whenTemplateHasNoComposeTypeChoiceStep() {
         AgentApplication app = createAppWithCompose(List.of(), null);
         AgentAppTemplate template = new AgentAppTemplate();
-        template.setStartSteps(List.of(createInfoStep()));
+        template.setStartSteps(List.of(createNonComposeStep()));
         TemplateMergeCtx ctx = TemplateMergeCtx.empty();
 
         assertFalse(rule.supports(app, template, ctx));
@@ -108,7 +108,7 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), compose);
         AgentAppTemplate template = new AgentAppTemplate();
-        template.setStartSteps(List.of(createInfoStep()));
+        template.setStartSteps(List.of(createNonComposeStep()));
         TemplateMergeCtx ctx = TemplateMergeCtx.empty();
 
         rule.apply(app, template, ctx);
@@ -192,13 +192,13 @@ class MergeComposeStepRuleTest {
         assertEquals("new-value", result.get("newKey").asText());
     }
 
-    // ==================== apply() - deep merge: remove keys ====================
+    // ==================== apply() - deep merge: preserve user keys ====================
 
     @Test
-    void apply_shouldRemoveTopLevelKeysNotInTemplate() {
+    void apply_shouldPreserveTopLevelKeysNotInTemplate() {
         ObjectNode appCompose = MAPPER.createObjectNode()
                 .put("keep", "kept-value")
-                .set("obsolete", MAPPER.createObjectNode()
+                .set("userKey", MAPPER.createObjectNode()
                         .put("k1", "v1"));
         ObjectNode templateCompose = MAPPER.createObjectNode().put("keep", "template-value");
 
@@ -213,7 +213,8 @@ class MergeComposeStepRuleTest {
 
         JsonNode result = getAppCompose(app);
         assertEquals("kept-value", result.get("keep").asText());
-        assertNull(result.get("obsolete"));
+        assertNotNull(result.get("userKey"));
+        assertEquals("v1", result.get("userKey").get("k1").asText());
     }
 
     // ==================== apply() - deep merge: preserve values ====================
@@ -270,10 +271,10 @@ class MergeComposeStepRuleTest {
     }
 
     @Test
-    void apply_shouldRemoveNestedKeysNotInTemplate() {
+    void apply_shouldPreserveNestedKeysNotInTemplate() {
         ObjectNode appNested = MAPPER.createObjectNode()
                 .put("keep", "val")
-                .put("remove", "gone");
+                .put("userCustom", "preserved");
         ObjectNode appCompose = MAPPER.createObjectNode();
         appCompose.set("service", appNested);
 
@@ -292,15 +293,15 @@ class MergeComposeStepRuleTest {
 
         JsonNode resultService = getAppCompose(app).get("service");
         assertEquals("val", resultService.get("keep").asText());
-        assertNull(resultService.get("remove"));
+        assertEquals("preserved", resultService.get("userCustom").asText());
     }
 
     @Test
     void apply_shouldRecurseDeeplyIntoMultipleLevels() {
-        // app: { a: { b: { existing: "custom", obsolete: "drop" } } }
+        // app: { a: { b: { existing: "custom", userProp: "keep" } } }
         ObjectNode appLevel3 = MAPPER.createObjectNode()
                 .put("existing", "custom")
-                .put("obsolete", "drop");
+                .put("userProp", "keep");
         ObjectNode appLevel2 = MAPPER.createObjectNode();
         appLevel2.set("b", appLevel3);
         ObjectNode appCompose = MAPPER.createObjectNode();
@@ -327,7 +328,7 @@ class MergeComposeStepRuleTest {
         JsonNode result = getAppCompose(app).get("a").get("b");
         assertEquals("custom", result.get("existing").asText());
         assertEquals("new", result.get("added").asText());
-        assertNull(result.get("obsolete"));
+        assertEquals("keep", result.get("userProp").asText());
     }
 
     // ==================== apply() - deep merge: type mismatches ====================
@@ -434,14 +435,14 @@ class MergeComposeStepRuleTest {
         assertTrue(ex.getMessage().contains("nonexistent-type"));
     }
 
-    // ==================== apply() - combined add and remove ====================
+    // ==================== apply() - combined add and preserve ====================
 
     @Test
-    void apply_shouldAddAndRemoveKeysInSingleMerge() {
+    void apply_shouldAddNewKeysAndPreserveUserKeys() {
         ObjectNode appCompose = MAPPER.createObjectNode()
                 .put("keep", "app-val")
-                .put("remove1", "gone1")
-                .put("remove2", "gone2");
+                .put("userKey1", "user1")
+                .put("userKey2", "user2");
         ObjectNode templateCompose = MAPPER.createObjectNode()
                 .put("keep", "tpl-val")
                 .put("add1", "new1")
@@ -457,12 +458,12 @@ class MergeComposeStepRuleTest {
         rule.apply(app, template, ctx);
 
         JsonNode result = getAppCompose(app);
-        assertEquals(3, result.size());
+        assertEquals(5, result.size());
         assertEquals("app-val", result.get("keep").asText());
         assertEquals("new1", result.get("add1").asText());
         assertEquals("new2", result.get("add2").asText());
-        assertNull(result.get("remove1"));
-        assertNull(result.get("remove2"));
+        assertEquals("user1", result.get("userKey1").asText());
+        assertEquals("user2", result.get("userKey2").asText());
     }
 
     // ==================== apply() - compose type selection ====================
@@ -512,10 +513,10 @@ class MergeComposeStepRuleTest {
         return step;
     }
 
-    private InfoStep createInfoStep() {
-        InfoStep step = new InfoStep();
+    private ComposeStartStep createNonComposeStep() {
+        ComposeStartStep step = new ComposeStartStep();
         step.setId(UUID.randomUUID());
-        step.setTitle("Info");
+        step.setTitle("Non-compose step");
         return step;
     }
 

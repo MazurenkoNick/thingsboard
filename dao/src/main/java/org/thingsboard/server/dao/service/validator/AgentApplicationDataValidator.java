@@ -42,7 +42,7 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
         if (old == null) {
             throw new DataValidationException("Can't update non existing agent application!");
         }
-        if (old.isPendingDeletion()) {
+        if (old.isPendingDeletion() && agentApplication.isPendingDeletion()) {
             throw new DataValidationException("Application is already pending for removal");
         }
         if (!agentApplication.isPendingDeletion() &&

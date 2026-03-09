@@ -15,15 +15,14 @@
  */
 package org.thingsboard.server.service.agent;
 
+import org.springframework.util.CollectionUtils;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.RollbackEventMeta;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
-import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
-import org.thingsboard.server.common.data.agent.step.InfoStep;
+import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 import org.thingsboard.server.gen.agent.v1.AppCommand;
 import org.thingsboard.server.gen.agent.v1.AppCommandAction;
 import org.thingsboard.server.gen.agent.v1.CommandId;
@@ -33,6 +32,7 @@ import org.thingsboard.server.gen.agent.v1.ServerToAgent;
 import org.thingsboard.server.gen.agent.v1.StepId;
 
 import java.util.Map;
+import java.util.UUID;
 
 public class AgentMsgConstructorUtils {
 
@@ -56,14 +56,11 @@ public class AgentMsgConstructorUtils {
                 .setTotalSteps(totalSteps);
 
         if (step != null) {
-            builder.putAllMetadata(buildStepMetadata(step, application));
+            builder.putAllMetadata(buildStepMetadata(event.getStepStates(), step, application));
             builder.setStepId(StepId.newBuilder()
                     .setIdMSB(step.getId().getMostSignificantBits())
                     .setIdLSB(step.getId().getLeastSignificantBits())
                     .build());
-        }
-        if (event.getMetadata() instanceof RollbackEventMeta rollbackMeta && rollbackMeta.getFailedEventId() != null) {
-            builder.putMetadata("failedCommandId", rollbackMeta.getFailedEventId().getId().toString());
         }
         return ServerToAgent.newBuilder()
                 .setAppCommand(builder.build())
@@ -77,6 +74,7 @@ public class AgentMsgConstructorUtils {
             case DELETE -> AppCommandAction.APP_DELETE;
             case RESTART -> AppCommandAction.APP_RESTART;
             case ROLLBACK -> AppCommandAction.APP_ROLLBACK;
+            case UPGRADE -> AppCommandAction.APP_UPGRADE;
         };
     }
 
@@ -84,28 +82,19 @@ public class AgentMsgConstructorUtils {
         return ConfigType.DOCKER_COMPOSE;
     }
 
-    private static Map<String, String> buildStepMetadata(AgentAppStep step, AgentApplication application) {
+    private static Map<String, String> buildStepMetadata(Map<UUID, AgentAppStepState> stateSteps, AgentAppStep step, AgentApplication application) {
         Map<String, String> metadata = new java.util.HashMap<>();
         metadata.put("stepTitle", step.getTitle() != null ? step.getTitle() : "");
         metadata.put("stepType", step.getType() != null ? step.getType().name() : "");
-
-        AgentAppStepType type = step.getType();
 
         if (application.getConfig() instanceof DockerComposeConfig cfg) {
             if (cfg.getProjectName() != null) {
                 metadata.put("projectName", cfg.getProjectName());
             }
-            if (type == AgentAppStepType.COMPOSE && cfg.getCompose() != null) {
-                metadata.put("compose", cfg.getCompose().toString());
-            }
-            if (type == AgentAppStepType.COMPOSE_DOWN) {
-                metadata.put("removeVolumes", String.valueOf(cfg.isRemoveVolumes()));
-            }
         }
 
-        if (type == AgentAppStepType.INFO && step instanceof InfoStep infoStep && infoStep.getMessage() != null) {
-            metadata.put("message", infoStep.getMessage());
-        }
+        AgentAppStepState resolvedState = CollectionUtils.isEmpty(stateSteps) ? null : stateSteps.get(step.getId());
+        metadata.putAll(step.getCommandMetadata(application, resolvedState));
 
         return metadata;
     }

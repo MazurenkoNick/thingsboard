@@ -783,6 +783,7 @@ CREATE TABLE IF NOT EXISTS agent_app_template (
     start_steps jsonb,
     upgrade_steps jsonb,
     delete_steps jsonb,
+    rollback_steps jsonb,
     version BIGINT DEFAULT 1
 );
 
@@ -794,11 +795,13 @@ CREATE TABLE IF NOT EXISTS agent_application (
     app_type varchar(255) NOT NULL,
     name varchar(255),
     template_id uuid,
+    desired_template_id uuid,
     config jsonb,
     pending_deletion boolean NOT NULL DEFAULT false,
     version BIGINT DEFAULT 1,
     CONSTRAINT fk_agent_application_agent FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE CASCADE,
-    CONSTRAINT fk_agent_application_template FOREIGN KEY (template_id) REFERENCES agent_app_template(id) ON DELETE CASCADE
+    CONSTRAINT fk_agent_application_template FOREIGN KEY (template_id) REFERENCES agent_app_template(id) ON DELETE CASCADE,
+    CONSTRAINT fk_agent_application_desired_template FOREIGN KEY (desired_template_id) REFERENCES agent_app_template(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS agent_app_event (
@@ -811,7 +814,7 @@ CREATE TABLE IF NOT EXISTS agent_app_event (
     status varchar(32),
     current_step_id uuid,
     updated_time bigint NOT NULL,
-    metadata jsonb,
+    step_states jsonb,
     CONSTRAINT fk_agent_app_event_application FOREIGN KEY (application_id) REFERENCES agent_application(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS idx_agent_app_event_app_delivery ON agent_app_event(application_id, delivery_state);

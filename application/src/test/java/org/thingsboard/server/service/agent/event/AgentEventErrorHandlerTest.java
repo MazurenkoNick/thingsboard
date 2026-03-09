@@ -29,14 +29,18 @@ import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.ErrorOrigin;
-import org.thingsboard.server.common.data.agent.RollbackEventMeta;
+import org.thingsboard.server.common.data.agent.step.AgentAppStep;
+import org.thingsboard.server.common.data.agent.step.RollBackStep;
+import org.thingsboard.server.common.data.agent.step.state.RollBackStepState;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
+import org.thingsboard.server.dao.agent.AgentAppEventStepsResolver;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,6 +58,8 @@ class AgentEventErrorHandlerTest {
     private AgentAppEventService appEventService;
     @Mock
     private AgentApplicationService appService;
+    @Mock
+    private AgentAppEventStepsResolver stepsResolver;
     @Mock
     private AgentEventWatchdog eventWatchdog;
     @Mock
@@ -75,6 +81,7 @@ class AgentEventErrorHandlerTest {
     private static final AgentId AGENT_ID = new AgentId(UUID.randomUUID());
     private static final AgentAppEventId EVENT_ID = new AgentAppEventId(UUID.randomUUID());
     private static final AgentApplicationId APP_ID = new AgentApplicationId(UUID.randomUUID());
+    private static final UUID ROLLBACK_STEP_ID = UUID.randomUUID();
 
     // ==================== Common behavior ====================
 
@@ -190,6 +197,9 @@ class AgentEventErrorHandlerTest {
     @Test
     void onFailure_serverUpdate_createsRollbackEvent() {
         when(appEventService.findById(TENANT_ID, EVENT_ID)).thenReturn(newEvent(AgentAppEventActionType.UPDATE));
+        AgentApplication app = newApplication();
+        when(appService.findById(TENANT_ID, APP_ID)).thenReturn(app);
+        when(stepsResolver.resolveSteps(app, AgentAppEventActionType.ROLLBACK)).thenReturn(List.of(newRollbackStep()));
 
         errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER);
 
@@ -201,13 +211,17 @@ class AgentEventErrorHandlerTest {
         assertThat(rollback.getActionType()).isEqualTo(AgentAppEventActionType.ROLLBACK);
         assertThat(rollback.getDeliveryState()).isEqualTo(AgentAppEventDeliveryState.DELIVERED);
         assertThat(rollback.getStatus()).isEqualTo(AgentAppEventStatus.PENDING);
-        assertThat(rollback.getMetadata()).isInstanceOf(RollbackEventMeta.class);
-        assertThat(((RollbackEventMeta) rollback.getMetadata()).getFailedEventId()).isEqualTo(EVENT_ID);
+        assertThat(rollback.getStepStates()).containsKey(ROLLBACK_STEP_ID);
+        RollBackStepState stepState = (RollBackStepState) rollback.getStepStates().get(ROLLBACK_STEP_ID);
+        assertThat(stepState.getFailedEventId()).isEqualTo(EVENT_ID);
     }
 
     @Test
     void onFailure_serverUpdate_doesNotDispatchNext() {
         when(appEventService.findById(TENANT_ID, EVENT_ID)).thenReturn(newEvent(AgentAppEventActionType.UPDATE));
+        AgentApplication app = newApplication();
+        when(appService.findById(TENANT_ID, APP_ID)).thenReturn(app);
+        when(stepsResolver.resolveSteps(app, AgentAppEventActionType.ROLLBACK)).thenReturn(List.of(newRollbackStep()));
 
         errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER);
 
@@ -259,5 +273,11 @@ class AgentEventErrorHandlerTest {
         app.setTenantId(TENANT_ID);
         app.setAgentId(AGENT_ID);
         return app;
+    }
+
+    private RollBackStep newRollbackStep() {
+        RollBackStep step = new RollBackStep();
+        step.setId(ROLLBACK_STEP_ID);
+        return step;
     }
 }

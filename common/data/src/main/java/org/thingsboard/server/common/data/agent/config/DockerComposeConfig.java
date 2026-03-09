@@ -31,7 +31,6 @@ public class DockerComposeConfig extends AgentAppConfig {
 
     private String projectName;
     private JsonNode compose;
-    private boolean removeVolumes;
 
     @Override
     public AgentAppConfigType getType() {
@@ -43,7 +42,6 @@ public class DockerComposeConfig extends AgentAppConfig {
         DockerComposeConfig copy = new DockerComposeConfig();
         copy.setProjectName(this.projectName);
         copy.setCompose(this.compose != null ? this.compose.deepCopy() : null);
-        copy.setRemoveVolumes(this.removeVolumes);
         return copy;
     }
 

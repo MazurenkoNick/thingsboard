@@ -13,24 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent.step;
+package org.thingsboard.server.common.data.agent.step.state;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.agent.step.state.ComposeDownStepState;
+import org.springframework.util.CollectionUtils;
+import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
+import org.thingsboard.server.exception.DataValidationException;
+
+import java.util.List;
+import java.util.Map;
 
 @Data
-@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ComposeDownStep extends AgentAppStep {
+@NoArgsConstructor
+public class BackupVolumesStepState extends AgentAppStepState {
 
-    @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
-    private ComposeDownStepState state;
+    private List<String> backupVolumes;
 
     @Override
     public AgentAppStepType getType() {
-        return AgentAppStepType.COMPOSE_DOWN;
+        return AgentAppStepType.BACKUP_VOLUME;
+    }
+
+    @Override
+    public void validate() throws DataValidationException {}
+
+    @Override
+    public Map<String, String> getCommandMetadata() {
+        return Map.of("backupVolumes", String.join(",", backupVolumes));
     }
 }

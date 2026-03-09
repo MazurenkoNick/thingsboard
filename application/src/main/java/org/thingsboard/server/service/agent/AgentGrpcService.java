@@ -15,9 +15,6 @@
  */
 package org.thingsboard.server.service.agent;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import io.grpc.Status;
@@ -168,29 +165,13 @@ public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBas
     private void ensureStateInit(AgentToServer msg, ServerCallStreamObserver<ServerToAgent> responseObserver,
                                  AtomicReference<AgentSession> sessionRef, AtomicBoolean initializing) {
         BaseAgentSession session = new BaseAgentSession(writer, responseObserver);
-        ListenableFuture<Optional<Status>> future;
+        Optional<Status> optErr;
         try {
-            future = agentStateService.onConnected(session, msg.getHello());
+            optErr = agentStateService.onConnected(session, msg.getHello());
         } catch (Exception e) {
             handleInitFailure(initializing, responseObserver, e);
             return;
         }
-        Futures.addCallback(future, new FutureCallback<>() {
-            @Override
-            public void onSuccess(Optional<Status> optErr) {
-                handleInitSuccess(responseObserver, sessionRef, session, optErr, initializing);
-            }
-
-            @Override
-            public void onFailure(Throwable t) {
-                handleInitFailure(initializing, responseObserver, t);
-            }
-        }, MoreExecutors.directExecutor());
-    }
-
-    private void handleInitSuccess(ServerCallStreamObserver<ServerToAgent> responseObserver,
-                                   AtomicReference<AgentSession> sessionRef, BaseAgentSession session,
-                                   Optional<Status> optErr, AtomicBoolean initializing) {
         if (optErr.isPresent()) {
             log.warn("The state couldn't be initialized: {}", optErr.get());
             initializing.set(false);
@@ -199,6 +180,7 @@ public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBas
         }
         sessionRef.set(session);
         session.push(AgentMsgConstructorUtils.helloSuccessResponse());
+        agentStateService.resumeEvents(session);
     }
 
     private void handleInitFailure(AtomicBoolean initializing, StreamObserver<ServerToAgent> responseObserver, Throwable t) {

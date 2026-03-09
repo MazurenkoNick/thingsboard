@@ -779,6 +779,31 @@ public class DefaultTbClusterService implements TbClusterService {
         });
     }
 
+    @Override
+    public void onAgentAppEventCancelled(TenantId tenantId, AgentId agentId, AgentAppEvent event) {
+        var serviceIdOpt = Optional.ofNullable(agentIdServiceIdCache.get(agentId));
+        serviceIdOpt.ifPresent(serviceId -> {
+            if (serviceId.get() != null) {
+                AgentAppEventNotificationProto proto = AgentAppEventNotificationProto.newBuilder()
+                        .setTenantIdMSB(tenantId.getId().getMostSignificantBits())
+                        .setTenantIdLSB(tenantId.getId().getLeastSignificantBits())
+                        .setAgentIdMSB(agentId.getId().getMostSignificantBits())
+                        .setAgentIdLSB(agentId.getId().getLeastSignificantBits())
+                        .setApplicationIdMSB(event.getApplicationId().getId().getMostSignificantBits())
+                        .setApplicationIdLSB(event.getApplicationId().getId().getLeastSignificantBits())
+                        .setEventIdMSB(event.getId().getId().getMostSignificantBits())
+                        .setEventIdLSB(event.getId().getId().getLeastSignificantBits())
+                        .setActionType(event.getActionType().name())
+                        .setCancelled(true)
+                        .build();
+                ToAgentNotificationMsg msg = ToAgentNotificationMsg.newBuilder()
+                        .setAgentAppEventNotification(proto)
+                        .build();
+                pushMsgToAgentNotification(msg, serviceId.get());
+            }
+        });
+    }
+
     private void pushMsgToAgentNotification(ToAgentNotificationMsg msg, String serviceId) {
         TopicPartitionInfo tpi = topicService.getAgentNotificationsTopic(serviceId);
         TbQueueProducer<TbProtoQueueMsg<ToAgentNotificationMsg>> producer = producerProvider.getTbAgentNotificationsMsgProducer();

@@ -62,7 +62,7 @@ import java.util.stream.Collectors;
 public class AgentAppTemplateSyncService {
 
     private static final Pattern TEMPLATE_FILE_PATTERN = Pattern.compile(
-            "^template-(?<appType>[A-Z0-9_]+)-(?<configType>[A-Z0-9_]+)-(?<version>\\d+\\.\\d+\\.\\d+(?:-[a-zA-Z0-9]+)?)\\.json$"
+            "^template-(?<appType>[A-Z0-9_]+)-(?<configType>[A-Z0-9_]+)-(?<version>\\d+(?:\\.\\d+)*(?:-[a-zA-Z0-9]+)?)\\.json$"
     );
     private static final int APP_TYPE_GROUP_NUM = 1;
     private static final int CONFIG_TYPE_GROUP_NUM = 2;
@@ -118,6 +118,7 @@ public class AgentAppTemplateSyncService {
                 template.setStartSteps(parsedFile.getStartSteps());
                 template.setUpgradeSteps(parsedFile.getUpgradeSteps());
                 template.setDeleteSteps(parsedFile.getDeleteSteps());
+                template.setRollbackSteps(parsedFile.getRollbackSteps());
 
                 agentAppTemplateService.save(TenantId.SYS_TENANT_ID, template);
             } catch (Exception e) {
@@ -235,6 +236,7 @@ public class AgentAppTemplateSyncService {
         private List<AgentAppStep> startSteps = new ArrayList<>();
         private List<AgentAppStep> upgradeSteps = new ArrayList<>();
         private List<AgentAppStep> deleteSteps = new ArrayList<>();
+        private List<AgentAppStep> rollbackSteps = new ArrayList<>();
 
         public AgentAppConfigType getConfigType() {
             return config.getType();

@@ -17,7 +17,7 @@ package org.thingsboard.server.dao.agent.step;
 
 import org.junit.jupiter.api.Test;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
-import org.thingsboard.server.common.data.agent.step.InfoStep;
+import org.thingsboard.server.common.data.agent.step.ComposeStartStep;
 import org.thingsboard.server.dao.agent.StepLinkedListUtils;
 
 import java.util.Collections;
@@ -39,7 +39,7 @@ class StepLinkedListUtilsTest {
     @Test
     void findFirstStep_shouldReturnOnlyStep_whenSingleStep() {
         UUID stepId = UUID.randomUUID();
-        InfoStep step = createStep(stepId, null, "Only Step");
+        ComposeStartStep step = createStep(stepId, null, "Only Step");
 
         AgentAppStep firstStep = StepLinkedListUtils.findFirstStep(List.of(step));
 
@@ -54,9 +54,9 @@ class StepLinkedListUtilsTest {
         UUID id3 = UUID.randomUUID();
 
         // Chain: 1 -> 2 -> 3
-        InfoStep step1 = createStep(id1, id2, "First");
-        InfoStep step2 = createStep(id2, id3, "Second");
-        InfoStep step3 = createStep(id3, null, "Third");
+        ComposeStartStep step1 = createStep(id1, id2, "First");
+        ComposeStartStep step2 = createStep(id2, id3, "Second");
+        ComposeStartStep step3 = createStep(id3, null, "Third");
 
         // Provide in random order
         AgentAppStep firstStep = StepLinkedListUtils.findFirstStep(List.of(step3, step1, step2));
@@ -71,8 +71,8 @@ class StepLinkedListUtilsTest {
         UUID id2 = UUID.randomUUID();
 
         // Circular: 1 -> 2 -> 1
-        InfoStep step1 = createStep(id1, id2, "First");
-        InfoStep step2 = createStep(id2, id1, "Second");
+        ComposeStartStep step1 = createStep(id1, id2, "First");
+        ComposeStartStep step2 = createStep(id2, id1, "Second");
 
         assertThrows(IllegalStateException.class,
                 () -> StepLinkedListUtils.findFirstStep(List.of(step1, step2)));
@@ -85,9 +85,9 @@ class StepLinkedListUtilsTest {
         UUID id3 = UUID.randomUUID();
 
         // Two separate chains: 1 -> 3, 2 -> (nothing)
-        InfoStep step1 = createStep(id1, id3, "First Chain Start");
-        InfoStep step2 = createStep(id2, null, "Second Chain Start");
-        InfoStep step3 = createStep(id3, null, "First Chain End");
+        ComposeStartStep step1 = createStep(id1, id3, "First Chain Start");
+        ComposeStartStep step2 = createStep(id2, null, "Second Chain Start");
+        ComposeStartStep step3 = createStep(id3, null, "First Chain End");
 
         assertThrows(IllegalStateException.class,
                 () -> StepLinkedListUtils.findFirstStep(List.of(step1, step2, step3)));
@@ -104,7 +104,7 @@ class StepLinkedListUtilsTest {
     @Test
     void toOrderedList_shouldReturnSingleStep() {
         UUID stepId = UUID.randomUUID();
-        InfoStep step = createStep(stepId, null, "Only Step");
+        ComposeStartStep step = createStep(stepId, null, "Only Step");
 
         List<AgentAppStep> result = StepLinkedListUtils.toOrderedList(List.of(step));
 
@@ -119,9 +119,9 @@ class StepLinkedListUtilsTest {
         UUID id3 = UUID.randomUUID();
 
         // Chain: 1 -> 2 -> 3
-        InfoStep step1 = createStep(id1, id2, "First");
-        InfoStep step2 = createStep(id2, id3, "Second");
-        InfoStep step3 = createStep(id3, null, "Third");
+        ComposeStartStep step1 = createStep(id1, id2, "First");
+        ComposeStartStep step2 = createStep(id2, id3, "Second");
+        ComposeStartStep step3 = createStep(id3, null, "Third");
 
         // Provide in reverse order
         List<AgentAppStep> result = StepLinkedListUtils.toOrderedList(List.of(step3, step2, step1));
@@ -139,8 +139,8 @@ class StepLinkedListUtilsTest {
         UUID nonExistentId = UUID.randomUUID();
 
         // Chain: 1 -> nonExistent (broken)
-        InfoStep step1 = createStep(id1, nonExistentId, "First");
-        InfoStep step2 = createStep(id2, null, "Orphan");
+        ComposeStartStep step1 = createStep(id1, nonExistentId, "First");
+        ComposeStartStep step2 = createStep(id2, null, "Orphan");
 
         assertThrows(IllegalStateException.class,
                 () -> StepLinkedListUtils.toOrderedList(List.of(step1, step2)));
@@ -153,9 +153,9 @@ class StepLinkedListUtilsTest {
         UUID id3 = UUID.randomUUID();
 
         // Chain: 1 -> 2, but 3 is orphaned (not referenced)
-        InfoStep step1 = createStep(id1, id2, "First");
-        InfoStep step2 = createStep(id2, null, "Second");
-        InfoStep step3 = createStep(id3, null, "Orphan");
+        ComposeStartStep step1 = createStep(id1, id2, "First");
+        ComposeStartStep step2 = createStep(id2, null, "Second");
+        ComposeStartStep step3 = createStep(id3, null, "Orphan");
 
         assertThrows(IllegalStateException.class,
                 () -> StepLinkedListUtils.toOrderedList(List.of(step1, step2, step3)));
@@ -168,9 +168,9 @@ class StepLinkedListUtilsTest {
         UUID id3 = UUID.randomUUID();
 
         // Circular: 1 -> 2 -> 3 -> 1
-        InfoStep step1 = createStep(id1, id2, "First");
-        InfoStep step2 = createStep(id2, id3, "Second");
-        InfoStep step3 = createStep(id3, id1, "Third");
+        ComposeStartStep step1 = createStep(id1, id2, "First");
+        ComposeStartStep step2 = createStep(id2, id3, "Second");
+        ComposeStartStep step3 = createStep(id3, id1, "Third");
 
         assertThrows(IllegalStateException.class,
                 () -> StepLinkedListUtils.toOrderedList(List.of(step1, step2, step3)));
@@ -189,15 +189,15 @@ class StepLinkedListUtilsTest {
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();
 
-        InfoStep step1 = createStep(id1, id2, "First");
-        InfoStep step2 = createStep(id2, null, "Second");
+        ComposeStartStep step1 = createStep(id1, id2, "First");
+        ComposeStartStep step2 = createStep(id2, null, "Second");
 
         assertDoesNotThrow(() -> StepLinkedListUtils.validate(List.of(step1, step2)));
     }
 
     @Test
     void validate_shouldThrow_whenStepHasNullId() {
-        InfoStep step = new InfoStep();
+        ComposeStartStep step = new ComposeStartStep();
         step.setTitle("No ID");
 
         IllegalStateException ex = assertThrows(IllegalStateException.class,
@@ -211,7 +211,7 @@ class StepLinkedListUtilsTest {
         UUID id1 = UUID.randomUUID();
         UUID nonExistent = UUID.randomUUID();
 
-        InfoStep step = createStep(id1, nonExistent, "Broken");
+        ComposeStartStep step = createStep(id1, nonExistent, "Broken");
 
         IllegalStateException ex = assertThrows(IllegalStateException.class,
                 () -> StepLinkedListUtils.validate(List.of(step)));
@@ -224,7 +224,7 @@ class StepLinkedListUtilsTest {
     @Test
     void getNextStep_shouldReturnEmpty_whenCurrentStepIdIsNull() {
         UUID id1 = UUID.randomUUID();
-        InfoStep step = createStep(id1, null, "Step");
+        ComposeStartStep step = createStep(id1, null, "Step");
         assertTrue(StepLinkedListUtils.getNextStep(null, List.of(step)).isEmpty());
     }
 
@@ -237,7 +237,7 @@ class StepLinkedListUtilsTest {
     @Test
     void getNextStep_shouldReturnEmpty_whenCurrentStepIsLast() {
         UUID id1 = UUID.randomUUID();
-        InfoStep step = createStep(id1, null, "Last");
+        ComposeStartStep step = createStep(id1, null, "Last");
         assertTrue(StepLinkedListUtils.getNextStep(id1, List.of(step)).isEmpty());
     }
 
@@ -247,9 +247,9 @@ class StepLinkedListUtilsTest {
         UUID id2 = UUID.randomUUID();
         UUID id3 = UUID.randomUUID();
 
-        InfoStep step1 = createStep(id1, id2, "First");
-        InfoStep step2 = createStep(id2, id3, "Second");
-        InfoStep step3 = createStep(id3, null, "Third");
+        ComposeStartStep step1 = createStep(id1, id2, "First");
+        ComposeStartStep step2 = createStep(id2, id3, "Second");
+        ComposeStartStep step3 = createStep(id3, null, "Third");
 
         List<AgentAppStep> steps = List.of(step1, step2, step3);
 
@@ -267,14 +267,17 @@ class StepLinkedListUtilsTest {
     @Test
     void getNextStep_shouldReturnEmpty_whenCurrentStepIdNotFound() {
         UUID id1 = UUID.randomUUID();
-        InfoStep step = createStep(id1, null, "Step");
+        ComposeStartStep step = createStep(id1, null, "Step");
         assertTrue(StepLinkedListUtils.getNextStep(UUID.randomUUID(), List.of(step)).isEmpty());
     }
 
     // ==================== Helper methods ====================
 
-    private InfoStep createStep(UUID id, UUID nextId, String title) {
-        InfoStep step = new InfoStep(id, nextId, title, false);
+    private ComposeStartStep createStep(UUID id, UUID nextId, String title) {
+        ComposeStartStep step = new ComposeStartStep();
+        step.setId(id);
+        step.setNextId(nextId);
+        step.setTitle(title);
         return step;
     }
 }

@@ -16,28 +16,27 @@
 package org.thingsboard.server.controller;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import io.swagger.v3.oas.annotations.media.Schema;
+import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -67,6 +66,8 @@ public class AgentApplicationController extends BaseController {
     private static final String TEMPLATE_ID_PARAM_DESCRIPTION = "A string value representing the agent app template id. For example, '784f394c-42b6-435a-983c-b7beff2784f9'";
     private static final String AGENT_APP_ID = "agentApplicationId";
     private static final String AGENT_APP_ID_PARAM_DESCRIPTION = "A string value representing the agent application id. For example, '784f394c-42b6-435a-983c-b7beff2784f9'";
+    private static final String AGENT_APP_EVENT_ID = "agentAppEventId";
+    private static final String AGENT_APP_EVENT_ID_PARAM_DESCRIPTION = "A string value representing the agent app event id. For example, '784f394c-42b6-435a-983c-b7beff2784f9'";
     private static final String AGENT_ID = "agentId";
     private static final String AGENT_ID_PARAM_DESCRIPTION = "A string value representing the agent id. For example, '784f394c-42b6-435a-983c-b7beff2784f9'";
 
@@ -112,8 +113,8 @@ public class AgentApplicationController extends BaseController {
         return checkNotNull(agentAppService.findByAgentId(tenantId, agentId, pageLink));
     }
 
-    @ApiOperation(value = "Create Or Update Agent Application (saveAgentApplication)",
-            notes = "Creates or Updates the Agent Application."
+    @ApiOperation(value = "Update Agent Application (saveAgentApplication)",
+            notes = "Updates the Agent Application."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @PostMapping("/agent/app")
@@ -122,38 +123,59 @@ public class AgentApplicationController extends BaseController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "A JSON value representing the agent application.")
             @RequestBody AgentApplication agentApplication) throws Exception {
         agentApplication.setTenantId(getTenantId());
-        checkEntity(agentApplication.getId(), agentApplication, org.thingsboard.server.service.security.permission.Resource.AGENT_APPLICATION);
+        checkEntityId(agentApplication.getId(), Operation.WRITE);
         return tbAgentApplicationService.save(agentApplication, getCurrentUser());
     }
 
-    @ApiOperation(value = "Delete Agent Application (deleteAgentApplication)",
-            notes = "Deletes the agent application using the delete steps already configured on it. " +
-                    "Referencing non-existing agent application Id will cause an error."
+    @ApiOperation(value = "Install Agent Application (installAgentApp)",
+            notes = "Creates a new agent application and an INSTALL event in a single operation. " +
+                    "The request body must include the application object."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @DeleteMapping(value = "/agent/app/{agentApplicationId}")
-    @ResponseStatus(value = HttpStatus.OK)
-    public void deleteAgentApplication(@Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
-                                       @PathVariable(AGENT_APP_ID) String strAgentAppId) throws ThingsboardException {
-        checkParameter(AGENT_APP_ID, strAgentAppId);
-        AgentApplicationId agentApplicationId = new AgentApplicationId(toUUID(strAgentAppId));
-        AgentApplication application = checkAgentAppId(agentApplicationId, Operation.DELETE);
-        tbAgentApplicationService.delete(application, getCurrentUser());
+    @PostMapping("/agent/app/event")
+    @ResponseBody
+    public AgentApplication installAgentApp(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "A JSON value representing the install event request with the application.")
+            @RequestBody AgentAppEventRequest request) throws Exception {
+        TenantId tenantId = getCurrentUser().getTenantId();
+        return tbAgentApplicationService.execInstallEvent(tenantId, request, getCurrentUser());
     }
 
-    @ApiOperation(value = "Restart Agent Application (restartAgentApplication)",
-            notes = "Restarts the agent application by creating a RESTART event."
+    @ApiOperation(value = "Execute Agent Application Event (createAgentAppEvent)",
+            notes = "Creates an event for the specified agent application. The action type determines the operation " +
+                    "(UPDATE, DELETE, RESTART, UPGRADE, ROLLBACK). Step inputs can be provided for actions that require them."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @PostMapping("/agent/app/{agentApplicationId}/restart")
+    @PostMapping("/agent/app/{agentApplicationId}/event")
     @ResponseStatus(value = HttpStatus.OK)
-    public void restartAgentApplication(@Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
-                                        @PathVariable(AGENT_APP_ID) String strAgentAppId) throws Exception {
+    public void createAgentAppEvent(
+            @Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
+            @PathVariable(AGENT_APP_ID) String strAgentAppId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "A JSON value representing the event request.")
+            @RequestBody AgentAppEventRequest request) throws Exception {
         checkParameter(AGENT_APP_ID, strAgentAppId);
         AgentApplicationId agentApplicationId = new AgentApplicationId(toUUID(strAgentAppId));
         checkAgentAppId(agentApplicationId, Operation.WRITE);
         TenantId tenantId = getCurrentUser().getTenantId();
-        tbAgentApplicationService.restart(tenantId, agentApplicationId, getCurrentUser());
+        tbAgentApplicationService.execActionEvent(tenantId, agentApplicationId, request, getCurrentUser());
+    }
+
+    @ApiOperation(value = "Cancel Agent Application Event (cancelAgentAppEvent)",
+            notes = "Force-cancels an in-flight or pending agent application event, marking it as ERROR. "
+                    + "Cannot cancel events that are already in a terminal state (FINISHED or ERROR)."
+                    + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PostMapping("/agent/app/{agentApplicationId}/event/{agentAppEventId}/cancel")
+    @ResponseStatus(value = HttpStatus.OK)
+    public void cancelAgentAppEvent(
+            @Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
+            @PathVariable(AGENT_APP_ID) String strAgentAppId,
+            @Parameter(description = AGENT_APP_EVENT_ID_PARAM_DESCRIPTION)
+            @PathVariable(AGENT_APP_EVENT_ID) String strAgentAppEventId) throws Exception {
+        checkParameter(AGENT_APP_EVENT_ID, strAgentAppEventId);
+        AgentAppEventId agentAppEventId = new AgentAppEventId(toUUID(strAgentAppEventId));
+        TenantId tenantId = getCurrentUser().getTenantId();
+        tbAgentApplicationService.cancelEvent(tenantId, agentAppEventId);
     }
 
     @ApiOperation(value = "Merge template into application for preview (mergeForPreview)",

@@ -17,20 +17,31 @@ package org.thingsboard.server.dao.service.validator;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
-import org.thingsboard.server.common.data.agent.RollbackEventMeta;
+import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.step.AgentAppStep;
+import org.thingsboard.server.common.data.agent.step.RollBackStep;
+import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
+import org.thingsboard.server.common.data.agent.step.state.RollBackStepState;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.dao.agent.AgentAppEventStepsResolver;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.exception.DataValidationException;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Component
 @AllArgsConstructor
 public class AgentAppEventDataValidator extends DataValidator<AgentAppEvent> {
 
     private final AgentApplicationDao agentApplicationDao;
+    private final AgentAppEventStepsResolver stepsResolver;
 
     @Override
     protected void validateDataImpl(TenantId tenantId, AgentAppEvent event) {
@@ -49,14 +60,29 @@ public class AgentAppEventDataValidator extends DataValidator<AgentAppEvent> {
         if (event.getDeliveryState() != AgentAppEventDeliveryState.PENDING && event.getStatus() == null) {
             throw new DataValidationException("Agent app event status must not be null!");
         }
-        if (agentApplicationDao.findById(tenantId, event.getApplicationId().getId()) == null) {
+        AgentApplication app = agentApplicationDao.findById(tenantId, event.getApplicationId().getId());
+        if (app == null) {
             throw new DataValidationException("Agent app event references non-existent application!");
         }
-        if (event.getActionType() == AgentAppEventActionType.ROLLBACK) {
-            if (!(event.getMetadata() instanceof RollbackEventMeta meta) || meta.getFailedEventId() == null) {
-                throw new DataValidationException("Rollback event must have failedEventId in metadata!");
-            }
-        }
-    }
 
+        Map<UUID, AgentAppStepState> stepStates = event.getStepStates();
+        if (!CollectionUtils.isEmpty(stepStates)) {
+            stepStates.values().forEach(AgentAppStepState::validate);
+        }
+
+        List<AgentAppStep> statefulAppSteps = stepsResolver.resolveSteps(app, event.getActionType())
+                .stream()
+                .filter(s -> s.getState() != null).toList();
+
+        if (!CollectionUtils.isEmpty(statefulAppSteps) && CollectionUtils.isEmpty(stepStates)) {
+                throw new DataValidationException("Agent app step states must not be null!");
+        }
+
+        statefulAppSteps.stream()
+                .filter(s -> !stepStates.containsKey(s.getId()))
+                .findAny()
+                .ifPresent(s -> {
+                    throw new DataValidationException("Step state is missing!");
+                });
+    }
 }

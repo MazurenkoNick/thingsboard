@@ -261,6 +261,7 @@ public class ModelConstants {
     public static final String AGENT_APPLICATION_APP_TYPE_PROPERTY = "app_type";
     public static final String AGENT_APPLICATION_NAME_PROPERTY = "name";
     public static final String AGENT_APPLICATION_TEMPLATE_ID_PROPERTY = "template_id";
+    public static final String AGENT_APPLICATION_DESIRED_TEMPLATE_ID_PROPERTY = "desired_template_id";
     public static final String AGENT_APPLICATION_CONFIG_PROPERTY = "config";
     public static final String AGENT_APPLICATION_PENDING_DELETION_PROPERTY = "pending_deletion";
 
@@ -275,7 +276,7 @@ public class ModelConstants {
     public static final String AGENT_APP_EVENT_STATUS_PROPERTY = "status";
     public static final String AGENT_APP_EVENT_CURRENT_STEP_ID_PROPERTY = "current_step_id";
     public static final String AGENT_APP_EVENT_UPDATED_TIME_PROPERTY = "updated_time";
-    public static final String AGENT_APP_EVENT_METADATA_PROPERTY = "metadata";
+    public static final String AGENT_APP_EVENT_STEP_STATES_PROPERTY = "step_states";
 
     /**
      * Agent app template constants.
@@ -290,6 +291,7 @@ public class ModelConstants {
     public static final String AGENT_APP_TEMPLATE_START_STEPS_PROPERTY = "start_steps";
     public static final String AGENT_APP_TEMPLATE_UPGRADE_STEPS_PROPERTY = "upgrade_steps";
     public static final String AGENT_APP_TEMPLATE_DELETE_STEPS_PROPERTY = "delete_steps";
+    public static final String AGENT_APP_TEMPLATE_ROLLBACK_STEPS_PROPERTY = "rollback_steps";
 
     /**
      * Agent app unit constants.

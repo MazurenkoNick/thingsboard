@@ -18,9 +18,10 @@ package org.thingsboard.server.common.data.agent.step;
 public enum AgentAppStepType {
     COMPOSE_TEMPLATE,
     COMPOSE,
-    COMPOSE_MODIFY, // todo: use for update?
     COMPOSE_START,
     COMPOSE_DOWN,
     ROLLBACK,
-    INFO
+    BACKUP_VOLUME,
+    BACKUP_VOLUME_REMOVE,
+    COMPOSE_MIGRATION,
 }

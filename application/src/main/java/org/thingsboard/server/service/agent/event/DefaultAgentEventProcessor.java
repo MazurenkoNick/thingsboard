@@ -38,7 +38,7 @@ import org.thingsboard.server.dao.agent.StepLinkedListUtils;
 import org.thingsboard.server.gen.agent.v1.ServerToAgent;
 import org.thingsboard.server.gen.transport.TransportProtos.AgentAppEventNotificationProto;
 import org.thingsboard.server.queue.util.TbCoreComponent;
-import org.thingsboard.server.service.agent.AgentAppEventStepsResolver;
+import org.thingsboard.server.dao.agent.AgentAppEventStepsResolver;
 import org.thingsboard.server.service.agent.AgentMsgConstructorUtils;
 import org.thingsboard.server.service.agent.AgentRpcService;
 import org.thingsboard.server.service.agent.AgentSessionNotFoundException;
@@ -73,6 +73,14 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         TenantId tenantId = TenantId.fromUUID(new UUID(notification.getTenantIdMSB(), notification.getTenantIdLSB()));
         AgentId agentId = AgentId.fromMsgAndLsb(notification.getAgentIdMSB(), notification.getAgentIdLSB());
         AgentApplicationId applicationId = AgentApplicationId.fromMsgAndLsb(notification.getApplicationIdMSB(), notification.getApplicationIdLSB());
+
+        if (notification.getCancelled()) {
+            AgentAppEventId eventId = new AgentAppEventId(new UUID(notification.getEventIdMSB(), notification.getEventIdLSB()));
+            log.trace("[{}][{}] Processing cancel notification for event {}", tenantId, agentId, eventId);
+            eventErrorHandler.onFailure(tenantId, agentId, eventId, ErrorOrigin.SERVER);
+            return;
+        }
+
         AgentApplication application = appService.findById(tenantId, applicationId);
 
         log.trace("[{}][{}] Processing agent app event notification for application {}", tenantId, agentId, application);
@@ -140,6 +148,15 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         if (event.getActionType() == AgentAppEventActionType.DELETE) {
             log.trace("[{}][{}] Deleting application {} after DELETE event", tenantId, agentId, application.getId());
             appService.delete(tenantId, event.getApplicationId());
+        } else if (event.getActionType() == AgentAppEventActionType.UPGRADE && application.getDesiredTemplateId() != null) {
+            log.trace("[{}][{}] Promoting desiredTemplateId to templateId for application {}", tenantId, agentId, application.getId());
+            application.setTemplateId(application.getDesiredTemplateId());
+            application.setDesiredTemplateId(null);
+            appService.save(tenantId, application);
+        } else if (event.getActionType() == AgentAppEventActionType.ROLLBACK && application.getDesiredTemplateId() != null) {
+            log.trace("[{}][{}] Clearing desiredTemplateId after rollback for application {}", tenantId, agentId, application.getId());
+            application.setDesiredTemplateId(null);
+            appService.save(tenantId, application);
         }
         processNextEventForApp(tenantId, agentId, application);
     }

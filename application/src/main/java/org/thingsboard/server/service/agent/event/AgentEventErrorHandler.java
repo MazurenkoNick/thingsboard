@@ -26,14 +26,21 @@ import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.ErrorOrigin;
-import org.thingsboard.server.common.data.agent.RollbackEventMeta;
+import org.thingsboard.server.common.data.agent.step.AgentAppStep;
+import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
+import org.thingsboard.server.common.data.agent.step.state.RollBackStepState;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
+import org.thingsboard.server.dao.agent.AgentAppEventStepsResolver;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 @TbCoreComponent
@@ -43,6 +50,7 @@ public class AgentEventErrorHandler {
 
     private final AgentAppEventService appEventService;
     private final AgentApplicationService appService;
+    private final AgentAppEventStepsResolver stepsResolver;
     private final AgentEventWatchdog eventWatchdog;
     @Lazy
     private final AgentEventProcessor agentEventProcessor;
@@ -69,25 +77,42 @@ public class AgentEventErrorHandler {
             boolean dispatchNextEvent = true;
 
             AgentAppEvent event = appEventService.findById(tenantId, failedEventId);
-            if (shouldRollbackPendingDeletion(event)) {
+            if (isDelete(event)) {
                 rollbackPendingDeletion(tenantId, event.getApplicationId());
-            } else if (shouldEnqueueRollbackEvent(event, errorOrigin)) {
+            }
+            if (shouldEnqueueRollbackEvent(event, errorOrigin)) {
                 appEventService.save(tenantId, buildRollbackEvent(tenantId, event));
                 dispatchNextEvent = false;
+            }
+            if (shouldClearDesiredTemplateId(event, errorOrigin)) {
+                clearDesiredTemplateId(tenantId, event.getApplicationId());
             }
 
             return dispatchNextEvent;
         }));
     }
 
-    private boolean shouldEnqueueRollbackEvent(AgentAppEvent event, ErrorOrigin errorOrigin) {
-        return errorOrigin == ErrorOrigin.SERVER
-                && event != null
-                && event.getActionType() == AgentAppEventActionType.UPDATE;
+    private boolean isDelete(AgentAppEvent event) {
+        return event != null && event.hasActionType(AgentAppEventActionType.DELETE);
     }
 
-    private boolean shouldRollbackPendingDeletion(AgentAppEvent event) {
-        return event != null && event.getActionType() == AgentAppEventActionType.DELETE;
+    private boolean shouldEnqueueRollbackEvent(AgentAppEvent event, ErrorOrigin errorOrigin) {
+        return errorOrigin == ErrorOrigin.SERVER && event != null
+                && (event.hasActionType(AgentAppEventActionType.UPDATE) || event.hasActionType(AgentAppEventActionType.UPGRADE));
+    }
+
+    private boolean shouldClearDesiredTemplateId(AgentAppEvent event, ErrorOrigin errorOrigin) {
+        return errorOrigin == ErrorOrigin.AGENT && event != null
+                && (event.hasActionType(AgentAppEventActionType.UPGRADE) || event.hasActionType(AgentAppEventActionType.ROLLBACK));
+    }
+
+    private void clearDesiredTemplateId(TenantId tenantId, AgentApplicationId applicationId) {
+        AgentApplication app = appService.findById(tenantId, applicationId);
+        if (app != null && app.getDesiredTemplateId() != null) {
+            log.info("[{}] Clearing desiredTemplateId for application {} after agent error", tenantId, applicationId);
+            app.setDesiredTemplateId(null);
+            appService.save(tenantId, app);
+        }
     }
 
     private void dispatchNextIfAppExists(TenantId tenantId, AgentId agentId, AgentAppEventId failedEventId) {
@@ -120,7 +145,16 @@ public class AgentEventErrorHandler {
         rollbackEvent.setDeliveryState(AgentAppEventDeliveryState.DELIVERED);
         rollbackEvent.setStatus(AgentAppEventStatus.PENDING);
         rollbackEvent.setUpdatedTime(System.currentTimeMillis());
-        rollbackEvent.setMetadata(new RollbackEventMeta(failedEvent.getId()));
+
+        AgentApplication app = appService.findById(tenantId, failedEvent.getApplicationId());
+        List<AgentAppStep> rollbackSteps = stepsResolver.resolveSteps(app, AgentAppEventActionType.ROLLBACK);
+        UUID rollbackStepId = rollbackSteps.stream()
+                .filter(s -> s.getType() == AgentAppStepType.ROLLBACK)
+                .findFirst()
+                .map(AgentAppStep::getId)
+                .orElseThrow(() -> new IllegalStateException("No rollback step found in template for application " + app.getId()));
+
+        rollbackEvent.setStepStates(Map.of(rollbackStepId, new RollBackStepState(failedEvent.getId())));
         return rollbackEvent;
     }
 }

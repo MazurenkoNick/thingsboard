@@ -58,6 +58,7 @@ enum AppCommandAction {
   APP_DELETE = 2;
   APP_RESTART = 3;
   APP_ROLLBACK = 4;
+  APP_UPGRADE = 5;
 }
 
 enum ConfigType {
