@@ -35,7 +35,6 @@ import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentAppUnitDao;
 import org.thingsboard.server.dao.agent.AgentDao;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 

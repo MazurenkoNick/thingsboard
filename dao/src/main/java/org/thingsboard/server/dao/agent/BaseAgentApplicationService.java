@@ -88,7 +88,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
 
     @Override
     public AgentApplication findById(TenantId tenantId, AgentApplicationId agentApplicationId) {
-        log.trace("Executing findAgentApplicationById [{}]", agentApplicationId);
+        log.trace("Executing findById [{}]", agentApplicationId);
         validateId(agentApplicationId, id -> INCORRECT_AGENT_APPLICATION_ID + id);
         return cache.getAndPutInTransaction(AgentApplicationCacheKey.from(agentApplicationId),
                 () -> agentApplicationDao.findById(tenantId, agentApplicationId.getId()), true);
