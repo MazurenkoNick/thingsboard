@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.agent.msg.inbound;
+package org.thingsboard.server.service.agent.compose;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.RegexUtils;
 import org.thingsboard.server.common.data.agent.AgentApplication;
@@ -30,64 +30,29 @@ import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
-import org.thingsboard.server.gen.agent.v1.AgentToServer;
 import org.thingsboard.server.gen.agent.v1.ComposeState;
-import org.thingsboard.server.gen.agent.v1.ProjectStateSync;
-import org.thingsboard.server.service.agent.AgentInboundMsgCtx;
 import org.thingsboard.server.service.agent.template.TbAgentAppTemplateService;
 
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-@Component
+@Service
 @Slf4j
 @RequiredArgsConstructor
-public class ComposeSyncMessageHandler implements AgentInboundMessageHandler {
+public class ComposeAgentAppCreator {
 
     private final AgentApplicationService appService;
     private final TbAgentAppTemplateService templateService;
 
-    @Override
-    public boolean canHandle(AgentInboundMsgCtx msgCtx) {
-        var msg = msgCtx.msg();
-        return msg.hasProjectSync()
-                && msg.getProjectSync().hasCompose()
-                && msg.getProjectSync().getCompose().hasComposeJson();
-    }
+    public AgentApplication createApp(TenantId tenantId, AgentId agentId, String projectName, ComposeState compose) {
+        JsonNode composeJson = extractCompose(compose);
+        ComposeInfo composeInfo = getComposeInfo(composeJson);
 
-    @Override
-    public void handle(AgentInboundMsgCtx msgCtx) {
-        ProjectStateSync projectSync = msgCtx.msg().getProjectSync();
-        TenantId tenantId = msgCtx.sessionState().getTenantId();
-        AgentId agentId = msgCtx.sessionState().getAgentId();
-
-        try {
-            doHandle(tenantId, agentId, projectSync);
-        } catch (Exception e) {
-            log.error("[{}][{}] Couldn't process compose synchronization for project: {}", tenantId, agentId, projectSync.getProjectName(), e);
-        }
-    }
-
-    private void doHandle(TenantId tenantId, AgentId agentId, ProjectStateSync projectSync) {
-        AgentApplication app = appService.findByProjectName(tenantId, projectSync.getProjectName());
-        if (app != null) {
-            log.info("[{}][{}] Agent Application already exists for project [{}], skipping creation",
-                    tenantId, agentId, projectSync.getProjectName());
-            return;
-        }
-
-        JsonNode compose = extractCompose(projectSync.getCompose());
-        ComposeInfo composeInfo = getComposeInfo(compose);
-
-        createApp(tenantId, agentId, projectSync.getProjectName(), composeInfo, compose);
-    }
-
-    private void createApp(TenantId tenantId, AgentId agentId, String projectName, ComposeInfo composeInfo, JsonNode compose) {
         AgentAppTemplate template = resolveTemplate(composeInfo);
         if (template == null) {
             log.warn("[{}][{}] No template found for appType [{}], version [{}]",
                     tenantId, agentId, composeInfo.appType(), composeInfo.version());
-            return;
+            return null;
         }
 
         AgentApplication newApp = new AgentApplication();
@@ -99,12 +64,13 @@ public class ComposeSyncMessageHandler implements AgentInboundMessageHandler {
         newApp.setTemplateId(template.getId());
 
         DockerComposeConfig config = new DockerComposeConfig();
-        config.setCompose(compose);
+        config.setCompose(composeJson);
         newApp.setConfig(config);
 
         AgentApplication app = appService.save(tenantId, newApp);
         log.info("[{}][{}] Created agent application for project [{}], appType [{}], version [{}]",
                 tenantId, agentId, app.getProjectName(), composeInfo.appType(), composeInfo.version());
+        return app;
     }
 
     private AgentAppTemplate resolveTemplate(ComposeInfo composeInfo) {
