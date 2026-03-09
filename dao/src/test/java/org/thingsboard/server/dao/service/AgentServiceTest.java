@@ -27,8 +27,8 @@ import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentInfo;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
@@ -513,5 +513,4 @@ public class AgentServiceTest extends AbstractServiceTest {
         agentService.deleteAgent(tenantId, agent.getId());
         customerService.deleteCustomer(tenantId, customerId);
     }
-
 }
