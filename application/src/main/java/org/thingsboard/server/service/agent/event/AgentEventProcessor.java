@@ -17,7 +17,6 @@ package org.thingsboard.server.service.agent.event;
 
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.gen.transport.TransportProtos.AgentAppEventNotificationProto;
@@ -27,8 +26,6 @@ public interface AgentEventProcessor {
     void onEventNotification(AgentAppEventNotificationProto notification);
 
     void resumeEventsOnReconnect(TenantId tenantId, AgentId agentId);
-
-    void processAfterError(TenantId tenantId, AgentId agentId, AgentAppEventId failedEvent);
 
     void processNextEventForApp(TenantId tenantId, AgentId agentId, AgentApplication application);
 

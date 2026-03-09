@@ -32,16 +32,17 @@ import java.util.UUID;
         @JsonSubTypes.Type(name = "COMPOSE", value = ComposeStep.class),
         @JsonSubTypes.Type(name = "COMPOSE_START", value = ComposeStartStep.class),
         @JsonSubTypes.Type(name = "COMPOSE_DOWN", value = ComposeDownStep.class),
+        @JsonSubTypes.Type(name = "ROLLBACK", value = RollBackStep.class),
         @JsonSubTypes.Type(name = "INFO", value = InfoStep.class)
 })
 @Data
 @NoArgsConstructor
 public abstract class AgentAppStep {
 
-    private UUID id;
-    private UUID nextId;
-    private String title;
-    private boolean templateOnly;
+    protected UUID id;
+    protected UUID nextId;
+    protected String title;
+    protected boolean templateOnly;
 
     public AgentAppStep(UUID nextId, UUID id, String title, boolean templateOnly) {
         this.nextId = nextId;
@@ -51,13 +52,4 @@ public abstract class AgentAppStep {
     }
 
     public abstract AgentAppStepType getType();
-
-    public abstract AgentAppStep copy();
-
-    protected void copyBaseFields(AgentAppStep copy) {
-        copy.setId(this.id);
-        copy.setNextId(this.nextId);
-        copy.setTitle(this.title);
-        copy.setTemplateOnly(this.templateOnly);
-    }
 }

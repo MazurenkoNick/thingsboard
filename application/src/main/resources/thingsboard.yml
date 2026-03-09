@@ -1506,6 +1506,8 @@ agents:
     retry_send_delay_ms: "${AGENTS_EVENT_RETRY_SEND_DELAY_MS:1000}"
     # Delay in milliseconds before the first staleness check for an event
     watchdog_initial_delay_ms: "${AGENTS_EVENT_WATCHDOG_INITIAL_DELAY_MS:30000}"
+    # Thread pool size for agent event processing executor
+    executor_pool_size: "${AGENTS_EVENT_EXECUTOR_POOL_SIZE:4}"
     # Thread pool size for the event scheduler (retries and watchdogs)
     scheduler_pool_size: "${AGENTS_EVENT_SCHEDULER_POOL_SIZE:4}"
 

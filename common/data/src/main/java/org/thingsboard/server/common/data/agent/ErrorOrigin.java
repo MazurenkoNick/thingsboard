@@ -13,21 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent.step;
+package org.thingsboard.server.common.data.agent;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
-@Data
-@NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class ComposeDownStep extends AgentAppStep {
-
-    private boolean removeVolumes;
-
-    @Override
-    public AgentAppStepType getType() {
-        return AgentAppStepType.COMPOSE_DOWN;
-    }
-}
+public enum ErrorOrigin { AGENT, SERVER }

@@ -19,5 +19,6 @@ public enum AgentAppEventActionType {
     INSTALL,
     UPDATE,
     DELETE,
-    RESTART
+    RESTART,
+    ROLLBACK
 }

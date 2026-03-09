@@ -13,21 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent.step;
+package org.thingsboard.server.common.data.agent;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
+@JsonSubTypes({
+        @JsonSubTypes.Type(name = "ROLLBACK", value = RollbackEventMeta.class)
+})
 @Data
-@NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class ComposeDownStep extends AgentAppStep {
+public abstract class AgentAppEventMeta {
 
-    private boolean removeVolumes;
+    public abstract AgentAppEventMetaType getType();
 
-    @Override
-    public AgentAppStepType getType() {
-        return AgentAppStepType.COMPOSE_DOWN;
-    }
 }

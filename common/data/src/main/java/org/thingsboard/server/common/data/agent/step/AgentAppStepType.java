@@ -21,5 +21,6 @@ public enum AgentAppStepType {
     COMPOSE_MODIFY, // todo: use for update?
     COMPOSE_START,
     COMPOSE_DOWN,
+    ROLLBACK,
     INFO
 }

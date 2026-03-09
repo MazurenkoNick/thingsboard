@@ -18,6 +18,7 @@ package org.thingsboard.server.service.agent;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.RollbackEventMeta;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
@@ -43,7 +44,7 @@ public class AgentMsgConstructorUtils {
                 .build();
     }
 
-    public static ServerToAgent buildAppCommand(AgentAppEvent event, AgentApplication application, AgentAppStep step) {
+    public static ServerToAgent buildAppCommand(AgentAppEvent event, AgentApplication application, AgentAppStep step, int totalSteps) {
         AppCommand.Builder builder = AppCommand.newBuilder()
                 .setCommandId(CommandId.newBuilder()
                         .setIdMSB(event.getId().getId().getMostSignificantBits())
@@ -51,7 +52,8 @@ public class AgentMsgConstructorUtils {
                         .build())
                 .setAction(mapAction(event.getActionType()))
                 .setAppName(application.getName() != null ? application.getName() : "")
-                .setConfigType(mapConfigType(application.getConfig().getType()));
+                .setConfigType(mapConfigType(application.getConfig().getType()))
+                .setTotalSteps(totalSteps);
 
         if (step != null) {
             builder.putAllMetadata(buildStepMetadata(step, application));
@@ -59,6 +61,9 @@ public class AgentMsgConstructorUtils {
                     .setIdMSB(step.getId().getMostSignificantBits())
                     .setIdLSB(step.getId().getLeastSignificantBits())
                     .build());
+        }
+        if (event.getMetadata() instanceof RollbackEventMeta rollbackMeta && rollbackMeta.getFailedEventId() != null) {
+            builder.putMetadata("failedCommandId", rollbackMeta.getFailedEventId().getId().toString());
         }
         return ServerToAgent.newBuilder()
                 .setAppCommand(builder.build())
@@ -71,6 +76,7 @@ public class AgentMsgConstructorUtils {
             case UPDATE -> AppCommandAction.APP_UPDATE;
             case DELETE -> AppCommandAction.APP_DELETE;
             case RESTART -> AppCommandAction.APP_RESTART;
+            case ROLLBACK -> AppCommandAction.APP_ROLLBACK;
         };
     }
 

@@ -15,13 +15,14 @@
  */
 package org.thingsboard.server.service.agent;
 
+import com.google.common.util.concurrent.ListeningExecutorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
-import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.ErrorOrigin;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -33,6 +34,7 @@ import org.thingsboard.server.gen.agent.v1.CommandId;
 import org.thingsboard.server.gen.agent.v1.CommandProgress;
 import org.thingsboard.server.gen.agent.v1.CommandResult;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.agent.event.AgentEventErrorHandler;
 import org.thingsboard.server.service.agent.event.AgentEventProcessor;
 
 import java.util.UUID;
@@ -45,7 +47,11 @@ public class CommandFeedbackHandler {
 
     private final AgentAppEventService appEventService;
     private final AgentEventProcessor agentEventProcessor;
+    private final AgentEventErrorHandler eventErrorHandler;
     private final AgentApplicationService appService;
+    private final AgentContextComponent agentCtx;
+
+    // todo: handle errors for each onCommand*
 
     public void onCommandAck(TenantId tenantId, AgentId agentId, CommandAck ack) {
         AgentAppEventId eventId = toEventId(ack.getCommandId());
@@ -54,8 +60,7 @@ public class CommandFeedbackHandler {
         if (ack.getStatus() == AckStatus.ACCEPTED) {
             appEventService.updateStatus(eventId, AgentAppEventStatus.QUEUED, null);
         } else {
-            appEventService.updateStatus(eventId, AgentAppEventStatus.ERROR, null);
-            agentEventProcessor.processAfterError(tenantId, agentId, eventId);
+            getExecutor().submit(() -> eventErrorHandler.onFailure(tenantId, agentId, eventId, ErrorOrigin.AGENT));
         }
     }
 
@@ -75,8 +80,7 @@ public class CommandFeedbackHandler {
             return;
         }
         if (!result.getSuccess()) {
-            appEventService.updateStatus(eventId, AgentAppEventStatus.ERROR, event.getCurrentStepId());
-            agentEventProcessor.processAfterError(tenantId, agentId, event.getId());
+            getExecutor().submit(() -> eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.AGENT));
             return;
         }
         if (event.getActionType() == AgentAppEventActionType.DELETE) {
@@ -84,7 +88,11 @@ public class CommandFeedbackHandler {
             return;
         }
         appEventService.updateStatus(eventId, AgentAppEventStatus.PROCESSING, null);
-        agentEventProcessor.processNextStepOrFinish(tenantId, agentId, event);
+        getExecutor().submit(() -> agentEventProcessor.processNextStepOrFinish(tenantId, agentId, event));
+    }
+
+    private ListeningExecutorService getExecutor() {
+        return agentCtx.getAgentEventExecutor();
     }
 
     private AgentAppEventId toEventId(CommandId commandId) {

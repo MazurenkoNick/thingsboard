@@ -15,14 +15,20 @@
  */
 package org.thingsboard.server.dao.model.sql;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.dialect.PostgreSQLJsonPGObjectJsonbType;
+import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppEventMeta;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
@@ -31,6 +37,7 @@ import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.model.BaseSqlEntity;
 import org.thingsboard.server.dao.model.ModelConstants;
+import org.thingsboard.server.dao.util.mapping.JsonConverter;
 
 import java.util.UUID;
 
@@ -64,6 +71,11 @@ public final class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
     @Column(name = ModelConstants.AGENT_APP_EVENT_UPDATED_TIME_PROPERTY)
     private long updatedTime;
 
+    @Convert(converter = JsonConverter.class)
+    @JdbcType(PostgreSQLJsonPGObjectJsonbType.class)
+    @Column(name = ModelConstants.AGENT_APP_EVENT_METADATA_PROPERTY, columnDefinition = "jsonb")
+    private JsonNode metadata;
+
     public AgentAppEventEntity() {
         super();
     }
@@ -81,6 +93,7 @@ public final class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
         this.status = event.getStatus();
         this.currentStepId = event.getCurrentStepId();
         this.updatedTime = event.getUpdatedTime();
+        this.metadata = JacksonUtil.convertValue(event.getMetadata(), JsonNode.class);
     }
 
     @Override
@@ -98,6 +111,7 @@ public final class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
         event.setStatus(status);
         event.setCurrentStepId(currentStepId);
         event.setUpdatedTime(updatedTime);
+        event.setMetadata(JacksonUtil.convertValue(metadata, AgentAppEventMeta.class));
         return event;
     }
 }

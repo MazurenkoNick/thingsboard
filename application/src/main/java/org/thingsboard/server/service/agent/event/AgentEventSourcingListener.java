@@ -20,9 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.thingsboard.server.cluster.TbClusterService;
-import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
-import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 

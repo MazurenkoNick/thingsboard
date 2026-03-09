@@ -13,21 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent.step;
+package org.thingsboard.server.common.data.agent;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.id.AgentAppEventId;
 
 @Data
-@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ComposeDownStep extends AgentAppStep {
+@NoArgsConstructor
+public class RollbackEventMeta extends AgentAppEventMeta {
 
-    private boolean removeVolumes;
+    private AgentAppEventId failedEventId;
+
+    public RollbackEventMeta(AgentAppEventId failedEventId) {
+        this.failedEventId = failedEventId;
+    }
 
     @Override
-    public AgentAppStepType getType() {
-        return AgentAppStepType.COMPOSE_DOWN;
+    public AgentAppEventMetaType getType() {
+        return AgentAppEventMetaType.ROLLBACK;
     }
+
 }

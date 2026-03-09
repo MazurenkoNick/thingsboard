@@ -19,15 +19,23 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-@Data
-@NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class ComposeDownStep extends AgentAppStep {
+import java.util.UUID;
 
-    private boolean removeVolumes;
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class RollBackStep extends AgentAppStep {
+
+    private static final UUID ID = UUID.fromString("232cfd18-71ca-410c-aecb-d1151e9c936e");
+
+    public static final RollBackStep INSTANCE = new RollBackStep();
+
+    private RollBackStep() {
+        this.id = ID;
+        this.title = "Rollback Step After Server Exception";
+    }
 
     @Override
     public AgentAppStepType getType() {
-        return AgentAppStepType.COMPOSE_DOWN;
+        return AgentAppStepType.ROLLBACK;
     }
 }
