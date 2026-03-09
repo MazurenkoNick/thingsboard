@@ -683,6 +683,9 @@ cache:
     agentApplications:
       timeToLiveInMinutes: "${CACHE_SPECS_AGENT_APPLICATION_TTL:1440}" # Agent application cache TTL
       maxSize: "${CACHE_SPECS_AGENT_APPLICATION_MAX_SIZE:10000}" # 0 means the cache is disabled
+    agentAppUnits:
+      timeToLiveInMinutes: "${CACHE_SPECS_AGENT_APP_UNIT_TTL:1440}" # Agent app unit cache TTL
+      maxSize: "${CACHE_SPECS_AGENT_APP_UNIT_MAX_SIZE:10000}" # 0 means the cache is disabled
     apiKeys:
       timeToLiveInMinutes: "${CACHE_SPECS_API_KEYS_TTL:1440}" # API keys cache TTL
       maxSize: "${CACHE_SPECS_API_KEYS_MAX_SIZE:10000}" # 0 means the cache is disabled
