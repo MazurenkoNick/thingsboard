@@ -30,7 +30,9 @@ import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
-import org.thingsboard.server.gen.agent.v1.ComposeStateSync;
+import org.thingsboard.server.gen.agent.v1.AgentToServer;
+import org.thingsboard.server.gen.agent.v1.ComposeState;
+import org.thingsboard.server.gen.agent.v1.ProjectStateSync;
 import org.thingsboard.server.service.agent.AgentInboundMsgCtx;
 import org.thingsboard.server.service.agent.template.TbAgentAppTemplateService;
 
@@ -47,34 +49,37 @@ public class ComposeSyncMessageHandler implements AgentInboundMessageHandler {
 
     @Override
     public boolean canHandle(AgentInboundMsgCtx msgCtx) {
-        return msgCtx.msg().hasComposeSync();
+        var msg = msgCtx.msg();
+        return msg.hasProjectSync()
+                && msg.getProjectSync().hasCompose()
+                && msg.getProjectSync().getCompose().hasComposeJson();
     }
 
     @Override
     public void handle(AgentInboundMsgCtx msgCtx) {
-        ComposeStateSync composeSync = msgCtx.msg().getComposeSync();
+        ProjectStateSync projectSync = msgCtx.msg().getProjectSync();
         TenantId tenantId = msgCtx.sessionState().getTenantId();
         AgentId agentId = msgCtx.sessionState().getAgentId();
 
         try {
-            doHandle(tenantId, agentId, composeSync);
+            doHandle(tenantId, agentId, projectSync);
         } catch (Exception e) {
-            log.error("[{}][{}] Couldn't process compose synchronization for project: {}", tenantId, agentId, composeSync.getProjectName(), e);
+            log.error("[{}][{}] Couldn't process compose synchronization for project: {}", tenantId, agentId, projectSync.getProjectName(), e);
         }
     }
 
-    private void doHandle(TenantId tenantId, AgentId agentId, ComposeStateSync composeSync) {
-        AgentApplication app = appService.findByProjectName(tenantId, composeSync.getProjectName());
+    private void doHandle(TenantId tenantId, AgentId agentId, ProjectStateSync projectSync) {
+        AgentApplication app = appService.findByProjectName(tenantId, projectSync.getProjectName());
         if (app != null) {
             log.info("[{}][{}] Agent Application already exists for project [{}], skipping creation",
-                    tenantId, agentId, composeSync.getProjectName());
+                    tenantId, agentId, projectSync.getProjectName());
             return;
         }
 
-        JsonNode compose = extractCompose(composeSync);
+        JsonNode compose = extractCompose(projectSync.getCompose());
         ComposeInfo composeInfo = getComposeInfo(compose);
 
-        createApp(tenantId, agentId, composeSync.getProjectName(), composeInfo, compose);
+        createApp(tenantId, agentId, projectSync.getProjectName(), composeInfo, compose);
     }
 
     private void createApp(TenantId tenantId, AgentId agentId, String projectName, ComposeInfo composeInfo, JsonNode compose) {
@@ -138,9 +143,9 @@ public class ComposeSyncMessageHandler implements AgentInboundMessageHandler {
         return colonIdx >= 0 ? image.substring(colonIdx + 1) : null;
     }
 
-    private JsonNode extractCompose(ComposeStateSync composeSync) {
+    private JsonNode extractCompose(ComposeState composeState) {
         try {
-            return JacksonUtil.OBJECT_MAPPER.readTree(composeSync.getComposeJson());
+            return JacksonUtil.OBJECT_MAPPER.readTree(composeState.getComposeJson());
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Couldn't parse docker compose");
         }
