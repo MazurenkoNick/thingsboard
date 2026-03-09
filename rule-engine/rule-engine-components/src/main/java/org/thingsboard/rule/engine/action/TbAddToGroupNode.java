@@ -90,18 +90,15 @@ public class TbAddToGroupNode extends TbAbstractGroupActionNode<TbAddToGroupConf
     @Override
     protected void doProcessEntityGroupAction(TbContext ctx, TbMsg msg, EntityGroupId entityGroupId) {
         if (BooleanUtils.toBooleanDefaultIfNull(config.isRemoveFromCurrentGroups(), false)) {
-            removeFromCurrentGroups(ctx, msg, entityGroupId);
+            DonAsynchron.withCallback(Futures.allAsList(getListenableFutures(ctx, msg)), containerList -> {
+                processRemove(ctx, msg, entityGroupId, containerList);
+                addEntityToGroup(ctx, msg, entityGroupId);
+            }, throwable -> {
+                throw new RuntimeException(throwable);
+            });
+        } else {
+            addEntityToGroup(ctx, msg, entityGroupId);
         }
-        addEntityToGroup(ctx, msg, entityGroupId);
-    }
-
-    private void removeFromCurrentGroups(TbContext ctx, TbMsg msg, EntityGroupId entityGroupId) {
-        DonAsynchron.withCallback(Futures.allAsList(getListenableFutures(ctx, msg)), containerList -> {
-            processRemove(ctx, msg, entityGroupId, containerList);
-        }, throwable -> {
-            throw new RuntimeException(throwable);
-        });
-
     }
 
     private void processRemove(TbContext ctx, TbMsg msg, EntityGroupId entityGroupId, List<EntityGroupContainer> containerList) {
