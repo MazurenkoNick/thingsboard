@@ -33,7 +33,7 @@ public class AgentAppUnit extends BaseData<AgentAppUnitId> implements HasId<Agen
 
     private AgentApplicationId agentApplicationId;
     private String identifier;
-    private String type;
+    private AgentAppUnitType type;
 
     public AgentAppUnit() {
         super();
@@ -73,7 +73,7 @@ public class AgentAppUnit extends BaseData<AgentAppUnitId> implements HasId<Agen
     }
 
     @Schema(description = "Unit type", requiredMode = Schema.RequiredMode.REQUIRED)
-    public String getType() {
+    public AgentAppUnitType getType() {
         return type;
     }
 }

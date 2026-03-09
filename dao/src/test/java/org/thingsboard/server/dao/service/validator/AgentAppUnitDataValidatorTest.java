@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.thingsboard.server.common.data.agent.AgentAppUnit;
+import org.thingsboard.server.common.data.agent.AgentAppUnitType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentAppUnitId;
@@ -61,7 +62,7 @@ class AgentAppUnitDataValidatorTest {
     void testValidateDataImpl_nullAgentApplicationId_thenException() {
         AgentAppUnit unit = new AgentAppUnit();
         unit.setIdentifier("id");
-        unit.setType("type");
+        unit.setType(AgentAppUnitType.CONTAINER);
 
         DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, unit));
@@ -76,7 +77,7 @@ class AgentAppUnitDataValidatorTest {
         AgentAppUnit unit = new AgentAppUnit();
         unit.setAgentApplicationId(nonExistentId);
         unit.setIdentifier("id");
-        unit.setType("type");
+        unit.setType(AgentAppUnitType.CONTAINER);
 
         DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, unit));
@@ -88,7 +89,7 @@ class AgentAppUnitDataValidatorTest {
         AgentAppUnit unit = new AgentAppUnit();
         unit.setAgentApplicationId(applicationId);
         unit.setIdentifier("  ");
-        unit.setType("type");
+        unit.setType(AgentAppUnitType.CONTAINER);
 
         DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, unit));
@@ -96,11 +97,11 @@ class AgentAppUnitDataValidatorTest {
     }
 
     @Test
-    void testValidateDataImpl_blankType_thenException() {
+    void testValidateDataImpl_nullType_thenException() {
         AgentAppUnit unit = new AgentAppUnit();
         unit.setAgentApplicationId(applicationId);
         unit.setIdentifier("id");
-        unit.setType("  ");
+        unit.setType(null);
 
         DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
                 () -> validator.validateDataImpl(tenantId, unit));
@@ -112,7 +113,7 @@ class AgentAppUnitDataValidatorTest {
         AgentAppUnit unit = new AgentAppUnit();
         unit.setAgentApplicationId(applicationId);
         unit.setIdentifier("unit-1");
-        unit.setType("container");
+        unit.setType(AgentAppUnitType.CONTAINER);
 
         Assertions.assertDoesNotThrow(() -> validator.validateDataImpl(tenantId, unit));
     }
@@ -122,7 +123,7 @@ class AgentAppUnitDataValidatorTest {
         AgentAppUnit unit = new AgentAppUnit(unitId);
         unit.setAgentApplicationId(applicationId);
         unit.setIdentifier("id");
-        unit.setType("type");
+        unit.setType(AgentAppUnitType.CONTAINER);
         willReturn(null).given(agentAppUnitDao).findById(eq(tenantId), eq(unitId.getId()));
 
         DataValidationException exception = Assertions.assertThrows(DataValidationException.class,
@@ -135,10 +136,10 @@ class AgentAppUnitDataValidatorTest {
         AgentAppUnit unit = new AgentAppUnit(unitId);
         unit.setAgentApplicationId(applicationId);
         unit.setIdentifier("new-id");
-        unit.setType("new-type");
+        unit.setType(AgentAppUnitType.VOLUME);
         AgentAppUnit oldUnit = new AgentAppUnit(unitId);
         oldUnit.setIdentifier("old-id");
-        oldUnit.setType("old-type");
+        oldUnit.setType(AgentAppUnitType.CONTAINER);
         willReturn(oldUnit).given(agentAppUnitDao).findById(eq(tenantId), eq(unitId.getId()));
 
         AgentAppUnit result = validator.validateUpdate(tenantId, unit);

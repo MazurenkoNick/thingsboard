@@ -24,6 +24,7 @@ import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.AgentAppUnit;
+import org.thingsboard.server.common.data.agent.AgentAppUnitType;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -86,7 +87,7 @@ public class JpaAgentAppUnitDaoTest extends AbstractJpaDaoTest {
         AgentAppUnit unit = new AgentAppUnit();
         unit.setAgentApplicationId(new AgentApplicationId(applicationId1));
         unit.setIdentifier("unit-1");
-        unit.setType("container");
+        unit.setType(AgentAppUnitType.CONTAINER);
 
         AgentAppUnit saved = agentAppUnitDao.save(TenantId.fromUUID(tenantId1), unit);
         assertNotNull(saved.getId());
@@ -96,7 +97,7 @@ public class JpaAgentAppUnitDaoTest extends AbstractJpaDaoTest {
         assertEquals(saved.getId(), found.getId());
         assertEquals(applicationId1, found.getAgentApplicationId().getId());
         assertEquals("unit-1", found.getIdentifier());
-        assertEquals("container", found.getType());
+        assertEquals(AgentAppUnitType.CONTAINER, found.getType());
 
         List<AgentAppUnit> byApp = agentAppUnitDao.findByAgentApplicationId(TenantId.fromUUID(tenantId1), applicationId1);
         assertEquals(1, byApp.size());
@@ -107,7 +108,7 @@ public class JpaAgentAppUnitDaoTest extends AbstractJpaDaoTest {
 
     @Test
     public void testRemoveById() {
-        AgentAppUnit unit = saveUnit("unit-2", "process");
+        AgentAppUnit unit = saveUnit("unit-2", AgentAppUnitType.VOLUME);
         agentAppUnitDao.removeById(TenantId.fromUUID(tenantId1), unit.getId().getId());
         AgentAppUnit found = agentAppUnitDao.findById(TenantId.fromUUID(tenantId1), unit.getId().getId());
         assertNull(found);
@@ -115,8 +116,8 @@ public class JpaAgentAppUnitDaoTest extends AbstractJpaDaoTest {
 
     @Test
     public void testRemoveByAgentApplicationId() {
-        saveUnit("u1", "type1");
-        saveUnit("u2", "type2");
+        saveUnit("u1", AgentAppUnitType.CONTAINER);
+        saveUnit("u2", AgentAppUnitType.NETWORK);
         List<AgentAppUnit> before = agentAppUnitDao.findByAgentApplicationId(TenantId.fromUUID(tenantId1), applicationId1);
         assertEquals(2, before.size());
 
@@ -127,8 +128,8 @@ public class JpaAgentAppUnitDaoTest extends AbstractJpaDaoTest {
 
     @Test
     public void testRemoveAgentApplicationRemovesAgentAppUnits() {
-        saveUnit("cascade1", "t1");
-        saveUnit("cascade2", "t2");
+        saveUnit("cascade1", AgentAppUnitType.CONTAINER);
+        saveUnit("cascade2", AgentAppUnitType.VOLUME);
         List<AgentAppUnit> before = agentAppUnitDao.findByAgentApplicationId(TenantId.fromUUID(tenantId1), applicationId1);
         assertEquals(2, before.size());
 
@@ -157,7 +158,7 @@ public class JpaAgentAppUnitDaoTest extends AbstractJpaDaoTest {
         return agentApplicationDao.save(TenantId.fromUUID(tenantId1), app);
     }
 
-    private AgentAppUnit saveUnit(String identifier, String type) {
+    private AgentAppUnit saveUnit(String identifier, AgentAppUnitType type) {
         AgentAppUnit unit = new AgentAppUnit();
         unit.setAgentApplicationId(new AgentApplicationId(applicationId1));
         unit.setIdentifier(identifier);
