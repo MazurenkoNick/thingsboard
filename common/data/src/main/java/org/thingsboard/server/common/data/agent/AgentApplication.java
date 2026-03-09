@@ -21,27 +21,29 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.thingsboard.server.common.data.BaseData;
+import org.thingsboard.server.common.data.HasName;
+import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.HasVersion;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
+import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.HasId;
-
-import java.util.List;
-import java.util.Map;
+import org.thingsboard.server.common.data.id.TenantId;
 
 @Schema
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter
-public class AgentApplication extends BaseData<AgentApplicationId> implements HasId<AgentApplicationId>, HasVersion {
+public class AgentApplication extends BaseData<AgentApplicationId> implements HasId<AgentApplicationId>, HasTenantId, HasVersion, HasName {
 
+    private TenantId tenantId;
     private AgentId agentId;
     private String name;
-    private AgentApplicationType type;
-    private String templateVersion;
-    private Map<String, String> placeholders;
-    private Map<String, String> configuration;
-    private List<String> steps;
+    private AgentAppTemplateId templateId;
+    private AgentApplicationType appType;
+    private AgentAppConfig config;
     @Getter
     private Long version;
 
@@ -55,14 +57,20 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
 
     public AgentApplication(AgentApplication application) {
         super(application);
+        this.tenantId = application.getTenantId();
         this.agentId = application.getAgentId();
+        this.appType = application.getAppType();
         this.name = application.getName();
-        this.type = application.getType();
-        this.templateVersion = application.getTemplateVersion();
-        this.placeholders = application.getPlaceholders();
-        this.configuration = application.getConfiguration();
-        this.steps = application.getSteps();
+        this.templateId = application.getTemplateId();
         this.version = application.getVersion();
+    }
+
+    public static AgentApplication fromTemplate(AgentAppTemplate template) {
+        AgentApplication app = new AgentApplication();
+        app.setTemplateId(template.getId());
+        app.setAppType(template.getAppType());
+        app.setConfig(template.getConfig() != null ? template.getConfig().copy() : null);
+        return app;
     }
 
     @Schema(description = "JSON object with the Agent Application Id.")
@@ -77,38 +85,34 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         return super.getCreatedTime();
     }
 
+    @Schema(description = "JSON object with Tenant Id.", accessMode = Schema.AccessMode.READ_ONLY)
+    @Override
+    public TenantId getTenantId() {
+        return tenantId;
+    }
+
     @Schema(description = "Agent this application belongs to", requiredMode = Schema.RequiredMode.REQUIRED)
     public AgentId getAgentId() {
         return agentId;
     }
 
-    @Schema(description = "Application name")
+    @Schema(description = "Application type", requiredMode = Schema.RequiredMode.REQUIRED)
+    public AgentApplicationType getAppType() {
+        return appType;
+    }
+
+    @Schema(description = "Application name (not unique across tenant)")
     public String getName() {
         return name;
     }
 
-    @Schema(description = "Application type: GENERIC, EDGE, or GATEWAY", requiredMode = Schema.RequiredMode.REQUIRED)
-    public AgentApplicationType getType() {
-        return type;
+    @Schema(description = "Config (with compose field and type = 'DOCKER_COMPOSE' for EDGE/GATEWAY)")
+    public AgentAppConfig getConfig() {
+        return config;
     }
 
-    @Schema(description = "Template version")
-    public String getTemplateVersion() {
-        return templateVersion;
-    }
-
-    @Schema(description = "Placeholder key-value map")
-    public Map<String, String> getPlaceholders() {
-        return placeholders;
-    }
-
-    @Schema(description = "Configuration key-value map")
-    public Map<String, String> getConfiguration() {
-        return configuration;
-    }
-
-    @Schema(description = "List of step identifiers")
-    public List<String> getSteps() {
-        return steps;
+    @Schema(description = "Template this application is based on", requiredMode = Schema.RequiredMode.REQUIRED)
+    public AgentAppTemplateId getTemplateId() {
+        return templateId;
     }
 }

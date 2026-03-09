@@ -28,4 +28,8 @@ public interface AgentApplicationDao extends Dao<AgentApplication> {
 
     void removeByAgentId(TenantId tenantId, UUID agentId);
 
+    List<AgentApplication> findByTemplateId(TenantId tenantId, UUID templateId);
+
+    void removeByTemplateId(TenantId tenantId, UUID templateId);
+
 }

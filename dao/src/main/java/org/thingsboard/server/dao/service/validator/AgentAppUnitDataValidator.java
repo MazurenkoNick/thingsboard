@@ -47,7 +47,7 @@ public class AgentAppUnitDataValidator extends DataValidator<AgentAppUnit> {
         if (agentAppUnit.getAgentApplicationId() == null) {
             throw new DataValidationException("Agent app unit should be assigned to agent application!");
         }
-        AgentApplication application = agentApplicationService.findAgentApplicationById(tenantId, agentAppUnit.getAgentApplicationId());
+        AgentApplication application = agentApplicationService.findById(tenantId, agentAppUnit.getAgentApplicationId());
         if (application == null) {
             throw new DataValidationException("Agent app unit is referencing non-existent agent application!");
         }

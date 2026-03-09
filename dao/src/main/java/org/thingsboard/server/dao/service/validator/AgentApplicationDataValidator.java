@@ -17,11 +17,10 @@ package org.thingsboard.server.dao.service.validator;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.dao.agent.AgentAppTemplateDao;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.service.DataValidator;
@@ -33,6 +32,7 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
 
     private final AgentService agentService;
     private final AgentApplicationDao agentApplicationDao;
+    private final AgentAppTemplateDao agentAppTemplateDao;
 
     @Override
     protected AgentApplication validateUpdate(TenantId tenantId, AgentApplication agentApplication) {
@@ -48,6 +48,10 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
         if (agentApplication.getAgentId() == null) {
             throw new DataValidationException("Agent application should be assigned to agent!");
         }
+        if (agentApplication.getAppType() == null) {
+            throw new DataValidationException("Agent application type must not be null!");
+        }
+        validateTemplate(agentApplication);
         Agent agent = agentService.findAgentById(tenantId, agentApplication.getAgentId());
         if (agent == null) {
             throw new DataValidationException("Agent application is referencing non-existent agent!");
@@ -55,19 +59,18 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
         if (!agent.getTenantId().equals(tenantId)) {
             throw new DataValidationException("Agent application cannot be assigned to agent from different tenant!");
         }
-        if (agentApplication.getType() == null) {
-            throw new DataValidationException("Agent application type is required!");
-        }
-        if (agentApplication.getType() != AgentApplicationType.GENERIC
-                && StringUtils.isBlank(agentApplication.getTemplateVersion())) {
-            throw new DataValidationException("Template version is required when agent application type is not GENERIC!");
-        }
-        if (agentApplication.getType() == AgentApplicationType.GENERIC
-                && agentApplication.getTemplateVersion() != null) {
-            throw new DataValidationException("Template version is not allowed for GENERIC agent application type");
-        }
         if (agentApplication.getName() != null && agentApplication.getName().length() > 255) {
             throw new DataValidationException("Agent application name length must be equal or shorter than 255!");
+        }
+    }
+
+    private void validateTemplate(AgentApplication agentApplication) {
+        // todo: validate with template?
+        if (agentApplication.getTemplateId() == null) {
+            throw new DataValidationException("Agent application should be assigned to template!");
+        }
+        if (agentAppTemplateDao.findById(TenantId.SYS_TENANT_ID, agentApplication.getTemplateId().getId()) == null) {
+            throw new DataValidationException("Agent application is referencing non-existent template!");
         }
     }
 }

@@ -54,7 +54,7 @@ class AgentAppUnitDataValidatorTest {
     void setUp() {
         AgentApplication application = new AgentApplication(applicationId);
         application.setName("Test Application");
-        willReturn(application).given(agentApplicationService).findAgentApplicationById(eq(tenantId), eq(applicationId));
+        willReturn(application).given(agentApplicationService).findById(eq(tenantId), eq(applicationId));
     }
 
     @Test
@@ -71,7 +71,7 @@ class AgentAppUnitDataValidatorTest {
     @Test
     void testValidateDataImpl_nonExistentAgentApplication_thenException() {
         AgentApplicationId nonExistentId = new AgentApplicationId(UUID.randomUUID());
-        willReturn(null).given(agentApplicationService).findAgentApplicationById(eq(tenantId), eq(nonExistentId));
+        willReturn(null).given(agentApplicationService).findById(eq(tenantId), eq(nonExistentId));
 
         AgentAppUnit unit = new AgentAppUnit();
         unit.setAgentApplicationId(nonExistentId);

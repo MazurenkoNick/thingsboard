@@ -15,9 +15,7 @@
  */
 package org.thingsboard.server.dao.model.sql;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,12 +24,9 @@ import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.model.BaseVersionedEntity;
-import org.thingsboard.server.dao.model.ModelConstants;
-import org.thingsboard.server.dao.util.mapping.JsonConverter;
 
 import java.util.UUID;
 
-import static org.thingsboard.server.dao.model.ModelConstants.AGENT_ADDITIONAL_INFO_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.AGENT_CUSTOMER_ID_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.AGENT_NAME_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.AGENT_TENANT_ID_PROPERTY;
@@ -50,10 +45,6 @@ public abstract class AbstractAgentEntity<T extends Agent> extends BaseVersioned
     @Column(name = AGENT_NAME_PROPERTY)
     private String name;
 
-    @Convert(converter = JsonConverter.class)
-    @Column(name = AGENT_ADDITIONAL_INFO_PROPERTY)
-    private JsonNode additionalInfo;
-
     public AbstractAgentEntity() {
         super();
     }
@@ -67,7 +58,6 @@ public abstract class AbstractAgentEntity<T extends Agent> extends BaseVersioned
             this.customerId = agent.getCustomerId().getId();
         }
         this.name = agent.getName();
-        this.additionalInfo = agent.getAdditionalInfo();
     }
 
     public AbstractAgentEntity(AgentEntity agentEntity) {
@@ -75,7 +65,6 @@ public abstract class AbstractAgentEntity<T extends Agent> extends BaseVersioned
         this.tenantId = agentEntity.getTenantId();
         this.customerId = agentEntity.getCustomerId();
         this.name = agentEntity.getName();
-        this.additionalInfo = agentEntity.getAdditionalInfo();
     }
 
     protected Agent toAgent() {
@@ -89,7 +78,6 @@ public abstract class AbstractAgentEntity<T extends Agent> extends BaseVersioned
             agent.setCustomerId(new CustomerId(customerId));
         }
         agent.setName(name);
-        agent.setAdditionalInfo(additionalInfo);
         return agent;
     }
 

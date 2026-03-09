@@ -47,10 +47,10 @@ public class DefaultTbAgentService extends AbstractTbEntityService implements Tb
 
         try {
             Agent savedAgent = checkNotNull(agentService.saveAgent(agent));
-            logEntityActionService.logEntityAction(tenantId, savedAgent.getId(), agent, actionType, user);
+            logEntityActionService.logEntityAction(tenantId, savedAgent.getId(), savedAgent, actionType, user);
             return savedAgent;
         } catch (Exception e) {
-            logEntityActionService.logEntityAction(tenantId, emptyId(EntityType.AGENT), agent, actionType, user);
+            logEntityActionService.logEntityAction(tenantId, emptyId(EntityType.AGENT), agent, actionType, user, e);
             throw e;
         }
     }

@@ -86,6 +86,7 @@ public class EntityIdFactory {
             case API_KEY -> new ApiKeyId(uuid);
             case AGENT -> new AgentId(uuid);
             case AGENT_APPLICATION -> new AgentApplicationId(uuid);
+            case AGENT_APP_TEMPLATE -> new AgentAppTemplateId(uuid);
             case AGENT_APP_UNIT -> new AgentAppUnitId(uuid);
         };
     }

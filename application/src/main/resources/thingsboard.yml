@@ -801,6 +801,16 @@ updates:
   # Enable/disable checks for the new version
   enabled: "${UPDATES_ENABLED:true}"
 
+# Agent application templates sync
+agent:
+  appTemplates:
+    sync:
+      enabled: "${AGENT_APP_TEMPLATE_SYNC_ENABLED:true}"
+      repoUri: "${AGENT_APP_TEMPLATE_SYNC_REPO_URI:}"
+      branch: "${AGENT_APP_TEMPLATE_SYNC_BRANCH:main}"
+      basePath: "${AGENT_APP_TEMPLATE_SYNC_BASE_PATH:templates}"
+      fetchFrequencyMs: "${AGENT_APP_TEMPLATE_SYNC_FETCH_FREQUENCY_MS:3600000}"
+
 # Spring CORS configuration parameters
 spring.mvc.cors:
   mappings:

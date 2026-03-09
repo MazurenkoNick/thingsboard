@@ -33,7 +33,6 @@ import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentAppUnitDao;
 import org.thingsboard.server.dao.agent.AgentDao;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -151,10 +150,7 @@ public class JpaAgentAppUnitDaoTest extends AbstractJpaDaoTest {
         AgentApplication app = new AgentApplication();
         app.setName(name);
         app.setAgentId(new AgentId(agentId1));
-        app.setType(AgentApplicationType.GENERIC);
-        app.setPlaceholders(Collections.emptyMap());
-        app.setConfiguration(Collections.emptyMap());
-        app.setSteps(Collections.emptyList());
+        app.setAppType(AgentApplicationType.GENERIC);
         return agentApplicationDao.save(TenantId.fromUUID(tenantId1), app);
     }
 

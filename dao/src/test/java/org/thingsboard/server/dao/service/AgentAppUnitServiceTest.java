@@ -23,8 +23,11 @@ import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.AgentAppUnit;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
+import org.thingsboard.server.dao.agent.AgentAppTemplateService;
 import org.thingsboard.server.dao.agent.AgentAppUnitService;
 import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.exception.DataValidationException;
@@ -39,6 +42,8 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
     AgentService agentService;
     @Autowired
     AgentApplicationService agentApplicationService;
+    @Autowired
+    AgentAppTemplateService agentAppTemplateService;
     @Autowired
     AgentAppUnitService agentAppUnitService;
 
@@ -68,7 +73,7 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
         Assert.assertEquals(saved.getId(), byApp.get(0).getId());
 
         agentAppUnitService.deleteAgentAppUnit(tenantId, saved.getId());
-        agentApplicationService.deleteAgentApplication(tenantId, app.getId());
+        agentApplicationService.delete(tenantId, app.getId());
         agentService.deleteAgent(tenantId, agent.getId());
     }
 
@@ -101,7 +106,7 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
         unit.setType("type");
         Assertions.assertThrows(DataValidationException.class, () ->
                 agentAppUnitService.saveAgentAppUnit(tenantId, unit));
-        agentApplicationService.deleteAgentApplication(tenantId, app.getId());
+        agentApplicationService.delete(tenantId, app.getId());
         agentService.deleteAgent(tenantId, agent.getId());
     }
 
@@ -115,7 +120,7 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
         unit.setType("  ");
         Assertions.assertThrows(DataValidationException.class, () ->
                 agentAppUnitService.saveAgentAppUnit(tenantId, unit));
-        agentApplicationService.deleteAgentApplication(tenantId, app.getId());
+        agentApplicationService.delete(tenantId, app.getId());
         agentService.deleteAgent(tenantId, agent.getId());
     }
 
@@ -131,7 +136,7 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
 
         agentAppUnitService.deleteAgentAppUnit(tenantId, u1.getId());
         agentAppUnitService.deleteAgentAppUnit(tenantId, u2.getId());
-        agentApplicationService.deleteAgentApplication(tenantId, app.getId());
+        agentApplicationService.delete(tenantId, app.getId());
         agentService.deleteAgent(tenantId, agent.getId());
     }
 
@@ -145,7 +150,7 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
         AgentAppUnit found = agentAppUnitService.findAgentAppUnitById(tenantId, unit.getId());
         Assert.assertNull(found);
 
-        agentApplicationService.deleteAgentApplication(tenantId, app.getId());
+        agentApplicationService.delete(tenantId, app.getId());
         agentService.deleteAgent(tenantId, agent.getId());
     }
 
@@ -163,7 +168,7 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
         List<AgentAppUnit> after = agentAppUnitService.findAgentAppUnitsByAgentAppId(tenantId, app.getId());
         Assert.assertTrue(after.isEmpty());
 
-        agentApplicationService.deleteAgentApplication(tenantId, app.getId());
+        agentApplicationService.delete(tenantId, app.getId());
         agentService.deleteAgent(tenantId, agent.getId());
     }
 
@@ -177,7 +182,7 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
         List<AgentAppUnit> before = agentAppUnitService.findAgentAppUnitsByAgentAppId(tenantId, app.getId());
         Assert.assertEquals(2, before.size());
 
-        agentApplicationService.deleteAgentApplication(tenantId, app.getId());
+        agentApplicationService.delete(tenantId, app.getId());
         List<AgentAppUnit> after = agentAppUnitService.findAgentAppUnitsByAgentAppId(tenantId, app.getId());
         Assert.assertTrue(after.isEmpty());
 
@@ -200,7 +205,7 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
         Assert.assertEquals("id1-updated", found.getIdentifier());
 
         agentAppUnitService.deleteAgentAppUnit(tenantId, unit.getId());
-        agentApplicationService.deleteAgentApplication(tenantId, app.getId());
+        agentApplicationService.delete(tenantId, app.getId());
         agentService.deleteAgent(tenantId, agent.getId());
     }
 
@@ -212,13 +217,22 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
     }
 
     private AgentApplication saveApplication(Agent agent) {
+        AgentAppTemplate template = createTemplate();
         AgentApplication app = new AgentApplication();
         app.setAgentId(agent.getId());
-        app.setType(AgentApplicationType.GENERIC);
-        app.setPlaceholders(Collections.emptyMap());
-        app.setConfiguration(Collections.emptyMap());
-        app.setSteps(Collections.emptyList());
-        return agentApplicationService.saveAgentApplication(tenantId, app);
+        app.setAppType(AgentApplicationType.GENERIC);
+        app.setTemplateId(template.getId());
+        return agentApplicationService.save(tenantId, app);
+    }
+
+    private AgentAppTemplate createTemplate() {
+        AgentAppTemplate template = new AgentAppTemplate();
+        template.setAppType(AgentApplicationType.GENERIC);
+        template.setCurrentVersion("1.0.0");
+        template.setPreviousVersion("0.9.0");
+        template.setStartSteps(Collections.emptyList());
+        template.setUpgradeSteps(Collections.emptyList());
+        return agentAppTemplateService.save(TenantId.SYS_TENANT_ID, template);
     }
 
     private AgentAppUnit saveUnit(AgentApplication app, String identifier, String type) {

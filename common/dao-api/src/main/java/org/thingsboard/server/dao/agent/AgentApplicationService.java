@@ -21,14 +21,13 @@ import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface AgentApplicationService {
 
-    AgentApplication saveAgentApplication(TenantId tenantId, AgentApplication agentApplication);
-    AgentApplication findAgentApplicationById(TenantId tenantId, AgentApplicationId agentApplicationId);
-    List<AgentApplication> findAgentApplicationsByAgentId(TenantId tenantId, AgentId agentId);
-    void deleteAgentApplication(TenantId tenantId, AgentApplicationId agentApplicationId);
+    AgentApplication save(TenantId tenantId, AgentApplication agentApplication);
+    AgentApplication findById(TenantId tenantId, AgentApplicationId agentApplicationId);
+    List<AgentApplication> findAllByAgentId(TenantId tenantId, AgentId agentId);
+    void delete(TenantId tenantId, AgentApplicationId agentApplicationId);
     void deleteByAgentId(TenantId tenantId, AgentId agentId);
 
 }

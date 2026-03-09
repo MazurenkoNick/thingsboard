@@ -20,7 +20,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.thingsboard.server.common.data.BaseDataWithAdditionalInfo;
+import org.thingsboard.server.common.data.BaseData;
 import org.thingsboard.server.common.data.HasCustomerId;
 import org.thingsboard.server.common.data.HasName;
 import org.thingsboard.server.common.data.HasTenantId;
@@ -36,7 +36,7 @@ import org.thingsboard.server.common.data.validation.NoXss;
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter
-public class Agent extends BaseDataWithAdditionalInfo<AgentId> implements HasId<AgentId>, HasTenantId, HasCustomerId, HasVersion, HasName {
+public class Agent extends BaseData<AgentId> implements HasId<AgentId>, HasTenantId, HasCustomerId, HasVersion, HasName {
 
     private TenantId tenantId;
     private CustomerId customerId;

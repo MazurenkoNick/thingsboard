@@ -25,14 +25,16 @@ import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.AgentInfo;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
+import org.thingsboard.server.dao.agent.AgentAppTemplateService;
 import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.exception.DataValidationException;
@@ -50,6 +52,8 @@ public class AgentServiceTest extends AbstractServiceTest {
     AgentService agentService;
     @Autowired
     AgentApplicationService agentApplicationService;
+    @Autowired
+    AgentAppTemplateService agentAppTemplateService;
     @Autowired
     CustomerService customerService;
 
@@ -417,33 +421,35 @@ public class AgentServiceTest extends AbstractServiceTest {
     }
 
     @Test
-    public void testDeleteAgentRemovesAgentApplications() {
+    public void testDeleteAgentRemovesAgentApplications() throws Exception {
         Agent agent = new Agent();
         agent.setTenantId(tenantId);
         agent.setName("Agent with applications");
         Agent savedAgent = agentService.saveAgent(agent);
 
+        AgentAppTemplate template = createTemplate();
+
         AgentApplication app1 = new AgentApplication();
         app1.setAgentId(savedAgent.getId());
-        app1.setType(AgentApplicationType.GENERIC);
-        app1.setTemplateVersion("1.0");
-        app1 = agentApplicationService.saveAgentApplication(tenantId, app1);
+        app1.setAppType(AgentApplicationType.GENERIC);
+        app1.setTemplateId(template.getId());
+        app1 = agentApplicationService.save(tenantId, app1);
 
         AgentApplication app2 = new AgentApplication();
         app2.setAgentId(savedAgent.getId());
-        app2.setType(AgentApplicationType.EDGE);
-        app2.setTemplateVersion("1.0");
-        app2 = agentApplicationService.saveAgentApplication(tenantId, app2);
+        app2.setAppType(AgentApplicationType.GENERIC);
+        app2.setTemplateId(template.getId());
+        app2 = agentApplicationService.save(tenantId, app2);
 
-        List<AgentApplication> applicationsBefore = agentApplicationService.findAgentApplicationsByAgentId(tenantId, savedAgent.getId());
+        List<AgentApplication> applicationsBefore = agentApplicationService.findAllByAgentId(tenantId, savedAgent.getId());
         Assert.assertEquals(2, applicationsBefore.size());
 
         agentService.deleteAgent(tenantId, savedAgent.getId());
 
-        List<AgentApplication> applicationsAfter = agentApplicationService.findAgentApplicationsByAgentId(tenantId, savedAgent.getId());
+        List<AgentApplication> applicationsAfter = agentApplicationService.findAllByAgentId(tenantId, savedAgent.getId());
         Assert.assertTrue(applicationsAfter.isEmpty());
-        Assert.assertNull(agentApplicationService.findAgentApplicationById(tenantId, app1.getId()));
-        Assert.assertNull(agentApplicationService.findAgentApplicationById(tenantId, app2.getId()));
+        Assert.assertNull(agentApplicationService.findById(tenantId, app1.getId()));
+        Assert.assertNull(agentApplicationService.findById(tenantId, app2.getId()));
     }
 
     @Test
@@ -459,28 +465,39 @@ public class AgentServiceTest extends AbstractServiceTest {
         agent.setName("Agent assign unassign");
         agent = agentService.saveAgent(agent);
 
+        AgentAppTemplate template = createTemplate();
         AgentApplication app = new AgentApplication();
         app.setAgentId(agent.getId());
-        app.setType(AgentApplicationType.GENERIC);
-        app.setTemplateVersion("1.0");
-        app = agentApplicationService.saveAgentApplication(tenantId, app);
+        app.setAppType(AgentApplicationType.GENERIC);
+        app.setTemplateId(template.getId());
+        app = agentApplicationService.save(tenantId, app);
 
-        List<AgentApplication> afterCreate = agentApplicationService.findAgentApplicationsByAgentId(tenantId, agent.getId());
+        List<AgentApplication> afterCreate = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
         Assert.assertEquals(1, afterCreate.size());
 
         agentService.assignAgentToCustomer(tenantId, agent.getId(), customerId);
-        List<AgentApplication> afterAssign = agentApplicationService.findAgentApplicationsByAgentId(tenantId, agent.getId());
+        List<AgentApplication> afterAssign = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
         Assert.assertEquals(1, afterAssign.size());
         Assert.assertEquals(app.getId(), afterAssign.get(0).getId());
 
         agentService.unassignAgentFromCustomer(tenantId, agent.getId());
-        List<AgentApplication> afterUnassign = agentApplicationService.findAgentApplicationsByAgentId(tenantId, agent.getId());
+        List<AgentApplication> afterUnassign = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
         Assert.assertEquals(1, afterUnassign.size());
         Assert.assertEquals(app.getId(), afterUnassign.get(0).getId());
 
-        agentApplicationService.deleteAgentApplication(tenantId, app.getId());
+        agentApplicationService.delete(tenantId, app.getId());
         agentService.deleteAgent(tenantId, agent.getId());
         customerService.deleteCustomer(tenantId, customerId);
+    }
+
+    private AgentAppTemplate createTemplate() {
+        AgentAppTemplate template = new AgentAppTemplate();
+        template.setAppType(AgentApplicationType.GENERIC);
+        template.setCurrentVersion("1.0.0");
+        template.setPreviousVersion("0.9.0");
+        template.setStartSteps(Collections.emptyList());
+        template.setUpgradeSteps(Collections.emptyList());
+        return agentAppTemplateService.save(TenantId.SYS_TENANT_ID, template);
     }
 
 }

@@ -19,20 +19,20 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.dao.agent.AgentAppTemplateService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
 @DaoSqlTest
 public class AgentApplicationServiceTest extends AbstractServiceTest {
@@ -41,135 +41,76 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     AgentService agentService;
     @Autowired
     AgentApplicationService agentApplicationService;
+    @Autowired
+    AgentAppTemplateService agentAppTemplateService;
 
     @Test
-    public void testSaveAgentApplication() {
+    public void testSave() {
         Agent agent = createAgent("My agent");
+        AgentAppTemplate template = createTemplate();
         AgentApplication app = new AgentApplication();
         app.setAgentId(agent.getId());
-        app.setType(AgentApplicationType.GENERIC);
-        app.setTemplateVersion("1.0");
-        app.setPlaceholders(Map.of("key", "value"));
-        app.setConfiguration(Map.of("config", "val"));
-        app.setSteps(List.of("step1", "step2"));
+        app.setAppType(AgentApplicationType.EDGE);
+        app.setTemplateId(template.getId());
 
-        AgentApplication saved = agentApplicationService.saveAgentApplication(tenantId, app);
+        AgentApplication saved = agentApplicationService.save(tenantId, app);
         Assert.assertNotNull(saved);
         Assert.assertNotNull(saved.getId());
         Assert.assertTrue(saved.getCreatedTime() > 0);
         Assert.assertEquals(agent.getId(), saved.getAgentId());
-        Assert.assertEquals(AgentApplicationType.GENERIC, saved.getType());
-        Assert.assertEquals("1.0", saved.getTemplateVersion());
-        Assert.assertEquals(Map.of("key", "value"), saved.getPlaceholders());
-        Assert.assertEquals(Map.of("config", "val"), saved.getConfiguration());
-        Assert.assertEquals(List.of("step1", "step2"), saved.getSteps());
+        Assert.assertEquals(template.getId(), saved.getTemplateId());
 
-        AgentApplication found = agentApplicationService.findAgentApplicationById(tenantId, saved.getId());
+        AgentApplication found = agentApplicationService.findById(tenantId, saved.getId());
         Assert.assertNotNull(found);
         Assert.assertEquals(saved.getId(), found.getId());
 
-        List<AgentApplication> byAgent = agentApplicationService.findAgentApplicationsByAgentId(tenantId, agent.getId());
+        List<AgentApplication> byAgent = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
         Assert.assertEquals(1, byAgent.size());
         Assert.assertEquals(saved.getId(), byAgent.get(0).getId());
 
-        agentApplicationService.deleteAgentApplication(tenantId, saved.getId());
+        agentApplicationService.delete(tenantId, saved.getId());
         agentService.deleteAgent(tenantId, agent.getId());
     }
 
     @Test
     public void testSaveAgentApplicationWithNullAgentId() {
         AgentApplication app = new AgentApplication();
-        app.setType(AgentApplicationType.EDGE);
         Assertions.assertThrows(DataValidationException.class, () ->
-                agentApplicationService.saveAgentApplication(tenantId, app));
+                agentApplicationService.save(tenantId, app));
     }
 
     @Test
     public void testSaveAgentApplicationWithNonExistentAgent() {
+        AgentAppTemplate template = createTemplate();
         AgentApplication app = new AgentApplication();
-        app.setAgentId(new AgentId(java.util.UUID.randomUUID()));
-        app.setType(AgentApplicationType.GATEWAY);
+        app.setAgentId(new AgentId(UUID.randomUUID()));
+        app.setAppType(AgentApplicationType.EDGE);
+        app.setTemplateId(template.getId());
         Assertions.assertThrows(DataValidationException.class, () ->
-                agentApplicationService.saveAgentApplication(tenantId, app));
+                agentApplicationService.save(tenantId, app));
     }
 
     @Test
-    public void testSaveAgentApplicationWithEdgeTypeWithoutTemplateVersion() {
-        Agent agent = createAgent("Agent for edge template test");
-        AgentApplication app = new AgentApplication();
-        app.setAgentId(agent.getId());
-        app.setType(AgentApplicationType.EDGE);
-
-        Assertions.assertThrows(DataValidationException.class, () ->
-                agentApplicationService.saveAgentApplication(tenantId, app));
-
-        agentService.deleteAgent(tenantId, agent.getId());
-    }
-
-    @Test
-    public void testSaveAgentApplicationWithGatewayTypeWithoutTemplateVersion() {
-        Agent agent = createAgent("Agent for gateway template test");
-        AgentApplication app = new AgentApplication();
-        app.setAgentId(agent.getId());
-        app.setType(AgentApplicationType.GATEWAY);
-
-        Assertions.assertThrows(DataValidationException.class, () ->
-                agentApplicationService.saveAgentApplication(tenantId, app));
-
-        agentService.deleteAgent(tenantId, agent.getId());
-    }
-
-    @Test
-    public void testSaveAgentApplicationWithEdgeTypeWithTemplateVersion() {
-        Agent agent = createAgent("Agent for edge with template");
-        AgentApplication app = new AgentApplication();
-        app.setAgentId(agent.getId());
-        app.setType(AgentApplicationType.EDGE);
-        app.setTemplateVersion("4.3.0");
-
-        AgentApplication saved = agentApplicationService.saveAgentApplication(tenantId, app);
-        Assert.assertNotNull(saved.getId());
-        Assert.assertEquals(AgentApplicationType.EDGE, saved.getType());
-        Assert.assertEquals("4.3.0", saved.getTemplateVersion());
-
-        agentApplicationService.deleteAgentApplication(tenantId, saved.getId());
-        agentService.deleteAgent(tenantId, agent.getId());
-    }
-
-    @Test
-    public void testSaveAgentApplicationWithNullType() {
-        Agent agent = createAgent("Agent for type test");
-        AgentApplication app = new AgentApplication();
-        app.setAgentId(agent.getId());
-        try {
-            Assertions.assertThrows(DataValidationException.class, () ->
-                    agentApplicationService.saveAgentApplication(tenantId, app));
-        } finally {
-            agentService.deleteAgent(tenantId, agent.getId());
-        }
-    }
-
-    @Test
-    public void testFindAgentApplicationsByAgentId() {
+    public void testFindAllByAgentId() {
         Agent agent = createAgent("Agent for list");
-        AgentApplication app1 = saveApplication(agent, AgentApplicationType.GENERIC, "app1");
-        AgentApplication app2 = saveApplication(agent, AgentApplicationType.EDGE, "app2");
+        AgentApplication app1 = saveApplication(agent, "app1");
+        AgentApplication app2 = saveApplication(agent, "app2");
 
-        List<AgentApplication> list = agentApplicationService.findAgentApplicationsByAgentId(tenantId, agent.getId());
+        List<AgentApplication> list = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
         Assert.assertEquals(2, list.size());
 
-        agentApplicationService.deleteAgentApplication(tenantId, app1.getId());
-        agentApplicationService.deleteAgentApplication(tenantId, app2.getId());
+        agentApplicationService.delete(tenantId, app1.getId());
+        agentApplicationService.delete(tenantId, app2.getId());
         agentService.deleteAgent(tenantId, agent.getId());
     }
 
     @Test
-    public void testDeleteAgentApplication() {
+    public void testDelete() throws Exception {
         Agent agent = createAgent("Agent for delete");
-        AgentApplication app = saveApplication(agent, AgentApplicationType.GENERIC, "toDelete");
+        AgentApplication app = saveApplication(agent, "toDelete");
 
-        agentApplicationService.deleteAgentApplication(tenantId, app.getId());
-        AgentApplication found = agentApplicationService.findAgentApplicationById(tenantId, app.getId());
+        agentApplicationService.delete(tenantId, app.getId());
+        AgentApplication found = agentApplicationService.findById(tenantId, app.getId());
         Assert.assertNull(found);
 
         agentService.deleteAgent(tenantId, agent.getId());
@@ -178,34 +119,33 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     @Test
     public void testDeleteByAgentId() {
         Agent agent = createAgent("Agent for deleteByAgentId");
-        saveApplication(agent, AgentApplicationType.GENERIC, "a1");
-        saveApplication(agent, AgentApplicationType.EDGE, "a2");
+        saveApplication(agent, "a1");
+        saveApplication(agent, "a2");
 
-        List<AgentApplication> before = agentApplicationService.findAgentApplicationsByAgentId(tenantId, agent.getId());
+        List<AgentApplication> before = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
         Assert.assertEquals(2, before.size());
 
         agentApplicationService.deleteByAgentId(tenantId, agent.getId());
-        List<AgentApplication> after = agentApplicationService.findAgentApplicationsByAgentId(tenantId, agent.getId());
+        List<AgentApplication> after = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
         Assert.assertTrue(after.isEmpty());
 
         agentService.deleteAgent(tenantId, agent.getId());
     }
 
     @Test
-    public void testUpdateAgentApplication() {
+    public void testUpdateAgentApplication() throws Exception {
         Agent agent = createAgent("Agent for update");
-        AgentApplication app = saveApplication(agent, AgentApplicationType.GENERIC, "v1");
+        AgentAppTemplate template = createTemplate();
+        AgentApplication app = saveApplication(agent, "v1");
 
-        app.setTemplateVersion("2.0");
-        app.setSteps(List.of("step1", "step2", "step3"));
-        AgentApplication updated = agentApplicationService.saveAgentApplication(tenantId, app);
-        Assert.assertEquals("2.0", updated.getTemplateVersion());
-        Assert.assertEquals(3, updated.getSteps().size());
+        app.setName("v2");
+        AgentApplication updated = agentApplicationService.save(tenantId, app);
+        Assert.assertEquals("v2", updated.getName());
 
-        AgentApplication found = agentApplicationService.findAgentApplicationById(tenantId, app.getId());
-        Assert.assertEquals("2.0", found.getTemplateVersion());
+        AgentApplication found = agentApplicationService.findById(tenantId, app.getId());
+        Assert.assertEquals("v2", found.getName());
 
-        agentApplicationService.deleteAgentApplication(tenantId, app.getId());
+        agentApplicationService.delete(tenantId, app.getId());
         agentService.deleteAgent(tenantId, agent.getId());
     }
 
@@ -216,14 +156,24 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         return agentService.saveAgent(agent);
     }
 
-    private AgentApplication saveApplication(Agent agent, AgentApplicationType type, String templateVersion) {
+    private AgentApplication saveApplication(Agent agent, String name) {
+        AgentAppTemplate template = createTemplate();
         AgentApplication app = new AgentApplication();
         app.setAgentId(agent.getId());
-        app.setType(type);
-        app.setTemplateVersion(templateVersion);
-        app.setPlaceholders(Collections.emptyMap());
-        app.setConfiguration(Collections.emptyMap());
-        app.setSteps(Collections.emptyList());
-        return agentApplicationService.saveAgentApplication(tenantId, app);
+        app.setAppType(AgentApplicationType.EDGE);
+        app.setName(name);
+        app.setTemplateId(template.getId());
+        return agentApplicationService.save(tenantId, app);
+    }
+
+    private AgentAppTemplate createTemplate() {
+        AgentAppTemplate template = new AgentAppTemplate();
+        template.setAppType(AgentApplicationType.GENERIC);
+        template.setCurrentVersion("1.0.0");
+        template.setPreviousVersion("0.9.0");
+        template.setNextVersion(null);
+        template.setStartSteps(Collections.emptyList());
+        template.setUpgradeSteps(Collections.emptyList());
+        return agentAppTemplateService.save(TenantId.SYS_TENANT_ID, template);
     }
 }
