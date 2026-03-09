@@ -26,6 +26,7 @@ import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.pat.ApiKeyInfo;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.service.security.model.SecurityUser;
+import org.thingsboard.server.service.security.permission.PermissionChecker.GenericPermissionChecker;
 
 @Component
 public class TenantAdminPermissions extends AbstractPermissions {
@@ -65,6 +66,7 @@ public class TenantAdminPermissions extends AbstractPermissions {
         put(Resource.AGENT, tenantEntityPermissionChecker);
         put(Resource.AGENT_APPLICATION, tenantEntityPermissionChecker);
         put(Resource.AGENT_APP_TEMPLATE, new PermissionChecker.GenericPermissionChecker(Operation.READ));
+        put(Resource.AGENT_APP_UNIT, agentAppUnitPermissionChecker);
     }
 
     public static final PermissionChecker tenantEntityPermissionChecker = new PermissionChecker() {
@@ -188,4 +190,6 @@ public class TenantAdminPermissions extends AbstractPermissions {
 
     };
 
+    public static final GenericPermissionChecker agentAppUnitPermissionChecker = new GenericPermissionChecker(
+            Operation.READ, Operation.READ_ATTRIBUTES, Operation.READ_TELEMETRY);
 }

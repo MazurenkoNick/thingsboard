@@ -17,6 +17,7 @@ package org.thingsboard.server.dao.agent;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -53,6 +54,10 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
     private AgentApplicationDao agentApplicationDao;
 
     @Autowired
+    @Lazy
+    private AgentAppUnitService agentAppUnitService;
+
+    @Autowired
     private DataValidator<AgentApplication> agentApplicationValidator;
 
     @Override
@@ -84,7 +89,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
 
     @Override
     public AgentApplication findById(TenantId tenantId, AgentApplicationId agentApplicationId) {
-        log.trace("Executing findAgentApplicationById [{}]", agentApplicationId);
+        log.trace("Executing findById [{}]", agentApplicationId);
         validateId(agentApplicationId, id -> INCORRECT_AGENT_APPLICATION_ID + id);
         return cache.getAndPutInTransaction(AgentApplicationCacheKey.from(agentApplicationId),
                 () -> agentApplicationDao.findById(tenantId, agentApplicationId.getId()), true);
@@ -129,6 +134,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         validateId(agentApplicationId, id -> INCORRECT_AGENT_APPLICATION_ID + id);
         AgentApplication application = agentApplicationDao.findById(tenantId, agentApplicationId.getId());
         if (application != null) {
+            agentAppUnitService.deleteByAgentApplicationId(tenantId, agentApplicationId);
             agentApplicationDao.removeById(tenantId, agentApplicationId.getId());
             publishCacheEvictAndDeleteEvent(tenantId, application);
         }
@@ -141,7 +147,10 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validateId(agentId, id -> INCORRECT_AGENT_ID + id);
         agentApplicationDao.findByAgentId(tenantId, agentId.getId())
-                .forEach(a -> publishCacheEvictAndDeleteEvent(tenantId, a));
+                .forEach(a -> {
+                    agentAppUnitService.deleteByAgentApplicationId(tenantId, a.getId());
+                    publishCacheEvictAndDeleteEvent(tenantId, a);
+                });
         agentApplicationDao.removeByAgentId(tenantId, agentId.getId());
     }
 
