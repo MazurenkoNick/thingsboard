@@ -92,6 +92,9 @@ public class AgentMsgConstructorUtils {
             if (type == AgentAppStepType.COMPOSE && cfg.getCompose() != null) {
                 metadata.put("compose", cfg.getCompose().toString());
             }
+            if (type == AgentAppStepType.COMPOSE_DOWN) {
+                metadata.put("removeVolumes", String.valueOf(cfg.isRemoveVolumes()));
+            }
         }
 
         if (type == AgentAppStepType.INFO && step instanceof InfoStep infoStep && infoStep.getMessage() != null) {

@@ -25,6 +25,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
 import org.thingsboard.server.common.data.audit.ActionType;
@@ -66,16 +67,13 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         ActionType actionType = isUpdate ? ActionType.UPDATED : ActionType.ADDED;
         TenantId tenantId = application.getTenantId();
         try {
-            if (isUpdate && agentAppEventService.hasActiveEventForApplication(application.getId())) {
-                throw new ThingsboardException("Cannot update application while an event is being processed", ThingsboardErrorCode.TOO_MANY_REQUESTS);
-            } else if (isUpdate) {
-                AgentApplication existing = agentApplicationService.findById(tenantId, application.getId());
-                throwIfPendingForDelete(existing);
-            }
+            AgentAppConfig oldConfig = isUpdate ? getOldConfig(tenantId, application.getId()) : null;
             AgentApplication savedApp = checkNotNull(agentApplicationService.save(tenantId, application));
 
-            AgentAppEventActionType eventAction = getSaveEventActionType(isUpdate);
-            createEvent(tenantId, savedApp.getId(), eventAction);
+            if (shouldCreateDeployEvent(isUpdate, oldConfig, savedApp.getConfig())) {
+                AgentAppEventActionType eventAction = getSaveEventActionType(isUpdate);
+                createEvent(tenantId, savedApp.getId(), eventAction);
+            }
 
             logEntityActionService.logEntityAction(tenantId, savedApp.getId(), savedApp, actionType, user);
             return savedApp;
@@ -94,10 +92,10 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         try {
             throwIfPendingForDelete(application);
             agentAppEventService.deleteAllPendingByApplicationId(applicationId);
-            createEvent(tenantId, applicationId, AgentAppEventActionType.DELETE);
-
             application.setPendingDeletion(true);
             agentApplicationService.save(tenantId, application);
+
+            createEvent(tenantId, applicationId, AgentAppEventActionType.DELETE);
 
             logEntityActionService.logEntityAction(tenantId, applicationId, actionType, user, null, applicationId.toString());
         } catch (Exception e) {
@@ -137,6 +135,25 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         }
     }
 
+    private AgentAppConfig getOldConfig(TenantId tenantId, AgentApplicationId applicationId) {
+        AgentApplication existing = agentApplicationService.findById(tenantId, applicationId);
+        return existing != null ? existing.getConfig() : null;
+    }
+
+    private boolean shouldCreateDeployEvent(boolean isUpdate, AgentAppConfig oldConfig, AgentAppConfig newConfig) {
+        if (!isUpdate) {
+            return true;
+        }
+        if (oldConfig == null || newConfig == null) {
+            return oldConfig != newConfig;
+        }
+        return oldConfig.isDeployFieldsChanged(newConfig);
+    }
+
+    private AgentAppEventActionType getSaveEventActionType(boolean isUpdate) {
+        return isUpdate ? AgentAppEventActionType.UPDATE : AgentAppEventActionType.INSTALL;
+    }
+
     private AgentAppEvent createEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventActionType actionType) {
         AgentAppEvent event = new AgentAppEvent();
         event.setTenantId(tenantId);
@@ -145,9 +162,5 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         event.setDeliveryState(AgentAppEventDeliveryState.PENDING);
         event.setUpdatedTime(System.currentTimeMillis());
         return agentAppEventService.save(tenantId, event);
-    }
-
-    private AgentAppEventActionType getSaveEventActionType(boolean isUpdate) {
-        return isUpdate ? AgentAppEventActionType.UPDATE : AgentAppEventActionType.INSTALL;
     }
 }

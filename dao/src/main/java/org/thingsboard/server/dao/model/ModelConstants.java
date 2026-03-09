@@ -288,6 +288,7 @@ public class ModelConstants {
     public static final String AGENT_APP_TEMPLATE_CONFIG_PROPERTY = "config";
     public static final String AGENT_APP_TEMPLATE_START_STEPS_PROPERTY = "start_steps";
     public static final String AGENT_APP_TEMPLATE_UPGRADE_STEPS_PROPERTY = "upgrade_steps";
+    public static final String AGENT_APP_TEMPLATE_DELETE_STEPS_PROPERTY = "delete_steps";
 
     /**
      * Agent app unit constants.

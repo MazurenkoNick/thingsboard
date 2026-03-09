@@ -16,21 +16,22 @@
 package org.thingsboard.server.common.data.agent.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.exception.DataValidationException;
 
+import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class DockerComposeConfig extends AgentAppConfig {
 
     private String projectName;
     private JsonNode compose;
+    private boolean removeVolumes;
 
     @Override
     public AgentAppConfigType getType() {
@@ -39,7 +40,30 @@ public class DockerComposeConfig extends AgentAppConfig {
 
     @Override
     public AgentAppConfig copy() {
-        return new DockerComposeConfig(this.projectName, compose.deepCopy());
+        DockerComposeConfig copy = new DockerComposeConfig();
+        copy.setProjectName(this.projectName);
+        copy.setCompose(this.compose != null ? this.compose.deepCopy() : null);
+        copy.setRemoveVolumes(this.removeVolumes);
+        return copy;
+    }
+
+    @Override
+    public void validate() {
+        if (projectName == null || projectName.isBlank()) {
+            throw new DataValidationException("Docker compose config project name must be specified!");
+        }
+        if (compose == null) {
+            throw new DataValidationException("Docker compose config compose content must be specified!");
+        }
+    }
+
+    @Override
+    public boolean isDeployFieldsChanged(AgentAppConfig other) {
+        if (!(other instanceof DockerComposeConfig that)) {
+            return true;
+        }
+        return !Objects.equals(this.projectName, that.projectName)
+                || !Objects.equals(this.compose, that.compose);
     }
 
     public static String generateProjectName() {

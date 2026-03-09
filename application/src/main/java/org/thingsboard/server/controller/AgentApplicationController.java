@@ -20,8 +20,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -73,7 +76,7 @@ public class AgentApplicationController extends BaseController {
             notes = "Fetch the Agent Application object based on the provided Agent Application Id."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/agent/app/{agentApplicationId}", method = RequestMethod.GET)
+    @GetMapping(value = "/agent/app/{agentApplicationId}")
     @ResponseBody
     public AgentApplication getAgentApplicationById(@Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
                                                     @PathVariable(AGENT_APP_ID) String strAgentAppId) throws ThingsboardException {
@@ -86,7 +89,7 @@ public class AgentApplicationController extends BaseController {
             notes = "Returns a page of agent applications that belong to the specified agent. "
                     + PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/agent/{agentId}/apps", params = {"pageSize", "page"}, method = RequestMethod.GET)
+    @GetMapping(value = "/agent/{agentId}/apps", params = {"pageSize", "page"})
     @ResponseBody
     public PageData<AgentApplication> getAgentApplicationsByAgentId(
             @Parameter(description = AGENT_ID_PARAM_DESCRIPTION)
@@ -124,10 +127,11 @@ public class AgentApplicationController extends BaseController {
     }
 
     @ApiOperation(value = "Delete Agent Application (deleteAgentApplication)",
-            notes = "Deletes the agent application. Referencing non-existing agent application Id will cause an error."
+            notes = "Deletes the agent application using the delete steps already configured on it. " +
+                    "Referencing non-existing agent application Id will cause an error."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/agent/app/{agentApplicationId}", method = RequestMethod.DELETE)
+    @DeleteMapping(value = "/agent/app/{agentApplicationId}")
     @ResponseStatus(value = HttpStatus.OK)
     public void deleteAgentApplication(@Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
                                        @PathVariable(AGENT_APP_ID) String strAgentAppId) throws ThingsboardException {

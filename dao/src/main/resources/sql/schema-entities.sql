@@ -782,6 +782,7 @@ CREATE TABLE IF NOT EXISTS agent_app_template (
     config jsonb,
     start_steps jsonb,
     upgrade_steps jsonb,
+    delete_steps jsonb,
     version BIGINT DEFAULT 1
 );
 

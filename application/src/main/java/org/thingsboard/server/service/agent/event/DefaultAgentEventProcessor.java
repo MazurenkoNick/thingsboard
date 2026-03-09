@@ -83,8 +83,8 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         forEachApplication(tenantId, agentId, app -> {
             try {
                 log.trace("[{}][{}] Checking in-flight events for application {}", tenantId, agentId, app.getId());
-                boolean inFlightPresent = resumeInFlightEvent(tenantId, agentId, app);
-                if (!inFlightPresent) {
+                boolean resumed = resumeInFlightEvent(tenantId, agentId, app);
+                if (!resumed) {
                     log.trace("[{}][{}] No in-flight event found, dispatching next event for application {}", tenantId, agentId, app.getId());
                     dispatchNextEventIfPossible(tenantId, agentId, app);
                 }
@@ -96,7 +96,6 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
 
     @Override
     public void processAfterError(TenantId tenantId, AgentId agentId, AgentAppEventId failedEventId) {
-        // todo: handle 'retry errors' logic
         log.trace("[{}][{}] Processing after error for event {}", tenantId, agentId, failedEventId);
         eventWatchdog.cancel(agentId, failedEventId);
 

@@ -24,10 +24,12 @@ import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.dao.agent.AgentAppEventDao;
 import org.thingsboard.server.dao.agent.AgentAppTemplateDao;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentService;
@@ -51,6 +53,8 @@ class AgentApplicationDataValidatorTest {
     AgentApplicationDao agentApplicationDao;
     @MockitoBean
     AgentAppTemplateDao agentAppTemplateDao;
+    @MockitoBean
+    AgentAppEventDao agentAppEventDao;
     @Autowired
     AgentApplicationDataValidator validator;
 
@@ -172,6 +176,51 @@ class AgentApplicationDataValidatorTest {
         assertDoesNotThrow(() -> validator.validateDataImpl(tenantId, app));
     }
 
+    // ==================== Config validation tests ====================
+
+    @Test
+    void testValidateDataImpl_nullConfig_thenOK() {
+        AgentApplication app = createValidApplication();
+        app.setConfig(null);
+
+        assertDoesNotThrow(() -> validator.validateDataImpl(tenantId, app));
+    }
+
+    @Test
+    void testValidateDataImpl_dockerComposeConfig_nullProjectName_thenException() {
+        AgentApplication app = createValidApplication();
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setCompose(new com.fasterxml.jackson.databind.node.TextNode("version: '3'"));
+        app.setConfig(config);
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> validator.validateDataImpl(tenantId, app));
+        assertThat(exception.getMessage()).contains("project name");
+    }
+
+    @Test
+    void testValidateDataImpl_dockerComposeConfig_nullCompose_thenException() {
+        AgentApplication app = createValidApplication();
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setProjectName("my-project");
+        app.setConfig(config);
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> validator.validateDataImpl(tenantId, app));
+        assertThat(exception.getMessage()).contains("compose content");
+    }
+
+    @Test
+    void testValidateDataImpl_dockerComposeConfig_valid_thenOK() {
+        AgentApplication app = createValidApplication();
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setProjectName("my-project");
+        config.setCompose(new com.fasterxml.jackson.databind.node.TextNode("version: '3'"));
+        app.setConfig(config);
+
+        assertDoesNotThrow(() -> validator.validateDataImpl(tenantId, app));
+    }
+
     // ==================== Update validation tests ====================
 
     @Test
@@ -197,6 +246,36 @@ class AgentApplicationDataValidatorTest {
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> validator.validateUpdate(tenantId, app));
         assertThat(exception.getMessage()).contains("non existing agent application");
+    }
+
+    @Test
+    void testValidateUpdate_pendingDeletion_thenException() {
+        AgentApplication oldApp = createValidApplication();
+        oldApp.setId(applicationId);
+        oldApp.setPendingDeletion(true);
+        willReturn(oldApp).given(agentApplicationDao).findById(eq(tenantId), eq(applicationId.getId()));
+
+        AgentApplication newApp = createValidApplication();
+        newApp.setId(applicationId);
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> validator.validateUpdate(tenantId, newApp));
+        assertThat(exception.getMessage()).contains("pending for removal");
+    }
+
+    @Test
+    void testValidateUpdate_activeEvent_thenException() {
+        AgentApplication oldApp = createValidApplication();
+        oldApp.setId(applicationId);
+        willReturn(oldApp).given(agentApplicationDao).findById(eq(tenantId), eq(applicationId.getId()));
+        willReturn(true).given(agentAppEventDao).hasActiveEventForApplication(eq(applicationId.getId()));
+
+        AgentApplication newApp = createValidApplication();
+        newApp.setId(applicationId);
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> validator.validateUpdate(tenantId, newApp));
+        assertThat(exception.getMessage()).contains("event is being processed");
     }
 
     // ==================== Helper methods ====================

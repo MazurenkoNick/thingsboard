@@ -120,4 +120,5 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     public AgentAppTemplateId getTemplateId() {
         return templateId;
     }
+
 }

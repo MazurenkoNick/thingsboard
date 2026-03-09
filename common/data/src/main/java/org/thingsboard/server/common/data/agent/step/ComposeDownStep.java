@@ -15,11 +15,27 @@
  */
 package org.thingsboard.server.common.data.agent.step;
 
-public enum AgentAppStepType {
-    COMPOSE_TEMPLATE,
-    COMPOSE,
-    COMPOSE_MODIFY, // todo: use for update?
-    COMPOSE_START,
-    COMPOSE_DOWN,
-    INFO
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class ComposeDownStep extends AgentAppStep {
+
+    private boolean removeVolumes;
+
+    @Override
+    public AgentAppStepType getType() {
+        return AgentAppStepType.COMPOSE_DOWN;
+    }
+
+    @Override
+    public AgentAppStep copy() {
+        ComposeDownStep copy = new ComposeDownStep();
+        copyBaseFields(copy);
+        copy.setRemoveVolumes(this.removeVolumes);
+        return copy;
+    }
 }

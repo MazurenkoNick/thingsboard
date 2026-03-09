@@ -41,8 +41,8 @@ public class DefaultAgentAppEventStepsResolver implements AgentAppEventStepsReso
             throw new IllegalStateException("Template not found for application " + app.getId());
         }
         List<AgentAppStep> steps = switch (actionType) {
-            case INSTALL, RESTART, UPDATE -> template.getStartSteps();
-            case DELETE -> template.getStartSteps(); // todo: handle delete steps separately
+            case INSTALL, RESTART, UPDATE -> template.getStartSteps(); // todo: add UPGDRADE
+            case DELETE -> template.getDeleteSteps();
         };
         if (steps == null || steps.isEmpty()) {
             throw new IllegalStateException("No steps resolved for application " + app.getId() + " and action " + actionType);

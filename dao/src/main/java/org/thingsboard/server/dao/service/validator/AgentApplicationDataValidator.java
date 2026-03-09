@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.dao.agent.AgentAppEventDao;
 import org.thingsboard.server.dao.agent.AgentAppTemplateDao;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentService;
@@ -33,12 +34,20 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
     private final AgentService agentService;
     private final AgentApplicationDao agentApplicationDao;
     private final AgentAppTemplateDao agentAppTemplateDao;
+    private final AgentAppEventDao agentAppEventDao;
 
     @Override
     protected AgentApplication validateUpdate(TenantId tenantId, AgentApplication agentApplication) {
         AgentApplication old = agentApplicationDao.findById(tenantId, agentApplication.getId().getId());
         if (old == null) {
             throw new DataValidationException("Can't update non existing agent application!");
+        }
+        if (old.isPendingDeletion()) {
+            throw new DataValidationException("Application is already pending for removal");
+        }
+        if (!agentApplication.isPendingDeletion() &&
+                agentAppEventDao.hasActiveEventForApplication(agentApplication.getId().getId())) {
+            throw new DataValidationException("Cannot update application while an event is being processed");
         }
         return old;
     }
@@ -62,10 +71,12 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
         if (agentApplication.getName() != null && agentApplication.getName().length() > 255) {
             throw new DataValidationException("Agent application name length must be equal or shorter than 255!");
         }
+        if (agentApplication.getConfig() != null) {
+            agentApplication.getConfig().validate();
+        }
     }
 
     private void validateTemplate(AgentApplication agentApplication) {
-        // todo: validate with template?
         if (agentApplication.getTemplateId() == null) {
             throw new DataValidationException("Agent application should be assigned to template!");
         }
