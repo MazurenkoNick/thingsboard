@@ -24,18 +24,12 @@ option java_outer_classname = "AgentProtos";
 
 service AgentRpcService {
   rpc controlStream(stream AgentToServer) returns (stream ServerToAgent);
-
-//  // (2) Logs: server requests logs, agent streams chunks
-//  rpc StreamLogs(LogRequest) returns (stream LogChunk);
-//
-//  // (3) Statuses: agent periodically streams current state (docker/compose)
-//  rpc ReportStatus(stream StatusEnvelope) returns (google.protobuf.Empty);
 }
 
 message AgentToServer {
   oneof msg {
     Hello hello = 1;
-    CommandAck ack = 2;
+    CommandAck commandAck = 2;
     CommandProgress progress = 3;
     CommandResult result = 4;
   }
@@ -43,30 +37,34 @@ message AgentToServer {
 
 message ServerToAgent {
   oneof msg {
-    InstallCommand installCommand = 1;
-    HelloAck helloAck = 2;
+    HelloAck helloAck = 1;
+    AppCommand appCommand = 2;
   }
 }
 
-message InstallCommand {
+message AppCommand {
   CommandId commandId = 1;
-  int64 step = 2;
-  string appName = 3;
-  AppType appType = 4;
-  Metadata meta = 5;
+  AppCommandAction action = 2;
+  StepId stepId = 3;
+  string appName = 4;
+  ConfigType configType = 5;
+  map<string, string> metadata = 6;
 }
 
-message Metadata {
-  map<string, string> data = 1;
+enum AppCommandAction {
+  APP_INSTALL = 0;
+  APP_UPDATE = 1;
+  APP_DELETE = 2;
+  APP_RESTART = 3;
 }
 
-enum AppType {
+enum ConfigType {
   DOCKER_COMPOSE = 0;
 }
 
 message Hello {
-  int64 agentIdMSB = 1;
-  int64 agentIdLSB = 2;
+  string routingKey = 1;
+  string routingSecret = 2;
 }
 
 message HelloAck {
@@ -76,8 +74,7 @@ message HelloAck {
 message CommandAck {
   CommandId commandId = 1;
   AckStatus status = 2;
-  string message = 3;
-  int64 step = 4;
+  optional string message = 3;
 }
 
 enum AckStatus {
@@ -87,17 +84,21 @@ enum AckStatus {
 
 message CommandProgress {
   CommandId commandId = 1;
-  string stage = 2;        // "pulling", "creating", "starting"
-  string message = 3;      // user-friendly
-  int64 step = 4;
+  optional string stage = 2;
+  optional string message = 3;
+  StepId step = 4;
 }
 
 message CommandResult {
-  CommandId command_id = 1;
+  CommandId commandId = 1;
   bool success = 2;
-  string message = 3;
-  int64 step = 4;
-//  google.protobuf.Struct details = 4;
+  optional string message = 3;
+  StepId step = 4;
+}
+
+message StepId {
+  int64 idMSB = 1;
+  int64 idLSB = 2;
 }
 
 message CommandId {

@@ -15,7 +15,6 @@
  */
 package org.thingsboard.server.dao.model.sql;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -31,7 +30,6 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
-import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -40,7 +38,6 @@ import org.thingsboard.server.dao.model.BaseVersionedEntity;
 import org.thingsboard.server.dao.model.ModelConstants;
 import org.thingsboard.server.dao.util.mapping.JsonConverter;
 
-import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -70,6 +67,9 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
     @Column(name = ModelConstants.AGENT_APPLICATION_CONFIG_PROPERTY, columnDefinition = "jsonb")
     private JsonNode config;
 
+    @Column(name = ModelConstants.AGENT_APPLICATION_PENDING_DELETION_PROPERTY)
+    private boolean pendingDeletion;
+
     public AgentApplicationEntity() {
         super();
     }
@@ -88,6 +88,7 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
             this.templateId = application.getTemplateId().getId();
         }
         this.config = application.getConfig() != null ? JacksonUtil.valueToTree(application.getConfig()) : null;
+        this.pendingDeletion = application.isPendingDeletion();
     }
 
     @Override
@@ -107,6 +108,7 @@ public final class AgentApplicationEntity extends BaseVersionedEntity<AgentAppli
             application.setTemplateId(new AgentAppTemplateId(templateId));
         }
         application.setConfig(config != null ? JacksonUtil.treeToValue(config, AgentAppConfig.class) : null);
+        application.setPendingDeletion(pendingDeletion);
         return application;
     }
 }

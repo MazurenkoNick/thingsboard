@@ -19,6 +19,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.gen.transport.TransportProtos;
+import org.thingsboard.server.gen.transport.TransportProtos.ToAgentNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCoreMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCoreNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToEdgeEventNotificationMsg;
@@ -90,6 +91,11 @@ public class TbVersionControlProducerProvider implements TbQueueProducerProvider
 
     @Override
     public TbQueueProducer<TbProtoQueueMsg<ToEdgeEventNotificationMsg>> getTbEdgeEventsMsgProducer() {
+        throw new RuntimeException("Not Implemented! Should not be used by Version Control Service!");
+    }
+
+    @Override
+    public TbQueueProducer<TbProtoQueueMsg<ToAgentNotificationMsg>> getTbAgentNotificationsMsgProducer() {
         throw new RuntimeException("Not Implemented! Should not be used by Version Control Service!");
     }
 

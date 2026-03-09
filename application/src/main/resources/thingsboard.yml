@@ -632,6 +632,9 @@ cache:
     edgeSessions:
       timeToLiveInMinutes: "${CACHE_SPECS_EDGE_SESSIONS_TTL:0}" # Edge Sessions cache TTL; no expiration time if set to '0'
       maxSize: "${CACHE_SPECS_EDGE_SESSIONS_MAX_SIZE:10000}" # 0 means the cache is disabled
+    agentSessions:
+      timeToLiveInMinutes: "${CACHE_SPECS_AGENT_SESSIONS_TTL:0}" # Agent Sessions cache TTL; no expiration time if set to '0'
+      maxSize: "${CACHE_SPECS_AGENT_SESSIONS_MAX_SIZE:10000}" # 0 means the cache is disabled
     relatedEdges:
       timeToLiveInMinutes: "${CACHE_SPECS_RELATED_EDGES_TTL:1440}" # Related Edges cache TTL
       maxSize: "${CACHE_SPECS_RELATED_EDGES_MAX_SIZE:10000}" # 0 means the cache is disabled
@@ -805,10 +808,15 @@ updates:
 agent:
   appTemplates:
     sync:
+      # Enable/disable periodic synchronization of agent application templates from a Git repository
       enabled: "${AGENT_APP_TEMPLATE_SYNC_ENABLED:true}"
+      # Git repository URI to fetch agent application templates from
       repoUri: "${AGENT_APP_TEMPLATE_SYNC_REPO_URI:}"
+      # Git branch to use when fetching agent application templates
       branch: "${AGENT_APP_TEMPLATE_SYNC_BRANCH:main}"
+      # Base path within the Git repository where template files are located
       basePath: "${AGENT_APP_TEMPLATE_SYNC_BASE_PATH:templates}"
+      # How often to fetch updates from the Git repository, in milliseconds
       fetchFrequencyMs: "${AGENT_APP_TEMPLATE_SYNC_FETCH_FREQUENCY_MS:3600000}"
 
 # Spring CORS configuration parameters
@@ -1493,6 +1501,13 @@ device:
 agents:
   # Number of threads that are used to send downlink messages to agent over gRPC
   write_pool_size: "${AGENTS_WRITE_POOL_SIZE:4}"
+  event:
+    # Delay in milliseconds before retrying a push that failed due to backpressure
+    retry_send_delay_ms: "${AGENTS_EVENT_RETRY_SEND_DELAY_MS:1000}"
+    # Delay in milliseconds before the first staleness check for an event
+    watchdog_initial_delay_ms: "${AGENTS_EVENT_WATCHDOG_INITIAL_DELAY_MS:30000}"
+    # Thread pool size for the event scheduler (retries and watchdogs)
+    scheduler_pool_size: "${AGENTS_EVENT_SCHEDULER_POOL_SIZE:4}"
 
 
 # Edges parameters
@@ -1986,6 +2001,13 @@ queue:
       enabled: "${TB_QUEUE_EDGE_STATS_ENABLED:true}"
       # Statistics printing interval for Edge services
       print-interval-ms: "${TB_QUEUE_EDGE_STATS_PRINT_INTERVAL_MS:60000}"
+  agent:
+    # Topic prefix for agent notifications. Each tb-core has its own topic: PREFIX.SERVICE_ID
+    notifications-topic: "${TB_QUEUE_AGENT_NOTIFICATIONS_TOPIC:tb_agent.notifications}"
+    # Poll interval for agent notification topics
+    poll-interval: "${TB_QUEUE_AGENT_NOTIFICATIONS_POLL_INTERVAL_MS:25}"
+    # Timeout for processing a message pack by agent notification consumer
+    pack-processing-timeout: "${TB_QUEUE_AGENT_NOTIFICATIONS_PACK_PROCESSING_TIMEOUT_MS:10000}"
   tasks:
     # Poll interval in milliseconds for tasks topics
     poll_interval: "${TB_QUEUE_TASKS_POLL_INTERVAL_MS:500}"

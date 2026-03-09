@@ -27,7 +27,6 @@ import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.id.AgentId;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.kv.BooleanDataEntry;
 import org.thingsboard.server.common.data.kv.LongDataEntry;
@@ -36,16 +35,18 @@ import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgDataType;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
 import org.thingsboard.server.common.msg.notification.NotificationRuleProcessor;
+import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.gen.agent.v1.Hello;
+import org.thingsboard.server.cache.TbTransactionalCache;
 import org.thingsboard.server.queue.discovery.TbServiceInfoProvider;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.agent.event.AgentEventProcessor;
 import org.thingsboard.server.service.agent.session.AgentSession;
 import org.thingsboard.server.service.agent.session.AgentSessionRegistry;
 import org.thingsboard.server.service.agent.session.AgentSessionState;
 import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.thingsboard.server.service.state.DefaultDeviceStateService.ACTIVITY_STATE;
 import static org.thingsboard.server.service.state.DefaultDeviceStateService.LAST_CONNECT_TIME;
@@ -57,32 +58,40 @@ import static org.thingsboard.server.service.state.DefaultDeviceStateService.LAS
 @RequiredArgsConstructor
 public class AgentStateService {
 
+    private final AgentService agentService;
     private final AgentSessionRegistry sessions;
     private final TbServiceInfoProvider serviceInfoProvider;
-//    private final TbTransactionalCache<AgentId, String> agentIdServiceIdCache; // todo: impl
+    private final TbTransactionalCache<AgentId, String> agentIdServiceIdCache;
     private final NotificationRuleProcessor notificationRuleProcessor; // todo: figure out the need of it here
     private final TelemetrySubscriptionService tsSubService;
     private final TbClusterService clusterService;
+    private final AgentEventProcessor agentEventProcessor;
 
     public Optional<Status> onConnected(AgentSession session, Hello msg) {
         AgentSessionState state = session.getState();
-        AgentId id = AgentId.fromMsgAndLsb(msg.getAgentIdMSB(), msg.getAgentIdLSB());
-        Agent agent = findAgent(id);
+        Agent agent;
+        try {
+            agent = findAgentByRoutingKeyAndSecret(msg.getRoutingKey(), msg.getRoutingSecret());
+        } catch (SecurityException e) {
+            log.warn("Agent authentication failed, routingKey={}: {}", msg.getRoutingKey(), e.getMessage());
+            return Optional.of(Status.UNAUTHENTICATED.withDescription(e.getMessage()));
+        }
         if (agent == null) {
-            log.trace("Agent not found, id={}", id);
-            return Optional.of(Status.NOT_FOUND.withDescription("Could not find agent with the given id: " + id));
+            log.trace("Agent not found, routingKey={}", msg.getRoutingKey());
+            return Optional.of(Status.NOT_FOUND.withDescription("Failed to find the agent. Routing key: " + msg.getRoutingKey()));
         }
         state.setAgent(agent);
         TenantId tenantId = agent.getTenantId();
         AgentId agentId = agent.getId();
 
         sessions.registerOrReplace(agentId, tenantId, session); // todo: think about epochs
-//        agentIdServiceIdCache.put(agentId, serviceInfoProvider.getServiceId()); // todo:
+        agentIdServiceIdCache.put(agentId, serviceInfoProvider.getServiceId());
         log.info("[{}] agent [{}] connected successfully", tenantId, agentId);
         save(tenantId, agentId, ACTIVITY_STATE, true);
         long lastConnectTs = System.currentTimeMillis();
         save(tenantId, agentId, LAST_CONNECT_TIME, System.currentTimeMillis());
         pushRuleEngineMessage(tenantId, session.getState().getAgent(), lastConnectTs, TbMsgType.CONNECT_EVENT);
+        agentEventProcessor.resumeEventsOnReconnect(tenantId, agentId);
 
         return Optional.empty();
     }
@@ -101,17 +110,21 @@ public class AgentStateService {
         AgentId agentId = agent.getId();
 
         sessions.removeIfSame(session);
+        agentIdServiceIdCache.evict(agentId);
         save(tenantId, agentId, ACTIVITY_STATE, false);
         long lastDisconnectTs = System.currentTimeMillis();
         save(tenantId, agentId, LAST_DISCONNECT_TIME, lastDisconnectTs);
         pushRuleEngineMessage(tenantId, session.getState().getAgent(), lastDisconnectTs, TbMsgType.DISCONNECT_EVENT);
     }
 
-    private Agent findAgent(AgentId id) { // todo: impl
-        Agent agent = new Agent();
-        agent.setId(new AgentId(UUID.randomUUID()));
-        agent.setTenantId(TenantId.fromUUID(UUID.randomUUID()));
-        agent.setCustomerId(new CustomerId(UUID.randomUUID()));
+    private Agent findAgentByRoutingKeyAndSecret(String routingKey, String routingSecret) {
+        Agent agent = agentService.findAgentByRoutingKey(TenantId.SYS_TENANT_ID, routingKey);
+        if (agent == null) {
+            return null;
+        }
+        if (!agent.getSecret().equals(routingSecret)) {
+            throw new SecurityException("Failed to validate the agent! Routing key: " + routingKey);
+        }
         return agent;
     }
 

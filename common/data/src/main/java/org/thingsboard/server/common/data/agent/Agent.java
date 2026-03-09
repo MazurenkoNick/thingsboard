@@ -43,6 +43,12 @@ public class Agent extends BaseData<AgentId> implements HasId<AgentId>, HasTenan
     @NoXss
     @Length(fieldName = "name")
     private String name;
+    @NoXss
+    @Length(fieldName = "routingKey")
+    private String routingKey;
+    @NoXss
+    @Length(fieldName = "secret")
+    private String secret;
     @Getter
     private Long version;
 
@@ -59,6 +65,8 @@ public class Agent extends BaseData<AgentId> implements HasId<AgentId>, HasTenan
         this.tenantId = agent.getTenantId();
         this.customerId = agent.getCustomerId();
         this.name = agent.getName();
+        this.routingKey = agent.getRoutingKey();
+        this.secret = agent.getSecret();
         this.version = agent.getVersion();
     }
 
@@ -93,5 +101,15 @@ public class Agent extends BaseData<AgentId> implements HasId<AgentId>, HasTenan
     @Override
     public String getName() {
         return this.name;
+    }
+
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Agent routing key used for authentication", example = "a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+    public String getRoutingKey() {
+        return this.routingKey;
+    }
+
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Agent secret used for authentication")
+    public String getSecret() {
+        return this.secret;
     }
 }

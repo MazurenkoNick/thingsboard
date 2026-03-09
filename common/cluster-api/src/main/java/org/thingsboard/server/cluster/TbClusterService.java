@@ -22,10 +22,12 @@ import org.thingsboard.server.common.data.DeviceProfile;
 import org.thingsboard.server.common.data.TbResourceInfo;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.TenantProfile;
+import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.edge.EdgeEventActionType;
 import org.thingsboard.server.common.data.edge.EdgeEventType;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.EdgeId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -141,5 +143,7 @@ public interface TbClusterService extends TbQueueClusterService {
     void onRelationUpdated(TenantId tenantId, EntityRelation entityRelation, TbQueueCallback callback);
 
     void onRelationDeleted(TenantId tenantId, EntityRelation entityRelation, TbQueueCallback callback);
+
+    void onAgentAppEvent(TenantId tenantId, AgentId agentId, AgentAppEvent event);
 
 }

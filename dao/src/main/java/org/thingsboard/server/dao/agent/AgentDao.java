@@ -27,6 +27,7 @@ import java.util.UUID;
 
 public interface AgentDao extends Dao<Agent>, TenantEntityDao<Agent> {
 
+    Agent findByRoutingKey(UUID tenantId, String routingKey);
     AgentInfo findAgentInfoById(TenantId tenantId, UUID agentId);
     PageData<Agent> findAgentsByTenantIdAndCustomerId(UUID tenantId, UUID customerId, PageLink pageLink);
     PageData<AgentInfo> findAgentInfosByTenantIdAndCustomerId(UUID tenantId, UUID customerId, PageLink pageLink);

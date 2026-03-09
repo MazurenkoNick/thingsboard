@@ -15,6 +15,7 @@
  */
 package org.thingsboard.server.common.data.agent;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -46,6 +47,9 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     private AgentAppConfig config;
     @Getter
     private Long version;
+    @JsonIgnore
+    @Getter
+    private boolean pendingDeletion;
 
     public AgentApplication() {
         super();
@@ -63,6 +67,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         this.name = application.getName();
         this.templateId = application.getTemplateId();
         this.version = application.getVersion();
+        this.pendingDeletion = application.isPendingDeletion();
     }
 
     public static AgentApplication fromTemplate(AgentAppTemplate template) {

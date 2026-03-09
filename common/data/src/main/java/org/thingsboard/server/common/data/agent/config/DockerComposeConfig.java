@@ -21,6 +21,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -38,6 +40,10 @@ public class DockerComposeConfig extends AgentAppConfig {
     @Override
     public AgentAppConfig copy() {
         return new DockerComposeConfig(this.projectName, compose.deepCopy());
+    }
+
+    public static String generateProjectName() {
+        return Long.toHexString(ThreadLocalRandom.current().nextLong(0x1000000000000L, 0xFFFFFFFFFFFFFL));
     }
 }
 

@@ -33,6 +33,7 @@ import org.thingsboard.server.common.data.DeviceProfile;
 import org.thingsboard.server.common.data.EdgeUtils;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.HasName;
+import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.HasRuleEngineProfile;
 import org.thingsboard.server.common.data.ResourceType;
 import org.thingsboard.server.common.data.TbResourceInfo;
@@ -43,6 +44,7 @@ import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.edge.EdgeEventActionType;
 import org.thingsboard.server.common.data.edge.EdgeEventType;
 import org.thingsboard.server.common.data.id.AssetId;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.AssetProfileId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.DeviceProfileId;
@@ -83,6 +85,8 @@ import org.thingsboard.server.gen.transport.TransportProtos.ResourceDeleteMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ResourceUpdateMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCalculatedFieldMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCalculatedFieldNotificationMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.ToAgentNotificationMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.AgentAppEventNotificationProto;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCoreMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCoreNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToEdgeMsg;
@@ -151,6 +155,7 @@ public class DefaultTbClusterService implements TbClusterService {
     private final GatewayNotificationsService gatewayNotificationsService;
     private final EdgeService edgeService;
     private final TbTransactionalCache<EdgeId, String> edgeIdServiceIdCache;
+    private final TbTransactionalCache<AgentId, String> agentIdServiceIdCache;
 
     @Override
     public void pushMsgToCore(TenantId tenantId, EntityId entityId, ToCoreMsg msg, TbQueueCallback callback) {
@@ -745,6 +750,37 @@ public class DefaultTbClusterService implements TbClusterService {
                 .info(JacksonUtil.valueToTree(entityRelation))
                 .build();
         broadcast(msg);
+    }
+
+    @Override
+    public void onAgentAppEvent(TenantId tenantId, AgentId agentId, AgentAppEvent event) {
+        var serviceIdOpt = Optional.ofNullable(agentIdServiceIdCache.get(agentId));
+        serviceIdOpt.ifPresent(serviceId -> {
+            if (serviceId.get() != null) {
+                AgentAppEventNotificationProto proto = AgentAppEventNotificationProto.newBuilder()
+                        .setTenantIdMSB(tenantId.getId().getMostSignificantBits())
+                        .setTenantIdLSB(tenantId.getId().getLeastSignificantBits())
+                        .setAgentIdMSB(agentId.getId().getMostSignificantBits())
+                        .setAgentIdLSB(agentId.getId().getLeastSignificantBits())
+                        .setApplicationIdMSB(event.getApplicationId().getId().getMostSignificantBits())
+                        .setApplicationIdLSB(event.getApplicationId().getId().getLeastSignificantBits())
+                        .setEventIdMSB(event.getId().getId().getMostSignificantBits())
+                        .setEventIdLSB(event.getId().getId().getLeastSignificantBits())
+                        .setActionType(event.getActionType().name())
+                        .build();
+                ToAgentNotificationMsg msg = ToAgentNotificationMsg.newBuilder()
+                        .setAgentAppEventNotification(proto)
+                        .build();
+                pushMsgToAgentNotification(msg, serviceId.get());
+            }
+            // else -> the event will be fetched and processed by the core which owns the session as soon as it's connected
+        });
+    }
+
+    private void pushMsgToAgentNotification(ToAgentNotificationMsg msg, String serviceId) {
+        TopicPartitionInfo tpi = topicService.getAgentNotificationsTopic(serviceId);
+        TbQueueProducer<TbProtoQueueMsg<ToAgentNotificationMsg>> producer = producerProvider.getTbAgentNotificationsMsgProducer();
+        producer.send(tpi, new TbProtoQueueMsg<>(UUID.randomUUID(), msg), null);
     }
 
     @Override

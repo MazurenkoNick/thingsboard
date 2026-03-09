@@ -16,17 +16,19 @@
 package org.thingsboard.server.dao.agent;
 
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
-
-import java.util.List;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 
 public interface AgentApplicationService {
 
     AgentApplication save(TenantId tenantId, AgentApplication agentApplication);
     AgentApplication findById(TenantId tenantId, AgentApplicationId agentApplicationId);
-    List<AgentApplication> findAllByAgentId(TenantId tenantId, AgentId agentId);
+    AgentApplication findByEventId(TenantId tenantId, AgentAppEventId agentAppEventId);
+    PageData<AgentApplication> findByAgentId(TenantId tenantId, AgentId agentId, PageLink pageLink);
     void delete(TenantId tenantId, AgentApplicationId agentApplicationId);
     void deleteByAgentId(TenantId tenantId, AgentId agentId);
 

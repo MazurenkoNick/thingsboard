@@ -15,8 +15,23 @@
  */
 package org.thingsboard.server.service.agent;
 
+import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
+import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
+import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
+import org.thingsboard.server.common.data.agent.step.AgentAppStep;
+import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
+import org.thingsboard.server.common.data.agent.step.InfoStep;
+import org.thingsboard.server.gen.agent.v1.AppCommand;
+import org.thingsboard.server.gen.agent.v1.AppCommandAction;
+import org.thingsboard.server.gen.agent.v1.CommandId;
+import org.thingsboard.server.gen.agent.v1.ConfigType;
 import org.thingsboard.server.gen.agent.v1.HelloAck;
 import org.thingsboard.server.gen.agent.v1.ServerToAgent;
+import org.thingsboard.server.gen.agent.v1.StepId;
+
+import java.util.Map;
 
 public class AgentMsgConstructorUtils {
 
@@ -27,4 +42,63 @@ public class AgentMsgConstructorUtils {
                 .setHelloAck(HELLO_SUCCESS_MSG)
                 .build();
     }
+
+    public static ServerToAgent buildAppCommand(AgentAppEvent event, AgentApplication application, AgentAppStep step) {
+        AppCommand.Builder builder = AppCommand.newBuilder()
+                .setCommandId(CommandId.newBuilder()
+                        .setIdMSB(event.getId().getId().getMostSignificantBits())
+                        .setIdLSB(event.getId().getId().getLeastSignificantBits())
+                        .build())
+                .setAction(mapAction(event.getActionType()))
+                .setAppName(application.getName() != null ? application.getName() : "")
+                .setConfigType(mapConfigType(application.getConfig().getType()));
+
+        if (step != null) {
+            builder.putAllMetadata(buildStepMetadata(step, application));
+            builder.setStepId(StepId.newBuilder()
+                    .setIdMSB(step.getId().getMostSignificantBits())
+                    .setIdLSB(step.getId().getLeastSignificantBits())
+                    .build());
+        }
+        return ServerToAgent.newBuilder()
+                .setAppCommand(builder.build())
+                .build();
+    }
+
+    private static AppCommandAction mapAction(AgentAppEventActionType actionType) {
+        return switch (actionType) {
+            case INSTALL -> AppCommandAction.APP_INSTALL;
+            case UPDATE -> AppCommandAction.APP_UPDATE;
+            case DELETE -> AppCommandAction.APP_DELETE;
+            case RESTART -> AppCommandAction.APP_RESTART;
+        };
+    }
+
+    private static ConfigType mapConfigType(AgentAppConfigType appConfigType) {
+        return ConfigType.DOCKER_COMPOSE;
+    }
+
+    private static Map<String, String> buildStepMetadata(AgentAppStep step, AgentApplication application) {
+        Map<String, String> metadata = new java.util.HashMap<>();
+        metadata.put("stepTitle", step.getTitle() != null ? step.getTitle() : "");
+        metadata.put("stepType", step.getType() != null ? step.getType().name() : "");
+
+        AgentAppStepType type = step.getType();
+
+        if (application.getConfig() instanceof DockerComposeConfig cfg) {
+            if (cfg.getProjectName() != null) {
+                metadata.put("projectName", cfg.getProjectName());
+            }
+            if (type == AgentAppStepType.COMPOSE && cfg.getCompose() != null) {
+                metadata.put("compose", cfg.getCompose().toString());
+            }
+        }
+
+        if (type == AgentAppStepType.INFO && step instanceof InfoStep infoStep && infoStep.getMessage() != null) {
+            metadata.put("message", infoStep.getMessage());
+        }
+
+        return metadata;
+    }
+
 }

@@ -21,6 +21,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
+import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
+import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
@@ -28,6 +32,7 @@ import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.dao.AbstractJpaDaoTest;
+import org.thingsboard.server.dao.agent.AgentAppEventDao;
 import org.thingsboard.server.dao.agent.AgentAppTemplateDao;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentDao;
@@ -53,6 +58,8 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
     private AgentApplicationDao agentApplicationDao;
     @Autowired
     private AgentAppTemplateDao agentAppTemplateDao;
+    @Autowired
+    private AgentAppEventDao agentAppEventDao;
 
     @Before
     public void setUp() {
@@ -163,6 +170,29 @@ public class JpaAgentApplicationDaoTest extends AbstractJpaDaoTest {
 
         List<AgentApplication> after = agentApplicationDao.findByAgentId(TenantId.fromUUID(tenantId1), agentId1);
         assertTrue(after.isEmpty());
+    }
+
+    @Test
+    public void testFindByEventId() {
+        AgentApplication app = saveApplication("eventApp");
+        TenantId tid = TenantId.fromUUID(tenantId1);
+
+        AgentAppEvent event = new AgentAppEvent();
+        event.setTenantId(tid);
+        event.setApplicationId(app.getId());
+        event.setActionType(AgentAppEventActionType.INSTALL);
+        event.setDeliveryState(AgentAppEventDeliveryState.PENDING);
+        event.setStatus(AgentAppEventStatus.PENDING);
+        event.setUpdatedTime(System.currentTimeMillis());
+        AgentAppEvent savedEvent = agentAppEventDao.save(tid, event);
+
+        AgentApplication found = agentApplicationDao.findByEventId(tid, savedEvent.getId().getId());
+        assertNotNull(found);
+        assertEquals(app.getId(), found.getId());
+
+        // non-existent event id
+        AgentApplication notFound = agentApplicationDao.findByEventId(tid, Uuids.timeBased());
+        assertNull(notFound);
     }
 
     private Agent saveAgent(UUID id, UUID tenantId, UUID customerId, String name) {

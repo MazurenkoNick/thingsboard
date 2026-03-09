@@ -76,6 +76,7 @@ public enum EntityType {
     AGENT(45),
     AGENT_APPLICATION(46),
     AGENT_APP_TEMPLATE(47),
+    AGENT_APP_EVENT(48),
     AGENT_APP_UNIT(49);
 
     @Getter

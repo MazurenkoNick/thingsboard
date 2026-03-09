@@ -249,6 +249,8 @@ public class ModelConstants {
     public static final String AGENT_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
     public static final String AGENT_CUSTOMER_ID_PROPERTY = CUSTOMER_ID_PROPERTY;
     public static final String AGENT_NAME_PROPERTY = NAME_PROPERTY;
+    public static final String AGENT_ROUTING_KEY_PROPERTY = "routing_key";
+    public static final String AGENT_SECRET_PROPERTY = "secret";
 
     /**
      * Agent application constants.
@@ -260,6 +262,19 @@ public class ModelConstants {
     public static final String AGENT_APPLICATION_NAME_PROPERTY = "name";
     public static final String AGENT_APPLICATION_TEMPLATE_ID_PROPERTY = "template_id";
     public static final String AGENT_APPLICATION_CONFIG_PROPERTY = "config";
+    public static final String AGENT_APPLICATION_PENDING_DELETION_PROPERTY = "pending_deletion";
+
+    /**
+     * Agent app event constants.
+     */
+    public static final String AGENT_APP_EVENT_TABLE_NAME = "agent_app_event";
+    public static final String AGENT_APP_EVENT_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String AGENT_APP_EVENT_APPLICATION_ID_PROPERTY = "application_id";
+    public static final String AGENT_APP_EVENT_ACTION_TYPE_PROPERTY = "action_type";
+    public static final String AGENT_APP_EVENT_DELIVERY_STATE_PROPERTY = "delivery_state";
+    public static final String AGENT_APP_EVENT_STATUS_PROPERTY = "status";
+    public static final String AGENT_APP_EVENT_CURRENT_STEP_ID_PROPERTY = "current_step_id";
+    public static final String AGENT_APP_EVENT_UPDATED_TIME_PROPERTY = "updated_time";
 
     /**
      * Agent app template constants.

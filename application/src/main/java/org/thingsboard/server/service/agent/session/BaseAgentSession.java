@@ -19,11 +19,16 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import io.grpc.Status;
 import io.grpc.stub.ServerCallStreamObserver;
 import lombok.extern.slf4j.Slf4j;
+import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.gen.agent.v1.ServerToAgent;
 
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
@@ -31,6 +36,7 @@ public class BaseAgentSession implements AgentSession {
 
     private static final int MAX_PENDING_MESSAGES = 10_000;
 
+    private final ConcurrentHashMap<AgentAppEventId, ScheduledFuture<?>> eventWatchdogs;
     private final ServerCallStreamObserver<ServerToAgent> responseObserver;
     private final Queue<ServerToAgent> pending;
     private final Semaphore pendingPermits;
@@ -46,13 +52,12 @@ public class BaseAgentSession implements AgentSession {
 
     public BaseAgentSession(ListeningExecutorService writer, ServerCallStreamObserver<ServerToAgent> responseObserver) {
         this.writer = writer;
+        this.eventWatchdogs = new ConcurrentHashMap<>();
         this.pending = new ConcurrentLinkedQueue<>();
         this.pendingPermits = new Semaphore(MAX_PENDING_MESSAGES);
         this.state = new AgentSessionState();
 
         this.responseObserver = responseObserver;
-        // Note: onReadyHandler and onCancelHandler must be set before returning the StreamObserver
-        // They are set in AgentGrpcService.controlStream() to comply with gRPC requirements
     }
 
     @Override
@@ -71,8 +76,25 @@ public class BaseAgentSession implements AgentSession {
     }
 
     @Override
+    public void scheduleEventWatchdog(AgentAppEventId eventId, ScheduledExecutorService scheduler,
+                                       Runnable task, long delay, TimeUnit unit) {
+        cancelEventWatchdog(eventId);
+        ScheduledFuture<?> future = scheduler.schedule(task, delay, unit);
+        eventWatchdogs.put(eventId, future);
+    }
+
+    @Override
+    public void cancelEventWatchdog(AgentAppEventId eventId) {
+        ScheduledFuture<?> existing = eventWatchdogs.remove(eventId);
+        if (existing != null && !existing.isCancelled() && !existing.isDone()) {
+            existing.cancel(false);
+        }
+    }
+
+    @Override
     public void onError(Status status) {
         state.closeAndDo(() -> {
+            cancelAllWatchdogs();
             clearPendingAndReleasePermits();
             writer.execute(() -> {
                 try {
@@ -100,7 +122,10 @@ public class BaseAgentSession implements AgentSession {
 
     @Override
     public void closeSilently() {
-        state.closeAndDo(this::clearPendingAndReleasePermits);
+        state.closeAndDo(() -> {
+            cancelAllWatchdogs();
+            clearPendingAndReleasePermits();
+        });
         log.trace("[{}] Stream is closed silently", state.getAgentId());
     }
 
@@ -133,6 +158,7 @@ public class BaseAgentSession implements AgentSession {
             // if we're closing and nothing left to send -> complete exactly once
             if (state.isClosing() && pending.isEmpty() && completeAfterDrain.compareAndSet(true, false)) {
                 state.closeAndDo(() -> {
+                    cancelAllWatchdogs();
                     clearPendingAndReleasePermits();
                     if (!responseObserver.isCancelled()) {
                         responseObserver.onCompleted();
@@ -145,6 +171,12 @@ public class BaseAgentSession implements AgentSession {
                 drainIfPossible();
             }
         }
+    }
+
+    private void cancelAllWatchdogs() {
+        eventWatchdogs.values().forEach(f -> f.cancel(false));
+        log.trace("[{}][{}] Clearing {} event watchdogs", state.getTenantId(), state.getAgentId(), eventWatchdogs.size());
+        eventWatchdogs.clear();
     }
 
     private void clearPendingAndReleasePermits() {

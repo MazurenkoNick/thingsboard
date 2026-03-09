@@ -56,6 +56,8 @@ public interface AgentRepository extends JpaRepository<AgentEntity, UUID> {
                                                                   @Param("textSearch") String textSearch,
                                                                   Pageable pageable);
 
+    AgentEntity findByRoutingKey(String routingKey);
+
     @Query("SELECT count(*) FROM AgentEntity a WHERE a.tenantId = :tenantId")
     Long countByTenantId(@Param("tenantId") UUID tenantId);
 

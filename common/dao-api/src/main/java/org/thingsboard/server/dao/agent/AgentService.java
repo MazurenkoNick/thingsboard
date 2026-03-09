@@ -27,6 +27,7 @@ import org.thingsboard.server.dao.entity.EntityDaoService;
 public interface AgentService extends EntityDaoService {
     Agent saveAgent(Agent agent);
     Agent findAgentById(TenantId tenantId, AgentId agentId);
+    Agent findAgentByRoutingKey(TenantId tenantId, String routingKey);
     AgentInfo findAgentInfoById(TenantId tenantId, AgentId agentId);
     PageData<Agent> findAgentsByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId, PageLink pageLink);
     PageData<AgentInfo> findAgentInfosByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId, PageLink pageLink);

@@ -33,8 +33,8 @@ import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.agent.AgentAppTemplateService;
+import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.exception.DataValidationException;
@@ -42,6 +42,7 @@ import org.thingsboard.server.exception.DataValidationException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.thingsboard.server.dao.model.ModelConstants.NULL_UUID;
 
@@ -61,9 +62,7 @@ public class AgentServiceTest extends AbstractServiceTest {
 
     @Test
     public void testSaveAgent() {
-        Agent agent = new Agent();
-        agent.setTenantId(tenantId);
-        agent.setName("My agent");
+        Agent agent = newAgent("My agent");
         Agent savedAgent = agentService.saveAgent(agent);
 
         Assert.assertNotNull(savedAgent);
@@ -87,6 +86,8 @@ public class AgentServiceTest extends AbstractServiceTest {
     public void testSaveAgentWithEmptyTenant() {
         Agent agent = new Agent();
         agent.setName("My agent");
+        agent.setRoutingKey(UUID.randomUUID().toString());
+        agent.setSecret(StringUtils.randomAlphanumeric(20));
         Assertions.assertThrows(DataValidationException.class, () -> {
             agentService.saveAgent(agent);
         });
@@ -94,9 +95,7 @@ public class AgentServiceTest extends AbstractServiceTest {
 
     @Test
     public void testSaveAgentWithInvalidTenant() {
-        Agent agent = new Agent();
-        agent.setName("My agent");
-        agent.setTenantId(TenantId.fromUUID(Uuids.timeBased()));
+        Agent agent = newAgent(TenantId.fromUUID(Uuids.timeBased()), "My agent");
         Assertions.assertThrows(DataValidationException.class, () -> {
             agentService.saveAgent(agent);
         });
@@ -113,9 +112,7 @@ public class AgentServiceTest extends AbstractServiceTest {
 
     @Test
     public void testSaveAgentWithInvalidName() {
-        Agent agent = new Agent();
-        agent.setTenantId(tenantId);
-        agent.setName(RandomStringUtils.randomAlphabetic(300));
+        Agent agent = newAgent(RandomStringUtils.randomAlphabetic(300));
         Assertions.assertThrows(DataValidationException.class, () -> {
             agentService.saveAgent(agent);
         });
@@ -123,14 +120,9 @@ public class AgentServiceTest extends AbstractServiceTest {
 
     @Test
     public void testSaveAgentWithSameName() {
-        Agent agent = new Agent();
-        agent.setTenantId(tenantId);
-        agent.setName("My agent");
-        Agent savedAgent = agentService.saveAgent(agent);
+        Agent savedAgent = agentService.saveAgent(newAgent("My agent"));
 
-        Agent agent2 = new Agent();
-        agent2.setTenantId(tenantId);
-        agent2.setName("My agent");
+        Agent agent2 = newAgent("My agent");
         try {
             Assertions.assertThrows(DataValidationException.class, () -> {
                 agentService.saveAgent(agent2);
@@ -142,9 +134,7 @@ public class AgentServiceTest extends AbstractServiceTest {
 
     @Test
     public void testFindAgentById() {
-        Agent agent = new Agent();
-        agent.setTenantId(tenantId);
-        agent.setName("My agent");
+        Agent agent = newAgent("My agent");
         Agent savedAgent = agentService.saveAgent(agent);
         Agent foundAgent = agentService.findAgentById(tenantId, savedAgent.getId());
         Assert.assertNotNull(foundAgent);
@@ -154,9 +144,7 @@ public class AgentServiceTest extends AbstractServiceTest {
 
     @Test
     public void testFindAgentInfoById() {
-        Agent agent = new Agent();
-        agent.setTenantId(tenantId);
-        agent.setName("My agent");
+        Agent agent = newAgent("My agent");
         Agent savedAgent = agentService.saveAgent(agent);
         AgentInfo foundAgentInfo = agentService.findAgentInfoById(tenantId, savedAgent.getId());
         Assert.assertNotNull(foundAgentInfo);
@@ -167,9 +155,7 @@ public class AgentServiceTest extends AbstractServiceTest {
 
     @Test
     public void testDeleteAgent() {
-        Agent agent = new Agent();
-        agent.setTenantId(tenantId);
-        agent.setName("My agent");
+        Agent agent = newAgent("My agent");
         Agent savedAgent = agentService.saveAgent(agent);
         Agent foundAgent = agentService.findAgentById(tenantId, savedAgent.getId());
         Assert.assertNotNull(foundAgent);
@@ -182,10 +168,7 @@ public class AgentServiceTest extends AbstractServiceTest {
     public void testFindAgentsByTenantId() {
         List<Agent> agents = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
-            Agent agent = new Agent();
-            agent.setTenantId(tenantId);
-            agent.setName("Agent" + i);
-            agents.add(agentService.saveAgent(agent));
+            agents.add(agentService.saveAgent(newAgent("Agent" + i)));
         }
 
         List<Agent> loadedAgents = new ArrayList<>();
@@ -217,25 +200,19 @@ public class AgentServiceTest extends AbstractServiceTest {
         String title1 = "Agent title 1";
         List<AgentInfo> agentsTitle1 = new ArrayList<>();
         for (int i = 0; i < 13; i++) {
-            Agent agent = new Agent();
-            agent.setTenantId(tenantId);
             String suffix = StringUtils.randomAlphanumeric(15);
             String name = title1 + suffix;
             name = i % 2 == 0 ? name.toLowerCase() : name.toUpperCase();
-            agent.setName(name);
-            Agent savedAgent = agentService.saveAgent(agent);
+            Agent savedAgent = agentService.saveAgent(newAgent(name));
             agentsTitle1.add(new AgentInfo(savedAgent, null, false));
         }
         String title2 = "Agent title 2";
         List<AgentInfo> agentsTitle2 = new ArrayList<>();
         for (int i = 0; i < 17; i++) {
-            Agent agent = new Agent();
-            agent.setTenantId(tenantId);
             String suffix = StringUtils.randomAlphanumeric(15);
             String name = title2 + suffix;
             name = i % 2 == 0 ? name.toLowerCase() : name.toUpperCase();
-            agent.setName(name);
-            Agent savedAgent = agentService.saveAgent(agent);
+            Agent savedAgent = agentService.saveAgent(newAgent(name));
             agentsTitle2.add(new AgentInfo(savedAgent, null, false));
         }
 
@@ -305,10 +282,7 @@ public class AgentServiceTest extends AbstractServiceTest {
 
         List<Agent> agents = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
-            Agent agent = new Agent();
-            agent.setTenantId(tenantId);
-            agent.setName("Agent" + i);
-            agent = agentService.saveAgent(agent);
+            Agent agent = agentService.saveAgent(newAgent(tenantId, "Agent" + i));
             agent.setCustomerId(customerId);
             agents.add(agentService.saveAgent(agent));
         }
@@ -355,10 +329,7 @@ public class AgentServiceTest extends AbstractServiceTest {
 
         List<AgentInfo> agentInfos = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
-            Agent agent = new Agent();
-            agent.setTenantId(tenantId);
-            agent.setName("Agent" + i);
-            agent = agentService.saveAgent(agent);
+            Agent agent = agentService.saveAgent(newAgent(tenantId, "Agent" + i));
             agent.setCustomerId(customerId);
             agent = agentService.saveAgent(agent);
             agentInfos.add(new AgentInfo(agent, customer.getTitle(), false));
@@ -397,10 +368,7 @@ public class AgentServiceTest extends AbstractServiceTest {
         customer = customerService.saveCustomer(customer);
         CustomerId customerId = customer.getId();
 
-        Agent agent = new Agent();
-        agent.setTenantId(tenantId);
-        agent.setName("My agent");
-        agent = agentService.saveAgent(agent);
+        Agent agent = agentService.saveAgent(newAgent("My agent"));
         agent.setCustomerId(customerId);
         agent = agentService.saveAgent(agent);
 
@@ -421,12 +389,47 @@ public class AgentServiceTest extends AbstractServiceTest {
     }
 
     @Test
-    public void testDeleteAgentRemovesAgentApplications() throws Exception {
+    public void testFindAgentByRoutingKey() {
         Agent agent = new Agent();
         agent.setTenantId(tenantId);
-        agent.setName("Agent with applications");
+        agent.setName("Agent with routing key");
+        agent.setRoutingKey("test-routing-key-" + UUID.randomUUID());
+        agent.setSecret("test-secret-123");
         Agent savedAgent = agentService.saveAgent(agent);
 
+        Agent found = agentService.findAgentByRoutingKey(tenantId, savedAgent.getRoutingKey());
+        Assert.assertNotNull(found);
+        Assert.assertEquals(savedAgent.getId(), found.getId());
+        Assert.assertEquals(savedAgent.getRoutingKey(), found.getRoutingKey());
+        Assert.assertEquals(savedAgent.getSecret(), found.getSecret());
+
+        Agent notFound = agentService.findAgentByRoutingKey(tenantId, "non-existent-routing-key");
+        Assert.assertNull(notFound);
+
+        agentService.deleteAgent(tenantId, savedAgent.getId());
+    }
+
+    @Test
+    public void testSaveAgentWithEmptyRoutingKey() {
+        Agent agent = new Agent();
+        agent.setTenantId(tenantId);
+        agent.setName("Agent no routing key");
+        agent.setSecret("some-secret");
+        Assertions.assertThrows(DataValidationException.class, () -> agentService.saveAgent(agent));
+    }
+
+    @Test
+    public void testSaveAgentWithEmptySecret() {
+        Agent agent = new Agent();
+        agent.setTenantId(tenantId);
+        agent.setName("Agent no secret");
+        agent.setRoutingKey("some-routing-key");
+        Assertions.assertThrows(DataValidationException.class, () -> agentService.saveAgent(agent));
+    }
+
+    @Test
+    public void testDeleteAgentRemovesAgentApplications() throws Exception {
+        Agent savedAgent = agentService.saveAgent(newAgent("Agent with applications"));
         AgentAppTemplate template = createTemplate();
 
         AgentApplication app1 = new AgentApplication();
@@ -441,15 +444,39 @@ public class AgentServiceTest extends AbstractServiceTest {
         app2.setTemplateId(template.getId());
         app2 = agentApplicationService.save(tenantId, app2);
 
-        List<AgentApplication> applicationsBefore = agentApplicationService.findAllByAgentId(tenantId, savedAgent.getId());
+        List<AgentApplication> applicationsBefore = agentApplicationService.findByAgentId(tenantId, savedAgent.getId(), new PageLink(100)).getData();
         Assert.assertEquals(2, applicationsBefore.size());
 
         agentService.deleteAgent(tenantId, savedAgent.getId());
 
-        List<AgentApplication> applicationsAfter = agentApplicationService.findAllByAgentId(tenantId, savedAgent.getId());
+        List<AgentApplication> applicationsAfter = agentApplicationService.findByAgentId(tenantId, savedAgent.getId(), new PageLink(100)).getData();
         Assert.assertTrue(applicationsAfter.isEmpty());
         Assert.assertNull(agentApplicationService.findById(tenantId, app1.getId()));
         Assert.assertNull(agentApplicationService.findById(tenantId, app2.getId()));
+    }
+
+    private Agent newAgent(String name) {
+        return newAgent(tenantId, name);
+    }
+
+    private Agent newAgent(TenantId tid, String name) {
+        Agent agent = new Agent();
+        agent.setTenantId(tid);
+        agent.setName(name);
+        agent.setRoutingKey(UUID.randomUUID().toString());
+        agent.setSecret(StringUtils.randomAlphanumeric(20));
+        return agent;
+    }
+
+    private AgentAppTemplate createTemplate() {
+        AgentAppTemplate template = new AgentAppTemplate();
+        template.setAppType(AgentApplicationType.GENERIC);
+        template.setCurrentVersion("1.0.0");
+        template.setPreviousVersion("0.9.0");
+        template.setNextVersion(null);
+        template.setStartSteps(Collections.emptyList());
+        template.setUpgradeSteps(Collections.emptyList());
+        return agentAppTemplateService.save(TenantId.SYS_TENANT_ID, template);
     }
 
     @Test
@@ -460,28 +487,25 @@ public class AgentServiceTest extends AbstractServiceTest {
         customer = customerService.saveCustomer(customer);
         CustomerId customerId = customer.getId();
 
-        Agent agent = new Agent();
-        agent.setTenantId(tenantId);
-        agent.setName("Agent assign unassign");
-        agent = agentService.saveAgent(agent);
-
+        Agent agent = agentService.saveAgent(newAgent("Agent assign unassign"));
         AgentAppTemplate template = createTemplate();
+
         AgentApplication app = new AgentApplication();
         app.setAgentId(agent.getId());
         app.setAppType(AgentApplicationType.GENERIC);
         app.setTemplateId(template.getId());
         app = agentApplicationService.save(tenantId, app);
 
-        List<AgentApplication> afterCreate = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
+        List<AgentApplication> afterCreate = agentApplicationService.findByAgentId(tenantId, agent.getId(), new PageLink(100)).getData();
         Assert.assertEquals(1, afterCreate.size());
 
         agentService.assignAgentToCustomer(tenantId, agent.getId(), customerId);
-        List<AgentApplication> afterAssign = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
+        List<AgentApplication> afterAssign = agentApplicationService.findByAgentId(tenantId, agent.getId(), new PageLink(100)).getData();
         Assert.assertEquals(1, afterAssign.size());
         Assert.assertEquals(app.getId(), afterAssign.get(0).getId());
 
         agentService.unassignAgentFromCustomer(tenantId, agent.getId());
-        List<AgentApplication> afterUnassign = agentApplicationService.findAllByAgentId(tenantId, agent.getId());
+        List<AgentApplication> afterUnassign = agentApplicationService.findByAgentId(tenantId, agent.getId(), new PageLink(100)).getData();
         Assert.assertEquals(1, afterUnassign.size());
         Assert.assertEquals(app.getId(), afterUnassign.get(0).getId());
 
@@ -489,15 +513,4 @@ public class AgentServiceTest extends AbstractServiceTest {
         agentService.deleteAgent(tenantId, agent.getId());
         customerService.deleteCustomer(tenantId, customerId);
     }
-
-    private AgentAppTemplate createTemplate() {
-        AgentAppTemplate template = new AgentAppTemplate();
-        template.setAppType(AgentApplicationType.GENERIC);
-        template.setCurrentVersion("1.0.0");
-        template.setPreviousVersion("0.9.0");
-        template.setStartSteps(Collections.emptyList());
-        template.setUpgradeSteps(Collections.emptyList());
-        return agentAppTemplateService.save(TenantId.SYS_TENANT_ID, template);
-    }
-
 }

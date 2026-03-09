@@ -24,37 +24,48 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @UtilityClass
 public class StepLinkedListUtils {
 
+    public AgentAppStep findByStepId(List<AgentAppStep> steps, UUID stepId) {
+        if (CollectionUtils.isEmpty(steps) || stepId == null) {
+            return null;
+        }
+        return steps.stream()
+                .filter(s -> s.getId().equals(stepId))
+                .findFirst()
+                .orElse(null);
+    }
+
     /**
-     * Find the first step ID (the step not referenced by any other step's nextId).
+     * Find the first step (the step not referenced by any other step's nextId).
      *
      * @param steps list of steps
-     * @return UUID of the first step, or null if list is empty
+     * @return the first step, or null if list is empty
      * @throws IllegalStateException if no first step found or multiple first steps exist
      */
-    public UUID findFirstStepId(List<AgentAppStep> steps) {
+    public AgentAppStep findFirstStep(List<AgentAppStep> steps) {
         if (CollectionUtils.isEmpty(steps)) {
             return null;
         }
 
-        Set<UUID> allIds = steps.stream()
-                .map(AgentAppStep::getId)
-                .collect(Collectors.toSet());
+        Map<UUID, AgentAppStep> stepsById = steps.stream()
+                .collect(Collectors.toMap(AgentAppStep::getId, Function.identity()));
 
         Set<UUID> referencedIds = steps.stream()
                 .map(AgentAppStep::getNextId)
-                .filter(nextId -> nextId != null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        Set<UUID> firstStepCandidates = new HashSet<>(allIds);
+        Set<UUID> firstStepCandidates = new HashSet<>(stepsById.keySet());
         firstStepCandidates.removeAll(referencedIds);
 
         if (firstStepCandidates.isEmpty()) {
@@ -64,7 +75,7 @@ public class StepLinkedListUtils {
             throw new IllegalStateException("Multiple first steps found: " + firstStepCandidates);
         }
 
-        return firstStepCandidates.iterator().next();
+        return stepsById.get(firstStepCandidates.iterator().next());
     }
 
     /**
@@ -82,7 +93,8 @@ public class StepLinkedListUtils {
         Map<UUID, AgentAppStep> stepsById = steps.stream()
                 .collect(Collectors.toMap(AgentAppStep::getId, Function.identity()));
 
-        UUID firstId = findFirstStepId(steps);
+        AgentAppStep firstStep = findFirstStep(steps);
+        UUID firstId = firstStep.getId();
         List<AgentAppStep> ordered = new ArrayList<>(steps.size());
         Set<UUID> visited = new HashSet<>();
 
@@ -144,6 +156,26 @@ public class StepLinkedListUtils {
         toOrderedList(steps);
     }
 
+    /**
+     * Find the step that follows the step with the given ID in the linked list.
+     *
+     * @param currentStepId the ID of the current step
+     * @param steps         list of steps
+     * @return the next step, or empty if currentStepId is null, not found, or is the last step
+     */
+    public Optional<AgentAppStep> getNextStep(UUID currentStepId, List<AgentAppStep> steps) {
+        if (currentStepId == null || CollectionUtils.isEmpty(steps)) {
+            return Optional.empty();
+        }
+        Map<UUID, AgentAppStep> stepsById = steps.stream()
+                .collect(Collectors.toMap(AgentAppStep::getId, Function.identity()));
+        AgentAppStep current = stepsById.get(currentStepId);
+        if (current == null || current.getNextId() == null) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(stepsById.get(current.getNextId()));
+    }
+
     public static <T extends AgentAppStep> Optional<T> getByType(AgentAppStepType agentAppStepType,
                                                               Class<T> stepCls,
                                                               List<AgentAppStep> steps) {
@@ -155,5 +187,9 @@ public class StepLinkedListUtils {
                 .map(stepCls::cast)
                 .filter(s -> s.getType() == agentAppStepType)
                 .findFirst();
+    }
+
+    public static List<AgentAppStep> filter(List<AgentAppStep> steps, Predicate<AgentAppStep> predicate) {
+        return steps.stream().filter(predicate).collect(Collectors.toList());
     }
 }

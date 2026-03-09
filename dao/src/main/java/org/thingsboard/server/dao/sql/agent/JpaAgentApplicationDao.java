@@ -22,6 +22,8 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.model.sql.AgentApplicationEntity;
@@ -61,6 +63,14 @@ public class JpaAgentApplicationDao extends JpaAbstractDao<AgentApplicationEntit
     }
 
     @Override
+    public PageData<AgentApplication> findByAgentId(TenantId tenantId, UUID agentId, PageLink pageLink) {
+        return DaoUtil.toPageData(agentApplicationRepository.findByAgentId(
+                agentId,
+                pageLink.getTextSearch(),
+                DaoUtil.toPageable(pageLink)));
+    }
+
+    @Override
     public void removeByAgentId(TenantId tenantId, UUID agentId) {
         agentApplicationRepository.deleteByAgentId(agentId);
     }
@@ -73,6 +83,11 @@ public class JpaAgentApplicationDao extends JpaAbstractDao<AgentApplicationEntit
     @Override
     public void removeByTemplateId(TenantId tenantId, UUID templateId) {
         agentApplicationRepository.deleteByTemplateId(templateId);
+    }
+
+    @Override
+    public AgentApplication findByEventId(TenantId tenantId, UUID eventId) {
+        return DaoUtil.getData(agentApplicationRepository.findByEventId(eventId));
     }
 
 }

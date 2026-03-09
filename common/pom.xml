@@ -47,6 +47,7 @@
         <module>cache</module>
         <module>coap-server</module>
         <module>edge-api</module>
+        <module>agent-api</module>
         <module>version-control</module>
         <module>script</module>
         <module>edqs</module>

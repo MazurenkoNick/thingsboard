@@ -27,12 +27,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.gen.agent.v1.AgentRpcServiceGrpc;
 import org.thingsboard.server.gen.agent.v1.AgentToServer;
 import org.thingsboard.server.gen.agent.v1.ServerToAgent;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.agent.msg.inbound.AgentInboundMessageDispatcher;
 import org.thingsboard.server.service.agent.session.AgentSession;
+import org.thingsboard.server.service.agent.session.AgentSessionRegistry;
 import org.thingsboard.server.service.agent.session.BaseAgentSession;
 
 import java.util.Optional;
@@ -43,13 +45,14 @@ import java.util.concurrent.atomic.AtomicReference;
 @Slf4j
 @TbCoreComponent
 @RequiredArgsConstructor
-public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBase {
+public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBase implements AgentRpcService {
 
     @Value("${agents.write_pool_size}")
     private int writePoolSize;
 
     private final AgentInboundMessageDispatcher inboundMessageDispatcher;
-    private final AgentStateService agentStateService;
+    private final AgentStateService agentStateService; // todo: finish
+    private final AgentSessionRegistry sessions;
 
     private ListeningExecutorService writer;
 
@@ -77,7 +80,7 @@ public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBas
             public void onNext(AgentToServer msg) {
                 AgentSession session = sessionRef.get();
                 if (session == null) {
-                    tryInitSession(msg, responseObserver).ifPresent(s -> sessionRef.set(s));
+                    tryInitSession(msg, responseObserver).ifPresent(sessionRef::set);
                     session = sessionRef.get();
                 }
                 processInboundMessage(session, msg);
@@ -122,6 +125,16 @@ public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBas
         return requestObserver;
     }
 
+
+    @Override
+    public boolean push(AgentId agentId, ServerToAgent msg) throws AgentSessionNotFoundException {
+        AgentSession session = sessions.getByAgentId(agentId);
+        if (session == null) {
+            throw new AgentSessionNotFoundException(agentId);
+        }
+        return session.push(msg);
+    }
+
     private void processInboundMessage(AgentSession session, AgentToServer msg) {
         if (session == null) {
             return;
@@ -144,7 +157,7 @@ public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBas
         Optional<Status> err = agentStateService.onConnected(session, msg.getHello());
         if (err.isPresent()) {
             StatusRuntimeException e = err.get().asRuntimeException();
-            log.error("The state couldn't be initialized", e);
+            log.warn("The state couldn't be initialized", e);
             observer.onError(e);
             return Optional.empty();
         }

@@ -15,6 +15,8 @@
  */
 package org.thingsboard.server.dao.sql.agent;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -29,6 +31,12 @@ public interface AgentApplicationRepository extends JpaRepository<AgentApplicati
 
     List<AgentApplicationEntity> findByAgentId(UUID agentId);
 
+    @Query("SELECT e FROM AgentApplicationEntity e WHERE e.agentId = :agentId " +
+            "AND (:textSearch IS NULL OR ilike(e.name, CONCAT('%', :textSearch, '%')) = true)")
+    Page<AgentApplicationEntity> findByAgentId(@Param("agentId") UUID agentId,
+                                               @Param("textSearch") String textSearch,
+                                               Pageable pageable);
+
     List<AgentApplicationEntity> findByTemplateId(UUID templateId);
 
     @Transactional
@@ -40,5 +48,8 @@ public interface AgentApplicationRepository extends JpaRepository<AgentApplicati
     @Modifying
     @Query("DELETE FROM AgentApplicationEntity e WHERE e.templateId = :templateId")
     void deleteByTemplateId(@Param("templateId") UUID templateId);
+
+    @Query("SELECT app FROM AgentApplicationEntity app JOIN AgentAppEventEntity evt ON app.id = evt.applicationId WHERE evt.id = :eventId")
+    AgentApplicationEntity findByEventId(@Param("eventId") UUID eventId);
 
 }
