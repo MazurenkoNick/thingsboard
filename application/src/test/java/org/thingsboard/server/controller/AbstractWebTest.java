@@ -503,6 +503,11 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
                 .until(() -> storage.getLag("tb_housekeeper") == 0);
     }
 
+    protected void awaitHousekeeperDrained() {
+        Awaitility.await("housekeeper drained").atMost(5, TimeUnit.MINUTES).during(300, TimeUnit.MILLISECONDS)
+                .until(() -> storage.getLag("tb_housekeeper") == 0);
+    }
+
     private List<Tenant> getAllTenants() throws Exception {
         List<Tenant> loadedTenants = new ArrayList<>();
         PageLink pageLink = new PageLink(10);
