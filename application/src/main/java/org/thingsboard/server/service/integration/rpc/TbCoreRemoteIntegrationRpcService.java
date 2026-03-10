@@ -132,6 +132,21 @@ public class TbCoreRemoteIntegrationRpcService extends IntegrationTransportGrpc.
         log.info("RPC service initialized!");
     }
 
+    /**
+     * Configures TLS for the Integration gRPC server.
+     * <p>
+     * Delegates PEM parsing and key management to {@link PemSslCredentials} — the same
+     * class used by MQTT, CoAP, and LwM2M transports — which supports:
+     * <ul>
+     *   <li>Separate certificate and private key files (classic two-file setup)</li>
+     *   <li>Combined PEM: certificate chain + private key in a single {@code cert} file
+     *       ({@code privateKey} left empty)</li>
+     *   <li>Encrypted private keys (password supplied via {@code key_password})</li>
+     * </ul>
+     * Path resolution (for both {@code cert} and {@code privateKey}) is handled by
+     * {@link org.thingsboard.server.common.data.ResourceUtils#getInputStream ResourceUtils}:
+     * absolute path → relative / working-dir → classpath → {@code classpath:} prefix.
+     */
     void setupSsl(NettyServerBuilder builder) throws Exception {
         PemSslCredentials credentials = new PemSslCredentials();
         credentials.setCertFile(certFileResource);
