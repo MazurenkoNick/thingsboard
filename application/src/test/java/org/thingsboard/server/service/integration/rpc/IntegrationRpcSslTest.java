@@ -48,7 +48,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.thingsboard.server.controller.AbstractWebTest;
 import org.thingsboard.server.gen.integration.IntegrationTransportGrpc;
 
 import java.io.ByteArrayInputStream;
@@ -120,6 +119,8 @@ class IntegrationRpcSslTest {
             return kpg.generateKeyPair();
         }
     }
+
+    private static final int TIMEOUT_SECONDS = 30;
 
     private final List<Path> tempFiles = new ArrayList<>();
     private Server server;
@@ -250,7 +251,7 @@ class IntegrationRpcSslTest {
                 .build();
 
         channel.getState(true); // trigger connection attempt
-        await().atMost(AbstractWebTest.TIMEOUT, TimeUnit.SECONDS)
+        await().atMost(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .pollInterval(50, TimeUnit.MILLISECONDS)
                 .untilAsserted(() -> {
                     var state = channel.getState(false);
