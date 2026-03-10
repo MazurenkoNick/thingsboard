@@ -71,6 +71,8 @@ import {
 import { AttributeDatasource } from '@home/models/datasource/attribute-datasource';
 import { AttributeService } from '@app/core/http/attribute.service';
 import { EntityType } from '@shared/models/entity-type.models';
+import { Authority } from '@shared/models/authority.enum';
+import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import {
   AddAttributeDialogComponent,
@@ -91,7 +93,6 @@ import { AliasController } from '@core/api/alias-controller';
 import { EntityAlias, EntityAliases } from '@shared/models/alias.models';
 import { UtilsService } from '@core/services/utils.service';
 import { DashboardUtilsService } from '@core/services/dashboard-utils.service';
-import { NULL_UUID } from '@shared/models/id/has-uuid';
 import { WidgetService } from '@core/http/widget.service';
 import { toWidgetInfo } from '../../models/widget-component.models';
 import { EntityService } from '@core/http/entity.service';
@@ -211,6 +212,8 @@ export class AttributeTableComponent extends PageComponent implements AfterViewI
 
   textSearch = this.fb.control('', {nonNullable: true});
 
+  isSysAdmin = false;
+
   private destroy$ = new Subject<void>();
 
   constructor(protected store: Store<AppState>,
@@ -231,6 +234,7 @@ export class AttributeTableComponent extends PageComponent implements AfterViewI
               private elementRef: ElementRef,
               private fb: FormBuilder) {
     super(store);
+    this.isSysAdmin = getCurrentAuthUser(this.store).authority === Authority.SYS_ADMIN;
     this.dirtyValue = !this.activeValue;
     const sortOrder: SortOrder = { property: 'key', direction: Direction.ASC };
     this.pageLink = new PageLink(10, 0, null, sortOrder);
