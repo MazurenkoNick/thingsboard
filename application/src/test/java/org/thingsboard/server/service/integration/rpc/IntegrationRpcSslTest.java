@@ -120,7 +120,7 @@ class IntegrationRpcSslTest {
         }
     }
 
-    private static final int TIMEOUT_SECONDS = 30;
+    private static final int TIMEOUT = 30;
 
     private final List<Path> tempFiles = new ArrayList<>();
     private Server server;
@@ -251,7 +251,7 @@ class IntegrationRpcSslTest {
                 .build();
 
         channel.getState(true); // trigger connection attempt
-        await().atMost(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        await().atMost(TIMEOUT, TimeUnit.SECONDS)
                 .pollInterval(50, TimeUnit.MILLISECONDS)
                 .untilAsserted(() -> {
                     var state = channel.getState(false);
