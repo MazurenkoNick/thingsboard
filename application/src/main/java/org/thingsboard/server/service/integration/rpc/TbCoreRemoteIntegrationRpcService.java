@@ -84,7 +84,7 @@ public class TbCoreRemoteIntegrationRpcService extends IntegrationTransportGrpc.
     private boolean sslEnabled;
     @Value("${integrations.rpc.ssl.cert}")
     private String certFileResource;
-    @Value("${integrations.rpc.ssl.privateKey:}")
+    @Value("${integrations.rpc.ssl.privateKey}")
     private String privateKeyResource;
     @Value("${integrations.rpc.ssl.key_password:}")
     private String keyPassword;

@@ -607,7 +607,7 @@ integrations:
       # Integration SSL certificate. Supports combined PEM (cert chain + private key in one file)
       cert: "${INTEGRATIONS_RPC_SSL_CERT:certChainFile.pem}"
       # Integration SSL private key. Leave empty when using combined PEM cert
-      privateKey: "${INTEGRATIONS_RPC_SSL_PRIVATE_KEY:}"
+      privateKey: "${INTEGRATIONS_RPC_SSL_PRIVATE_KEY:privateKeyFile.pem}"
       # Password for encrypted private key. Leave empty if the key is not encrypted
       key_password: "${INTEGRATIONS_RPC_SSL_KEY_PASSWORD:}"
     # Disconnect a client if no keepalive ping received in the specified time
