@@ -604,10 +604,12 @@ integrations:
     ssl:
       # Enable/disable SSL support
       enabled: "${INTEGRATIONS_RPC_SSL_ENABLED:false}"
-      # Integration SSL certificate name
+      # Integration SSL certificate. Supports combined PEM (cert chain + private key in one file)
       cert: "${INTEGRATIONS_RPC_SSL_CERT:certChainFile.pem}"
-      # Integration SSL private key
-      privateKey: "${INTEGRATIONS_RPC_SSL_PRIVATE_KEY:privateKeyFile.pem}"
+      # Integration SSL private key. Leave empty when using combined PEM cert
+      privateKey: "${INTEGRATIONS_RPC_SSL_PRIVATE_KEY:}"
+      # Password for encrypted private key. Leave empty if the key is not encrypted
+      key_password: "${INTEGRATIONS_RPC_SSL_KEY_PASSWORD:}"
     # Disconnect a client if no keepalive ping received in the specified time
     client_max_keep_alive_time_sec: "${INTEGRATIONS_RPC_CLIENT_MAX_KEEP_ALIVE_TIME_SEC:300}"
   activity:
