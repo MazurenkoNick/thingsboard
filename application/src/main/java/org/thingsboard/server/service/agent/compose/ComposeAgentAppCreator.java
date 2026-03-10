@@ -91,17 +91,23 @@ public class ComposeAgentAppCreator {
         Iterator<Entry<String, JsonNode>> it = services.fields();
         while (it.hasNext()) {
             JsonNode service = it.next().getValue();
-            if (service.isObject() && service.has("image")) {
-                String image = service.get("image").asText();
-                for (var t : AgentApplicationType.values()) {
-                    if (t.getMainImagePattern() != null && RegexUtils.matches(image, t.getMainImagePattern())) {
-                        String version = extractVersion(image);
-                        return new ComposeInfo(t, image, version);
-                    }
+            ComposeInfo t = resolveAppTypeAndVersion(service);
+            if (t != null) return t;
+        }
+        return ComposeInfo.GENERIC;
+    }
+
+    private ComposeInfo resolveAppTypeAndVersion(JsonNode service) {
+        if (service.isObject() && service.has("image")) {
+            String image = service.get("image").asText();
+            for (var t : AgentApplicationType.values()) {
+                if (t.getMainImagePattern() != null && RegexUtils.matches(image, t.getMainImagePattern())) {
+                    String version = extractVersion(image);
+                    return new ComposeInfo(t, image, version);
                 }
             }
         }
-        return ComposeInfo.GENERIC;
+        return null;
     }
 
     private String extractVersion(String image) {
@@ -119,10 +125,13 @@ public class ComposeAgentAppCreator {
 
     private record ComposeInfo(AgentApplicationType appType, String mainServiceImage, String version) {
 
-        public static final ComposeInfo GENERIC = new ComposeInfo(AgentApplicationType.GENERIC, null, null);
+        public static final ComposeInfo GENERIC = new ComposeInfo(AgentApplicationType.GENERIC, null, AgentApplicationType.GENERIC.getDefaultVersion());
 
         public String generatePlaceholderAppName(String projectName) {
-            return this.appType + "_" + mainServiceImage + "_" + projectName;
+            if (mainServiceImage != null) {
+                return this.appType + "_" + mainServiceImage + "_" + projectName;
+            }
+            return this.appType + "_" + projectName;
         }
     }
 }

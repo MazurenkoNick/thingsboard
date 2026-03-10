@@ -84,32 +84,31 @@ class DefaultTbAgentApplicationServiceTest {
         ReflectionTestUtils.setField(service, "logEntityActionService", logEntityActionService);
     }
 
-    // ==================== save() - pure CRUD ====================
+    // ==================== update() ====================
 
     @Test
-    void save_newApplication_noEventCreated() throws Exception {
+    void update_newApplication_throws() {
         AgentApplication app = newApplication(null);
-        when(agentApplicationService.save(eq(TENANT_ID), eq(app))).thenReturn(app);
 
-        service.save(app, USER);
-
-        verify(agentAppEventService, never()).save(any(), any());
+        assertThatThrownBy(() -> service.update(app, USER))
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    void save_updateApplication_noEventCreated() throws Exception {
+    void update_existingApplication_savesAndLogsUpdate() throws Exception {
         AgentApplication app = newApplication(APP_ID);
         when(agentApplicationService.save(eq(TENANT_ID), eq(app))).thenReturn(app);
 
-        service.save(app, USER);
+        AgentApplication result = service.update(app, USER);
 
+        assertThat(result.getId()).isEqualTo(APP_ID);
         verify(agentAppEventService, never()).save(any(), any());
     }
 
     // ==================== installEvent() ====================
 
     @Test
-    void execInstallEvent_createsAppAndEvent() throws Exception {
+    void install() throws Exception {
         AgentApplication app = newApplication(null);
         AgentApplication savedApp = newApplication(APP_ID);
         when(agentApplicationService.save(eq(TENANT_ID), eq(app))).thenReturn(savedApp);
@@ -118,7 +117,7 @@ class DefaultTbAgentApplicationServiceTest {
         request.setActionType(AgentAppEventActionType.INSTALL);
         request.setApplication(app);
 
-        AgentApplication result = service.execInstallEvent(TENANT_ID, request, USER);
+        AgentApplication result = service.install(TENANT_ID, request, USER);
 
         assertThat(result.getId()).isEqualTo(APP_ID);
 
@@ -131,11 +130,11 @@ class DefaultTbAgentApplicationServiceTest {
     }
 
     @Test
-    void execInstallEvent_noApplication_throws() {
+    void install_noApplication_throws() {
         AgentAppEventRequest request = new AgentAppEventRequest();
         request.setActionType(AgentAppEventActionType.INSTALL);
 
-        assertThatThrownBy(() -> service.execInstallEvent(TENANT_ID, request, USER))
+        assertThatThrownBy(() -> service.install(TENANT_ID, request, USER))
                 .isInstanceOf(NullPointerException.class);
     }
 

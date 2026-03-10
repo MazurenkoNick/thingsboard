@@ -20,14 +20,17 @@ import lombok.Getter;
 import java.util.regex.Pattern;
 
 public enum AgentApplicationType {
-    GENERIC(null),
-    EDGE("thingsboard/tb-edge:.+"),
-    GATEWAY("thingsboard/tb-gateway:.+");
+    GENERIC(null, "1.0.0"),
+    EDGE("thingsboard/tb-edge:.+", null),
+    GATEWAY("thingsboard/tb-gateway:.+", null);
 
     @Getter
     private final Pattern mainImagePattern;
+    @Getter
+    private final String defaultVersion;
 
-    AgentApplicationType(String mainImageRegex) {
+    AgentApplicationType(String mainImageRegex, String defaultVersion) {
         this.mainImagePattern = mainImageRegex != null ? Pattern.compile(mainImageRegex) : null;
+        this.defaultVersion = defaultVersion;
     }
 }

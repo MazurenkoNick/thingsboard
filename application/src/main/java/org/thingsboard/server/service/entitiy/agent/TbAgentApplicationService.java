@@ -25,9 +25,9 @@ import org.thingsboard.server.common.data.id.TenantId;
 
 public interface TbAgentApplicationService {
 
-    AgentApplication save(AgentApplication application, User user) throws Exception;
+    AgentApplication update(AgentApplication application, User user) throws Exception;
 
-    AgentApplication execInstallEvent(TenantId tenantId, AgentAppEventRequest request, User user) throws Exception;
+    AgentApplication install(TenantId tenantId, AgentAppEventRequest request, User user) throws Exception;
 
     void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, User user) throws Exception;
 

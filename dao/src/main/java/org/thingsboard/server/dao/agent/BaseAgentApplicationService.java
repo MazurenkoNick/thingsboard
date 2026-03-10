@@ -25,6 +25,9 @@ import org.thingsboard.server.cache.agent.AgentApplicationCacheEvictEvent;
 import org.thingsboard.server.cache.agent.AgentApplicationCacheKey;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -57,6 +60,9 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
     private AgentAppUnitService agentAppUnitService;
 
     @Autowired
+    private AgentAppTemplateService agentAppTemplateService;
+
+    @Autowired
     private DataValidator<AgentApplication> agentApplicationValidator;
 
     @Override
@@ -72,6 +78,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         AgentApplication old = agentApplication.getId() != null
                 ? agentApplicationDao.findById(tenantId, agentApplication.getUuidId())
                 : null;
+        resolveTemplateId(agentApplication, old);
         resolveProjectName(agentApplication, old);
         agentApplicationValidator.validate(agentApplication, app -> tenantId);
         AgentApplication saved = agentApplicationDao.save(tenantId, agentApplication);
@@ -167,6 +174,24 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
                 .entityId(agentApplicationId)
                 .entity(application)
                 .build());
+    }
+
+    private void resolveTemplateId(AgentApplication agentApplication, AgentApplication old) {
+        if (agentApplication.getAppType() != AgentApplicationType.GENERIC) {
+            return;
+        }
+        if (old != null) {
+            agentApplication.setTemplateId(old.getTemplateId());
+        } else {
+            String defaultVersion = agentApplication.getAppType().getDefaultVersion();
+            if (defaultVersion != null) {
+                AgentAppTemplate template = agentAppTemplateService.findByAppTypeAndConfigTypeAndVersion(
+                        agentApplication.getAppType(), AgentAppConfigType.DOCKER_COMPOSE, defaultVersion);
+                if (template != null) {
+                    agentApplication.setTemplateId(template.getId());
+                }
+            }
+        }
     }
 
     private void resolveProjectName(AgentApplication agentApplication, AgentApplication old) {
