@@ -44,6 +44,7 @@ import org.bouncycastle.openssl.jcajce.JcePEMEncryptorBuilder;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -52,6 +53,7 @@ import org.thingsboard.server.gen.integration.IntegrationTransportGrpc;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -187,6 +189,38 @@ class IntegrationRpcSslTest {
 
         assertThatThrownBy(() -> startServer(certOnlyFile.toString(), "", null))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    // Backward-compatibility: existing users reference cert/key by classpath-relative names
+    // (e.g. "certChainFile.pem") resolved via ResourceUtils → classLoader.getResourceAsStream().
+    // This test writes generated PEM files into the test classpath directory and verifies
+    // that setupSsl() resolves them the same way the old Resources.getResource() code did.
+    @Test
+    void separateCertAndKey_classpathResources() throws Exception {
+        KeyPair kp = KeyType.RSA_2048.generateKeyPair();
+        X509Certificate cert = generateSelfSignedCert(kp, KeyType.RSA_2048.sigAlg);
+
+        String certName = "integration-rpc-ssl-test-cert.pem";
+        String keyName = "integration-rpc-ssl-test-key.pem";
+
+        // Write PEM files into the classpath root (target/test-classes/)
+        URL classpathRoot = getClass().getClassLoader().getResource("");
+        Path classpathDir = Path.of(classpathRoot.toURI());
+        Path certPath = classpathDir.resolve(certName);
+        Path keyPath = classpathDir.resolve(keyName);
+        tempFiles.add(certPath);
+        tempFiles.add(keyPath);
+
+        try (JcaPEMWriter w = new JcaPEMWriter(Files.newBufferedWriter(certPath))) {
+            w.writeObject(cert);
+        }
+        try (JcaPEMWriter w = new JcaPEMWriter(Files.newBufferedWriter(keyPath))) {
+            w.writeObject(toPkcs8IfKey(kp.getPrivate()));
+        }
+
+        // Use bare classpath-relative names — same as existing deployments
+        server = startServer(certName, keyName, null);
+        assertTlsConnectivity(cert);
     }
 
     // --- Server startup using production TbCoreRemoteIntegrationRpcService.setupSsl() ---
