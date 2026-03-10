@@ -34,7 +34,7 @@ public interface AgentAppTemplateRepository extends JpaRepository<AgentAppTempla
             @Param("configType") String configType);
 
     @Query(value = "SELECT * FROM agent_app_template WHERE app_type = :appType " +
-            "AND config ->> 'type' = :configType AND current_version = :currentVersion LIMIT 1",
+            "AND config ->> 'type' = :configType AND current_version IS NOT DISTINCT FROM :currentVersion LIMIT 1",
             nativeQuery = true)
     AgentAppTemplateEntity findFirstByAppTypeAndConfigTypeAndCurrentVersion(
             @Param("appType") String appType,

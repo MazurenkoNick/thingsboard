@@ -37,6 +37,8 @@ public interface AgentApplicationDao extends Dao<AgentApplication> {
 
     void removeByTemplateId(TenantId tenantId, UUID templateId);
 
+    AgentApplication findByProjectName(TenantId tenantId, String projectName);
+
     AgentApplication findByEventId(TenantId tenantId, UUID eventId);
 
     AgentApplicationInfo findInfoById(TenantId tenantId, UUID id);

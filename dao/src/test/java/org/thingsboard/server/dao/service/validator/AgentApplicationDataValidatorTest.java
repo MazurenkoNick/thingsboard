@@ -187,22 +187,9 @@ class AgentApplicationDataValidatorTest {
     }
 
     @Test
-    void testValidateDataImpl_dockerComposeConfig_nullProjectName_thenException() {
-        AgentApplication app = createValidApplication();
-        DockerComposeConfig config = new DockerComposeConfig();
-        config.setCompose(new com.fasterxml.jackson.databind.node.TextNode("version: '3'"));
-        app.setConfig(config);
-
-        DataValidationException exception = assertThrows(DataValidationException.class,
-                () -> validator.validateDataImpl(tenantId, app));
-        assertThat(exception.getMessage()).contains("project name");
-    }
-
-    @Test
     void testValidateDataImpl_dockerComposeConfig_nullCompose_thenException() {
         AgentApplication app = createValidApplication();
         DockerComposeConfig config = new DockerComposeConfig();
-        config.setProjectName("my-project");
         app.setConfig(config);
 
         DataValidationException exception = assertThrows(DataValidationException.class,
@@ -214,7 +201,6 @@ class AgentApplicationDataValidatorTest {
     void testValidateDataImpl_dockerComposeConfig_valid_thenOK() {
         AgentApplication app = createValidApplication();
         DockerComposeConfig config = new DockerComposeConfig();
-        config.setProjectName("my-project");
         config.setCompose(new com.fasterxml.jackson.databind.node.TextNode("version: '3'"));
         app.setConfig(config);
 

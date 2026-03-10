@@ -54,7 +54,7 @@ public class AgentAppUnitDataValidator extends DataValidator<AgentAppUnit> {
         if (StringUtils.isBlank(agentAppUnit.getIdentifier())) {
             throw new DataValidationException("Agent app unit identifier is required!");
         }
-        if (StringUtils.isBlank(agentAppUnit.getType())) {
+        if (agentAppUnit.getType() == null) {
             throw new DataValidationException("Agent app unit type is required!");
         }
     }

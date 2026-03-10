@@ -32,7 +32,21 @@ message AgentToServer {
     CommandAck commandAck = 2;
     CommandProgress progress = 3;
     CommandResult result = 4;
+    ProjectStateSync projectSync = 5;
   }
+}
+
+message ProjectStateSync {
+  string projectName = 1;
+  bool removed = 2;
+  oneof state {
+    ComposeState compose = 3;
+  }
+}
+
+message ComposeState {
+  optional string composeJson = 1;
+  map<string, string> containerStates = 2;
 }
 
 message ServerToAgent {

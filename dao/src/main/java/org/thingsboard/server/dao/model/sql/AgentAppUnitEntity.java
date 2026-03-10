@@ -17,10 +17,13 @@ package org.thingsboard.server.dao.model.sql;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.agent.AgentAppUnit;
+import org.thingsboard.server.common.data.agent.AgentAppUnitType;
 import org.thingsboard.server.common.data.id.AgentAppUnitId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.dao.model.BaseSqlEntity;
@@ -40,8 +43,9 @@ public final class AgentAppUnitEntity extends BaseSqlEntity<AgentAppUnit> {
     @Column(name = ModelConstants.AGENT_APP_UNIT_IDENTIFIER_PROPERTY)
     private String identifier;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = ModelConstants.AGENT_APP_UNIT_TYPE_PROPERTY)
-    private String type;
+    private AgentAppUnitType type;
 
     public AgentAppUnitEntity() {
         super();

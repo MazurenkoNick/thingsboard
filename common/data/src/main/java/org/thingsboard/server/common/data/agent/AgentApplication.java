@@ -33,6 +33,8 @@ import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.TenantId;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 @Schema
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -50,6 +52,9 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     private AgentAppConfig config;
     @Getter
     private Long version;
+    @JsonIgnore
+    @Getter
+    private String projectName;
     @JsonIgnore
     @Getter
     private boolean pendingDeletion;
@@ -70,6 +75,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         this.name = application.getName();
         this.templateId = application.getTemplateId();
         this.desiredTemplateId = application.getDesiredTemplateId();
+        this.projectName = application.getProjectName();
         this.version = application.getVersion();
         this.pendingDeletion = application.isPendingDeletion();
     }
@@ -123,6 +129,10 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     @Schema(description = "Template this application is based on", requiredMode = Schema.RequiredMode.REQUIRED)
     public AgentAppTemplateId getTemplateId() {
         return templateId;
+    }
+
+    public static String generateProjectName() {
+        return Long.toHexString(ThreadLocalRandom.current().nextLong(0x1000000000000L, 0xFFFFFFFFFFFFFL));
     }
 
 }

@@ -55,23 +55,24 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
     private final TbClusterService tbClusterService;
 
     @Override
-    public AgentApplication save(AgentApplication application, User user) throws Exception {
-        boolean isUpdate = application.getId() != null;
-        ActionType actionType = isUpdate ? ActionType.UPDATED : ActionType.ADDED;
+    public AgentApplication update(AgentApplication application, User user) throws Exception {
+        if (application.getId() == null) {
+            throw new IllegalStateException("Can't update state of the non-existent application!");
+        }
         TenantId tenantId = application.getTenantId();
         try {
             AgentApplication savedApp = checkNotNull(applicationService.save(tenantId, application));
-            logEntityActionService.logEntityAction(tenantId, savedApp.getId(), savedApp, actionType, user);
+            logEntityActionService.logEntityAction(tenantId, savedApp.getId(), savedApp, ActionType.UPDATED, user);
             return savedApp;
         } catch (Exception e) {
-            logEntityActionService.logEntityAction(tenantId, emptyId(EntityType.AGENT_APPLICATION), application, actionType, user, e);
+            logEntityActionService.logEntityAction(tenantId, emptyId(EntityType.AGENT_APPLICATION), application, ActionType.UPDATED, user, e);
             throw e;
         }
     }
 
     @Transactional
     @Override
-    public AgentApplication execInstallEvent(TenantId tenantId, AgentAppEventRequest request, User user) throws Exception {
+    public AgentApplication install(TenantId tenantId, AgentAppEventRequest request, User user) throws Exception {
         AgentApplication application = request.getApplication();
         application.setId(null);
         application.setTenantId(tenantId);

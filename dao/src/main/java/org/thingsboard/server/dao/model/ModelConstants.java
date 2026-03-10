@@ -263,6 +263,7 @@ public class ModelConstants {
     public static final String AGENT_APPLICATION_TEMPLATE_ID_PROPERTY = "template_id";
     public static final String AGENT_APPLICATION_DESIRED_TEMPLATE_ID_PROPERTY = "desired_template_id";
     public static final String AGENT_APPLICATION_CONFIG_PROPERTY = "config";
+    public static final String AGENT_APPLICATION_PROJECT_NAME_PROPERTY = "project_name";
     public static final String AGENT_APPLICATION_PENDING_DELETION_PROPERTY = "pending_deletion";
 
     /**

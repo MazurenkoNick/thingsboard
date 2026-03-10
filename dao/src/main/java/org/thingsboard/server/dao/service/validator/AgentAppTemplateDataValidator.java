@@ -50,9 +50,6 @@ public class AgentAppTemplateDataValidator extends DataValidator<AgentAppTemplat
         if (template.getCurrentVersion() == null || template.getCurrentVersion().isBlank()) {
             throw new DataValidationException("Template current version should be specified!");
         }
-        if (template.getPreviousVersion() == null || template.getPreviousVersion().isBlank()) {
-            throw new DataValidationException("Template previous version should be specified!");
-        }
         validateSteps(template);
     }
 

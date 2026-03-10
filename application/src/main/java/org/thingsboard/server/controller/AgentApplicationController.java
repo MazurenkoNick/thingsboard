@@ -24,6 +24,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -118,14 +119,14 @@ public class AgentApplicationController extends BaseController {
             notes = "Updates the Agent Application."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @PostMapping("/agent/app")
+    @PutMapping("/agent/app")
     @ResponseBody
-    public AgentApplication saveAgentApplication(
+    public AgentApplication updateAgentApplication(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "A JSON value representing the agent application.")
             @RequestBody AgentApplication agentApplication) throws Exception {
         agentApplication.setTenantId(getTenantId());
         checkEntityId(agentApplication.getId(), Operation.WRITE);
-        return tbAgentApplicationService.save(agentApplication, getCurrentUser());
+        return tbAgentApplicationService.update(agentApplication, getCurrentUser());
     }
 
     @ApiOperation(value = "Install Agent Application (installAgentApp)",
@@ -142,7 +143,7 @@ public class AgentApplicationController extends BaseController {
             throw new ThingsboardException("Install request must include an application", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
         TenantId tenantId = getCurrentUser().getTenantId();
-        return tbAgentApplicationService.execInstallEvent(tenantId, request, getCurrentUser());
+        return tbAgentApplicationService.install(tenantId, request, getCurrentUser());
     }
 
     @ApiOperation(value = "Execute Agent Application Event (createAgentAppEvent)",

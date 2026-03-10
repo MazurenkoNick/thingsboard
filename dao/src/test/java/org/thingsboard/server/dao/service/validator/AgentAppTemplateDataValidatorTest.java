@@ -86,26 +86,6 @@ class AgentAppTemplateDataValidatorTest {
     }
 
     @Test
-    void testValidateDataImpl_nullPreviousVersion_thenException() {
-        AgentAppTemplate template = createValidTemplate();
-        template.setPreviousVersion(null);
-
-        DataValidationException exception = assertThrows(DataValidationException.class,
-                () -> validator.validateDataImpl(tenantId, template));
-        assertThat(exception.getMessage()).containsIgnoringCase("previous version");
-    }
-
-    @Test
-    void testValidateDataImpl_blankPreviousVersion_thenException() {
-        AgentAppTemplate template = createValidTemplate();
-        template.setPreviousVersion("  ");
-
-        DataValidationException exception = assertThrows(DataValidationException.class,
-                () -> validator.validateDataImpl(tenantId, template));
-        assertThat(exception.getMessage()).containsIgnoringCase("previous version");
-    }
-
-    @Test
     void testValidateDataImpl_valid_thenOK() {
         AgentAppTemplate template = createValidTemplate();
 
@@ -285,7 +265,6 @@ class AgentAppTemplateDataValidatorTest {
         AgentAppTemplate template = new AgentAppTemplate();
         template.setAppType(AgentApplicationType.GENERIC);
         template.setCurrentVersion("1.0.0");
-        template.setPreviousVersion("0.9.0");
         return template;
     }
 }

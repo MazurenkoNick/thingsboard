@@ -797,8 +797,10 @@ CREATE TABLE IF NOT EXISTS agent_application (
     template_id uuid,
     desired_template_id uuid,
     config jsonb,
+    project_name varchar(255),
     pending_deletion boolean NOT NULL DEFAULT false,
     version BIGINT DEFAULT 1,
+    CONSTRAINT agent_application_project_name_unq_key UNIQUE (agent_id, project_name),
     CONSTRAINT fk_agent_application_agent FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE CASCADE,
     CONSTRAINT fk_agent_application_template FOREIGN KEY (template_id) REFERENCES agent_app_template(id) ON DELETE CASCADE,
     CONSTRAINT fk_agent_application_desired_template FOREIGN KEY (desired_template_id) REFERENCES agent_app_template(id) ON DELETE SET NULL
@@ -825,7 +827,8 @@ CREATE TABLE IF NOT EXISTS agent_app_unit (
     agent_application_id uuid NOT NULL,
     identifier varchar(255) NOT NULL,
     type varchar(255) NOT NULL,
-    CONSTRAINT fk_agent_app_unit_agent_application FOREIGN KEY (agent_application_id) REFERENCES agent_application(id) ON DELETE CASCADE
+    CONSTRAINT fk_agent_app_unit_agent_application FOREIGN KEY (agent_application_id) REFERENCES agent_application(id) ON DELETE CASCADE,
+    CONSTRAINT uq_agent_app_unit_app_id_identifier UNIQUE (agent_application_id, identifier)
 );
 
 CREATE TABLE IF NOT EXISTS edge_event (

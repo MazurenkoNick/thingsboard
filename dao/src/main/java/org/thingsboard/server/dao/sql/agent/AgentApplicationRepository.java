@@ -50,6 +50,8 @@ public interface AgentApplicationRepository extends JpaRepository<AgentApplicati
     @Query("DELETE FROM AgentApplicationEntity e WHERE e.templateId = :templateId")
     void deleteByTemplateId(@Param("templateId") UUID templateId);
 
+    AgentApplicationEntity findByProjectName(String projectName);
+
     @Query("SELECT app FROM AgentApplicationEntity app JOIN AgentAppEventEntity evt ON app.id = evt.applicationId WHERE evt.id = :eventId")
     AgentApplicationEntity findByEventId(@Param("eventId") UUID eventId);
 

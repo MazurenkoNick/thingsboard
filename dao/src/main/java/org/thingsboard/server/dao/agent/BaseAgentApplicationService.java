@@ -25,7 +25,9 @@ import org.thingsboard.server.cache.agent.AgentApplicationCacheEvictEvent;
 import org.thingsboard.server.cache.agent.AgentApplicationCacheKey;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
-import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -58,6 +60,9 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
     private AgentAppUnitService agentAppUnitService;
 
     @Autowired
+    private AgentAppTemplateService agentAppTemplateService;
+
+    @Autowired
     private DataValidator<AgentApplication> agentApplicationValidator;
 
     @Override
@@ -73,6 +78,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         AgentApplication old = agentApplication.getId() != null
                 ? agentApplicationDao.findById(tenantId, agentApplication.getUuidId())
                 : null;
+        resolveTemplateId(agentApplication, old);
         resolveProjectName(agentApplication, old);
         agentApplicationValidator.validate(agentApplication, app -> tenantId);
         AgentApplication saved = agentApplicationDao.save(tenantId, agentApplication);
@@ -100,6 +106,12 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         log.trace("Executing findAgentApplicationInfoById [{}]", agentApplicationId);
         validateId(agentApplicationId, id -> INCORRECT_AGENT_APPLICATION_ID + id);
         return agentApplicationDao.findInfoById(tenantId, agentApplicationId.getId());
+    }
+
+    @Override
+    public AgentApplication findByProjectName(TenantId tenantId, String projectName) {
+        log.trace("Executing findAgentApplicationByProjectName [{}]", projectName);
+        return agentApplicationDao.findByProjectName(tenantId, projectName);
     }
 
     @Override
@@ -164,14 +176,29 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
                 .build());
     }
 
-    private void resolveProjectName(AgentApplication agentApplication, AgentApplication old) {
-        if (!(agentApplication.getConfig() instanceof DockerComposeConfig config)) {
+    private void resolveTemplateId(AgentApplication agentApplication, AgentApplication old) {
+        if (agentApplication.getAppType() != AgentApplicationType.GENERIC) {
             return;
         }
-        if (old != null && old.getConfig() instanceof DockerComposeConfig oldConfig) {
-            config.setProjectName(oldConfig.getProjectName());
+        if (old != null) {
+            agentApplication.setTemplateId(old.getTemplateId());
         } else {
-            config.setProjectName(DockerComposeConfig.generateProjectName());
+            String defaultVersion = agentApplication.getAppType().getDefaultVersion();
+            if (defaultVersion != null) {
+                AgentAppTemplate template = agentAppTemplateService.findByAppTypeAndConfigTypeAndVersion(
+                        agentApplication.getAppType(), AgentAppConfigType.DOCKER_COMPOSE, defaultVersion);
+                if (template != null) {
+                    agentApplication.setTemplateId(template.getId());
+                }
+            }
+        }
+    }
+
+    private void resolveProjectName(AgentApplication agentApplication, AgentApplication old) {
+        if (old != null && old.getProjectName() != null) {
+            agentApplication.setProjectName(old.getProjectName());
+        } else if (agentApplication.getProjectName() == null) {
+            agentApplication.setProjectName(AgentApplication.generateProjectName());
         }
     }
 

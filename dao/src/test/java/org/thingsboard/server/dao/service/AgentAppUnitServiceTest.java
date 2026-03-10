@@ -19,16 +19,18 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentAppUnit;
+import org.thingsboard.server.common.data.agent.AgentAppUnitType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.AgentAppUnit;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.agent.AgentAppTemplateService;
 import org.thingsboard.server.dao.agent.AgentAppUnitService;
+import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.exception.DataValidationException;
 
@@ -54,7 +56,7 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
         AgentAppUnit unit = new AgentAppUnit();
         unit.setAgentApplicationId(app.getId());
         unit.setIdentifier("unit-1");
-        unit.setType("container");
+        unit.setType(AgentAppUnitType.CONTAINER);
 
         AgentAppUnit saved = agentAppUnitService.saveAgentAppUnit(tenantId, unit);
         Assert.assertNotNull(saved);
@@ -62,7 +64,7 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
         Assert.assertTrue(saved.getCreatedTime() > 0);
         Assert.assertEquals(app.getId(), saved.getAgentApplicationId());
         Assert.assertEquals("unit-1", saved.getIdentifier());
-        Assert.assertEquals("container", saved.getType());
+        Assert.assertEquals(AgentAppUnitType.CONTAINER, saved.getType());
 
         AgentAppUnit found = agentAppUnitService.findAgentAppUnitById(tenantId, saved.getId());
         Assert.assertNotNull(found);
@@ -81,7 +83,7 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
     public void testSaveAgentAppUnitWithNullAgentApplicationId() {
         AgentAppUnit unit = new AgentAppUnit();
         unit.setIdentifier("id");
-        unit.setType("type");
+        unit.setType(AgentAppUnitType.CONTAINER);
         Assertions.assertThrows(DataValidationException.class, () ->
                 agentAppUnitService.saveAgentAppUnit(tenantId, unit));
     }
@@ -91,7 +93,7 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
         AgentAppUnit unit = new AgentAppUnit();
         unit.setAgentApplicationId(new AgentApplicationId(java.util.UUID.randomUUID()));
         unit.setIdentifier("id");
-        unit.setType("type");
+        unit.setType(AgentAppUnitType.CONTAINER);
         Assertions.assertThrows(DataValidationException.class, () ->
                 agentAppUnitService.saveAgentAppUnit(tenantId, unit));
     }
@@ -103,7 +105,7 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
         AgentAppUnit unit = new AgentAppUnit();
         unit.setAgentApplicationId(app.getId());
         unit.setIdentifier("  ");
-        unit.setType("type");
+        unit.setType(AgentAppUnitType.CONTAINER);
         Assertions.assertThrows(DataValidationException.class, () ->
                 agentAppUnitService.saveAgentAppUnit(tenantId, unit));
         agentApplicationService.delete(tenantId, app.getId());
@@ -111,13 +113,13 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
     }
 
     @Test
-    public void testSaveAgentAppUnitWithBlankType() {
+    public void testSaveAgentAppUnitWithNullType() {
         Agent agent = createAgent("Agent");
         AgentApplication app = saveApplication(agent);
         AgentAppUnit unit = new AgentAppUnit();
         unit.setAgentApplicationId(app.getId());
         unit.setIdentifier("id");
-        unit.setType("  ");
+        unit.setType(null);
         Assertions.assertThrows(DataValidationException.class, () ->
                 agentAppUnitService.saveAgentAppUnit(tenantId, unit));
         agentApplicationService.delete(tenantId, app.getId());
@@ -128,8 +130,8 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
     public void testFindAgentAppUnitsByAgentAppId() {
         Agent agent = createAgent("Agent");
         AgentApplication app = saveApplication(agent);
-        AgentAppUnit u1 = saveUnit(app, "id1", "t1");
-        AgentAppUnit u2 = saveUnit(app, "id2", "t2");
+        AgentAppUnit u1 = saveUnit(app, "id1", AgentAppUnitType.CONTAINER);
+        AgentAppUnit u2 = saveUnit(app, "id2", AgentAppUnitType.VOLUME);
 
         List<AgentAppUnit> list = agentAppUnitService.findAgentAppUnitsByAgentAppId(tenantId, app.getId());
         Assert.assertEquals(2, list.size());
@@ -144,7 +146,7 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
     public void testDeleteAgentAppUnit() {
         Agent agent = createAgent("Agent");
         AgentApplication app = saveApplication(agent);
-        AgentAppUnit unit = saveUnit(app, "toDelete", "type");
+        AgentAppUnit unit = saveUnit(app, "toDelete", AgentAppUnitType.CONTAINER);
 
         agentAppUnitService.deleteAgentAppUnit(tenantId, unit.getId());
         AgentAppUnit found = agentAppUnitService.findAgentAppUnitById(tenantId, unit.getId());
@@ -158,8 +160,8 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
     public void testDeleteByAgentApplicationId() {
         Agent agent = createAgent("Agent");
         AgentApplication app = saveApplication(agent);
-        saveUnit(app, "u1", "t1");
-        saveUnit(app, "u2", "t2");
+        saveUnit(app, "u1", AgentAppUnitType.CONTAINER);
+        saveUnit(app, "u2", AgentAppUnitType.VOLUME);
 
         List<AgentAppUnit> before = agentAppUnitService.findAgentAppUnitsByAgentAppId(tenantId, app.getId());
         Assert.assertEquals(2, before.size());
@@ -176,8 +178,8 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
     public void testDeleteAgentApplicationRemovesAgentAppUnits() {
         Agent agent = createAgent("Agent");
         AgentApplication app = saveApplication(agent);
-        saveUnit(app, "c1", "t1");
-        saveUnit(app, "c2", "t2");
+        saveUnit(app, "c1", AgentAppUnitType.CONTAINER);
+        saveUnit(app, "c2", AgentAppUnitType.NETWORK);
 
         List<AgentAppUnit> before = agentAppUnitService.findAgentAppUnitsByAgentAppId(tenantId, app.getId());
         Assert.assertEquals(2, before.size());
@@ -193,13 +195,13 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
     public void testUpdateAgentAppUnit() {
         Agent agent = createAgent("Agent");
         AgentApplication app = saveApplication(agent);
-        AgentAppUnit unit = saveUnit(app, "id1", "type1");
+        AgentAppUnit unit = saveUnit(app, "id1", AgentAppUnitType.CONTAINER);
 
         unit.setIdentifier("id1-updated");
-        unit.setType("type2");
+        unit.setType(AgentAppUnitType.VOLUME);
         AgentAppUnit updated = agentAppUnitService.saveAgentAppUnit(tenantId, unit);
         Assert.assertEquals("id1-updated", updated.getIdentifier());
-        Assert.assertEquals("type2", updated.getType());
+        Assert.assertEquals(AgentAppUnitType.VOLUME, updated.getType());
 
         AgentAppUnit found = agentAppUnitService.findAgentAppUnitById(tenantId, unit.getId());
         Assert.assertEquals("id1-updated", found.getIdentifier());
@@ -213,6 +215,8 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
         Agent agent = new Agent();
         agent.setTenantId(tenantId);
         agent.setName(name);
+        agent.setRoutingKey(name);
+        agent.setSecret(StringUtils.randomAlphanumeric(20));
         return agentService.saveAgent(agent);
     }
 
@@ -230,12 +234,13 @@ public class AgentAppUnitServiceTest extends AbstractServiceTest {
         template.setAppType(AgentApplicationType.GENERIC);
         template.setCurrentVersion("1.0.0");
         template.setPreviousVersion("0.9.0");
-        template.setStartSteps(Collections.emptyList());
-        template.setUpgradeSteps(Collections.emptyList());
+        template.setNextVersion(null);
+        template.setStartSteps(java.util.Collections.emptyList());
+        template.setUpgradeSteps(java.util.Collections.emptyList());
         return agentAppTemplateService.save(TenantId.SYS_TENANT_ID, template);
     }
 
-    private AgentAppUnit saveUnit(AgentApplication app, String identifier, String type) {
+    private AgentAppUnit saveUnit(AgentApplication app, String identifier, AgentAppUnitType type) {
         AgentAppUnit unit = new AgentAppUnit();
         unit.setAgentApplicationId(app.getId());
         unit.setIdentifier(identifier);
