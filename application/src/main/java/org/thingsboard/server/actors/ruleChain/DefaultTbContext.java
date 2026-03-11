@@ -138,7 +138,9 @@ import org.thingsboard.server.dao.notification.NotificationRuleService;
 import org.thingsboard.server.dao.notification.NotificationTargetService;
 import org.thingsboard.server.dao.notification.NotificationTemplateService;
 import org.thingsboard.server.dao.oauth2.OAuth2ClientService;
+import org.thingsboard.server.dao.ota.DeviceGroupOtaPackageService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
+import org.thingsboard.server.dao.ota.OtaPackageStateService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.queue.QueueStatsService;
 import org.thingsboard.server.dao.relation.RelationService;
@@ -848,6 +850,11 @@ public class DefaultTbContext implements TbContext, TbPeContext {
     }
 
     @Override
+    public OtaPackageStateService getOtaPackageStateService() {
+        return mainCtx.getOtaPackageStateService();
+    }
+
+    @Override
     public RuleEngineDeviceProfileCache getDeviceProfileCache() {
         return mainCtx.getDeviceProfileCache();
     }
@@ -1250,6 +1257,11 @@ public class DefaultTbContext implements TbContext, TbPeContext {
     @Override
     public SecretService getSecretService() {
         return mainCtx.getSecretService();
+    }
+
+    @Override
+    public DeviceGroupOtaPackageService getDeviceGroupOtaPackageService() {
+        return mainCtx.getDeviceGroupOtaPackageService();
     }
 
     @Override
