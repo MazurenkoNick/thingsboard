@@ -72,7 +72,12 @@ for dir in integration/*/; do
   copy_and_rename "${target}/${prefix}.rpm"            "${prefix}" "rpm"
 done
 
-# 3) Upload to S3
+# 3) Web report packages
+copy_and_rename "msa/web-report/target/tb-web-report.deb"        "tb-web-report" "deb"
+copy_and_rename "msa/web-report/target/tb-web-report.rpm"        "tb-web-report" "rpm"
+copy_and_rename "msa/web-report/target/tb-web-report-windows.zip" "tb-web-report-windows" "zip"
+
+# 4) Upload to S3
 echo "Uploading all files in $TMP_DIR to $S3_BUCKET ..."
 aws s3 sync "$TMP_DIR" "$S3_BUCKET" --no-progress
 
