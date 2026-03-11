@@ -82,7 +82,7 @@ import org.thingsboard.server.queue.TbQueueMsgMetadata;
 import org.thingsboard.server.queue.discovery.PartitionService;
 import org.thingsboard.server.queue.discovery.TbServiceInfoProvider;
 import org.thingsboard.server.queue.util.TbCoreComponent;
-import org.thingsboard.server.service.ota.OtaPackageStateService;
+import org.thingsboard.server.dao.ota.OtaPackageStateService;
 import org.thingsboard.server.service.partition.AbstractPartitionBasedService;
 
 import java.util.ArrayList;

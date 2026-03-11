@@ -83,8 +83,8 @@ import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.IntegrationId;
 import org.thingsboard.server.common.data.id.HasId;
+import org.thingsboard.server.common.data.id.IntegrationId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.RuleNodeId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -138,15 +138,17 @@ import org.thingsboard.server.dao.notification.NotificationRuleService;
 import org.thingsboard.server.dao.notification.NotificationTargetService;
 import org.thingsboard.server.dao.notification.NotificationTemplateService;
 import org.thingsboard.server.dao.oauth2.OAuth2ClientService;
+import org.thingsboard.server.dao.ota.DeviceGroupOtaPackageService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
+import org.thingsboard.server.dao.ota.OtaPackageStateService;
 import org.thingsboard.server.dao.pat.ApiKeyService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.queue.QueueStatsService;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.report.ReportService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
-import org.thingsboard.server.dao.resource.TbResourceDataCache;
 import org.thingsboard.server.dao.resource.ResourceService;
+import org.thingsboard.server.dao.resource.TbResourceDataCache;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rule.RuleChainService;
 import org.thingsboard.server.dao.scheduler.SchedulerEventService;
@@ -225,8 +227,8 @@ public class DefaultTbContext implements TbContext, TbPeContext {
         RuleNodeId selfId = nodeCtx.getSelf().getId();
         if (msg.isAlreadyInStack(selfRuleChainId, selfId)) {
             log.warn("[{}] Detected rule chain processing loop for rule node [{}] in rule chain [{}]. " +
-                    "The message will be failed to prevent infinite loop. " +
-                    "Please check the rule chain configuration for circular references.",
+                     "The message will be failed to prevent infinite loop. " +
+                     "Please check the rule chain configuration for circular references.",
                     nodeCtx.getTenantId(), selfId, selfRuleChainId);
             tellFailure(msg, new RuntimeException(
                     "Detected rule chain processing loop for rule node [" + selfId + "] " +
@@ -849,6 +851,11 @@ public class DefaultTbContext implements TbContext, TbPeContext {
     }
 
     @Override
+    public OtaPackageStateService getOtaPackageStateService() {
+        return mainCtx.getOtaPackageStateService();
+    }
+
+    @Override
     public RuleEngineDeviceProfileCache getDeviceProfileCache() {
         return mainCtx.getDeviceProfileCache();
     }
@@ -1256,6 +1263,11 @@ public class DefaultTbContext implements TbContext, TbPeContext {
     @Override
     public SecretService getSecretService() {
         return mainCtx.getSecretService();
+    }
+
+    @Override
+    public DeviceGroupOtaPackageService getDeviceGroupOtaPackageService() {
+        return mainCtx.getDeviceGroupOtaPackageService();
     }
 
     @Override
