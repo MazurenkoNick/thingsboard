@@ -604,10 +604,17 @@ integrations:
     ssl:
       # Enable/disable SSL support
       enabled: "${INTEGRATIONS_RPC_SSL_ENABLED:false}"
-      # Integration SSL certificate name
+      # Path to the server certificate file (holds server certificate or certificate chain, may include server private key).
+      # Accepts an absolute filesystem path (e.g. /etc/thingsboard/certChainFile.pem),
+      # a relative path resolved against the working directory first then the classpath,
+      # or a classpath resource with the explicit "classpath:" prefix (e.g. classpath:conf/certChainFile.pem).
       cert: "${INTEGRATIONS_RPC_SSL_CERT:certChainFile.pem}"
-      # Integration SSL private key
+      # Path to the server certificate private key file. Optional if the private key is already present in the cert file above.
+      # Supports the same path resolution as 'cert': absolute, relative/classpath, or "classpath:" prefix.
+      # Leave empty when using a combined PEM cert that already contains the private key.
       privateKey: "${INTEGRATIONS_RPC_SSL_PRIVATE_KEY:privateKeyFile.pem}"
+      # Server certificate private key password (optional). Leave empty if the key is not encrypted
+      key_password: "${INTEGRATIONS_RPC_SSL_KEY_PASSWORD:}"
     # Disconnect a client if no keepalive ping received in the specified time
     client_max_keep_alive_time_sec: "${INTEGRATIONS_RPC_CLIENT_MAX_KEEP_ALIVE_TIME_SEC:300}"
   activity:

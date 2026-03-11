@@ -30,12 +30,14 @@
  */
 package org.thingsboard.server.service.integration.rpc;
 
-import com.google.common.io.Resources;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import io.grpc.Server;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import io.grpc.stub.StreamObserver;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -47,6 +49,8 @@ import org.thingsboard.integration.api.data.IntegrationDownlinkMsg;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.Device;
+import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.transport.config.ssl.PemSslCredentials;
 import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.event.LifecycleEvent;
 import org.thingsboard.server.common.data.id.DeviceId;
@@ -61,7 +65,6 @@ import org.thingsboard.server.queue.discovery.TbServiceInfoProvider;
 import org.thingsboard.server.service.integration.IntegrationContextComponent;
 import org.thingsboard.server.service.integration.RemoteIntegrationRpcService;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
@@ -83,6 +86,8 @@ public class TbCoreRemoteIntegrationRpcService extends IntegrationTransportGrpc.
     private String certFileResource;
     @Value("${integrations.rpc.ssl.privateKey}")
     private String privateKeyResource;
+    @Value("${integrations.rpc.ssl.key_password:}")
+    private String keyPassword;
     @Value("${integrations.rpc.client_max_keep_alive_time_sec:300}")
     private int clientMaxKeepAliveTimeSec;
 
@@ -110,9 +115,7 @@ public class TbCoreRemoteIntegrationRpcService extends IntegrationTransportGrpc.
                 .addService(this);
         if (sslEnabled) {
             try {
-                File certFile = new File(Resources.getResource(certFileResource).toURI());
-                File privateKeyFile = new File(Resources.getResource(privateKeyResource).toURI());
-                builder.useTransportSecurity(certFile, privateKeyFile);
+                setupSsl(builder);
             } catch (Exception e) {
                 log.error("Unable to set up SSL context. Reason: " + e.getMessage(), e);
                 throw new RuntimeException("Unable to set up SSL context!", e);
@@ -127,6 +130,33 @@ public class TbCoreRemoteIntegrationRpcService extends IntegrationTransportGrpc.
             throw new RuntimeException("Failed to start RPC server!", e);
         }
         log.info("RPC service initialized!");
+    }
+
+    /**
+     * Configures TLS for the Integration gRPC server.
+     * <p>
+     * Delegates PEM parsing and key management to {@link PemSslCredentials} — the same
+     * class used by MQTT, CoAP, and LwM2M transports — which supports:
+     * <ul>
+     *   <li>Separate certificate and private key files (classic two-file setup)</li>
+     *   <li>Combined PEM: certificate chain + private key in a single {@code cert} file
+     *       ({@code privateKey} left empty)</li>
+     *   <li>Encrypted private keys (password supplied via {@code key_password})</li>
+     * </ul>
+     * Path resolution (for both {@code cert} and {@code privateKey}) is handled by
+     * {@link org.thingsboard.server.common.data.ResourceUtils#getInputStream ResourceUtils}:
+     * absolute path → relative / working-dir → classpath → {@code classpath:} prefix.
+     */
+    void setupSsl(NettyServerBuilder builder) throws Exception {
+        PemSslCredentials credentials = new PemSslCredentials();
+        credentials.setCertFile(certFileResource);
+        credentials.setKeyFile(StringUtils.isEmpty(privateKeyResource) ? null : privateKeyResource);
+        credentials.setKeyPassword(keyPassword);
+        credentials.init(false);
+
+        SslContext sslContext = GrpcSslContexts.configure(
+                SslContextBuilder.forServer(credentials.createKeyManagerFactory())).build();
+        builder.sslContext(sslContext);
     }
 
     @PreDestroy
