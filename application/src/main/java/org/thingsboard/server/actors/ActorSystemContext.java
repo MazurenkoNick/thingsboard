@@ -127,7 +127,9 @@ import org.thingsboard.server.dao.notification.NotificationRuleService;
 import org.thingsboard.server.dao.notification.NotificationTargetService;
 import org.thingsboard.server.dao.notification.NotificationTemplateService;
 import org.thingsboard.server.dao.oauth2.OAuth2ClientService;
+import org.thingsboard.server.dao.ota.DeviceGroupOtaPackageService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
+import org.thingsboard.server.dao.ota.OtaPackageStateService;
 import org.thingsboard.server.dao.owner.OwnerService;
 import org.thingsboard.server.dao.pat.ApiKeyService;
 import org.thingsboard.server.dao.queue.QueueService;
@@ -628,6 +630,14 @@ public class ActorSystemContext {
     @Autowired(required = false)
     @Getter
     private OtaPackageService otaPackageService;
+
+    @Autowired
+    @Getter
+    private OtaPackageStateService otaPackageStateService;
+
+    @Autowired
+    @Getter
+    private DeviceGroupOtaPackageService deviceGroupOtaPackageService;
 
     @Lazy
     @Autowired(required = false)

@@ -44,6 +44,7 @@ import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -55,11 +56,14 @@ import java.io.Serializable;
         @Type(name = "DELETE_ENTITIES", value = EntitiesDeletionHousekeeperTask.class),
         @Type(name = "DELETE_ALARMS", value = AlarmsDeletionHousekeeperTask.class),
         @Type(name = "UNASSIGN_ALARMS", value = AlarmsUnassignHousekeeperTask.class),
-        @Type(name = "CLEANUP_ENTITIES", value = EntitiesCleanupHousekeeperTask.class),
+        @Type(name = "CLEANUP_ENTITIES", value = EntitiesCleanupHousekeeperTask.class)
 })
 @Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class HousekeeperTask implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = -2585974110832225152L;
 
     private TenantId tenantId;
     private EntityId entityId;
