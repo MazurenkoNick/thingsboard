@@ -42,6 +42,8 @@ import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
+import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.EntityIdFactory;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -113,6 +115,23 @@ public class AgentApplicationController extends BaseController {
         TenantId tenantId = getCurrentUser().getTenantId();
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         return checkNotNull(agentAppService.findByAgentId(tenantId, agentId, pageLink));
+    }
+
+    @ApiOperation(value = "Get Agent Application by Related Entity (getAgentApplicationByRelatedEntity)",
+            notes = "Returns the agent application linked to the specified entity. "
+                    + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @GetMapping(value = "/agent/apps/{entityType}/{entityId}")
+    @ResponseBody
+    public AgentApplication getAgentApplicationByRelatedEntity(
+            @Parameter(description = "Entity type", required = true)
+            @PathVariable String entityType,
+            @Parameter(description = "Entity id", required = true)
+            @PathVariable String entityId) throws ThingsboardException {
+        EntityId relatedEntityId = EntityIdFactory.getByTypeAndId(entityType, entityId);
+        checkEntityId(relatedEntityId, Operation.READ);
+        TenantId tenantId = getCurrentUser().getTenantId();
+        return checkNotNull(agentAppService.findByRelatedEntity(tenantId, relatedEntityId));
     }
 
     @ApiOperation(value = "Update Agent Application (saveAgentApplication)",

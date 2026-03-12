@@ -19,9 +19,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.exception.DataValidationException;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 @Data
 @NoArgsConstructor
@@ -55,6 +59,37 @@ public class DockerComposeConfig extends AgentAppConfig {
             return true;
         }
         return !Objects.equals(this.compose, that.compose);
+    }
+
+    @Override
+    public String getEdgeRoutingKey() {
+        return getServiceEnvVariable(AgentApplicationType.EDGE.getMainImagePattern(), "CLOUD_ROUTING_KEY");
+    }
+
+    private String getServiceEnvVariable(Pattern imagePattern, String envVarName) {
+        if (compose == null || imagePattern == null) {
+            return null;
+        }
+        JsonNode services = compose.get("services");
+        if (services == null || !services.isObject()) {
+            return null;
+        }
+        Iterator<Map.Entry<String, JsonNode>> it = services.fields();
+        while (it.hasNext()) {
+            JsonNode service = it.next().getValue();
+            if (!service.isObject() || !service.has("image")) {
+                continue;
+            }
+            String image = service.get("image").asText();
+            if (!imagePattern.matcher(image).matches()) {
+                continue;
+            }
+            JsonNode environment = service.get("environment");
+            if (environment != null && environment.isObject() && environment.has(envVarName)) {
+                return environment.get(envVarName).asText();
+            }
+        }
+        return null;
     }
 }
 

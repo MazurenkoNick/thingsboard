@@ -15,10 +15,13 @@
  */
 package org.thingsboard.server.dao.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
@@ -27,7 +30,10 @@ import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
+import org.thingsboard.server.common.data.agent.step.ComposeStartStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
+import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -36,9 +42,9 @@ import org.thingsboard.server.dao.agent.AgentAppEventService;
 import org.thingsboard.server.dao.agent.AgentAppTemplateService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.agent.AgentService;
+import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.exception.DataValidationException;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,6 +59,8 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     AgentAppTemplateService agentAppTemplateService;
     @Autowired
     AgentAppEventService agentAppEventService;
+    @Autowired
+    EdgeService edgeService;
 
     @Test
     public void testSave() {
@@ -226,6 +234,109 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         agentService.deleteAgent(tenantId, agent.getId());
     }
 
+    @Test
+    public void testSaveEdgeAppResolvesRelatedEntity() {
+        Agent agent = createAgent("Agent for edge resolution");
+        Edge edge = createEdge("Test Edge", "test-routing-key");
+        AgentApplication app = saveApplicationWithEdgeConfig(agent, "edgeApp", edge.getRoutingKey());
+
+        AgentApplication found = agentApplicationService.findByRelatedEntity(tenantId, edge.getId());
+        Assert.assertNotNull(found);
+        Assert.assertEquals(app.getId(), found.getId());
+
+        agentApplicationService.delete(tenantId, app.getId());
+        edgeService.deleteEdge(tenantId, edge.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testSaveEdgeAppWithMissingRoutingKey() {
+        Agent agent = createAgent("Agent for missing key");
+        AgentApplication app = saveApplicationWithEdgeConfig(agent, "noKeyApp", null);
+
+        AgentApplication found = agentApplicationService.findByRelatedEntity(tenantId, app.getAgentId());
+        Assert.assertNull(found);
+
+        agentApplicationService.delete(tenantId, app.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testSaveEdgeAppWithUnknownRoutingKey() {
+        Agent agent = createAgent("Agent for unknown key");
+        AgentApplication app = saveApplicationWithEdgeConfig(agent, "unknownKeyApp", "non-existent-key");
+
+        AgentApplication found = agentApplicationService.findByRelatedEntity(tenantId, app.getAgentId());
+        Assert.assertNull(found);
+
+        agentApplicationService.delete(tenantId, app.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testSaveGenericAppNoRelatedEntity() {
+        Agent agent = createAgent("Agent for generic");
+        AgentAppTemplate template = createTemplate();
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.GENERIC);
+        app.setTemplateId(template.getId());
+
+        AgentApplication saved = agentApplicationService.save(tenantId, app);
+        AgentApplication found = agentApplicationService.findByRelatedEntity(tenantId, saved.getAgentId());
+        Assert.assertNull(found);
+
+        agentApplicationService.delete(tenantId, saved.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testUpdateEdgeAppChangesRelatedEntity() {
+        Agent agent = createAgent("Agent for update edge");
+        Edge edge1 = createEdge("Edge 1", "routing-key-1");
+        Edge edge2 = createEdge("Edge 2", "routing-key-2");
+
+        AgentApplication app = saveApplicationWithEdgeConfig(agent, "updateEdgeApp", edge1.getRoutingKey());
+        Assert.assertNotNull(agentApplicationService.findByRelatedEntity(tenantId, edge1.getId()));
+
+        // Update config to point to edge2
+        DockerComposeConfig newConfig = new DockerComposeConfig();
+        newConfig.setCompose(createEdgeComposeJson(edge2.getRoutingKey()));
+        app.setConfig(newConfig);
+        agentApplicationService.save(tenantId, app);
+
+        Assert.assertNull(agentApplicationService.findByRelatedEntity(tenantId, edge1.getId()));
+        AgentApplication found = agentApplicationService.findByRelatedEntity(tenantId, edge2.getId());
+        Assert.assertNotNull(found);
+        Assert.assertEquals(app.getId(), found.getId());
+
+        agentApplicationService.delete(tenantId, app.getId());
+        edgeService.deleteEdge(tenantId, edge1.getId());
+        edgeService.deleteEdge(tenantId, edge2.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testFindByRelatedEntity() {
+        Agent agent = createAgent("Agent for findByRelated");
+        Edge edge = createEdge("Related Edge", "related-key");
+
+        AgentApplication app1 = saveApplicationWithEdgeConfig(agent, "related1", edge.getRoutingKey());
+        AgentApplication app2 = saveApplication(agent, "unrelated");
+
+        AgentApplication found = agentApplicationService.findByRelatedEntity(tenantId, edge.getId());
+        Assert.assertNotNull(found);
+        Assert.assertEquals(app1.getId(), found.getId());
+
+        AgentApplication notFound = agentApplicationService.findByRelatedEntity(tenantId, app2.getAgentId());
+        Assert.assertNull(notFound);
+
+        agentApplicationService.delete(tenantId, app1.getId());
+        agentApplicationService.delete(tenantId, app2.getId());
+        edgeService.deleteEdge(tenantId, edge.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
     private Agent createAgent(String name) {
         Agent agent = new Agent();
         agent.setTenantId(tenantId);
@@ -251,8 +362,51 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         template.setCurrentVersion("1.0.0");
         template.setPreviousVersion("0.9.0");
         template.setNextVersion(null);
-        template.setStartSteps(Collections.emptyList());
-        template.setUpgradeSteps(Collections.emptyList());
+        ComposeStartStep step = new ComposeStartStep();
+        step.setId(UUID.randomUUID());
+        step.setTitle("start");
+        template.setStartSteps(List.of(step));
+        template.setUpgradeSteps(List.of(step));
         return agentAppTemplateService.save(TenantId.SYS_TENANT_ID, template);
+    }
+
+    private Edge createEdge(String name, String routingKey) {
+        Edge edge = new Edge();
+        edge.setTenantId(tenantId);
+        edge.setName(name);
+        edge.setType("default");
+        edge.setRoutingKey(routingKey);
+        edge.setSecret(StringUtils.randomAlphanumeric(20));
+        return edgeService.saveEdge(edge);
+    }
+
+    private AgentApplication saveApplicationWithEdgeConfig(Agent agent, String name, String routingKey) {
+        AgentAppTemplate template = createTemplate();
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.EDGE);
+        app.setName(name);
+        app.setTemplateId(template.getId());
+
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setCompose(createEdgeComposeJson(routingKey));
+        app.setConfig(config);
+
+        return agentApplicationService.save(tenantId, app);
+    }
+
+    private JsonNode createEdgeComposeJson(String routingKey) {
+        ObjectNode service = JacksonUtil.newObjectNode();
+        service.put("image", "thingsboard/tb-edge:3.8.0");
+        if (routingKey != null) {
+            ObjectNode env = JacksonUtil.newObjectNode();
+            env.put("CLOUD_ROUTING_KEY", routingKey);
+            service.set("environment", env);
+        }
+        ObjectNode services = JacksonUtil.newObjectNode();
+        services.set("mytbedge", service);
+        ObjectNode compose = JacksonUtil.newObjectNode();
+        compose.set("services", services);
+        return compose;
     }
 }

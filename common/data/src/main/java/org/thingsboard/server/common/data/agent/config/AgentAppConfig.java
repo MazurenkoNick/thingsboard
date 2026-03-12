@@ -39,4 +39,8 @@ public abstract class AgentAppConfig {
 
     public void validate() {
     }
+
+    public String getEdgeRoutingKey() {
+        return null;
+    }
 }

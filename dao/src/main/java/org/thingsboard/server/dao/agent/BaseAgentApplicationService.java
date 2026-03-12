@@ -23,23 +23,34 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.thingsboard.server.cache.agent.AgentApplicationCacheEvictEvent;
 import org.thingsboard.server.cache.agent.AgentApplicationCacheKey;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
+import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.relation.EntityRelation;
+import org.thingsboard.server.common.data.relation.RelationTypeGroup;
+import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.entity.AbstractCachedEntityService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
+import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.service.DataValidator;
+import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validatePageLink;
@@ -63,6 +74,13 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
     private AgentAppTemplateService agentAppTemplateService;
 
     @Autowired
+    @Lazy
+    private EdgeService edgeService;
+
+    @Autowired
+    private RelationService relationService;
+
+    @Autowired
     private DataValidator<AgentApplication> agentApplicationValidator;
 
     @Override
@@ -82,6 +100,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         resolveProjectName(agentApplication, old);
         agentApplicationValidator.validate(agentApplication, app -> tenantId);
         AgentApplication saved = agentApplicationDao.save(tenantId, agentApplication);
+        saveRelatedEntityRelation(tenantId, saved);
         publishEvictEvent(new AgentApplicationCacheEvictEvent(saved.getId()));
         eventPublisher.publishEvent(SaveEntityEvent.builder()
                 .tenantId(tenantId)
@@ -140,6 +159,21 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
     }
 
     @Override
+    public AgentApplication findByRelatedEntity(TenantId tenantId, EntityId entityId) {
+        log.trace("Executing findByRelatedEntity, tenantId [{}], entityId [{}]", tenantId, entityId);
+        validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
+        validateId(entityId.getId(), id -> "Incorrect entityId " + id);
+        return relationService.findByToAndType(tenantId, entityId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.COMMON)
+                .stream()
+                .map(EntityRelation::getFrom)
+                .filter(BaseAgentApplicationService::isAgentAppId)
+                .map(id -> new AgentApplicationId(id.getId()))
+                .findFirst()
+                .map(id -> findById(tenantId, id))
+                .orElse(null);
+    }
+
+    @Override
     @Transactional
     public void delete(TenantId tenantId, AgentApplicationId agentApplicationId) {
         log.trace("Executing deleteAgentApplication [{}]", agentApplicationId);
@@ -147,6 +181,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         AgentApplication application = agentApplicationDao.findById(tenantId, agentApplicationId.getId());
         if (application != null) {
             agentAppUnitService.deleteByAgentApplicationId(tenantId, agentApplicationId);
+            relationService.deleteEntityCommonRelations(tenantId, agentApplicationId);
             agentApplicationDao.removeById(tenantId, agentApplicationId.getId());
             publishCacheEvictAndDeleteEvent(tenantId, application);
         }
@@ -161,6 +196,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         agentApplicationDao.findByAgentId(tenantId, agentId.getId())
                 .forEach(a -> {
                     agentAppUnitService.deleteByAgentApplicationId(tenantId, a.getId());
+                    relationService.deleteEntityCommonRelations(tenantId, a.getId());
                     publishCacheEvictAndDeleteEvent(tenantId, a);
                 });
         agentApplicationDao.removeByAgentId(tenantId, agentId.getId());
@@ -202,4 +238,67 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         }
     }
 
+    private void saveRelatedEntityRelation(TenantId tenantId, AgentApplication app) {
+        if (app.getAppType() == null) {
+            return;
+        }
+        EntityType relatedType = app.getAppType().getRelatedEntityType();
+        if (relatedType == null || app.getConfig() == null) {
+            return;
+        }
+
+        EntityId newRelatedEntityId = switch (relatedType) {
+            case EDGE -> resolveEdgeId(tenantId, app);
+            default -> null;
+        };
+
+        List<EntityRelation> existingRelated = relationService.findByFromAndType(
+                tenantId, app.getId(), EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.COMMON);
+
+        if (sameRelatedEntityId(existingRelated, newRelatedEntityId)) return;
+
+        for (EntityRelation rel : existingRelated) {
+            relationService.deleteRelation(tenantId, rel);
+        }
+        if (newRelatedEntityId != null) {
+            validateRelatedEntityNotManaged(tenantId, app, newRelatedEntityId);
+            relationService.saveRelation(tenantId, new EntityRelation(
+                    app.getId(), newRelatedEntityId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.COMMON));
+        }
+    }
+
+    private boolean sameRelatedEntityId(List<EntityRelation> existing, EntityId newRelatedEntityId) {
+        UUID currentId = existing.stream()
+                .findFirst()
+                .map(r -> r.getTo().getId())
+                .orElse(null);
+
+        UUID newId = newRelatedEntityId != null ? newRelatedEntityId.getId() : null;
+
+        return Objects.equals(currentId, newId);
+    }
+
+    private void validateRelatedEntityNotManaged(TenantId tenantId, AgentApplication app, EntityId relatedEntityId) {
+        boolean alreadyManaged = relationService.findByToAndType(
+                        tenantId, relatedEntityId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.COMMON)
+                .stream()
+                .anyMatch(r -> isAgentAppId(r.getFrom()) && !r.getFrom().getId().equals(app.getId().getId()));
+        if (alreadyManaged) {
+            throw new DataValidationException("Entity is already managed by another agent application");
+        }
+    }
+
+    private EntityId resolveEdgeId(TenantId tenantId, AgentApplication app) {
+        String routingKey = app.getConfig().getEdgeRoutingKey();
+        if (routingKey == null) {
+            return null;
+        }
+        return edgeService.findEdgeByRoutingKey(tenantId, routingKey)
+                .map(Edge::getId)
+                .orElse(null);
+    }
+
+    private static boolean isAgentAppId(EntityId appCandidateId) {
+        return appCandidateId.getEntityType() == EntityType.AGENT_APPLICATION;
+    }
 }
