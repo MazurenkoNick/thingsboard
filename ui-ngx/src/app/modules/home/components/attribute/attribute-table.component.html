@@ -108,7 +108,7 @@
                 (click)="deleteTelemetry($event)">
           <mat-icon>delete</mat-icon>
         </button>
-        <button [class.!hidden]="!(resource.WIDGETS_BUNDLE | hasGenericPermission: operation.READ)"
+        <button [class.!hidden]="isSysAdmin || !(resource.WIDGETS_BUNDLE | hasGenericPermission: operation.READ)"
                 mat-raised-button color="accent"
                 class="button-widget-action"
                 [disabled]="isLoading$ | async"
