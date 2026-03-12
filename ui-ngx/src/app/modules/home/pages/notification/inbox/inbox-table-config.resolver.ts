@@ -52,9 +52,10 @@ import {
   InboxNotificationDialogComponent,
   InboxNotificationDialogData
 } from '@home/pages/notification/inbox/inbox-notification-dialog.component';
-import { Injectable } from '@angular/core';
+import { Injectable, SecurityContext } from '@angular/core';
 import { ActivatedRouteSnapshot } from '@angular/router';
 import { UtilsService } from '@core/services/utils.service';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Injectable()
 export class InboxTableConfigResolver  {
@@ -65,7 +66,8 @@ export class InboxTableConfigResolver  {
               private translate: TranslateService,
               private dialog: MatDialog,
               private datePipe: DatePipe,
-              private utilsService: UtilsService) {
+              private utilsService: UtilsService,
+              private sanitizer: DomSanitizer) {
 
     this.config.entityType = EntityType.NOTIFICATION;
     this.config.detailsPanelEnabled = false;
@@ -110,14 +112,14 @@ export class InboxTableConfigResolver  {
       new EntityTableColumn<Notification>('type', 'notification.type', '10%', (notification) =>
         this.translate.instant(NotificationTemplateTypeTranslateMap.get(notification.type).name)),
       new EntityTableColumn<Notification>('subject', 'notification.subject', '30%',
-        (entity) => this.utilsService.customTranslation(entity.subject, entity.subject)),
+        (entity) => this.sanitizer.sanitize(SecurityContext.HTML, this.utilsService.customTranslation(entity.subject, entity.subject))),
       new EntityTableColumn<Notification>('text', 'notification.message', '60%',
-        (entity) => this.utilsService.customTranslation(entity.text, entity.text))
+        (entity) => this.sanitizer.sanitize(SecurityContext.HTML, this.utilsService.customTranslation(entity.text, entity.text)))
     );
 
   }
 
-  resolve(route: ActivatedRouteSnapshot): EntityTableConfig<Notification> {
+  resolve(_route: ActivatedRouteSnapshot): EntityTableConfig<Notification> {
     return this.config;
   }
 
@@ -143,7 +145,7 @@ export class InboxTableConfigResolver  {
     });
   }
 
-  private markAsRead($event, entity){
+  private markAsRead($event: Event, entity){
     if ($event) {
       $event.stopPropagation();
     }
