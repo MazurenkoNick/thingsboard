@@ -777,7 +777,7 @@ CREATE TABLE IF NOT EXISTS agent_app_template (
     tenant_id uuid,
     app_type varchar(32) NOT NULL,
     current_version varchar(255) NOT NULL,
-    previous_version varchar(255) NOT NULL,
+    previous_version varchar(255),
     next_version varchar(255),
     config jsonb,
     start_steps jsonb,

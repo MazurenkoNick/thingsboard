@@ -229,9 +229,6 @@ public class AgentApplicationController extends BaseController {
         AgentAppTemplateId templateId = new AgentAppTemplateId(toUUID(strTemplateId));
         AgentAppTemplate template = checkAgentAppTemplateId(templateId, Operation.READ);
 
-        if (template.getAppType() == AgentApplicationType.GENERIC) {
-            throw new ThingsboardException("Can't merge agent application with the template of the generic type", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
-        }
         if (application == null) {
             application = AgentApplication.fromTemplate(template);
         }

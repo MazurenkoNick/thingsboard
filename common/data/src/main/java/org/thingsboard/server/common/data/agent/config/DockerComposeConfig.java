@@ -15,6 +15,7 @@
  */
 package org.thingsboard.server.common.data.agent.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -62,6 +63,7 @@ public class DockerComposeConfig extends AgentAppConfig {
     }
 
     @Override
+    @JsonIgnore
     public String getEdgeRoutingKey() {
         return getServiceEnvVariable(AgentApplicationType.EDGE.getMainImagePattern(), "CLOUD_ROUTING_KEY");
     }
