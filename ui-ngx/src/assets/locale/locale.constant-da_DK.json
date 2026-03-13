@@ -579,7 +579,8 @@
     "slack-settings": "Slack-indstillinger",
     "mobile-settings": "Mobilindstillinger",
     "firebase-service-account-file": "Firebase servicekonto-legitimationsoplysninger JSON-fil",
-    "select-firebase-service-account-file": "Træk og slip din Firebase servicekonto-legitimationsfil eller "
+    "select-firebase-service-account-file": "Træk og slip din Firebase servicekonto-legitimationsfil eller ",
+    "use-system-mobile-settings": "Brug systemets mobilindstillinger"
   },
   "alarm": {
     "alarm": "Alarm",
@@ -1003,10 +1004,9 @@
     "view-details": "Vis detaljer",
     "view-statistics": "Vis statistik",
     "transport-messages": "Transportbeskeder",
-    "view-statistics": "Vis statistik",
     "reports-created": "Oprettede rapporter",
-    "reports-created-daily-activity": "Daglig aktivitet for oprettede rapporter",
-    "reports-created-monthly-activity": "Månedlig aktivitet for oprettede rapporter"
+    "reports-created-daily-activity": "Oprettede rapporter – dagsaktivitet",
+    "reports-created-monthly-activity": "Oprettede rapporter – månedsaktivitet"
   },
   "api-limit": {
     "cassandra-write-queries-core": "REST API Cassandra-skriveforespørgsler",
@@ -1194,7 +1194,7 @@
       "expression": "Standardudtryk demonstrerer, hvordan man omregner temperatur fra Fahrenheit til Celsius.",
       "arguments-entity-not-found": "Målentitet for argument ikke fundet.",
       "use-latest-timestamp": "Hvis aktiveret, vil den beregnede værdi blive gemt med det nyeste tidsstempel fra argumenternes telemetri i stedet for serverens tid.",
-      "reprocessing": "Hvis intet specifikt tidsstempel er foruddefineret, gemmes resultaterne fra genbehandlingen med tidsstemplet fra den tilsvarende historiske telemetri, der udløste beregningen."
+      "reprocessing": "Hvis der ikke er foruddefineret et specifikt tidsstempel, gemmes resultaterne fra genbehandling med tidsstemplet for den tilsvarende historiske telemetri, der udløste beregningen."
     }
   },
   "secret-storage": {
@@ -1495,8 +1495,7 @@
     "decoder-output": "Dekoder-output",
     "converter-output": "Konverter-output",
     "converter-type": "Konvertertype",
-    "update-raw-payload": "Opdateret RAW payload",
-    "see-debug-events": "Se fejlsøgningshændelser"
+    "update-raw-payload": "Opdateret RAW payload"
   },
   "content-type": {
     "json": "Json",
@@ -3428,7 +3427,8 @@
     "queue-name": "Kønavn",
     "service-id": "Service Id",
     "owner-name": "Ejerens navn",
-    "owner-type": "Ejerens type"
+    "owner-type": "Ejerens type",
+    "format": "Format"
   },
   "entity-view": {
     "all": "Alle",
@@ -4543,8 +4543,7 @@
     "downlink-connection-string": "Downlink forbindelsesstreng",
     "downlink-connection-string-required": "Downlink forbindelsesstreng er påkrævet",
     "downlink-topic-name": "Downlink emnenavn",
-    "downlink-topic-name-required": "Downlink emnenavn er påkrævet",
-    "see-debug-events": "Se fejlhændelser"
+    "downlink-topic-name-required": "Downlink emnenavn er påkrævet"
   },
   "scada": {
     "symbols": "SCADA-symboler",
@@ -5009,7 +5008,6 @@
     "invalid-email-format": "Ugyldigt emailformat.",
     "no-account": "Har du ikke en konto?",
     "create-account": "Opret en konto",
-    "login-with": "Log ind med {{name}}",
     "or": "eller",
     "error": "Loginfejl",
     "verify-your-identity": "Bekræft din identitet",
@@ -5058,7 +5056,11 @@
     "terms-of-use": "Brugsbetingelser",
     "recaptcha-title": "reCAPTCHA",
     "accept-privacy-policy-message": "Du skal acceptere vores Privatlivspolitik",
-    "accept-terms-of-use-message": "Du skal acceptere vores Brugsbetingelser"
+    "accept-terms-of-use-message": "Du skal acceptere vores Brugsbetingelser",
+    "firstname-max-length": "Fornavn skal være under 256 tegn",
+    "lastname-max-length": "Efternavn skal være under 256 tegn",
+    "firstname-required": "Fornavn er påkrævet",
+    "lastname-required": "Efternavn er påkrævet"
   },
   "mobile": {
     "add-application": "Tilføj applikation",
@@ -7238,6 +7240,7 @@
     "timezone-description": "Tidszone, hvori måldashboardet vises i rapporten.",
     "reporting": "Rapportering",
     "templates": "Skabeloner",
+    "report": "Rapport",
     "reports": "Rapporter",
     "scheduling": "Planlægning",
     "generating-report": "Genererer rapport...",
@@ -7254,14 +7257,14 @@
     "file-name": "Filnavn",
     "format": "Format",
     "download": "Download rapport",
-    "reports-filter": "Rapportfilter"
+    "no-reports-matching": "Ingen rapporter, der matcher '{{entity}}', blev fundet.",
+    "report-required": "Rapport er påkrævet"
   },
   "report-template": {
     "report-template": "Rapportskabelon",
     "report-templates": "Rapportskabeloner",
     "add": "Tilføj rapportskabelon",
     "search": "Søg i rapportskabeloner",
-    "templates-filter": "Skabelonfilter",
     "sub-report": "Delrapport",
     "no-report-templates-text": "Ingen rapportskabeloner fundet",
     "no-sub-reports-text": "Ingen delrapporter fundet",
@@ -8722,9 +8725,9 @@
     "export-relations": "Eksporter relationer",
     "export-attributes": "Eksporter attributter",
     "export-credentials": "Eksporter legitimationsoplysninger",
-    "export-calculated-fields": "Eksportér beregnede felter \nog alarmregler",
     "export-group-entities": "Eksporter gruppeenheder",
     "export-roles": "Eksporter roller",
+    "export-calculated-fields": "Eksportér beregnede felter \nog alarmregler",
     "entity-versions": "Entitetsversioner",
     "versions": "Versioner",
     "created-time": "Oprettelsestidspunkt",
@@ -8835,8 +8838,6 @@
       "calculated-field-reprocessing": "Genberegning af beregnet felt",
       "report": "Rapportgenerering"
     },
-    "tasks-filter": "Opgavefilter",
-    "tasks-filter-params": "Filter: {{ filterParams }}",
     "tasks-status-list": "Liste over opgavestatusser",
     "tasks-type-list": "Liste over opgavetyper",
     "time-taken": "Tid forbrugt",
@@ -11889,35 +11890,6 @@
     "items-per-page-separator": "af"
   },
   "language": {
-    "language": "Sprog",
-    "locales": {
-      "ar_AE": "العربية (الإمارات العربية المتحدة)",
-      "ca_ES": "català (Espanya)",
-      "cs_CZ": "čeština (Česko)",
-      "da_DK": "dansk (Danmark)",
-      "de_DE": "Deutsch (Deutschland)",
-      "el_GR": "Ελληνικά (Ελλάδα)",
-      "en_US": "English (United States)",
-      "es_ES": "español (España)",
-      "fa_IR": "فارسی (ایران)",
-      "fr_FR": "français (France)",
-      "it_IT": "italiano (Italia)",
-      "ja_JP": "日本語 (日本)",
-      "ka_GE": "ქართული (საქართველო)",
-      "ko_KR": "한국어 (대한민국)",
-      "lt_LT": "lietuvių (Lietuva)",
-      "lv_LV": "latviešu (Latvija)",
-      "nl_BE": "Nederlands (België)",
-      "nl_NL": "Nederlands (Nederland)",
-      "no_NO": "norsk (Norge)",
-      "pl_PL": "polski (Polska)",
-      "pt_BR": "português (Brasil)",
-      "ro_RO": "română (România)",
-      "sl_SI": "slovenščina (Slovenija)",
-      "tr_TR": "Türkçe (Türkiye)",
-      "uk_UA": "українська (Україна)",
-      "zh_CN": "中文 (中国)",
-      "zh_TW": "中文 (台灣)"
-    }
+    "language": "Sprog"
   }
 }

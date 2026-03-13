@@ -579,7 +579,8 @@
     "slack-settings": "Impostazioni di Slack",
     "mobile-settings": "Impostazioni mobile",
     "firebase-service-account-file": "File JSON delle credenziali dell'account di servizio Firebase",
-    "select-firebase-service-account-file": "Trascina e rilascia il file delle credenziali dell'account di servizio Firebase oppure"
+    "select-firebase-service-account-file": "Trascina e rilascia il file delle credenziali dell'account di servizio Firebase oppure",
+    "use-system-mobile-settings": "Usa le impostazioni mobili di sistema"
   },
   "alarm": {
     "alarm": "Allarme",
@@ -1002,7 +1003,10 @@
     "transport-data-points": "Punti dati del trasporto",
     "view-details": "Visualizza dettagli",
     "view-statistics": "Visualizza statistiche",
-    "transport-messages": "Messaggi di trasporto"
+    "transport-messages": "Messaggi di trasporto",
+    "reports-created": "Report creati",
+    "reports-created-daily-activity": "Attività giornaliera dei report creati",
+    "reports-created-monthly-activity": "Attività mensile dei report creati"
   },
   "api-limit": {
     "cassandra-write-queries-core": "Query di scrittura Cassandra tramite Rest API",
@@ -1190,7 +1194,7 @@
       "expression": "L'espressione predefinita dimostra come trasformare una temperatura da Fahrenheit a Celsius.",
       "arguments-entity-not-found": "Entità di destinazione dell'argomento non trovata.",
       "use-latest-timestamp": "Se abilitato, il valore calcolato verrà memorizzato utilizzando il timestamp più recente dalla telemetria degli argomenti, invece del tempo del server.",
-      "reprocessing": "Se non è predefinito alcun timestamp specifico, i risultati della rielaborazione vengono salvati utilizzando il timestamp della telemetria storica corrispondente che ha attivato il calcolo."
+      "reprocessing": "Se non è predefinito un timestamp specifico, i risultati del rielaboramento vengono salvati utilizzando il timestamp della telemetria storica corrispondente che ha attivato il calcolo."
     }
   },
   "secret-storage": {
@@ -1491,8 +1495,7 @@
     "decoder-output": "Output decoder",
     "converter-output": "Output convertitore",
     "converter-type": "Tipo convertitore",
-    "update-raw-payload": "Payload RAW aggiornato",
-    "see-debug-events": "Vedi eventi di debug"
+    "update-raw-payload": "Payload RAW aggiornato"
   },
   "content-type": {
     "json": "Json",
@@ -3424,7 +3427,8 @@
     "queue-name": "Nome della coda",
     "service-id": "ID del servizio",
     "owner-name": "Nome del proprietario",
-    "owner-type": "Tipo di proprietario"
+    "owner-type": "Tipo di proprietario",
+    "format": "Formato"
   },
   "entity-view": {
     "all": "Tutti",
@@ -4539,8 +4543,7 @@
     "downlink-connection-string": "Stringa di connessione downlink",
     "downlink-connection-string-required": "La stringa di connessione downlink è richiesta",
     "downlink-topic-name": "Nome topic downlink",
-    "downlink-topic-name-required": "Il nome del topic downlink è richiesto",
-    "see-debug-events": "Visualizza eventi di debug"
+    "downlink-topic-name-required": "Il nome del topic downlink è richiesto"
   },
   "scada": {
     "symbols": "Simboli SCADA",
@@ -5003,6 +5006,8 @@
     "password-link-sent-message": "Link di reimpostazione inviato",
     "email": "Email",
     "invalid-email-format": "Formato email non valido.",
+    "no-account": "Non hai un account?",
+    "create-account": "Crea un account",
     "or": "oppure",
     "error": "Errore di accesso",
     "verify-your-identity": "Verifica la tua identità",
@@ -5051,7 +5056,11 @@
     "terms-of-use": "Termini di Utilizzo",
     "recaptcha-title": "reCAPTCHA",
     "accept-privacy-policy-message": "Devi accettare la nostra Informativa sulla Privacy",
-    "accept-terms-of-use-message": "Devi accettare i nostri Termini di Utilizzo"
+    "accept-terms-of-use-message": "Devi accettare i nostri Termini di Utilizzo",
+    "firstname-max-length": "Il nome deve essere inferiore a 256 caratteri",
+    "lastname-max-length": "Il cognome deve essere inferiore a 256 caratteri",
+    "firstname-required": "Il nome è obbligatorio",
+    "lastname-required": "Il cognome è obbligatorio"
   },
   "mobile": {
     "add-application": "Aggiungi applicazione",
@@ -7231,6 +7240,7 @@
     "timezone-description": "Fuso orario in cui la dashboard di destinazione verrà presentata nel report.",
     "reporting": "Reportistica",
     "templates": "Template",
+    "report": "Report",
     "reports": "Report",
     "scheduling": "Pianificazione",
     "generating-report": "Generazione del report...",
@@ -7247,14 +7257,14 @@
     "file-name": "Nome file",
     "format": "Formato",
     "download": "Scarica report",
-    "reports-filter": "Filtro report"
+    "no-reports-matching": "Nessun report corrispondente a '{{entity}}' trovato.",
+    "report-required": "Il report è obbligatorio"
   },
   "report-template": {
     "report-template": "Modello di report",
     "report-templates": "Modelli di report",
     "add": "Aggiungi modello di report",
     "search": "Cerca modelli di report",
-    "templates-filter": "Filtro template",
     "sub-report": "Sottoreport",
     "no-report-templates-text": "Nessun modello di report trovato",
     "no-sub-reports-text": "Nessun sottoreport trovato",
@@ -8715,9 +8725,9 @@
     "export-relations": "Esporta relazioni",
     "export-attributes": "Esporta attributi",
     "export-credentials": "Esporta credenziali",
-    "export-calculated-fields": "Esporta campi calcolati \ne regole allarme",
     "export-group-entities": "Esporta entità di gruppo",
     "export-roles": "Esporta ruoli",
+    "export-calculated-fields": "Esporta campi calcolati \ne regole allarme",
     "entity-versions": "Versioni entità",
     "versions": "Versioni",
     "created-time": "Ora di creazione",
@@ -8828,8 +8838,6 @@
       "calculated-field-reprocessing": "Rielaborazione campi calcolati",
       "report": "Generazione report"
     },
-    "tasks-filter": "Filtro task",
-    "tasks-filter-params": "Filtro: {{ filterParams }}",
     "tasks-status-list": "Elenco stati dei task",
     "tasks-type-list": "Elenco tipi di task",
     "time-taken": "Tempo impiegato",
@@ -11882,35 +11890,6 @@
     "items-per-page-separator": "di"
   },
   "language": {
-    "language": "Lingua",
-    "locales": {
-      "ar_AE": "العربية (الإمارات العربية المتحدة)",
-      "ca_ES": "català (Espanya)",
-      "cs_CZ": "čeština (Česko)",
-      "da_DK": "dansk (Danmark)",
-      "de_DE": "Deutsch (Deutschland)",
-      "el_GR": "Ελληνικά (Ελλάδα)",
-      "en_US": "English (United States)",
-      "es_ES": "español (España)",
-      "fa_IR": "فارسی (ایران)",
-      "fr_FR": "français (France)",
-      "it_IT": "italiano (Italia)",
-      "ja_JP": "日本語 (日本)",
-      "ka_GE": "ქართული (საქართველო)",
-      "ko_KR": "한국어 (대한민국)",
-      "lt_LT": "lietuvių (Lietuva)",
-      "lv_LV": "latviešu (Latvija)",
-      "nl_BE": "Nederlands (België)",
-      "nl_NL": "Nederlands (Nederland)",
-      "no_NO": "norsk (Norge)",
-      "pl_PL": "polski (Polska)",
-      "pt_BR": "português (Brasil)",
-      "ro_RO": "română (România)",
-      "sl_SI": "slovenščina (Slovenija)",
-      "tr_TR": "Türkçe (Türkiye)",
-      "uk_UA": "українська (Україна)",
-      "zh_CN": "中文 (中国)",
-      "zh_TW": "中文 (台灣)"
-    }
+    "language": "Lingua"
   }
 }

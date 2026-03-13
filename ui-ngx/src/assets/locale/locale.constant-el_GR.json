@@ -579,7 +579,8 @@
     "slack-settings": "Ρυθμίσεις Slack",
     "mobile-settings": "Ρυθμίσεις κινητού",
     "firebase-service-account-file": "Αρχείο διαπιστευτηρίων λογαριασμού υπηρεσίας Firebase (JSON)",
-    "select-firebase-service-account-file": "Σύρετε και αποθέστε το αρχείο διαπιστευτηρίων λογαριασμού υπηρεσίας Firebase ή "
+    "select-firebase-service-account-file": "Σύρετε και αποθέστε το αρχείο διαπιστευτηρίων λογαριασμού υπηρεσίας Firebase ή ",
+    "use-system-mobile-settings": "Χρήση ρυθμίσεων συστήματος για κινητά"
   },
   "alarm": {
     "alarm": "Συναγερμός",
@@ -1002,7 +1003,10 @@
     "transport-data-points": "Σημεία δεδομένων μεταφοράς",
     "view-details": "Προβολή λεπτομερειών",
     "view-statistics": "Προβολή στατιστικών",
-    "transport-messages": "Μηνύματα transport"
+    "transport-messages": "Μηνύματα transport",
+    "reports-created": "Δημιουργημένες αναφορές",
+    "reports-created-daily-activity": "Ημερήσια δραστηριότητα δημιουργημένων αναφορών",
+    "reports-created-monthly-activity": "Μηνιαία δραστηριότητα δημιουργημένων αναφορών"
   },
   "api-limit": {
     "cassandra-write-queries-core": "Ερωτήματα εγγραφής Cassandra από REST API",
@@ -1491,8 +1495,7 @@
     "decoder-output": "Έξοδος αποκωδικοποιητή",
     "converter-output": "Έξοδος μετατροπέα",
     "converter-type": "Τύπος μετατροπέα",
-    "update-raw-payload": "Ενημερωμένο ακατέργαστο φορτίο",
-    "see-debug-events": "Προβολή γεγονότων εντοπισμού σφαλμάτων"
+    "update-raw-payload": "Ενημερωμένο ακατέργαστο φορτίο"
   },
   "content-type": {
     "json": "Json",
@@ -3424,7 +3427,8 @@
     "queue-name": "Όνομα ουράς",
     "service-id": "Service Id",
     "owner-name": "Όνομα ιδιοκτήτη",
-    "owner-type": "Τύπος ιδιοκτήτη"
+    "owner-type": "Τύπος ιδιοκτήτη",
+    "format": "Μορφή"
   },
   "entity-view": {
     "all": "Όλα",
@@ -4539,8 +4543,7 @@
     "downlink-connection-string": "Σύνδεση downlink",
     "downlink-connection-string-required": "Η σύνδεση downlink είναι υποχρεωτική",
     "downlink-topic-name": "Όνομα θέματος downlink",
-    "downlink-topic-name-required": "Το όνομα θέματος downlink είναι υποχρεωτικό",
-    "see-debug-events": "Προβολή συμβάντων αποσφαλμάτωσης"
+    "downlink-topic-name-required": "Το όνομα θέματος downlink είναι υποχρεωτικό"
   },
   "scada": {
     "symbols": "Σύμβολα SCADA",
@@ -5003,6 +5006,8 @@
     "password-link-sent-message": "Ο σύνδεσμος επαναφοράς έχει σταλεί",
     "email": "Email",
     "invalid-email-format": "Μη έγκυρη μορφή email.",
+    "no-account": "Δεν έχετε λογαριασμό;",
+    "create-account": "Δημιουργία λογαριασμού",
     "or": "ή",
     "error": "Σφάλμα σύνδεσης",
     "verify-your-identity": "Επαληθεύστε την ταυτότητά σας",
@@ -5051,7 +5056,11 @@
     "terms-of-use": "Όροι Χρήσης",
     "recaptcha-title": "reCAPTCHA",
     "accept-privacy-policy-message": "Πρέπει να αποδεχθείτε την Πολιτική Απορρήτου μας",
-    "accept-terms-of-use-message": "Πρέπει να αποδεχθείτε τους Όρους Χρήσης μας"
+    "accept-terms-of-use-message": "Πρέπει να αποδεχθείτε τους Όρους Χρήσης μας",
+    "firstname-max-length": "Το όνομα πρέπει να είναι μικρότερο από 256 χαρακτήρες",
+    "lastname-max-length": "Το επώνυμο πρέπει να είναι μικρότερο από 256 χαρακτήρες",
+    "firstname-required": "Απαιτείται όνομα",
+    "lastname-required": "Απαιτείται επώνυμο"
   },
   "mobile": {
     "add-application": "Προσθήκη εφαρμογής",
@@ -7231,6 +7240,7 @@
     "timezone-description": "Ζώνη ώρας στην οποία θα παρουσιαστεί ο πίνακας στην αναφορά.",
     "reporting": "Αναφορές",
     "templates": "Πρότυπα",
+    "report": "Αναφορά",
     "reports": "Αναφορές",
     "scheduling": "Προγραμματισμός",
     "generating-report": "Δημιουργία αναφοράς...",
@@ -7247,14 +7257,14 @@
     "file-name": "Όνομα αρχείου",
     "format": "Μορφή",
     "download": "Λήψη αναφοράς",
-    "reports-filter": "Φίλτρο αναφορών"
+    "no-reports-matching": "Δεν βρέθηκαν αναφορές που να αντιστοιχούν στο '{{entity}}'.",
+    "report-required": "Απαιτείται αναφορά"
   },
   "report-template": {
     "report-template": "Πρότυπο αναφοράς",
     "report-templates": "Πρότυπα αναφοράς",
     "add": "Προσθήκη προτύπου αναφοράς",
     "search": "Αναζήτηση προτύπων αναφοράς",
-    "templates-filter": "Φίλτρο προτύπων",
     "sub-report": "Υπο-αναφορά",
     "no-report-templates-text": "Δεν βρέθηκαν πρότυπα αναφοράς",
     "no-sub-reports-text": "Δεν βρέθηκαν υπο-αναφορές",
@@ -8715,9 +8725,9 @@
     "export-relations": "Εξαγωγή σχέσεων",
     "export-attributes": "Εξαγωγή ιδιοτήτων",
     "export-credentials": "Εξαγωγή διαπιστευτηρίων",
-    "export-calculated-fields": "Εξαγωγή υπολογιζόμενων πεδίων \nκαι κανόνων συναγερμού",
     "export-group-entities": "Εξαγωγή οντοτήτων ομάδων",
     "export-roles": "Εξαγωγή ρόλων",
+    "export-calculated-fields": "Εξαγωγή υπολογιζόμενων πεδίων \nκαι κανόνων συναγερμού",
     "entity-versions": "Εκδόσεις οντοτήτων",
     "versions": "Εκδόσεις",
     "created-time": "Ώρα δημιουργίας",
@@ -8828,8 +8838,6 @@
       "calculated-field-reprocessing": "Επαναεπεξεργασία υπολογιζόμενου πεδίου",
       "report": "Δημιουργία αναφοράς"
     },
-    "tasks-filter": "Φίλτρο εργασιών",
-    "tasks-filter-params": "Φίλτρο: {{ filterParams }}",
     "tasks-status-list": "Λίστα κατάστασης εργασιών",
     "tasks-type-list": "Λίστα τύπων εργασιών",
     "time-taken": "Χρόνος εκτέλεσης",
@@ -11882,35 +11890,6 @@
     "items-per-page-separator": "από"
   },
   "language": {
-    "language": "Γλώσσα",
-    "locales": {
-      "ar_AE": "العربية (الإمارات العربية المتحدة)",
-      "ca_ES": "català (Espanya)",
-      "cs_CZ": "čeština (Česko)",
-      "da_DK": "dansk (Danmark)",
-      "de_DE": "Deutsch (Deutschland)",
-      "el_GR": "Ελληνικά (Ελλάδα)",
-      "en_US": "English (United States)",
-      "es_ES": "español (España)",
-      "fa_IR": "فارسی (ایران)",
-      "fr_FR": "français (France)",
-      "it_IT": "italiano (Italia)",
-      "ja_JP": "日本語 (日本)",
-      "ka_GE": "ქართული (საქართველო)",
-      "ko_KR": "한국어 (대한민국)",
-      "lt_LT": "lietuvių (Lietuva)",
-      "lv_LV": "latviešu (Latvija)",
-      "nl_BE": "Nederlands (België)",
-      "nl_NL": "Nederlands (Nederland)",
-      "no_NO": "norsk (Norge)",
-      "pl_PL": "polski (Polska)",
-      "pt_BR": "português (Brasil)",
-      "ro_RO": "română (România)",
-      "sl_SI": "slovenščina (Slovenija)",
-      "tr_TR": "Türkçe (Türkiye)",
-      "uk_UA": "українська (Україна)",
-      "zh_CN": "中文 (中国)",
-      "zh_TW": "中文 (台灣)"
-    }
+    "language": "Γλώσσα"
   }
 }

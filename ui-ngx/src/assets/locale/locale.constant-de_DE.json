@@ -579,7 +579,8 @@
     "slack-settings": "Slack-Einstellungen",
     "mobile-settings": "Mobile Einstellungen",
     "firebase-service-account-file": "Firebase-Service-Konto-Anmeldeinformationen (JSON-Datei)",
-    "select-firebase-service-account-file": "Ziehen Sie Ihre Firebase-Service-Konto-Datei hierher oder "
+    "select-firebase-service-account-file": "Ziehen Sie Ihre Firebase-Service-Konto-Datei hierher oder ",
+    "use-system-mobile-settings": "Systemeinstellungen für Mobile verwenden"
   },
   "alarm": {
     "alarm": "Alarm",
@@ -1002,7 +1003,10 @@
     "transport-data-points": "Transportierte Datenpunkte",
     "view-details": "Details anzeigen",
     "view-statistics": "Statistiken anzeigen",
-    "transport-messages": "Transportnachrichten"
+    "transport-messages": "Transportnachrichten",
+    "reports-created": "Erstellte Berichte",
+    "reports-created-daily-activity": "Erstellte Berichte tägliche Aktivität",
+    "reports-created-monthly-activity": "Erstellte Berichte monatliche Aktivität"
   },
   "api-limit": {
     "cassandra-write-queries-core": "REST-API Cassandra-Schreibabfragen",
@@ -1491,8 +1495,7 @@
     "decoder-output": "Decoder-Ausgabe",
     "converter-output": "Konverter-Ausgabe",
     "converter-type": "Konvertertyp",
-    "update-raw-payload": "RAW-Nutzlast aktualisiert",
-    "see-debug-events": "Debug-Ereignisse anzeigen"
+    "update-raw-payload": "RAW-Nutzlast aktualisiert"
   },
   "content-type": {
     "json": "JSON",
@@ -3424,7 +3427,8 @@
     "queue-name": "Name der Warteschlange",
     "service-id": "Service-ID",
     "owner-name": "Name des Besitzers",
-    "owner-type": "Typ des Besitzers"
+    "owner-type": "Typ des Besitzers",
+    "format": "Format"
   },
   "entity-view": {
     "all": "Alle",
@@ -4539,8 +4543,7 @@
     "downlink-connection-string": "Downlink-Verbindungszeichenfolge",
     "downlink-connection-string-required": "Downlink-Verbindungszeichenfolge ist erforderlich",
     "downlink-topic-name": "Downlink-Themenname",
-    "downlink-topic-name-required": "Downlink-Themenname ist erforderlich",
-    "see-debug-events": "Debug-Ereignisse anzeigen"
+    "downlink-topic-name-required": "Downlink-Themenname ist erforderlich"
   },
   "scada": {
     "symbols": "SCADA-Symbole",
@@ -5003,6 +5006,8 @@
     "password-link-sent-message": "Link zum Zurücksetzen wurde gesendet",
     "email": "E-Mail",
     "invalid-email-format": "Ungültiges E-Mail-Format.",
+    "no-account": "Noch kein Konto?",
+    "create-account": "Konto erstellen",
     "or": "oder",
     "error": "Anmeldefehler",
     "verify-your-identity": "Identität bestätigen",
@@ -5051,7 +5056,11 @@
     "terms-of-use": "Nutzungsbedingungen",
     "recaptcha-title": "reCAPTCHA",
     "accept-privacy-policy-message": "Sie müssen unsere Datenschutzerklärung akzeptieren",
-    "accept-terms-of-use-message": "Sie müssen unsere Nutzungsbedingungen akzeptieren"
+    "accept-terms-of-use-message": "Sie müssen unsere Nutzungsbedingungen akzeptieren",
+    "firstname-max-length": "Vorname sollte kürzer als 256 Zeichen sein",
+    "lastname-max-length": "Nachname sollte kürzer als 256 Zeichen sein",
+    "firstname-required": "Vorname ist erforderlich",
+    "lastname-required": "Nachname ist erforderlich"
   },
   "mobile": {
     "add-application": "Anwendung hinzufügen",
@@ -7231,6 +7240,7 @@
     "timezone-description": "Zeitzone, in der das Ziel-Dashboard im Bericht dargestellt wird.",
     "reporting": "Berichtswesen",
     "templates": "Vorlagen",
+    "report": "Bericht",
     "reports": "Berichte",
     "scheduling": "Planung",
     "generating-report": "Bericht wird erstellt...",
@@ -7247,14 +7257,14 @@
     "file-name": "Dateiname",
     "format": "Format",
     "download": "Bericht herunterladen",
-    "reports-filter": "Berichtsfilter"
+    "no-reports-matching": "Keine Berichte gefunden, die zu '{{entity}}' passen.",
+    "report-required": "Bericht ist erforderlich"
   },
   "report-template": {
     "report-template": "Berichtsvorlage",
     "report-templates": "Berichtsvorlagen",
     "add": "Berichtsvorlage hinzufügen",
     "search": "Berichtsvorlagen suchen",
-    "templates-filter": "Vorlagenfilter",
     "sub-report": "Teilbericht",
     "no-report-templates-text": "Keine Berichtsvorlagen gefunden",
     "no-sub-reports-text": "Keine Teilberichte gefunden",
@@ -8715,9 +8725,9 @@
     "export-relations": "Beziehungen exportieren",
     "export-attributes": "Attribute exportieren",
     "export-credentials": "Zugangsdaten exportieren",
-    "export-calculated-fields": "Berechnete Felder \nund Alarmregeln exportieren",
     "export-group-entities": "Gruppenentitäten exportieren",
     "export-roles": "Rollen exportieren",
+    "export-calculated-fields": "Berechnete Felder \nund Alarmregeln exportieren",
     "entity-versions": "Entitätsversionen",
     "versions": "Versionen",
     "created-time": "Erstellungszeit",
@@ -8828,8 +8838,6 @@
       "calculated-field-reprocessing": "Nachverarbeitung berechneter Felder",
       "report": "Berichtserstellung"
     },
-    "tasks-filter": "Aufgabenfilter",
-    "tasks-filter-params": "Filter: {{ filterParams }}",
     "tasks-status-list": "Statusliste der Aufgaben",
     "tasks-type-list": "Typenliste der Aufgaben",
     "time-taken": "Benötigte Zeit",
@@ -9239,19 +9247,19 @@
     "enable-mobile-self-registration": "Selbstregistrierung über mobile App aktivieren",
     "mobile-self-registration-title": "Selbstregistrierung über mobile Anwendung",
     "mobile-package": "Anwendungspaket",
-    "mobile-package-placeholder": "z. B.: my.example.app",
+    "mobile-package-placeholder": "z.B.: my.example.app",
     "mobile-package-hint": "Für Android: Eigene eindeutige Application-ID. Für iOS: Produkt-Bundle-Identifier.",
     "mobile-package-required": "Anwendungspaket ist erforderlich",
     "mobile-app-secret": "Anwendungsschlüssel",
     "invalid-mobile-app-secret": "Der Anwendungsschlüssel darf nur alphanumerische Zeichen enthalten und muss zwischen 16 und 2048 Zeichen lang sein.",
     "copy-mobile-app-secret": "Anwendungsschlüssel kopieren",
     "mobile-app-scheme": "Anwendungs-URL-Schema",
-    "mobile-app-scheme-placeholder": "z. B.: customscheme",
+    "mobile-app-scheme-placeholder": "z.B.: customscheme",
     "mobile-app-scheme-required": "Anwendungs-URL-Schema ist erforderlich",
     "mobile-app-scheme-cannot-contain-only-spaces": "Anwendungs-URL-Schema darf nicht nur Leerzeichen enthalten",
     "mobile-app-scheme-max-length": "Anwendungs-URL-Schema darf nicht länger als 256 Zeichen sein",
     "mobile-app-host": "Anwendungs-URL-Hostname",
-    "mobile-app-host-placeholder": "z. B.: my.app.host",
+    "mobile-app-host-placeholder": "z.B.: my.app.host",
     "mobile-app-host-required": "Anwendungs-URL-Hostname ist erforderlich",
     "mobile-app-host-cannot-contain-only-spaces": "Anwendungs-URL-Hostname darf nicht nur Leerzeichen enthalten",
     "mobile-app-host-max-length": "Anwendungs-URL-Hostname darf nicht länger als 256 Zeichen sein",
@@ -11882,35 +11890,6 @@
     "items-per-page-separator": "von"
   },
   "language": {
-    "language": "Sprache",
-    "locales": {
-      "ar_AE": "العربية (الإمارات العربية المتحدة)",
-      "ca_ES": "català (Espanya)",
-      "cs_CZ": "čeština (Česko)",
-      "da_DK": "dansk (Danmark)",
-      "de_DE": "Deutsch (Deutschland)",
-      "el_GR": "Ελληνικά (Ελλάδα)",
-      "en_US": "English (United States)",
-      "es_ES": "español (España)",
-      "fa_IR": "فارسی (ایران)",
-      "fr_FR": "français (France)",
-      "it_IT": "italiano (Italia)",
-      "ja_JP": "日本語 (日本)",
-      "ka_GE": "ქართული (საქართველო)",
-      "ko_KR": "한국어 (대한민국)",
-      "lt_LT": "lietuvių (Lietuva)",
-      "lv_LV": "latviešu (Latvija)",
-      "nl_BE": "Nederlands (België)",
-      "nl_NL": "Nederlands (Nederland)",
-      "no_NO": "norsk (Norge)",
-      "pl_PL": "polski (Polska)",
-      "pt_BR": "português (Brasil)",
-      "ro_RO": "română (România)",
-      "sl_SI": "slovenščina (Slovenija)",
-      "tr_TR": "Türkçe (Türkiye)",
-      "uk_UA": "українська (Україна)",
-      "zh_CN": "中文 (中国)",
-      "zh_TW": "中文 (台灣)"
-    }
+    "language": "Sprache"
   }
 }

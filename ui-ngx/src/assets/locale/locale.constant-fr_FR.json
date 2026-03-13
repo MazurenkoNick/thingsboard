@@ -579,7 +579,8 @@
     "slack-settings": "Paramètres Slack",
     "mobile-settings": "Paramètres mobiles",
     "firebase-service-account-file": "Fichier JSON des identifiants du compte de service Firebase",
-    "select-firebase-service-account-file": "Glissez-déposez votre fichier d'identifiants de compte de service Firebase ou "
+    "select-firebase-service-account-file": "Glissez-déposez votre fichier d'identifiants de compte de service Firebase ou ",
+    "use-system-mobile-settings": "Utiliser les paramètres mobiles système"
   },
   "alarm": {
     "alarm": "Alarme",
@@ -1002,7 +1003,10 @@
     "transport-data-points": "Points de données de transport",
     "view-details": "Voir les détails",
     "view-statistics": "Voir les statistiques",
-    "transport-messages": "Messages de transport"
+    "transport-messages": "Messages de transport",
+    "reports-created": "Rapports créés",
+    "reports-created-daily-activity": "Activité quotidienne des rapports créés",
+    "reports-created-monthly-activity": "Activité mensuelle des rapports créés"
   },
   "api-limit": {
     "cassandra-write-queries-core": "Requêtes d’écriture Cassandra via l’API REST",
@@ -1491,8 +1495,7 @@
     "decoder-output": "Résultat du décodeur",
     "converter-output": "Résultat du convertisseur",
     "converter-type": "Type de convertisseur",
-    "update-raw-payload": "Payload RAW mis à jour",
-    "see-debug-events": "Voir les événements de débogage"
+    "update-raw-payload": "Payload RAW mis à jour"
   },
   "content-type": {
     "json": "Json",
@@ -3424,7 +3427,8 @@
     "queue-name": "Nom de la file",
     "service-id": "ID du service",
     "owner-name": "Nom du propriétaire",
-    "owner-type": "Type de propriétaire"
+    "owner-type": "Type de propriétaire",
+    "format": "Format"
   },
   "entity-view": {
     "all": "Tous",
@@ -4539,8 +4543,7 @@
     "downlink-connection-string": "Chaîne de connexion downlink",
     "downlink-connection-string-required": "La chaîne de connexion downlink est requise",
     "downlink-topic-name": "Nom du sujet downlink",
-    "downlink-topic-name-required": "Le nom du sujet downlink est requis",
-    "see-debug-events": "Voir les événements de débogage"
+    "downlink-topic-name-required": "Le nom du sujet downlink est requis"
   },
   "scada": {
     "symbols": "Symboles SCADA",
@@ -5003,6 +5006,8 @@
     "password-link-sent-message": "Le lien de réinitialisation a été envoyé",
     "email": "Email",
     "invalid-email-format": "Format d'email invalide.",
+    "no-account": "Vous n'avez pas de compte ?",
+    "create-account": "Créer un compte",
     "or": "ou",
     "error": "Erreur de connexion",
     "verify-your-identity": "Vérifiez votre identité",
@@ -5051,7 +5056,11 @@
     "terms-of-use": "Conditions d'utilisation",
     "recaptcha-title": "reCAPTCHA",
     "accept-privacy-policy-message": "Vous devez accepter notre politique de confidentialité",
-    "accept-terms-of-use-message": "Vous devez accepter nos conditions d'utilisation"
+    "accept-terms-of-use-message": "Vous devez accepter nos conditions d'utilisation",
+    "firstname-max-length": "Le prénom doit comporter moins de 256 caractères",
+    "lastname-max-length": "Le nom doit comporter moins de 256 caractères",
+    "firstname-required": "Le prénom est requis",
+    "lastname-required": "Le nom est requis"
   },
   "mobile": {
     "add-application": "Ajouter une application",
@@ -7231,6 +7240,7 @@
     "timezone-description": "Fuseau horaire dans lequel le tableau de bord cible sera affiché dans le rapport.",
     "reporting": "Rapports",
     "templates": "Modèles",
+    "report": "Rapport",
     "reports": "Rapports",
     "scheduling": "Planification",
     "generating-report": "Génération du rapport...",
@@ -7247,14 +7257,14 @@
     "file-name": "Nom du fichier",
     "format": "Format",
     "download": "Télécharger le rapport",
-    "reports-filter": "Filtre de rapports"
+    "no-reports-matching": "Aucun rapport correspondant à « {{entity}} » n’a été trouvé.",
+    "report-required": "Le rapport est requis"
   },
   "report-template": {
     "report-template": "Modèle de rapport",
     "report-templates": "Modèles de rapport",
     "add": "Ajouter un modèle de rapport",
     "search": "Rechercher des modèles de rapport",
-    "templates-filter": "Filtre des modèles",
     "sub-report": "Sous-rapport",
     "no-report-templates-text": "Aucun modèle de rapport trouvé",
     "no-sub-reports-text": "Aucun sous-rapport trouvé",
@@ -8715,9 +8725,9 @@
     "export-relations": "Exporter les relations",
     "export-attributes": "Exporter les attributs",
     "export-credentials": "Exporter les identifiants",
-    "export-calculated-fields": "Exporter les champs calculés \net les règles d’alarme",
     "export-group-entities": "Exporter les entités de groupe",
     "export-roles": "Exporter les rôles",
+    "export-calculated-fields": "Exporter les champs calculés \net les règles d’alarme",
     "entity-versions": "Versions des entités",
     "versions": "Versions",
     "created-time": "Date de création",
@@ -8828,8 +8838,6 @@
       "calculated-field-reprocessing": "Retraitement du champ calculé",
       "report": "Génération de rapport"
     },
-    "tasks-filter": "Filtre de tâches",
-    "tasks-filter-params": "Filtre : {{ filterParams }}",
     "tasks-status-list": "Liste des statuts de tâches",
     "tasks-type-list": "Liste des types de tâches",
     "time-taken": "Temps écoulé",
@@ -11882,35 +11890,6 @@
     "items-per-page-separator": "sur"
   },
   "language": {
-    "language": "Langue",
-    "locales": {
-      "ar_AE": "العربية (الإمارات العربية المتحدة)",
-      "ca_ES": "català (Espanya)",
-      "cs_CZ": "čeština (Česko)",
-      "da_DK": "dansk (Danmark)",
-      "de_DE": "Deutsch (Deutschland)",
-      "el_GR": "Ελληνικά (Ελλάδα)",
-      "en_US": "English (United States)",
-      "es_ES": "español (España)",
-      "fa_IR": "فارسی (ایران)",
-      "fr_FR": "français (France)",
-      "it_IT": "italiano (Italia)",
-      "ja_JP": "日本語 (日本)",
-      "ka_GE": "ქართული (საქართველო)",
-      "ko_KR": "한국어 (대한민국)",
-      "lt_LT": "lietuvių (Lietuva)",
-      "lv_LV": "latviešu (Latvija)",
-      "nl_BE": "Nederlands (België)",
-      "nl_NL": "Nederlands (Nederland)",
-      "no_NO": "norsk (Norge)",
-      "pl_PL": "polski (Polska)",
-      "pt_BR": "português (Brasil)",
-      "ro_RO": "română (România)",
-      "sl_SI": "slovenščina (Slovenija)",
-      "tr_TR": "Türkçe (Türkiye)",
-      "uk_UA": "українська (Україна)",
-      "zh_CN": "中文 (中国)",
-      "zh_TW": "中文 (台灣)"
-    }
+    "language": "Langue"
   }
 }
