@@ -58,8 +58,29 @@ public abstract class AgentAppStep {
         this.templateOnly = templateOnly;
     }
 
+    /**
+     * Template-defined state that describes what fields the frontend should render for user input (stepInputs).
+     * When present, the step is considered stateful and the validator may require the user to provide
+     * corresponding stepInputs in the event, unless a {@link StepWithDefaultState#getDefaultState() defaultState}
+     * is available as a server-side fallback.
+     * <p>
+     * This is NOT used in command metadata resolution — only resolvedState (from user stepInputs)
+     * or defaultState contribute to the command sent to the agent.
+     */
     public abstract @Nullable AgentAppStepState getState();
     public abstract AgentAppStepType getType();
+
+    public boolean isStateful() {
+        return getState() != null;
+    }
+
+    public boolean hasNoDefaultState() {
+        return !hasDefaultState();
+    }
+
+    public boolean hasDefaultState() {
+        return this instanceof StepWithDefaultState<?> ss && ss.getDefaultState() != null;
+    }
 
     @JsonIgnore
     public Map<String, String> getCommandMetadata(AgentApplication application, @Nullable AgentAppStepState resolvedState) {

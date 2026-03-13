@@ -13,26 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent.step;
+package org.thingsboard.server.common.data.agent.step.state;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import javax.annotation.Nullable;
-import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
+import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
+import org.thingsboard.server.exception.DataValidationException;
+
+import java.util.Map;
 
 @Data
-@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ComposeStartStep extends AgentAppStep {
+@NoArgsConstructor
+public class ComposeMigrationStepState extends AgentAppStepState {
 
-    @Override
-    public @Nullable AgentAppStepState getState() {
-        return null;
+    private boolean pullImages = false;
+
+    public ComposeMigrationStepState(ComposeMigrationStepState other) {
+        this.pullImages = other.pullImages;
     }
 
     @Override
     public AgentAppStepType getType() {
-        return AgentAppStepType.COMPOSE_START;
+        return AgentAppStepType.COMPOSE_MIGRATION;
+    }
+
+    @Override
+    public void validate() throws DataValidationException {}
+
+    @Override
+    public Map<String, String> getCommandMetadata() {
+        return Map.of(
+                "pullImages", String.valueOf(pullImages)
+        );
     }
 }

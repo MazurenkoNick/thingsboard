@@ -15,24 +15,30 @@
  */
 package org.thingsboard.server.common.data.agent.step;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import javax.annotation.Nullable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 
-@Data
-@NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class ComposeStartStep extends AgentAppStep {
+import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.Map;
+
+public abstract class StepWithDefaultState<T extends AgentAppStepState> extends AgentAppStep {
+
+    @JsonIgnore
+    protected abstract T getDefaultState();
 
     @Override
-    public @Nullable AgentAppStepState getState() {
-        return null;
+    @JsonIgnore
+    public Map<String, String> getCommandMetadata(AgentApplication application, @Nullable AgentAppStepState resolvedState) {
+        if (resolvedState != null) {
+            return resolvedState.getCommandMetadata();
+        }
+        T def = getDefaultState();
+        if (def != null) {
+            return def.getCommandMetadata();
+        }
+        return Collections.emptyMap();
     }
 
-    @Override
-    public AgentAppStepType getType() {
-        return AgentAppStepType.COMPOSE_START;
-    }
 }
