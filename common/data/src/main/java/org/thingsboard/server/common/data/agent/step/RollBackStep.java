@@ -24,7 +24,7 @@ import org.thingsboard.server.common.data.agent.step.state.RollBackStepState;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class RollBackStep extends AgentAppStep {
+public class RollBackStep extends StatefulStep<RollBackStepState> {
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
     private RollBackStepState state;

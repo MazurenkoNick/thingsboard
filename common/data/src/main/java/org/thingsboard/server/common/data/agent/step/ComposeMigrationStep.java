@@ -37,7 +37,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ComposeMigrationStep extends AgentAppStep {
+public class ComposeMigrationStep extends StatefulStep<ComposeMigrationStepState> {
 
     private List<ServiceOverride> serviceOverrides;
     @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)

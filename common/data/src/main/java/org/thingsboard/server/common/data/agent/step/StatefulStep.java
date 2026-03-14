@@ -15,30 +15,20 @@
  */
 package org.thingsboard.server.common.data.agent.step;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.Map;
 
-public abstract class StepWithDefaultState<T extends AgentAppStepState> extends StatefulStep<T> {
+public abstract class StatefulStep<T extends AgentAppStepState> extends AgentAppStep {
 
-    @JsonIgnore
-    protected abstract T getDefaultState();
-
-    @Override
-    @JsonIgnore
-    public Map<String, String> getCommandMetadata(AgentApplication application, @Nullable AgentAppStepState resolvedState) {
-        if (resolvedState != null) {
-            return resolvedState.getCommandMetadata();
-        }
-        T def = getDefaultState();
-        if (def != null) {
-            return def.getCommandMetadata();
-        }
-        return Collections.emptyMap();
-    }
-
+    /**
+     * Template-defined state that describes what fields the frontend should render for user input (stepInputs).
+     * When present, the step is considered stateful and the validator may require the user to provide
+     * corresponding stepInputs in the event, unless a {@link StepWithDefaultState#getDefaultState() defaultState}
+     * is available as a server-side fallback.
+     * <p>
+     * This is NOT used in command metadata resolution — only resolvedState (from user stepInputs)
+     * or defaultState contribute to the command sent to the agent.
+     */
+    public abstract @Nullable T getState();
 }

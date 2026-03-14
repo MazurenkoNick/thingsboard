@@ -24,7 +24,7 @@ import org.thingsboard.server.common.data.agent.step.state.ComposeDownStepState;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ComposeDownStep extends AgentAppStep {
+public class ComposeDownStep extends StatefulStep<ComposeDownStepState> {
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
     private ComposeDownStepState state;

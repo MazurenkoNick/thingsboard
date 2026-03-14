@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 
 import java.util.Map;
 import java.util.Optional;
@@ -36,11 +35,6 @@ public class ComposeTypeChoiceStep extends AgentAppStep {
 
     public ComposeTypeChoiceStep(UUID id, UUID nextId, String title) {
         super(id, nextId, title, true);
-    }
-
-    @Override
-    public AgentAppStepState getState() {
-        return null;
     }
 
     @Override
