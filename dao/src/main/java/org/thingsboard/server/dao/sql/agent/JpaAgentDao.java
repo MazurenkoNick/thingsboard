@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentInfo;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -102,5 +103,10 @@ public class JpaAgentDao extends JpaAbstractDao<AgentEntity, Agent> implements A
     @Override
     public Long countByTenantId(TenantId tenantId) {
         return agentRepository.countByTenantId(tenantId.getId());
+    }
+
+    @Override
+    public EntityType getEntityType() {
+        return EntityType.AGENT;
     }
 }
