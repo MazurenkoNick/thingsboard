@@ -340,11 +340,6 @@ class DefaultAgentEventProcessorTest {
     private AgentAppStep newStep(UUID id, UUID nextId) {
         return new AgentAppStep(nextId, id, "Step " + id, false) {
             @Override
-            public AgentAppStepState getState() {
-                return null;
-            }
-
-            @Override
             public AgentAppStepType getType() {
                 return AgentAppStepType.COMPOSE_START;
             }

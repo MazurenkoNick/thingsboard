@@ -26,10 +26,12 @@ import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.gen.agent.v1.ComposeState;
+import org.thingsboard.server.gen.agent.v1.ContainerInfo;
 import org.thingsboard.server.gen.agent.v1.ProjectStateSync;
 import org.thingsboard.server.service.agent.AgentInboundMsgCtx;
 import org.thingsboard.server.service.agent.compose.ComposeAgentAppCreator;
 import org.thingsboard.server.service.agent.compose.ComposeUnitsSynchronizer;
+import org.thingsboard.server.service.agent.compose.ImageDigestChecker;
 
 import java.util.Map;
 
@@ -41,6 +43,7 @@ public class ComposeProjectSyncMessageHandler implements AgentInboundMessageHand
     private final AgentApplicationService appService;
     private final ComposeAgentAppCreator appCreator;
     private final ComposeUnitsSynchronizer unitsSynchronizer;
+    private final ImageDigestChecker imageDigestChecker;
 
     @Override
     public boolean canHandle(AgentInboundMsgCtx msgCtx) {
@@ -81,15 +84,18 @@ public class ComposeProjectSyncMessageHandler implements AgentInboundMessageHand
             }
         }
 
-        Map<String, String> containerStates = compose.getContainerStatesMap();
+        Map<String, ContainerInfo> containerStates = compose.getContainerStatesMap();
+        JsonNode composeJson = null;
         if (compose.hasComposeJson()) {
             log.trace("[{}][{}] Compose JSON changed for project [{}], syncing units and state", tenantId, agentId, projectName);
-            JsonNode composeJson = parseComposeJson(compose.getComposeJson());
+            composeJson = parseComposeJson(compose.getComposeJson());
             unitsSynchronizer.syncUnitsAndState(tenantId, app.getId(), composeJson, containerStates);
         } else {
             log.trace("[{}][{}] Syncing container states only for project [{}]", tenantId, agentId, projectName);
             unitsSynchronizer.syncState(tenantId, app.getId(), containerStates);
         }
+
+        imageDigestChecker.checkImageDigest(tenantId, app, containerStates, composeJson);
     }
 
     private JsonNode parseComposeJson(String json) {

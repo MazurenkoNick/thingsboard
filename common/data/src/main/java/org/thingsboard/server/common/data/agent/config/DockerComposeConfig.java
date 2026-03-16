@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 public class DockerComposeConfig extends AgentAppConfig {
 
     private JsonNode compose;
+    private String imageDigest;
 
     @Override
     public AgentAppConfigType getType() {
@@ -44,6 +45,7 @@ public class DockerComposeConfig extends AgentAppConfig {
     public AgentAppConfig copy() {
         DockerComposeConfig copy = new DockerComposeConfig();
         copy.setCompose(this.compose != null ? this.compose.deepCopy() : null);
+        copy.setImageDigest(this.imageDigest);
         return copy;
     }
 
