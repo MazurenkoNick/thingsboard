@@ -87,7 +87,6 @@ public class IntegrationControllerTest extends AbstractControllerTest {
 
     private Tenant savedTenant;
     private Converter savedConverter;
-    private Converter savedDownlinkConverter;
     private User tenantAdmin;
 
     private static final JsonNode CUSTOM_CONVERTER_CONFIGURATION = JacksonUtil.newObjectNode()
@@ -131,7 +130,7 @@ public class IntegrationControllerTest extends AbstractControllerTest {
         downlinkConverter.setType(ConverterType.DOWNLINK);
         downlinkConverter.setIntegrationType(IntegrationType.MQTT);
         downlinkConverter.setConfiguration(CUSTOM_DOWNLINK_CONVERTER_CONFIGURATION);
-        savedDownlinkConverter = doPost("/api/converter", downlinkConverter, Converter.class);
+        doPost("/api/converter", downlinkConverter, Converter.class);
     }
 
     @After
