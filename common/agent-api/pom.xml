@@ -27,7 +27,7 @@
     <artifactId>agent-api</artifactId>
     <packaging>jar</packaging>
 
-    <name>agent-api</name>
+    <name>Thingsboard Server Remote Agent wrapper</name>
     <url>https://thingsboard.io</url>
 
     <properties>

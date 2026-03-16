@@ -20,6 +20,7 @@ import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -33,6 +34,7 @@ public interface AgentApplicationService {
     AgentApplication findByEventId(TenantId tenantId, AgentAppEventId agentAppEventId);
     PageData<AgentApplication> findByAgentId(TenantId tenantId, AgentId agentId, PageLink pageLink);
     PageData<AgentApplicationInfo> findInfosByAgentId(TenantId tenantId, AgentId agentId, PageLink pageLink);
+    AgentApplication findByRelatedEntity(TenantId tenantId, EntityId entityId);
     void delete(TenantId tenantId, AgentApplicationId agentApplicationId);
     void deleteByAgentId(TenantId tenantId, AgentId agentId);
 

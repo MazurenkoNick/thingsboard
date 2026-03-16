@@ -15,6 +15,7 @@
  */
 package org.thingsboard.server.common.data.agent.step;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
@@ -24,9 +25,11 @@ import org.springframework.util.CollectionUtils;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
+import org.thingsboard.server.common.data.agent.step.state.ComposeMigrationStepState;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -34,14 +37,11 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ComposeMigrationStep extends AgentAppStep {
+public class ComposeMigrationStep extends StatefulStep<ComposeMigrationStepState> {
 
     private List<ServiceOverride> serviceOverrides;
-
-    @Override
-    public @Nullable AgentAppStepState getState() {
-        return null;
-    }
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
+    private ComposeMigrationStepState state;
 
     @Override
     public AgentAppStepType getType() {
@@ -53,14 +53,18 @@ public class ComposeMigrationStep extends AgentAppStep {
         if (!(application.getConfig() instanceof DockerComposeConfig d) || d.getCompose() == null) {
             return Collections.emptyMap();
         }
+        HashMap<String, String> res = new HashMap<>();
         JsonNode compose = d.getCompose().deepCopy();
         if (!CollectionUtils.isEmpty(serviceOverrides)) {
             applyOverrides(compose);
         }
-        return Map.of(
-                "compose", compose.toString(),
-                "abortOnContainerExit", "true"
-        );
+        res.put("compose", compose.toString());
+        res.put("abortOnContainerExit", "true");
+
+        if (resolvedState != null) {
+            res.putAll(resolvedState.getCommandMetadata());
+        }
+        return res;
     }
 
     private void applyOverrides(JsonNode compose) {

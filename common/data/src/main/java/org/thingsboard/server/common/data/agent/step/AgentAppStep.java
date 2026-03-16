@@ -58,14 +58,22 @@ public abstract class AgentAppStep {
         this.templateOnly = templateOnly;
     }
 
-    public abstract @Nullable AgentAppStepState getState();
     public abstract AgentAppStepType getType();
+
+    public boolean isStateful() {
+        return this instanceof StatefulStep<?> ss && ss.getState() != null;
+    }
+
+    public boolean hasNoDefaultState() {
+        return !hasDefaultState();
+    }
+
+    public boolean hasDefaultState() {
+        return this instanceof StepWithDefaultState<?> ss && ss.getDefaultState() != null;
+    }
 
     @JsonIgnore
     public Map<String, String> getCommandMetadata(AgentApplication application, @Nullable AgentAppStepState resolvedState) {
-        if (resolvedState != null) {
-            return resolvedState.getCommandMetadata();
-        }
         return Collections.emptyMap();
     }
 }

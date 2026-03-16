@@ -16,16 +16,14 @@
 package org.thingsboard.server.dao.service.validator;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
-import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
-import org.thingsboard.server.common.data.agent.step.RollBackStep;
 import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
-import org.thingsboard.server.common.data.agent.step.state.RollBackStepState;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppEventStepsResolver;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
@@ -37,6 +35,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Component
+@Slf4j
 @AllArgsConstructor
 public class AgentAppEventDataValidator extends DataValidator<AgentAppEvent> {
 
@@ -70,18 +69,21 @@ public class AgentAppEventDataValidator extends DataValidator<AgentAppEvent> {
             stepStates.values().forEach(AgentAppStepState::validate);
         }
 
-        List<AgentAppStep> statefulAppSteps = stepsResolver.resolveSteps(app, event.getActionType())
+        List<AgentAppStep> statefulAppStepsWithoutDefaultState = stepsResolver.resolveSteps(app, event.getActionType())
                 .stream()
-                .filter(s -> s.getState() != null).toList();
+                .filter(AgentAppStep::isStateful)
+                .filter(AgentAppStep::hasNoDefaultState)
+                .toList();
 
-        if (!CollectionUtils.isEmpty(statefulAppSteps) && CollectionUtils.isEmpty(stepStates)) {
+        if (!CollectionUtils.isEmpty(statefulAppStepsWithoutDefaultState) && CollectionUtils.isEmpty(stepStates)) {
                 throw new DataValidationException("Agent app step states must not be null!");
         }
 
-        statefulAppSteps.stream()
+        statefulAppStepsWithoutDefaultState.stream()
                 .filter(s -> !stepStates.containsKey(s.getId()))
                 .findAny()
                 .ifPresent(s -> {
+                    log.trace("Step state is missing!, {}", s.getId());
                     throw new DataValidationException("Step state is missing!");
                 });
     }

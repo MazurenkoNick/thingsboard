@@ -16,21 +16,25 @@
 package org.thingsboard.server.common.data.agent;
 
 import lombok.Getter;
+import org.thingsboard.server.common.data.EntityType;
 
 import java.util.regex.Pattern;
 
 public enum AgentApplicationType {
-    GENERIC(null, "1.0.0"),
-    EDGE("thingsboard/tb-edge:.+", null),
-    GATEWAY("thingsboard/tb-gateway:.+", null);
+    GENERIC(null, "1.0.0", null),
+    EDGE("thingsboard/tb-edge:.+", null, EntityType.EDGE),
+    GATEWAY("thingsboard/tb-gateway:.+", null, null);
 
     @Getter
     private final Pattern mainImagePattern;
     @Getter
     private final String defaultVersion;
+    @Getter
+    private final EntityType relatedEntityType;
 
-    AgentApplicationType(String mainImageRegex, String defaultVersion) {
+    AgentApplicationType(String mainImageRegex, String defaultVersion, EntityType relatedEntityType) {
         this.mainImagePattern = mainImageRegex != null ? Pattern.compile(mainImageRegex) : null;
         this.defaultVersion = defaultVersion;
+        this.relatedEntityType = relatedEntityType;
     }
 }

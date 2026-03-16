@@ -30,6 +30,8 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({
+        @Type(name = "COMPOSE", value = ComposeStepState.class),
+        @Type(name = "COMPOSE_MIGRATION", value = ComposeMigrationStepState.class),
         @Type(name = "COMPOSE_DOWN", value = ComposeDownStepState.class),
         @Type(name = "ROLLBACK", value = RollBackStepState.class),
         @Type(name = "BACKUP_VOLUME", value = BackupVolumesStepState.class),

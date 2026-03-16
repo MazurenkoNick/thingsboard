@@ -15,27 +15,34 @@
  */
 package org.thingsboard.server.common.data.agent.step;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
+import org.thingsboard.server.common.data.agent.step.state.ComposeStepState;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ComposeStep extends AgentAppStep {
+public class ComposeStep extends StepWithDefaultState<ComposeStepState> {
 
-    @Override
-    public @Nullable AgentAppStepState getState() {
-        return null;
-    }
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
+    private ComposeStepState state;
+
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
+    @JsonProperty(access = Access.WRITE_ONLY)
+    private ComposeStepState defaultState;
 
     @Override
     public AgentAppStepType getType() {
@@ -44,10 +51,20 @@ public class ComposeStep extends AgentAppStep {
 
     @Override
     public Map<String, String> getCommandMetadata(AgentApplication application, @Nullable AgentAppStepState resolvedState) {
+        HashMap<String, String> res = new HashMap<>();
         AgentAppConfig config = application.getConfig();
         if (config instanceof DockerComposeConfig d && d.getCompose() != null) {
-            return Map.of("compose", d.getCompose().toString());
+            res.put("compose", d.getCompose().toString());
         }
-        return Collections.emptyMap();
+        res.putAll(super.getCommandMetadata(application, resolvedState));
+
+        return res;
     }
+
+    @Override
+    @JsonIgnore
+    protected ComposeStepState getDefaultState() {
+        return defaultState != null ? new ComposeStepState(defaultState) : null;
+    }
+
 }
