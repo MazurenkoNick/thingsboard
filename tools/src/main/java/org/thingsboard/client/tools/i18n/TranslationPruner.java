@@ -99,6 +99,7 @@ public class TranslationPruner {
             JsonNode usRoot = mapper.readTree(referenceFile);
             Set<String> validKeys = new HashSet<>();
             collectKeys(usRoot, "", validKeys);
+            validKeys.remove("language.locales"); // no need to change it.
             for (File sourceFile : sourceFolder.listFiles()) {
                 File destFile = new File(destFolder, sourceFile.getName());
                 JsonNode sourceRoot = mapper.readTree(sourceFile);

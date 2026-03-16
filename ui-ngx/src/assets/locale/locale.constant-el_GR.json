@@ -580,13 +580,7 @@
     "mobile-settings": "Ρυθμίσεις κινητού",
     "firebase-service-account-file": "Αρχείο διαπιστευτηρίων λογαριασμού υπηρεσίας Firebase (JSON)",
     "select-firebase-service-account-file": "Σύρετε και αποθέστε το αρχείο διαπιστευτηρίων λογαριασμού υπηρεσίας Firebase ή ",
-    "use-system-mobile-settings": "Χρήση ρυθμίσεων συστήματος για κινητά",
-    "trendz": "Trendz",
-    "trendz-settings": "Ρυθμίσεις Trendz",
-    "trendz-url": "Διεύθυνση URL Trendz",
-    "trendz-url-required": "Απαιτείται η διεύθυνση URL του Trendz",
-    "trendz-api-key": "API κλειδί Trendz",
-    "trendz-enable": "Ενεργοποίηση Trendz"
+    "use-system-mobile-settings": "Χρήση ρυθμίσεων συστήματος για κινητά"
   },
   "alarm": {
     "alarm": "Συναγερμός",
@@ -874,7 +868,7 @@
     "no-assets-matching": "Δεν βρέθηκαν περιουσιακά στοιχεία που να ταιριάζουν με '{{entity}}'.",
     "asset-required": "Απαιτείται περιουσιακό στοιχείο",
     "name-starts-with": "Έκφραση ονόματος περιουσιακού στοιχείου",
-    "help-text": "Χρησιμοποιήστε το '%' κατά περίπτωση: '%περιουσιακό_όνομα%', '%περιουσιακό_όνομα_λήγει', 'περιουσιακό_ξεκινά_με'.",
+    "help-text": "Χρησιμοποιήστε '%' ανάλογα με τις ανάγκες: '%asset_name_contains%', '%asset_name_ends', 'asset_starts_with%'.",
     "search": "Αναζήτηση περιουσιακών στοιχείων",
     "select-group-to-add": "Επιλέξτε την ομάδα στόχου για προσθήκη των επιλεγμένων περιουσιακών στοιχείων",
     "select-group-to-move": "Επιλέξτε την ομάδα στόχου για μετακίνηση των επιλεγμένων περιουσιακών στοιχείων",
@@ -988,9 +982,9 @@
     "processing-timeouts": "Χρονικά όρια επεξεργασίας ${entityName}",
     "rule-chain": "Αλυσίδα κανόνων",
     "rule-engine": "Μηχανή κανόνων",
-    "rule-engine-daily-activity": "Ημερήσια δραστηριότητα μηχανής κανόνων",
     "rule-engine-executions": "Εκτελέσεις μηχανής κανόνων",
     "rule-engine-hourly-activity": "Ωριαία δραστηριότητα μηχανής κανόνων",
+    "rule-engine-daily-activity": "Ημερήσια δραστηριότητα μηχανής κανόνων",
     "rule-engine-monthly-activity": "Μηνιαία δραστηριότητα μηχανής κανόνων",
     "rule-engine-statistics": "Στατιστικά μηχανής κανόνων",
     "rule-node": "Κόμβος κανόνα",
@@ -1007,14 +1001,12 @@
     "transport": "Μεταφορά",
     "transport-daily-activity": "Ημερήσια δραστηριότητα μεταφοράς",
     "transport-data-points": "Σημεία δεδομένων μεταφοράς",
-    "transport-hourly-activity": "Ωριαία δραστηριότητα μεταφοράς",
-    "transport-messages": "Μηνύματα μεταφοράς",
-    "transport-monthly-activity": "Μηνιαία δραστηριότητα μεταφοράς",
     "view-details": "Προβολή λεπτομερειών",
     "view-statistics": "Προβολή στατιστικών",
-    "reports-created": "Αναφορές που δημιουργήθηκαν",
-    "reports-created-daily-activity": "Ημερήσια δραστηριότητα δημιουργίας αναφορών",
-    "reports-created-monthly-activity": "Μηνιαία δραστηριότητα δημιουργίας αναφορών"
+    "transport-messages": "Μηνύματα transport",
+    "reports-created": "Δημιουργημένες αναφορές",
+    "reports-created-daily-activity": "Ημερήσια δραστηριότητα δημιουργημένων αναφορών",
+    "reports-created-monthly-activity": "Μηνιαία δραστηριότητα δημιουργημένων αναφορών"
   },
   "api-limit": {
     "cassandra-write-queries-core": "Ερωτήματα εγγραφής Cassandra από REST API",
@@ -1122,7 +1114,7 @@
     "selected-fields": "{ count, plural, =1 {1 υπολογιζόμενο πεδίο} other {# υπολογιζόμενα πεδία} } επιλεγμένα",
     "type": {
       "simple": "Απλό",
-      "script": "Script"
+      "script": "Σενάριο"
     },
     "arguments": "Ορίσματα",
     "decimals-by-default": "Αριθμοί μετά την υποδιαστολή (προεπιλογή)",
@@ -1141,7 +1133,6 @@
     "argument-tenant": "Τρέχων ενοικιαστής",
     "argument-owner": "Τρέχων ιδιοκτήτης",
     "argument-type": "Τύπος ορίσματος",
-    "see-debug-events": "Προβολή γεγονότων εντοπισμού σφαλμάτων",
     "attribute": "Χαρακτηριστικό",
     "copy-argument-name": "Αντιγραφή ονόματος ορίσματος",
     "timeseries-key": "Κλειδί χρονοσειράς",
@@ -1187,8 +1178,8 @@
     "task-failed-reprocess": "Η εργασία απέτυχε να επαναεπεξεργαστεί",
     "tasks-failed-reprocess": "{{ error }} από {{ total }} οντότητες απέτυχαν να επαναεπεξεργαστούν",
     "hint": {
-      "arguments-simple-with-rolling": "Τα υπολογιζόμενα πεδία τύπου Simple δεν πρέπει να περιέχουν κλειδιά τύπου time series rolling.",
-      "arguments-empty": "Τα ορίσματα δεν πρέπει να είναι κενά.",
+      "arguments-simple-with-rolling": "Το υπολογιζόμενο πεδίο τύπου «Απλό» δεν πρέπει να περιέχει κλειδιά με τύπο «Κυλιόμενη χρονοσειρά».",
+      "arguments-empty": "Πρέπει να καθοριστεί τουλάχιστον ένα όρισμα.",
       "expression-required": "Απαιτείται έκφραση.",
       "expression-invalid": "Η έκφραση δεν είναι έγκυρη.",
       "expression-max-length": "Το μήκος της έκφρασης πρέπει να είναι μικρότερο από 255 χαρακτήρες.",
@@ -1363,6 +1354,7 @@
   "contact": {
     "country": "Χώρα",
     "country-required": "Η χώρα είναι υποχρεωτική.",
+    "country-object-required": "Παρακαλούμε επιλέξτε μια έγκυρη χώρα από τη λίστα.",
     "city": "Πόλη",
     "state": "Πολιτεία / Περιφέρεια",
     "postal-code": "Ταχυδρομικός Κώδικας",
@@ -1503,8 +1495,7 @@
     "decoder-output": "Έξοδος αποκωδικοποιητή",
     "converter-output": "Έξοδος μετατροπέα",
     "converter-type": "Τύπος μετατροπέα",
-    "update-raw-payload": "Ενημερωμένο ακατέργαστο φορτίο",
-    "see-debug-events": "Προβολή γεγονότων εντοπισμού σφαλμάτων"
+    "update-raw-payload": "Ενημερωμένο ακατέργαστο φορτίο"
   },
   "content-type": {
     "json": "Json",
@@ -2064,7 +2055,7 @@
     "remove-alias": "Αφαίρεση ψευδωνύμου συσκευής",
     "add-alias": "Προσθήκη ψευδωνύμου συσκευής",
     "name-starts-with": "Έκφραση ονόματος συσκευής",
-    "help-text": "Χρησιμοποιήστε '%' όπως απαιτείται: '%device_name_contains%', '%device_name_ends', 'device_starts_with'.",
+    "help-text": "Χρησιμοποιήστε '%' ανάλογα με τις ανάγκες: '%device_name_contains%', '%device_name_ends', 'device_starts_with%'.",
     "device-list": "Λίστα συσκευών",
     "use-device-name-filter": "Χρήση φίλτρου",
     "device-list-empty": "Δεν έχουν επιλεγεί συσκευές.",
@@ -2191,7 +2182,6 @@
     "unable-delete-device-alias-text": "Το ψευδώνυμο συσκευής '{{deviceAlias}}' δεν μπορεί να διαγραφεί επειδή χρησιμοποιείται από τα παρακάτω widget(s):<br/>{{widgetsList}}",
     "is-gateway": "Είναι gateway",
     "overwrite-activity-time": "Αντικατάσταση χρόνου δραστηριότητας για συνδεδεμένη συσκευή",
-    "device-filter": "Φίλτρο συσκευής",
     "device-filter-title": "Φίλτρο συσκευής",
     "filter-title": "Φίλτρο",
     "device-state": "Κατάσταση συσκευής",
@@ -2653,7 +2643,7 @@
       "short-id-required": "Το σύντομο αναγνωριστικό διακομιστή είναι υποχρεωτικό.",
       "short-id-range": "Το σύντομο αναγνωριστικό διακομιστή πρέπει να είναι εντός του εύρους από {{ min }} έως {{ max }}.",
       "short-id-pattern": "Το σύντομο αναγνωριστικό διακομιστή πρέπει να είναι θετικός ακέραιος αριθμός.",
-      "lifetime": "Διάρκεια εγγραφής πελάτη",
+      "lifetime": "Διάρκεια ζωής καταχώρισης πελάτη",
       "lifetime-required": "Η διάρκεια εγγραφής πελάτη είναι υποχρεωτική.",
       "lifetime-pattern": "Η διάρκεια εγγραφής πελάτη πρέπει να είναι θετικός ακέραιος αριθμός.",
       "default-min-period": "Ελάχιστη περίοδος μεταξύ δύο ειδοποιήσεων (δλ)",
@@ -3058,7 +3048,7 @@
     "no-entities-text": "Δεν βρέθηκαν οντότητες",
     "no-entity-types-matching": "Δεν βρέθηκαν τύποι οντοτήτων που να ταιριάζουν με '{{entityType}}'.",
     "name-starts-with": "Έκφραση ονόματος",
-    "help-text": "Χρησιμοποιήστε '%' ανάλογα με την ανάγκη: '%entity_name_contains%', '%entity_name_ends', 'entity_starts_with'.",
+    "help-text": "Χρησιμοποιήστε '%' ανάλογα με τις ανάγκες: '%entity_name_contains%', '%entity_name_ends', 'entity_starts_with%'.",
     "use-entity-name-filter": "Χρήση φίλτρου",
     "entity-list-empty": "Δεν επιλέχθηκαν οντότητες.",
     "entity-type-list-required": "Πρέπει να επιλεγεί τουλάχιστον ένας τύπος οντότητας.",
@@ -3437,7 +3427,8 @@
     "queue-name": "Όνομα ουράς",
     "service-id": "Service Id",
     "owner-name": "Όνομα ιδιοκτήτη",
-    "owner-type": "Τύπος ιδιοκτήτη"
+    "owner-type": "Τύπος ιδιοκτήτη",
+    "format": "Μορφή"
   },
   "entity-view": {
     "all": "Όλα",
@@ -3466,7 +3457,7 @@
     "remove-alias": "Αφαίρεση ψευδωνύμου προβολής οντότητας",
     "add-alias": "Προσθήκη ψευδωνύμου προβολής οντότητας",
     "name-starts-with": "Έκφραση ονόματος προβολής οντότητας",
-    "help-text": "Χρησιμοποιήστε '%' όπως απαιτείται: '%entity-view_name_contains%', '%entity-view_name_ends', 'entity-view_starts_with'.",
+    "help-text": "Χρησιμοποιήστε '%' ανάλογα με τις ανάγκες: '%entity-view_name_contains%', '%entity-view_name_ends', 'entity-view_starts_with%'.",
     "entity-view-list": "Λίστα προβολών οντοτήτων",
     "use-entity-view-name-filter": "Χρήση φίλτρου",
     "entity-view-list-empty": "Δεν έχουν επιλεγεί προβολές οντοτήτων.",
@@ -4552,8 +4543,7 @@
     "downlink-connection-string": "Σύνδεση downlink",
     "downlink-connection-string-required": "Η σύνδεση downlink είναι υποχρεωτική",
     "downlink-topic-name": "Όνομα θέματος downlink",
-    "downlink-topic-name-required": "Το όνομα θέματος downlink είναι υποχρεωτικό",
-    "see-debug-events": "Προβολή συμβάντων αποσφαλμάτωσης"
+    "downlink-topic-name-required": "Το όνομα θέματος downlink είναι υποχρεωτικό"
   },
   "scada": {
     "symbols": "Σύμβολα SCADA",
@@ -5018,7 +5008,6 @@
     "invalid-email-format": "Μη έγκυρη μορφή email.",
     "no-account": "Δεν έχετε λογαριασμό;",
     "create-account": "Δημιουργία λογαριασμού",
-    "login-with": "Σύνδεση με {{name}}",
     "or": "ή",
     "error": "Σφάλμα σύνδεσης",
     "verify-your-identity": "Επαληθεύστε την ταυτότητά σας",
@@ -5067,7 +5056,11 @@
     "terms-of-use": "Όροι Χρήσης",
     "recaptcha-title": "reCAPTCHA",
     "accept-privacy-policy-message": "Πρέπει να αποδεχθείτε την Πολιτική Απορρήτου μας",
-    "accept-terms-of-use-message": "Πρέπει να αποδεχθείτε τους Όρους Χρήσης μας"
+    "accept-terms-of-use-message": "Πρέπει να αποδεχθείτε τους Όρους Χρήσης μας",
+    "firstname-max-length": "Το όνομα πρέπει να είναι μικρότερο από 256 χαρακτήρες",
+    "lastname-max-length": "Το επώνυμο πρέπει να είναι μικρότερο από 256 χαρακτήρες",
+    "firstname-required": "Απαιτείται όνομα",
+    "lastname-required": "Απαιτείται επώνυμο"
   },
   "mobile": {
     "add-application": "Προσθήκη εφαρμογής",
@@ -6836,8 +6829,7 @@
       },
       "time-series": "Χρονοσειρές",
       "latest": "Τελευταίες τιμές",
-      "web-sockets": "WebSockets",
-      "calculated-fields": "Υπολογιζόμενα πεδία"
+      "web-sockets": "WebSockets"
     },
     "save-attribute": {
       "processing-settings": "Ρυθμίσεις επεξεργασίας",
@@ -7248,6 +7240,7 @@
     "timezone-description": "Ζώνη ώρας στην οποία θα παρουσιαστεί ο πίνακας στην αναφορά.",
     "reporting": "Αναφορές",
     "templates": "Πρότυπα",
+    "report": "Αναφορά",
     "reports": "Αναφορές",
     "scheduling": "Προγραμματισμός",
     "generating-report": "Δημιουργία αναφοράς...",
@@ -7264,14 +7257,14 @@
     "file-name": "Όνομα αρχείου",
     "format": "Μορφή",
     "download": "Λήψη αναφοράς",
-    "reports-filter": "Φίλτρο αναφορών"
+    "no-reports-matching": "Δεν βρέθηκαν αναφορές που να αντιστοιχούν στο '{{entity}}'.",
+    "report-required": "Απαιτείται αναφορά"
   },
   "report-template": {
     "report-template": "Πρότυπο αναφοράς",
     "report-templates": "Πρότυπα αναφοράς",
     "add": "Προσθήκη προτύπου αναφοράς",
     "search": "Αναζήτηση προτύπων αναφοράς",
-    "templates-filter": "Φίλτρο προτύπων",
     "sub-report": "Υπο-αναφορά",
     "no-report-templates-text": "Δεν βρέθηκαν πρότυπα αναφοράς",
     "no-sub-reports-text": "Δεν βρέθηκαν υπο-αναφορές",
@@ -8732,9 +8725,9 @@
     "export-relations": "Εξαγωγή σχέσεων",
     "export-attributes": "Εξαγωγή ιδιοτήτων",
     "export-credentials": "Εξαγωγή διαπιστευτηρίων",
-    "export-calculated-fields": "Εξαγωγή υπολογιζόμενων πεδίων",
     "export-group-entities": "Εξαγωγή οντοτήτων ομάδων",
     "export-roles": "Εξαγωγή ρόλων",
+    "export-calculated-fields": "Εξαγωγή υπολογιζόμενων πεδίων \nκαι κανόνων συναγερμού",
     "entity-versions": "Εκδόσεις οντοτήτων",
     "versions": "Εκδόσεις",
     "created-time": "Ώρα δημιουργίας",
@@ -8845,8 +8838,6 @@
       "calculated-field-reprocessing": "Επαναεπεξεργασία υπολογιζόμενου πεδίου",
       "report": "Δημιουργία αναφοράς"
     },
-    "tasks-filter": "Φίλτρο εργασιών",
-    "tasks-filter-params": "Φίλτρο: {{ filterParams }}",
     "tasks-status-list": "Λίστα κατάστασης εργασιών",
     "tasks-type-list": "Λίστα τύπων εργασιών",
     "time-taken": "Χρόνος εκτέλεσης",
@@ -9748,9 +9739,9 @@
       },
       "chart-axis": {
         "scale": "Κλίμακα",
-        "scale-min": "ελάχιστο",
-        "scale-max": "μέγιστο",
-        "scale-auto": "Αυτόματα"
+        "scale-min": "ελάχ.",
+        "scale-max": "μέγ.",
+        "scale-auto": "Αυτόματο"
       },
       "bar": {
         "show-border": "Εμφάνιση περιγράμματος",
@@ -10789,11 +10780,11 @@
           "finish-circle-hint-with-entity": "Κύκλος για '{{entityName}}': κάντε κλικ για ολοκλήρωση και αποθήκευση",
           "finish-circle-hint": "Κύκλος: κάντε κλικ για ολοκλήρωση σχεδίασης"
         },
-        "select-entity": "Επιλέξτε οντότητα",
-        "select-entity-hint": "Υπόδειξη: μετά την επιλογή κάντε κλικ στον χάρτη για ορισμό θέσης"
+        "select-entity": "Επιλογή οντότητας",
+        "select-entity-hint": "Υπόδειξη: μετά την επιλογή, κάντε κλικ στον χάρτη για να ορίσετε θέση"
       },
-      "select-entity": "Επιλέξτε οντότητα",
-      "select-entity-hint": "Υπόδειξη: μετά την επιλογή κάντε κλικ στον χάρτη για ορισμό θέσης",
+      "select-entity": "Επιλογή οντότητας",
+      "select-entity-hint": "Υπόδειξη: μετά την επιλογή, κάντε κλικ στον χάρτη για να ορίσετε θέση",
       "tooltips": {
         "placeMarker": "Κάντε κλικ για τοποθέτηση οντότητας '{{entityName}}'",
         "firstVertex": "Πολύγωνο για '{{entityName}}': κάντε κλικ για τοποθέτηση πρώτου σημείου",
@@ -11899,35 +11890,6 @@
     "items-per-page-separator": "από"
   },
   "language": {
-    "language": "Γλώσσα",
-    "locales": {
-      "ar_AE": "العربية (الإمارات العربية المتحدة)",
-      "ca_ES": "català (Espanya)",
-      "cs_CZ": "čeština (Česko)",
-      "da_DK": "dansk (Danmark)",
-      "de_DE": "Deutsch (Deutschland)",
-      "el_GR": "Ελληνικά (Ελλάδα)",
-      "en_US": "English (United States)",
-      "es_ES": "español (España)",
-      "fa_IR": "فارسی (ایران)",
-      "fr_FR": "français (France)",
-      "it_IT": "italiano (Italia)",
-      "ja_JP": "日本語 (日本)",
-      "ka_GE": "ქართული (საქართველო)",
-      "ko_KR": "한국어 (대한민국)",
-      "lt_LT": "lietuvių (Lietuva)",
-      "lv_LV": "latviešu (Latvija)",
-      "nl_BE": "Nederlands (België)",
-      "nl_NL": "Nederlands (Nederland)",
-      "no_NO": "norsk (Norge)",
-      "pl_PL": "polski (Polska)",
-      "pt_BR": "português (Brasil)",
-      "ro_RO": "română (România)",
-      "sl_SI": "slovenščina (Slovenija)",
-      "tr_TR": "Türkçe (Türkiye)",
-      "uk_UA": "українська (Україна)",
-      "zh_CN": "中文 (中国)",
-      "zh_TW": "中文 (台灣)"
-    }
+    "language": "Γλώσσα"
   }
 }

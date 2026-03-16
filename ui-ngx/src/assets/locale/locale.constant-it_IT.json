@@ -580,13 +580,7 @@
     "mobile-settings": "Impostazioni mobile",
     "firebase-service-account-file": "File JSON delle credenziali dell'account di servizio Firebase",
     "select-firebase-service-account-file": "Trascina e rilascia il file delle credenziali dell'account di servizio Firebase oppure",
-    "use-system-mobile-settings": "Usa le impostazioni mobili di sistema",
-    "trendz": "Trendz",
-    "trendz-settings": "Impostazioni di Trendz",
-    "trendz-url": "URL di Trendz",
-    "trendz-url-required": "L'URL di Trendz è obbligatorio",
-    "trendz-api-key": "Chiave API di Trendz",
-    "trendz-enable": "Abilita Trendz"
+    "use-system-mobile-settings": "Usa le impostazioni mobili di sistema"
   },
   "alarm": {
     "alarm": "Allarme",
@@ -874,7 +868,7 @@
     "no-assets-matching": "Nessun asset corrispondente a '{{entity}}' trovato.",
     "asset-required": "L'asset è obbligatorio",
     "name-starts-with": "Espressione nome asset",
-    "help-text": "Usa '%' secondo necessità: '%asset_name_contains%', '%asset_name_ends', 'asset_starts_with'.",
+    "help-text": "Usa '%' secondo necessità: '%asset_name_contains%', '%asset_name_ends', 'asset_starts_with%'.",
     "search": "Cerca asset",
     "select-group-to-add": "Seleziona gruppo di destinazione per aggiungere gli asset selezionati",
     "select-group-to-move": "Seleziona gruppo di destinazione per spostare gli asset selezionati",
@@ -988,9 +982,9 @@
     "processing-timeouts": "Timeout di elaborazione ${entityName}",
     "rule-chain": "Catena di regole",
     "rule-engine": "Motore di regole",
-    "rule-engine-daily-activity": "Attività giornaliera motore di regole",
     "rule-engine-executions": "Esecuzioni motore di regole",
     "rule-engine-hourly-activity": "Attività oraria motore di regole",
+    "rule-engine-daily-activity": "Attività giornaliera motore di regole",
     "rule-engine-monthly-activity": "Attività mensile motore di regole",
     "rule-engine-statistics": "Statistiche motore di regole",
     "rule-node": "Nodo regola",
@@ -1007,11 +1001,9 @@
     "transport": "Trasporto",
     "transport-daily-activity": "Attività giornaliera del trasporto",
     "transport-data-points": "Punti dati del trasporto",
-    "transport-hourly-activity": "Attività oraria del trasporto",
-    "transport-messages": "Messaggi del trasporto",
-    "transport-monthly-activity": "Attività mensile del trasporto",
     "view-details": "Visualizza dettagli",
     "view-statistics": "Visualizza statistiche",
+    "transport-messages": "Messaggi di trasporto",
     "reports-created": "Report creati",
     "reports-created-daily-activity": "Attività giornaliera dei report creati",
     "reports-created-monthly-activity": "Attività mensile dei report creati"
@@ -1141,7 +1133,6 @@
     "argument-tenant": "Tenant corrente",
     "argument-owner": "Proprietario corrente",
     "argument-type": "Tipo di argomento",
-    "see-debug-events": "Vedi eventi di debug",
     "attribute": "Attributo",
     "copy-argument-name": "Copia nome argomento",
     "timeseries-key": "Chiave serie temporale",
@@ -1187,10 +1178,10 @@
     "task-failed-reprocess": "Il compito non è riuscito a rielaborare",
     "tasks-failed-reprocess": "{{ error }} di {{ total }} entità non sono riuscite a rielaborare",
     "hint": {
-      "arguments-simple-with-rolling": "Il campo calcolato di tipo semplice non deve contenere chiavi con tipo rolling delle serie temporali.",
-      "arguments-empty": "Gli argomenti non devono essere vuoti.",
-      "expression-required": "Espressione obbligatoria.",
-      "expression-invalid": "Espressione non valida",
+      "arguments-simple-with-rolling": "Un campo calcolato di tipo semplice non dovrebbe contenere chiavi con tipo di serie temporale rolling.",
+      "arguments-empty": "Almeno un argomento deve essere specificato.",
+      "expression-required": "L'espressione è obbligatoria.",
+      "expression-invalid": "L'espressione non è valida.",
       "expression-max-length": "La lunghezza dell'espressione deve essere inferiore a 255 caratteri.",
       "argument-name-required": "Il nome dell'argomento è obbligatorio.",
       "argument-name-pattern": "Il nome dell'argomento non è valido.",
@@ -1199,11 +1190,11 @@
       "argument-name-forbidden": "Il nome dell'argomento è riservato e non può essere utilizzato.",
       "argument-type-required": "Il tipo di argomento è obbligatorio.",
       "max-args": "Numero massimo di argomenti raggiunto.",
-      "decimals-range": "Per impostazione predefinita, i decimali devono essere un numero compreso tra 0 e 15.",
+      "decimals-range": "I decimali di default devono essere un numero compreso tra 0 e 15.",
       "expression": "L'espressione predefinita dimostra come trasformare una temperatura da Fahrenheit a Celsius.",
       "arguments-entity-not-found": "Entità di destinazione dell'argomento non trovata.",
-      "use-latest-timestamp": "Se abilitato, il valore calcolato verrà salvato utilizzando il timestamp più recente dalla telemetria degli argomenti, invece dell'orario del server.",
-      "reprocessing": "Se non è predefinito alcun timestamp specifico, i risultati della rielaborazione vengono salvati utilizzando il timestamp della telemetria storica corrispondente che ha attivato il calcolo."
+      "use-latest-timestamp": "Se abilitato, il valore calcolato verrà memorizzato utilizzando il timestamp più recente dalla telemetria degli argomenti, invece del tempo del server.",
+      "reprocessing": "Se non è predefinito un timestamp specifico, i risultati del rielaboramento vengono salvati utilizzando il timestamp della telemetria storica corrispondente che ha attivato il calcolo."
     }
   },
   "secret-storage": {
@@ -1363,6 +1354,7 @@
   "contact": {
     "country": "Paese",
     "country-required": "Il paese è obbligatorio.",
+    "country-object-required": "Seleziona un paese valido dalla lista.",
     "city": "Città",
     "state": "Stato / Provincia",
     "postal-code": "CAP / Codice postale",
@@ -1503,8 +1495,7 @@
     "decoder-output": "Output decoder",
     "converter-output": "Output convertitore",
     "converter-type": "Tipo convertitore",
-    "update-raw-payload": "Payload RAW aggiornato",
-    "see-debug-events": "Vedi eventi di debug"
+    "update-raw-payload": "Payload RAW aggiornato"
   },
   "content-type": {
     "json": "Json",
@@ -2064,7 +2055,7 @@
     "remove-alias": "Rimuovi alias del dispositivo",
     "add-alias": "Aggiungi alias del dispositivo",
     "name-starts-with": "Espressione nome dispositivo",
-    "help-text": "Usa '%' secondo necessità: '%device_name_contains%', '%device_name_ends', 'device_starts_with'.",
+    "help-text": "Usa '%' secondo necessità: '%device_name_contains%', '%device_name_ends', 'device_starts_with%'.",
     "device-list": "Elenco dispositivi",
     "use-device-name-filter": "Usa filtro",
     "device-list-empty": "Nessun dispositivo selezionato.",
@@ -2191,7 +2182,6 @@
     "unable-delete-device-alias-text": "L'alias del dispositivo '{{deviceAlias}}' non può essere eliminato poiché è utilizzato dai seguenti widget:<br/>{{widgetsList}}",
     "is-gateway": "È un gateway",
     "overwrite-activity-time": "Sovrascrivi tempo di attività per il dispositivo connesso",
-    "device-filter": "Filtro dispositivo",
     "device-filter-title": "Filtro dispositivo",
     "filter-title": "Filtro",
     "device-state": "Stato dispositivo",
@@ -2653,7 +2643,7 @@
       "short-id-required": "ID server breve obbligatorio.",
       "short-id-range": "L'ID server breve deve essere compreso tra {{ min }} e {{ max }}.",
       "short-id-pattern": "L'ID server breve deve essere un numero intero positivo.",
-      "lifetime": "Durata registrazione client",
+      "lifetime": "Durata della registrazione del client",
       "lifetime-required": "Durata registrazione client obbligatoria.",
       "lifetime-pattern": "La durata della registrazione deve essere un numero intero positivo.",
       "default-min-period": "Periodo minimo tra due notifiche (s)",
@@ -3058,7 +3048,7 @@
     "no-entities-text": "Nessuna entità trovata",
     "no-entity-types-matching": "Nessun tipo entità corrispondente a '{{entityType}}' trovato.",
     "name-starts-with": "Espressione nome",
-    "help-text": "Usa '%' secondo necessità: '%nome_entità_contiene%', '%nome_entità_finisce', 'entità_inizia_con'.",
+    "help-text": "Usa '%' secondo necessità: '%entity_name_contains%', '%entity_name_ends', 'entity_starts_with%'.",
     "use-entity-name-filter": "Usa filtro",
     "entity-list-empty": "Nessuna entità selezionata.",
     "entity-type-list-required": "È richiesto almeno un tipo di entità.",
@@ -3437,7 +3427,8 @@
     "queue-name": "Nome della coda",
     "service-id": "ID del servizio",
     "owner-name": "Nome del proprietario",
-    "owner-type": "Tipo di proprietario"
+    "owner-type": "Tipo di proprietario",
+    "format": "Formato"
   },
   "entity-view": {
     "all": "Tutti",
@@ -3466,7 +3457,7 @@
     "remove-alias": "Rimuovi alias vista entità",
     "add-alias": "Aggiungi alias vista entità",
     "name-starts-with": "Espressione nome vista entità",
-    "help-text": "Usa '%' se necessario: '%entity-view_name_contains%', '%entity-view_name_ends', 'entity-view_starts_with'.",
+    "help-text": "Usa '%' secondo necessità: '%entity-view_name_contains%', '%entity-view_name_ends', 'entity-view_starts_with%'.",
     "entity-view-list": "Elenco viste entità",
     "use-entity-view-name-filter": "Usa filtro",
     "entity-view-list-empty": "Nessuna vista entità selezionata.",
@@ -4552,8 +4543,7 @@
     "downlink-connection-string": "Stringa di connessione downlink",
     "downlink-connection-string-required": "La stringa di connessione downlink è richiesta",
     "downlink-topic-name": "Nome topic downlink",
-    "downlink-topic-name-required": "Il nome del topic downlink è richiesto",
-    "see-debug-events": "Visualizza eventi di debug"
+    "downlink-topic-name-required": "Il nome del topic downlink è richiesto"
   },
   "scada": {
     "symbols": "Simboli SCADA",
@@ -5018,7 +5008,6 @@
     "invalid-email-format": "Formato email non valido.",
     "no-account": "Non hai un account?",
     "create-account": "Crea un account",
-    "login-with": "Accedi con {{name}}",
     "or": "oppure",
     "error": "Errore di accesso",
     "verify-your-identity": "Verifica la tua identità",
@@ -5067,7 +5056,11 @@
     "terms-of-use": "Termini di Utilizzo",
     "recaptcha-title": "reCAPTCHA",
     "accept-privacy-policy-message": "Devi accettare la nostra Informativa sulla Privacy",
-    "accept-terms-of-use-message": "Devi accettare i nostri Termini di Utilizzo"
+    "accept-terms-of-use-message": "Devi accettare i nostri Termini di Utilizzo",
+    "firstname-max-length": "Il nome deve essere inferiore a 256 caratteri",
+    "lastname-max-length": "Il cognome deve essere inferiore a 256 caratteri",
+    "firstname-required": "Il nome è obbligatorio",
+    "lastname-required": "Il cognome è obbligatorio"
   },
   "mobile": {
     "add-application": "Aggiungi applicazione",
@@ -6836,8 +6829,7 @@
       },
       "time-series": "Serie temporale",
       "latest": "Ultimi valori",
-      "web-sockets": "WebSockets",
-      "calculated-fields": "Campi calcolati"
+      "web-sockets": "WebSockets"
     },
     "save-attribute": {
       "processing-settings": "Impostazioni di elaborazione",
@@ -7248,6 +7240,7 @@
     "timezone-description": "Fuso orario in cui la dashboard di destinazione verrà presentata nel report.",
     "reporting": "Reportistica",
     "templates": "Template",
+    "report": "Report",
     "reports": "Report",
     "scheduling": "Pianificazione",
     "generating-report": "Generazione del report...",
@@ -7264,14 +7257,14 @@
     "file-name": "Nome file",
     "format": "Formato",
     "download": "Scarica report",
-    "reports-filter": "Filtro report"
+    "no-reports-matching": "Nessun report corrispondente a '{{entity}}' trovato.",
+    "report-required": "Il report è obbligatorio"
   },
   "report-template": {
     "report-template": "Modello di report",
     "report-templates": "Modelli di report",
     "add": "Aggiungi modello di report",
     "search": "Cerca modelli di report",
-    "templates-filter": "Filtro template",
     "sub-report": "Sottoreport",
     "no-report-templates-text": "Nessun modello di report trovato",
     "no-sub-reports-text": "Nessun sottoreport trovato",
@@ -8732,9 +8725,9 @@
     "export-relations": "Esporta relazioni",
     "export-attributes": "Esporta attributi",
     "export-credentials": "Esporta credenziali",
-    "export-calculated-fields": "Esporta campi calcolati",
     "export-group-entities": "Esporta entità di gruppo",
     "export-roles": "Esporta ruoli",
+    "export-calculated-fields": "Esporta campi calcolati \ne regole allarme",
     "entity-versions": "Versioni entità",
     "versions": "Versioni",
     "created-time": "Ora di creazione",
@@ -8845,8 +8838,6 @@
       "calculated-field-reprocessing": "Rielaborazione campi calcolati",
       "report": "Generazione report"
     },
-    "tasks-filter": "Filtro task",
-    "tasks-filter-params": "Filtro: {{ filterParams }}",
     "tasks-status-list": "Elenco stati dei task",
     "tasks-type-list": "Elenco tipi di task",
     "time-taken": "Tempo impiegato",
@@ -10790,7 +10781,7 @@
           "finish-circle-hint": "Cerchio: clicca per terminare il disegno"
         },
         "select-entity": "Seleziona entità",
-        "select-entity-hint": "Suggerimento: dopo la selezione, clicca sulla mappa per impostare la posizione"
+        "select-entity-hint": "Suggerimento: dopo la selezione clicca sulla mappa per impostare la posizione"
       },
       "select-entity": "Seleziona entità",
       "select-entity-hint": "Suggerimento: dopo la selezione clicca sulla mappa per impostare la posizione",
@@ -11899,35 +11890,6 @@
     "items-per-page-separator": "di"
   },
   "language": {
-    "language": "Lingua",
-    "locales": {
-      "ar_AE": "العربية (الإمارات العربية المتحدة)",
-      "ca_ES": "català (Espanya)",
-      "cs_CZ": "čeština (Česko)",
-      "da_DK": "dansk (Danmark)",
-      "de_DE": "Deutsch (Deutschland)",
-      "el_GR": "Ελληνικά (Ελλάδα)",
-      "en_US": "English (United States)",
-      "es_ES": "español (España)",
-      "fa_IR": "فارسی (ایران)",
-      "fr_FR": "français (France)",
-      "it_IT": "italiano (Italia)",
-      "ja_JP": "日本語 (日本)",
-      "ka_GE": "ქართული (საქართველო)",
-      "ko_KR": "한국어 (대한민국)",
-      "lt_LT": "lietuvių (Lietuva)",
-      "lv_LV": "latviešu (Latvija)",
-      "nl_BE": "Nederlands (België)",
-      "nl_NL": "Nederlands (Nederland)",
-      "no_NO": "norsk (Norge)",
-      "pl_PL": "polski (Polska)",
-      "pt_BR": "português (Brasil)",
-      "ro_RO": "română (România)",
-      "sl_SI": "slovenščina (Slovenija)",
-      "tr_TR": "Türkçe (Türkiye)",
-      "uk_UA": "українська (Україна)",
-      "zh_CN": "中文 (中国)",
-      "zh_TW": "中文 (台灣)"
-    }
+    "language": "Lingua"
   }
 }

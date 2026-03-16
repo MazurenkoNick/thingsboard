@@ -193,10 +193,10 @@
     "number-from-required": "Telefonnummer Von ist erforderlich.",
     "number-to": "Telefonnummer An",
     "number-to-required": "Telefonnummer An ist erforderlich.",
-    "phone-number-hint": "Telefonnummer im E.164-Format, z. B. +19995550123",
-    "phone-number-hint-twilio": "Telefonnummer im E.164-Format/SID der Telefonnummer/SID des Messaging-Dienstes, z. B. +19995550123/PNXXX/MGXXX",
-    "phone-number-pattern": "Ungültige Telefonnummer. Sollte im E.164-Format vorliegen, z. B. +19995550123.",
-    "phone-number-pattern-twilio": "Ungültige Telefonnummer. Sollte im E.164-Format/SID der Telefonnummer/SID des Messaging-Dienstes vorliegen, z. B. +19995550123/PNXXX/MGXXX.",
+    "phone-number-hint": "Telefonnummer im E.164-Format, z.B. +19995550123",
+    "phone-number-hint-twilio": "Telefonnummer im E.164-Format/SID der Telefonnummer/SID des Messaging-Dienstes, z.B. +19995550123/PNXXX/MGXXX",
+    "phone-number-pattern": "Ungültige Telefonnummer. Sollte im E.164-Format vorliegen, z.B. +19995550123.",
+    "phone-number-pattern-twilio": "Ungültige Telefonnummer. Sollte im E.164-Format/SID der Telefonnummer/SID des Messaging-Dienstes vorliegen, z.B. +19995550123/PNXXX/MGXXX.",
     "sms-message": "SMS-Nachricht",
     "sms-message-required": "SMS-Nachricht ist erforderlich.",
     "sms-message-max-length": "SMS-Nachricht darf nicht länger als 1600 Zeichen sein",
@@ -580,13 +580,7 @@
     "mobile-settings": "Mobile Einstellungen",
     "firebase-service-account-file": "Firebase-Service-Konto-Anmeldeinformationen (JSON-Datei)",
     "select-firebase-service-account-file": "Ziehen Sie Ihre Firebase-Service-Konto-Datei hierher oder ",
-    "use-system-mobile-settings": "Systemeinstellungen für Mobile verwenden",
-    "trendz": "Trendz",
-    "trendz-settings": "Trendz-Einstellungen",
-    "trendz-url": "Trendz-URL",
-    "trendz-url-required": "Trendz-URL ist erforderlich",
-    "trendz-api-key": "Trendz-API-Schlüssel",
-    "trendz-enable": "Trendz aktivieren"
+    "use-system-mobile-settings": "Systemeinstellungen für Mobile verwenden"
   },
   "alarm": {
     "alarm": "Alarm",
@@ -874,7 +868,7 @@
     "no-assets-matching": "Keine Assets gefunden, die mit '{{entity}}' übereinstimmen.",
     "asset-required": "Asset ist erforderlich",
     "name-starts-with": "Ausdruck für Assetnamen",
-    "help-text": "Verwenden Sie '%' je nach Bedarf: '%asset_name_contains%', '%asset_name_ends', 'asset_starts_with'.",
+    "help-text": "Verwenden Sie '%' nach Bedarf: '%asset_name_contains%', '%asset_name_ends', 'asset_starts_with%'.",
     "search": "Assets suchen",
     "select-group-to-add": "Zielgruppe auswählen, um ausgewählte Assets hinzuzufügen",
     "select-group-to-move": "Zielgruppe auswählen, um ausgewählte Assets zu verschieben",
@@ -988,9 +982,9 @@
     "processing-timeouts": "${entityName} Verarbeitungszeitüberschreitungen",
     "rule-chain": "Regelkette",
     "rule-engine": "Regel-Engine",
-    "rule-engine-daily-activity": "Tägliche Aktivität der Regel-Engine",
     "rule-engine-executions": "Ausführungen der Regel-Engine",
     "rule-engine-hourly-activity": "Stündliche Aktivität der Regel-Engine",
+    "rule-engine-daily-activity": "Tägliche Aktivität der Regel-Engine",
     "rule-engine-monthly-activity": "Monatliche Aktivität der Regel-Engine",
     "rule-engine-statistics": "Regel-Engine-Statistiken",
     "rule-node": "Regelknoten",
@@ -1007,14 +1001,12 @@
     "transport": "Transport",
     "transport-daily-activity": "Tägliche Transportaktivität",
     "transport-data-points": "Transportierte Datenpunkte",
-    "transport-hourly-activity": "Stündliche Transportaktivität",
-    "transport-messages": "Transportnachrichten",
-    "transport-monthly-activity": "Monatliche Transportaktivität",
     "view-details": "Details anzeigen",
     "view-statistics": "Statistiken anzeigen",
-    "reports-created": "Berichte erstellt",
-    "reports-created-daily-activity": "Tägliche Aktivität der Berichtserstellung",
-    "reports-created-monthly-activity": "Monatliche Aktivität der Berichtserstellung"
+    "transport-messages": "Transportnachrichten",
+    "reports-created": "Erstellte Berichte",
+    "reports-created-daily-activity": "Erstellte Berichte tägliche Aktivität",
+    "reports-created-monthly-activity": "Erstellte Berichte monatliche Aktivität"
   },
   "api-limit": {
     "cassandra-write-queries-core": "REST-API Cassandra-Schreibabfragen",
@@ -1141,7 +1133,6 @@
     "argument-tenant": "Aktueller Mandant",
     "argument-owner": "Aktueller Eigentümer",
     "argument-type": "Argumenttyp",
-    "see-debug-events": "Debug-Ereignisse anzeigen",
     "attribute": "Attribut",
     "copy-argument-name": "Argumentnamen kopieren",
     "timeseries-key": "Zeitreihen-Schlüssel",
@@ -1187,8 +1178,8 @@
     "task-failed-reprocess": "Die Aufgabe konnte nicht neu verarbeitet werden",
     "tasks-failed-reprocess": "{{ error }} von {{ total }} Entitäten konnten nicht neu verarbeitet werden",
     "hint": {
-      "arguments-simple-with-rolling": "Einfacher Feldtyp darf keine Schlüssel mit Zeitreihen-Rollup-Typ enthalten.",
-      "arguments-empty": "Argumente dürfen nicht leer sein.",
+      "arguments-simple-with-rolling": "Ein berechnetes Feld vom Typ „Einfach“ sollte keine Schlüssel mit dem Zeitreihen-Rolling-Typ enthalten.",
+      "arguments-empty": "Mindestens ein Argument sollte angegeben werden.",
       "expression-required": "Ausdruck ist erforderlich.",
       "expression-invalid": "Ausdruck ist ungültig",
       "expression-max-length": "Ausdruck sollte weniger als 255 Zeichen enthalten.",
@@ -1363,6 +1354,7 @@
   "contact": {
     "country": "Land",
     "country-required": "Land ist erforderlich.",
+    "country-object-required": "Bitte wählen Sie ein gültiges Land aus der Liste aus.",
     "city": "Stadt",
     "state": "Bundesland / Provinz",
     "postal-code": "PLZ / Postleitzahl",
@@ -1503,8 +1495,7 @@
     "decoder-output": "Decoder-Ausgabe",
     "converter-output": "Konverter-Ausgabe",
     "converter-type": "Konvertertyp",
-    "update-raw-payload": "RAW-Nutzlast aktualisiert",
-    "see-debug-events": "Debug-Ereignisse anzeigen"
+    "update-raw-payload": "RAW-Nutzlast aktualisiert"
   },
   "content-type": {
     "json": "JSON",
@@ -2064,7 +2055,7 @@
     "remove-alias": "Gerätealias entfernen",
     "add-alias": "Gerätealias hinzufügen",
     "name-starts-with": "Ausdruck für Gerätename",
-    "help-text": "Verwenden Sie '%' bei Bedarf: '%device_name_contains%', '%device_name_ends', 'device_starts_with'.",
+    "help-text": "Verwenden Sie '%' nach Bedarf: '%device_name_contains%', '%device_name_ends', 'device_starts_with%'.",
     "device-list": "Geräteliste",
     "use-device-name-filter": "Filter verwenden",
     "device-list-empty": "Keine Geräte ausgewählt.",
@@ -2191,7 +2182,6 @@
     "unable-delete-device-alias-text": "Gerätealias '{{deviceAlias}}' kann nicht gelöscht werden, da er in folgenden Widgets verwendet wird:<br/>{{widgetsList}}",
     "is-gateway": "Ist Gateway",
     "overwrite-activity-time": "Aktivitätszeit für verbundenes Gerät überschreiben",
-    "device-filter": "Gerätefilter",
     "device-filter-title": "Gerätefilter",
     "filter-title": "Filter",
     "device-state": "Gerätestatus",
@@ -2653,7 +2643,7 @@
       "short-id-required": "Kurze Server-ID ist erforderlich.",
       "short-id-range": "Kurze Server-ID sollte im Bereich von {{ min }} bis {{ max }} liegen.",
       "short-id-pattern": "Kurze Server-ID muss eine positive Ganzzahl sein.",
-      "lifetime": "Registrierungslebensdauer des Clients",
+      "lifetime": "Lebensdauer der Client-Registrierung",
       "lifetime-required": "Registrierungslebensdauer des Clients ist erforderlich.",
       "lifetime-pattern": "Registrierungslebensdauer muss eine positive Ganzzahl sein.",
       "default-min-period": "Minimale Periode zwischen zwei Benachrichtigungen (s)",
@@ -3058,7 +3048,7 @@
     "no-entities-text": "Keine Entitäten gefunden",
     "no-entity-types-matching": "Keine Entitätstypen gefunden, die mit '{{entityType}}' übereinstimmen.",
     "name-starts-with": "Namensausdruck",
-    "help-text": "Verwenden Sie '%' nach Bedarf: '%entity_name_contains%', '%entity_name_ends', 'entity_starts_with'.",
+    "help-text": "Verwenden Sie '%' nach Bedarf: '%entity_name_contains%', '%entity_name_ends', 'entity_starts_with%'.",
     "use-entity-name-filter": "Filter verwenden",
     "entity-list-empty": "Keine Entitäten ausgewählt.",
     "entity-type-list-required": "Mindestens ein Entitätstyp sollte ausgewählt werden.",
@@ -3437,7 +3427,8 @@
     "queue-name": "Name der Warteschlange",
     "service-id": "Service-ID",
     "owner-name": "Name des Besitzers",
-    "owner-type": "Typ des Besitzers"
+    "owner-type": "Typ des Besitzers",
+    "format": "Format"
   },
   "entity-view": {
     "all": "Alle",
@@ -3466,7 +3457,7 @@
     "remove-alias": "Entitätsansicht-Alias entfernen",
     "add-alias": "Entitätsansicht-Alias hinzufügen",
     "name-starts-with": "Namensausdruck für Entitätsansicht",
-    "help-text": "Verwenden Sie '%' nach Bedarf: '%entity-view_name_contains%', '%entity-view_name_ends', 'entity-view_starts_with'.",
+    "help-text": "Verwenden Sie '%' nach Bedarf: '%entity-view_name_contains%', '%entity-view_name_ends', 'entity-view_starts_with%'.",
     "entity-view-list": "Liste der Entitätsansichten",
     "use-entity-view-name-filter": "Filter verwenden",
     "entity-view-list-empty": "Keine Entitätsansichten ausgewählt.",
@@ -3788,7 +3779,7 @@
     "edit": "Filter bearbeiten",
     "name": "Filtername",
     "name-required": "Filtername ist erforderlich.",
-    "duplicate-filter": "Ein Filter mit demselben Namen ist bereits vorhanden.",
+    "duplicate-filter": "Ein Filter mit demselben Namen existiert bereits.",
     "filters": "Filter",
     "unable-delete-filter-title": "Filter kann nicht gelöscht werden",
     "unable-delete-filter-text": "Filter '{{filter}}' kann nicht gelöscht werden, da er von folgendem/n Widget(s) verwendet wird:<br/>{{widgetsList}}",
@@ -4552,8 +4543,7 @@
     "downlink-connection-string": "Downlink-Verbindungszeichenfolge",
     "downlink-connection-string-required": "Downlink-Verbindungszeichenfolge ist erforderlich",
     "downlink-topic-name": "Downlink-Themenname",
-    "downlink-topic-name-required": "Downlink-Themenname ist erforderlich",
-    "see-debug-events": "Debug-Ereignisse anzeigen"
+    "downlink-topic-name-required": "Downlink-Themenname ist erforderlich"
   },
   "scada": {
     "symbols": "SCADA-Symbole",
@@ -5018,7 +5008,6 @@
     "invalid-email-format": "Ungültiges E-Mail-Format.",
     "no-account": "Noch kein Konto?",
     "create-account": "Konto erstellen",
-    "login-with": "Anmelden mit {{name}}",
     "or": "oder",
     "error": "Anmeldefehler",
     "verify-your-identity": "Identität bestätigen",
@@ -5067,7 +5056,11 @@
     "terms-of-use": "Nutzungsbedingungen",
     "recaptcha-title": "reCAPTCHA",
     "accept-privacy-policy-message": "Sie müssen unsere Datenschutzerklärung akzeptieren",
-    "accept-terms-of-use-message": "Sie müssen unsere Nutzungsbedingungen akzeptieren"
+    "accept-terms-of-use-message": "Sie müssen unsere Nutzungsbedingungen akzeptieren",
+    "firstname-max-length": "Vorname sollte kürzer als 256 Zeichen sein",
+    "lastname-max-length": "Nachname sollte kürzer als 256 Zeichen sein",
+    "firstname-required": "Vorname ist erforderlich",
+    "lastname-required": "Nachname ist erforderlich"
   },
   "mobile": {
     "add-application": "Anwendung hinzufügen",
@@ -6836,8 +6829,7 @@
       },
       "time-series": "Zeitreihe",
       "latest": "Neueste Werte",
-      "web-sockets": "WebSockets",
-      "calculated-fields": "Berechnete Felder"
+      "web-sockets": "WebSockets"
     },
     "save-attribute": {
       "processing-settings": "Verarbeitungseinstellungen",
@@ -7248,6 +7240,7 @@
     "timezone-description": "Zeitzone, in der das Ziel-Dashboard im Bericht dargestellt wird.",
     "reporting": "Berichtswesen",
     "templates": "Vorlagen",
+    "report": "Bericht",
     "reports": "Berichte",
     "scheduling": "Planung",
     "generating-report": "Bericht wird erstellt...",
@@ -7264,14 +7257,14 @@
     "file-name": "Dateiname",
     "format": "Format",
     "download": "Bericht herunterladen",
-    "reports-filter": "Berichtsfilter"
+    "no-reports-matching": "Keine Berichte gefunden, die zu '{{entity}}' passen.",
+    "report-required": "Bericht ist erforderlich"
   },
   "report-template": {
     "report-template": "Berichtsvorlage",
     "report-templates": "Berichtsvorlagen",
     "add": "Berichtsvorlage hinzufügen",
     "search": "Berichtsvorlagen suchen",
-    "templates-filter": "Vorlagenfilter",
     "sub-report": "Teilbericht",
     "no-report-templates-text": "Keine Berichtsvorlagen gefunden",
     "no-sub-reports-text": "Keine Teilberichte gefunden",
@@ -8732,9 +8725,9 @@
     "export-relations": "Beziehungen exportieren",
     "export-attributes": "Attribute exportieren",
     "export-credentials": "Zugangsdaten exportieren",
-    "export-calculated-fields": "Berechnete Felder exportieren",
     "export-group-entities": "Gruppenentitäten exportieren",
     "export-roles": "Rollen exportieren",
+    "export-calculated-fields": "Berechnete Felder \nund Alarmregeln exportieren",
     "entity-versions": "Entitätsversionen",
     "versions": "Versionen",
     "created-time": "Erstellungszeit",
@@ -8845,8 +8838,6 @@
       "calculated-field-reprocessing": "Nachverarbeitung berechneter Felder",
       "report": "Berichtserstellung"
     },
-    "tasks-filter": "Aufgabenfilter",
-    "tasks-filter-params": "Filter: {{ filterParams }}",
     "tasks-status-list": "Statusliste der Aufgaben",
     "tasks-type-list": "Typenliste der Aufgaben",
     "time-taken": "Benötigte Zeit",
@@ -9256,19 +9247,19 @@
     "enable-mobile-self-registration": "Selbstregistrierung über mobile App aktivieren",
     "mobile-self-registration-title": "Selbstregistrierung über mobile Anwendung",
     "mobile-package": "Anwendungspaket",
-    "mobile-package-placeholder": "z. B.: my.example.app",
+    "mobile-package-placeholder": "z.B.: my.example.app",
     "mobile-package-hint": "Für Android: Eigene eindeutige Application-ID. Für iOS: Produkt-Bundle-Identifier.",
     "mobile-package-required": "Anwendungspaket ist erforderlich",
     "mobile-app-secret": "Anwendungsschlüssel",
     "invalid-mobile-app-secret": "Der Anwendungsschlüssel darf nur alphanumerische Zeichen enthalten und muss zwischen 16 und 2048 Zeichen lang sein.",
     "copy-mobile-app-secret": "Anwendungsschlüssel kopieren",
     "mobile-app-scheme": "Anwendungs-URL-Schema",
-    "mobile-app-scheme-placeholder": "z. B.: customscheme",
+    "mobile-app-scheme-placeholder": "z.B.: customscheme",
     "mobile-app-scheme-required": "Anwendungs-URL-Schema ist erforderlich",
     "mobile-app-scheme-cannot-contain-only-spaces": "Anwendungs-URL-Schema darf nicht nur Leerzeichen enthalten",
     "mobile-app-scheme-max-length": "Anwendungs-URL-Schema darf nicht länger als 256 Zeichen sein",
     "mobile-app-host": "Anwendungs-URL-Hostname",
-    "mobile-app-host-placeholder": "z. B.: my.app.host",
+    "mobile-app-host-placeholder": "z.B.: my.app.host",
     "mobile-app-host-required": "Anwendungs-URL-Hostname ist erforderlich",
     "mobile-app-host-cannot-contain-only-spaces": "Anwendungs-URL-Hostname darf nicht nur Leerzeichen enthalten",
     "mobile-app-host-max-length": "Anwendungs-URL-Hostname darf nicht länger als 256 Zeichen sein",
@@ -9747,7 +9738,7 @@
         "update-animation-delay": "Verzögerung der Aktualisierungsanimation"
       },
       "chart-axis": {
-        "scale": "Skalierung",
+        "scale": "Skala",
         "scale-min": "min",
         "scale-max": "max",
         "scale-auto": "Auto"
@@ -10302,14 +10293,14 @@
     "invalid-qr-code-text": "Ungültiger Eingabetext für QR-Code. Eingabe sollte vom Typ String sein",
     "qr-code": {
       "use-qr-code-text-function": "QR-Code-Textfunktion verwenden",
-      "qr-code-text-pattern": "QR-Code-Textmuster (z. B. '${entityName} | ${keyName} - ein Text.')",
+      "qr-code-text-pattern": "QR-Code-Textmuster (z.B. '${entityName} | ${keyName} - ein Text.')",
       "qr-code-text-pattern-hint": "QR-Code-Textmuster verwendet den Wert des zuerst gefundenen Schlüssels in den Entitäten im Entitätsalias.",
       "qr-code-text-pattern-required": "QR-Code-Textmuster ist erforderlich.",
       "qr-code-text-function": "QR-Code-Textfunktion"
     },
     "label-widget": {
       "label-pattern": "Muster",
-      "label-pattern-hint": "Hinweis: z. B. 'Text <code><span style=\"color: #000;\">$&#123;</span>keyName<span style=\"color: #000;\">&#125;</span></code> Einheiten.' oder <code><span style=\"color: #000;\">$&#123;</span>#&lt;key index&gt;<span style=\"color: #000;\">&#125;</span></code> Einheiten",
+      "label-pattern-hint": "Hinweis: z.B. 'Text <code><span style=\"color: #000;\">$&#123;</span>keyName<span style=\"color: #000;\">&#125;</span></code> Einheiten.' oder <code><span style=\"color: #000;\">$&#123;</span>#&lt;key index&gt;<span style=\"color: #000;\">&#125;</span></code> Einheiten",
       "label-pattern-required": "Muster ist erforderlich",
       "label-position": "Position (Prozent relativ zum Hintergrund)",
       "x-pos": "X",
@@ -10790,7 +10781,7 @@
           "finish-circle-hint": "Kreis: Klicken, um Zeichnung zu beenden"
         },
         "select-entity": "Entität auswählen",
-        "select-entity-hint": "Hinweis: Nach Auswahl auf die Karte klicken, um Position festzulegen"
+        "select-entity-hint": "Hinweis: Nach der Auswahl auf die Karte klicken, um die Position festzulegen"
       },
       "select-entity": "Entität auswählen",
       "select-entity-hint": "Hinweis: Nach der Auswahl auf die Karte klicken, um die Position festzulegen",
@@ -11899,35 +11890,6 @@
     "items-per-page-separator": "von"
   },
   "language": {
-    "language": "Sprache",
-    "locales": {
-      "ar_AE": "العربية (الإمارات العربية المتحدة)",
-      "ca_ES": "català (Espanya)",
-      "cs_CZ": "čeština (Česko)",
-      "da_DK": "dansk (Danmark)",
-      "de_DE": "Deutsch (Deutschland)",
-      "el_GR": "Ελληνικά (Ελλάδα)",
-      "en_US": "English (United States)",
-      "es_ES": "español (España)",
-      "fa_IR": "فارسی (ایران)",
-      "fr_FR": "français (France)",
-      "it_IT": "italiano (Italia)",
-      "ja_JP": "日本語 (日本)",
-      "ka_GE": "ქართული (საქართველო)",
-      "ko_KR": "한국어 (대한민국)",
-      "lt_LT": "lietuvių (Lietuva)",
-      "lv_LV": "latviešu (Latvija)",
-      "nl_BE": "Nederlands (België)",
-      "nl_NL": "Nederlands (Nederland)",
-      "no_NO": "norsk (Norge)",
-      "pl_PL": "polski (Polska)",
-      "pt_BR": "português (Brasil)",
-      "ro_RO": "română (România)",
-      "sl_SI": "slovenščina (Slovenija)",
-      "tr_TR": "Türkçe (Türkiye)",
-      "uk_UA": "українська (Україна)",
-      "zh_CN": "中文 (中国)",
-      "zh_TW": "中文 (台灣)"
-    }
+    "language": "Sprache"
   }
 }

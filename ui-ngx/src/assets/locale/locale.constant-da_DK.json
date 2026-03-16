@@ -580,13 +580,7 @@
     "mobile-settings": "Mobilindstillinger",
     "firebase-service-account-file": "Firebase servicekonto-legitimationsoplysninger JSON-fil",
     "select-firebase-service-account-file": "Træk og slip din Firebase servicekonto-legitimationsfil eller ",
-    "use-system-mobile-settings": "Brug systemets mobilindstillinger",
-    "trendz": "Trendz",
-    "trendz-settings": "Trendz-indstillinger",
-    "trendz-url": "Trendz URL",
-    "trendz-url-required": "Trendz URL er påkrævet",
-    "trendz-api-key": "Trendz API-nøgle",
-    "trendz-enable": "Aktivér Trendz"
+    "use-system-mobile-settings": "Brug systemets mobilindstillinger"
   },
   "alarm": {
     "alarm": "Alarm",
@@ -874,7 +868,7 @@
     "no-assets-matching": "Ingen assets matcher '{{entity}}'.",
     "asset-required": "Asset er påkrævet",
     "name-starts-with": "Asset-navneudtryk",
-    "help-text": "Brug '%' efter behov: '%asset_name_contains%', '%asset_name_ends', 'asset_starts_with'.",
+    "help-text": "Brug '%' efter behov: '%asset_name_contains%', '%asset_name_ends', 'asset_starts_with%'.",
     "search": "Søg assets",
     "select-group-to-add": "Vælg målgruppe for at tilføje valgte assets",
     "select-group-to-move": "Vælg målgruppe for at flytte valgte assets",
@@ -988,9 +982,9 @@
     "processing-timeouts": "${entityName} behandlingstimeouts",
     "rule-chain": "Rule Chain",
     "rule-engine": "Rule Engine",
-    "rule-engine-daily-activity": "Daglig aktivitet for Rule Engine",
     "rule-engine-executions": "Rule Engine-udførelser",
     "rule-engine-hourly-activity": "Timebaseret aktivitet for Rule Engine",
+    "rule-engine-daily-activity": "Daglig aktivitet for Rule Engine",
     "rule-engine-monthly-activity": "Månedlig aktivitet for Rule Engine",
     "rule-engine-statistics": "Statistik for Rule Engine",
     "rule-node": "Rule Node",
@@ -1005,16 +999,14 @@
     "telemetry-persistence-hourly-activity": "Timebaseret aktivitet for telemetri-persistens",
     "telemetry-persistence-monthly-activity": "Månedlig aktivitet for telemetri-persistens",
     "transport": "Transport",
-    "transport-daily-activity": "Daglig transportaktivitet",
-    "transport-data-points": "Transport-datapunkter",
-    "transport-hourly-activity": "Timebaseret transportaktivitet",
-    "transport-messages": "Transportbeskeder",
-    "transport-monthly-activity": "Månedlig transportaktivitet",
+    "transport-daily-activity": "Transport – dagsaktivitet",
+    "transport-data-points": "Transportdatapunkter",
     "view-details": "Vis detaljer",
     "view-statistics": "Vis statistik",
+    "transport-messages": "Transportbeskeder",
     "reports-created": "Oprettede rapporter",
-    "reports-created-daily-activity": "Daglig aktivitet for oprettede rapporter",
-    "reports-created-monthly-activity": "Månedlig aktivitet for oprettede rapporter"
+    "reports-created-daily-activity": "Oprettede rapporter – dagsaktivitet",
+    "reports-created-monthly-activity": "Oprettede rapporter – månedsaktivitet"
   },
   "api-limit": {
     "cassandra-write-queries-core": "REST API Cassandra-skriveforespørgsler",
@@ -1141,7 +1133,6 @@
     "argument-tenant": "Aktuel lejer",
     "argument-owner": "Nuværende ejer",
     "argument-type": "Argumenttype",
-    "see-debug-events": "Se fejlsøgningshændelser",
     "attribute": "Attribut",
     "copy-argument-name": "Kopiér argumentnavn",
     "timeseries-key": "Tidsserienøgle",
@@ -1203,7 +1194,7 @@
       "expression": "Standardudtryk demonstrerer, hvordan man omregner temperatur fra Fahrenheit til Celsius.",
       "arguments-entity-not-found": "Målentitet for argument ikke fundet.",
       "use-latest-timestamp": "Hvis aktiveret, vil den beregnede værdi blive gemt med det nyeste tidsstempel fra argumenternes telemetri i stedet for serverens tid.",
-      "reprocessing": "Hvis intet specifikt tidsstempel er foruddefineret, gemmes resultaterne fra genbehandlingen med tidsstemplet fra den tilsvarende historiske telemetri, der udløste beregningen."
+      "reprocessing": "Hvis der ikke er foruddefineret et specifikt tidsstempel, gemmes resultaterne fra genbehandling med tidsstemplet for den tilsvarende historiske telemetri, der udløste beregningen."
     }
   },
   "secret-storage": {
@@ -1363,6 +1354,7 @@
   "contact": {
     "country": "Land",
     "country-required": "Land er påkrævet.",
+    "country-object-required": "Vælg venligst et gyldigt land fra listen.",
     "city": "By",
     "state": "Stat / Provins",
     "postal-code": "Postnummer",
@@ -1503,8 +1495,7 @@
     "decoder-output": "Dekoder-output",
     "converter-output": "Konverter-output",
     "converter-type": "Konvertertype",
-    "update-raw-payload": "Opdateret RAW payload",
-    "see-debug-events": "Se fejlsøgningshændelser"
+    "update-raw-payload": "Opdateret RAW payload"
   },
   "content-type": {
     "json": "Json",
@@ -2064,7 +2055,7 @@
     "remove-alias": "Fjern enhedsalias",
     "add-alias": "Tilføj enhedsalias",
     "name-starts-with": "Udtryk for enhedsnavn",
-    "help-text": "Brug '%' efter behov: '%device_name_contains%', '%device_name_ends', 'device_starts_with'.",
+    "help-text": "Brug '%' efter behov: '%device_name_contains%', '%device_name_ends', 'device_starts_with%'.",
     "device-list": "Enhedsliste",
     "use-device-name-filter": "Brug filter",
     "device-list-empty": "Ingen enheder valgt.",
@@ -2191,7 +2182,6 @@
     "unable-delete-device-alias-text": "Enhedsalias '{{deviceAlias}}' kan ikke slettes, da det bruges af følgende widget(s):<br/>{{widgetsList}}",
     "is-gateway": "Er gateway",
     "overwrite-activity-time": "Overskriv aktivitetstid for tilsluttet enhed",
-    "device-filter": "Enhedsfilter",
     "device-filter-title": "Enhedsfilter",
     "filter-title": "Filter",
     "device-state": "Enhedstilstand",
@@ -3058,7 +3048,7 @@
     "no-entities-text": "Ingen enheder fundet",
     "no-entity-types-matching": "Ingen enhedstyper matcher '{{entityType}}'.",
     "name-starts-with": "Navneudtryk",
-    "help-text": "Brug '%' efter behov: '%entity_name_contains%', '%entity_name_ends', 'entity_starts_with'.",
+    "help-text": "Brug '%' efter behov: '%entity_name_contains%', '%entity_name_ends', 'entity_starts_with%'.",
     "use-entity-name-filter": "Brug filter",
     "entity-list-empty": "Ingen enheder valgt.",
     "entity-type-list-required": "Mindst én enhedstype skal vælges.",
@@ -3437,7 +3427,8 @@
     "queue-name": "Kønavn",
     "service-id": "Service Id",
     "owner-name": "Ejerens navn",
-    "owner-type": "Ejerens type"
+    "owner-type": "Ejerens type",
+    "format": "Format"
   },
   "entity-view": {
     "all": "Alle",
@@ -3466,7 +3457,7 @@
     "remove-alias": "Fjern entitetsvisningsalias",
     "add-alias": "Tilføj entitetsvisningsalias",
     "name-starts-with": "Entitetsvisningsnavn udtryk",
-    "help-text": "Brug '%' efter behov: '%entity-view_name_contains%', '%entity-view_name_ends', 'entity-view_starts_with'.",
+    "help-text": "Brug '%' efter behov: '%entity-view_name_contains%', '%entity-view_name_ends', 'entity-view_starts_with%'.",
     "entity-view-list": "Entitetsvisningsliste",
     "use-entity-view-name-filter": "Brug filter",
     "entity-view-list-empty": "Ingen entitetsvisninger valgt.",
@@ -4552,8 +4543,7 @@
     "downlink-connection-string": "Downlink forbindelsesstreng",
     "downlink-connection-string-required": "Downlink forbindelsesstreng er påkrævet",
     "downlink-topic-name": "Downlink emnenavn",
-    "downlink-topic-name-required": "Downlink emnenavn er påkrævet",
-    "see-debug-events": "Se fejlhændelser"
+    "downlink-topic-name-required": "Downlink emnenavn er påkrævet"
   },
   "scada": {
     "symbols": "SCADA-symboler",
@@ -5018,7 +5008,6 @@
     "invalid-email-format": "Ugyldigt emailformat.",
     "no-account": "Har du ikke en konto?",
     "create-account": "Opret en konto",
-    "login-with": "Log ind med {{name}}",
     "or": "eller",
     "error": "Loginfejl",
     "verify-your-identity": "Bekræft din identitet",
@@ -5067,7 +5056,11 @@
     "terms-of-use": "Brugsbetingelser",
     "recaptcha-title": "reCAPTCHA",
     "accept-privacy-policy-message": "Du skal acceptere vores Privatlivspolitik",
-    "accept-terms-of-use-message": "Du skal acceptere vores Brugsbetingelser"
+    "accept-terms-of-use-message": "Du skal acceptere vores Brugsbetingelser",
+    "firstname-max-length": "Fornavn skal være under 256 tegn",
+    "lastname-max-length": "Efternavn skal være under 256 tegn",
+    "firstname-required": "Fornavn er påkrævet",
+    "lastname-required": "Efternavn er påkrævet"
   },
   "mobile": {
     "add-application": "Tilføj applikation",
@@ -6836,8 +6829,7 @@
       },
       "time-series": "Tidsserier",
       "latest": "Seneste værdier",
-      "web-sockets": "WebSockets",
-      "calculated-fields": "Beregnet felter"
+      "web-sockets": "WebSockets"
     },
     "save-attribute": {
       "processing-settings": "Behandlingsindstillinger",
@@ -7248,6 +7240,7 @@
     "timezone-description": "Tidszone, hvori måldashboardet vises i rapporten.",
     "reporting": "Rapportering",
     "templates": "Skabeloner",
+    "report": "Rapport",
     "reports": "Rapporter",
     "scheduling": "Planlægning",
     "generating-report": "Genererer rapport...",
@@ -7264,14 +7257,14 @@
     "file-name": "Filnavn",
     "format": "Format",
     "download": "Download rapport",
-    "reports-filter": "Rapportfilter"
+    "no-reports-matching": "Ingen rapporter, der matcher '{{entity}}', blev fundet.",
+    "report-required": "Rapport er påkrævet"
   },
   "report-template": {
     "report-template": "Rapportskabelon",
     "report-templates": "Rapportskabeloner",
     "add": "Tilføj rapportskabelon",
     "search": "Søg i rapportskabeloner",
-    "templates-filter": "Skabelonfilter",
     "sub-report": "Delrapport",
     "no-report-templates-text": "Ingen rapportskabeloner fundet",
     "no-sub-reports-text": "Ingen delrapporter fundet",
@@ -8732,9 +8725,9 @@
     "export-relations": "Eksporter relationer",
     "export-attributes": "Eksporter attributter",
     "export-credentials": "Eksporter legitimationsoplysninger",
-    "export-calculated-fields": "Eksporter beregnede felter",
     "export-group-entities": "Eksporter gruppeenheder",
     "export-roles": "Eksporter roller",
+    "export-calculated-fields": "Eksportér beregnede felter \nog alarmregler",
     "entity-versions": "Entitetsversioner",
     "versions": "Versioner",
     "created-time": "Oprettelsestidspunkt",
@@ -8751,7 +8744,7 @@
     "load-relations": "Indlæs relationer",
     "load-attributes": "Indlæs attributter",
     "load-credentials": "Indlæs legitimationsoplysninger",
-    "load-calculated-fields": "Indlæs beregnede felter",
+    "load-calculated-fields": "Indlæs beregnede felter og alarmregler",
     "load-group-entities": "Indlæs gruppeenheder",
     "load-roles": "Indlæs roller",
     "compare-with-current": "Sammenlign med nuværende",
@@ -8845,8 +8838,6 @@
       "calculated-field-reprocessing": "Genberegning af beregnet felt",
       "report": "Rapportgenerering"
     },
-    "tasks-filter": "Opgavefilter",
-    "tasks-filter-params": "Filter: {{ filterParams }}",
     "tasks-status-list": "Liste over opgavestatusser",
     "tasks-type-list": "Liste over opgavetyper",
     "time-taken": "Tid forbrugt",
@@ -11899,35 +11890,6 @@
     "items-per-page-separator": "af"
   },
   "language": {
-    "language": "Sprog",
-    "locales": {
-      "ar_AE": "العربية (الإمارات العربية المتحدة)",
-      "ca_ES": "català (Espanya)",
-      "cs_CZ": "čeština (Česko)",
-      "da_DK": "dansk (Danmark)",
-      "de_DE": "Deutsch (Deutschland)",
-      "el_GR": "Ελληνικά (Ελλάδα)",
-      "en_US": "English (United States)",
-      "es_ES": "español (España)",
-      "fa_IR": "فارسی (ایران)",
-      "fr_FR": "français (France)",
-      "it_IT": "italiano (Italia)",
-      "ja_JP": "日本語 (日本)",
-      "ka_GE": "ქართული (საქართველო)",
-      "ko_KR": "한국어 (대한민국)",
-      "lt_LT": "lietuvių (Lietuva)",
-      "lv_LV": "latviešu (Latvija)",
-      "nl_BE": "Nederlands (België)",
-      "nl_NL": "Nederlands (Nederland)",
-      "no_NO": "norsk (Norge)",
-      "pl_PL": "polski (Polska)",
-      "pt_BR": "português (Brasil)",
-      "ro_RO": "română (România)",
-      "sl_SI": "slovenščina (Slovenija)",
-      "tr_TR": "Türkçe (Türkiye)",
-      "uk_UA": "українська (Україна)",
-      "zh_CN": "中文 (中国)",
-      "zh_TW": "中文 (台灣)"
-    }
+    "language": "Sprog"
   }
 }

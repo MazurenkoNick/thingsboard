@@ -580,13 +580,7 @@
     "mobile-settings": "Mobiele instellingen",
     "firebase-service-account-file": "Firebase serviceaccountreferenties JSON-bestand",
     "select-firebase-service-account-file": "Sleep je Firebase serviceaccountreferentiesbestand hierheen of ",
-    "use-system-mobile-settings": "Systeeminstellingen voor mobiel gebruik",
-    "trendz": "Trendz",
-    "trendz-settings": "Trendz-instellingen",
-    "trendz-url": "Trendz-URL",
-    "trendz-url-required": "Trendz-URL is vereist",
-    "trendz-api-key": "Trendz API-sleutel",
-    "trendz-enable": "Trendz inschakelen"
+    "use-system-mobile-settings": "Systeeminstellingen voor mobiel gebruik"
   },
   "alarm": {
     "alarm": "Alarm",
@@ -874,7 +868,7 @@
     "no-assets-matching": "Geen overeenkomende assets gevonden voor '{{entity}}'.",
     "asset-required": "Asset is verplicht",
     "name-starts-with": "Assetnaam-expressie",
-    "help-text": "Gebruik '%' indien nodig: '%asset_name_contains%', '%asset_name_ends', 'asset_starts_with'.",
+    "help-text": "Gebruik '%' naar behoefte: '%asset_name_contains%', '%asset_name_ends', 'asset_starts_with%'.",
     "search": "Assets zoeken",
     "select-group-to-add": "Selecteer bestemmingsgroep om geselecteerde assets toe te voegen",
     "select-group-to-move": "Selecteer bestemmingsgroep om geselecteerde assets te verplaatsen",
@@ -988,9 +982,9 @@
     "processing-timeouts": "${entityName} Verwerking time-outs",
     "rule-chain": "Rule chain",
     "rule-engine": "Rule Engine",
-    "rule-engine-daily-activity": "Dagelijkse activiteit Rule Engine",
     "rule-engine-executions": "Rule Engine-uitvoeringen",
     "rule-engine-hourly-activity": "Uurlijkse activiteit Rule Engine",
+    "rule-engine-daily-activity": "Dagelijkse activiteit Rule Engine",
     "rule-engine-monthly-activity": "Maandelijkse activiteit Rule Engine",
     "rule-engine-statistics": "Rule Engine-statistieken",
     "rule-node": "Rule node",
@@ -1007,14 +1001,12 @@
     "transport": "Transport",
     "transport-daily-activity": "Dagelijkse activiteit transport",
     "transport-data-points": "Transport datapunten",
-    "transport-hourly-activity": "Uurlijkse activiteit transport",
-    "transport-messages": "Transportberichten",
-    "transport-monthly-activity": "Maandelijkse activiteit transport",
     "view-details": "Details bekijken",
     "view-statistics": "Statistieken bekijken",
+    "transport-messages": "Transportberichten",
     "reports-created": "Aangemaakte rapporten",
-    "reports-created-daily-activity": "Dagelijkse activiteit van aangemaakte rapporten",
-    "reports-created-monthly-activity": "Maandelijkse activiteit van aangemaakte rapporten"
+    "reports-created-daily-activity": "Aangemaakte rapporten: dagelijkse activiteit",
+    "reports-created-monthly-activity": "Aangemaakte rapporten: maandelijkse activiteit"
   },
   "api-limit": {
     "cassandra-write-queries-core": "Rest API Cassandra schrijfbewerkingen",
@@ -1141,7 +1133,6 @@
     "argument-tenant": "Huidige tenant",
     "argument-owner": "Huidige eigenaar",
     "argument-type": "Argumenttype",
-    "see-debug-events": "Debuggebeurtenissen bekijken",
     "attribute": "Attribuut",
     "copy-argument-name": "Argumentnaam kopiëren",
     "timeseries-key": "Tijdreeks-sleutel",
@@ -1187,8 +1178,8 @@
     "task-failed-reprocess": "De taak is niet geslaagd bij herberekening",
     "tasks-failed-reprocess": "{{ error }} van {{ total }} entiteiten zijn niet succesvol herberekend",
     "hint": {
-      "arguments-simple-with-rolling": "Berekende velden van het type 'eenvoudig' mogen geen sleutels bevatten met een rollende tijdreeks.",
-      "arguments-empty": "Argumenten mogen niet leeg zijn.",
+      "arguments-simple-with-rolling": "Een berekend veld van het type Eenvoudig mag geen sleutels bevatten met het type 'Time series rolling'.",
+      "arguments-empty": "Er moet ten minste één argument worden opgegeven.",
       "expression-required": "Expressie is vereist.",
       "expression-invalid": "Expressie is ongeldig",
       "expression-max-length": "De lengte van de expressie moet minder dan 255 tekens zijn.",
@@ -1363,6 +1354,7 @@
   "contact": {
     "country": "Land",
     "country-required": "Land is verplicht.",
+    "country-object-required": "Selecteer een geldig land uit de lijst.",
     "city": "Stad",
     "state": "Staat / Provincie",
     "postal-code": "Postcode",
@@ -1503,8 +1495,7 @@
     "decoder-output": "Decoder-uitvoer",
     "converter-output": "Converter-uitvoer",
     "converter-type": "Convertertype",
-    "update-raw-payload": "Bijgewerkte RAW-payload",
-    "see-debug-events": "Debuggebeurtenissen bekijken"
+    "update-raw-payload": "Bijgewerkte RAW-payload"
   },
   "content-type": {
     "json": "Json",
@@ -2064,7 +2055,7 @@
     "remove-alias": "Apparaatalias verwijderen",
     "add-alias": "Apparaatalias toevoegen",
     "name-starts-with": "Apparaatnaam expressie",
-    "help-text": "Gebruik '%' indien nodig: '%device_name_contains%', '%device_name_ends', 'device_starts_with'.",
+    "help-text": "Gebruik '%' naar behoefte: '%device_name_contains%', '%device_name_ends', 'device_starts_with%'.",
     "device-list": "Apparatenlijst",
     "use-device-name-filter": "Filter gebruiken",
     "device-list-empty": "Geen apparaten geselecteerd.",
@@ -2191,7 +2182,6 @@
     "unable-delete-device-alias-text": "Apparaat-alias '{{deviceAlias}}' kan niet worden verwijderd omdat het wordt gebruikt door de volgende widget(s):<br/>{{widgetsList}}",
     "is-gateway": "Is gateway",
     "overwrite-activity-time": "Activiteitstijd voor verbonden apparaat overschrijven",
-    "device-filter": "Apparaatfilter",
     "device-filter-title": "Apparaatfilter",
     "filter-title": "Filter",
     "device-state": "Apparaatstatus",
@@ -2653,7 +2643,7 @@
       "short-id-required": "Korte server-ID is verplicht.",
       "short-id-range": "Korte server-ID moet tussen {{ min }} en {{ max }} liggen.",
       "short-id-pattern": "Korte server-ID moet een positief geheel getal zijn.",
-      "lifetime": "Registratieduur client",
+      "lifetime": "Clientregistratielevensduur",
       "lifetime-required": "Registratieduur is verplicht.",
       "lifetime-pattern": "Registratieduur moet een positief geheel getal zijn.",
       "default-min-period": "Minimale periode tussen meldingen (s)",
@@ -3058,7 +3048,7 @@
     "no-entities-text": "Geen entiteiten gevonden",
     "no-entity-types-matching": "Geen entiteittypes gevonden die overeenkomen met '{{entityType}}'.",
     "name-starts-with": "Naamexpressie",
-    "help-text": "Gebruik '%' indien nodig: '%entity_name_contains%', '%entity_name_ends', 'entity_starts_with'.",
+    "help-text": "Gebruik '%' naar behoefte: '%entity_name_contains%', '%entity_name_ends', 'entity_starts_with%'.",
     "use-entity-name-filter": "Gebruik filter",
     "entity-list-empty": "Geen entiteiten geselecteerd.",
     "entity-type-list-required": "Minstens één entiteittype moet worden geselecteerd.",
@@ -3437,7 +3427,8 @@
     "queue-name": "Naam wachtrij",
     "service-id": "Service-ID",
     "owner-name": "Naam eigenaar",
-    "owner-type": "Eigenaartype"
+    "owner-type": "Eigenaartype",
+    "format": "Indeling"
   },
   "entity-view": {
     "all": "Alles",
@@ -3466,7 +3457,7 @@
     "remove-alias": "Alias van entiteitweergave verwijderen",
     "add-alias": "Alias voor entiteitweergave toevoegen",
     "name-starts-with": "Naamexpressie van entiteitweergave",
-    "help-text": "Gebruik '%' waar nodig: '%entity-view_name_contains%', '%entity-view_name_ends', 'entity-view_starts_with'.",
+    "help-text": "Gebruik '%' naar behoefte: '%entity-view_name_contains%', '%entity-view_name_ends', 'entity-view_starts_with%'.",
     "entity-view-list": "Lijst van entiteitweergaven",
     "use-entity-view-name-filter": "Filter gebruiken",
     "entity-view-list-empty": "Geen entiteitweergaven geselecteerd.",
@@ -4552,8 +4543,7 @@
     "downlink-connection-string": "Downlink verbindingsreeks",
     "downlink-connection-string-required": "Downlink verbindingsreeks is vereist",
     "downlink-topic-name": "Downlink onderwerpnaam",
-    "downlink-topic-name-required": "Downlink onderwerpnaam is vereist",
-    "see-debug-events": "Bekijk debuggebeurtenissen"
+    "downlink-topic-name-required": "Downlink onderwerpnaam is vereist"
   },
   "scada": {
     "symbols": "SCADA-symbolen",
@@ -5018,7 +5008,6 @@
     "invalid-email-format": "Ongeldig e-mailformaat.",
     "no-account": "Heeft u nog geen account?",
     "create-account": "Account aanmaken",
-    "login-with": "Inloggen met {{name}}",
     "or": "of",
     "error": "Inlogfout",
     "verify-your-identity": "Verifieer uw identiteit",
@@ -5067,7 +5056,11 @@
     "terms-of-use": "Gebruiksvoorwaarden",
     "recaptcha-title": "reCAPTCHA",
     "accept-privacy-policy-message": "U moet ons privacybeleid accepteren",
-    "accept-terms-of-use-message": "U moet onze gebruiksvoorwaarden accepteren"
+    "accept-terms-of-use-message": "U moet onze gebruiksvoorwaarden accepteren",
+    "firstname-max-length": "Voornaam moet korter zijn dan 256 tekens",
+    "lastname-max-length": "Achternaam moet korter zijn dan 256 tekens",
+    "firstname-required": "Voornaam is vereist",
+    "lastname-required": "Achternaam is vereist"
   },
   "mobile": {
     "add-application": "Applicatie toevoegen",
@@ -6836,8 +6829,7 @@
       },
       "time-series": "Tijdreeksen",
       "latest": "Laatste waarden",
-      "web-sockets": "WebSockets",
-      "calculated-fields": "Berekende velden"
+      "web-sockets": "WebSockets"
     },
     "save-attribute": {
       "processing-settings": "Verwerkingsinstellingen",
@@ -7248,6 +7240,7 @@
     "timezone-description": "Tijdzone waarin het doeldashboard in het rapport wordt weergegeven.",
     "reporting": "Rapportage",
     "templates": "Templates",
+    "report": "Rapport",
     "reports": "Rapporten",
     "scheduling": "Planning",
     "generating-report": "Rapport wordt gegenereerd...",
@@ -7264,14 +7257,14 @@
     "file-name": "Bestandsnaam",
     "format": "Formaat",
     "download": "Rapport downloaden",
-    "reports-filter": "Rapportfilter"
+    "no-reports-matching": "Geen rapporten gevonden die overeenkomen met '{{entity}}'.",
+    "report-required": "Rapport is vereist"
   },
   "report-template": {
     "report-template": "Rapporttemplate",
     "report-templates": "Rapporttemplates",
     "add": "Rapporttemplate toevoegen",
     "search": "Rapporttemplates zoeken",
-    "templates-filter": "Templatefilter",
     "sub-report": "Subrapport",
     "no-report-templates-text": "Geen rapporttemplates gevonden",
     "no-sub-reports-text": "Geen subrapporten gevonden",
@@ -8732,9 +8725,9 @@
     "export-relations": "Exporteer relaties",
     "export-attributes": "Exporteer attributen",
     "export-credentials": "Exporteer inloggegevens",
-    "export-calculated-fields": "Exporteer berekende velden",
     "export-group-entities": "Exporteer groep entiteiten",
     "export-roles": "Exporteer rollen",
+    "export-calculated-fields": "Berekende velden exporteren \nen alarmregels",
     "entity-versions": "Entiteitversies",
     "versions": "Versies",
     "created-time": "Aangemaakt op",
@@ -8845,8 +8838,6 @@
       "calculated-field-reprocessing": "Herverwerking berekende velden",
       "report": "Rapportgeneratie"
     },
-    "tasks-filter": "Taakfilter",
-    "tasks-filter-params": "Filter: {{ filterParams }}",
     "tasks-status-list": "Statuslijst taken",
     "tasks-type-list": "Typelijst taken",
     "time-taken": "Benodigde tijd",
@@ -9750,7 +9741,7 @@
         "scale": "Schaal",
         "scale-min": "min",
         "scale-max": "max",
-        "scale-auto": "Automatisch"
+        "scale-auto": "Auto"
       },
       "bar": {
         "show-border": "Toon rand",
@@ -10789,10 +10780,10 @@
           "finish-circle-hint-with-entity": "Cirkel voor '{{entityName}}': klik om te voltooien en op te slaan",
           "finish-circle-hint": "Cirkel: klik om tekenen te voltooien"
         },
-        "select-entity": "Selecteer entiteit",
-        "select-entity-hint": "Tip: klik op de kaart na selectie om positie in te stellen"
+        "select-entity": "Entiteit selecteren",
+        "select-entity-hint": "Tip: klik na selectie op de kaart om de positie in te stellen"
       },
-      "select-entity": "Selecteer entiteit",
+      "select-entity": "Entiteit selecteren",
       "select-entity-hint": "Tip: klik na selectie op de kaart om de positie in te stellen",
       "tooltips": {
         "placeMarker": "Klik om entiteit '{{entityName}}' te plaatsen",
@@ -11899,35 +11890,6 @@
     "items-per-page-separator": "van"
   },
   "language": {
-    "language": "Taal",
-    "locales": {
-      "ar_AE": "العربية (الإمارات العربية المتحدة)",
-      "ca_ES": "català (Espanya)",
-      "cs_CZ": "čeština (Česko)",
-      "da_DK": "dansk (Danmark)",
-      "de_DE": "Deutsch (Deutschland)",
-      "el_GR": "Ελληνικά (Ελλάδα)",
-      "en_US": "English (United States)",
-      "es_ES": "español (España)",
-      "fa_IR": "فارسی (ایران)",
-      "fr_FR": "français (France)",
-      "it_IT": "italiano (Italia)",
-      "ja_JP": "日本語 (日本)",
-      "ka_GE": "ქართული (საქართველო)",
-      "ko_KR": "한국어 (대한민국)",
-      "lt_LT": "lietuvių (Lietuva)",
-      "lv_LV": "latviešu (Latvija)",
-      "nl_BE": "Nederlands (België)",
-      "nl_NL": "Nederlands (Nederland)",
-      "no_NO": "norsk (Norge)",
-      "pl_PL": "polski (Polska)",
-      "pt_BR": "português (Brasil)",
-      "ro_RO": "română (România)",
-      "sl_SI": "slovenščina (Slovenija)",
-      "tr_TR": "Türkçe (Türkiye)",
-      "uk_UA": "українська (Україна)",
-      "zh_CN": "中文 (中国)",
-      "zh_TW": "中文 (台灣)"
-    }
+    "language": "Taal"
   }
 }
