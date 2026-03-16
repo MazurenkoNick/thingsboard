@@ -33,4 +33,5 @@ public class ComposeDownStep extends StatefulStep<ComposeDownStepState> {
     public AgentAppStepType getType() {
         return AgentAppStepType.COMPOSE_DOWN;
     }
+
 }

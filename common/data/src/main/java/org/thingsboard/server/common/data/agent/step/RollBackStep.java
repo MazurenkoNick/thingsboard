@@ -33,4 +33,5 @@ public class RollBackStep extends StatefulStep<RollBackStepState> {
     public AgentAppStepType getType() {
         return AgentAppStepType.ROLLBACK;
     }
+
 }

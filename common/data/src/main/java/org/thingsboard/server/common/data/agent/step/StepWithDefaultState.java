@@ -25,6 +25,13 @@ import java.util.Map;
 
 public abstract class StepWithDefaultState<T extends AgentAppStepState> extends StatefulStep<T> {
 
+    /**
+     * Returns the default state for this step, used as a fallback in
+     * {@link #getCommandMetadata(AgentApplication, AgentAppStepState)} when the user-defined {@code resolvedState}
+     * parameter is {@code null}.
+     *
+     * @return the default state, or {@code null} if no default is defined
+     */
     @JsonIgnore
     protected abstract T getDefaultState();
 

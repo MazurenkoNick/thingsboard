@@ -15,9 +15,13 @@
  */
 package org.thingsboard.server.common.data.agent.step;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.Map;
 
 public abstract class StatefulStep<T extends AgentAppStepState> extends AgentAppStep {
 
@@ -31,4 +35,13 @@ public abstract class StatefulStep<T extends AgentAppStepState> extends AgentApp
      * or defaultState contribute to the command sent to the agent.
      */
     public abstract @Nullable T getState();
+
+    @Override
+    @JsonIgnore
+    public Map<String, String> getCommandMetadata(AgentApplication application, @Nullable AgentAppStepState resolvedState) {
+        if (resolvedState != null) {
+            return resolvedState.getCommandMetadata();
+        }
+        return Collections.emptyMap();
+    }
 }

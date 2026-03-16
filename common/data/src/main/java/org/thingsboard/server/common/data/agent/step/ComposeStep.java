@@ -66,4 +66,5 @@ public class ComposeStep extends StepWithDefaultState<ComposeStepState> {
     protected ComposeStepState getDefaultState() {
         return defaultState != null ? new ComposeStepState(defaultState) : null;
     }
+
 }

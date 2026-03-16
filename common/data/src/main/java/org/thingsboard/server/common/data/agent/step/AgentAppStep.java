@@ -74,9 +74,6 @@ public abstract class AgentAppStep {
 
     @JsonIgnore
     public Map<String, String> getCommandMetadata(AgentApplication application, @Nullable AgentAppStepState resolvedState) {
-        if (resolvedState != null) {
-            return resolvedState.getCommandMetadata();
-        }
         return Collections.emptyMap();
     }
 }
