@@ -111,15 +111,6 @@ public interface ConverterDao extends Dao<Converter>, TenantEntityDao<Converter>
     ListenableFuture<List<Converter>> findConvertersByTenantIdAndIdsAsync(UUID tenantId, List<UUID> converterIds);
 
     /**
-     * Check if tenant has converters of specified type.
-     *
-     * @param tenantId the tenantId
-     * @param type the converter type
-     * @return the boolean value
-     */
-    boolean hasConverterOfType(UUID tenantId, ConverterType type);
-
-    /**
      * Find existing converter types grouped by integration type.
      *
      * @param tenantId the tenantId

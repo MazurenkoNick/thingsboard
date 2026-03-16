@@ -207,12 +207,6 @@ public class BaseConverterService extends AbstractEntityService implements Conve
     }
 
     @Override
-    public boolean hasConverterOfType(TenantId tenantId, ConverterType converterType) {
-        log.trace("Executing hasConverterOfType, tenantId [{}], type [{}]", tenantId, converterType);
-        return converterDao.hasConverterOfType(tenantId.getId(), converterType);
-    }
-
-    @Override
     public Map<IntegrationType, Set<ConverterType>> getExistingConverterTypes(TenantId tenantId) {
         log.trace("Executing getExistingConverterTypes, tenantId [{}]", tenantId);
         return converterDao.findExistingConverterTypes(tenantId.getId());

@@ -118,11 +118,6 @@ public class JpaConverterDao extends JpaAbstractDao<ConverterEntity, Converter> 
     }
 
     @Override
-    public boolean hasConverterOfType(UUID tenantId, ConverterType type) {
-        return converterRepository.existsByTenantIdAndType(tenantId, type);
-    }
-
-    @Override
     public Map<IntegrationType, Set<ConverterType>> findExistingConverterTypes(UUID tenantId) {
         return converterRepository.findExistingConverterTypes(tenantId).stream()
                 .collect(Collectors.groupingBy(

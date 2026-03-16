@@ -83,8 +83,6 @@ public interface ConverterRepository extends JpaRepository<ConverterEntity, UUID
     @Query("SELECT externalId FROM ConverterEntity WHERE id = :id")
     UUID getExternalIdById(@Param("id") UUID id);
 
-    boolean existsByTenantIdAndType(UUID tenantId, ConverterType type);
-
     @Query("SELECT c.integrationType, c.type FROM ConverterEntity c WHERE c.tenantId = :tenantId GROUP BY c.integrationType, c.type")
     List<Object[]> findExistingConverterTypes(@Param("tenantId") UUID tenantId);
 
