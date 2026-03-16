@@ -119,6 +119,7 @@ public class IntegrationControllerTest extends AbstractControllerTest {
         Converter converter = new Converter();
         converter.setName("My converter");
         converter.setType(ConverterType.UPLINK);
+        converter.setIntegrationType(IntegrationType.MQTT);
         converter.setConfiguration(CUSTOM_CONVERTER_CONFIGURATION);
         savedConverter = doPost("/api/converter", converter, Converter.class);
     }
@@ -670,7 +671,7 @@ public class IntegrationControllerTest extends AbstractControllerTest {
     public void testGetConvertersInfo() throws Exception {
         Map<IntegrationType, IntegrationConvertersInfo> convertersInfo = readResponse(doGet("/api/integrations/converters/info"), new TypeReference<>() {});
         for (Map.Entry<IntegrationType, IntegrationConvertersInfo> integrationConverterInfo : convertersInfo.entrySet()) {
-            assertThat(integrationConverterInfo.getValue().uplink().existing()).isTrue();
+            assertThat(integrationConverterInfo.getValue().uplink().existing()).isEqualTo(integrationConverterInfo.getKey() == IntegrationType.MQTT);
             assertThat(integrationConverterInfo.getValue().downlink().existing()).isFalse();
             if (integrationConverterInfo.getKey() == IntegrationType.CHIRPSTACK) {
                 assertThat(integrationConverterInfo.getValue().uplink().library()).isTrue();

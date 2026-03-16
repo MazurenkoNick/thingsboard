@@ -99,12 +99,12 @@ public class DefaultTbIntegrationService extends AbstractTbEntityService impleme
 
     @Override
     public Map<IntegrationType, IntegrationConvertersInfo> getIntegrationsConvertersInfo(TenantId tenantId) {
-        boolean hasUplink = converterService.hasConverterOfType(tenantId, ConverterType.UPLINK);
-        boolean hasDownlink = converterService.hasConverterOfType(tenantId, ConverterType.DOWNLINK);
-
         Map<String, LibraryConvertersInfo> libraryConvertersInfo = converterLibraryService.getConvertersInfo();
         Map<IntegrationType, IntegrationConvertersInfo> result = new HashMap<>();
         for (IntegrationType integrationType : IntegrationType.values()) {
+            boolean hasUplink = converterService.hasConverterOfType(tenantId, integrationType, ConverterType.UPLINK);
+            boolean hasDownlink = converterService.hasConverterOfType(tenantId, integrationType, ConverterType.DOWNLINK);
+
             String directory = integrationType.getDirectory();
             LibraryConvertersInfo libraryInfo = libraryConvertersInfo.getOrDefault(directory, new LibraryConvertersInfo(false, false));
             Set<String> keys = ConverterUnwrapperFactory

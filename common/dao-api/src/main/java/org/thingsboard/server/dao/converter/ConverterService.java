@@ -65,5 +65,5 @@ public interface ConverterService extends EntityDaoService {
 
     void deleteConvertersByTenantId(TenantId tenantId);
 
-    boolean hasConverterOfType(TenantId tenantId, ConverterType converterType);
+    boolean hasConverterOfType(TenantId tenantId, IntegrationType integrationType, ConverterType converterType);
 }

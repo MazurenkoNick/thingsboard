@@ -83,7 +83,7 @@ public interface ConverterRepository extends JpaRepository<ConverterEntity, UUID
     @Query("SELECT externalId FROM ConverterEntity WHERE id = :id")
     UUID getExternalIdById(@Param("id") UUID id);
 
-    boolean existsByTenantIdAndType(UUID tenantId, ConverterType type);
+    boolean existsByTenantIdAndIntegrationTypeAndType(UUID tenantId, IntegrationType integrationType, ConverterType type);
 
     @Query("SELECT new org.thingsboard.server.common.data.edqs.fields.ConverterFields(c.id, c.createdTime, c.tenantId, " +
             "c.name, c.version, c.type, c.additionalInfo) FROM ConverterEntity c WHERE c.id > :id ORDER BY c.id")
