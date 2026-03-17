@@ -53,6 +53,7 @@ public class SsrfProtectionValidator {
     private static final Set<String> BLOCKED_HOSTNAME_SUFFIXES = Set.of(".internal", ".local");
 
     private static volatile AdditionalBlockedHosts additionalBlocked = AdditionalBlockedHosts.EMPTY;
+    private static volatile AllowedHosts allowedHosts = AllowedHosts.EMPTY;
 
     // Well-known cloud metadata endpoints not covered by the JDK checks (isLoopback, isSiteLocal, isLinkLocal)
     private static final List<CidrRange> CLOUD_METADATA_RANGES = List.of(
@@ -81,6 +82,13 @@ public class SsrfProtectionValidator {
         }
 
         String hostLower = host.toLowerCase();
+
+        // Allow-listed hostnames bypass all hostname and IP checks
+        AllowedHosts currentAllowed = allowedHosts;
+        if (currentAllowed.hostnames.contains(hostLower)) {
+            return;
+        }
+
         if (BLOCKED_HOSTNAMES.contains(hostLower) || additionalBlocked.hostnames.contains(hostLower)) {
             throwBlockedHost(host);
         }
@@ -113,7 +121,15 @@ public class SsrfProtectionValidator {
         }
     }
 
-    private static boolean isBlockedAddress(InetAddress address) {
+    public static boolean isBlockedAddress(InetAddress address) {
+        // Check allow-list first: allowed addresses bypass all block checks
+        AllowedHosts currentAllowed = allowedHosts;
+        for (CidrRange cidr : currentAllowed.cidrRanges) {
+            if (cidr.contains(address)) {
+                return false;
+            }
+        }
+
         // Covers 127.0.0.0/8 and ::1
         if (address.isLoopbackAddress()) {
             return true;
@@ -157,14 +173,37 @@ public class SsrfProtectionValidator {
         throw new RuntimeException("URI is invalid: host '" + host + "' is not allowed");
     }
 
+    public static boolean isEnabled() {
+        return enabled;
+    }
+
     public static void setEnabled(boolean enabled) {
         SsrfProtectionValidator.enabled = enabled;
     }
 
     public static void setAdditionalBlockedHosts(List<String> entries) {
+        ParsedHostEntries parsed = parseHostEntries(entries);
+        additionalBlocked = new AdditionalBlockedHosts(parsed.cidrRanges, parsed.hostnames);
+        if (!parsed.cidrRanges.isEmpty() || !parsed.hostnames.isEmpty()) {
+            log.info("SSRF additional blocked hosts configured: {} CIDR range(s), {} hostname(s)", parsed.cidrRanges.size(), parsed.hostnames.size());
+        }
+    }
+
+    public static void setAllowedHosts(List<String> entries) {
+        ParsedHostEntries parsed = parseHostEntries(entries);
+        allowedHosts = new AllowedHosts(parsed.cidrRanges, parsed.hostnames);
+        if (!parsed.cidrRanges.isEmpty() || !parsed.hostnames.isEmpty()) {
+            log.info("SSRF allowed hosts configured: {} CIDR range(s), {} hostname(s)", parsed.cidrRanges.size(), parsed.hostnames.size());
+        }
+    }
+
+    public static boolean isHostnameAllowed(String hostname) {
+        return allowedHosts.hostnames.contains(hostname.toLowerCase());
+    }
+
+    private static ParsedHostEntries parseHostEntries(List<String> entries) {
         if (entries == null || entries.isEmpty()) {
-            additionalBlocked = AdditionalBlockedHosts.EMPTY;
-            return;
+            return ParsedHostEntries.EMPTY;
         }
         List<CidrRange> cidrRanges = new ArrayList<>();
         Set<String> hostnames = new HashSet<>();
@@ -183,10 +222,9 @@ public class SsrfProtectionValidator {
                 hostnames.add(trimmed.toLowerCase());
             }
         }
-        additionalBlocked = new AdditionalBlockedHosts(
+        return new ParsedHostEntries(
                 Collections.unmodifiableList(cidrRanges),
                 Collections.unmodifiableSet(hostnames));
-        log.info("SSRF additional blocked hosts configured: {} CIDR range(s), {} hostname(s)", cidrRanges.size(), hostnames.size());
     }
 
     private static boolean isIpLiteral(String entry) {
@@ -194,8 +232,16 @@ public class SsrfProtectionValidator {
         return !entry.isEmpty() && (Character.isDigit(entry.charAt(0)) || entry.contains(":"));
     }
 
+    private record ParsedHostEntries(List<CidrRange> cidrRanges, Set<String> hostnames) {
+        static final ParsedHostEntries EMPTY = new ParsedHostEntries(Collections.emptyList(), Collections.emptySet());
+    }
+
     record AdditionalBlockedHosts(List<CidrRange> cidrRanges, Set<String> hostnames) {
         static final AdditionalBlockedHosts EMPTY = new AdditionalBlockedHosts(Collections.emptyList(), Collections.emptySet());
+    }
+
+    record AllowedHosts(List<CidrRange> cidrRanges, Set<String> hostnames) {
+        static final AllowedHosts EMPTY = new AllowedHosts(Collections.emptyList(), Collections.emptySet());
     }
 
     record CidrRange(byte[] network, int prefixLength) {

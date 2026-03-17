@@ -50,10 +50,20 @@ public class ReportServiceConfiguration {
     @Value("${reports.ssrf_additional_blocked_hosts:}")
     private List<String> ssrfAdditionalBlockedHosts;
 
+    @Value("${reports.ssrf_allowed_hosts:}")
+    private List<String> ssrfAllowedHosts;
+
     @PostConstruct
     public void init() {
         SsrfProtectionValidator.setEnabled(ssrfProtectionEnabled);
         SsrfProtectionValidator.setAdditionalBlockedHosts(ssrfAdditionalBlockedHosts);
+        SsrfProtectionValidator.setAllowedHosts(ssrfAllowedHosts);
+        if (!ssrfProtectionEnabled) {
+            log.warn("SSRF protection for report service is DISABLED. This allows report generation to access " +
+                    "internal/private network addresses including cloud metadata endpoints. It is strongly recommended to " +
+                    "enable SSRF protection by setting SSRF_PROTECTION_ENABLED=true. If your reports need to access " +
+                    "resources on local networks, use SSRF_ALLOWED_HOSTS to whitelist specific addresses or ranges.");
+        }
     }
 
 }
