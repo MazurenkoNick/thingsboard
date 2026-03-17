@@ -272,7 +272,7 @@ public class ThingsboardSecurityConfiguration {
         http.headers(headers -> {
                     headers.defaultsDisabled();
                     headers.cacheControl(config -> {});
-                    headers.crossOriginOpenerPolicy(coop -> coop.policy(CrossOriginOpenerPolicy.SAME_ORIGIN)))
+                    headers.crossOriginOpenerPolicy(coop -> coop.policy(CrossOriginOpenerPolicy.SAME_ORIGIN));
                     httpSecurityHeadersCustomizer.customize(headers);
                 })
                 .cors(cors -> {})
