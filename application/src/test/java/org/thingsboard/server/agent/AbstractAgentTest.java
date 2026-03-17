@@ -16,7 +16,6 @@
 package org.thingsboard.server.agent;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
@@ -30,29 +29,39 @@ import org.thingsboard.server.agent.imitator.AgentImitator;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
+import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
+import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
+import org.thingsboard.server.common.data.agent.step.ComposeDownStep;
+import org.thingsboard.server.common.data.agent.step.ComposeStartStep;
 import org.thingsboard.server.common.data.agent.step.ComposeStep;
+import org.thingsboard.server.common.data.agent.step.RollBackStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
+import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.controller.AbstractControllerTest;
+import org.thingsboard.server.dao.agent.AgentAppEventService;
 import org.thingsboard.server.dao.agent.AgentAppTemplateService;
+import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.attributes.AttributesService;
+import org.thingsboard.server.gen.agent.v1.AckStatus;
 import org.thingsboard.server.gen.agent.v1.AppCommand;
+import org.thingsboard.server.gen.agent.v1.AppCommandAction;
 import org.thingsboard.server.gen.agent.v1.ComposeState;
 import org.thingsboard.server.gen.agent.v1.ContainerInfo;
 import org.thingsboard.server.gen.agent.v1.ProjectStateSync;
-import org.thingsboard.server.gen.agent.v1.ServerToAgent;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -76,6 +85,12 @@ abstract public class AbstractAgentTest extends AbstractControllerTest {
 
     @Autowired
     protected AttributesService attributesService;
+
+    @Autowired
+    protected AgentAppEventService agentAppEventService;
+
+    @Autowired
+    protected AgentApplicationService agentApplicationService;
 
     @Before
     public void setupAgentTest() throws Exception {
@@ -214,5 +229,140 @@ abstract public class AbstractAgentTest extends AbstractControllerTest {
         });
         root.set("services", services);
         return root.toString();
+    }
+
+    // --- Step creation helpers ---
+
+    protected ComposeStartStep createComposeStartStep() {
+        ComposeStartStep step = new ComposeStartStep();
+        step.setId(UUID.randomUUID());
+        step.setTitle("Start compose");
+        return step;
+    }
+
+    protected ComposeDownStep createComposeDownStep() {
+        ComposeDownStep step = new ComposeDownStep();
+        step.setId(UUID.randomUUID());
+        step.setTitle("Compose down");
+        return step;
+    }
+
+    protected RollBackStep createRollbackStep() {
+        RollBackStep step = new RollBackStep();
+        step.setId(UUID.randomUUID());
+        step.setTitle("Rollback");
+        return step;
+    }
+
+    protected List<AgentAppStep> chainSteps(AgentAppStep... steps) {
+        if (steps.length == 0) return List.of();
+        for (int i = 0; i < steps.length - 1; i++) {
+            steps[i].setNextId(steps[i + 1].getId());
+        }
+        steps[steps.length - 1].setNextId(null);
+        return Arrays.asList(steps);
+    }
+
+    // --- Full template creation ---
+
+    protected AgentAppTemplate createEdgeTemplateWithSteps(String version,
+                                                            List<AgentAppStep> startSteps,
+                                                            List<AgentAppStep> upgradeSteps,
+                                                            List<AgentAppStep> deleteSteps,
+                                                            List<AgentAppStep> rollbackSteps) {
+        return createEdgeTemplateWithSteps(version, null, startSteps, upgradeSteps, deleteSteps, rollbackSteps);
+    }
+
+    protected AgentAppTemplate createEdgeTemplateWithSteps(String version, String nextVersion,
+                                                            List<AgentAppStep> startSteps,
+                                                            List<AgentAppStep> upgradeSteps,
+                                                            List<AgentAppStep> deleteSteps,
+                                                            List<AgentAppStep> rollbackSteps) {
+        DockerComposeConfig config = new DockerComposeConfig();
+        String composeJson = constructComposeJson(
+                Map.of("tb-edge", "thingsboard/tb-edge:" + version));
+        config.setCompose(JacksonUtil.toJsonNode(composeJson));
+
+        AgentAppTemplate template = new AgentAppTemplate();
+        template.setTenantId(tenantId);
+        template.setAppType(AgentApplicationType.EDGE);
+        template.setCurrentVersion(version);
+        template.setNextVersion(nextVersion);
+        template.setConfig(config);
+        template.setStartSteps(startSteps);
+        template.setUpgradeSteps(upgradeSteps);
+        template.setDeleteSteps(deleteSteps);
+        template.setRollbackSteps(rollbackSteps);
+        return agentAppTemplateService.save(tenantId, template);
+    }
+
+    // --- Install helpers ---
+
+    protected AgentApplication installEdgeApp(AgentAppTemplate template) {
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setName("Test Edge App");
+        app.setAppType(AgentApplicationType.EDGE);
+        app.setTemplateId(template.getId());
+        app.setConfig(template.getConfig() != null ? template.getConfig().copy() : null);
+
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.INSTALL);
+        request.setApplication(app);
+
+        agentImitator.expectMessageAmount(1);
+        return installApp(request);
+    }
+
+    // --- Event helpers ---
+
+    protected AgentAppEventId extractEventId(AppCommand command) {
+        return new AgentAppEventId(new UUID(
+                command.getCommandId().getIdMSB(),
+                command.getCommandId().getIdLSB()));
+    }
+
+    protected void awaitEventStatus(AgentAppEventId eventId, AgentAppEventStatus expected) {
+        Awaitility.await()
+                .atMost(TIMEOUT, TimeUnit.SECONDS)
+                .until(() -> {
+                    AgentAppEvent event = agentAppEventService.findById(tenantId, eventId);
+                    return event != null && event.getStatus() == expected;
+                });
+    }
+
+    protected void completeAllSteps(AppCommand cmd) throws InterruptedException {
+        agentImitator.sendCommandAck(cmd.getCommandId(), AckStatus.ACCEPTED);
+        agentImitator.sendCommandResult(cmd.getCommandId(), cmd.getStepId(), true);
+        for (int i = 1; i < cmd.getTotalSteps(); i++) {
+            AppCommand next = waitForCommand();
+            agentImitator.sendCommandAck(next.getCommandId(), AckStatus.ACCEPTED);
+            agentImitator.sendCommandResult(next.getCommandId(), next.getStepId(), true);
+        }
+    }
+
+    /**
+     * Polls for a command with the given action using Awaitility.
+     * Unlike {@link #waitForCommand()}, this method is race-free: it does not clear
+     * existing messages or rely on a CountDownLatch being set before the message arrives.
+     * Use this when the command may arrive asynchronously (e.g. after reconnect or auto-rollback).
+     */
+    protected AppCommand awaitCommand(AppCommandAction expectedAction) {
+        Awaitility.await()
+                .atMost(TIMEOUT, TimeUnit.SECONDS)
+                .until(() -> agentImitator.findCommand(
+                        c -> c.getAction() == expectedAction).isPresent());
+        return agentImitator.findCommand(c -> c.getAction() == expectedAction).get();
+    }
+
+    // --- Reconnect helpers ---
+
+    protected void reconnectAgent() throws InterruptedException {
+        agentImitator.disconnect();
+        agentImitator = new AgentImitator("localhost", 7070,
+                agent.getRoutingKey(), agent.getSecret());
+        agentImitator.connect();
+        Assert.assertNotNull("HelloAck should not be null after reconnect", agentImitator.getHelloAck());
+        Assert.assertTrue("HelloAck should be successful after reconnect", agentImitator.getHelloAck().getSuccess());
     }
 }

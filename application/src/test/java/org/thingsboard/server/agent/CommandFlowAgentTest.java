@@ -17,8 +17,6 @@ package org.thingsboard.server.agent;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
-import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
@@ -29,7 +27,6 @@ import org.thingsboard.server.gen.agent.v1.AckStatus;
 import org.thingsboard.server.gen.agent.v1.AppCommand;
 import org.thingsboard.server.gen.agent.v1.AppCommandAction;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -96,19 +93,5 @@ public class CommandFlowAgentTest extends AbstractAgentTest {
                 config, List.of(step));
     }
 
-    private AgentApplication installEdgeApp(AgentAppTemplate template) {
-        AgentApplication app = new AgentApplication();
-        app.setAgentId(agent.getId());
-        app.setName("Test Edge App");
-        app.setAppType(AgentApplicationType.EDGE);
-        app.setTemplateId(template.getId());
-        app.setConfig(template.getConfig() != null ? template.getConfig().copy() : null);
-
-        AgentAppEventRequest request = new AgentAppEventRequest();
-        request.setActionType(AgentAppEventActionType.INSTALL);
-        request.setApplication(app);
-
-        agentImitator.expectMessageAmount(1);
-        return installApp(request);
-    }
+    // installEdgeApp is inherited from AbstractAgentTest
 }
