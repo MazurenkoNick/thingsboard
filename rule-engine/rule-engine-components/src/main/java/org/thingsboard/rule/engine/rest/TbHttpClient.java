@@ -123,6 +123,7 @@ public class TbHttpClient {
                     .build();
 
             HttpClient httpClient = HttpClient.create(connectionProvider)
+                    .followRedirect(false)
                     .runOn(getSharedOrCreateEventLoopGroup(eventLoopGroupShared))
                     .doOnConnected(c ->
                             c.addHandlerLast(new ReadTimeoutHandler(config.getReadTimeoutMs(), TimeUnit.MILLISECONDS)));
@@ -156,6 +157,10 @@ public class TbHttpClient {
             } else {
                 SslContext sslContext = config.getCredentials().initSslContext();
                 httpClient = httpClient.secure(t -> t.sslContext(sslContext));
+            }
+
+            if (SsrfProtectionValidator.isEnabled()) {
+                httpClient = httpClient.resolver(SsrfSafeAddressResolverGroup.INSTANCE);
             }
 
             validateMaxInMemoryBufferSize(config);
