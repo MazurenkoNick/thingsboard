@@ -755,53 +755,53 @@ public class DefaultTbClusterService implements TbClusterService {
 
     @Override
     public void onAgentAppEvent(TenantId tenantId, AgentId agentId, AgentAppEvent event) {
-        var serviceIdOpt = Optional.ofNullable(agentIdServiceIdCache.get(agentId));
-        serviceIdOpt.ifPresent(serviceId -> {
-            if (serviceId.get() != null) {
-                AgentAppEventNotificationProto proto = AgentAppEventNotificationProto.newBuilder()
-                        .setTenantIdMSB(tenantId.getId().getMostSignificantBits())
-                        .setTenantIdLSB(tenantId.getId().getLeastSignificantBits())
-                        .setAgentIdMSB(agentId.getId().getMostSignificantBits())
-                        .setAgentIdLSB(agentId.getId().getLeastSignificantBits())
-                        .setApplicationIdMSB(event.getApplicationId().getId().getMostSignificantBits())
-                        .setApplicationIdLSB(event.getApplicationId().getId().getLeastSignificantBits())
-                        .setEventIdMSB(event.getId().getId().getMostSignificantBits())
-                        .setEventIdLSB(event.getId().getId().getLeastSignificantBits())
-                        .setActionType(event.getActionType().name())
-                        .setDelivered(event.getDeliveryState() == AgentAppEventDeliveryState.DELIVERED)
-                        .build();
-                ToAgentNotificationMsg msg = ToAgentNotificationMsg.newBuilder()
-                        .setAgentAppEventNotification(proto)
-                        .build();
-                pushMsgToAgentNotification(msg, serviceId.get());
-            }
-            // else -> the event will be fetched and processed by the core which owns the session as soon as it's connected
-        });
+        AgentAppEventNotificationProto proto = buildAgentAppEventProto(tenantId, agentId, event,
+                event.getDeliveryState() == AgentAppEventDeliveryState.DELIVERED, false);
+        sendAgentAppEventNotification(agentId, proto);
     }
 
     @Override
     public void onAgentAppEventCancelled(TenantId tenantId, AgentId agentId, AgentAppEvent event) {
+        AgentAppEventNotificationProto proto = buildAgentAppEventProto(tenantId, agentId, event, false, true);
+        sendAgentAppEventNotification(agentId, proto);
+    }
+
+    private void sendAgentAppEventNotification(AgentId agentId, AgentAppEventNotificationProto proto) {
+        ToAgentNotificationMsg msg = ToAgentNotificationMsg.newBuilder()
+                .setAgentAppEventNotification(proto).build();
         var serviceIdOpt = Optional.ofNullable(agentIdServiceIdCache.get(agentId));
-        serviceIdOpt.ifPresent(serviceId -> {
-            if (serviceId.get() != null) {
-                AgentAppEventNotificationProto proto = AgentAppEventNotificationProto.newBuilder()
-                        .setTenantIdMSB(tenantId.getId().getMostSignificantBits())
-                        .setTenantIdLSB(tenantId.getId().getLeastSignificantBits())
-                        .setAgentIdMSB(agentId.getId().getMostSignificantBits())
-                        .setAgentIdLSB(agentId.getId().getLeastSignificantBits())
-                        .setApplicationIdMSB(event.getApplicationId().getId().getMostSignificantBits())
-                        .setApplicationIdLSB(event.getApplicationId().getId().getLeastSignificantBits())
-                        .setEventIdMSB(event.getId().getId().getMostSignificantBits())
-                        .setEventIdLSB(event.getId().getId().getLeastSignificantBits())
-                        .setActionType(event.getActionType().name())
-                        .setCancelled(true)
-                        .build();
-                ToAgentNotificationMsg msg = ToAgentNotificationMsg.newBuilder()
-                        .setAgentAppEventNotification(proto)
-                        .build();
-                pushMsgToAgentNotification(msg, serviceId.get());
-            }
-        });
+        serviceIdOpt.ifPresentOrElse(
+                serviceId -> {
+                    if (serviceId.get() != null) {
+                        pushMsgToAgentNotification(msg, serviceId.get());
+                    }
+                },
+                () -> broadcastAgentNotification(msg)
+        );
+    }
+
+    private void broadcastAgentNotification(ToAgentNotificationMsg msg) {
+        Set<String> serviceIds = partitionService.getAllServiceIds(ServiceType.TB_CORE);
+        for (String serviceId : serviceIds) {
+            pushMsgToAgentNotification(msg, serviceId);
+        }
+    }
+
+    private AgentAppEventNotificationProto buildAgentAppEventProto(TenantId tenantId, AgentId agentId,
+                                                                   AgentAppEvent event, boolean delivered, boolean cancelled) {
+        return AgentAppEventNotificationProto.newBuilder()
+                .setTenantIdMSB(tenantId.getId().getMostSignificantBits())
+                .setTenantIdLSB(tenantId.getId().getLeastSignificantBits())
+                .setAgentIdMSB(agentId.getId().getMostSignificantBits())
+                .setAgentIdLSB(agentId.getId().getLeastSignificantBits())
+                .setApplicationIdMSB(event.getApplicationId().getId().getMostSignificantBits())
+                .setApplicationIdLSB(event.getApplicationId().getId().getLeastSignificantBits())
+                .setEventIdMSB(event.getId().getId().getMostSignificantBits())
+                .setEventIdLSB(event.getId().getId().getLeastSignificantBits())
+                .setActionType(event.getActionType().name())
+                .setDelivered(delivered)
+                .setCancelled(cancelled)
+                .build();
     }
 
     private void pushMsgToAgentNotification(ToAgentNotificationMsg msg, String serviceId) {
