@@ -28,42 +28,44 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.config;
+package org.thingsboard.server.config;
 
-import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Configuration;
-import org.thingsboard.common.util.SsrfProtectionValidator;
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
+@Component
+@ConfigurationProperties(prefix = "security.headers")
+@Data
+public class HttpSecurityHeadersProperties {
 
-@Slf4j
-@Configuration
-@ConditionalOnProperty(name = "service.type", havingValue = "tb-report")
-public class ReportServiceConfiguration {
+    private XContentTypeOptions xContentTypeOptions = new XContentTypeOptions();
+    private ReferrerPolicy referrerPolicy = new ReferrerPolicy();
+    private XFrameOptions xFrameOptions = new XFrameOptions();
+    private ContentSecurityPolicy contentSecurityPolicy = new ContentSecurityPolicy();
 
-    @Value("${reports.ssrf_protection_enabled:false}")
-    private boolean ssrfProtectionEnabled;
+    @Data
+    public static class XContentTypeOptions {
+        private boolean enabled = true;
+    }
 
-    @Value("${reports.ssrf_additional_blocked_hosts:}")
-    private List<String> ssrfAdditionalBlockedHosts;
+    @Data
+    public static class ReferrerPolicy {
+        private boolean enabled = true;
+        private String value = "strict-origin-when-cross-origin";
+    }
 
-    @Value("${reports.ssrf_allowed_hosts:}")
-    private List<String> ssrfAllowedHosts;
+    @Data
+    public static class XFrameOptions {
+        private boolean enabled = false;
+        private String value = "SAMEORIGIN";
+    }
 
-    @PostConstruct
-    public void init() {
-        SsrfProtectionValidator.setEnabled(ssrfProtectionEnabled);
-        SsrfProtectionValidator.setAdditionalBlockedHosts(ssrfAdditionalBlockedHosts);
-        SsrfProtectionValidator.setAllowedHosts(ssrfAllowedHosts);
-        if (!ssrfProtectionEnabled) {
-            log.warn("SSRF protection for report service is DISABLED. This allows report generation to access " +
-                    "internal/private network addresses including cloud metadata endpoints. It is strongly recommended to " +
-                    "enable SSRF protection by setting SSRF_PROTECTION_ENABLED=true. If your reports need to access " +
-                    "resources on local networks, use SSRF_ALLOWED_HOSTS to whitelist specific addresses or ranges.");
-        }
+    @Data
+    public static class ContentSecurityPolicy {
+        private boolean enabled = false;
+        private String value = "";
+        private boolean reportOnly = false;
     }
 
 }
