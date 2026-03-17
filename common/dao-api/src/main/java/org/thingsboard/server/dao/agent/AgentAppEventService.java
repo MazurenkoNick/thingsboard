@@ -21,6 +21,8 @@ import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 
 import java.util.List;
 import java.util.Optional;
@@ -43,4 +45,6 @@ public interface AgentAppEventService {
     void updateStatus(AgentAppEventId id, AgentAppEventStatus status, UUID currentStepId);
 
     void deleteAllPendingByApplicationId(AgentApplicationId applicationId);
+
+    PageData<AgentAppEvent> findByApplicationId(TenantId tenantId, AgentApplicationId applicationId, PageLink pageLink);
 }

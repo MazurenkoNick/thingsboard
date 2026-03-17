@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentApplication;
@@ -49,6 +50,7 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.dao.agent.AgentAppEventService;
 import org.thingsboard.server.service.entitiy.agent.TbAgentApplicationService;
 import org.thingsboard.server.service.security.permission.Operation;
 
@@ -76,6 +78,7 @@ public class AgentApplicationController extends BaseController {
     private static final String AGENT_ID_PARAM_DESCRIPTION = "A string value representing the agent id. For example, '784f394c-42b6-435a-983c-b7beff2784f9'";
 
     private final TbAgentApplicationService tbAgentApplicationService;
+    private final AgentAppEventService agentAppEventService;
 
     @ApiOperation(value = "Get Agent Application (getAgentApplicationById)",
             notes = "Fetch the Agent Application object based on the provided Agent Application Id."
@@ -207,6 +210,33 @@ public class AgentApplicationController extends BaseController {
         AgentAppEventId agentAppEventId = new AgentAppEventId(toUUID(strAgentAppEventId));
         TenantId tenantId = getCurrentUser().getTenantId();
         tbAgentApplicationService.cancelEvent(tenantId, agentAppEventId);
+    }
+
+    @ApiOperation(value = "Get Agent Application Events (getAgentAppEvents)",
+            notes = "Returns a page of events for the specified agent application. "
+                    + PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @GetMapping(value = "/agent/app/{agentApplicationId}/events", params = {"pageSize", "page"})
+    @ResponseBody
+    public PageData<AgentAppEvent> getAgentAppEvents(
+            @Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
+            @PathVariable(AGENT_APP_ID) String strAgentAppId,
+            @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
+            @RequestParam int pageSize,
+            @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true)
+            @RequestParam int page,
+            @Parameter(description = "Optional String value reserved for future event filtering")
+            @RequestParam(required = false) String textSearch,
+            @Parameter(description = SORT_PROPERTY_DESCRIPTION, schema = @Schema(allowableValues = {"createdTime", "updatedTime"}))
+            @RequestParam(required = false) String sortProperty,
+            @Parameter(description = SORT_ORDER_DESCRIPTION, schema = @Schema(allowableValues = {"ASC", "DESC"}))
+            @RequestParam(required = false) String sortOrder) throws ThingsboardException {
+        checkParameter(AGENT_APP_ID, strAgentAppId);
+        AgentApplicationId agentApplicationId = new AgentApplicationId(toUUID(strAgentAppId));
+        checkAgentAppId(agentApplicationId, Operation.READ);
+        TenantId tenantId = getCurrentUser().getTenantId();
+        PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
+        return agentAppEventService.findByApplicationId(tenantId, agentApplicationId, pageLink);
     }
 
     @ApiOperation(value = "Merge template into application for preview (mergeForPreview)",
