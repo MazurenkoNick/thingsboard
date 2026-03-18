@@ -50,6 +50,10 @@ public class AgentSessionRegistry {
     }
 
 
+    public boolean hasSession(AgentId agentId) {
+        return sessionsByAgentId.containsKey(agentId);
+    }
+
     public AgentSession getByAgentId(AgentId agentId) {
         return sessionsByAgentId.get(agentId);
     }

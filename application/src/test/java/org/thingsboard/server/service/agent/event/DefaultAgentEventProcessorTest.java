@@ -41,8 +41,10 @@ import org.thingsboard.server.dao.agent.AgentAppEventService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.gen.agent.v1.ServerToAgent;
 import org.thingsboard.server.dao.agent.AgentAppEventStepsResolver;
+import org.thingsboard.server.gen.transport.TransportProtos.AgentAppEventNotificationProto;
 import org.thingsboard.server.service.agent.AgentMsgConstructorUtils;
 import org.thingsboard.server.service.agent.AgentRpcService;
+import org.thingsboard.server.service.agent.session.AgentSessionRegistry;
 
 import java.util.List;
 import java.util.Optional;
@@ -70,6 +72,8 @@ class DefaultAgentEventProcessorTest {
     private AgentAppEventStepsResolver eventStepsResolver;
     @Mock
     private AgentEventErrorHandler eventErrorHandler;
+    @Mock
+    private AgentSessionRegistry sessions;
 
     @InjectMocks
     private DefaultAgentEventProcessor processor;
@@ -318,6 +322,57 @@ class DefaultAgentEventProcessorTest {
         verify(appEventService).findOldestPendingByApplicationId(app2Id);
     }
 
+    // ==================== onEventNotification ====================
+
+    @Test
+    void onEventNotification_noLocalSession_skips() {
+        when(sessions.hasSession(AGENT_ID)).thenReturn(false);
+
+        AgentAppEventNotificationProto notification = AgentAppEventNotificationProto.newBuilder()
+                .setTenantIdMSB(TENANT_ID.getId().getMostSignificantBits())
+                .setTenantIdLSB(TENANT_ID.getId().getLeastSignificantBits())
+                .setAgentIdMSB(AGENT_ID.getId().getMostSignificantBits())
+                .setAgentIdLSB(AGENT_ID.getId().getLeastSignificantBits())
+                .setApplicationIdMSB(APP_ID.getId().getMostSignificantBits())
+                .setApplicationIdLSB(APP_ID.getId().getLeastSignificantBits())
+                .setEventIdMSB(EVENT_ID.getId().getMostSignificantBits())
+                .setEventIdLSB(EVENT_ID.getId().getLeastSignificantBits())
+                .setActionType(AgentAppEventActionType.INSTALL.name())
+                .build();
+
+        processor.onEventNotification(notification);
+
+        verify(appService, never()).findById(any(), any());
+        verify(appEventService, never()).findOldestPendingByApplicationId(any());
+        verify(eventErrorHandler, never()).onFailure(any(), any(), any(), any());
+    }
+
+    @Test
+    void onEventNotification_hasLocalSession_processes() {
+        when(sessions.hasSession(AGENT_ID)).thenReturn(true);
+
+        AgentAppEventNotificationProto notification = AgentAppEventNotificationProto.newBuilder()
+                .setTenantIdMSB(TENANT_ID.getId().getMostSignificantBits())
+                .setTenantIdLSB(TENANT_ID.getId().getLeastSignificantBits())
+                .setAgentIdMSB(AGENT_ID.getId().getMostSignificantBits())
+                .setAgentIdLSB(AGENT_ID.getId().getLeastSignificantBits())
+                .setApplicationIdMSB(APP_ID.getId().getMostSignificantBits())
+                .setApplicationIdLSB(APP_ID.getId().getLeastSignificantBits())
+                .setEventIdMSB(EVENT_ID.getId().getMostSignificantBits())
+                .setEventIdLSB(EVENT_ID.getId().getLeastSignificantBits())
+                .setActionType(AgentAppEventActionType.INSTALL.name())
+                .build();
+
+        AgentApplication app = newApplication();
+        when(appService.findById(TENANT_ID, APP_ID)).thenReturn(app);
+        when(appEventService.hasActiveEventForApplication(APP_ID)).thenReturn(false);
+        when(appEventService.findOldestPendingByApplicationId(APP_ID)).thenReturn(Optional.empty());
+
+        processor.onEventNotification(notification);
+
+        verify(appService).findById(TENANT_ID, APP_ID);
+    }
+
     // ==================== Helpers ====================
 
     private AgentAppEvent newEvent(AgentAppEventActionType actionType) {
@@ -339,11 +394,6 @@ class DefaultAgentEventProcessorTest {
 
     private AgentAppStep newStep(UUID id, UUID nextId) {
         return new AgentAppStep(nextId, id, "Step " + id, false) {
-            @Override
-            public AgentAppStepState getState() {
-                return null;
-            }
-
             @Override
             public AgentAppStepType getType() {
                 return AgentAppStepType.COMPOSE_START;

@@ -42,6 +42,7 @@ import org.thingsboard.server.dao.agent.AgentAppEventStepsResolver;
 import org.thingsboard.server.service.agent.AgentMsgConstructorUtils;
 import org.thingsboard.server.service.agent.AgentRpcService;
 import org.thingsboard.server.service.agent.AgentSessionNotFoundException;
+import org.thingsboard.server.service.agent.session.AgentSessionRegistry;
 
 import java.util.List;
 import java.util.Optional;
@@ -67,11 +68,16 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
     private final AgentEventWatchdog eventWatchdog;
     private final AgentAppEventStepsResolver eventStepsResolver;
     private final AgentEventErrorHandler eventErrorHandler;
+    private final AgentSessionRegistry sessions;
 
     @Override
     public void onEventNotification(AgentAppEventNotificationProto notification) {
-        TenantId tenantId = TenantId.fromUUID(new UUID(notification.getTenantIdMSB(), notification.getTenantIdLSB()));
         AgentId agentId = AgentId.fromMsgAndLsb(notification.getAgentIdMSB(), notification.getAgentIdLSB());
+        if (!sessions.hasSession(agentId)) {
+            log.trace("[{}] No local session for agent, skipping notification", agentId);
+            return;
+        }
+        TenantId tenantId = TenantId.fromUUID(new UUID(notification.getTenantIdMSB(), notification.getTenantIdLSB()));
         AgentApplicationId applicationId = AgentApplicationId.fromMsgAndLsb(notification.getApplicationIdMSB(), notification.getApplicationIdLSB());
 
         if (notification.getCancelled()) {

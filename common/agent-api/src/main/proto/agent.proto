@@ -46,7 +46,12 @@ message ProjectStateSync {
 
 message ComposeState {
   optional string composeJson = 1;
-  map<string, string> containerStates = 2;
+  map<string, ContainerInfo> containerStates = 2;
+}
+
+message ContainerInfo {
+  string state = 1;
+  string imageDigest = 2;
 }
 
 message ServerToAgent {

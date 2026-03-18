@@ -30,8 +30,8 @@ import org.thingsboard.server.common.data.agent.AgentAppUnitType;
 import org.thingsboard.server.common.data.id.AgentAppUnitId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.kv.StringDataEntry;
 import org.thingsboard.server.dao.agent.AgentAppUnitService;
+import org.thingsboard.server.gen.agent.v1.ContainerInfo;
 import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
 
 import java.util.Collections;
@@ -146,7 +146,9 @@ class ComposeUnitsSynchronizerTest {
         when(unitService.findAgentAppUnitsByAgentAppId(TENANT_ID, APP_ID))
                 .thenReturn(List.of(web, db, data));
 
-        Map<String, String> containerStates = Map.of("web", "running", "db", "exited");
+        Map<String, ContainerInfo> containerStates = Map.of(
+                "web", containerInfo("running", "sha256:aaa"),
+                "db", containerInfo("exited", "sha256:bbb"));
 
         synchronizer.syncUnitsAndState(TENANT_ID, APP_ID, composeJson, containerStates);
 
@@ -171,6 +173,44 @@ class ComposeUnitsSynchronizerTest {
         });
     }
 
+    @Test
+    void syncUnitsAndState_savesImageAttributesFromComposeJson() {
+        JsonNode composeJson = JacksonUtil.toJsonNode("""
+                {
+                  "services": {
+                    "web": {"image": "nginx:latest"},
+                    "db": {"image": "postgres:15"}
+                  }
+                }
+                """);
+
+        AgentAppUnit web = newUnit("web", AgentAppUnitType.CONTAINER);
+        AgentAppUnit db = newUnit("db", AgentAppUnitType.CONTAINER);
+
+        when(unitService.findAgentAppUnitsByAgentAppId(TENANT_ID, APP_ID))
+                .thenReturn(List.of(web, db));
+
+        synchronizer.syncUnitsAndState(TENANT_ID, APP_ID, composeJson, Map.of());
+
+        ArgumentCaptor<AttributesSaveRequest> attrCaptor = ArgumentCaptor.forClass(AttributesSaveRequest.class);
+        // 2 image attribute saves (no state saves since containerStates is empty)
+        verify(tsSubService, times(2)).saveAttributes(attrCaptor.capture());
+
+        List<AttributesSaveRequest> requests = attrCaptor.getAllValues();
+        assertThat(requests).allSatisfy(req -> {
+            assertThat(req.getEntries().get(0).getKey()).isEqualTo("image");
+        });
+
+        assertThat(requests).anySatisfy(req -> {
+            assertThat(req.getEntityId()).isEqualTo(web.getId());
+            assertThat(req.getEntries().get(0).getValueAsString()).isEqualTo("nginx:latest");
+        });
+        assertThat(requests).anySatisfy(req -> {
+            assertThat(req.getEntityId()).isEqualTo(db.getId());
+            assertThat(req.getEntries().get(0).getValueAsString()).isEqualTo("postgres:15");
+        });
+    }
+
     // ==================== syncState ====================
 
     @Test
@@ -181,7 +221,9 @@ class ComposeUnitsSynchronizerTest {
         when(unitService.findAgentAppUnitsByAgentAppId(TENANT_ID, APP_ID))
                 .thenReturn(List.of(web, db));
 
-        Map<String, String> containerStates = Map.of("web", "running", "db", "restarting");
+        Map<String, ContainerInfo> containerStates = Map.of(
+                "web", containerInfo("running", "sha256:aaa"),
+                "db", containerInfo("restarting", "sha256:bbb"));
 
         synchronizer.syncState(TENANT_ID, APP_ID, containerStates);
 
@@ -197,7 +239,9 @@ class ComposeUnitsSynchronizerTest {
         when(unitService.findAgentAppUnitsByAgentAppId(TENANT_ID, APP_ID))
                 .thenReturn(List.of(web));
 
-        Map<String, String> containerStates = Map.of("web", "running", "unknown", "exited");
+        Map<String, ContainerInfo> containerStates = Map.of(
+                "web", containerInfo("running", "sha256:aaa"),
+                "unknown", containerInfo("exited", "sha256:bbb"));
 
         synchronizer.syncState(TENANT_ID, APP_ID, containerStates);
 
@@ -222,5 +266,12 @@ class ComposeUnitsSynchronizerTest {
         unit.setIdentifier(identifier);
         unit.setType(type);
         return unit;
+    }
+
+    private static ContainerInfo containerInfo(String state, String imageDigest) {
+        return ContainerInfo.newBuilder()
+                .setState(state)
+                .setImageDigest(imageDigest)
+                .build();
     }
 }
