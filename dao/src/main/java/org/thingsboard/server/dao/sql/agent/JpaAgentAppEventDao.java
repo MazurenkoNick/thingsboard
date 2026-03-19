@@ -23,6 +23,7 @@ import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -94,6 +95,17 @@ public class JpaAgentAppEventDao extends JpaAbstractDao<AgentAppEventEntity, Age
                 repository.findByTenantIdAndApplicationId(
                                 tenantId.getId(),
                                 applicationId.getId(),
+                                DaoUtil.toPageable(pageLink))
+                        .map(AgentAppEventEntity::toData)
+        );
+    }
+
+    @Override
+    public PageData<AgentAppEvent> findByTenantIdAndAgentId(TenantId tenantId, AgentId agentId, PageLink pageLink) {
+        return DaoUtil.pageToPageData(
+                repository.findByTenantIdAndAgentId(
+                                tenantId.getId(),
+                                agentId.getId(),
                                 DaoUtil.toPageable(pageLink))
                         .map(AgentAppEventEntity::toData)
         );

@@ -79,4 +79,13 @@ public interface AgentAppEventRepository extends JpaRepository<AgentAppEventEnti
     void deleteAllPendingByApplicationId(@Param("appId") UUID applicationId);
 
     Page<AgentAppEventEntity> findByTenantIdAndApplicationId(UUID tenantId, UUID applicationId, Pageable pageable);
+
+    @Query("""
+           SELECT e FROM AgentAppEventEntity e
+           JOIN AgentApplicationEntity a ON e.applicationId = a.id
+           WHERE e.tenantId = :tenantId AND a.agentId = :agentId
+           """)
+    Page<AgentAppEventEntity> findByTenantIdAndAgentId(@Param("tenantId") UUID tenantId,
+                                                       @Param("agentId") UUID agentId,
+                                                       Pageable pageable);
 }

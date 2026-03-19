@@ -3989,6 +3989,17 @@ public class RestClient implements Closeable {
                 params).getBody();
     }
 
+    public PageData<AgentAppEvent> getAgentAppEventsByAgentId(AgentId agentId, PageLink pageLink) {
+        Map<String, String> params = new HashMap<>();
+        params.put("agentId", agentId.getId().toString());
+        addPageLinkToParam(params, pageLink);
+        return restTemplate.exchange(
+                baseURL + "/api/agent/{agentId}/events?" + getUrlParams(pageLink),
+                HttpMethod.GET, HttpEntity.EMPTY,
+                new ParameterizedTypeReference<PageData<AgentAppEvent>>() {},
+                params).getBody();
+    }
+
     public AgentApplication mergeForPreview(AgentAppTemplateId templateId, String composeType, AgentApplication application) {
         return restTemplate.postForEntity(
                 baseURL + "/api/agent/app/merge/{agentAppTemplateId}/preview?composeType={composeType}",
