@@ -83,6 +83,40 @@ public class AgentServiceTest extends AbstractServiceTest {
     }
 
     @Test
+    public void testSaveAgentWithDescription() {
+        Agent agent = newAgent("Agent with description");
+        agent.setDescription("Test description");
+        Agent savedAgent = agentService.saveAgent(agent);
+
+        Assert.assertNotNull(savedAgent);
+        Assert.assertEquals("Test description", savedAgent.getDescription());
+
+        Agent foundAgent = agentService.findAgentById(tenantId, savedAgent.getId());
+        Assert.assertEquals("Test description", foundAgent.getDescription());
+
+        savedAgent.setDescription("Updated description");
+        agentService.saveAgent(savedAgent);
+        Agent updatedAgent = agentService.findAgentById(tenantId, savedAgent.getId());
+        Assert.assertEquals("Updated description", updatedAgent.getDescription());
+
+        agentService.deleteAgent(tenantId, savedAgent.getId());
+    }
+
+    @Test
+    public void testSaveAgentWithNullDescription() {
+        Agent agent = newAgent("Agent null description");
+        Agent savedAgent = agentService.saveAgent(agent);
+
+        Assert.assertNotNull(savedAgent);
+        Assert.assertNull(savedAgent.getDescription());
+
+        Agent foundAgent = agentService.findAgentById(tenantId, savedAgent.getId());
+        Assert.assertNull(foundAgent.getDescription());
+
+        agentService.deleteAgent(tenantId, savedAgent.getId());
+    }
+
+    @Test
     public void testSaveAgentWithEmptyTenant() {
         Agent agent = new Agent();
         agent.setName("My agent");
