@@ -37,10 +37,8 @@ public abstract class AgentAppConfig {
 
     public abstract boolean isDeployFieldsChanged(AgentAppConfig other);
 
-    public void validate() {
-    }
+    public abstract String getEdgeRoutingKey();
 
-    public String getEdgeRoutingKey() {
-        return null;
+    public void validate() {
     }
 }
