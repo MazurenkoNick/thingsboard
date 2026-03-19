@@ -41,7 +41,6 @@ public class ComposeStep extends StepWithDefaultState<ComposeStepState> {
     private ComposeStepState state;
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
-    @JsonProperty(access = Access.WRITE_ONLY)
     private ComposeStepState defaultState;
 
     @Override
@@ -62,7 +61,6 @@ public class ComposeStep extends StepWithDefaultState<ComposeStepState> {
     }
 
     @Override
-    @JsonIgnore
     protected ComposeStepState getDefaultState() {
         return defaultState != null ? new ComposeStepState(defaultState) : null;
     }

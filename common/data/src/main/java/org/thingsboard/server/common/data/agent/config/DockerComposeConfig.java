@@ -51,7 +51,7 @@ public class DockerComposeConfig extends AgentAppConfig {
 
     @Override
     public void validate() {
-        if (compose == null) {
+        if (compose == null || compose.isNull()) {
             throw new DataValidationException("Docker compose config compose content must be specified!");
         }
     }

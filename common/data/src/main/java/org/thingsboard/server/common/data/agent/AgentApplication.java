@@ -52,7 +52,6 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     private AgentAppConfig config;
     @Getter
     private Long version;
-    @JsonIgnore
     @Getter
     private String projectName;
     @JsonIgnore

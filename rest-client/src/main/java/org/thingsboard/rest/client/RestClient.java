@@ -97,6 +97,7 @@ import org.thingsboard.server.common.data.device.DeviceSearchQuery;
 import org.thingsboard.server.common.data.domain.Domain;
 import org.thingsboard.server.common.data.domain.DomainInfo;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentInfo;
@@ -3975,6 +3976,17 @@ public class RestClient implements Closeable {
         restTemplate.postForEntity(
                 baseURL + "/api/agent/app/{agentApplicationId}/event/{agentAppEventId}/cancel",
                 null, Void.class, agentApplicationId.getId(), agentAppEventId.getId());
+    }
+
+    public PageData<AgentAppEvent> getAgentAppEvents(AgentApplicationId agentApplicationId, PageLink pageLink) {
+        Map<String, String> params = new HashMap<>();
+        params.put("agentApplicationId", agentApplicationId.getId().toString());
+        addPageLinkToParam(params, pageLink);
+        return restTemplate.exchange(
+                baseURL + "/api/agent/app/{agentApplicationId}/events?" + getUrlParams(pageLink),
+                HttpMethod.GET, HttpEntity.EMPTY,
+                new ParameterizedTypeReference<PageData<AgentAppEvent>>() {},
+                params).getBody();
     }
 
     public AgentApplication mergeForPreview(AgentAppTemplateId templateId, String composeType, AgentApplication application) {
