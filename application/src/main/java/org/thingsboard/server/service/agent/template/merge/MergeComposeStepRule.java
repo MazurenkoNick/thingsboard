@@ -18,6 +18,8 @@ package org.thingsboard.server.service.agent.template.merge;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.AgentApplication;
@@ -33,6 +35,7 @@ import java.util.Iterator;
 import java.util.Optional;
 
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @Slf4j
 public class MergeComposeStepRule implements AppTemplateMergeRule {
 

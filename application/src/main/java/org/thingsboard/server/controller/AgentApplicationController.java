@@ -242,7 +242,8 @@ public class AgentApplicationController extends BaseController {
     @ApiOperation(value = "Merge template into application for preview (mergeForPreview)",
             notes = "Merges the specified template into an agent application for preview purposes. " +
                     "If no application is provided in the body, a new one is created from the template. " +
-                    "The compose type determines which compose configuration variant from the template is used."
+                    "The compose type determines which compose configuration variant from the template is used. " +
+                    "Optionally provide relatedEntityId to auto-fill entity credentials (Edge routing key/secret or Gateway access token) into the compose."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @PostMapping("/agent/app/merge/{agentAppTemplateId}/preview")
@@ -252,6 +253,8 @@ public class AgentApplicationController extends BaseController {
             @PathVariable(TEMPLATE_ID) String strTemplateId,
             @Parameter(description = "The compose type to select from the template (e.g. 'monolith', 'microservices')")
             @RequestParam String composeType,
+            @Parameter(description = "Optional related entity id (Edge or Gateway device) for credential auto-fill")
+            @RequestParam(required = false) String relatedEntityId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Optional agent application to merge with. If null, a new application is created from the template.")
             @RequestBody(required = false) AgentApplication application) throws ThingsboardException {
         checkParameter(TEMPLATE_ID, strTemplateId);
@@ -263,6 +266,7 @@ public class AgentApplicationController extends BaseController {
             application = AgentApplication.fromTemplate(template);
         }
         application.setTenantId(tenantId);
-        return tbAgentApplicationService.mergeForPreview(tenantId, application, template, composeType);
+        return tbAgentApplicationService.mergeForPreview(tenantId, application, template, composeType,
+                relatedEntityId != null ? toUUID(relatedEntityId) : null);
     }
 }

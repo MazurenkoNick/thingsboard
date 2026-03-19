@@ -19,7 +19,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.agent.step.ComposeTypeChoiceStep;
+
+import java.util.UUID;
 
 @Data
 @Builder
@@ -28,6 +29,7 @@ import org.thingsboard.server.common.data.agent.step.ComposeTypeChoiceStep;
 public class TemplateMergeCtx {
 
     private String selectedComposeType;
+    private UUID relatedEntityId;
 
     public static TemplateMergeCtx empty() {
         return new TemplateMergeCtx();

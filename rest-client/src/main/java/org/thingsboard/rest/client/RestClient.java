@@ -4001,10 +4001,19 @@ public class RestClient implements Closeable {
     }
 
     public AgentApplication mergeForPreview(AgentAppTemplateId templateId, String composeType, AgentApplication application) {
-        return restTemplate.postForEntity(
-                baseURL + "/api/agent/app/merge/{agentAppTemplateId}/preview?composeType={composeType}",
-                application, AgentApplication.class,
-                templateId.getId(), composeType).getBody();
+        return mergeForPreview(templateId, composeType, null, application);
+    }
+
+    public AgentApplication mergeForPreview(AgentAppTemplateId templateId, String composeType, UUID relatedEntityId, AgentApplication application) {
+        String url = baseURL + "/api/agent/app/merge/{agentAppTemplateId}/preview?composeType={composeType}";
+        Map<String, String> params = new HashMap<>();
+        params.put("agentAppTemplateId", templateId.getId().toString());
+        params.put("composeType", composeType);
+        if (relatedEntityId != null) {
+            url += "&relatedEntityId={relatedEntityId}";
+            params.put("relatedEntityId", relatedEntityId.toString());
+        }
+        return restTemplate.postForEntity(url, application, AgentApplication.class, params).getBody();
     }
 
     // Agent App Template Controller
