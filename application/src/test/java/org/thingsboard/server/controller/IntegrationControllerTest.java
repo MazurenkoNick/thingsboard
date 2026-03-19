@@ -678,6 +678,13 @@ public class IntegrationControllerTest extends AbstractControllerTest {
 
     @Test
     public void testGetConvertersInfo() throws Exception {
+        // converters without integration type are not taken into account in the response
+        Converter converterWithoutIntegrationType = new Converter();
+        converterWithoutIntegrationType.setName("My universal converter");
+        converterWithoutIntegrationType.setType(ConverterType.UPLINK);
+        converterWithoutIntegrationType.setConfiguration(CUSTOM_CONVERTER_CONFIGURATION);
+        doPost("/api/converter", converterWithoutIntegrationType, Converter.class);
+
         Map<IntegrationType, IntegrationConvertersInfo> convertersInfo = readResponse(doGet("/api/integrations/converters/info"), new TypeReference<>() {});
         for (Map.Entry<IntegrationType, IntegrationConvertersInfo> info : convertersInfo.entrySet()) {
             IntegrationConvertersInfo infoValue = info.getValue();
