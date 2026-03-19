@@ -28,6 +28,7 @@ import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLJsonPGObjectJsonbType;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationOrigin;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
@@ -76,6 +77,10 @@ public class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication
     @Column(name = ModelConstants.AGENT_APPLICATION_PENDING_DELETION_PROPERTY)
     private boolean pendingDeletion;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = ModelConstants.AGENT_APPLICATION_ORIGIN_PROPERTY)
+    private AgentApplicationOrigin origin;
+
     public AgentApplicationEntity() {
         super();
     }
@@ -99,6 +104,7 @@ public class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication
         this.config = application.getConfig() != null ? JacksonUtil.valueToTree(application.getConfig()) : null;
         this.projectName = application.getProjectName();
         this.pendingDeletion = application.isPendingDeletion();
+        this.origin = application.getOrigin();
     }
 
     @Override
@@ -123,6 +129,7 @@ public class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication
         application.setConfig(config != null ? JacksonUtil.treeToValue(config, AgentAppConfig.class) : null);
         application.setProjectName(projectName);
         application.setPendingDeletion(pendingDeletion);
+        application.setOrigin(origin);
         return application;
     }
 }

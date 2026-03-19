@@ -266,6 +266,7 @@ public class ModelConstants {
     public static final String AGENT_APPLICATION_CONFIG_PROPERTY = "config";
     public static final String AGENT_APPLICATION_PROJECT_NAME_PROPERTY = "project_name";
     public static final String AGENT_APPLICATION_PENDING_DELETION_PROPERTY = "pending_deletion";
+    public static final String AGENT_APPLICATION_ORIGIN_PROPERTY = "origin";
 
     /**
      * Agent app event constants.
