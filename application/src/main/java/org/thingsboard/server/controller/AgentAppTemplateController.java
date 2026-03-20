@@ -76,6 +76,19 @@ public class AgentAppTemplateController extends BaseController {
         return checkNotNull(agentAppTemplateService.findLatestByAppTypeAndConfigType(appType, configType));
     }
 
+    @ApiOperation(value = "Get Agent App Template by current version (getAgentAppTemplateByCurrentVersion)",
+            notes = "Fetch the Agent App Template object based on the provided app type, config type, and current version."
+                    + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @RequestMapping(value = "/agent/app/template/{appType}/{configType}/{currentVersion}", method = RequestMethod.GET)
+    @ResponseBody
+    public AgentAppTemplate getAgentAppTemplateByCurrentVersion(
+            @PathVariable @Parameter(description = APP_TYPE_PARAM_DESCRIPTION) AgentApplicationType appType,
+            @PathVariable @Parameter(description = CONFIG_TYPE_PARAM_DESCRIPTION) AgentAppConfigType configType,
+            @PathVariable @Parameter(description = "A string value representing the current version of the template, e.g. '1.0.0'") String currentVersion) throws ThingsboardException {
+        return checkNotNull(agentAppTemplateService.findByAppTypeAndConfigTypeAndVersion(appType, configType, currentVersion));
+    }
+
     @ApiOperation(value = "Get all Agent App Templates (getAgentAppTemplates)",
             notes = "Returns a list of all agent app templates available for the current tenant."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
