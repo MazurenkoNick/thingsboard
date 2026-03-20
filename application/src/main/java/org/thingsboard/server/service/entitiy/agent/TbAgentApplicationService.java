@@ -23,6 +23,8 @@ import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.TenantId;
 
+import java.util.UUID;
+
 public interface TbAgentApplicationService {
 
     AgentApplication update(AgentApplication application, User user) throws Exception;
@@ -33,5 +35,5 @@ public interface TbAgentApplicationService {
 
     void cancelEvent(TenantId tenantId, AgentAppEventId eventId) throws Exception;
 
-    AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application, AgentAppTemplate template, String composeType);
+    AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application, AgentAppTemplate template, String composeType, UUID relatedEntityId);
 }

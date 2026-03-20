@@ -52,12 +52,12 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     private AgentAppConfig config;
     @Getter
     private Long version;
-    @JsonIgnore
     @Getter
     private String projectName;
     @JsonIgnore
     @Getter
     private boolean pendingDeletion;
+    private AgentApplicationOrigin origin;
 
     public AgentApplication() {
         super();
@@ -78,6 +78,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         this.projectName = application.getProjectName();
         this.version = application.getVersion();
         this.pendingDeletion = application.isPendingDeletion();
+        this.origin = application.getOrigin();
     }
 
     public static AgentApplication fromTemplate(AgentAppTemplate template) {
@@ -129,6 +130,11 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     @Schema(description = "Template this application is based on", requiredMode = Schema.RequiredMode.REQUIRED)
     public AgentAppTemplateId getTemplateId() {
         return templateId;
+    }
+
+    @Schema(description = "Origin of the application (INSTALLED or DISCOVERED)")
+    public AgentApplicationOrigin getOrigin() {
+        return origin;
     }
 
     public static String generateProjectName() {

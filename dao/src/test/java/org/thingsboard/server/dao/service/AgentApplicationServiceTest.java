@@ -28,7 +28,9 @@ import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
+import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationOrigin;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.ComposeStartStep;
@@ -38,10 +40,15 @@ import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.security.DeviceCredentials;
+import org.thingsboard.server.common.data.security.DeviceCredentialsType;
+import org.thingsboard.server.common.msg.EncryptionUtil;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
 import org.thingsboard.server.dao.agent.AgentAppTemplateService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.agent.AgentService;
+import org.thingsboard.server.dao.device.DeviceCredentialsService;
+import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.exception.DataValidationException;
 
@@ -61,6 +68,10 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     AgentAppEventService agentAppEventService;
     @Autowired
     EdgeService edgeService;
+    @Autowired
+    DeviceService deviceService;
+    @Autowired
+    DeviceCredentialsService deviceCredentialsService;
 
     @Test
     public void testSave() {
@@ -337,6 +348,207 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         agentService.deleteAgent(tenantId, agent.getId());
     }
 
+    @Test
+    public void testSaveApplicationWithOrigin() {
+        Agent agent = createAgent("Agent for origin");
+        AgentAppTemplate template = createTemplate();
+
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.EDGE);
+        app.setTemplateId(template.getId());
+        app.setOrigin(AgentApplicationOrigin.INSTALLED);
+
+        AgentApplication saved = agentApplicationService.save(tenantId, app);
+        Assert.assertEquals(AgentApplicationOrigin.INSTALLED, saved.getOrigin());
+
+        AgentApplication found = agentApplicationService.findById(tenantId, saved.getId());
+        Assert.assertEquals(AgentApplicationOrigin.INSTALLED, found.getOrigin());
+
+        agentApplicationService.delete(tenantId, saved.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testSaveApplicationWithDiscoveredOrigin() {
+        Agent agent = createAgent("Agent for discovered origin");
+        AgentAppTemplate template = createTemplate();
+
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.GENERIC);
+        app.setTemplateId(template.getId());
+        app.setOrigin(AgentApplicationOrigin.DISCOVERED);
+
+        AgentApplication saved = agentApplicationService.save(tenantId, app);
+        Assert.assertEquals(AgentApplicationOrigin.DISCOVERED, saved.getOrigin());
+
+        AgentApplication found = agentApplicationService.findById(tenantId, saved.getId());
+        Assert.assertEquals(AgentApplicationOrigin.DISCOVERED, found.getOrigin());
+
+        agentApplicationService.delete(tenantId, saved.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testSaveApplicationWithNullOrigin() {
+        Agent agent = createAgent("Agent for null origin");
+        AgentAppTemplate template = createTemplate();
+
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.GENERIC);
+        app.setTemplateId(template.getId());
+
+        AgentApplication saved = agentApplicationService.save(tenantId, app);
+        Assert.assertNull(saved.getOrigin());
+
+        agentApplicationService.delete(tenantId, saved.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testFindEventsByAgentId() {
+        Agent agent = createAgent("Agent for events by agentId");
+        AgentApplication app1 = saveApplication(agent, "app1");
+        AgentApplication app2 = saveApplication(agent, "app2");
+
+        AgentAppEvent event1 = new AgentAppEvent();
+        event1.setTenantId(tenantId);
+        event1.setApplicationId(app1.getId());
+        event1.setActionType(AgentAppEventActionType.INSTALL);
+        event1.setDeliveryState(AgentAppEventDeliveryState.PENDING);
+        event1.setUpdatedTime(System.currentTimeMillis());
+        agentAppEventService.save(tenantId, event1);
+
+        AgentAppEvent event2 = new AgentAppEvent();
+        event2.setTenantId(tenantId);
+        event2.setApplicationId(app2.getId());
+        event2.setActionType(AgentAppEventActionType.UPDATE);
+        event2.setDeliveryState(AgentAppEventDeliveryState.PENDING);
+        event2.setUpdatedTime(System.currentTimeMillis());
+        agentAppEventService.save(tenantId, event2);
+
+        AgentAppEvent event3 = new AgentAppEvent();
+        event3.setTenantId(tenantId);
+        event3.setApplicationId(app1.getId());
+        event3.setActionType(AgentAppEventActionType.RESTART);
+        event3.setDeliveryState(AgentAppEventDeliveryState.PENDING);
+        event3.setUpdatedTime(System.currentTimeMillis());
+        agentAppEventService.save(tenantId, event3);
+
+        List<AgentAppEvent> events = agentAppEventService.findByAgentId(tenantId, agent.getId(), new PageLink(100)).getData();
+        Assert.assertEquals(3, events.size());
+
+        // Verify events from both apps are included
+        long app1Events = events.stream().filter(e -> e.getApplicationId().equals(app1.getId())).count();
+        long app2Events = events.stream().filter(e -> e.getApplicationId().equals(app2.getId())).count();
+        Assert.assertEquals(2, app1Events);
+        Assert.assertEquals(1, app2Events);
+
+        agentApplicationService.delete(tenantId, app1.getId());
+        agentApplicationService.delete(tenantId, app2.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testSaveGatewayAppResolvesRelatedEntity_accessToken() {
+        Agent agent = createAgent("Agent for GW access token");
+        Device device = createDevice("GW Device 1");
+        DeviceCredentials creds = deviceCredentialsService.findDeviceCredentialsByDeviceId(tenantId, device.getId());
+        String accessToken = creds.getCredentialsId();
+
+        AgentApplication app = saveGatewayApplicationWithCompose(agent, "gwApp1",
+                createGatewayAccessTokenCompose(accessToken));
+
+        AgentApplication found = agentApplicationService.findByRelatedEntity(tenantId, device.getId());
+        Assert.assertNotNull(found);
+        Assert.assertEquals(app.getId(), found.getId());
+
+        agentApplicationService.delete(tenantId, app.getId());
+        deviceService.deleteDevice(tenantId, device.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testSaveGatewayAppResolvesRelatedEntity_mqttBasicUserNameOnly() {
+        Agent agent = createAgent("Agent for GW MQTT userName");
+        Device device = createDevice("GW Device 2");
+        DeviceCredentials creds = deviceCredentialsService.findDeviceCredentialsByDeviceId(tenantId, device.getId());
+        creds.setCredentialsType(DeviceCredentialsType.MQTT_BASIC);
+        creds.setCredentialsId("gwUser1");
+        creds.setCredentialsValue("{\"userName\":\"gwUser1\",\"password\":\"pass\"}");
+        deviceCredentialsService.updateDeviceCredentials(tenantId, creds);
+
+        AgentApplication app = saveGatewayApplicationWithCompose(agent, "gwApp2",
+                createGatewayMqttBasicCompose(null, "gwUser1"));
+
+        AgentApplication found = agentApplicationService.findByRelatedEntity(tenantId, device.getId());
+        Assert.assertNotNull(found);
+        Assert.assertEquals(app.getId(), found.getId());
+
+        agentApplicationService.delete(tenantId, app.getId());
+        deviceService.deleteDevice(tenantId, device.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testSaveGatewayAppResolvesRelatedEntity_mqttBasicClientIdOnly() {
+        Agent agent = createAgent("Agent for GW MQTT clientId");
+        Device device = createDevice("GW Device 3");
+        DeviceCredentials creds = deviceCredentialsService.findDeviceCredentialsByDeviceId(tenantId, device.getId());
+        String clientId = "myGwClient";
+        creds.setCredentialsType(DeviceCredentialsType.MQTT_BASIC);
+        creds.setCredentialsId(EncryptionUtil.getSha3Hash(clientId));
+        creds.setCredentialsValue("{\"clientId\":\"" + clientId + "\"}");
+        deviceCredentialsService.updateDeviceCredentials(tenantId, creds);
+
+        AgentApplication app = saveGatewayApplicationWithCompose(agent, "gwApp3",
+                createGatewayMqttBasicCompose(clientId, null));
+
+        AgentApplication found = agentApplicationService.findByRelatedEntity(tenantId, device.getId());
+        Assert.assertNotNull(found);
+        Assert.assertEquals(app.getId(), found.getId());
+
+        agentApplicationService.delete(tenantId, app.getId());
+        deviceService.deleteDevice(tenantId, device.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testSaveGatewayAppResolvesRelatedEntity_mqttBasicBoth() {
+        Agent agent = createAgent("Agent for GW MQTT both");
+        Device device = createDevice("GW Device 4");
+        DeviceCredentials creds = deviceCredentialsService.findDeviceCredentialsByDeviceId(tenantId, device.getId());
+        String clientId = "myGwClient2";
+        String userName = "myGwUser2";
+        creds.setCredentialsType(DeviceCredentialsType.MQTT_BASIC);
+        creds.setCredentialsId(EncryptionUtil.getSha3Hash("|", clientId, userName));
+        creds.setCredentialsValue("{\"clientId\":\"" + clientId + "\",\"userName\":\"" + userName + "\",\"password\":\"pass\"}");
+        deviceCredentialsService.updateDeviceCredentials(tenantId, creds);
+
+        AgentApplication app = saveGatewayApplicationWithCompose(agent, "gwApp4",
+                createGatewayMqttBasicCompose(clientId, userName));
+
+        AgentApplication found = agentApplicationService.findByRelatedEntity(tenantId, device.getId());
+        Assert.assertNotNull(found);
+        Assert.assertEquals(app.getId(), found.getId());
+
+        agentApplicationService.delete(tenantId, app.getId());
+        deviceService.deleteDevice(tenantId, device.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testFindEventsByAgentIdEmpty() {
+        Agent agent = createAgent("Agent with no events");
+
+        List<AgentAppEvent> events = agentAppEventService.findByAgentId(tenantId, agent.getId(), new PageLink(100)).getData();
+        Assert.assertTrue(events.isEmpty());
+
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
     private Agent createAgent(String name) {
         Agent agent = new Agent();
         agent.setTenantId(tenantId);
@@ -393,6 +605,59 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         app.setConfig(config);
 
         return agentApplicationService.save(tenantId, app);
+    }
+
+    private Device createDevice(String name) {
+        Device device = new Device();
+        device.setTenantId(tenantId);
+        device.setName(name);
+        device.setType("default");
+        return deviceService.saveDevice(device);
+    }
+
+    private AgentApplication saveGatewayApplicationWithCompose(Agent agent, String name, JsonNode compose) {
+        AgentAppTemplate template = createTemplate();
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.GATEWAY);
+        app.setName(name);
+        app.setTemplateId(template.getId());
+
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setCompose(compose);
+        app.setConfig(config);
+
+        return agentApplicationService.save(tenantId, app);
+    }
+
+    private JsonNode createGatewayAccessTokenCompose(String accessToken) {
+        ObjectNode env = JacksonUtil.newObjectNode();
+        env.put("TB_GW_SECURITY_TYPE", "accessToken");
+        env.put("TB_GW_ACCESS_TOKEN", accessToken);
+        return createGatewayComposeWithEnv(env);
+    }
+
+    private JsonNode createGatewayMqttBasicCompose(String clientId, String userName) {
+        ObjectNode env = JacksonUtil.newObjectNode();
+        env.put("TB_GW_SECURITY_TYPE", "usernamePassword");
+        if (clientId != null) {
+            env.put("TB_GW_CLIENT_ID", clientId);
+        }
+        if (userName != null) {
+            env.put("TB_GW_USERNAME", userName);
+        }
+        return createGatewayComposeWithEnv(env);
+    }
+
+    private JsonNode createGatewayComposeWithEnv(ObjectNode env) {
+        ObjectNode service = JacksonUtil.newObjectNode();
+        service.put("image", "thingsboard/tb-gateway:3.7");
+        service.set("environment", env);
+        ObjectNode services = JacksonUtil.newObjectNode();
+        services.set("tb-gateway", service);
+        ObjectNode compose = JacksonUtil.newObjectNode();
+        compose.set("services", services);
+        return compose;
     }
 
     private JsonNode createEdgeComposeJson(String routingKey) {

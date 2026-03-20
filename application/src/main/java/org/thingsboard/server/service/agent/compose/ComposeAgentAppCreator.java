@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.RegexUtils;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationOrigin;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
@@ -62,6 +63,7 @@ public class ComposeAgentAppCreator {
         newApp.setProjectName(projectName);
         newApp.setAppType(composeInfo.appType());
         newApp.setTemplateId(template.getId());
+        newApp.setOrigin(AgentApplicationOrigin.DISCOVERED);
 
         DockerComposeConfig config = new DockerComposeConfig();
         config.setCompose(composeJson);

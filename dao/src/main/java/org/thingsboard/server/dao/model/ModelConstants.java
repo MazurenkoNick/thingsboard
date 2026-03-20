@@ -249,6 +249,7 @@ public class ModelConstants {
     public static final String AGENT_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
     public static final String AGENT_CUSTOMER_ID_PROPERTY = CUSTOMER_ID_PROPERTY;
     public static final String AGENT_NAME_PROPERTY = NAME_PROPERTY;
+    public static final String AGENT_DESCRIPTION_PROPERTY = "description";
     public static final String AGENT_ROUTING_KEY_PROPERTY = "routing_key";
     public static final String AGENT_SECRET_PROPERTY = "secret";
 
@@ -265,6 +266,7 @@ public class ModelConstants {
     public static final String AGENT_APPLICATION_CONFIG_PROPERTY = "config";
     public static final String AGENT_APPLICATION_PROJECT_NAME_PROPERTY = "project_name";
     public static final String AGENT_APPLICATION_PENDING_DELETION_PROPERTY = "pending_deletion";
+    public static final String AGENT_APPLICATION_ORIGIN_PROPERTY = "origin";
 
     /**
      * Agent app event constants.

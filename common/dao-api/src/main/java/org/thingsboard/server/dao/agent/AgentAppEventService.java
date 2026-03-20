@@ -47,4 +47,6 @@ public interface AgentAppEventService {
     void deleteAllPendingByApplicationId(AgentApplicationId applicationId);
 
     PageData<AgentAppEvent> findByApplicationId(TenantId tenantId, AgentApplicationId applicationId, PageLink pageLink);
+
+    PageData<AgentAppEvent> findByAgentId(TenantId tenantId, AgentId agentId, PageLink pageLink);
 }

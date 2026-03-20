@@ -28,6 +28,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationOrigin;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
 import org.thingsboard.server.common.data.audit.ActionType;
@@ -36,6 +37,8 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.TenantId;
+
+import java.util.UUID;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.exception.DataValidationException;
@@ -76,6 +79,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         AgentApplication application = request.getApplication();
         application.setId(null);
         application.setTenantId(tenantId);
+        application.setOrigin(AgentApplicationOrigin.INSTALLED);
         AgentApplication savedApp = checkNotNull(applicationService.save(tenantId, application));
 
         saveEvent(tenantId, savedApp.getId(), AgentAppEventActionType.INSTALL, request);
@@ -130,12 +134,13 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
     }
 
     @Override
-    public AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application, AgentAppTemplate template, String composeType) {
-        log.trace("Executing mergeForPreview, tenantId [{}], applicationId [{}], templateId [{}], composeType [{}]",
-                tenantId, application.getId(), template.getId(), composeType);
+    public AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application, AgentAppTemplate template, String composeType, UUID relatedEntityId) {
+        log.trace("Executing mergeForPreview, tenantId [{}], applicationId [{}], templateId [{}], composeType [{}], relatedEntityId [{}]",
+                tenantId, application.getId(), template.getId(), composeType, relatedEntityId);
 
         TemplateMergeCtx ctx = TemplateMergeCtx.builder()
                 .selectedComposeType(composeType)
+                .relatedEntityId(relatedEntityId)
                 .build();
         templateMergeOrchestrator.merge(application, template, ctx);
         return application;

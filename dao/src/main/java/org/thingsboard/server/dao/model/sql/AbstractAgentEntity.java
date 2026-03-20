@@ -28,6 +28,7 @@ import org.thingsboard.server.dao.model.BaseVersionedEntity;
 import java.util.UUID;
 
 import static org.thingsboard.server.dao.model.ModelConstants.AGENT_CUSTOMER_ID_PROPERTY;
+import static org.thingsboard.server.dao.model.ModelConstants.AGENT_DESCRIPTION_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.AGENT_NAME_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.AGENT_ROUTING_KEY_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.AGENT_SECRET_PROPERTY;
@@ -46,6 +47,9 @@ public abstract class AbstractAgentEntity<T extends Agent> extends BaseVersioned
 
     @Column(name = AGENT_NAME_PROPERTY)
     private String name;
+
+    @Column(name = AGENT_DESCRIPTION_PROPERTY)
+    private String description;
 
     @Column(name = AGENT_ROUTING_KEY_PROPERTY)
     private String routingKey;
@@ -66,6 +70,7 @@ public abstract class AbstractAgentEntity<T extends Agent> extends BaseVersioned
             this.customerId = agent.getCustomerId().getId();
         }
         this.name = agent.getName();
+        this.description = agent.getDescription();
         this.routingKey = agent.getRoutingKey();
         this.secret = agent.getSecret();
     }
@@ -75,6 +80,7 @@ public abstract class AbstractAgentEntity<T extends Agent> extends BaseVersioned
         this.tenantId = agentEntity.getTenantId();
         this.customerId = agentEntity.getCustomerId();
         this.name = agentEntity.getName();
+        this.description = agentEntity.getDescription();
         this.routingKey = agentEntity.getRoutingKey();
         this.secret = agentEntity.getSecret();
     }
@@ -90,6 +96,7 @@ public abstract class AbstractAgentEntity<T extends Agent> extends BaseVersioned
             agent.setCustomerId(new CustomerId(customerId));
         }
         agent.setName(name);
+        agent.setDescription(description);
         agent.setRoutingKey(routingKey);
         agent.setSecret(secret);
         return agent;

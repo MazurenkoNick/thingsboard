@@ -23,8 +23,8 @@ import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
@@ -110,5 +110,11 @@ public class BaseAgentAppEventService implements AgentAppEventService {
     public PageData<AgentAppEvent> findByApplicationId(TenantId tenantId, AgentApplicationId applicationId, PageLink pageLink) {
         log.trace("Executing findAgentAppEventsByApplicationId [{}]", applicationId);
         return agentAppEventDao.findByTenantIdAndApplicationId(tenantId, applicationId, pageLink);
+    }
+
+    @Override
+    public PageData<AgentAppEvent> findByAgentId(TenantId tenantId, AgentId agentId, PageLink pageLink) {
+        log.trace("Executing findAgentAppEventsByAgentId [{}]", agentId);
+        return agentAppEventDao.findByTenantIdAndAgentId(tenantId, agentId, pageLink);
     }
 }

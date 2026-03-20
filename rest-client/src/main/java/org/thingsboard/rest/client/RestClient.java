@@ -97,6 +97,7 @@ import org.thingsboard.server.common.data.device.DeviceSearchQuery;
 import org.thingsboard.server.common.data.domain.Domain;
 import org.thingsboard.server.common.data.domain.DomainInfo;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentInfo;
@@ -3977,11 +3978,42 @@ public class RestClient implements Closeable {
                 null, Void.class, agentApplicationId.getId(), agentAppEventId.getId());
     }
 
+    public PageData<AgentAppEvent> getAgentAppEvents(AgentApplicationId agentApplicationId, PageLink pageLink) {
+        Map<String, String> params = new HashMap<>();
+        params.put("agentApplicationId", agentApplicationId.getId().toString());
+        addPageLinkToParam(params, pageLink);
+        return restTemplate.exchange(
+                baseURL + "/api/agent/app/{agentApplicationId}/events?" + getUrlParams(pageLink),
+                HttpMethod.GET, HttpEntity.EMPTY,
+                new ParameterizedTypeReference<PageData<AgentAppEvent>>() {},
+                params).getBody();
+    }
+
+    public PageData<AgentAppEvent> getAgentAppEventsByAgentId(AgentId agentId, PageLink pageLink) {
+        Map<String, String> params = new HashMap<>();
+        params.put("agentId", agentId.getId().toString());
+        addPageLinkToParam(params, pageLink);
+        return restTemplate.exchange(
+                baseURL + "/api/agent/{agentId}/events?" + getUrlParams(pageLink),
+                HttpMethod.GET, HttpEntity.EMPTY,
+                new ParameterizedTypeReference<PageData<AgentAppEvent>>() {},
+                params).getBody();
+    }
+
     public AgentApplication mergeForPreview(AgentAppTemplateId templateId, String composeType, AgentApplication application) {
-        return restTemplate.postForEntity(
-                baseURL + "/api/agent/app/merge/{agentAppTemplateId}/preview?composeType={composeType}",
-                application, AgentApplication.class,
-                templateId.getId(), composeType).getBody();
+        return mergeForPreview(templateId, composeType, null, application);
+    }
+
+    public AgentApplication mergeForPreview(AgentAppTemplateId templateId, String composeType, UUID relatedEntityId, AgentApplication application) {
+        String url = baseURL + "/api/agent/app/merge/{agentAppTemplateId}/preview?composeType={composeType}";
+        Map<String, String> params = new HashMap<>();
+        params.put("agentAppTemplateId", templateId.getId().toString());
+        params.put("composeType", composeType);
+        if (relatedEntityId != null) {
+            url += "&relatedEntityId={relatedEntityId}";
+            params.put("relatedEntityId", relatedEntityId.toString());
+        }
+        return restTemplate.postForEntity(url, application, AgentApplication.class, params).getBody();
     }
 
     // Agent App Template Controller

@@ -31,6 +31,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationOrigin;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.state.ComposeDownStepState;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -127,6 +128,23 @@ class DefaultTbAgentApplicationServiceTest {
         assertThat(event.getActionType()).isEqualTo(AgentAppEventActionType.INSTALL);
         assertThat(event.getApplicationId()).isEqualTo(APP_ID);
         assertThat(event.getDeliveryState()).isEqualTo(AgentAppEventDeliveryState.PENDING);
+    }
+
+    @Test
+    void install_setsOriginToInstalled() throws Exception {
+        AgentApplication app = newApplication(null);
+        AgentApplication savedApp = newApplication(APP_ID);
+        when(agentApplicationService.save(eq(TENANT_ID), any(AgentApplication.class))).thenReturn(savedApp);
+
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.INSTALL);
+        request.setApplication(app);
+
+        service.install(TENANT_ID, request, USER);
+
+        ArgumentCaptor<AgentApplication> appCaptor = ArgumentCaptor.forClass(AgentApplication.class);
+        verify(agentApplicationService).save(eq(TENANT_ID), appCaptor.capture());
+        assertThat(appCaptor.getValue().getOrigin()).isEqualTo(AgentApplicationOrigin.INSTALLED);
     }
 
     @Test

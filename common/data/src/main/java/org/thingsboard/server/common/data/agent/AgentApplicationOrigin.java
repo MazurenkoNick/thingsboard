@@ -13,25 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent.template;
+package org.thingsboard.server.common.data.agent;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.UUID;
-
-@Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class TemplateMergeCtx {
-
-    private String selectedComposeType;
-    private UUID relatedEntityId;
-
-    public static TemplateMergeCtx empty() {
-        return new TemplateMergeCtx();
-    }
+public enum AgentApplicationOrigin {
+    INSTALLED,
+    DISCOVERED
 }

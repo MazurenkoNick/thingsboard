@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 public enum AgentApplicationType {
     GENERIC(null, "1.0.0", null),
     EDGE("thingsboard/tb-edge:.+", null, EntityType.EDGE),
-    GATEWAY("thingsboard/tb-gateway:.+", null, null);
+    GATEWAY("thingsboard/tb-gateway:.+", null, EntityType.DEVICE);
 
     @Getter
     private final Pattern mainImagePattern;
