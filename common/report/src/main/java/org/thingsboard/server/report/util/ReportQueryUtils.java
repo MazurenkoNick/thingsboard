@@ -81,15 +81,15 @@ public class ReportQueryUtils {
     public static final EntityDataSortOrder DEFAULT_TS_CHART_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ENTITY_FIELD, "createdTime"), EntityDataSortOrder.Direction.DESC);
     public static final EntityDataSortOrder DEFAULT_ALARM_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ALARM_FIELD, "createdTime"), EntityDataSortOrder.Direction.DESC);
 
-    public static EntityCountQuery toEntityCountQuery(DataSource dataSource, TbReportCtx ctx) {
-        EntityFilter entityFilter = buildEntityFilter(dataSource, ctx, null);
+    public static EntityCountQuery toEntityCountQuery(DataSource dataSource, TbReportCtx ctx, EntityId stateEntityId) {
+        EntityFilter entityFilter = buildEntityFilter(dataSource, ctx, stateEntityId);
         List<KeyFilter> keyFilters = findKeyFilters(dataSource, ctx.getConfiguration());
 
         return new EntityCountQuery(entityFilter, keyFilters);
     }
 
-    public static AlarmCountQuery toAlarmCountQuery(DataSource dataSource, TbReportCtx ctx) {
-        EntityFilter entityFilter = buildEntityFilter(dataSource, ctx, null);
+    public static AlarmCountQuery toAlarmCountQuery(DataSource dataSource, TbReportCtx ctx, EntityId stateEntityId) {
+        EntityFilter entityFilter = buildEntityFilter(dataSource, ctx, stateEntityId);
         List<KeyFilter> keyFilters = findKeyFilters(dataSource, ctx.getConfiguration());
         AlarmCountQuery alarmCountQuery = new AlarmCountQuery(entityFilter, keyFilters);
 
