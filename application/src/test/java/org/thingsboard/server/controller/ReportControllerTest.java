@@ -48,9 +48,11 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityInfo;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmSeverity;
+import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
@@ -67,7 +69,12 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
+import org.thingsboard.server.common.data.query.EntityTypeFilter;
+import org.thingsboard.server.common.data.query.RelationsQueryFilter;
 import org.thingsboard.server.common.data.query.SingleEntityFilter;
+import org.thingsboard.server.common.data.relation.EntityRelation;
+import org.thingsboard.server.common.data.relation.EntitySearchDirection;
+import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportInfo;
 import org.thingsboard.server.common.data.report.ReportRequest;
@@ -98,6 +105,7 @@ import org.thingsboard.server.common.data.report.configuration.timewindow.QuickT
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 import org.thingsboard.server.dao.notification.DefaultNotifications;
+import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
 import org.thingsboard.server.report.service.TbReportService;
@@ -134,6 +142,8 @@ public class ReportControllerTest extends AbstractControllerTest {
     private TbReportService tbReportService;
     @Autowired
     private TimeseriesService timeseriesService;
+    @Autowired
+    private RelationService relationService;
 
     @Before
     public void beforeTest() throws Exception {
@@ -213,6 +223,47 @@ public class ReportControllerTest extends AbstractControllerTest {
             return actualReportRows
                     .containsAll(List.of("CREATED TIME,NAME,TEMPERATURE", formatter.format(Instant.ofEpochMilli(finalDevice.getCreatedTime())) + "," + finalDevice.getName() + ",17"));
         });
+    }
+
+    @Test
+    public void testEntityCountDatasourceWithOriginator() {
+        Asset asset = new Asset();
+        asset.setName("Originator asset");
+        asset.setType("default");
+        asset.setLabel("testLabel" + (int) (Math.random() * 1000));
+        asset = doPost("/api/asset", asset, Asset.class);
+
+        Device device = new Device();
+        device.setName("Test device");
+        device.setType("default");
+        device.setLabel("testLabel" + (int) (Math.random() * 1000));
+        device = doPost("/api/device", device, Device.class);
+
+        relationService.saveRelation(tenantId, new EntityRelation(asset.getId(), device.getId(), "Contains", RelationTypeGroup.COMMON));
+
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        RelationsQueryFilter filter = new RelationsQueryFilter();
+        filter.setRootStateEntity(true);
+        filter.setDirection(EntitySearchDirection.FROM);
+        filter.setMaxLevel(1);
+        EntityAlias entityAlias = new EntityAlias(devicesAliasId, "device", filter);
+
+        RichTextComponent richTextComponent = new RichTextComponent();
+        DataKey countField = new DataKey("count", "count", "count");
+        richTextComponent.setDataSources(List.of(DataSource.builder()
+                .type(DataSourceType.ENTITY_COUNT)
+                .entityAliasId(devicesAliasId)
+                .dataKeys(List.of(countField))
+                .build()));
+        richTextComponent.setValue("${count}");
+
+        ReportTemplateConfig configuration = createReportConfigTemplate(List.of(richTextComponent), entityAlias, TbReportFormat.PDF);
+
+        ReportRequest request = new ReportRequest();
+        request.setReportTemplateConfig(configuration);
+        request.setOriginator(asset.getId());
+
+        generateAndCheckPDFReportText(request, List.of("1"));
     }
 
     @Test
@@ -645,9 +696,20 @@ public class ReportControllerTest extends AbstractControllerTest {
         });
     }
 
+    private void generateAndCheckPDFReportText(ReportRequest request, List<String> expectedRows) {
+        await().atMost(60, TimeUnit.SECONDS).until(() -> {
+            String pdfReport = requestPdfReport(request);
+            return Arrays.stream(pdfReport.split("\\r?\\n")).map(String::trim).toList().containsAll(expectedRows);
+        });
+    }
+
     private String generatePDFReportText(ReportTemplateConfig config) throws Exception {
         ReportRequest request = new ReportRequest();
         request.setReportTemplateConfig(config);
+        return requestPdfReport(request);
+    }
+
+    private String requestPdfReport(ReportRequest request) throws Exception {
         ResultActions result = doPost("/api/v2/report/test", request);
         byte[] pdfBytes = result.andReturn().getResponse().getContentAsByteArray();
 
