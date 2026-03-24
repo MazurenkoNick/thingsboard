@@ -91,6 +91,8 @@ public class IntegrationControllerTest extends AbstractControllerTest {
 
     private static final JsonNode CUSTOM_CONVERTER_CONFIGURATION = JacksonUtil.newObjectNode()
             .put("decoder", "return {deviceName: 'Device A', deviceType: 'thermostat'};");
+    private static final JsonNode CUSTOM_DOWNLINK_CONVERTER_CONFIGURATION = JacksonUtil.newObjectNode()
+            .put("encoder", "return {};");
 
     private static final ObjectNode INTEGRATION_CONFIGURATION = JacksonUtil.newObjectNode();
 
@@ -116,11 +118,19 @@ public class IntegrationControllerTest extends AbstractControllerTest {
 
         tenantAdmin = createUserAndLogin(tenantAdmin, "testPassword1");
 
-        Converter converter = new Converter();
-        converter.setName("My converter");
-        converter.setType(ConverterType.UPLINK);
-        converter.setConfiguration(CUSTOM_CONVERTER_CONFIGURATION);
-        savedConverter = doPost("/api/converter", converter, Converter.class);
+        Converter uplinkConverter = new Converter();
+        uplinkConverter.setName("My converter");
+        uplinkConverter.setType(ConverterType.UPLINK);
+        uplinkConverter.setIntegrationType(IntegrationType.MQTT);
+        uplinkConverter.setConfiguration(CUSTOM_CONVERTER_CONFIGURATION);
+        savedConverter = doPost("/api/converter", uplinkConverter, Converter.class);
+
+        Converter downlinkConverter = new Converter();
+        downlinkConverter.setName("Downlink converter");
+        downlinkConverter.setType(ConverterType.DOWNLINK);
+        downlinkConverter.setIntegrationType(IntegrationType.MQTT);
+        downlinkConverter.setConfiguration(CUSTOM_DOWNLINK_CONVERTER_CONFIGURATION);
+        doPost("/api/converter", downlinkConverter, Converter.class);
     }
 
     @After
@@ -668,15 +678,23 @@ public class IntegrationControllerTest extends AbstractControllerTest {
 
     @Test
     public void testGetConvertersInfo() throws Exception {
+        // converters without integration type are not taken into account in the response
+        Converter converterWithoutIntegrationType = new Converter();
+        converterWithoutIntegrationType.setName("My universal converter");
+        converterWithoutIntegrationType.setType(ConverterType.UPLINK);
+        converterWithoutIntegrationType.setConfiguration(CUSTOM_CONVERTER_CONFIGURATION);
+        doPost("/api/converter", converterWithoutIntegrationType, Converter.class);
+
         Map<IntegrationType, IntegrationConvertersInfo> convertersInfo = readResponse(doGet("/api/integrations/converters/info"), new TypeReference<>() {});
-        for (Map.Entry<IntegrationType, IntegrationConvertersInfo> integrationConverterInfo : convertersInfo.entrySet()) {
-            assertThat(integrationConverterInfo.getValue().uplink().existing()).isTrue();
-            assertThat(integrationConverterInfo.getValue().downlink().existing()).isFalse();
-            if (integrationConverterInfo.getKey() == IntegrationType.CHIRPSTACK) {
-                assertThat(integrationConverterInfo.getValue().uplink().library()).isTrue();
-                assertThat(integrationConverterInfo.getValue().downlink().library()).isTrue();
-            } else if (integrationConverterInfo.getKey() == IntegrationType.TTN || integrationConverterInfo.getKey() == IntegrationType.TTI) {
-                assertThat(integrationConverterInfo.getValue().uplink().library()).isTrue();
+        for (Map.Entry<IntegrationType, IntegrationConvertersInfo> info : convertersInfo.entrySet()) {
+            IntegrationConvertersInfo infoValue = info.getValue();
+            assertThat(infoValue.uplink().existing()).isEqualTo(info.getKey() == IntegrationType.MQTT);
+            assertThat(infoValue.downlink().existing()).isEqualTo(info.getKey() == IntegrationType.MQTT);
+            if (info.getKey() == IntegrationType.CHIRPSTACK) {
+                assertThat(infoValue.uplink().library()).isTrue();
+                assertThat(infoValue.downlink().library()).isTrue();
+            } else if (info.getKey() == IntegrationType.TTN || info.getKey() == IntegrationType.TTI) {
+                assertThat(infoValue.uplink().library()).isTrue();
             }
         }
     }

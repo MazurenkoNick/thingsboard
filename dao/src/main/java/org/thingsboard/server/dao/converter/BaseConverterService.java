@@ -58,7 +58,9 @@ import org.thingsboard.server.dao.sql.JpaExecutorService;
 import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
@@ -205,9 +207,9 @@ public class BaseConverterService extends AbstractEntityService implements Conve
     }
 
     @Override
-    public boolean hasConverterOfType(TenantId tenantId, ConverterType converterType) {
-        log.trace("Executing hasConverterOfType, tenantId [{}], type [{}]", tenantId, converterType);
-        return converterDao.hasConverterOfType(tenantId.getId(), converterType);
+    public Map<IntegrationType, Set<ConverterType>> getExistingConverterTypes(TenantId tenantId) {
+        log.trace("Executing getExistingConverterTypes, tenantId [{}]", tenantId);
+        return converterDao.findExistingConverterTypes(tenantId.getId());
     }
 
     @Override

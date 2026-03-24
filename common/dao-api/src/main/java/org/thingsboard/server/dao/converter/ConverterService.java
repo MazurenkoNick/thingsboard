@@ -41,7 +41,9 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.entity.EntityDaoService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public interface ConverterService extends EntityDaoService {
 
@@ -65,5 +67,5 @@ public interface ConverterService extends EntityDaoService {
 
     void deleteConvertersByTenantId(TenantId tenantId);
 
-    boolean hasConverterOfType(TenantId tenantId, ConverterType converterType);
+    Map<IntegrationType, Set<ConverterType>> getExistingConverterTypes(TenantId tenantId);
 }
