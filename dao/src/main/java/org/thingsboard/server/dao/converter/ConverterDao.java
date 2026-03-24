@@ -42,7 +42,9 @@ import org.thingsboard.server.dao.ExportableEntityDao;
 import org.thingsboard.server.dao.TenantEntityDao;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -109,13 +111,12 @@ public interface ConverterDao extends Dao<Converter>, TenantEntityDao<Converter>
     ListenableFuture<List<Converter>> findConvertersByTenantIdAndIdsAsync(UUID tenantId, List<UUID> converterIds);
 
     /**
-     * Check if tenant has converters of specified type.
+     * Find existing converter types grouped by integration type.
      *
      * @param tenantId the tenantId
-     * @param type the converter type
-     * @return the boolean value
+     * @return map of integration type to set of converter types
      */
-    boolean hasConverterOfType(UUID tenantId, ConverterType type);
+    Map<IntegrationType, Set<ConverterType>> findExistingConverterTypes(UUID tenantId);
 
     boolean existsByTenantIdAndNameAndType(UUID tenantId, String name, ConverterType type, UUID skippedId);
 }

@@ -606,8 +606,8 @@ public class PdfReportService extends AbstractReportService {
     private ComponentData buildSingleComponentData(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
         return switch (dataSource.getType()) {
             case DEVICE, ENTITY -> buildEntityDataSource(usablePageWidthPx, ctx, dataSource, stateEntityId);
-            case ENTITY_COUNT -> buildEntityCountDataSource(usablePageWidthPx, ctx, dataSource);
-            case ALARM_COUNT -> buildAlarmCountDataSource(usablePageWidthPx, ctx, dataSource);
+            case ENTITY_COUNT -> buildEntityCountDataSource(usablePageWidthPx, ctx, dataSource, stateEntityId);
+            case ALARM_COUNT -> buildAlarmCountDataSource(usablePageWidthPx, ctx, dataSource, stateEntityId);
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
@@ -621,17 +621,17 @@ public class PdfReportService extends AbstractReportService {
         return new ComponentData(usablePageWidthPx, dataSource, entityDatas, variables);
     }
 
-    private ComponentData buildEntityCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource) {
+    private ComponentData buildEntityCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
         Map<String, Object> map = new HashMap<>();
         String label = resolveSingleLabel(dataSource, "count");
-        map.put(label, dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, ctx), ctx));
+        map.put(label, dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, ctx, stateEntityId), ctx));
         return new ComponentData(usablePageWidthPx, map);
     }
 
-    private ComponentData buildAlarmCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource) {
+    private ComponentData buildAlarmCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
         Map<String, Object> map = new HashMap<>();
         String label = resolveSingleLabel(dataSource, "count");
-        map.put(label, dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, ctx), ctx));
+        map.put(label, dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, ctx, stateEntityId), ctx));
         return new ComponentData(usablePageWidthPx, map);
     }
 
