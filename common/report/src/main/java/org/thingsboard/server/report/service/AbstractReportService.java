@@ -474,7 +474,7 @@ public abstract class AbstractReportService implements ReportService {
             throw new RuntimeException("Failed to evaluate data: " + value, e);
         } catch (ExecutionException e) {
             String error = "Failed to evaluate data: " + value;
-            log.error(error, e);
+            log.error("[{}] {}", ctx.getTenantId(), error, e);
             return error;
         }
     }
@@ -485,7 +485,7 @@ public abstract class AbstractReportService implements ReportService {
         } catch (InterruptedException e) {
             throw new RuntimeException("Failed to compile script: " + script, e);
         } catch (ExecutionException e) {
-            log.error("Failed to compile script {} ", script, e);
+            log.error("[{}] Failed to compile script {} ", ctx.getTenantId(), script, e);
             return null;
         }
     }
