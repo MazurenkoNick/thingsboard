@@ -82,7 +82,7 @@ public class DefaultDashboardReportService implements DashboardReportService {
                                         JsonNode reportParams, String accessToken, long accessTokenExpiration,
                                         Consumer<DashboardReportData> onSuccess, Consumer<Throwable> onFailure) {
         checkLimits(tenantId);
-        log.trace("Executing generateDashboardReport, baseUrl [{}], dashboardId [{}], userId [{}]", baseUrl, dashboardId, userId);
+        log.trace("[{}] Executing generateDashboardReport, baseUrl [{}], dashboardId [{}], userId [{}]", tenantId, baseUrl, dashboardId, userId);
 
         ObjectNode dashboardReportRequest = JacksonUtil.newObjectNode();
         dashboardReportRequest.put("baseUrl", baseUrl);
@@ -97,7 +97,7 @@ public class DefaultDashboardReportService implements DashboardReportService {
     @Override
     public void generateReport(TenantId tenantId, DashboardReportConfig reportConfig, String reportsServerEndpointUrl, Consumer<DashboardReportData> onSuccess, Consumer<Throwable> onFailure) throws ThingsboardException {
         checkLimits(tenantId);
-        log.trace("Executing generateReport, reportConfig [{}]", reportConfig);
+        log.trace("[{}] Executing generateReport, reportConfig [{}]", tenantId, reportConfig);
         AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(tenantId, new UserId(UUID.fromString(reportConfig.getUserId())));
         webReportClient.requestDashboardReport(reportConfig, reportsServerEndpointUrl, accessToken.getToken(),
                 accessToken.getClaims().getExpiration().getTime(), onSuccess, onFailure);

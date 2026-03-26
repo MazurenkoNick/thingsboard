@@ -211,7 +211,7 @@ public class ReportJobProcessor implements JobProcessor {
         requestConfig.setReports(List.of(report.getId()));
         notificationRequest.setAdditionalConfig(requestConfig);
 
-        log.debug("Submitting notification request with report: {}", notificationRequest);
+        log.debug("[{}] Submitting notification request with report: {}", tenantId, notificationRequest);
         notificationExecutor.executeAsync(() -> {
             try {
                 notificationCenter.processNotificationRequest(tenantId, notificationRequest, null);
