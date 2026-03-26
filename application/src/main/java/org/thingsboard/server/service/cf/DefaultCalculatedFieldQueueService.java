@@ -179,7 +179,7 @@ public class DefaultCalculatedFieldQueueService implements CalculatedFieldQueueS
         if (!supportedReferencedEntities.contains(entityId.getEntityType())) {
             return false;
         }
-        List<CalculatedFieldCtx> entityCfs = calculatedFieldCache.getCalculatedFieldCtxsByEntityId(entityId);
+        List<CalculatedFieldCtx> entityCfs = calculatedFieldCache.getCalculatedFieldCtxsByEntityId(tenantId, entityId);
         for (CalculatedFieldCtx ctx : entityCfs) {
             if (filter.test(ctx)) {
                 return true;
@@ -188,7 +188,7 @@ public class DefaultCalculatedFieldQueueService implements CalculatedFieldQueueS
 
         EntityId profileId = getProfileId(tenantId, entityId);
         if (profileId != null) {
-            List<CalculatedFieldCtx> profileCfs = calculatedFieldCache.getCalculatedFieldCtxsByEntityId(profileId);
+            List<CalculatedFieldCtx> profileCfs = calculatedFieldCache.getCalculatedFieldCtxsByEntityId(tenantId, profileId);
             for (CalculatedFieldCtx ctx : profileCfs) {
                 if (filter.test(ctx)) {
                     return true;
@@ -196,7 +196,7 @@ public class DefaultCalculatedFieldQueueService implements CalculatedFieldQueueS
             }
         }
 
-        List<CalculatedFieldLink> links = calculatedFieldCache.getCalculatedFieldLinksByEntityId(entityId);
+        List<CalculatedFieldLink> links = calculatedFieldCache.getCalculatedFieldLinksByEntityId(tenantId, entityId);
         for (CalculatedFieldLink link : links) {
             CalculatedFieldCtx ctx = calculatedFieldCache.getCalculatedFieldCtx(link.getCalculatedFieldId());
             if (ctx != null && linkedEntityFilter.test(ctx)) {
@@ -205,11 +205,11 @@ public class DefaultCalculatedFieldQueueService implements CalculatedFieldQueueS
         }
 
         for (EntityId dynamicEntity : calculatedFieldCache.getDynamicEntities(tenantId, entityId)) {
-            if (calculatedFieldCache.getCalculatedFieldCtxsByEntityId(dynamicEntity).stream().anyMatch(dynamicSourceFilter)) {
+            if (calculatedFieldCache.getCalculatedFieldCtxsByEntityId(tenantId, dynamicEntity).stream().anyMatch(dynamicSourceFilter)) {
                 return true;
             }
             EntityId dynamicEntityProfileId = getProfileId(tenantId, dynamicEntity);
-            if (calculatedFieldCache.getCalculatedFieldCtxsByEntityId(dynamicEntityProfileId).stream().anyMatch(dynamicSourceFilter)) {
+            if (calculatedFieldCache.getCalculatedFieldCtxsByEntityId(tenantId, dynamicEntityProfileId).stream().anyMatch(dynamicSourceFilter)) {
                 return true;
             }
         }
