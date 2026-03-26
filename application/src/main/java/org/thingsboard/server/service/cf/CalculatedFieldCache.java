@@ -56,7 +56,7 @@ public interface CalculatedFieldCache {
 
     List<CalculatedFieldCtx> getCalculatedFieldCtxsByEntityId(TenantId tenantId, EntityId entityId);
 
-    Stream<CalculatedFieldCtx> getCalculatedFieldCtxsByType(CalculatedFieldType cfType);
+    Stream<CalculatedFieldCtx> getCalculatedFieldCtxsByType(TenantId tenantId, CalculatedFieldType cfType);
 
     boolean hasCalculatedFields(TenantId tenantId, EntityId entityId, Predicate<CalculatedFieldCtx> filter);
 

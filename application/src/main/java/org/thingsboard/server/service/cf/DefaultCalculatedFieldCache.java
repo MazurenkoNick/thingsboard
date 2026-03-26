@@ -133,7 +133,7 @@ public class DefaultCalculatedFieldCache implements CalculatedFieldCache {
     @Override
     public List<CalculatedFieldLink> getCalculatedFieldLinksByEntityId(TenantId tenantId, EntityId entityId) {
         return entityIdCalculatedFieldLinks.getOrDefault(entityId, Collections.emptyList()).stream()
-                .filter(link -> link.getTenantId().equals(tenantId))
+                .filter(link -> link.tenantId().equals(tenantId))
                 .toList();
     }
 
@@ -172,15 +172,15 @@ public class DefaultCalculatedFieldCache implements CalculatedFieldCache {
     }
 
     @Override
-    public Stream<CalculatedFieldCtx> getCalculatedFieldCtxsByType(CalculatedFieldType cfType) {
+    public Stream<CalculatedFieldCtx> getCalculatedFieldCtxsByType(TenantId tenantId, CalculatedFieldType cfType) {
         return calculatedFields.values().stream()
-                .filter(cf -> cfType.equals(cf.getType()))
+                .filter(cf -> cf.getTenantId().equals(tenantId) && cfType.equals(cf.getType()))
                 .map(cf -> getCalculatedFieldCtx(cf.getId()));
     }
 
     @Override
     public boolean hasCalculatedFields(TenantId tenantId, EntityId entityId, Predicate<CalculatedFieldCtx> filter) {
-        List<CalculatedFieldCtx> entityCfs = getCalculatedFieldCtxsByEntityId(entityId);
+        List<CalculatedFieldCtx> entityCfs = getCalculatedFieldCtxsByEntityId(tenantId, entityId);
         for (CalculatedFieldCtx ctx : entityCfs) {
             if (filter.test(ctx)) {
                 return true;
@@ -193,7 +193,7 @@ public class DefaultCalculatedFieldCache implements CalculatedFieldCache {
     public boolean hasCalculatedFieldsByProfile(TenantId tenantId, EntityId entityId, Predicate<CalculatedFieldCtx> filter) {
         EntityId profileId = getProfileId(tenantId, entityId);
         if (profileId != null) {
-            List<CalculatedFieldCtx> profileCfs = getCalculatedFieldCtxsByEntityId(profileId);
+            List<CalculatedFieldCtx> profileCfs = getCalculatedFieldCtxsByEntityId(tenantId, profileId);
             for (CalculatedFieldCtx ctx : profileCfs) {
                 if (filter.test(ctx)) {
                     return true;
