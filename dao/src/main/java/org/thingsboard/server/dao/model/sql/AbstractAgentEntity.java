@@ -20,6 +20,7 @@ import jakarta.persistence.MappedSuperclass;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.id.AgentGroupId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -29,6 +30,7 @@ import java.util.UUID;
 
 import static org.thingsboard.server.dao.model.ModelConstants.AGENT_CUSTOMER_ID_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.AGENT_DESCRIPTION_PROPERTY;
+import static org.thingsboard.server.dao.model.ModelConstants.AGENT_GROUP_ID_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.AGENT_NAME_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.AGENT_ROUTING_KEY_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.AGENT_SECRET_PROPERTY;
@@ -57,6 +59,9 @@ public abstract class AbstractAgentEntity<T extends Agent> extends BaseVersioned
     @Column(name = AGENT_SECRET_PROPERTY)
     private String secret;
 
+    @Column(name = AGENT_GROUP_ID_PROPERTY)
+    private UUID agentGroupId;
+
     public AbstractAgentEntity() {
         super();
     }
@@ -73,6 +78,9 @@ public abstract class AbstractAgentEntity<T extends Agent> extends BaseVersioned
         this.description = agent.getDescription();
         this.routingKey = agent.getRoutingKey();
         this.secret = agent.getSecret();
+        if (agent.getAgentGroupId() != null) {
+            this.agentGroupId = agent.getAgentGroupId().getId();
+        }
     }
 
     public AbstractAgentEntity(AgentEntity agentEntity) {
@@ -83,6 +91,7 @@ public abstract class AbstractAgentEntity<T extends Agent> extends BaseVersioned
         this.description = agentEntity.getDescription();
         this.routingKey = agentEntity.getRoutingKey();
         this.secret = agentEntity.getSecret();
+        this.agentGroupId = agentEntity.getAgentGroupId();
     }
 
     protected Agent toAgent() {
@@ -99,6 +108,9 @@ public abstract class AbstractAgentEntity<T extends Agent> extends BaseVersioned
         agent.setDescription(description);
         agent.setRoutingKey(routingKey);
         agent.setSecret(secret);
+        if (agentGroupId != null) {
+            agent.setAgentGroupId(new AgentGroupId(agentGroupId));
+        }
         return agent;
     }
 

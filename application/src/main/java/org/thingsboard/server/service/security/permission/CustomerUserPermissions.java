@@ -56,6 +56,8 @@ public class CustomerUserPermissions extends AbstractPermissions {
         put(Resource.AGENT_APPLICATION, customerEntityPermissionChecker);
         put(Resource.AGENT_APP_TEMPLATE, new PermissionChecker.GenericPermissionChecker(Operation.READ));
         put(Resource.AGENT_APP_UNIT, agentAppUnitPermissionChecker);
+        put(Resource.AGENT_APP_PROFILE, new PermissionChecker.GenericPermissionChecker(Operation.READ));
+        put(Resource.AGENT_GROUP, customerEntityPermissionChecker);
     }
 
     private static final PermissionChecker customerAlarmPermissionChecker = new PermissionChecker() {

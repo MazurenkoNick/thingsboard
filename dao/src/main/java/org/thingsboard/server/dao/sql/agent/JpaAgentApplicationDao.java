@@ -108,4 +108,10 @@ public class JpaAgentApplicationDao extends JpaAbstractDao<AgentApplicationEntit
                 agentId, pageLink.getTextSearch(), DaoUtil.toPageable(pageLink))
                 .map(AgentApplicationInfoEntity::toData));
     }
+
+    @Override
+    public PageData<AgentApplication> findByApplicationProfileIdAndAgentGroupId(UUID profileId, UUID groupId, PageLink pageLink) {
+        return DaoUtil.toPageData(agentApplicationRepository.findByApplicationProfileIdAndAgentGroupId(
+                profileId, groupId, DaoUtil.toPageable(pageLink)));
+    }
 }

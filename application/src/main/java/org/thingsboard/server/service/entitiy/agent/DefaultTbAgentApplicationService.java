@@ -91,8 +91,14 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
     @Transactional
     @Override
     public void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, User user) throws Exception {
+        execActionEvent(tenantId, applicationId, request, user, false);
+    }
+
+    @Transactional
+    @Override
+    public void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, User user, boolean skipActiveEventCheck) throws Exception {
         AgentAppEventActionType actionType = request.getActionType();
-        if (appEventService.hasActiveEventForApplication(applicationId)) {
+        if (!skipActiveEventCheck && appEventService.hasActiveEventForApplication(applicationId)) {
             throw new ThingsboardException("Cannot create event while another event is being processed", ThingsboardErrorCode.TOO_MANY_REQUESTS);
         }
 

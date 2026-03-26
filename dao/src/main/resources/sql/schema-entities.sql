@@ -758,6 +758,20 @@ CREATE TABLE IF NOT EXISTS edge (
     CONSTRAINT edge_routing_key_unq_key UNIQUE (routing_key)
 );
 
+CREATE TABLE IF NOT EXISTS agent_group (
+    id uuid NOT NULL CONSTRAINT agent_group_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    tenant_id uuid NOT NULL,
+    customer_id uuid,
+    name varchar(255) NOT NULL,
+    description varchar(255),
+    provision_key varchar(255),
+    provision_secret varchar(255),
+    version BIGINT DEFAULT 1,
+    CONSTRAINT agent_group_name_unq_key UNIQUE (tenant_id, name),
+    CONSTRAINT agent_group_provision_key_unq_key UNIQUE (provision_key)
+);
+
 CREATE TABLE IF NOT EXISTS agent (
     id uuid NOT NULL CONSTRAINT agent_pkey PRIMARY KEY,
     created_time bigint NOT NULL,
@@ -767,9 +781,11 @@ CREATE TABLE IF NOT EXISTS agent (
     routing_key varchar(255),
     secret varchar(255),
     tenant_id uuid,
+    agent_group_id uuid,
     version BIGINT DEFAULT 1,
     CONSTRAINT agent_name_unq_key UNIQUE (tenant_id, name),
-    CONSTRAINT agent_routing_key_unq_key UNIQUE (routing_key)
+    CONSTRAINT agent_routing_key_unq_key UNIQUE (routing_key),
+    CONSTRAINT fk_agent_agent_group FOREIGN KEY (agent_group_id) REFERENCES agent_group(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS agent_app_template (
@@ -788,6 +804,20 @@ CREATE TABLE IF NOT EXISTS agent_app_template (
     version BIGINT DEFAULT 1
 );
 
+CREATE TABLE IF NOT EXISTS agent_app_profile (
+    id uuid NOT NULL CONSTRAINT agent_app_profile_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    tenant_id uuid NOT NULL,
+    name varchar(255) NOT NULL,
+    description varchar(255),
+    app_type varchar(32) NOT NULL,
+    template_id uuid NOT NULL,
+    config jsonb,
+    version BIGINT DEFAULT 1,
+    CONSTRAINT agent_app_profile_name_unq_key UNIQUE (tenant_id, name),
+    CONSTRAINT fk_agent_app_profile_template FOREIGN KEY (template_id) REFERENCES agent_app_template(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS agent_application (
     id uuid NOT NULL CONSTRAINT agent_application_pkey PRIMARY KEY,
     created_time bigint NOT NULL,
@@ -801,11 +831,13 @@ CREATE TABLE IF NOT EXISTS agent_application (
     project_name varchar(255),
     pending_deletion boolean NOT NULL DEFAULT false,
     origin varchar(32),
+    application_profile_id uuid,
     version BIGINT DEFAULT 1,
     CONSTRAINT agent_application_project_name_unq_key UNIQUE (agent_id, project_name),
     CONSTRAINT fk_agent_application_agent FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE CASCADE,
     CONSTRAINT fk_agent_application_template FOREIGN KEY (template_id) REFERENCES agent_app_template(id) ON DELETE CASCADE,
-    CONSTRAINT fk_agent_application_desired_template FOREIGN KEY (desired_template_id) REFERENCES agent_app_template(id) ON DELETE SET NULL
+    CONSTRAINT fk_agent_application_desired_template FOREIGN KEY (desired_template_id) REFERENCES agent_app_template(id) ON DELETE SET NULL,
+    CONSTRAINT fk_agent_app_profile FOREIGN KEY (application_profile_id) REFERENCES agent_app_profile(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS agent_app_event (

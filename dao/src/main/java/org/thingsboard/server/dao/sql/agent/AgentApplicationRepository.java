@@ -70,4 +70,11 @@ public interface AgentApplicationRepository extends JpaRepository<AgentApplicati
                                                         @Param("textSearch") String textSearch,
                                                         Pageable pageable);
 
+    @Query("SELECT a FROM AgentApplicationEntity a " +
+            "JOIN AgentEntity ag ON a.agentId = ag.id " +
+            "WHERE a.applicationProfileId = :profileId AND ag.agentGroupId = :groupId")
+    Page<AgentApplicationEntity> findByApplicationProfileIdAndAgentGroupId(@Param("profileId") UUID profileId,
+                                                                           @Param("groupId") UUID groupId,
+                                                                           Pageable pageable);
+
 }

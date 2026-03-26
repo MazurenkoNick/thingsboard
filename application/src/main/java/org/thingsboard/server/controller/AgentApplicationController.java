@@ -39,9 +39,12 @@ import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.agent.AgentAppProfile;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityIdFactory;
@@ -268,5 +271,61 @@ public class AgentApplicationController extends BaseController {
         application.setTenantId(tenantId);
         return tbAgentApplicationService.mergeForPreview(tenantId, application, template, composeType,
                 relatedEntityId != null ? toUUID(relatedEntityId) : null);
+    }
+
+    @ApiOperation(value = "Detach Application from Profile (detachFromProfile)",
+            notes = "Detaches the application from its profile. Resolves effective config (profile + credentials) " +
+                    "and writes it into the app's config. The app becomes standalone and editable."
+                    + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    @PostMapping("/agent/app/{agentApplicationId}/detach")
+    @ResponseBody
+    public AgentApplication detachFromProfile(
+            @Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
+            @PathVariable(AGENT_APP_ID) String strAgentAppId) throws Exception {
+        checkParameter(AGENT_APP_ID, strAgentAppId);
+        AgentApplicationId appId = new AgentApplicationId(toUUID(strAgentAppId));
+        AgentApplication app = checkAgentAppId(appId, Operation.WRITE);
+        TenantId tenantId = getCurrentUser().getTenantId();
+
+        if (app.getApplicationProfileId() == null) {
+            throw new ThingsboardException("Application is not attached to any profile", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        }
+
+        AgentAppProfile profile = agentAppProfileService.findProfileById(tenantId, app.getApplicationProfileId());
+        if (profile != null && profile.getConfig() != null) {
+            app.setConfig(profile.getConfig());
+        }
+        app.setApplicationProfileId(null);
+        return tbAgentApplicationService.update(app, getCurrentUser());
+    }
+
+    @ApiOperation(value = "Attach Application to Profile (attachToProfile)",
+            notes = "Re-attaches the application to a profile. Only succeeds if the app's templateId matches the profile's templateId. " +
+                    "After attachment, the app's config is cleared (profile is the source)."
+                    + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    @PostMapping("/agent/app/{agentApplicationId}/attach/{profileId}")
+    @ResponseBody
+    public AgentApplication attachToProfile(
+            @Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
+            @PathVariable(AGENT_APP_ID) String strAgentAppId,
+            @PathVariable("profileId") String strProfileId) throws Exception {
+        checkParameter(AGENT_APP_ID, strAgentAppId);
+        checkParameter("profileId", strProfileId);
+
+        AgentApplicationId appId = new AgentApplicationId(toUUID(strAgentAppId));
+        AgentApplication app = checkAgentAppId(appId, Operation.WRITE);
+        AgentAppProfileId profileId = new AgentAppProfileId(toUUID(strProfileId));
+        AgentAppProfile profile = checkAgentAppProfileId(profileId, Operation.READ);
+
+        if (!app.getTemplateId().equals(profile.getTemplateId())) {
+            throw new ThingsboardException("Cannot attach: application templateId does not match profile templateId",
+                    ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        }
+
+        app.setApplicationProfileId(profileId);
+        app.setConfig(null);
+        return tbAgentApplicationService.update(app, getCurrentUser());
     }
 }

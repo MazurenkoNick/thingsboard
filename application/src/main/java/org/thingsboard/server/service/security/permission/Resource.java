@@ -58,7 +58,9 @@ public enum Resource {
     AGENT(EntityType.AGENT),
     AGENT_APPLICATION(EntityType.AGENT_APPLICATION),
     AGENT_APP_TEMPLATE(EntityType.AGENT_APP_TEMPLATE),
-    AGENT_APP_UNIT(EntityType.AGENT_APP_UNIT);
+    AGENT_APP_UNIT(EntityType.AGENT_APP_UNIT),
+    AGENT_APP_PROFILE(EntityType.AGENT_APP_PROFILE),
+    AGENT_GROUP(EntityType.AGENT_GROUP);
 
     private final Set<EntityType> entityTypes;
 

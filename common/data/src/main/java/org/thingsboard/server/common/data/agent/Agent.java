@@ -25,6 +25,7 @@ import org.thingsboard.server.common.data.HasCustomerId;
 import org.thingsboard.server.common.data.HasName;
 import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.HasVersion;
+import org.thingsboard.server.common.data.id.AgentGroupId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.HasId;
@@ -52,6 +53,7 @@ public class Agent extends BaseData<AgentId> implements HasId<AgentId>, HasTenan
     @NoXss
     @Length(fieldName = "secret")
     private String secret;
+    private AgentGroupId agentGroupId;
     @Getter
     private Long version;
 
@@ -71,6 +73,7 @@ public class Agent extends BaseData<AgentId> implements HasId<AgentId>, HasTenan
         this.description = agent.getDescription();
         this.routingKey = agent.getRoutingKey();
         this.secret = agent.getSecret();
+        this.agentGroupId = agent.getAgentGroupId();
         this.version = agent.getVersion();
     }
 
@@ -120,5 +123,10 @@ public class Agent extends BaseData<AgentId> implements HasId<AgentId>, HasTenan
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Agent secret used for authentication")
     public String getSecret() {
         return this.secret;
+    }
+
+    @Schema(description = "JSON object with Agent Group Id. Nullable.")
+    public AgentGroupId getAgentGroupId() {
+        return this.agentGroupId;
     }
 }

@@ -305,6 +305,34 @@ public class ModelConstants {
     public static final String AGENT_APP_UNIT_TYPE_PROPERTY = "type";
 
     /**
+     * Agent application profile constants.
+     */
+    public static final String AGENT_APP_PROFILE_TABLE_NAME = "agent_app_profile";
+    public static final String AGENT_APP_PROFILE_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String AGENT_APP_PROFILE_NAME_PROPERTY = NAME_PROPERTY;
+    public static final String AGENT_APP_PROFILE_DESCRIPTION_PROPERTY = "description";
+    public static final String AGENT_APP_PROFILE_APP_TYPE_PROPERTY = "app_type";
+    public static final String AGENT_APP_PROFILE_TEMPLATE_ID_PROPERTY = "template_id";
+    public static final String AGENT_APP_PROFILE_CONFIG_PROPERTY = "config";
+
+    /**
+     * Agent group constants.
+     */
+    public static final String AGENT_GROUP_TABLE_NAME = "agent_group";
+    public static final String AGENT_GROUP_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String AGENT_GROUP_CUSTOMER_ID_PROPERTY = CUSTOMER_ID_PROPERTY;
+    public static final String AGENT_GROUP_NAME_PROPERTY = NAME_PROPERTY;
+    public static final String AGENT_GROUP_DESCRIPTION_PROPERTY = "description";
+    public static final String AGENT_GROUP_PROVISION_KEY_PROPERTY = "provision_key";
+    public static final String AGENT_GROUP_PROVISION_SECRET_PROPERTY = "provision_secret";
+
+    /**
+     * Agent additional FK columns.
+     */
+    public static final String AGENT_GROUP_ID_PROPERTY = "agent_group_id";
+    public static final String AGENT_APP_PROFILE_ID_PROPERTY = "application_profile_id";
+
+    /**
      * Alarm constants.
      */
     public static final String ENTITY_ALARM_TABLE_NAME = "entity_alarm";
