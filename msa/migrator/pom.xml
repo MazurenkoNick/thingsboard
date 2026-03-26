@@ -49,7 +49,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <main.dir>${basedir}/../..</main.dir>
+        <main.dir>${maven.multiModuleProjectDirectory}</main.dir>
         <pkg.name>tb-migrator</pkg.name>
         <docker.name>tb-${tb.docker.id}-migrator</docker.name>
         <pkg.logFolder>/var/log/${pkg.name}</pkg.logFolder>
@@ -58,12 +58,11 @@
     </properties>
 
     <dependencies>
+        <!-- Plain JAR dependency — preserves reactor build ordering without triggering DEB artifact type resolution. -->
         <dependency>
             <groupId>org.thingsboard</groupId>
             <artifactId>migrator</artifactId>
             <version>${project.version}</version>
-            <classifier>deb</classifier>
-            <type>deb</type>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -72,25 +71,22 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
+                <artifactId>maven-enforcer-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy-tb-migrator-deb</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
+                        <id>enforce-deb-exists</id>
+                        <phase>pre-integration-test</phase>
+                        <goals><goal>enforce</goal></goals>
                         <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.thingsboard</groupId>
-                                    <artifactId>migrator</artifactId>
-                                    <classifier>deb</classifier>
-                                    <type>deb</type>
-                                    <destFileName>${pkg.name}.deb</destFileName>
-                                    <outputDirectory>${project.build.directory}</outputDirectory>
-                                </artifactItem>
-                            </artifactItems>
+                            <skip>${pkg.skip.deb}</skip>
+                            <rules>
+                                <requireFilesExist>
+                                    <files>
+                                        <file>${project.build.directory}/${pkg.name}.deb</file>
+                                    </files>
+                                    <message>DEB artifact not found in ${project.build.directory}/${pkg.name}.deb — build the upstream module first or pass -Dpkg.skip.deb=true.</message>
+                                </requireFilesExist>
+                            </rules>
                         </configuration>
                     </execution>
                 </executions>
@@ -115,36 +111,60 @@
                             </resources>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>copy-tb-migrator-deb</id>
+                        <phase>${pkg.deb.phase}</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <directory>${main.dir}/migrator/target</directory>
+                                    <includes>
+                                        <include>${pkg.name}.deb</include>
+                                    </includes>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
-                <groupId>com.spotify</groupId>
-                <artifactId>dockerfile-maven-plugin</artifactId>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
                 <executions>
                     <execution>
                         <id>build-docker-image</id>
                         <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
+                        <goals><goal>exec</goal></goals>
                         <configuration>
                             <skip>${dockerfile.skip}</skip>
-                            <repository>${docker.repo}/${docker.name}</repository>
-                            <verbose>true</verbose>
-                            <googleContainerRegistryEnabled>false</googleContainerRegistryEnabled>
-                            <contextDirectory>${project.build.directory}</contextDirectory>
+                            <executable>docker</executable>
+                            <workingDirectory>${project.build.directory}</workingDirectory>
+                            <arguments>
+                                <argument>build</argument>
+                                <argument>-t</argument>
+                                <argument>${docker.repo}/${docker.name}:latest</argument>
+                                <argument>.</argument>
+                            </arguments>
                         </configuration>
                     </execution>
                     <execution>
                         <id>tag-docker-image</id>
                         <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>tag</goal>
-                        </goals>
+                        <goals><goal>exec</goal></goals>
                         <configuration>
                             <skip>${dockerfile.skip}</skip>
-                            <repository>${docker.repo}/${docker.name}</repository>
-                            <tag>${project.version}</tag>
+                            <executable>docker</executable>
+                            <arguments>
+                                <argument>tag</argument>
+                                <argument>${docker.repo}/${docker.name}:latest</argument>
+                                <argument>${docker.repo}/${docker.name}:${project.version}</argument>
+                            </arguments>
                         </configuration>
                     </execution>
                 </executions>
@@ -162,29 +182,31 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>com.spotify</groupId>
-                        <artifactId>dockerfile-maven-plugin</artifactId>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
                         <executions>
                             <execution>
                                 <id>push-latest-docker-image</id>
                                 <phase>pre-integration-test</phase>
-                                <goals>
-                                    <goal>push</goal>
-                                </goals>
+                                <goals><goal>exec</goal></goals>
                                 <configuration>
-                                    <tag>latest</tag>
-                                    <repository>${docker.repo}/${docker.name}</repository>
+                                    <executable>docker</executable>
+                                    <arguments>
+                                        <argument>push</argument>
+                                        <argument>${docker.repo}/${docker.name}:latest</argument>
+                                    </arguments>
                                 </configuration>
                             </execution>
                             <execution>
                                 <id>push-version-docker-image</id>
                                 <phase>pre-integration-test</phase>
-                                <goals>
-                                    <goal>push</goal>
-                                </goals>
+                                <goals><goal>exec</goal></goals>
                                 <configuration>
-                                    <tag>${project.version}</tag>
-                                    <repository>${docker.repo}/${docker.name}</repository>
+                                    <executable>docker</executable>
+                                    <arguments>
+                                        <argument>push</argument>
+                                        <argument>${docker.repo}/${docker.name}:${project.version}</argument>
+                                    </arguments>
                                 </configuration>
                             </execution>
                         </executions>
