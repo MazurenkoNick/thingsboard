@@ -572,7 +572,6 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         AgentAppTemplate template = new AgentAppTemplate();
         template.setAppType(AgentApplicationType.GENERIC);
         template.setCurrentVersion("1.0.0");
-        template.setPreviousVersion("0.9.0");
         template.setNextVersion(null);
         ComposeStartStep step = new ComposeStartStep();
         step.setId(UUID.randomUUID());

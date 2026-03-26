@@ -124,7 +124,7 @@ class AgentAppTemplateSyncServiceTest {
         when(gitSyncService.listFiles(eq("agent-app-templates"), eq("templates"), anyInt(), eq(FileType.FILE)))
                 .thenReturn(List.of(file));
         when(gitSyncService.getFileContent("agent-app-templates", filePath))
-                .thenReturn(templateJson("DOCKER_COMPOSE", "0.9.0", "1.1.0", "[]"));
+                .thenReturn(templateJson("DOCKER_COMPOSE", "1.1.0", "[]"));
         when(agentAppTemplateService.findByAppTypeAndConfigTypeAndVersion(
                 AgentApplicationType.EDGE, AgentAppConfigType.DOCKER_COMPOSE, "1.0.0"))
                 .thenReturn(null);
@@ -138,7 +138,6 @@ class AgentAppTemplateSyncServiceTest {
         assertThat(saved.getConfig()).isNotNull();
         assertThat(saved.getConfig().getType()).isEqualTo(AgentAppConfigType.DOCKER_COMPOSE);
         assertThat(saved.getCurrentVersion()).isEqualTo("1.0.0");
-        assertThat(saved.getPreviousVersion()).isEqualTo("0.9.0");
         assertThat(saved.getNextVersion()).isEqualTo("1.1.0");
         assertThat(saved.getTenantId()).isEqualTo(TenantId.SYS_TENANT_ID);
     }
@@ -151,7 +150,7 @@ class AgentAppTemplateSyncServiceTest {
         RepoFile file = new RepoFile(filePath, fileName, FileType.FILE);
         when(gitSyncService.listFiles(any(), any(), anyInt(), any())).thenReturn(List.of(file));
         when(gitSyncService.getFileContent("agent-app-templates", filePath))
-                .thenReturn(templateJson("DOCKER_COMPOSE", "1.0.0", null, "[]"));
+                .thenReturn(templateJson("DOCKER_COMPOSE", null, "[]"));
 
         AgentAppTemplate existing = new AgentAppTemplate();
         existing.setAppType(AgentApplicationType.GATEWAY);
@@ -165,7 +164,6 @@ class AgentAppTemplateSyncServiceTest {
         verify(agentAppTemplateService).save(eq(TenantId.SYS_TENANT_ID), captor.capture());
         assertThat(captor.getValue()).isSameAs(existing);
         assertThat(existing.getCurrentVersion()).isEqualTo("2.0.0");
-        assertThat(existing.getPreviousVersion()).isEqualTo("1.0.0");
     }
 
     @Test
@@ -367,7 +365,7 @@ class AgentAppTemplateSyncServiceTest {
                 [{"type": "COMPOSE_START", "id": "%s", "title": "Upgrade info"}]
                 """.formatted(stepId);
         when(gitSyncService.getFileContent("agent-app-templates", file.path()))
-                .thenReturn(templateJson("DOCKER_COMPOSE", "0.9.0", null, "[]", infoStepJson));
+                .thenReturn(templateJson("DOCKER_COMPOSE", null, "[]", infoStepJson));
         when(agentAppTemplateService.findByAppTypeAndConfigTypeAndVersion(any(), any(), any()))
                 .thenReturn(null);
 
@@ -396,23 +394,21 @@ class AgentAppTemplateSyncServiceTest {
         }
     }
 
-    private byte[] templateJson(String configType, String previousVersion, String nextVersion, String startStepsJson) {
-        return templateJson(configType, previousVersion, nextVersion, startStepsJson, "[]");
+    private byte[] templateJson(String configType, String nextVersion, String startStepsJson) {
+        return templateJson(configType, nextVersion, startStepsJson, "[]");
     }
 
-    private byte[] templateJson(String configType, String previousVersion, String nextVersion,
+    private byte[] templateJson(String configType, String nextVersion,
                                 String startStepsJson, String upgradeStepsJson) {
         return """
                 {
                   "config": {"type": "%s"},
-                  "previousVersion": %s,
                   "nextVersion": %s,
                   "startSteps": %s,
                   "upgradeSteps": %s
                 }
                 """.formatted(
                 configType,
-                previousVersion != null ? "\"" + previousVersion + "\"" : "null",
                 nextVersion != null ? "\"" + nextVersion + "\"" : "null",
                 startStepsJson,
                 upgradeStepsJson

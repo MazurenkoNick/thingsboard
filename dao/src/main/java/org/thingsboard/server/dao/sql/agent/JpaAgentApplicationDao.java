@@ -59,6 +59,16 @@ public class JpaAgentApplicationDao extends JpaAbstractDao<AgentApplicationEntit
     }
 
     @Override
+    public void removeByAgentId(TenantId tenantId, UUID agentId) {
+        agentApplicationRepository.deleteByAgentId(agentId);
+    }
+
+    @Override
+    public void removeByTemplateId(TenantId tenantId, UUID templateId) {
+        agentApplicationRepository.deleteByTemplateId(templateId);
+    }
+
+    @Override
     public List<AgentApplication> findByAgentId(TenantId tenantId, UUID agentId) {
         return DaoUtil.convertDataList(agentApplicationRepository.findByAgentId(agentId));
     }
@@ -72,18 +82,8 @@ public class JpaAgentApplicationDao extends JpaAbstractDao<AgentApplicationEntit
     }
 
     @Override
-    public void removeByAgentId(TenantId tenantId, UUID agentId) {
-        agentApplicationRepository.deleteByAgentId(agentId);
-    }
-
-    @Override
     public List<AgentApplication> findByTemplateId(TenantId tenantId, UUID templateId) {
         return DaoUtil.convertDataList(agentApplicationRepository.findByTemplateId(templateId));
-    }
-
-    @Override
-    public void removeByTemplateId(TenantId tenantId, UUID templateId) {
-        agentApplicationRepository.deleteByTemplateId(templateId);
     }
 
     @Override

@@ -111,7 +111,6 @@ public class AgentAppTemplateSyncService {
                 template.setAppType(parsedFile.getAppType());
                 template.setConfig(parsedFile.getConfig());
                 template.setCurrentVersion(parsedFile.getCurrentVersion());
-                template.setPreviousVersion(parsedFile.getPreviousVersion());
                 template.setNextVersion(parsedFile.getNextVersion());
 
                 convertComposeTemplatesFromYamlToJson(f.name(), parsedFile.getStartSteps());
@@ -231,7 +230,6 @@ public class AgentAppTemplateSyncService {
         private AgentApplicationType appType;
         private AgentAppConfig config;
         private String currentVersion;
-        private String previousVersion;
         private String nextVersion;
         private List<AgentAppStep> startSteps = new ArrayList<>();
         private List<AgentAppStep> upgradeSteps = new ArrayList<>();

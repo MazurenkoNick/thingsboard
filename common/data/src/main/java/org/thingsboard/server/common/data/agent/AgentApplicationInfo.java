@@ -27,9 +27,6 @@ public class AgentApplicationInfo extends AgentApplication {
     @Schema(description = "Current version of the template this application is based on.", accessMode = Schema.AccessMode.READ_ONLY)
     private String currentVersion;
 
-    @Schema(description = "Previous version available for rollback.", accessMode = Schema.AccessMode.READ_ONLY)
-    private String previousVersion;
-
     @Schema(description = "Next version available for upgrade.", accessMode = Schema.AccessMode.READ_ONLY)
     private String nextVersion;
 
@@ -37,10 +34,9 @@ public class AgentApplicationInfo extends AgentApplication {
         super();
     }
 
-    public AgentApplicationInfo(AgentApplication application, String currentVersion, String previousVersion, String nextVersion) {
+    public AgentApplicationInfo(AgentApplication application, String currentVersion, String nextVersion) {
         super(application);
         this.currentVersion = currentVersion;
-        this.previousVersion = previousVersion;
         this.nextVersion = nextVersion;
     }
 

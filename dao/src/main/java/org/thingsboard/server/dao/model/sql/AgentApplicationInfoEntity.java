@@ -24,7 +24,6 @@ import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
 public class AgentApplicationInfoEntity extends AgentApplicationEntity {
 
     private String currentVersion;
-    private String previousVersion;
     private String nextVersion;
 
     public AgentApplicationInfoEntity() {
@@ -33,20 +32,18 @@ public class AgentApplicationInfoEntity extends AgentApplicationEntity {
 
     public AgentApplicationInfoEntity(AgentApplicationEntity entity,
                                       String currentVersion,
-                                      String previousVersion,
                                       String nextVersion) {
         super(entity.toData());
         this.id = entity.getId();
         this.createdTime = entity.getCreatedTime();
         this.version = entity.getVersion();
         this.currentVersion = currentVersion;
-        this.previousVersion = previousVersion;
         this.nextVersion = nextVersion;
     }
 
     @Override
     public AgentApplicationInfo toData() {
-        return new AgentApplicationInfo(super.toData(), currentVersion, previousVersion, nextVersion);
+        return new AgentApplicationInfo(super.toData(), currentVersion, nextVersion);
     }
 
 }

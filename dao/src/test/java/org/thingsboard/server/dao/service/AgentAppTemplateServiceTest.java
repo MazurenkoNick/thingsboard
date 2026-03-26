@@ -48,7 +48,6 @@ public class AgentAppTemplateServiceTest extends AbstractServiceTest {
         Assert.assertTrue(saved.getCreatedTime() > 0);
         Assert.assertEquals(AgentApplicationType.EDGE, saved.getAppType());
         Assert.assertEquals("1.0.0", saved.getCurrentVersion());
-        Assert.assertEquals("0.9.0", saved.getPreviousVersion());
 
         agentAppTemplateService.delete(TenantId.SYS_TENANT_ID, saved.getId());
     }
@@ -174,7 +173,6 @@ public class AgentAppTemplateServiceTest extends AbstractServiceTest {
         template.setAppType(appType);
         template.setConfig(new DockerComposeConfig());
         template.setCurrentVersion(version);
-        template.setPreviousVersion("0.9.0");
         template.setNextVersion(null);
         template.setStartSteps(Collections.emptyList());
         template.setUpgradeSteps(Collections.emptyList());
