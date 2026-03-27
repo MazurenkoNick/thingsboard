@@ -24,11 +24,10 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.config.DockerComposeUtils;
-import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
-import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
 import org.thingsboard.server.common.data.device.credentials.BasicMqttCredentials;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.id.DeviceId;
@@ -53,7 +52,7 @@ import java.util.Map;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class MergeCredentialsRule implements AppTemplateMergeRule {
+public class MergeCredentialsToConfigRule implements AppConfigMergeRule {
 
     private static final String CLOUD_ROUTING_KEY = "CLOUD_ROUTING_KEY";
     private static final String CLOUD_ROUTING_SECRET = "CLOUD_ROUTING_SECRET";
@@ -72,7 +71,7 @@ public class MergeCredentialsRule implements AppTemplateMergeRule {
     private int edgeRpcPort;
 
     @Override
-    public boolean supports(AgentApplication agentApp, AgentAppTemplate template, TemplateMergeCtx ctx) {
+    public boolean supports(AgentApplication agentApp, AppConfigMergeCtx ctx) {
         return ctx != null
                 && ctx.getRelatedEntityId() != null
                 && agentApp.getAppType() != null
@@ -80,7 +79,7 @@ public class MergeCredentialsRule implements AppTemplateMergeRule {
     }
 
     @Override
-    public void apply(AgentApplication agentApp, AgentAppTemplate template, TemplateMergeCtx ctx) {
+    public void apply(AgentApplication agentApp, AppConfigMergeCtx ctx) {
         AgentAppConfig config = agentApp.getConfig();
         if (!(config instanceof DockerComposeConfig composeConfig)) {
             log.trace("Skipping credentials merge: config is not DockerComposeConfig");
@@ -103,7 +102,7 @@ public class MergeCredentialsRule implements AppTemplateMergeRule {
         }
     }
 
-    private void applyEdgeCredentials(JsonNode compose, TenantId tenantId, TemplateMergeCtx ctx) {
+    private void applyEdgeCredentials(JsonNode compose, TenantId tenantId, AppConfigMergeCtx ctx) {
         EdgeId edgeId = new EdgeId(ctx.getRelatedEntityId());
         Edge edge = edgeService.findEdgeById(tenantId, edgeId);
         if (edge == null) {
@@ -118,7 +117,7 @@ public class MergeCredentialsRule implements AppTemplateMergeRule {
         DockerComposeUtils.setEnvVariables(compose, AgentApplicationType.EDGE.getMainImagePattern(), envVars);
     }
 
-    private void applyGatewayCredentials(JsonNode compose, TenantId tenantId, TemplateMergeCtx ctx) {
+    private void applyGatewayCredentials(JsonNode compose, TenantId tenantId, AppConfigMergeCtx ctx) {
         DeviceId deviceId = new DeviceId(ctx.getRelatedEntityId());
         DeviceCredentials credentials = deviceCredentialsService.findDeviceCredentialsByDeviceId(tenantId, deviceId);
         if (credentials == null) {

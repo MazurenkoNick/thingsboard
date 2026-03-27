@@ -29,6 +29,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
 import org.thingsboard.server.common.data.agent.BulkOperationRequest;
 import org.thingsboard.server.common.data.agent.BulkOperationResult;
 import org.thingsboard.server.common.data.agent.BulkOperationResult.SkipReason;
@@ -36,19 +37,25 @@ import org.thingsboard.server.common.data.agent.BulkOperationResult.SkippedApp;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AgentAppProfileId;
+import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageDataIterable;
+import org.thingsboard.server.common.data.relation.EntityRelation;
+import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
 import org.thingsboard.server.dao.agent.AgentAppProfileService;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
+import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.exception.DataValidationException;
+import org.thingsboard.server.service.agent.template.merge.MergeCredentialsToConfigRule;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
@@ -95,11 +102,7 @@ public class DefaultAgentBulkOperationService implements AgentBulkOperationServi
         AgentAppProfile profile = profileService.findProfileById(tenantId, profileId);
 
         BulkOperationResult result = new BulkOperationResult();
-        PageDataIterable<AgentApplication> it = new PageDataIterable<>(
-                link -> applicationDao.findByApplicationProfileIdAndAgentGroupId(profileId.getId(), groupId.getId(), link),
-                100);
-
-        List<AgentApplication> eligibleApps = filterEligibleApps(it, result, profile, actionType, force);
+        List<AgentApplication> eligibleApps = filterEligibleApps(groupId, result, profile, actionType, force);
 
         if (eligibleApps.isEmpty()) {
             return result;
@@ -132,8 +135,11 @@ public class DefaultAgentBulkOperationService implements AgentBulkOperationServi
         return result;
     }
 
-    private List<AgentApplication> filterEligibleApps(PageDataIterable<AgentApplication> it, BulkOperationResult result,
-                                                      AgentAppProfile profile, AgentAppEventActionType actionType, boolean force) {
+    private List<AgentApplication> filterEligibleApps(AgentGroupId groupId, BulkOperationResult result, AgentAppProfile profile, AgentAppEventActionType actionType, boolean force) {
+        PageDataIterable<AgentApplication> it = new PageDataIterable<>(
+                link -> applicationDao.findByApplicationProfileIdAndAgentGroupId(profile.getId().getId(), groupId.getId(), link),
+                100);
+
         List<AgentApplication> eligibleApps = new ArrayList<>();
         for (var app : it) {
             result.incrementTotal();

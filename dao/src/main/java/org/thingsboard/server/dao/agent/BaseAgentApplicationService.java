@@ -93,7 +93,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         resolveProjectName(agentApplication, old);
         agentApplicationValidator.validate(agentApplication, app -> tenantId);
         AgentApplication saved = agentApplicationDao.save(tenantId, agentApplication);
-        agentAppRelationService.relateToParentEntity(tenantId, saved);
+        agentAppRelationService.relateToParentEntityByConfig(tenantId, saved);
         publishEvictEvent(new AgentApplicationCacheEvictEvent(saved.getId()));
         eventPublisher.publishEvent(SaveEntityEvent.builder()
                 .tenantId(tenantId)

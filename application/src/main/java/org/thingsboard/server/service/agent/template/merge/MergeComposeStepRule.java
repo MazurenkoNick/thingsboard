@@ -23,12 +23,12 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
 import org.thingsboard.server.common.data.agent.step.ComposeTypeChoiceStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
-import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
 import org.thingsboard.server.dao.agent.StepLinkedListUtils;
 
 import java.util.Iterator;
@@ -37,15 +37,16 @@ import java.util.Optional;
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @Slf4j
-public class MergeComposeStepRule implements AppTemplateMergeRule {
+public class MergeComposeStepRule implements AppConfigMergeRule {
 
     @Override
-    public boolean supports(AgentApplication agentApp, AgentAppTemplate template, TemplateMergeCtx ctx) {
-        return ctx != null && StringUtils.isNoneBlank(ctx.getSelectedComposeType());
+    public boolean supports(AgentApplication agentApp, AppConfigMergeCtx ctx) {
+        return ctx != null && ctx.getTemplate() != null && StringUtils.isNoneBlank(ctx.getSelectedComposeType());
     }
 
     @Override
-    public void apply(AgentApplication agentApp, AgentAppTemplate template, TemplateMergeCtx ctx) {
+    public void apply(AgentApplication agentApp, AppConfigMergeCtx ctx) {
+        AgentAppTemplate template = ctx.getTemplate();
         Optional<ComposeTypeChoiceStep> choiceStep = StepLinkedListUtils.getByType(
                 AgentAppStepType.COMPOSE_TEMPLATE, ComposeTypeChoiceStep.class, template.getStartSteps()
         );
@@ -57,7 +58,7 @@ public class MergeComposeStepRule implements AppTemplateMergeRule {
         mergeComposeBySelectedType(agentApp, composeTypeChoiceStep, ctx);
     }
 
-    private void mergeComposeBySelectedType(AgentApplication agentApp, ComposeTypeChoiceStep choiceStep, TemplateMergeCtx ctx) {
+    private void mergeComposeBySelectedType(AgentApplication agentApp, ComposeTypeChoiceStep choiceStep, AppConfigMergeCtx ctx) {
         String selectedComposeType = ctx.getSelectedComposeType();
         JsonNode composeTemplate = getComposeTemplateByType(choiceStep, selectedComposeType);
         AgentAppConfig appConfig = agentApp.getConfig();
@@ -84,7 +85,6 @@ public class MergeComposeStepRule implements AppTemplateMergeRule {
      * </ul>
      */
     private void deepMerge(ObjectNode appNode, JsonNode templateNode) {
-        // Add missing keys from template; recurse into shared object keys
         Iterator<String> templateFields = templateNode.fieldNames();
         while (templateFields.hasNext()) {
             String key = templateFields.next();
@@ -104,4 +104,3 @@ public class MergeComposeStepRule implements AppTemplateMergeRule {
                 ));
     }
 }
-

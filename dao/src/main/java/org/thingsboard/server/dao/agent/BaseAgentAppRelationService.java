@@ -1,3 +1,18 @@
+/**
+ * Copyright © 2016-2026 The Thingsboard Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.thingsboard.server.dao.agent;
 
 import lombok.RequiredArgsConstructor;
@@ -9,6 +24,7 @@ import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.config.DockerComposeUtils;
 import org.thingsboard.server.common.data.edge.Edge;
+import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.relation.EntityRelation;
@@ -33,12 +49,12 @@ public class BaseAgentAppRelationService implements AgentAppRelationService {
     private final DeviceCredentialsService deviceCredentialsService;
 
     @Override
-    public void relateToParentEntity(TenantId tenantId, AgentApplication app) {
-        if (app.getAppType() == null) {
+    public void relateToParentEntityByConfig(TenantId tenantId, AgentApplication app) {
+        if (app.getAppType() == null || app.getConfig() == null) {
             return;
         }
         EntityType relatedType = app.getAppType().getRelatedEntityType();
-        if (relatedType == null || app.getConfig() == null) {
+        if (relatedType == null) {
             return;
         }
 
@@ -61,6 +77,16 @@ public class BaseAgentAppRelationService implements AgentAppRelationService {
             relationService.saveRelation(tenantId, new EntityRelation(
                     app.getId(), newRelatedEntityId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.COMMON));
         }
+    }
+
+    @Override
+    public UUID findRelatedEntityId(TenantId tenantId, AgentApplicationId applicationId) {
+        return relationService.findByFromAndType(
+                        tenantId, applicationId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.COMMON)
+                .stream()
+                .findFirst()
+                .map(rel -> rel.getTo().getId())
+                .orElse(null);
     }
 
     private boolean sameRelatedEntityId(List<EntityRelation> existing, EntityId newRelatedEntityId) {

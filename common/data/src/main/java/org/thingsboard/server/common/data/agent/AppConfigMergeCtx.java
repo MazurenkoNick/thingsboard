@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent.template;
+package org.thingsboard.server.common.data.agent;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 
 import java.util.UUID;
 
@@ -26,12 +27,13 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class TemplateMergeCtx {
+public class AppConfigMergeCtx {
 
+    private AgentAppTemplate template;
     private String selectedComposeType;
     private UUID relatedEntityId;
 
-    public static TemplateMergeCtx empty() {
-        return new TemplateMergeCtx();
+    public static AppConfigMergeCtx empty() {
+        return new AppConfigMergeCtx();
     }
 }

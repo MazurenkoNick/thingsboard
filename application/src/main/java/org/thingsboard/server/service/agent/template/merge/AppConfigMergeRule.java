@@ -15,19 +15,12 @@
  */
 package org.thingsboard.server.service.agent.template.merge;
 
-import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
+import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
 
-public interface AppTemplateMergeRule {
+public interface AppConfigMergeRule {
 
-    /**
-     * Determines whether the merge is supported or not based on the provided arguments
-     */
-    boolean supports(AgentApplication agentApplication, AgentAppTemplate template, TemplateMergeCtx ctx);
+    boolean supports(AgentApplication agentApplication, AppConfigMergeCtx ctx);
 
-    /**
-     * Merges the template's configuration into the provided agentApplication
-     */
-    void apply(AgentApplication agentApplication, AgentAppTemplate template, TemplateMergeCtx ctx);
+    void apply(AgentApplication agentApplication, AppConfigMergeCtx ctx);
 }

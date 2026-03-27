@@ -27,7 +27,7 @@ import org.thingsboard.server.common.data.agent.step.ComposeStep;
 import org.thingsboard.server.common.data.agent.step.ComposeTypeChoiceStep;
 import org.thingsboard.server.common.data.agent.step.ComposeStartStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
-import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
+import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
 import org.thingsboard.server.service.agent.template.merge.MergeComposeStepRule;
 
 import java.util.ArrayList;
@@ -54,9 +54,9 @@ class MergeComposeStepRuleTest {
     void supports_shouldReturnFalse_whenTemplateHasNoStartSteps() {
         AgentApplication app = createAppWithCompose(List.of(), null);
         AgentAppTemplate template = new AgentAppTemplate();
-        TemplateMergeCtx ctx = TemplateMergeCtx.empty();
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.empty();
 
-        assertFalse(rule.supports(app, template, ctx));
+        assertFalse(rule.supports(app, ctx));
     }
 
     @Test
@@ -64,9 +64,9 @@ class MergeComposeStepRuleTest {
         AgentApplication app = createAppWithCompose(List.of(), null);
         AgentAppTemplate template = new AgentAppTemplate();
         template.setStartSteps(List.of(createNonComposeStep()));
-        TemplateMergeCtx ctx = TemplateMergeCtx.empty();
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.empty();
 
-        assertFalse(rule.supports(app, template, ctx));
+        assertFalse(rule.supports(app, ctx));
     }
 
     @Test
@@ -74,9 +74,9 @@ class MergeComposeStepRuleTest {
         ComposeTypeChoiceStep choiceStep = createChoiceStep(
                 Map.of("monolith", MAPPER.createObjectNode()));
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder().selectedComposeType(null).build();
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().selectedComposeType(null).build();
 
-        assertFalse(rule.supports(createAppWithCompose(List.of(), null), template, ctx));
+        assertFalse(rule.supports(createAppWithCompose(List.of(), null), ctx));
     }
 
     @Test
@@ -84,9 +84,9 @@ class MergeComposeStepRuleTest {
         ComposeTypeChoiceStep choiceStep = createChoiceStep(
                 Map.of("monolith", MAPPER.createObjectNode()));
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder().selectedComposeType("").build();
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().selectedComposeType("").build();
 
-        assertFalse(rule.supports(createAppWithCompose(List.of(), null), template, ctx));
+        assertFalse(rule.supports(createAppWithCompose(List.of(), null), ctx));
     }
 
     @Test
@@ -94,9 +94,9 @@ class MergeComposeStepRuleTest {
         ComposeTypeChoiceStep choiceStep = createChoiceStep(
                 Map.of("monolith", MAPPER.createObjectNode()));
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder().selectedComposeType("monolith").build();
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().template(template).selectedComposeType("monolith").build();
 
-        assertTrue(rule.supports(createAppWithCompose(List.of(), null), template, ctx));
+        assertTrue(rule.supports(createAppWithCompose(List.of(), null), ctx));
     }
 
     // ==================== apply() - skip scenarios ====================
@@ -109,9 +109,9 @@ class MergeComposeStepRuleTest {
         AgentApplication app = createAppWithCompose(List.of(composeStep), compose);
         AgentAppTemplate template = new AgentAppTemplate();
         template.setStartSteps(List.of(createNonComposeStep()));
-        TemplateMergeCtx ctx = TemplateMergeCtx.empty();
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().template(template).selectedComposeType("monolith").build();
 
-        rule.apply(app, template, ctx);
+        rule.apply(app, ctx);
 
         assertEquals("value", getAppCompose(app).get("service").asText());
     }
@@ -124,9 +124,9 @@ class MergeComposeStepRuleTest {
         AgentApplication app = createAppWithCompose(List.of(composeStep), compose);
         AgentAppTemplate template = new AgentAppTemplate();
         template.setStartSteps(null);
-        TemplateMergeCtx ctx = TemplateMergeCtx.empty();
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().template(template).selectedComposeType("monolith").build();
 
-        rule.apply(app, template, ctx);
+        rule.apply(app, ctx);
 
         assertEquals("val", getAppCompose(app).get("key").asText());
     }
@@ -144,9 +144,9 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), null);
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = createCtx("monolith");
+        AppConfigMergeCtx ctx = createCtx(template,"monolith");
 
-        rule.apply(app, template, ctx);
+        rule.apply(app, ctx);
 
         JsonNode result = getAppCompose(app);
         assertNotNull(result);
@@ -162,9 +162,9 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), MAPPER.nullNode());
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = createCtx("monolith");
+        AppConfigMergeCtx ctx = createCtx(template,"monolith");
 
-        rule.apply(app, template, ctx);
+        rule.apply(app, ctx);
 
         assertEquals("img", getAppCompose(app).get("svc").asText());
     }
@@ -183,9 +183,9 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), appCompose);
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = createCtx("monolith");
+        AppConfigMergeCtx ctx = createCtx(template,"monolith");
 
-        rule.apply(app, template, ctx);
+        rule.apply(app, ctx);
 
         JsonNode result = getAppCompose(app);
         assertEquals("value", result.get("existing").asText());
@@ -207,9 +207,9 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), appCompose);
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = createCtx("monolith");
+        AppConfigMergeCtx ctx = createCtx(template,"monolith");
 
-        rule.apply(app, template, ctx);
+        rule.apply(app, ctx);
 
         JsonNode result = getAppCompose(app);
         assertEquals("kept-value", result.get("keep").asText());
@@ -233,9 +233,9 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), appCompose);
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = createCtx("monolith");
+        AppConfigMergeCtx ctx = createCtx(template,"monolith");
 
-        rule.apply(app, template, ctx);
+        rule.apply(app, ctx);
 
         JsonNode result = getAppCompose(app);
         assertEquals(9090, result.get("port").asInt());
@@ -261,9 +261,9 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), appCompose);
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = createCtx("monolith");
+        AppConfigMergeCtx ctx = createCtx(template,"monolith");
 
-        rule.apply(app, template, ctx);
+        rule.apply(app, ctx);
 
         JsonNode resultService = getAppCompose(app).get("service");
         assertEquals("custom", resultService.get("existingProp").asText());
@@ -287,9 +287,9 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), appCompose);
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = createCtx("monolith");
+        AppConfigMergeCtx ctx = createCtx(template,"monolith");
 
-        rule.apply(app, template, ctx);
+        rule.apply(app, ctx);
 
         JsonNode resultService = getAppCompose(app).get("service");
         assertEquals("val", resultService.get("keep").asText());
@@ -321,9 +321,9 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), appCompose);
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = createCtx("monolith");
+        AppConfigMergeCtx ctx = createCtx(template,"monolith");
 
-        rule.apply(app, template, ctx);
+        rule.apply(app, ctx);
 
         JsonNode result = getAppCompose(app).get("a").get("b");
         assertEquals("custom", result.get("existing").asText());
@@ -346,9 +346,9 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), appCompose);
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = createCtx("monolith");
+        AppConfigMergeCtx ctx = createCtx(template,"monolith");
 
-        rule.apply(app, template, ctx);
+        rule.apply(app, ctx);
 
         assertEquals("flat-string", getAppCompose(app).get("config").asText());
     }
@@ -367,9 +367,9 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), appCompose);
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = createCtx("monolith");
+        AppConfigMergeCtx ctx = createCtx(template,"monolith");
 
-        rule.apply(app, template, ctx);
+        rule.apply(app, ctx);
 
         assertTrue(getAppCompose(app).get("config").isObject());
         assertEquals("val", getAppCompose(app).get("config").get("inner").asText());
@@ -389,9 +389,9 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), appCompose);
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = createCtx("monolith");
+        AppConfigMergeCtx ctx = createCtx(template,"monolith");
 
-        rule.apply(app, template, ctx);
+        rule.apply(app, ctx);
 
         // Mutate the result
         ((ObjectNode) getAppCompose(app).get("newService")).put("prop", "mutated");
@@ -409,9 +409,9 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), null);
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = createCtx("monolith");
+        AppConfigMergeCtx ctx = createCtx(template,"monolith");
 
-        rule.apply(app, template, ctx);
+        rule.apply(app, ctx);
 
         ((ObjectNode) getAppCompose(app)).put("key", "mutated");
         assertEquals("original", templateCompose.get("key").asText());
@@ -427,10 +427,10 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), MAPPER.createObjectNode());
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = createCtx("nonexistent-type");
+        AppConfigMergeCtx ctx = createCtx(template,"nonexistent-type");
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> rule.apply(app, template, ctx));
+                () -> rule.apply(app, ctx));
 
         assertTrue(ex.getMessage().contains("nonexistent-type"));
     }
@@ -453,9 +453,9 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), appCompose);
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = createCtx("monolith");
+        AppConfigMergeCtx ctx = createCtx(template,"monolith");
 
-        rule.apply(app, template, ctx);
+        rule.apply(app, ctx);
 
         JsonNode result = getAppCompose(app);
         assertEquals(5, result.size());
@@ -483,9 +483,9 @@ class MergeComposeStepRuleTest {
 
         AgentApplication app = createAppWithCompose(List.of(composeStep), null);
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        TemplateMergeCtx ctx = createCtx("microservices");
+        AppConfigMergeCtx ctx = createCtx(template,"microservices");
 
-        rule.apply(app, template, ctx);
+        rule.apply(app, ctx);
 
         JsonNode result = getAppCompose(app);
         assertEquals("core-img", result.get("core").asText());
@@ -495,8 +495,15 @@ class MergeComposeStepRuleTest {
 
     // ==================== Helper methods ====================
 
-    private TemplateMergeCtx createCtx(String selectedComposeType) {
-        return TemplateMergeCtx.builder()
+    private AppConfigMergeCtx createCtx(String selectedComposeType) {
+        return AppConfigMergeCtx.builder()
+                .selectedComposeType(selectedComposeType)
+                .build();
+    }
+
+    private AppConfigMergeCtx createCtx(AgentAppTemplate template, String selectedComposeType) {
+        return AppConfigMergeCtx.builder()
+                .template(template)
                 .selectedComposeType(selectedComposeType)
                 .build();
     }
