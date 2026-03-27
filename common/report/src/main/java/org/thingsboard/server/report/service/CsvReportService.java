@@ -121,7 +121,7 @@ public class CsvReportService extends AbstractReportService {
             ComponentData componentData = getComponentData(ctx, component, stateEntity);
             return componentsRenderers.get(component.getType()).render(component, componentData);
         } catch (Exception e) {
-            log.error("Failed to render component of type [{}]", component.getType(), e);
+            log.error("[{}] Failed to render component of type [{}]", ctx.getTenantId(), component.getType(), e);
             return renderError("Failed to render component of type: " + component.getType(), e);
         }
     }
@@ -144,7 +144,7 @@ public class CsvReportService extends AbstractReportService {
             }
             return content;
         } catch (Exception e) {
-            log.error("Failed to render Subreport, template id: {}", templateId, e);
+            log.error("[{}] Failed to render Subreport, template id: {}", ctx.getTenantId(), templateId, e);
             return renderError("Failed to render sub-report " + templateId, e);
         }
     }
