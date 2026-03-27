@@ -31,6 +31,7 @@
 package org.thingsboard.server.exception;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.persistence.PersistenceException;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -71,6 +72,7 @@ import org.thingsboard.server.common.data.subscription.SubscriptionErrorCode;
 import org.thingsboard.server.common.data.subscription.SubscriptionException;
 import org.thingsboard.server.common.msg.tools.MaxPayloadSizeExceededException;
 import org.thingsboard.server.common.msg.tools.TbRateLimitsException;
+import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.service.security.exception.AuthMethodNotSupportedException;
 import org.thingsboard.server.service.security.exception.JwtExpiredTokenException;
 import org.thingsboard.server.service.security.exception.UserPasswordExpiredException;
@@ -185,8 +187,8 @@ public class ThingsboardErrorResponseHandler extends ResponseEntityExceptionHand
                     handleAuthenticationException(authenticationException, response);
                 } else if (exception instanceof MaxPayloadSizeExceededException maxPayloadSizeExceededException) {
                     handleMaxPayloadSizeExceededException(response, maxPayloadSizeExceededException);
-                } else if (exception instanceof DataAccessException e) {
-                    handleDatabaseException(e, response);
+                } else if (exception instanceof DataAccessException || exception instanceof PersistenceException) {
+                    handleDatabaseException(exception, response);
                 } else {
                     response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
                     JacksonUtil.writeValue(response.getWriter(), ThingsboardErrorResponse.of(exception.getMessage(),
@@ -250,8 +252,17 @@ public class ThingsboardErrorResponseHandler extends ResponseEntityExceptionHand
 
     private void handleDatabaseException(Throwable databaseException, HttpServletResponse response) throws IOException {
         ThingsboardErrorResponse errorResponse;
-        if (databaseException instanceof ConstraintViolationException) {
-            errorResponse = ThingsboardErrorResponse.of(ExceptionUtils.getRootCause(databaseException).getMessage(), ThingsboardErrorCode.BAD_REQUEST_PARAMS, HttpStatus.BAD_REQUEST);
+        ConstraintViolationException constraintViolationException = DaoUtil.extractConstraintViolation(databaseException);
+        if (constraintViolationException != null) {
+            log.debug("Constraint violation: {}", ExceptionUtils.getRootCauseMessage(databaseException));
+            String constraintName = constraintViolationException.getConstraintName();
+            String userMessage;
+            if (constraintName != null && !constraintName.isEmpty()) {
+                userMessage = "Constraint violation: " + constraintName;
+            } else {
+                userMessage = "Constraint violation";
+            }
+            errorResponse = ThingsboardErrorResponse.of(userMessage, ThingsboardErrorCode.BAD_REQUEST_PARAMS, HttpStatus.BAD_REQUEST);
         } else {
             log.warn("Database error: {} - {}", databaseException.getClass().getSimpleName(), ExceptionUtils.getRootCauseMessage(databaseException));
             errorResponse = ThingsboardErrorResponse.of("Database error", ThingsboardErrorCode.DATABASE, HttpStatus.INTERNAL_SERVER_ERROR);

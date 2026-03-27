@@ -265,4 +265,13 @@ public final class DaoUtil {
                 .collect(Collectors.toList());
     }
 
+    public static ConstraintViolationException extractConstraintViolation(Throwable t) {
+        if (t instanceof ConstraintViolationException cve) {
+            return cve;
+        } else if (t != null && t.getCause() instanceof ConstraintViolationException cve) {
+            return cve;
+        }
+        return null;
+    }
+
 }

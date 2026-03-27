@@ -244,7 +244,7 @@ public class PdfReportService extends AbstractReportService {
             ComponentData componentData = getComponentData(usablePageWidthPx, ctx, component, stateEntity);
             return componentsRenderers.get(component.getType()).render(component, componentData);
         } catch (Exception e) {
-            log.error("Failed to render component of type [{}]", component.getType(), e);
+            log.error("[{}] Failed to render component of type [{}]", ctx.getTenantId(), component.getType(), e);
             String componentSubType = component.getSubType() != null ? " [" + component.getSubType() + "]" : "";
             return renderError(usablePageWidthPx, "Failed to render component of type: "
                     + component.getType() + componentSubType, e);
@@ -338,7 +338,7 @@ public class PdfReportService extends AbstractReportService {
             }
             return content.toString();
         } catch (Exception e) {
-            log.error("Failed to render Subreport, template id: {}", templateId, e);
+            log.error("[{}] Failed to render Subreport, template id: {}", ctx.getTenantId(), templateId, e);
             return renderError(usablePageWidthPx, "Failed to render sub-report " + templateId, e);
         }
     }
@@ -606,8 +606,8 @@ public class PdfReportService extends AbstractReportService {
     private ComponentData buildSingleComponentData(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
         return switch (dataSource.getType()) {
             case DEVICE, ENTITY -> buildEntityDataSource(usablePageWidthPx, ctx, dataSource, stateEntityId);
-            case ENTITY_COUNT -> buildEntityCountDataSource(usablePageWidthPx, ctx, dataSource);
-            case ALARM_COUNT -> buildAlarmCountDataSource(usablePageWidthPx, ctx, dataSource);
+            case ENTITY_COUNT -> buildEntityCountDataSource(usablePageWidthPx, ctx, dataSource, stateEntityId);
+            case ALARM_COUNT -> buildAlarmCountDataSource(usablePageWidthPx, ctx, dataSource, stateEntityId);
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
@@ -621,17 +621,17 @@ public class PdfReportService extends AbstractReportService {
         return new ComponentData(usablePageWidthPx, dataSource, entityDatas, variables);
     }
 
-    private ComponentData buildEntityCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource) {
+    private ComponentData buildEntityCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
         Map<String, Object> map = new HashMap<>();
         String label = resolveSingleLabel(dataSource, "count");
-        map.put(label, dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, ctx), ctx));
+        map.put(label, dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, ctx, stateEntityId), ctx));
         return new ComponentData(usablePageWidthPx, map);
     }
 
-    private ComponentData buildAlarmCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource) {
+    private ComponentData buildAlarmCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
         Map<String, Object> map = new HashMap<>();
         String label = resolveSingleLabel(dataSource, "count");
-        map.put(label, dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, ctx), ctx));
+        map.put(label, dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, ctx, stateEntityId), ctx));
         return new ComponentData(usablePageWidthPx, map);
     }
 
@@ -665,7 +665,7 @@ public class PdfReportService extends AbstractReportService {
         webReportClient.requestDashboardReport(config, null,
                 ctx.getAccessToken(), ctx.getAccessTokenExpTs(),
                 futureToSet::set, error -> {
-                    log.error("Failed to generate dashboard report", error);
+                    log.error("[{}] Failed to generate dashboard report", ctx.getTenantId(), error);
                     futureToSet.setException(error);
                 });
         try {

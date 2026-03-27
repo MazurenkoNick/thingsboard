@@ -48,6 +48,7 @@ import org.thingsboard.server.dao.converter.ConverterService;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.grouppermission.GroupPermissionService;
 import org.thingsboard.server.dao.integration.IntegrationService;
+import org.thingsboard.server.dao.ota.DeviceGroupOtaPackageService;
 import org.thingsboard.server.dao.report.ReportService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.role.RoleService;
@@ -82,6 +83,8 @@ public interface TbPeContext {
     SchedulerEventService getSchedulerEventService();
 
     SecretService getSecretService();
+
+    DeviceGroupOtaPackageService getDeviceGroupOtaPackageService();
 
     EntityId getOwner(TenantId tenantId, EntityId entityId);
 

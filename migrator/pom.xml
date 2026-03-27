@@ -38,7 +38,7 @@
     <parent>
         <artifactId>thingsboard</artifactId>
         <groupId>org.thingsboard</groupId>
-        <version>4.3.1PE</version>
+        <version>4.3.1.1PE-SNAPSHOT</version>
     </parent>
 
     <artifactId>migrator</artifactId>
@@ -50,7 +50,6 @@
         <main.dir>${basedir}/..</main.dir>
         <pkg.type>java</pkg.type>
         <pkg.name>tb-migrator</pkg.name>
-        <pkg.disabled>false</pkg.disabled>
         <pkg.process-resources.phase>process-resources</pkg.process-resources.phase>
         <pkg.package.phase>package</pkg.package.phase>
         <pkg.copyInstallScripts>false</pkg.copyInstallScripts>
@@ -135,10 +134,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

@@ -40,3 +40,5 @@ rebuild-docker.sh
 .run
 instance-license.data
 .claude/
+.claude
+.planning

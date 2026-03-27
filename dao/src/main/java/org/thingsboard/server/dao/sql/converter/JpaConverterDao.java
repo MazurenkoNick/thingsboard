@@ -52,8 +52,11 @@ import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @SqlDao
@@ -141,8 +144,12 @@ public class JpaConverterDao extends JpaAbstractDao<ConverterEntity, Converter> 
     }
 
     @Override
-    public boolean hasConverterOfType(UUID tenantId, ConverterType type) {
-        return converterRepository.existsByTenantIdAndType(tenantId, type);
+    public Map<IntegrationType, Set<ConverterType>> findExistingConverterTypes(UUID tenantId) {
+        return converterRepository.findExistingConverterTypes(tenantId).stream()
+                .collect(Collectors.groupingBy(
+                        row -> (IntegrationType) row[0],
+                        Collectors.mapping(row -> (ConverterType) row[1], Collectors.toSet())
+                ));
     }
 
     @Override

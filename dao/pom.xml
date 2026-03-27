@@ -35,7 +35,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.thingsboard</groupId>
-        <version>4.3.1PE</version>
+        <version>4.3.1.1PE-SNAPSHOT</version>
         <artifactId>thingsboard</artifactId>
     </parent>
     <artifactId>dao</artifactId>
@@ -300,14 +300,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>${jar-plugin.version}</version>
-		       <executions>
-		         <execution>
-		           <goals>
-		             <goal>test-jar</goal>
-		           </goals>
-		         </execution>
-		       </executions>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
 		    </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

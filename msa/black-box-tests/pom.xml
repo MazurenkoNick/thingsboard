@@ -36,7 +36,7 @@
 
     <parent>
         <groupId>org.thingsboard</groupId>
-        <version>4.3.1PE</version>
+        <version>4.3.1.1PE-SNAPSHOT</version>
         <artifactId>msa</artifactId>
     </parent>
     <groupId>org.thingsboard.msa</groupId>
@@ -179,47 +179,56 @@
         <dependency>
             <groupId>org.thingsboard.msa</groupId>
             <artifactId>js-executor</artifactId>
-            <type>docker-info</type>
+            <version>${project.version}</version>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>org.thingsboard.msa</groupId>
             <artifactId>web-ui</artifactId>
-            <type>docker-info</type>
+            <version>${project.version}</version>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>org.thingsboard.msa</groupId>
             <artifactId>web-report</artifactId>
-            <type>docker-info</type>
+            <version>${project.version}</version>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>org.thingsboard.msa</groupId>
             <artifactId>tb-node</artifactId>
-            <type>docker-info</type>
+            <version>${project.version}</version>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>org.thingsboard.msa.transport</groupId>
             <artifactId>coap</artifactId>
-            <type>docker-info</type>
+            <version>${project.version}</version>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>org.thingsboard.msa.transport</groupId>
             <artifactId>http</artifactId>
-            <type>docker-info</type>
+            <version>${project.version}</version>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>org.thingsboard.msa.transport</groupId>
             <artifactId>mqtt</artifactId>
-            <type>docker-info</type>
+            <version>${project.version}</version>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>org.thingsboard.msa.transport</groupId>
             <artifactId>lwm2m</artifactId>
-            <type>docker-info</type>
+            <version>${project.version}</version>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>org.thingsboard.msa.transport</groupId>
             <artifactId>snmp</artifactId>
-            <type>docker-info</type>
+            <version>${project.version}</version>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>org.thingsboard.common</groupId>
@@ -305,7 +314,7 @@
                             <dependency>
                                 <groupId>org.apache.maven.surefire</groupId>
                                 <artifactId>surefire-testng</artifactId>
-                                <version>${surefire.version}</version>
+                                <version>${maven-surefire-plugin.version}</version>
                             </dependency>
                         </dependencies>
                     </plugin>
@@ -315,8 +324,7 @@
                         <version>${allure-maven.version}</version>
                         <configuration>
                             <reportVersion>${allure-testng.version}</reportVersion>
-                            <allureDownloadUrl>https://repo.maven.apache.org/maven2/io/qameta/allure/allure-commandline/
-                                ${allure-testng.version}/allure-commandline-${allure-testng.version}.zip</allureDownloadUrl>
+                            <propertiesFilePath>src/test/resources/allure.properties</propertiesFilePath>
                         </configuration>
                     </plugin>
                 </plugins>

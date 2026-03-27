@@ -214,6 +214,10 @@ reports:
   ssrf_protection_enabled: "${SSRF_PROTECTION_ENABLED:false}"
   # Comma-separated list of additional blocked hosts/CIDRs for SSRF protection (e.g. "evil.corp,203.0.113.0/24")
   ssrf_additional_blocked_hosts: "${SSRF_ADDITIONAL_BLOCKED_HOSTS:}"
+  # Comma-separated list of allowed destinations that bypass SSRF blocking (IPs, CIDR subnets, or hostnames).
+  # Use this when reports need to access resources on private networks (e.g., 192.168.1.0/24).
+  # Example: "192.168.1.0/24,10.0.0.0/8,my-internal-service.corp"
+  ssrf_allowed_hosts: "${SSRF_ALLOWED_HOSTS:}"
   web_report:
     # Report server endpoint
     base_url: "${REPORTS_SERVER_ENDPOINT_URL:http://localhost:8383}"

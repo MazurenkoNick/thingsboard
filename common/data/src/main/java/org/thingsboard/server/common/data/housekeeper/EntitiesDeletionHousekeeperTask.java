@@ -38,6 +38,7 @@ import lombok.ToString;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.id.TenantId;
 
+import java.io.Serial;
 import java.util.List;
 import java.util.UUID;
 
@@ -46,6 +47,9 @@ import java.util.UUID;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public class EntitiesDeletionHousekeeperTask extends HousekeeperTask {
+
+    @Serial
+    private static final long serialVersionUID = 9009068831061529286L;
 
     private EntityType entityType;
     private List<UUID> entities;

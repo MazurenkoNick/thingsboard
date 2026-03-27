@@ -39,6 +39,7 @@ import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 
+import java.io.Serial;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,6 +48,9 @@ import java.util.UUID;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AlarmsUnassignHousekeeperTask extends HousekeeperTask {
+
+    @Serial
+    private static final long serialVersionUID = 9156667024462937756L;
 
     private String userTitle;
     private List<UUID> alarms;

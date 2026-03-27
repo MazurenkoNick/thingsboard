@@ -53,6 +53,7 @@ import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.converter.ConverterLibraryService;
 import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,12 +100,14 @@ public class DefaultTbIntegrationService extends AbstractTbEntityService impleme
 
     @Override
     public Map<IntegrationType, IntegrationConvertersInfo> getIntegrationsConvertersInfo(TenantId tenantId) {
-        boolean hasUplink = converterService.hasConverterOfType(tenantId, ConverterType.UPLINK);
-        boolean hasDownlink = converterService.hasConverterOfType(tenantId, ConverterType.DOWNLINK);
-
         Map<String, LibraryConvertersInfo> libraryConvertersInfo = converterLibraryService.getConvertersInfo();
+        Map<IntegrationType, Set<ConverterType>> existingConverters = converterService.getExistingConverterTypes(tenantId);
         Map<IntegrationType, IntegrationConvertersInfo> result = new HashMap<>();
         for (IntegrationType integrationType : IntegrationType.values()) {
+            Set<ConverterType> existing = existingConverters.getOrDefault(integrationType, Collections.emptySet());
+            boolean hasUplink = existing.contains(ConverterType.UPLINK);
+            boolean hasDownlink = existing.contains(ConverterType.DOWNLINK);
+
             String directory = integrationType.getDirectory();
             LibraryConvertersInfo libraryInfo = libraryConvertersInfo.getOrDefault(directory, new LibraryConvertersInfo(false, false));
             Set<String> keys = ConverterUnwrapperFactory
