@@ -244,7 +244,7 @@ public class PdfReportService extends AbstractReportService {
             ComponentData componentData = getComponentData(usablePageWidthPx, ctx, component, stateEntity);
             return componentsRenderers.get(component.getType()).render(component, componentData);
         } catch (Exception e) {
-            log.error("Failed to render component of type [{}]", component.getType(), e);
+            log.error("[{}] Failed to render component of type [{}]", ctx.getTenantId(), component.getType(), e);
             String componentSubType = component.getSubType() != null ? " [" + component.getSubType() + "]" : "";
             return renderError(usablePageWidthPx, "Failed to render component of type: "
                     + component.getType() + componentSubType, e);
@@ -338,7 +338,7 @@ public class PdfReportService extends AbstractReportService {
             }
             return content.toString();
         } catch (Exception e) {
-            log.error("Failed to render Subreport, template id: {}", templateId, e);
+            log.error("[{}] Failed to render Subreport, template id: {}", ctx.getTenantId(), templateId, e);
             return renderError(usablePageWidthPx, "Failed to render sub-report " + templateId, e);
         }
     }
@@ -665,7 +665,7 @@ public class PdfReportService extends AbstractReportService {
         webReportClient.requestDashboardReport(config, null,
                 ctx.getAccessToken(), ctx.getAccessTokenExpTs(),
                 futureToSet::set, error -> {
-                    log.error("Failed to generate dashboard report", error);
+                    log.error("[{}] Failed to generate dashboard report", ctx.getTenantId(), error);
                     futureToSet.setException(error);
                 });
         try {
