@@ -24,8 +24,6 @@ import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.validation.NoXss;
 import org.thingsboard.server.exception.DataValidationException;
 
-import java.util.Objects;
-
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
@@ -53,14 +51,6 @@ public class DockerComposeConfig extends AgentAppConfig {
         if (compose == null || compose.isNull()) {
             throw new DataValidationException("Docker compose config compose content must be specified!");
         }
-    }
-
-    @Override
-    public boolean isDeployFieldsChanged(AgentAppConfig other) {
-        if (!(other instanceof DockerComposeConfig that)) {
-            return true;
-        }
-        return !Objects.equals(this.compose, that.compose);
     }
 
     @Override

@@ -53,7 +53,7 @@ import java.util.Map;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class MergeCredentialsMergeRule implements AppTemplateMergeRule {
+public class MergeCredentialsRule implements AppTemplateMergeRule {
 
     private static final String CLOUD_ROUTING_KEY = "CLOUD_ROUTING_KEY";
     private static final String CLOUD_ROUTING_SECRET = "CLOUD_ROUTING_SECRET";

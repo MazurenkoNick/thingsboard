@@ -37,7 +37,7 @@ import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.server.common.data.security.DeviceCredentialsType;
 import org.thingsboard.server.dao.device.DeviceCredentialsService;
 import org.thingsboard.server.dao.edge.EdgeService;
-import org.thingsboard.server.service.agent.template.merge.MergeCredentialsMergeRule;
+import org.thingsboard.server.service.agent.template.merge.MergeCredentialsRule;
 
 import java.util.UUID;
 
@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class MergeCredentialsMergeRuleTest {
+class MergeCredentialsRuleTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final TenantId TENANT_ID = TenantId.fromUUID(UUID.randomUUID());
@@ -55,11 +55,11 @@ class MergeCredentialsMergeRuleTest {
     @Mock
     private DeviceCredentialsService deviceCredentialsService;
 
-    private MergeCredentialsMergeRule rule;
+    private MergeCredentialsRule rule;
 
     @BeforeEach
     void setUp() {
-        rule = new MergeCredentialsMergeRule(edgeService, deviceCredentialsService);
+        rule = new MergeCredentialsRule(edgeService, deviceCredentialsService);
         ReflectionTestUtils.setField(rule, "edgeRpcPort", 7070);
     }
 
