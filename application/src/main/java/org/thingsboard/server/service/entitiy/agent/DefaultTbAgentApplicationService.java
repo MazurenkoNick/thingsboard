@@ -130,12 +130,10 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
             if (upgradedApp == null) {
                 throw new DataValidationException("Upgrade request must include an application");
             }
-            upgradedApp.setId(applicationId);
-            upgradedApp.setTenantId(tenantId);
-            upgradedApp.setVersion(application.getVersion());
-            upgradedApp.setDesiredTemplateId(upgradedApp.getTemplateId());
-            upgradedApp.setTemplateId(application.getTemplateId());
-            application = upgradedApp;
+            application.setDesiredTemplateId(upgradedApp.getTemplateId());
+            if (upgradedApp.getConfig() != null) {
+                application.setConfig(upgradedApp.getConfig());
+            }
         }
 
         applicationService.save(tenantId, application);

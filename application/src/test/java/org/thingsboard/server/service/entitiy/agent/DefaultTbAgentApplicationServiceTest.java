@@ -241,12 +241,14 @@ class DefaultTbAgentApplicationServiceTest {
     }
 
     @Test
-    void execActionEvent_upgrade_savesUpdatedApplication() throws Exception {
+    void execActionEvent_upgrade_copiesFieldsOntoExistingApp() throws Exception {
         AgentAppTemplateId oldTemplateId = new AgentAppTemplateId(UUID.randomUUID());
         AgentAppTemplateId newTemplateId = new AgentAppTemplateId(UUID.randomUUID());
 
         AgentApplication app = newApplication(APP_ID);
         app.setTemplateId(oldTemplateId);
+        app.setName("my-app");
+        app.setAgentId(AGENT_ID);
         when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
 
         AgentApplication upgradedApp = new AgentApplication();
@@ -259,11 +261,15 @@ class DefaultTbAgentApplicationServiceTest {
 
         service.execActionEvent(TENANT_ID, APP_ID, request, USER);
 
-        verify(agentApplicationService).save(eq(TENANT_ID), eq(upgradedApp));
-        assertThat(upgradedApp.getId()).isEqualTo(APP_ID);
-        assertThat(upgradedApp.getTenantId()).isEqualTo(TENANT_ID);
-        assertThat(upgradedApp.getTemplateId()).isEqualTo(oldTemplateId);
-        assertThat(upgradedApp.getDesiredTemplateId()).isEqualTo(newTemplateId);
+        ArgumentCaptor<AgentApplication> captor = ArgumentCaptor.forClass(AgentApplication.class);
+        verify(agentApplicationService).save(eq(TENANT_ID), captor.capture());
+        AgentApplication saved = captor.getValue();
+        assertThat(saved.getId()).isEqualTo(APP_ID);
+        assertThat(saved.getName()).isEqualTo("my-app");
+        assertThat(saved.getAgentId()).isEqualTo(AGENT_ID);
+        assertThat(saved.getTemplateId()).isEqualTo(oldTemplateId);
+        assertThat(saved.getDesiredTemplateId()).isEqualTo(newTemplateId);
+        assertThat(saved.getConfig()).isNotNull();
     }
 
     @Test
