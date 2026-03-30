@@ -99,7 +99,11 @@ import org.thingsboard.server.common.data.domain.DomainInfo;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
+import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentGroup;
+import org.thingsboard.server.common.data.agent.BulkOperationRequest;
+import org.thingsboard.server.common.data.agent.BulkOperationResult;
 import org.thingsboard.server.common.data.agent.AgentInfo;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
@@ -123,8 +127,10 @@ import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.DeviceProfileId;
 import org.thingsboard.server.common.data.id.DomainId;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
+import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentGroupId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.EdgeId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -4051,6 +4057,66 @@ public class RestClient implements Closeable {
         return restTemplate.exchange(
                 baseURL + "/api/agent/app/templates", HttpMethod.GET, HttpEntity.EMPTY,
                 new ParameterizedTypeReference<List<AgentAppTemplate>>() {}).getBody();
+    }
+
+    // Agent App Profile Controller
+
+    public AgentAppProfile saveAgentAppProfile(AgentAppProfile profile) {
+        return restTemplate.postForEntity(baseURL + "/api/agent/app/profile", profile, AgentAppProfile.class).getBody();
+    }
+
+    public Optional<AgentAppProfile> getAgentAppProfileById(AgentAppProfileId profileId) {
+        try {
+            ResponseEntity<AgentAppProfile> profile = restTemplate.getForEntity(
+                    baseURL + "/api/agent/app/profile/{profileId}", AgentAppProfile.class, profileId.getId());
+            return Optional.ofNullable(profile.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public void deleteAgentAppProfile(AgentAppProfileId profileId) {
+        restTemplate.delete(baseURL + "/api/agent/app/profile/{profileId}", profileId.getId());
+    }
+
+    // Agent Group Controller
+
+    public AgentGroup saveAgentGroup(AgentGroup group) {
+        return restTemplate.postForEntity(baseURL + "/api/agent/group", group, AgentGroup.class).getBody();
+    }
+
+    public Optional<AgentGroup> getAgentGroupById(AgentGroupId groupId) {
+        try {
+            ResponseEntity<AgentGroup> group = restTemplate.getForEntity(
+                    baseURL + "/api/agent/group/{groupId}", AgentGroup.class, groupId.getId());
+            return Optional.ofNullable(group.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public void deleteAgentGroup(AgentGroupId groupId) {
+        restTemplate.delete(baseURL + "/api/agent/group/{groupId}", groupId.getId());
+    }
+
+    public void assignProfileToGroup(AgentGroupId groupId, AgentAppProfileId profileId) {
+        restTemplate.postForEntity(
+                baseURL + "/api/agent/group/{groupId}/profile/{profileId}",
+                null, Void.class, groupId.getId(), profileId.getId());
+    }
+
+    public BulkOperationResult bulkOperation(AgentGroupId groupId, AgentAppProfileId profileId, BulkOperationRequest request, boolean force) {
+        return restTemplate.postForEntity(
+                baseURL + "/api/agent/group/{groupId}/profile/{profileId}/bulk?force={force}",
+                request, BulkOperationResult.class, groupId.getId(), profileId.getId(), force).getBody();
     }
 
     public UUID saveEntitiesVersion(VersionCreateRequest request) {

@@ -177,6 +177,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
             return;
         }
         application.setConfig(profile.getConfig().copy());
+        application.setProfileConfigVersion(profile.getVersion());
 
         AppConfigMergeCtx ctx = AppConfigMergeCtx.builder()
                 .relatedEntityId(relatedEntityId)

@@ -331,6 +331,7 @@ public class ModelConstants {
      */
     public static final String AGENT_GROUP_ID_PROPERTY = "agent_group_id";
     public static final String AGENT_APP_PROFILE_ID_PROPERTY = "application_profile_id";
+    public static final String AGENT_APPLICATION_PROFILE_CONFIG_VERSION_PROPERTY = "profile_config_version";
 
     /**
      * Alarm constants.

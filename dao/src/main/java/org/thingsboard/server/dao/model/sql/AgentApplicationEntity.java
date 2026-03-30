@@ -85,6 +85,9 @@ public class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication
     @Column(name = ModelConstants.AGENT_APP_PROFILE_ID_PROPERTY)
     private UUID applicationProfileId;
 
+    @Column(name = ModelConstants.AGENT_APPLICATION_PROFILE_CONFIG_VERSION_PROPERTY)
+    private Long profileConfigVersion;
+
     public AgentApplicationEntity() {
         super();
     }
@@ -112,6 +115,7 @@ public class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication
         if (application.getApplicationProfileId() != null) {
             this.applicationProfileId = application.getApplicationProfileId().getId();
         }
+        this.profileConfigVersion = application.getProfileConfigVersion();
     }
 
     @Override
@@ -140,6 +144,7 @@ public class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication
         if (applicationProfileId != null) {
             application.setApplicationProfileId(new AgentAppProfileId(applicationProfileId));
         }
+        application.setProfileConfigVersion(profileConfigVersion);
         return application;
     }
 }

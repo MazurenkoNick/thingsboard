@@ -337,13 +337,14 @@ class DefaultTbAgentApplicationServiceTest {
     // ==================== install with profile config ====================
 
     @Test
-    void install_withProfileId_copiesProfileConfig() throws Exception {
+    void install_withProfileId_copiesProfileConfigAndVersion() throws Exception {
         AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
         AgentApplication app = newApplication(null);
         app.setApplicationProfileId(profileId);
 
         AgentAppProfile profile = new AgentAppProfile();
         profile.setConfig(createDockerComposeConfig("profile-compose"));
+        profile.setVersion(5L);
         when(profileService.findProfileById(TENANT_ID, profileId)).thenReturn(profile);
 
         AgentApplication savedApp = newApplication(APP_ID);
@@ -359,6 +360,7 @@ class DefaultTbAgentApplicationServiceTest {
         verify(agentApplicationService).save(eq(TENANT_ID), appCaptor.capture());
         assertThat(appCaptor.getValue().getConfig()).isNotNull();
         assertThat(appCaptor.getValue().getConfig()).isNotSameAs(profile.getConfig());
+        assertThat(appCaptor.getValue().getProfileConfigVersion()).isEqualTo(5L);
     }
 
     @Test

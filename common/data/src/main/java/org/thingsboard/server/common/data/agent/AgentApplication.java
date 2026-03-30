@@ -60,6 +60,8 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     private boolean pendingDeletion;
     private AgentApplicationOrigin origin;
     private AgentAppProfileId applicationProfileId;
+    @Getter
+    private Long profileConfigVersion;
 
     public AgentApplication() {
         super();
@@ -82,6 +84,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         this.pendingDeletion = application.isPendingDeletion();
         this.origin = application.getOrigin();
         this.applicationProfileId = application.getApplicationProfileId();
+        this.profileConfigVersion = application.getProfileConfigVersion();
     }
 
     public static AgentApplication fromTemplate(AgentAppTemplate template) {

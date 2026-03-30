@@ -832,6 +832,7 @@ CREATE TABLE IF NOT EXISTS agent_application (
     pending_deletion boolean NOT NULL DEFAULT false,
     origin varchar(32),
     application_profile_id uuid,
+    profile_config_version BIGINT,
     version BIGINT DEFAULT 1,
     CONSTRAINT agent_application_project_name_unq_key UNIQUE (agent_id, project_name),
     CONSTRAINT fk_agent_application_agent FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE CASCADE,

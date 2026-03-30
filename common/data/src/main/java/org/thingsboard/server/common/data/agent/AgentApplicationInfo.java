@@ -30,6 +30,9 @@ public class AgentApplicationInfo extends AgentApplication {
     @Schema(description = "Next version available for upgrade.", accessMode = Schema.AccessMode.READ_ONLY)
     private String nextVersion;
 
+    @Schema(description = "True if the app's config is outdated relative to its profile.", accessMode = Schema.AccessMode.READ_ONLY)
+    private boolean profileConfigOutdated;
+
     public AgentApplicationInfo() {
         super();
     }
@@ -38,6 +41,13 @@ public class AgentApplicationInfo extends AgentApplication {
         super(application);
         this.currentVersion = currentVersion;
         this.nextVersion = nextVersion;
+    }
+
+    public AgentApplicationInfo(AgentApplication application, String currentVersion, String nextVersion, boolean profileConfigOutdated) {
+        super(application);
+        this.currentVersion = currentVersion;
+        this.nextVersion = nextVersion;
+        this.profileConfigOutdated = profileConfigOutdated;
     }
 
 }
