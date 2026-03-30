@@ -51,6 +51,7 @@ import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -126,8 +127,7 @@ public class JpaConverterDao extends JpaAbstractDao<ConverterEntity, Converter> 
 
         Set<ConverterType> genericConverters = rows.stream()
                 .filter(row -> row[0] == null && row[1] != null)
-                .map(row -> (ConverterType) row[1])
-                .collect(Collectors.toSet());
+                .map(row -> (ConverterType) row[1]).collect(Collectors.toUnmodifiableSet());
 
         Map<IntegrationType, Set<ConverterType>> typedConverters = rows.stream()
                 .filter(row -> row[0] != null)

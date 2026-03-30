@@ -678,18 +678,36 @@ public class IntegrationControllerTest extends AbstractControllerTest {
 
     @Test
     public void testGetConvertersInfo() throws Exception {
-        // converters without integration type are not taken into account in the response
+        // converters without integration type (generic converters) apply to all integration types
         Converter converterWithoutIntegrationType = new Converter();
         converterWithoutIntegrationType.setName("My universal converter");
         converterWithoutIntegrationType.setType(ConverterType.UPLINK);
         converterWithoutIntegrationType.setConfiguration(CUSTOM_CONVERTER_CONFIGURATION);
-        doPost("/api/converter", converterWithoutIntegrationType, Converter.class);
+        Converter savedGenericConverter = doPost("/api/converter", converterWithoutIntegrationType, Converter.class);
 
         Map<IntegrationType, IntegrationConvertersInfo> convertersInfo = readResponse(doGet("/api/integrations/converters/info"), new TypeReference<>() {});
         assertThat(convertersInfo.size()).isEqualTo(IntegrationType.values().length);
         for (Map.Entry<IntegrationType, IntegrationConvertersInfo> info : convertersInfo.entrySet()) {
             IntegrationConvertersInfo infoValue = info.getValue();
-            assertThat(infoValue.uplink().existing()).isEqualTo(true);
+            assertThat(infoValue.uplink().existing()).isTrue();
+            assertThat(infoValue.downlink().existing()).isEqualTo(info.getKey() == IntegrationType.MQTT);
+            if (info.getKey() == IntegrationType.CHIRPSTACK) {
+                assertThat(infoValue.uplink().library()).isTrue();
+                assertThat(infoValue.downlink().library()).isTrue();
+            } else if (info.getKey() == IntegrationType.TTN || info.getKey() == IntegrationType.TTI) {
+                assertThat(infoValue.uplink().library()).isTrue();
+            }
+        }
+
+        //delete generic uplink converter
+        doDelete("/api/converter/" + savedGenericConverter.getId().getId().toString())
+                .andExpect(status().isOk());
+
+        Map<IntegrationType, IntegrationConvertersInfo> convertersInfoAfterUpdate = readResponse(doGet("/api/integrations/converters/info"), new TypeReference<>() {});
+        assertThat(convertersInfoAfterUpdate.size()).isEqualTo(IntegrationType.values().length);
+        for (Map.Entry<IntegrationType, IntegrationConvertersInfo> info : convertersInfoAfterUpdate.entrySet()) {
+            IntegrationConvertersInfo infoValue = info.getValue();
+            assertThat(infoValue.uplink().existing()).isEqualTo(info.getKey() == IntegrationType.MQTT);
             assertThat(infoValue.downlink().existing()).isEqualTo(info.getKey() == IntegrationType.MQTT);
             if (info.getKey() == IntegrationType.CHIRPSTACK) {
                 assertThat(infoValue.uplink().library()).isTrue();
