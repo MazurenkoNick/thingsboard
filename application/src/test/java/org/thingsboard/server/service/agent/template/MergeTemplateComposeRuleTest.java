@@ -76,7 +76,7 @@ class MergeTemplateComposeRuleTest {
         ComposeTypeChoiceStep choiceStep = createChoiceStep(
                 Map.of("monolith", MAPPER.createObjectNode()));
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().selectedComposeType(null).build();
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().template(template).selectedComposeType(null).build();
 
         assertFalse(rule.supports(createAppWithCompose(List.of(), null), ctx));
     }
@@ -86,7 +86,7 @@ class MergeTemplateComposeRuleTest {
         ComposeTypeChoiceStep choiceStep = createChoiceStep(
                 Map.of("monolith", MAPPER.createObjectNode()));
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
-        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().selectedComposeType("").build();
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().template(template).selectedComposeType("").build();
 
         assertFalse(rule.supports(createAppWithCompose(List.of(), null), ctx));
     }
