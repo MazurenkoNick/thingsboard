@@ -89,6 +89,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         AgentApplication old = agentApplication.getId() != null
                 ? agentApplicationDao.findById(tenantId, agentApplication.getUuidId())
                 : null;
+        resolveOrigin(agentApplication, old);
         resolveTemplateId(agentApplication, old);
         resolveProjectName(agentApplication, old);
         agentApplicationValidator.validate(agentApplication, app -> tenantId);
@@ -220,6 +221,12 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
                     agentApplication.setTemplateId(template.getId());
                 }
             }
+        }
+    }
+
+    private void resolveOrigin(AgentApplication agentApplication, AgentApplication old) {
+        if (old != null && old.getOrigin() != null) {
+            agentApplication.setOrigin(old.getOrigin());
         }
     }
 
