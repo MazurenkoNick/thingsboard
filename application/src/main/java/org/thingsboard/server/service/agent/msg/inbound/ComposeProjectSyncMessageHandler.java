@@ -68,34 +68,34 @@ public class ComposeProjectSyncMessageHandler implements AgentInboundMessageHand
 
     private void doHandle(TenantId tenantId, AgentId agentId, ProjectStateSync projectSync) {
         String projectName = projectSync.getProjectName();
-        ComposeState compose = projectSync.getCompose();
-        log.trace("[{}][{}] Processing compose sync for project [{}], hasComposeJson: {}, containerStates: {}",
-                tenantId, agentId, projectName, compose.hasComposeJson(), compose.getContainerStatesMap().keySet());
+        ComposeState externalCompose = projectSync.getCompose();
+        log.trace("[{}][{}] Processing externalCompose sync for project [{}], hasComposeJson: {}, containerStates: {}",
+                tenantId, agentId, projectName, externalCompose.hasComposeJson(), externalCompose.getContainerStatesMap().keySet());
 
         AgentApplication app = appService.findByProjectName(tenantId, projectName);
         if (app == null) {
-            if (!compose.hasComposeJson()) {
-                log.warn("[{}][{}] No agent application found for project [{}] and no composeJson provided, skipping", tenantId, agentId, projectName);
+            if (!externalCompose.hasComposeJson()) {
+                log.warn("[{}][{}] No agent application found for project [{}] and no externalComposeJson provided, skipping", tenantId, agentId, projectName);
                 return;
             }
-            app = appCreator.createApp(tenantId, agentId, projectName, compose);
+            app = appCreator.createApp(tenantId, agentId, projectName, externalCompose);
             if (app == null) {
                 return;
             }
         }
 
-        Map<String, ContainerInfo> containerStates = compose.getContainerStatesMap();
-        JsonNode composeJson = null;
-        if (compose.hasComposeJson()) {
+        Map<String, ContainerInfo> containerStates = externalCompose.getContainerStatesMap();
+        JsonNode externalComposeJson = null;
+        if (externalCompose.hasComposeJson()) {
             log.trace("[{}][{}] Compose JSON changed for project [{}], syncing units and state", tenantId, agentId, projectName);
-            composeJson = parseComposeJson(compose.getComposeJson());
-            unitsSynchronizer.syncUnitsAndState(tenantId, app.getId(), composeJson, containerStates);
+            externalComposeJson = parseComposeJson(externalCompose.getComposeJson());
+            unitsSynchronizer.syncUnitsAndState(tenantId, app.getId(), externalComposeJson, containerStates);
         } else {
-            log.trace("[{}][{}] Syncing container states only for project [{}]", tenantId, agentId, projectName);
+            log.trace("[{}][{}] Syncing project container states only [{}]", tenantId, agentId, projectName);
             unitsSynchronizer.syncState(tenantId, app.getId(), containerStates);
         }
 
-        imageDigestChecker.checkImageDigest(tenantId, app, containerStates, composeJson);
+        imageDigestChecker.checkImageDigest(tenantId, app, containerStates, externalComposeJson);
     }
 
     private JsonNode parseComposeJson(String json) {

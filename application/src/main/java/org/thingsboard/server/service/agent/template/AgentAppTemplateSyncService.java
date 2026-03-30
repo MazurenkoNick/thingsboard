@@ -110,6 +110,7 @@ public class AgentAppTemplateSyncService {
                 template.setTenantId(TenantId.SYS_TENANT_ID);
                 template.setAppType(parsedFile.getAppType());
                 template.setConfig(parsedFile.getConfig());
+                template.setImageDigest(parsedFile.getImageDigest());
                 template.setCurrentVersion(parsedFile.getCurrentVersion());
                 template.setNextVersion(parsedFile.getNextVersion());
 
@@ -229,6 +230,7 @@ public class AgentAppTemplateSyncService {
     private static class ParsedTemplateFile {
         private AgentApplicationType appType;
         private AgentAppConfig config;
+        private String imageDigest;
         private String currentVersion;
         private String nextVersion;
         private List<AgentAppStep> startSteps = new ArrayList<>();

@@ -48,12 +48,9 @@ public class ImageDigestChecker {
     private final TelemetrySubscriptionService tsSubService;
 
     public void checkImageDigest(TenantId tenantId, AgentApplication app,
-                                  Map<String, ContainerInfo> containerStates, JsonNode composeJson) {
+                                  Map<String, ContainerInfo> containerStates, JsonNode externalComposeJson) {
         Pattern mainImagePattern = app.getAppType().getMainImagePattern();
-        if (mainImagePattern == null) {
-            return;
-        }
-        if (app.getTemplateId() == null) {
+        if (mainImagePattern == null || app.getTemplateId() == null) {
             return;
         }
         AgentAppTemplate template = templateService.findById(tenantId, app.getTemplateId());
@@ -64,7 +61,7 @@ public class ImageDigestChecker {
         if (StringUtils.isBlank(templateImageDigest)) {
             return;
         }
-        String mainServiceName = findMainServiceName(app, mainImagePattern, composeJson);
+        String mainServiceName = findMainServiceName(app, mainImagePattern, externalComposeJson);
         if (mainServiceName == null) {
             log.trace("[{}] Could not find main service for app [{}] with pattern [{}]",
                     tenantId, app.getId(), mainImagePattern);
@@ -88,25 +85,22 @@ public class ImageDigestChecker {
     }
 
     private String getTemplateImageDigest(AgentAppTemplate template) {
-        if (template.getConfig() instanceof DockerComposeConfig dockerComposeConfig) {
-            return dockerComposeConfig.getImageDigest();
+        return template.getImageDigest();
+    }
+
+    private String findMainServiceName(AgentApplication app, Pattern mainImagePattern, JsonNode externalComposeJson) {
+        if (externalComposeJson != null) {
+            return findMainServiceNameFromComposeJson(mainImagePattern, externalComposeJson);
+        }
+        // Use compose definition of app's config in case the externalComposeJson hasn't been sent, meaning it's unchanged since the last synchronization
+        if (app.getConfig() instanceof DockerComposeConfig appConfig && appConfig.getCompose() != null) {
+            return findMainServiceNameFromComposeJson(mainImagePattern, appConfig.getCompose());
         }
         return null;
     }
 
-    private String findMainServiceName(AgentApplication app, Pattern mainImagePattern, JsonNode composeJson) {
-        if (composeJson != null) {
-            return findMainServiceNameFromComposeJson(mainImagePattern, composeJson);
-        }
-        // Fall back to the compose definition stored on the application's config
-        if (app.getConfig() instanceof DockerComposeConfig c && c.getCompose() != null) {
-            return findMainServiceNameFromComposeJson(mainImagePattern, c.getCompose());
-        }
-        return null;
-    }
-
-    private String findMainServiceNameFromComposeJson(Pattern mainImagePattern, JsonNode composeJson) {
-        JsonNode services = composeJson.get("services");
+    private String findMainServiceNameFromComposeJson(Pattern mainImagePattern, JsonNode externalComposeJson) {
+        JsonNode services = externalComposeJson.get("services");
         if (services == null || !services.isObject()) {
             return null;
         }

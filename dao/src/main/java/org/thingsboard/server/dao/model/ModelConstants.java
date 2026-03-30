@@ -294,6 +294,7 @@ public class ModelConstants {
     public static final String AGENT_APP_TEMPLATE_START_STEPS_PROPERTY = "start_steps";
     public static final String AGENT_APP_TEMPLATE_UPGRADE_STEPS_PROPERTY = "upgrade_steps";
     public static final String AGENT_APP_TEMPLATE_DELETE_STEPS_PROPERTY = "delete_steps";
+    public static final String AGENT_APP_TEMPLATE_IMAGE_DIGEST_PROPERTY = "image_digest";
     public static final String AGENT_APP_TEMPLATE_ROLLBACK_STEPS_PROPERTY = "rollback_steps";
 
     /**

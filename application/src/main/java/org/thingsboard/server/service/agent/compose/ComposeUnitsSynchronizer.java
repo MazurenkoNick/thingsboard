@@ -50,11 +50,11 @@ public class ComposeUnitsSynchronizer {
     private final TelemetrySubscriptionService tsSubService;
 
     public void syncUnitsAndState(TenantId tenantId, AgentApplicationId appId,
-                                   JsonNode composeJson, Map<String, ContainerInfo> containerStates) {
+                                   JsonNode externalComposeJson, Map<String, ContainerInfo> containerStates) {
         log.trace("[{}] Syncing units and state for app [{}]", tenantId, appId);
-        Map<String, AgentAppUnit> unitsByIdentifier = syncUnits(tenantId, appId, composeJson);
+        Map<String, AgentAppUnit> unitsByIdentifier = syncUnits(tenantId, appId, externalComposeJson);
         saveContainerStateAttributes(tenantId, unitsByIdentifier, containerStates);
-        saveImageAttributes(tenantId, unitsByIdentifier, composeJson);
+        saveImageAttributes(tenantId, unitsByIdentifier, externalComposeJson);
     }
 
     public void syncState(TenantId tenantId, AgentApplicationId appId, Map<String, ContainerInfo> containerStates) {
@@ -69,8 +69,8 @@ public class ComposeUnitsSynchronizer {
         saveContainerStateAttributes(tenantId, unitsByIdentifier, containerStates);
     }
 
-    private Map<String, AgentAppUnit> syncUnits(TenantId tenantId, AgentApplicationId appId, JsonNode composeJson) {
-        Map<String, AgentAppUnitType> desiredUnits = parseDesiredUnits(composeJson);
+    private Map<String, AgentAppUnit> syncUnits(TenantId tenantId, AgentApplicationId appId, JsonNode externalComposeJson) {
+        Map<String, AgentAppUnitType> desiredUnits = parseDesiredUnits(externalComposeJson);
         log.trace("[{}] Desired units for app [{}]: {}", tenantId, appId, desiredUnits);
 
         Map<String, AgentAppUnit> existingByIdentifier = unitService.findAgentAppUnitsByAgentAppId(tenantId, appId)
@@ -105,16 +105,16 @@ public class ComposeUnitsSynchronizer {
         return result;
     }
 
-    private Map<String, AgentAppUnitType> parseDesiredUnits(JsonNode composeJson) {
+    private Map<String, AgentAppUnitType> parseDesiredUnits(JsonNode externalComposeJson) {
         Map<String, AgentAppUnitType> units = new LinkedHashMap<>();
-        collectKeys(composeJson, "services", AgentAppUnitType.CONTAINER, units);
-        collectKeys(composeJson, "volumes", AgentAppUnitType.VOLUME, units);
-        collectKeys(composeJson, "networks", AgentAppUnitType.NETWORK, units);
+        collectKeys(externalComposeJson, "services", AgentAppUnitType.CONTAINER, units);
+        collectKeys(externalComposeJson, "volumes", AgentAppUnitType.VOLUME, units);
+        collectKeys(externalComposeJson, "networks", AgentAppUnitType.NETWORK, units);
         return units;
     }
 
-    private void collectKeys(JsonNode composeJson, String section, AgentAppUnitType type, Map<String, AgentAppUnitType> units) {
-        JsonNode node = composeJson.get(section);
+    private void collectKeys(JsonNode externalComposeJson, String section, AgentAppUnitType type, Map<String, AgentAppUnitType> units) {
+        JsonNode node = externalComposeJson.get(section);
         if (node != null && node.isObject()) {
             node.fieldNames().forEachRemaining(name -> units.put(name, type));
         }
@@ -137,8 +137,8 @@ public class ComposeUnitsSynchronizer {
         }
     }
 
-    private void saveImageAttributes(TenantId tenantId, Map<String, AgentAppUnit> units, JsonNode composeJson) {
-        JsonNode services = composeJson.get("services");
+    private void saveImageAttributes(TenantId tenantId, Map<String, AgentAppUnit> units, JsonNode externalComposeJson) {
+        JsonNode services = externalComposeJson.get("services");
         if (services == null || !services.isObject()) {
             return;
         }
