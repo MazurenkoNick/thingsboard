@@ -27,8 +27,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
-import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
-import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
+import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EdgeId;
@@ -37,7 +36,7 @@ import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.server.common.data.security.DeviceCredentialsType;
 import org.thingsboard.server.dao.device.DeviceCredentialsService;
 import org.thingsboard.server.dao.edge.EdgeService;
-import org.thingsboard.server.service.agent.template.merge.MergeCredentialsMergeRule;
+import org.thingsboard.server.service.agent.template.merge.MergeCredentialsToConfigRule;
 
 import java.util.UUID;
 
@@ -45,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class MergeCredentialsMergeRuleTest {
+class MergeCredentialsToConfigRuleTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final TenantId TENANT_ID = TenantId.fromUUID(UUID.randomUUID());
@@ -55,11 +54,11 @@ class MergeCredentialsMergeRuleTest {
     @Mock
     private DeviceCredentialsService deviceCredentialsService;
 
-    private MergeCredentialsMergeRule rule;
+    private MergeCredentialsToConfigRule rule;
 
     @BeforeEach
     void setUp() {
-        rule = new MergeCredentialsMergeRule(edgeService, deviceCredentialsService);
+        rule = new MergeCredentialsToConfigRule(edgeService, deviceCredentialsService);
         ReflectionTestUtils.setField(rule, "edgeRpcPort", 7070);
     }
 
@@ -68,42 +67,42 @@ class MergeCredentialsMergeRuleTest {
     @Test
     void supports_shouldReturnFalse_whenCtxIsNull() {
         AgentApplication app = createEdgeApp(null);
-        assertFalse(rule.supports(app, new AgentAppTemplate(), null));
+        assertFalse(rule.supports(app,null));
     }
 
     @Test
     void supports_shouldReturnFalse_whenRelatedEntityIdIsNull() {
         AgentApplication app = createEdgeApp(null);
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder().build();
-        assertFalse(rule.supports(app, new AgentAppTemplate(), ctx));
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().build();
+        assertFalse(rule.supports(app,ctx));
     }
 
     @Test
     void supports_shouldReturnFalse_whenAppTypeIsGeneric() {
         AgentApplication app = createApp(AgentApplicationType.GENERIC, null);
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder().relatedEntityId(UUID.randomUUID()).build();
-        assertFalse(rule.supports(app, new AgentAppTemplate(), ctx));
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().relatedEntityId(UUID.randomUUID()).build();
+        assertFalse(rule.supports(app,ctx));
     }
 
     @Test
     void supports_shouldReturnFalse_whenAppTypeIsNull() {
         AgentApplication app = createApp(null, null);
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder().relatedEntityId(UUID.randomUUID()).build();
-        assertFalse(rule.supports(app, new AgentAppTemplate(), ctx));
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().relatedEntityId(UUID.randomUUID()).build();
+        assertFalse(rule.supports(app,ctx));
     }
 
     @Test
     void supports_shouldReturnTrue_whenEdgeAppWithRelatedEntityId() {
         AgentApplication app = createEdgeApp(null);
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder().relatedEntityId(UUID.randomUUID()).build();
-        assertTrue(rule.supports(app, new AgentAppTemplate(), ctx));
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().relatedEntityId(UUID.randomUUID()).build();
+        assertTrue(rule.supports(app,ctx));
     }
 
     @Test
     void supports_shouldReturnTrue_whenGatewayAppWithRelatedEntityId() {
         AgentApplication app = createApp(AgentApplicationType.GATEWAY, null);
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder().relatedEntityId(UUID.randomUUID()).build();
-        assertTrue(rule.supports(app, new AgentAppTemplate(), ctx));
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().relatedEntityId(UUID.randomUUID()).build();
+        assertTrue(rule.supports(app,ctx));
     }
 
     // ==================== apply() - Edge ====================
@@ -122,8 +121,8 @@ class MergeCredentialsMergeRuleTest {
         JsonNode compose = createEdgeCompose("placeholder-key", "placeholder-secret", "7070");
         AgentApplication app = createEdgeApp(compose);
 
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder().relatedEntityId(edgeUuid).build();
-        rule.apply(app, new AgentAppTemplate(), ctx);
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().relatedEntityId(edgeUuid).build();
+        rule.apply(app, ctx);
 
         JsonNode env = getServiceEnvironment(app, "mytbedge");
         assertEquals("test-routing-key", env.get("CLOUD_ROUTING_KEY").asText());
@@ -140,8 +139,8 @@ class MergeCredentialsMergeRuleTest {
         JsonNode compose = createEdgeCompose("original-key", "original-secret", "7070");
         AgentApplication app = createEdgeApp(compose);
 
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder().relatedEntityId(edgeUuid).build();
-        rule.apply(app, new AgentAppTemplate(), ctx);
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().relatedEntityId(edgeUuid).build();
+        rule.apply(app, ctx);
 
         JsonNode env = getServiceEnvironment(app, "mytbedge");
         assertEquals("original-key", env.get("CLOUD_ROUTING_KEY").asText());
@@ -162,8 +161,8 @@ class MergeCredentialsMergeRuleTest {
         JsonNode compose = createGatewayAccessTokenCompose("placeholder-token", "placeholder-type");
         AgentApplication app = createGatewayApp(compose);
 
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder().relatedEntityId(deviceUuid).build();
-        rule.apply(app, new AgentAppTemplate(), ctx);
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().relatedEntityId(deviceUuid).build();
+        rule.apply(app, ctx);
 
         JsonNode env = getServiceEnvironment(app, "mygateway");
         assertEquals("accessToken", env.get("TB_GW_SECURITY_TYPE").asText());
@@ -185,8 +184,8 @@ class MergeCredentialsMergeRuleTest {
         JsonNode compose = createGatewayMqttBasicCompose();
         AgentApplication app = createGatewayApp(compose);
 
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder().relatedEntityId(deviceUuid).build();
-        rule.apply(app, new AgentAppTemplate(), ctx);
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().relatedEntityId(deviceUuid).build();
+        rule.apply(app, ctx);
 
         JsonNode env = getServiceEnvironment(app, "mygateway");
         assertEquals("usernamePassword", env.get("TB_GW_SECURITY_TYPE").asText());
@@ -208,8 +207,8 @@ class MergeCredentialsMergeRuleTest {
         JsonNode compose = createGatewayMqttBasicCompose();
         AgentApplication app = createGatewayApp(compose);
 
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder().relatedEntityId(deviceUuid).build();
-        rule.apply(app, new AgentAppTemplate(), ctx);
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().relatedEntityId(deviceUuid).build();
+        rule.apply(app, ctx);
 
         JsonNode env = getServiceEnvironment(app, "mygateway");
         assertEquals("usernamePassword", env.get("TB_GW_SECURITY_TYPE").asText());
@@ -227,8 +226,8 @@ class MergeCredentialsMergeRuleTest {
         JsonNode compose = createGatewayAccessTokenCompose("original-token", "accessToken");
         AgentApplication app = createGatewayApp(compose);
 
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder().relatedEntityId(deviceUuid).build();
-        rule.apply(app, new AgentAppTemplate(), ctx);
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().relatedEntityId(deviceUuid).build();
+        rule.apply(app, ctx);
 
         JsonNode env = getServiceEnvironment(app, "mygateway");
         assertEquals("original-token", env.get("TB_GW_ACCESS_TOKEN").asText());
@@ -241,9 +240,9 @@ class MergeCredentialsMergeRuleTest {
         UUID edgeUuid = UUID.randomUUID();
         AgentApplication app = createEdgeApp(null);
 
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder().relatedEntityId(edgeUuid).build();
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().relatedEntityId(edgeUuid).build();
         // Should not throw
-        rule.apply(app, new AgentAppTemplate(), ctx);
+        rule.apply(app, ctx);
     }
 
     @Test
@@ -254,8 +253,8 @@ class MergeCredentialsMergeRuleTest {
         app.setTenantId(TENANT_ID);
         // config is null (not DockerComposeConfig)
 
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder().relatedEntityId(edgeUuid).build();
-        rule.apply(app, new AgentAppTemplate(), ctx);
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().relatedEntityId(edgeUuid).build();
+        rule.apply(app, ctx);
     }
 
     @Test
@@ -281,8 +280,8 @@ class MergeCredentialsMergeRuleTest {
         compose.set("services", services);
 
         AgentApplication app = createEdgeApp(compose);
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder().relatedEntityId(edgeUuid).build();
-        rule.apply(app, new AgentAppTemplate(), ctx);
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder().relatedEntityId(edgeUuid).build();
+        rule.apply(app, ctx);
 
         JsonNode resultEnv = getServiceEnvironment(app, "mytbedge");
         assertEquals("value", resultEnv.get("SOME_OTHER_VAR").asText());

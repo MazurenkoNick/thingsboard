@@ -27,6 +27,7 @@ import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.HasVersion;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
+import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -39,7 +40,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter
-public class AgentApplication extends BaseData<AgentApplicationId> implements HasId<AgentApplicationId>, HasTenantId, HasVersion, HasName {
+public class AgentApplication extends BaseData<AgentApplicationId> implements HasId<AgentApplicationId>, HasTenantId, HasVersion, HasName, HasAgentAppConfig {
 
     private TenantId tenantId;
     private AgentId agentId;
@@ -58,6 +59,9 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     @Getter
     private boolean pendingDeletion;
     private AgentApplicationOrigin origin;
+    private AgentAppProfileId applicationProfileId;
+    @Getter
+    private Long profileConfigVersion;
 
     public AgentApplication() {
         super();
@@ -79,6 +83,8 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         this.version = application.getVersion();
         this.pendingDeletion = application.isPendingDeletion();
         this.origin = application.getOrigin();
+        this.applicationProfileId = application.getApplicationProfileId();
+        this.profileConfigVersion = application.getProfileConfigVersion();
     }
 
     public static AgentApplication fromTemplate(AgentAppTemplate template) {
@@ -135,6 +141,11 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     @Schema(description = "Origin of the application (INSTALLED or DISCOVERED)")
     public AgentApplicationOrigin getOrigin() {
         return origin;
+    }
+
+    @Schema(description = "Application Profile Id. When set, config is read-only and inherited from the profile.")
+    public AgentAppProfileId getApplicationProfileId() {
+        return applicationProfileId;
     }
 
     public static String generateProjectName() {

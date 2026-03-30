@@ -57,11 +57,11 @@ public final class AgentAppTemplateEntity extends BaseVersionedEntity<AgentAppTe
     @Column(name = ModelConstants.AGENT_APP_TEMPLATE_CURRENT_VERSION_PROPERTY)
     private String currentVersion;
 
-    @Column(name = ModelConstants.AGENT_APP_TEMPLATE_PREVIOUS_VERSION_PROPERTY)
-    private String previousVersion;
-
     @Column(name = ModelConstants.AGENT_APP_TEMPLATE_NEXT_VERSION_PROPERTY)
     private String nextVersion;
+
+    @Column(name = ModelConstants.AGENT_APP_TEMPLATE_IMAGE_DIGEST_PROPERTY)
+    private String imageDigest;
 
     @Convert(converter = JsonConverter.class)
     @JdbcType(PostgreSQLJsonPGObjectJsonbType.class)
@@ -99,8 +99,8 @@ public final class AgentAppTemplateEntity extends BaseVersionedEntity<AgentAppTe
         }
         this.appType = template.getAppType();
         this.currentVersion = template.getCurrentVersion();
-        this.previousVersion = template.getPreviousVersion();
         this.nextVersion = template.getNextVersion();
+        this.imageDigest = template.getImageDigest();
         this.config = template.getConfig() != null ? JacksonUtil.valueToTree(template.getConfig()) : null;
         this.startSteps = template.getStartSteps() != null ? JacksonUtil.valueToTree(template.getStartSteps()) : null;
         this.upgradeSteps = template.getUpgradeSteps() != null ? JacksonUtil.valueToTree(template.getUpgradeSteps()) : null;
@@ -118,8 +118,8 @@ public final class AgentAppTemplateEntity extends BaseVersionedEntity<AgentAppTe
         }
         template.setAppType(appType);
         template.setCurrentVersion(currentVersion);
-        template.setPreviousVersion(previousVersion);
         template.setNextVersion(nextVersion);
+        template.setImageDigest(imageDigest);
         template.setConfig(config != null ? JacksonUtil.treeToValue(config, AgentAppConfig.class) : null);
         template.setStartSteps(startSteps != null ? JacksonUtil.convertValue(startSteps, new TypeReference<List<AgentAppStep>>() {}) : null);
         template.setUpgradeSteps(upgradeSteps != null ? JacksonUtil.convertValue(upgradeSteps, new TypeReference<List<AgentAppStep>>() {}) : null);

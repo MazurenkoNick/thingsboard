@@ -13,21 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.agent.template.merge;
+package org.thingsboard.server.service.entitiy.agent;
 
+import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
-import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
+import org.thingsboard.server.common.data.id.TenantId;
 
-public interface AppTemplateMergeRule {
+public interface TbAgentAppProfileService {
 
-    /**
-     * Determines whether the merge is supported or not based on the provided arguments
-     */
-    boolean supports(AgentApplication agentApplication, AgentAppTemplate template, TemplateMergeCtx ctx);
+    AgentAppProfile save(AgentAppProfile profile, User currentUser) throws Exception;
 
-    /**
-     * Merges the template's configuration into the provided agentApplication
-     */
-    void apply(AgentApplication agentApplication, AgentAppTemplate template, TemplateMergeCtx ctx);
+    void delete(AgentAppProfile profile, User user);
+
+    AgentAppProfile mergeForPreview(TenantId tenantId, AgentAppProfile appProfile, AgentAppTemplate template, String composeType);
 }

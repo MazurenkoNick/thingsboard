@@ -22,13 +22,13 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
+import org.thingsboard.server.common.data.agent.HasAgentAppConfig;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
 import org.thingsboard.server.common.data.agent.step.ComposeTypeChoiceStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
-import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
 import org.thingsboard.server.dao.agent.StepLinkedListUtils;
 
 import java.util.Iterator;
@@ -37,15 +37,20 @@ import java.util.Optional;
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @Slf4j
-public class MergeComposeStepRule implements AppTemplateMergeRule {
+public class MergeTemplateComposeRule implements AppConfigMergeRule {
 
     @Override
-    public boolean supports(AgentApplication agentApp, AgentAppTemplate template, TemplateMergeCtx ctx) {
-        return ctx != null && StringUtils.isNoneBlank(ctx.getSelectedComposeType());
+    public boolean supports(HasAgentAppConfig hasAgentAppConfig, AppConfigMergeCtx ctx) {
+        return isTemplateComposeMergeRequested(ctx);
+    }
+
+    private static boolean isTemplateComposeMergeRequested(AppConfigMergeCtx ctx) {
+        return ctx != null && ctx.getTemplate() != null && StringUtils.isNoneBlank(ctx.getSelectedComposeType());
     }
 
     @Override
-    public void apply(AgentApplication agentApp, AgentAppTemplate template, TemplateMergeCtx ctx) {
+    public void apply(HasAgentAppConfig hasAgentAppConfig, AppConfigMergeCtx ctx) {
+        AgentAppTemplate template = ctx.getTemplate();
         Optional<ComposeTypeChoiceStep> choiceStep = StepLinkedListUtils.getByType(
                 AgentAppStepType.COMPOSE_TEMPLATE, ComposeTypeChoiceStep.class, template.getStartSteps()
         );
@@ -54,24 +59,34 @@ public class MergeComposeStepRule implements AppTemplateMergeRule {
             return;
         }
         ComposeTypeChoiceStep composeTypeChoiceStep = choiceStep.get();
-        mergeComposeBySelectedType(agentApp, composeTypeChoiceStep, ctx);
+        mergeComposeBySelectedType(hasAgentAppConfig, composeTypeChoiceStep, ctx);
     }
 
-    private void mergeComposeBySelectedType(AgentApplication agentApp, ComposeTypeChoiceStep choiceStep, TemplateMergeCtx ctx) {
+    private void mergeComposeBySelectedType(HasAgentAppConfig hasAgentAppConfig, ComposeTypeChoiceStep choiceStep, AppConfigMergeCtx ctx) {
         String selectedComposeType = ctx.getSelectedComposeType();
-        JsonNode composeTemplate = getComposeTemplateByType(choiceStep, selectedComposeType);
-        AgentAppConfig appConfig = agentApp.getConfig();
+        JsonNode templateCompose = getTemplateComposeByType(choiceStep, selectedComposeType);
+        AgentAppConfig appConfig = hasAgentAppConfig.getConfig();
 
+        if (appConfig == null) {
+            DockerComposeConfig config = new DockerComposeConfig();
+            config.setCompose(templateCompose.deepCopy());
+            hasAgentAppConfig.setConfig(config);
+            return;
+        }
+        mergeExisting(appConfig, templateCompose);
+    }
+
+    private void mergeExisting(AgentAppConfig appConfig, JsonNode templateCompose) {
         if (!(appConfig instanceof DockerComposeConfig appDockerConfig)) {
             throw new IllegalStateException("Can't set compose to the non-compose configuration " + appConfig);
         }
         JsonNode appCompose = appDockerConfig.getCompose();
 
         if (appCompose == null || appCompose.isNull() || !appCompose.isObject()) {
-            appDockerConfig.setCompose(composeTemplate.deepCopy());
+            appDockerConfig.setCompose(templateCompose.deepCopy());
             return;
         }
-        deepMerge((ObjectNode) appCompose, composeTemplate);
+        deepMerge((ObjectNode) appCompose, templateCompose);
     }
 
     /**
@@ -84,7 +99,6 @@ public class MergeComposeStepRule implements AppTemplateMergeRule {
      * </ul>
      */
     private void deepMerge(ObjectNode appNode, JsonNode templateNode) {
-        // Add missing keys from template; recurse into shared object keys
         Iterator<String> templateFields = templateNode.fieldNames();
         while (templateFields.hasNext()) {
             String key = templateFields.next();
@@ -97,11 +111,10 @@ public class MergeComposeStepRule implements AppTemplateMergeRule {
         }
     }
 
-    private JsonNode getComposeTemplateByType(ComposeTypeChoiceStep choiceStep, String selectedComposeType) {
+    private JsonNode getTemplateComposeByType(ComposeTypeChoiceStep choiceStep, String selectedComposeType) {
         return choiceStep.getTemplateByType(selectedComposeType)
                 .orElseThrow(() -> new IllegalArgumentException(
                         String.format("There's no '%s' compose type in: %s", selectedComposeType, choiceStep.getComposeTypes())
                 ));
     }
 }
-

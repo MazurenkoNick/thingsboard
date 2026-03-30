@@ -67,6 +67,8 @@ public class TenantAdminPermissions extends AbstractPermissions {
         put(Resource.AGENT_APPLICATION, tenantEntityPermissionChecker);
         put(Resource.AGENT_APP_TEMPLATE, new PermissionChecker.GenericPermissionChecker(Operation.READ));
         put(Resource.AGENT_APP_UNIT, agentAppUnitPermissionChecker);
+        put(Resource.AGENT_APP_PROFILE, tenantEntityPermissionChecker);
+        put(Resource.AGENT_GROUP, tenantEntityPermissionChecker);
     }
 
     public static final PermissionChecker tenantEntityPermissionChecker = new PermissionChecker() {

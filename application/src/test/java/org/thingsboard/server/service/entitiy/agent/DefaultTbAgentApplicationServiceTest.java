@@ -30,20 +30,26 @@ import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
+import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationOrigin;
+import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.state.ComposeDownStepState;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
+import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
+import org.thingsboard.server.dao.agent.AgentAppProfileService;
+import org.thingsboard.server.dao.agent.AgentAppRelationService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
-import org.thingsboard.server.service.agent.template.merge.AgentAppTemplateMergeOrchestrator;
+import org.thingsboard.server.service.agent.template.merge.AgentAppConfigMergeOrchestrator;
+import org.thingsboard.server.service.agent.template.merge.MergeCredentialsToConfigRule;
 import org.thingsboard.server.service.entitiy.TbLogEntityActionService;
 
 import java.util.Map;
@@ -61,9 +67,15 @@ import static org.mockito.Mockito.when;
 class DefaultTbAgentApplicationServiceTest {
 
     @Mock
-    private AgentAppTemplateMergeOrchestrator templateMergeOrchestrator;
+    private AgentAppConfigMergeOrchestrator templateMergeOrchestrator;
+    @Mock
+    private MergeCredentialsToConfigRule mergeCredentialsToConfigRule;
     @Mock
     private AgentApplicationService agentApplicationService;
+    @Mock
+    private AgentAppProfileService profileService;
+    @Mock
+    private AgentAppRelationService agentAppRelationService;
     @Mock
     private AgentAppEventService agentAppEventService;
     @Mock
@@ -229,12 +241,14 @@ class DefaultTbAgentApplicationServiceTest {
     }
 
     @Test
-    void execActionEvent_upgrade_savesUpdatedApplication() throws Exception {
+    void execActionEvent_upgrade_copiesFieldsOntoExistingApp() throws Exception {
         AgentAppTemplateId oldTemplateId = new AgentAppTemplateId(UUID.randomUUID());
         AgentAppTemplateId newTemplateId = new AgentAppTemplateId(UUID.randomUUID());
 
         AgentApplication app = newApplication(APP_ID);
         app.setTemplateId(oldTemplateId);
+        app.setName("my-app");
+        app.setAgentId(AGENT_ID);
         when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
 
         AgentApplication upgradedApp = new AgentApplication();
@@ -247,11 +261,15 @@ class DefaultTbAgentApplicationServiceTest {
 
         service.execActionEvent(TENANT_ID, APP_ID, request, USER);
 
-        verify(agentApplicationService).save(eq(TENANT_ID), eq(upgradedApp));
-        assertThat(upgradedApp.getId()).isEqualTo(APP_ID);
-        assertThat(upgradedApp.getTenantId()).isEqualTo(TENANT_ID);
-        assertThat(upgradedApp.getTemplateId()).isEqualTo(oldTemplateId);
-        assertThat(upgradedApp.getDesiredTemplateId()).isEqualTo(newTemplateId);
+        ArgumentCaptor<AgentApplication> captor = ArgumentCaptor.forClass(AgentApplication.class);
+        verify(agentApplicationService).save(eq(TENANT_ID), captor.capture());
+        AgentApplication saved = captor.getValue();
+        assertThat(saved.getId()).isEqualTo(APP_ID);
+        assertThat(saved.getName()).isEqualTo("my-app");
+        assertThat(saved.getAgentId()).isEqualTo(AGENT_ID);
+        assertThat(saved.getTemplateId()).isEqualTo(oldTemplateId);
+        assertThat(saved.getDesiredTemplateId()).isEqualTo(newTemplateId);
+        assertThat(saved.getConfig()).isNotNull();
     }
 
     @Test
@@ -314,6 +332,200 @@ class DefaultTbAgentApplicationServiceTest {
 
         assertThatThrownBy(() -> service.cancelEvent(TENANT_ID, EVENT_ID))
                 .isInstanceOf(ThingsboardException.class);
+    }
+
+    // ==================== install with profile config ====================
+
+    @Test
+    void install_withProfileId_copiesProfileConfigAndVersion() throws Exception {
+        AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
+        AgentApplication app = newApplication(null);
+        app.setApplicationProfileId(profileId);
+
+        AgentAppProfile profile = new AgentAppProfile();
+        profile.setConfig(createDockerComposeConfig("profile-compose"));
+        profile.setVersion(5L);
+        when(profileService.findProfileById(TENANT_ID, profileId)).thenReturn(profile);
+
+        AgentApplication savedApp = newApplication(APP_ID);
+        when(agentApplicationService.save(eq(TENANT_ID), any(AgentApplication.class))).thenReturn(savedApp);
+
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.INSTALL);
+        request.setApplication(app);
+
+        service.install(TENANT_ID, request, USER);
+
+        ArgumentCaptor<AgentApplication> appCaptor = ArgumentCaptor.forClass(AgentApplication.class);
+        verify(agentApplicationService).save(eq(TENANT_ID), appCaptor.capture());
+        assertThat(appCaptor.getValue().getConfig()).isNotNull();
+        assertThat(appCaptor.getValue().getConfig()).isNotSameAs(profile.getConfig());
+        assertThat(appCaptor.getValue().getProfileConfigVersion()).isEqualTo(5L);
+    }
+
+    @Test
+    void install_withProfileId_andRelatedEntityId_mergesCredentials() throws Exception {
+        AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
+        UUID relatedEntityId = UUID.randomUUID();
+
+        AgentApplication app = newApplication(null);
+        app.setApplicationProfileId(profileId);
+
+        AgentAppProfile profile = new AgentAppProfile();
+        profile.setConfig(createDockerComposeConfig("profile-compose"));
+        when(profileService.findProfileById(TENANT_ID, profileId)).thenReturn(profile);
+        when(mergeCredentialsToConfigRule.supports(any(), any())).thenReturn(true);
+
+        AgentApplication savedApp = newApplication(APP_ID);
+        when(agentApplicationService.save(eq(TENANT_ID), any(AgentApplication.class))).thenReturn(savedApp);
+
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.INSTALL);
+        request.setApplication(app);
+        request.setRelatedEntityId(relatedEntityId);
+
+        service.install(TENANT_ID, request, USER);
+
+        ArgumentCaptor<AppConfigMergeCtx> ctxCaptor = ArgumentCaptor.forClass(AppConfigMergeCtx.class);
+        verify(mergeCredentialsToConfigRule).supports(any(), ctxCaptor.capture());
+        assertThat(ctxCaptor.getValue().getRelatedEntityId()).isEqualTo(relatedEntityId);
+        verify(mergeCredentialsToConfigRule).apply(any(), any());
+    }
+
+    @Test
+    void install_withProfileId_noRelatedEntityId_skipsCredentialMerge() throws Exception {
+        AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
+        AgentApplication app = newApplication(null);
+        app.setApplicationProfileId(profileId);
+
+        AgentAppProfile profile = new AgentAppProfile();
+        profile.setConfig(createDockerComposeConfig("profile-compose"));
+        when(profileService.findProfileById(TENANT_ID, profileId)).thenReturn(profile);
+        when(mergeCredentialsToConfigRule.supports(any(), any())).thenReturn(false);
+
+        AgentApplication savedApp = newApplication(APP_ID);
+        when(agentApplicationService.save(eq(TENANT_ID), any(AgentApplication.class))).thenReturn(savedApp);
+
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.INSTALL);
+        request.setApplication(app);
+
+        service.install(TENANT_ID, request, USER);
+
+        verify(mergeCredentialsToConfigRule, never()).apply(any(), any());
+    }
+
+    @Test
+    void install_withProfileId_profileNotFound_keepsAppConfig() throws Exception {
+        AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
+        AgentApplication app = newApplication(null);
+        app.setApplicationProfileId(profileId);
+        DockerComposeConfig originalConfig = createDockerComposeConfig("original");
+        app.setConfig(originalConfig);
+
+        when(profileService.findProfileById(TENANT_ID, profileId)).thenReturn(null);
+
+        AgentApplication savedApp = newApplication(APP_ID);
+        when(agentApplicationService.save(eq(TENANT_ID), any(AgentApplication.class))).thenReturn(savedApp);
+
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.INSTALL);
+        request.setApplication(app);
+
+        service.install(TENANT_ID, request, USER);
+
+        ArgumentCaptor<AgentApplication> appCaptor = ArgumentCaptor.forClass(AgentApplication.class);
+        verify(agentApplicationService).save(eq(TENANT_ID), appCaptor.capture());
+        assertThat(appCaptor.getValue().getConfig()).isSameAs(originalConfig);
+    }
+
+    @Test
+    void install_withoutProfileId_skipsProfileResolution() throws Exception {
+        AgentApplication app = newApplication(null);
+
+        AgentApplication savedApp = newApplication(APP_ID);
+        when(agentApplicationService.save(eq(TENANT_ID), any(AgentApplication.class))).thenReturn(savedApp);
+
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.INSTALL);
+        request.setApplication(app);
+
+        service.install(TENANT_ID, request, USER);
+
+        verify(profileService, never()).findProfileById(any(), any());
+    }
+
+    // ==================== execActionEvent with profile config ====================
+
+    @Test
+    void execActionEvent_update_withProfileId_resolvesProfileConfig() throws Exception {
+        AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
+        AgentApplication app = newApplication(APP_ID);
+        app.setApplicationProfileId(profileId);
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
+
+        AgentAppProfile profile = new AgentAppProfile();
+        profile.setConfig(createDockerComposeConfig("profile-compose"));
+        profile.setVersion(7L);
+        when(profileService.findProfileById(TENANT_ID, profileId)).thenReturn(profile);
+
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.UPDATE);
+
+        service.execActionEvent(TENANT_ID, APP_ID, request, USER);
+
+        ArgumentCaptor<AgentApplication> appCaptor = ArgumentCaptor.forClass(AgentApplication.class);
+        verify(agentApplicationService).save(eq(TENANT_ID), appCaptor.capture());
+        assertThat(appCaptor.getValue().getConfig()).isNotNull();
+        assertThat(appCaptor.getValue().getProfileConfigVersion()).isEqualTo(7L);
+    }
+
+    @Test
+    void execActionEvent_upgrade_withProfileId_resolvesProfileConfig() throws Exception {
+        AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
+        AgentAppTemplateId oldTemplateId = new AgentAppTemplateId(UUID.randomUUID());
+        AgentAppTemplateId newTemplateId = new AgentAppTemplateId(UUID.randomUUID());
+
+        AgentApplication app = newApplication(APP_ID);
+        app.setApplicationProfileId(profileId);
+        app.setTemplateId(oldTemplateId);
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
+
+        AgentAppProfile profile = new AgentAppProfile();
+        profile.setConfig(createDockerComposeConfig("profile-compose"));
+        profile.setVersion(3L);
+        when(profileService.findProfileById(TENANT_ID, profileId)).thenReturn(profile);
+
+        AgentApplication upgradedApp = new AgentApplication();
+        upgradedApp.setTemplateId(newTemplateId);
+
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.UPGRADE);
+        request.setApplication(upgradedApp);
+
+        service.execActionEvent(TENANT_ID, APP_ID, request, USER);
+
+        ArgumentCaptor<AgentApplication> appCaptor = ArgumentCaptor.forClass(AgentApplication.class);
+        verify(agentApplicationService).save(eq(TENANT_ID), appCaptor.capture());
+        AgentApplication saved = appCaptor.getValue();
+        assertThat(saved.getProfileConfigVersion()).isEqualTo(3L);
+        assertThat(saved.getDesiredTemplateId()).isEqualTo(newTemplateId);
+        assertThat(saved.getTemplateId()).isEqualTo(oldTemplateId);
+    }
+
+    @Test
+    void execActionEvent_delete_withProfileId_doesNotResolveProfileConfig() throws Exception {
+        AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
+        AgentApplication app = newApplication(APP_ID);
+        app.setApplicationProfileId(profileId);
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
+
+        AgentAppEventRequest request = new AgentAppEventRequest();
+        request.setActionType(AgentAppEventActionType.DELETE);
+
+        service.execActionEvent(TENANT_ID, APP_ID, request, USER);
+
+        verify(profileService, never()).findProfileById(any(), any());
     }
 
     // ==================== Helpers ====================

@@ -119,16 +119,15 @@ public class ImageDigestCheckAgentTest extends AbstractAgentTest {
         verifyAttribute(app.getId(), "pullRequired", true);
     }
 
-    private AgentAppTemplate createEdgeTemplateWithDigest(String imageDigest) {
+    private AgentAppTemplate createEdgeTemplateWithDigest(String digest) {
         DockerComposeConfig config = new DockerComposeConfig();
         String composeJson = constructComposeJson(
                 Map.of("tb-edge", "thingsboard/tb-edge:" + EDGE_VERSION));
         config.setCompose(org.thingsboard.common.util.JacksonUtil.toJsonNode(composeJson));
-        config.setImageDigest(imageDigest);
 
         ComposeStep step = createComposeStep();
 
         return createAgentAppTemplate(AgentApplicationType.EDGE, EDGE_VERSION,
-                config, List.of(step));
+                config, List.of(step), digest);
     }
 }

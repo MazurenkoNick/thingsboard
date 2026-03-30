@@ -27,15 +27,15 @@ import java.util.UUID;
 
 public interface AgentApplicationDao extends Dao<AgentApplication> {
 
+    void removeByAgentId(TenantId tenantId, UUID agentId);
+
+    void removeByTemplateId(TenantId tenantId, UUID templateId);
+
     List<AgentApplication> findByAgentId(TenantId tenantId, UUID agentId);
 
     PageData<AgentApplication> findByAgentId(TenantId tenantId, UUID agentId, PageLink pageLink);
 
-    void removeByAgentId(TenantId tenantId, UUID agentId);
-
     List<AgentApplication> findByTemplateId(TenantId tenantId, UUID templateId);
-
-    void removeByTemplateId(TenantId tenantId, UUID templateId);
 
     AgentApplication findByProjectName(TenantId tenantId, String projectName);
 
@@ -44,5 +44,7 @@ public interface AgentApplicationDao extends Dao<AgentApplication> {
     AgentApplicationInfo findInfoById(TenantId tenantId, UUID id);
 
     PageData<AgentApplicationInfo> findInfosByAgentId(TenantId tenantId, UUID agentId, PageLink pageLink);
+
+    PageData<AgentApplication> findByApplicationProfileIdAndAgentGroupId(UUID profileId, UUID groupId, PageLink pageLink);
 
 }

@@ -134,12 +134,19 @@ abstract public class AbstractAgentTest extends AbstractControllerTest {
 
     protected AgentAppTemplate createAgentAppTemplate(AgentApplicationType appType, String version,
                                                        AgentAppConfig config, List<AgentAppStep> startSteps) {
+        return createAgentAppTemplate(appType, version, config, startSteps, null);
+    }
+
+    protected AgentAppTemplate createAgentAppTemplate(AgentApplicationType appType, String version,
+                                                       AgentAppConfig config, List<AgentAppStep> startSteps,
+                                                       String imageDigest) {
         AgentAppTemplate template = new AgentAppTemplate();
         template.setTenantId(tenantId);
         template.setAppType(appType);
         template.setCurrentVersion(version);
         template.setConfig(config);
         template.setStartSteps(startSteps);
+        template.setImageDigest(imageDigest);
         return agentAppTemplateService.save(tenantId, template);
     }
 

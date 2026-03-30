@@ -29,10 +29,6 @@ import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
-import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
-import org.thingsboard.server.common.data.agent.config.DockerComposeUtils;
-import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -42,22 +38,13 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
-import org.thingsboard.server.common.data.id.DeviceId;
-import org.thingsboard.server.common.data.security.DeviceCredentials;
-import org.thingsboard.server.common.msg.EncryptionUtil;
-import org.thingsboard.server.dao.device.DeviceCredentialsService;
-import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.entity.AbstractCachedEntityService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.service.DataValidator;
-import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
 
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validatePageLink;
@@ -81,12 +68,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
     private AgentAppTemplateService agentAppTemplateService;
 
     @Autowired
-    @Lazy
-    private EdgeService edgeService;
-
-    @Autowired
-    @Lazy
-    private DeviceCredentialsService deviceCredentialsService;
+    private AgentAppRelationService agentAppRelationService;
 
     @Autowired
     private RelationService relationService;
@@ -107,11 +89,12 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         AgentApplication old = agentApplication.getId() != null
                 ? agentApplicationDao.findById(tenantId, agentApplication.getUuidId())
                 : null;
+        resolveOrigin(agentApplication, old);
         resolveTemplateId(agentApplication, old);
         resolveProjectName(agentApplication, old);
         agentApplicationValidator.validate(agentApplication, app -> tenantId);
         AgentApplication saved = agentApplicationDao.save(tenantId, agentApplication);
-        saveRelatedEntityRelation(tenantId, saved);
+        agentAppRelationService.relateToParentEntityByConfig(tenantId, saved);
         publishEvictEvent(new AgentApplicationCacheEvictEvent(saved.getId()));
         eventPublisher.publishEvent(SaveEntityEvent.builder()
                 .tenantId(tenantId)
@@ -174,7 +157,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         log.trace("Executing findByRelatedEntity, tenantId [{}], entityId [{}]", tenantId, entityId);
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validateId(entityId.getId(), id -> "Incorrect entityId " + id);
-        return relationService.findByToAndType(tenantId, entityId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.COMMON)
+        return relationService.findByToAndType(tenantId, entityId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.AGENT)
                 .stream()
                 .map(EntityRelation::getFrom)
                 .filter(BaseAgentApplicationService::isAgentAppId)
@@ -241,104 +224,18 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         }
     }
 
+    private void resolveOrigin(AgentApplication agentApplication, AgentApplication old) {
+        if (old != null && old.getOrigin() != null) {
+            agentApplication.setOrigin(old.getOrigin());
+        }
+    }
+
     private void resolveProjectName(AgentApplication agentApplication, AgentApplication old) {
         if (old != null && old.getProjectName() != null) {
             agentApplication.setProjectName(old.getProjectName());
         } else if (agentApplication.getProjectName() == null) {
             agentApplication.setProjectName(AgentApplication.generateProjectName());
         }
-    }
-
-    private void saveRelatedEntityRelation(TenantId tenantId, AgentApplication app) {
-        if (app.getAppType() == null) {
-            return;
-        }
-        EntityType relatedType = app.getAppType().getRelatedEntityType();
-        if (relatedType == null || app.getConfig() == null) {
-            return;
-        }
-
-        EntityId newRelatedEntityId = switch (relatedType) {
-            case EDGE -> resolveEdgeId(tenantId, app);
-            case DEVICE -> resolveDeviceId(app);
-            default -> null;
-        };
-
-        List<EntityRelation> existingRelated = relationService.findByFromAndType(
-                tenantId, app.getId(), EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.COMMON);
-
-        if (sameRelatedEntityId(existingRelated, newRelatedEntityId)) return;
-
-        for (EntityRelation rel : existingRelated) {
-            relationService.deleteRelation(tenantId, rel);
-        }
-        if (newRelatedEntityId != null) {
-            validateRelatedEntityNotManaged(tenantId, app, newRelatedEntityId);
-            relationService.saveRelation(tenantId, new EntityRelation(
-                    app.getId(), newRelatedEntityId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.COMMON));
-        }
-    }
-
-    private boolean sameRelatedEntityId(List<EntityRelation> existing, EntityId newRelatedEntityId) {
-        UUID currentId = existing.stream()
-                .findFirst()
-                .map(r -> r.getTo().getId())
-                .orElse(null);
-
-        UUID newId = newRelatedEntityId != null ? newRelatedEntityId.getId() : null;
-
-        return Objects.equals(currentId, newId);
-    }
-
-    private void validateRelatedEntityNotManaged(TenantId tenantId, AgentApplication app, EntityId relatedEntityId) {
-        boolean alreadyManaged = relationService.findByToAndType(
-                        tenantId, relatedEntityId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.COMMON)
-                .stream()
-                .anyMatch(r -> isAgentAppId(r.getFrom()) && !r.getFrom().getId().equals(app.getId().getId()));
-        if (alreadyManaged) {
-            throw new DataValidationException("Entity is already managed by another agent application");
-        }
-    }
-
-    private EntityId resolveEdgeId(TenantId tenantId, AgentApplication app) {
-        String routingKey = app.getConfig().getEdgeRoutingKey();
-        if (routingKey == null) {
-            return null;
-        }
-        return edgeService.findEdgeByRoutingKey(tenantId, routingKey)
-                .map(Edge::getId)
-                .orElse(null);
-    }
-
-    private EntityId resolveDeviceId(AgentApplication app) {
-        if (!(app.getConfig() instanceof DockerComposeConfig composeConfig)) {
-            return null;
-        }
-        String credentialsId = resolveGatewayCredentialsId(composeConfig);
-        if (credentialsId == null) {
-            return null;
-        }
-        DeviceCredentials credentials = deviceCredentialsService.findDeviceCredentialsByCredentialsId(credentialsId);
-        return credentials != null ? credentials.getDeviceId() : null;
-    }
-
-    private String resolveGatewayCredentialsId(DockerComposeConfig config) {
-        var imagePattern = AgentApplicationType.GATEWAY.getMainImagePattern();
-        String securityType = DockerComposeUtils.getEnvVariable(config.getCompose(), imagePattern, "TB_GW_SECURITY_TYPE");
-        if ("accessToken".equals(securityType)) {
-            return DockerComposeUtils.getEnvVariable(config.getCompose(), imagePattern, "TB_GW_ACCESS_TOKEN");
-        } else if ("usernamePassword".equals(securityType)) {
-            String clientId = DockerComposeUtils.getEnvVariable(config.getCompose(), imagePattern, "TB_GW_CLIENT_ID");
-            String userName = DockerComposeUtils.getEnvVariable(config.getCompose(), imagePattern, "TB_GW_USERNAME");
-            if (StringUtils.isEmpty(clientId) && StringUtils.isNotEmpty(userName)) {
-                return userName;
-            } else if (StringUtils.isNotEmpty(clientId) && StringUtils.isEmpty(userName)) {
-                return EncryptionUtil.getSha3Hash(clientId);
-            } else if (StringUtils.isNotEmpty(clientId) && StringUtils.isNotEmpty(userName)) {
-                return EncryptionUtil.getSha3Hash("|", clientId, userName);
-            }
-        }
-        return null;
     }
 
     private static boolean isAgentAppId(EntityId appCandidateId) {

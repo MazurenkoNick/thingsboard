@@ -16,28 +16,27 @@
 package org.thingsboard.server.service.agent.template.merge;
 
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
-import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
+import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
+import org.thingsboard.server.common.data.agent.HasAgentAppConfig;
 
 import java.util.List;
 
 @Component
-public class AgentAppTemplateMergeOrchestrator {
+public class AgentAppConfigMergeOrchestrator {
 
-    private final List<AppTemplateMergeRule> rules;
+    private final List<AppConfigMergeRule> rules;
 
-    public AgentAppTemplateMergeOrchestrator(List<AppTemplateMergeRule> rules) {
+    public AgentAppConfigMergeOrchestrator(List<AppConfigMergeRule> rules) {
         this.rules = rules;
     }
 
-    public void merge(AgentApplication agentApplication, AgentAppTemplate template, TemplateMergeCtx ctx) {
+    public void merge(HasAgentAppConfig hasAgentAppConfig, AppConfigMergeCtx ctx) {
         if (rules == null || rules.isEmpty()) {
             return;
         }
-        for (AppTemplateMergeRule rule : rules) {
-            if (rule.supports(agentApplication, template, ctx)) {
-                rule.apply(agentApplication, template, ctx);
+        for (AppConfigMergeRule rule : rules) {
+            if (rule.supports(hasAgentAppConfig, ctx)) {
+                rule.apply(hasAgentAppConfig, ctx);
             }
         }
     }

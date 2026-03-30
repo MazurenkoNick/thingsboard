@@ -13,25 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent.template;
+package org.thingsboard.server.cache.agent;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.thingsboard.server.common.data.id.TenantId;
 
 @Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class TemplateMergeCtx {
+@RequiredArgsConstructor
+public class AgentAppProfileCacheEvictEvent {
 
-    private String selectedComposeType;
-    private UUID relatedEntityId;
+    private final TenantId tenantId;
+    private final String newName;
+    private final String oldName;
 
-    public static TemplateMergeCtx empty() {
-        return new TemplateMergeCtx();
-    }
 }

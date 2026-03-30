@@ -37,6 +37,7 @@ import org.thingsboard.server.common.data.agent.step.ComposeStartStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
+import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -77,17 +78,14 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     public void testSave() {
         Agent agent = createAgent("My agent");
         AgentAppTemplate template = createTemplate();
-        AgentApplication app = new AgentApplication();
-        app.setAgentId(agent.getId());
-        app.setAppType(AgentApplicationType.EDGE);
-        app.setTemplateId(template.getId());
 
-        AgentApplication saved = agentApplicationService.save(tenantId, app);
+        AgentApplication saved = saveApplicationWithEdgeConfig(agent, "app1", "routing-key1", template.getId());
+
         Assert.assertNotNull(saved);
         Assert.assertNotNull(saved.getId());
         Assert.assertTrue(saved.getCreatedTime() > 0);
-        Assert.assertEquals(agent.getId(), saved.getAgentId());
         Assert.assertEquals(template.getId(), saved.getTemplateId());
+        Assert.assertEquals(agent.getId(), saved.getAgentId());
 
         AgentApplication found = agentApplicationService.findById(tenantId, saved.getId());
         Assert.assertNotNull(found);
@@ -122,8 +120,8 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     @Test
     public void testFindAllByAgentId() {
         Agent agent = createAgent("Agent for list");
-        AgentApplication app1 = saveApplication(agent, "app1");
-        AgentApplication app2 = saveApplication(agent, "app2");
+        AgentApplication app1 = saveApplicationWithEdgeConfig(agent, "app1", "routing-key1");
+        AgentApplication app2 = saveApplicationWithEdgeConfig(agent, "app2", "routing-key2");
 
         List<AgentApplication> list = agentApplicationService.findByAgentId(tenantId, agent.getId(), new PageLink(100)).getData();
         Assert.assertEquals(2, list.size());
@@ -136,7 +134,7 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     @Test
     public void testDelete() throws Exception {
         Agent agent = createAgent("Agent for delete");
-        AgentApplication app = saveApplication(agent, "toDelete");
+        AgentApplication app = saveApplicationWithEdgeConfig(agent, "toDelete", "routing-key");
 
         agentApplicationService.delete(tenantId, app.getId());
         AgentApplication found = agentApplicationService.findById(tenantId, app.getId());
@@ -148,8 +146,8 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     @Test
     public void testDeleteByAgentId() {
         Agent agent = createAgent("Agent for deleteByAgentId");
-        saveApplication(agent, "a1");
-        saveApplication(agent, "a2");
+        saveApplicationWithEdgeConfig(agent, "a1", "rk1");
+        saveApplicationWithEdgeConfig(agent, "a2", "rk2");
 
         List<AgentApplication> before = agentApplicationService.findByAgentId(tenantId, agent.getId(), new PageLink(100)).getData();
         Assert.assertEquals(2, before.size());
@@ -164,8 +162,7 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     @Test
     public void testUpdateAgentApplication() throws Exception {
         Agent agent = createAgent("Agent for update");
-        AgentAppTemplate template = createTemplate();
-        AgentApplication app = saveApplication(agent, "v1");
+        AgentApplication app = saveApplicationWithEdgeConfig(agent, "v1", "rk1");
 
         app.setName("v2");
         AgentApplication updated = agentApplicationService.save(tenantId, app);
@@ -181,7 +178,7 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     @Test
     public void testFindByEventId() {
         Agent agent = createAgent("Agent for findByEventId");
-        AgentApplication app = saveApplication(agent, "eventApp");
+        AgentApplication app = saveApplicationWithEdgeConfig(agent, "eventApp", "rk1");
 
         AgentAppEvent event = new AgentAppEvent();
         event.setTenantId(tenantId);
@@ -206,14 +203,8 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     @Test
     public void testSave_projectNameIsGenerated() {
         Agent agent = createAgent("Agent for project name");
-        AgentAppTemplate template = createTemplate();
 
-        AgentApplication app = new AgentApplication();
-        app.setAgentId(agent.getId());
-        app.setAppType(AgentApplicationType.EDGE);
-        app.setTemplateId(template.getId());
-
-        AgentApplication saved = agentApplicationService.save(tenantId, app);
+        AgentApplication saved = saveApplicationWithEdgeConfig(agent, "app1", "rk1");
         Assert.assertNotNull(saved);
         Assert.assertNotNull("Project name should be auto-generated on create", saved.getProjectName());
         Assert.assertFalse(saved.getProjectName().isBlank());
@@ -225,14 +216,8 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     @Test
     public void testUpdate_projectNameIsPreserved() {
         Agent agent = createAgent("Agent for project name update");
-        AgentAppTemplate template = createTemplate();
 
-        AgentApplication app = new AgentApplication();
-        app.setAgentId(agent.getId());
-        app.setAppType(AgentApplicationType.EDGE);
-        app.setTemplateId(template.getId());
-
-        AgentApplication saved = agentApplicationService.save(tenantId, app);
+        AgentApplication saved = saveApplicationWithEdgeConfig(agent, "app1", "rk1");
         String originalProjectName = saved.getProjectName();
         Assert.assertNotNull(originalProjectName);
 
@@ -292,6 +277,9 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         app.setAgentId(agent.getId());
         app.setAppType(AgentApplicationType.GENERIC);
         app.setTemplateId(template.getId());
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setCompose(createGenericComposeJson());
+        app.setConfig(config);
 
         AgentApplication saved = agentApplicationService.save(tenantId, app);
         AgentApplication found = agentApplicationService.findByRelatedEntity(tenantId, saved.getAgentId());
@@ -333,17 +321,12 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         Edge edge = createEdge("Related Edge", "related-key");
 
         AgentApplication app1 = saveApplicationWithEdgeConfig(agent, "related1", edge.getRoutingKey());
-        AgentApplication app2 = saveApplication(agent, "unrelated");
 
         AgentApplication found = agentApplicationService.findByRelatedEntity(tenantId, edge.getId());
         Assert.assertNotNull(found);
         Assert.assertEquals(app1.getId(), found.getId());
 
-        AgentApplication notFound = agentApplicationService.findByRelatedEntity(tenantId, app2.getAgentId());
-        Assert.assertNull(notFound);
-
         agentApplicationService.delete(tenantId, app1.getId());
-        agentApplicationService.delete(tenantId, app2.getId());
         edgeService.deleteEdge(tenantId, edge.getId());
         agentService.deleteAgent(tenantId, agent.getId());
     }
@@ -358,6 +341,9 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         app.setAppType(AgentApplicationType.EDGE);
         app.setTemplateId(template.getId());
         app.setOrigin(AgentApplicationOrigin.INSTALLED);
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setCompose(createEdgeComposeJson("rk1"));
+        app.setConfig(config);
 
         AgentApplication saved = agentApplicationService.save(tenantId, app);
         Assert.assertEquals(AgentApplicationOrigin.INSTALLED, saved.getOrigin());
@@ -379,6 +365,10 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         app.setAppType(AgentApplicationType.GENERIC);
         app.setTemplateId(template.getId());
         app.setOrigin(AgentApplicationOrigin.DISCOVERED);
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setCompose(createGenericComposeJson());
+        app.setConfig(config);
+
 
         AgentApplication saved = agentApplicationService.save(tenantId, app);
         Assert.assertEquals(AgentApplicationOrigin.DISCOVERED, saved.getOrigin());
@@ -399,6 +389,9 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         app.setAgentId(agent.getId());
         app.setAppType(AgentApplicationType.GENERIC);
         app.setTemplateId(template.getId());
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setCompose(createGenericComposeJson());
+        app.setConfig(config);
 
         AgentApplication saved = agentApplicationService.save(tenantId, app);
         Assert.assertNull(saved.getOrigin());
@@ -410,8 +403,8 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     @Test
     public void testFindEventsByAgentId() {
         Agent agent = createAgent("Agent for events by agentId");
-        AgentApplication app1 = saveApplication(agent, "app1");
-        AgentApplication app2 = saveApplication(agent, "app2");
+        AgentApplication app1 = saveApplicationWithEdgeConfig(agent, "app1", "rk1");
+        AgentApplication app2 = saveApplicationWithEdgeConfig(agent, "app2", "rk2");
 
         AgentAppEvent event1 = new AgentAppEvent();
         event1.setTenantId(tenantId);
@@ -572,7 +565,6 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         AgentAppTemplate template = new AgentAppTemplate();
         template.setAppType(AgentApplicationType.GENERIC);
         template.setCurrentVersion("1.0.0");
-        template.setPreviousVersion("0.9.0");
         template.setNextVersion(null);
         ComposeStartStep step = new ComposeStartStep();
         step.setId(UUID.randomUUID());
@@ -594,11 +586,15 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
 
     private AgentApplication saveApplicationWithEdgeConfig(Agent agent, String name, String routingKey) {
         AgentAppTemplate template = createTemplate();
+        return saveApplicationWithEdgeConfig(agent, name, routingKey, template.getId());
+    }
+
+    private AgentApplication saveApplicationWithEdgeConfig(Agent agent, String name, String routingKey, AgentAppTemplateId agentAppTemplateId) {
         AgentApplication app = new AgentApplication();
         app.setAgentId(agent.getId());
         app.setAppType(AgentApplicationType.EDGE);
         app.setName(name);
-        app.setTemplateId(template.getId());
+        app.setTemplateId(agentAppTemplateId);
 
         DockerComposeConfig config = new DockerComposeConfig();
         config.setCompose(createEdgeComposeJson(routingKey));
@@ -671,6 +667,18 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         ObjectNode services = JacksonUtil.newObjectNode();
         services.set("mytbedge", service);
         ObjectNode compose = JacksonUtil.newObjectNode();
+        compose.set("services", services);
+        return compose;
+    }
+
+    private JsonNode createGenericComposeJson() {
+        ObjectNode service = JacksonUtil.newObjectNode();
+        service.put("image", "nginx:alpine");
+
+        ObjectNode services = JacksonUtil.newObjectNode();
+        services.set("generic", service);
+        ObjectNode compose = JacksonUtil.newObjectNode();
+
         compose.set("services", services);
         return compose;
     }

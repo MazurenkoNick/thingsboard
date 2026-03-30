@@ -33,6 +33,8 @@ public interface TbAgentApplicationService {
 
     void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, User user) throws Exception;
 
+    void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, User user, boolean skipActiveEventCheck) throws Exception;
+
     void cancelEvent(TenantId tenantId, AgentAppEventId eventId) throws Exception;
 
     AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application, AgentAppTemplate template, String composeType, UUID relatedEntityId);

@@ -63,6 +63,8 @@ import org.thingsboard.server.common.data.TenantInfo;
 import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentAppProfile;
+import org.thingsboard.server.common.data.agent.AgentGroup;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.ai.AiModel;
@@ -82,6 +84,8 @@ import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentAppProfileId;
+import org.thingsboard.server.common.data.id.AgentGroupId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.AiModelId;
 import org.thingsboard.server.common.data.id.AlarmCommentId;
@@ -141,7 +145,9 @@ import org.thingsboard.server.common.data.widget.WidgetTypeDetails;
 import org.thingsboard.server.common.data.widget.WidgetTypeInfo;
 import org.thingsboard.server.common.data.widget.WidgetsBundle;
 import org.thingsboard.server.dao.agent.AgentAppTemplateService;
+import org.thingsboard.server.dao.agent.AgentAppProfileService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
+import org.thingsboard.server.dao.agent.AgentGroupService;
 import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.ai.AiModelService;
 import org.thingsboard.server.dao.alarm.AlarmCommentService;
@@ -192,6 +198,7 @@ import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.action.EntityActionService;
 import org.thingsboard.server.service.component.ComponentDiscoveryService;
 import org.thingsboard.server.service.entitiy.TbLogEntityActionService;
+import org.thingsboard.server.service.entitiy.agent.AgentBulkOperationService;
 import org.thingsboard.server.service.entitiy.ai.TbAiModelService;
 import org.thingsboard.server.service.entitiy.user.TbUserSettingsService;
 import org.thingsboard.server.service.ota.OtaPackageStateService;
@@ -411,6 +418,15 @@ public abstract class BaseController {
 
     @Autowired
     protected AgentAppTemplateService agentAppTemplateService;
+
+    @Autowired
+    protected AgentAppProfileService agentAppProfileService;
+
+    @Autowired
+    protected AgentGroupService agentGroupService;
+
+    @Autowired
+    protected AgentBulkOperationService agentBulkOperationService;
 
     @Value("${server.log_controller_error_stack_trace}")
     @Getter
@@ -677,6 +693,8 @@ public abstract class BaseController {
                 case AGENT -> checkAgentId(new AgentId(entityId.getId()), operation);
                 case AGENT_APPLICATION -> checkAgentAppId(new AgentApplicationId(entityId.getId()), operation);
                 case AGENT_APP_TEMPLATE -> checkAgentAppTemplateId(new AgentAppTemplateId(entityId.getId()), operation);
+                case AGENT_APP_PROFILE -> checkAgentAppProfileId(new AgentAppProfileId(entityId.getId()), operation);
+                case AGENT_GROUP -> checkAgentGroupId(new AgentGroupId(entityId.getId()), operation);
                 default -> (HasId<? extends EntityId>) checkEntityId(entityId, entitiesService::findEntityByTenantIdAndId, operation);
             };
         } catch (Exception e) {
@@ -899,6 +917,14 @@ public abstract class BaseController {
 
     AgentAppTemplate checkAgentAppTemplateId(AgentAppTemplateId agentAppTemplateId, Operation operation) throws ThingsboardException {
         return checkEntityId(agentAppTemplateId, agentAppTemplateService::findById, operation);
+    }
+
+    AgentAppProfile checkAgentAppProfileId(AgentAppProfileId profileId, Operation operation) throws ThingsboardException {
+        return checkEntityId(profileId, agentAppProfileService::findProfileById, operation);
+    }
+
+    AgentGroup checkAgentGroupId(AgentGroupId groupId, Operation operation) throws ThingsboardException {
+        return checkEntityId(groupId, agentGroupService::findGroupById, operation);
     }
 
     protected <I extends EntityId> I emptyId(EntityType entityType) {

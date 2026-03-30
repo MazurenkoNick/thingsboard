@@ -17,6 +17,7 @@ package org.thingsboard.server.common.data.agent.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -24,7 +25,9 @@ import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.validation.NoXss;
 import org.thingsboard.server.exception.DataValidationException;
 
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
 
 @Data
 @NoArgsConstructor
@@ -33,7 +36,6 @@ public class DockerComposeConfig extends AgentAppConfig {
 
     @NoXss
     private JsonNode compose;
-    private String imageDigest;
 
     @Override
     public AgentAppConfigType getType() {
@@ -44,7 +46,6 @@ public class DockerComposeConfig extends AgentAppConfig {
     public AgentAppConfig copy() {
         DockerComposeConfig copy = new DockerComposeConfig();
         copy.setCompose(this.compose != null ? this.compose.deepCopy() : null);
-        copy.setImageDigest(this.imageDigest);
         return copy;
     }
 
@@ -56,11 +57,42 @@ public class DockerComposeConfig extends AgentAppConfig {
     }
 
     @Override
-    public boolean isDeployFieldsChanged(AgentAppConfig other) {
-        if (!(other instanceof DockerComposeConfig that)) {
-            return true;
+    public void validateForProfile(AgentApplicationType appType) {
+        Pattern imagePattern = appType.getMainImagePattern();
+        if (imagePattern == null) {
+            return;
         }
-        return !Objects.equals(this.compose, that.compose);
+        ObjectNode env = DockerComposeUtils.findServiceEnvironment(compose, imagePattern);
+        if (env == null) {
+            throw new DataValidationException("Compose config must contain a service matching image pattern: " + imagePattern);
+        }
+        switch (appType) {
+            case EDGE -> requireEnvKeys(env, "CLOUD_ROUTING_KEY", "CLOUD_ROUTING_SECRET", "CLOUD_RPC_PORT");
+            case GATEWAY -> validateGatewayCredentialKeys(env);
+        }
+    }
+
+    private void validateGatewayCredentialKeys(ObjectNode env) {
+        requireEnvKeys(env, "TB_GW_SECURITY_TYPE");
+        String securityType = env.get("TB_GW_SECURITY_TYPE").asText();
+        switch (securityType) {
+            case "accessToken" -> requireEnvKeys(env, "TB_GW_ACCESS_TOKEN");
+            case "usernamePassword" -> requireEnvKeys(env, "TB_GW_CLIENT_ID", "TB_GW_USERNAME", "TB_GW_PASSWORD");
+            default -> throw new DataValidationException("Unsupported gateway security type: " + securityType
+                    + ". Supported types: accessToken, usernamePassword");
+        }
+    }
+
+    private void requireEnvKeys(ObjectNode env, String... keys) {
+        List<String> missing = new ArrayList<>();
+        for (String key : keys) {
+            if (!env.has(key)) {
+                missing.add(key);
+            }
+        }
+        if (!missing.isEmpty()) {
+            throw new DataValidationException("Compose config is missing required credential environment variables: " + missing);
+        }
     }
 
     @Override

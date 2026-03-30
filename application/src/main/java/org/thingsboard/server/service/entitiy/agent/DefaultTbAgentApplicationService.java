@@ -27,10 +27,11 @@ import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
+import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationOrigin;
+import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
-import org.thingsboard.server.common.data.agent.template.TemplateMergeCtx;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -40,10 +41,13 @@ import org.thingsboard.server.common.data.id.TenantId;
 
 import java.util.UUID;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
+import org.thingsboard.server.dao.agent.AgentAppProfileService;
+import org.thingsboard.server.dao.agent.AgentAppRelationService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.queue.util.TbCoreComponent;
-import org.thingsboard.server.service.agent.template.merge.AgentAppTemplateMergeOrchestrator;
+import org.thingsboard.server.service.agent.template.merge.AgentAppConfigMergeOrchestrator;
+import org.thingsboard.server.service.agent.template.merge.MergeCredentialsToConfigRule;
 import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
 
 @TbCoreComponent
@@ -52,8 +56,11 @@ import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
 @RequiredArgsConstructor
 public class DefaultTbAgentApplicationService extends AbstractTbEntityService implements TbAgentApplicationService {
 
-    private final AgentAppTemplateMergeOrchestrator templateMergeOrchestrator;
+    private final AgentAppConfigMergeOrchestrator configMergeOrchestrator;
+    private final MergeCredentialsToConfigRule mergeCredentialsToConfigRule;
     private final AgentApplicationService applicationService;
+    private final AgentAppProfileService profileService;
+    private final AgentAppRelationService agentAppRelationService;
     private final AgentAppEventService appEventService;
     private final TbClusterService tbClusterService;
 
@@ -61,6 +68,9 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
     public AgentApplication update(AgentApplication application, User user) throws Exception {
         if (application.getId() == null) {
             throw new IllegalStateException("Can't update state of the non-existent application!");
+        }
+        if (application.getApplicationProfileId() != null && application.getConfig() != null) {
+            throw new DataValidationException("Cannot set config directly on a profile-managed application. Use bulk UPDATE to push profile config.");
         }
         TenantId tenantId = application.getTenantId();
         try {
@@ -80,6 +90,9 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         application.setId(null);
         application.setTenantId(tenantId);
         application.setOrigin(AgentApplicationOrigin.INSTALLED);
+
+        resolveProfileConfig(tenantId, application, request.getRelatedEntityId());
+
         AgentApplication savedApp = checkNotNull(applicationService.save(tenantId, application));
 
         saveEvent(tenantId, savedApp.getId(), AgentAppEventActionType.INSTALL, request);
@@ -91,13 +104,23 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
     @Transactional
     @Override
     public void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, User user) throws Exception {
+        execActionEvent(tenantId, applicationId, request, user, false);
+    }
+
+    @Transactional
+    @Override
+    public void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, User user, boolean skipActiveEventCheck) throws Exception {
         AgentAppEventActionType actionType = request.getActionType();
-        if (appEventService.hasActiveEventForApplication(applicationId)) {
+        if (!skipActiveEventCheck && appEventService.hasActiveEventForApplication(applicationId)) {
             throw new ThingsboardException("Cannot create event while another event is being processed", ThingsboardErrorCode.TOO_MANY_REQUESTS);
         }
 
         AgentApplication application = checkNotNull(applicationService.findById(tenantId, applicationId));
         application.setDesiredTemplateId(null);
+
+        if (actionType == AgentAppEventActionType.UPDATE || actionType == AgentAppEventActionType.UPGRADE) {
+            resolveProfileConfig(tenantId, application, agentAppRelationService.findRelatedEntityId(tenantId, applicationId));
+        }
 
         if (actionType == AgentAppEventActionType.DELETE) {
             appEventService.deleteAllPendingByApplicationId(applicationId);
@@ -107,12 +130,10 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
             if (upgradedApp == null) {
                 throw new DataValidationException("Upgrade request must include an application");
             }
-            upgradedApp.setId(applicationId);
-            upgradedApp.setTenantId(tenantId);
-            upgradedApp.setVersion(application.getVersion());
-            upgradedApp.setDesiredTemplateId(upgradedApp.getTemplateId());
-            upgradedApp.setTemplateId(application.getTemplateId());
-            application = upgradedApp;
+            application.setDesiredTemplateId(upgradedApp.getTemplateId());
+            if (upgradedApp.getConfig() != null) {
+                application.setConfig(upgradedApp.getConfig());
+            }
         }
 
         applicationService.save(tenantId, application);
@@ -138,12 +159,32 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         log.trace("Executing mergeForPreview, tenantId [{}], applicationId [{}], templateId [{}], composeType [{}], relatedEntityId [{}]",
                 tenantId, application.getId(), template.getId(), composeType, relatedEntityId);
 
-        TemplateMergeCtx ctx = TemplateMergeCtx.builder()
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder()
+                .template(template)
                 .selectedComposeType(composeType)
                 .relatedEntityId(relatedEntityId)
                 .build();
-        templateMergeOrchestrator.merge(application, template, ctx);
+        configMergeOrchestrator.merge(application, ctx);
         return application;
+    }
+
+    private void resolveProfileConfig(TenantId tenantId, AgentApplication application, UUID relatedEntityId) {
+        if (application.getApplicationProfileId() == null) {
+            return;
+        }
+        AgentAppProfile profile = profileService.findProfileById(tenantId, application.getApplicationProfileId());
+        if (profile == null || profile.getConfig() == null) {
+            return;
+        }
+        application.setConfig(profile.getConfig().copy());
+        application.setProfileConfigVersion(profile.getVersion());
+
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder()
+                .relatedEntityId(relatedEntityId)
+                .build();
+        if (mergeCredentialsToConfigRule.supports(application, ctx)) {
+            mergeCredentialsToConfigRule.apply(application, ctx);
+        }
     }
 
     private void saveEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventActionType actionType, AgentAppEventRequest request) {

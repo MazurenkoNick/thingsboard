@@ -32,6 +32,7 @@ import org.thingsboard.server.common.data.agent.AgentApplicationOrigin;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -81,6 +82,12 @@ public class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication
     @Column(name = ModelConstants.AGENT_APPLICATION_ORIGIN_PROPERTY)
     private AgentApplicationOrigin origin;
 
+    @Column(name = ModelConstants.AGENT_APP_PROFILE_ID_PROPERTY)
+    private UUID applicationProfileId;
+
+    @Column(name = ModelConstants.AGENT_APPLICATION_PROFILE_CONFIG_VERSION_PROPERTY)
+    private Long profileConfigVersion;
+
     public AgentApplicationEntity() {
         super();
     }
@@ -105,6 +112,10 @@ public class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication
         this.projectName = application.getProjectName();
         this.pendingDeletion = application.isPendingDeletion();
         this.origin = application.getOrigin();
+        if (application.getApplicationProfileId() != null) {
+            this.applicationProfileId = application.getApplicationProfileId().getId();
+        }
+        this.profileConfigVersion = application.getProfileConfigVersion();
     }
 
     @Override
@@ -130,6 +141,10 @@ public class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication
         application.setProjectName(projectName);
         application.setPendingDeletion(pendingDeletion);
         application.setOrigin(origin);
+        if (applicationProfileId != null) {
+            application.setApplicationProfileId(new AgentAppProfileId(applicationProfileId));
+        }
+        application.setProfileConfigVersion(profileConfigVersion);
         return application;
     }
 }

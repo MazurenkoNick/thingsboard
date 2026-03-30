@@ -27,21 +27,27 @@ public class AgentApplicationInfo extends AgentApplication {
     @Schema(description = "Current version of the template this application is based on.", accessMode = Schema.AccessMode.READ_ONLY)
     private String currentVersion;
 
-    @Schema(description = "Previous version available for rollback.", accessMode = Schema.AccessMode.READ_ONLY)
-    private String previousVersion;
-
     @Schema(description = "Next version available for upgrade.", accessMode = Schema.AccessMode.READ_ONLY)
     private String nextVersion;
+
+    @Schema(description = "True if the app's config is outdated relative to its profile.", accessMode = Schema.AccessMode.READ_ONLY)
+    private boolean profileConfigOutdated;
 
     public AgentApplicationInfo() {
         super();
     }
 
-    public AgentApplicationInfo(AgentApplication application, String currentVersion, String previousVersion, String nextVersion) {
+    public AgentApplicationInfo(AgentApplication application, String currentVersion, String nextVersion) {
         super(application);
         this.currentVersion = currentVersion;
-        this.previousVersion = previousVersion;
         this.nextVersion = nextVersion;
+    }
+
+    public AgentApplicationInfo(AgentApplication application, String currentVersion, String nextVersion, boolean profileConfigOutdated) {
+        super(application);
+        this.currentVersion = currentVersion;
+        this.nextVersion = nextVersion;
+        this.profileConfigOutdated = profileConfigOutdated;
     }
 
 }

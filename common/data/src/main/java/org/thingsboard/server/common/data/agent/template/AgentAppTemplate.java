@@ -41,8 +41,8 @@ public class AgentAppTemplate extends BaseData<AgentAppTemplateId> implements Ha
     private TenantId tenantId;
     private AgentApplicationType appType;
     private AgentAppConfig config;
+    private String imageDigest;
     private String currentVersion;
-    private String previousVersion;
     private String nextVersion;
     private List<AgentAppStep> startSteps;
     private List<AgentAppStep> upgradeSteps;
@@ -63,8 +63,8 @@ public class AgentAppTemplate extends BaseData<AgentAppTemplateId> implements Ha
         super(template);
         this.tenantId = template.getTenantId();
         this.appType = template.getAppType();
+        this.imageDigest = template.getImageDigest();
         this.currentVersion = template.getCurrentVersion();
-        this.previousVersion = template.getPreviousVersion();
         this.nextVersion = template.getNextVersion();
         this.startSteps = template.getStartSteps();
         this.upgradeSteps = template.getUpgradeSteps();
@@ -101,14 +101,14 @@ public class AgentAppTemplate extends BaseData<AgentAppTemplateId> implements Ha
         return config;
     }
 
+    @Schema(description = "Expected Docker image digest for the main service container (e.g. 'sha256:abc123...')")
+    public String getImageDigest() {
+        return imageDigest;
+    }
+
     @Schema(description = "Current template version", requiredMode = Schema.RequiredMode.REQUIRED)
     public String getCurrentVersion() {
         return currentVersion;
-    }
-
-    @Schema(description = "Previous template version", requiredMode = Schema.RequiredMode.REQUIRED)
-    public String getPreviousVersion() {
-        return previousVersion;
     }
 
     @Schema(description = "Next template version")

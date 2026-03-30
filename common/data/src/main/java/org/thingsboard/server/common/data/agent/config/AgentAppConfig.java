@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
@@ -35,10 +36,11 @@ public abstract class AgentAppConfig {
 
     public abstract AgentAppConfig copy();
 
-    public abstract boolean isDeployFieldsChanged(AgentAppConfig other);
-
     public abstract String getEdgeRoutingKey();
 
     public void validate() {
+    }
+
+    public void validateForProfile(AgentApplicationType appType) {
     }
 }

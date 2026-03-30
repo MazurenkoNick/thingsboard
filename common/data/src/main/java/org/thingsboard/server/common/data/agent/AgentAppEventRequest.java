@@ -27,4 +27,5 @@ public class AgentAppEventRequest {
     private AgentAppEventActionType actionType;
     private AgentApplication application;
     private Map<UUID, AgentAppStepState> stepInputs;
+    private UUID relatedEntityId;
 }
