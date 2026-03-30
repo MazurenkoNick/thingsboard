@@ -686,9 +686,10 @@ public class IntegrationControllerTest extends AbstractControllerTest {
         doPost("/api/converter", converterWithoutIntegrationType, Converter.class);
 
         Map<IntegrationType, IntegrationConvertersInfo> convertersInfo = readResponse(doGet("/api/integrations/converters/info"), new TypeReference<>() {});
+        assertThat(convertersInfo.size()).isEqualTo(IntegrationType.values().length);
         for (Map.Entry<IntegrationType, IntegrationConvertersInfo> info : convertersInfo.entrySet()) {
             IntegrationConvertersInfo infoValue = info.getValue();
-            assertThat(infoValue.uplink().existing()).isEqualTo(info.getKey() == IntegrationType.MQTT);
+            assertThat(infoValue.uplink().existing()).isEqualTo(true);
             assertThat(infoValue.downlink().existing()).isEqualTo(info.getKey() == IntegrationType.MQTT);
             if (info.getKey() == IntegrationType.CHIRPSTACK) {
                 assertThat(infoValue.uplink().library()).isTrue();
