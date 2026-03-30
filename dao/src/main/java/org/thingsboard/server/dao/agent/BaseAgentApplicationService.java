@@ -156,7 +156,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         log.trace("Executing findByRelatedEntity, tenantId [{}], entityId [{}]", tenantId, entityId);
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validateId(entityId.getId(), id -> "Incorrect entityId " + id);
-        return relationService.findByToAndType(tenantId, entityId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.COMMON)
+        return relationService.findByToAndType(tenantId, entityId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.AGENT)
                 .stream()
                 .map(EntityRelation::getFrom)
                 .filter(BaseAgentApplicationService::isAgentAppId)

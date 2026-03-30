@@ -185,20 +185,20 @@ public class BaseAgentGroupService extends AbstractCachedEntityService<AgentGrou
 
     @Override
     public void assignProfileToGroup(TenantId tenantId, AgentGroupId groupId, AgentAppProfileId profileId) {
-        if (relationService.checkRelation(tenantId, groupId, profileId, HAS_PROFILE_RELATION_TYPE, RelationTypeGroup.COMMON)) {
+        if (relationService.checkRelation(tenantId, groupId, profileId, HAS_PROFILE_RELATION_TYPE, RelationTypeGroup.AGENT)) {
             throw new DataValidationException("Profile is already assigned to this group!");
         }
-        relationService.saveRelation(tenantId, new EntityRelation(groupId, profileId, HAS_PROFILE_RELATION_TYPE, RelationTypeGroup.COMMON));
+        relationService.saveRelation(tenantId, new EntityRelation(groupId, profileId, HAS_PROFILE_RELATION_TYPE, RelationTypeGroup.AGENT));
     }
 
     @Override
     public void unassignProfileFromGroup(TenantId tenantId, AgentGroupId groupId, AgentAppProfileId profileId) {
-        relationService.deleteRelation(tenantId, groupId, profileId, HAS_PROFILE_RELATION_TYPE, RelationTypeGroup.COMMON);
+        relationService.deleteRelation(tenantId, groupId, profileId, HAS_PROFILE_RELATION_TYPE, RelationTypeGroup.AGENT);
     }
 
     @Override
     public List<EntityRelation> findProfileRelations(TenantId tenantId, AgentGroupId groupId) {
-        return relationService.findByFromAndType(tenantId, groupId, HAS_PROFILE_RELATION_TYPE, RelationTypeGroup.COMMON);
+        return relationService.findByFromAndType(tenantId, groupId, HAS_PROFILE_RELATION_TYPE, RelationTypeGroup.AGENT);
     }
 
     @Override

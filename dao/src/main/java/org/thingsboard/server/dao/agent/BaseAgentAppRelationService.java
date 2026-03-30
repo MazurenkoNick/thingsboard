@@ -65,7 +65,7 @@ public class BaseAgentAppRelationService implements AgentAppRelationService {
         };
 
         List<EntityRelation> existingRelated = relationService.findByFromAndType(
-                tenantId, app.getId(), EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.COMMON);
+                tenantId, app.getId(), EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.AGENT);
 
         if (sameRelatedEntityId(existingRelated, newRelatedEntityId)) return;
 
@@ -75,14 +75,14 @@ public class BaseAgentAppRelationService implements AgentAppRelationService {
         if (newRelatedEntityId != null) {
             validateRelatedEntityNotManaged(tenantId, app, newRelatedEntityId);
             relationService.saveRelation(tenantId, new EntityRelation(
-                    app.getId(), newRelatedEntityId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.COMMON));
+                    app.getId(), newRelatedEntityId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.AGENT));
         }
     }
 
     @Override
     public UUID findRelatedEntityId(TenantId tenantId, AgentApplicationId applicationId) {
         return relationService.findByFromAndType(
-                        tenantId, applicationId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.COMMON)
+                        tenantId, applicationId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.AGENT)
                 .stream()
                 .findFirst()
                 .map(rel -> rel.getTo().getId())
@@ -102,7 +102,7 @@ public class BaseAgentAppRelationService implements AgentAppRelationService {
 
     private void validateRelatedEntityNotManaged(TenantId tenantId, AgentApplication app, EntityId relatedEntityId) {
         boolean alreadyManaged = relationService.findByToAndType(
-                        tenantId, relatedEntityId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.COMMON)
+                        tenantId, relatedEntityId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.AGENT)
                 .stream()
                 .anyMatch(r -> isAgentAppId(r.getFrom()) && !r.getFrom().getId().equals(app.getId().getId()));
         if (alreadyManaged) {
