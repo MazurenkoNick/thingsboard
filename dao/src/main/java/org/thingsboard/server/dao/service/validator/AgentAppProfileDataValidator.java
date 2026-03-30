@@ -55,10 +55,10 @@ public class AgentAppProfileDataValidator extends DataValidator<AgentAppProfile>
         if (profile.getConfig() == null) {
             throw new DataValidationException("Agent application config must not be null!");
         }
-        else {
-            if (!tenantService.tenantExists(profile.getTenantId())) {
-                throw new DataValidationException("Agent application profile is referencing to non-existent tenant!");
-            }
+        profile.getConfig().validate();
+        profile.getConfig().validateForProfile(profile.getAppType());
+        if (!tenantService.tenantExists(profile.getTenantId())) {
+            throw new DataValidationException("Agent application profile is referencing to non-existent tenant!");
         }
     }
 }
