@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -30,8 +31,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.agent.AgentAppProfile;
+import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AgentAppProfileId;
+import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -47,6 +51,7 @@ import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DE
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_AUTHORITY_PARAGRAPH;
+import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 
 @RestController
 @TbCoreComponent
@@ -55,6 +60,8 @@ import static org.thingsboard.server.controller.ControllerConstants.TENANT_AUTHO
 @Slf4j
 public class AgentAppProfileController extends BaseController {
 
+    private static final String TEMPLATE_ID = "agentAppTemplateId";
+    private static final String TEMPLATE_ID_PARAM_DESCRIPTION = "A string value representing the agent app template id. For example, '784f394c-42b6-435a-983c-b7beff2784f9'";
     private static final String PROFILE_ID = "profileId";
 
     private final TbAgentAppProfileService tbProfileService;
@@ -94,6 +101,29 @@ public class AgentAppProfileController extends BaseController {
         AgentAppProfileId profileId = new AgentAppProfileId(toUUID(strProfileId));
         AgentAppProfile profile = checkAgentAppProfileId(profileId, Operation.DELETE);
         tbProfileService.delete(profile, getCurrentUser());
+    }
+
+    @ApiOperation(value = "Merge template into application profile for preview (mergeForPreview)",
+            notes = "Merges the specified template into an agent application profile for preview purposes. " +
+                    "The compose type determines which compose configuration variant from the template is used. " +
+                    TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PostMapping("/agent/app/profiles/merge/{agentAppTemplateId}/preview")
+    @ResponseBody
+    public AgentAppProfile mergeForPreview(
+            @Parameter(description = TEMPLATE_ID_PARAM_DESCRIPTION)
+            @PathVariable(TEMPLATE_ID) String strTemplateId,
+            @Parameter(description = "The compose type to select from the template (e.g. 'monolith', 'microservices')")
+            @RequestParam String composeType,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Agent application profile to merge template with")
+            @RequestBody AgentAppProfile appProfile) throws ThingsboardException {
+        checkParameter(TEMPLATE_ID, strTemplateId);
+        TenantId tenantId = getCurrentUser().getTenantId();
+        AgentAppTemplateId templateId = new AgentAppTemplateId(toUUID(strTemplateId));
+        AgentAppTemplate template = checkAgentAppTemplateId(templateId, Operation.READ);
+
+        appProfile.setTenantId(tenantId);
+        return tbProfileService.mergeForPreview(tenantId, appProfile, template, composeType);
     }
 
     @ApiOperation(value = "Get Tenant Agent Application Profiles (getTenantAgentAppProfiles)",

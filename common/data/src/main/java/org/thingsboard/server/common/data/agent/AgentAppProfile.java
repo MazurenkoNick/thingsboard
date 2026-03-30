@@ -36,7 +36,7 @@ import org.thingsboard.server.common.data.validation.NoXss;
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter
-public class AgentAppProfile extends BaseData<AgentAppProfileId> implements HasId<AgentAppProfileId>, HasTenantId, HasVersion, HasName {
+public class AgentAppProfile extends BaseData<AgentAppProfileId> implements HasId<AgentAppProfileId>, HasTenantId, HasVersion, HasName, HasAgentAppConfig {
 
     private TenantId tenantId;
     @NoXss

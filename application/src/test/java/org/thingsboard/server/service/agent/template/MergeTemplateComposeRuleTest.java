@@ -20,7 +20,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.HasAgentAppConfig;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
 import org.thingsboard.server.common.data.agent.step.ComposeStep;
@@ -28,7 +30,7 @@ import org.thingsboard.server.common.data.agent.step.ComposeTypeChoiceStep;
 import org.thingsboard.server.common.data.agent.step.ComposeStartStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
-import org.thingsboard.server.service.agent.template.merge.MergeComposeStepRule;
+import org.thingsboard.server.service.agent.template.merge.MergeTemplateComposeRule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,15 +39,15 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class MergeComposeStepRuleTest {
+class MergeTemplateComposeRuleTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private MergeComposeStepRule rule;
+    private MergeTemplateComposeRule rule;
 
     @BeforeEach
     void setUp() {
-        rule = new MergeComposeStepRule();
+        rule = new MergeTemplateComposeRule();
     }
 
     // ==================== supports() tests ====================
@@ -491,6 +493,51 @@ class MergeComposeStepRuleTest {
         assertEquals("core-img", result.get("core").asText());
         assertEquals("rule-img", result.get("rule").asText());
         assertNull(result.get("all-in-one"));
+    }
+
+    // ==================== AgentAppProfile tests ====================
+
+    @Test
+    void apply_shouldCreateConfigForProfile_whenConfigIsNull() {
+        ObjectNode templateCompose = MAPPER.createObjectNode()
+                .put("tb-core", "image:core");
+
+        ComposeTypeChoiceStep choiceStep = createChoiceStep(Map.of("monolith", templateCompose));
+        AgentAppTemplate template = createTemplate(List.of(choiceStep));
+        AppConfigMergeCtx ctx = createCtx(template, "monolith");
+
+        AgentAppProfile profile = new AgentAppProfile();
+        // config is null
+
+        rule.apply(profile, ctx);
+
+        assertNotNull(profile.getConfig());
+        assertInstanceOf(DockerComposeConfig.class, profile.getConfig());
+        JsonNode result = ((DockerComposeConfig) profile.getConfig()).getCompose();
+        assertEquals("image:core", result.get("tb-core").asText());
+    }
+
+    @Test
+    void apply_shouldMergeIntoExistingProfileConfig() {
+        ObjectNode appCompose = MAPPER.createObjectNode().put("custom", "value");
+        ObjectNode templateCompose = MAPPER.createObjectNode()
+                .put("custom", "template-value")
+                .put("added", "new");
+
+        ComposeTypeChoiceStep choiceStep = createChoiceStep(Map.of("monolith", templateCompose));
+        AgentAppTemplate template = createTemplate(List.of(choiceStep));
+        AppConfigMergeCtx ctx = createCtx(template, "monolith");
+
+        AgentAppProfile profile = new AgentAppProfile();
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setCompose(appCompose);
+        profile.setConfig(config);
+
+        rule.apply(profile, ctx);
+
+        JsonNode result = ((DockerComposeConfig) profile.getConfig()).getCompose();
+        assertEquals("value", result.get("custom").asText());
+        assertEquals("new", result.get("added").asText());
     }
 
     // ==================== Helper methods ====================

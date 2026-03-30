@@ -15,12 +15,12 @@
  */
 package org.thingsboard.server.service.agent.template.merge;
 
-import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
+import org.thingsboard.server.common.data.agent.HasAgentAppConfig;
 
 public interface AppConfigMergeRule {
 
-    boolean supports(AgentApplication agentApplication, AppConfigMergeCtx ctx);
+    boolean supports(HasAgentAppConfig hasAgentAppConfig, AppConfigMergeCtx ctx);
 
-    void apply(AgentApplication agentApplication, AppConfigMergeCtx ctx);
+    void apply(HasAgentAppConfig hasAgentAppConfig, AppConfigMergeCtx ctx);
 }

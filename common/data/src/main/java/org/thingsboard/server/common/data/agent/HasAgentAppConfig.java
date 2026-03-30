@@ -13,18 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.entitiy.agent;
+package org.thingsboard.server.common.data.agent;
 
-import org.thingsboard.server.common.data.User;
-import org.thingsboard.server.common.data.agent.AgentAppProfile;
-import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
-import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 
-public interface TbAgentAppProfileService {
+public interface HasAgentAppConfig {
 
-    AgentAppProfile save(AgentAppProfile profile, User currentUser) throws Exception;
+    AgentAppConfig getConfig();
 
-    void delete(AgentAppProfile profile, User user);
-
-    AgentAppProfile mergeForPreview(TenantId tenantId, AgentAppProfile appProfile, AgentAppTemplate template, String composeType);
+    void setConfig(AgentAppConfig config);
 }

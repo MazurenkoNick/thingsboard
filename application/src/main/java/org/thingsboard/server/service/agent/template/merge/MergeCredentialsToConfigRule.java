@@ -25,6 +25,7 @@ import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
+import org.thingsboard.server.common.data.agent.HasAgentAppConfig;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.config.DockerComposeUtils;
@@ -42,7 +43,7 @@ import java.util.Map;
 
 /**
  * Merge rule that injects entity credentials into the compose configuration.
- * Must run after {@link MergeComposeStepRule} (which has {@code @Order(Ordered.HIGHEST_PRECEDENCE)})
+ * Must run after {@link MergeTemplateComposeRule} (which has {@code @Order(Ordered.HIGHEST_PRECEDENCE)})
  * because it operates on the already-populated compose config.
  * <p>
  * For EDGE applications: injects CLOUD_ROUTING_KEY, CLOUD_ROUTING_SECRET, and CLOUD_RPC_PORT from the selected Edge entity.
@@ -71,15 +72,20 @@ public class MergeCredentialsToConfigRule implements AppConfigMergeRule {
     private int edgeRpcPort;
 
     @Override
-    public boolean supports(AgentApplication agentApp, AppConfigMergeCtx ctx) {
+    public boolean supports(HasAgentAppConfig data, AppConfigMergeCtx ctx) {
         return ctx != null
                 && ctx.getRelatedEntityId() != null
+                && data instanceof AgentApplication agentApp
                 && agentApp.getAppType() != null
                 && (agentApp.getAppType() == AgentApplicationType.EDGE || agentApp.getAppType() == AgentApplicationType.GATEWAY);
     }
 
     @Override
-    public void apply(AgentApplication agentApp, AppConfigMergeCtx ctx) {
+    public void apply(HasAgentAppConfig data, AppConfigMergeCtx ctx) {
+        if (!(data instanceof AgentApplication agentApp)) {
+            log.warn("MergeCredentialsToConfigRule called with non-AgentApplication data [{}], skipping", data.getClass().getSimpleName());
+            return;
+        }
         AgentAppConfig config = agentApp.getConfig();
         if (!(config instanceof DockerComposeConfig composeConfig)) {
             log.trace("Skipping credentials merge: config is not DockerComposeConfig");

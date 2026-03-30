@@ -22,10 +22,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.agent.AgentAppProfile;
+import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppProfileService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.agent.template.merge.AgentAppConfigMergeOrchestrator;
 import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
 
 @AllArgsConstructor
@@ -35,6 +38,7 @@ import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
 public class DefaultTbAgentAppProfileService extends AbstractTbEntityService implements TbAgentAppProfileService {
 
     private final AgentAppProfileService profileService;
+    private final AgentAppConfigMergeOrchestrator configMergeOrchestrator;
 
     @Override
     public AgentAppProfile save(AgentAppProfile profile, User user) throws Exception {
@@ -62,5 +66,18 @@ public class DefaultTbAgentAppProfileService extends AbstractTbEntityService imp
             logEntityActionService.logEntityAction(tenantId, emptyId(EntityType.AGENT_APP_PROFILE), profile, actionType, user, e, profile.getId().toString());
             throw e;
         }
+    }
+
+    @Override
+    public AgentAppProfile mergeForPreview(TenantId tenantId, AgentAppProfile appProfile, AgentAppTemplate template, String composeType) {
+        log.trace("Executing mergeForPreview, tenantId [{}], appProfileId [{}], templateId [{}], composeType [{}]",
+                tenantId, appProfile.getId(), template.getId(), composeType);
+
+        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder()
+                .template(template)
+                .selectedComposeType(composeType)
+                .build();
+        configMergeOrchestrator.merge(appProfile, ctx);
+        return appProfile;
     }
 }
