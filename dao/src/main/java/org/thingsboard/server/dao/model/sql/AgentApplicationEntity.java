@@ -31,10 +31,12 @@ import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationOrigin;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentId;
+import org.thingsboard.server.common.data.id.EntityIdFactory;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.model.BaseVersionedEntity;
 import org.thingsboard.server.dao.model.ModelConstants;
@@ -88,6 +90,13 @@ public class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication
     @Column(name = ModelConstants.AGENT_APPLICATION_PROFILE_CONFIG_VERSION_PROPERTY)
     private Long profileConfigVersion;
 
+    @Column(name = ModelConstants.AGENT_APPLICATION_RELATED_ENTITY_ID_PROPERTY)
+    private UUID relatedEntityId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = ModelConstants.AGENT_APPLICATION_RELATED_ENTITY_TYPE_PROPERTY)
+    private EntityType relatedEntityType;
+
     public AgentApplicationEntity() {
         super();
     }
@@ -116,6 +125,10 @@ public class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication
             this.applicationProfileId = application.getApplicationProfileId().getId();
         }
         this.profileConfigVersion = application.getProfileConfigVersion();
+        if (application.getRelatedEntityId() != null) {
+            this.relatedEntityId = application.getRelatedEntityId().getId();
+            this.relatedEntityType = application.getRelatedEntityId().getEntityType();
+        }
     }
 
     @Override
@@ -145,6 +158,9 @@ public class AgentApplicationEntity extends BaseVersionedEntity<AgentApplication
             application.setApplicationProfileId(new AgentAppProfileId(applicationProfileId));
         }
         application.setProfileConfigVersion(profileConfigVersion);
+        if (relatedEntityId != null && relatedEntityType != null) {
+            application.setRelatedEntityId(EntityIdFactory.getByTypeAndUuid(relatedEntityType, relatedEntityId));
+        }
         return application;
     }
 }

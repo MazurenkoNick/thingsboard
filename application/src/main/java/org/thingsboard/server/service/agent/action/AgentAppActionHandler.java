@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.dao.agent;
+package org.thingsboard.server.service.agent.action;
 
+import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
+import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.id.TenantId;
 
-public interface AgentAppRelationService {
+public interface AgentAppActionHandler {
 
-    void resolveRelatedEntity(TenantId tenantId, AgentApplication app);
+    AgentAppEventActionType getActionType();
+
+    void handle(AgentApplication application, AgentAppEventRequest request, AgentAppActionContext ctx);
 }

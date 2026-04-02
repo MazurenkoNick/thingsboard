@@ -47,4 +47,6 @@ public interface AgentApplicationDao extends Dao<AgentApplication> {
 
     PageData<AgentApplication> findByApplicationProfileIdAndAgentGroupId(UUID profileId, UUID groupId, PageLink pageLink);
 
+    AgentApplication findByRelatedEntity(TenantId tenantId, UUID relatedEntityId, String relatedEntityType);
+
 }

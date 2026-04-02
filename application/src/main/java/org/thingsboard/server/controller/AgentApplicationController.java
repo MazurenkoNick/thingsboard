@@ -50,6 +50,8 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityIdFactory;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
+
+import java.util.UUID;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -256,8 +258,6 @@ public class AgentApplicationController extends BaseController {
             @PathVariable(TEMPLATE_ID) String strTemplateId,
             @Parameter(description = "The compose type to select from the template (e.g. 'monolith', 'microservices')")
             @RequestParam String composeType,
-            @Parameter(description = "Optional related entity id (Edge or Gateway device) for credential auto-fill")
-            @RequestParam(required = false) String relatedEntityId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Optional agent application to merge with. If null, a new application is created from the template.")
             @RequestBody(required = false) AgentApplication application) throws ThingsboardException {
         checkParameter(TEMPLATE_ID, strTemplateId);
@@ -269,8 +269,8 @@ public class AgentApplicationController extends BaseController {
             application = AgentApplication.fromTemplate(template);
         }
         application.setTenantId(tenantId);
-        return tbAgentApplicationService.mergeForPreview(tenantId, application, template, composeType,
-                relatedEntityId != null ? toUUID(relatedEntityId) : null);
+        UUID relatedEntityUuid = application.getRelatedEntityId() != null ? application.getRelatedEntityId().getId() : null;
+        return tbAgentApplicationService.mergeForPreview(tenantId, application, template, composeType, relatedEntityUuid);
     }
 
     @ApiOperation(value = "Detach Application from Profile (detachFromProfile)",

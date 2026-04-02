@@ -19,6 +19,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppEventDao;
@@ -77,6 +78,14 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
         }
         if (agentApplication.getApplicationProfileId() == null && agentApplication.getConfig() == null) {
             throw new DataValidationException("Agent application config must not be null!");
+        }
+        if (agentApplication.getRelatedEntityId() != null) {
+            if (agentApplication.getAppType() == AgentApplicationType.GENERIC) {
+                throw new DataValidationException("Generic agent application can't have related entity id");
+            }
+            if (!agentApplication.getRelatedEntityId().getEntityType().equals(agentApplication.getAppType().getRelatedEntityType())) {
+                throw new DataValidationException("Entity id with this type can't be assigned to this application");
+            }
         }
         if (agentApplication.getConfig() != null) {
             agentApplication.getConfig().validate();

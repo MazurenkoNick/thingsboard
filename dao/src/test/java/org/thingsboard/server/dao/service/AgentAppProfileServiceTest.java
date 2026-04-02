@@ -239,7 +239,7 @@ public class AgentAppProfileServiceTest extends AbstractServiceTest {
         ObjectNode env = JacksonUtil.newObjectNode();
         env.put("CLOUD_ROUTING_KEY", "placeholder");
         env.put("CLOUD_ROUTING_SECRET", "placeholder");
-        env.put("CLOUD_RPC_PORT", "7070");
+        env.put("CLOUD_RPC_HOST", "localhost");
 
         ObjectNode service = JacksonUtil.newObjectNode();
         service.put("image", "thingsboard/tb-edge:3.8.0");

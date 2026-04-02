@@ -24,32 +24,24 @@ import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.config.DockerComposeUtils;
 import org.thingsboard.server.common.data.edge.Edge;
-import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.relation.EntityRelation;
-import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.server.common.msg.EncryptionUtil;
 import org.thingsboard.server.dao.device.DeviceCredentialsService;
 import org.thingsboard.server.dao.edge.EdgeService;
-import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.exception.DataValidationException;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class BaseAgentAppRelationService implements AgentAppRelationService {
 
     private final EdgeService edgeService;
-    private final RelationService relationService;
     private final DeviceCredentialsService deviceCredentialsService;
+    private final AgentApplicationDao agentApplicationDao;
 
     @Override
-    public void relateToParentEntityByConfig(TenantId tenantId, AgentApplication app) {
+    public void resolveRelatedEntity(TenantId tenantId, AgentApplication app) {
         if (app.getAppType() == null || app.getConfig() == null) {
             return;
         }
@@ -64,48 +56,16 @@ public class BaseAgentAppRelationService implements AgentAppRelationService {
             default -> null;
         };
 
-        List<EntityRelation> existingRelated = relationService.findByFromAndType(
-                tenantId, app.getId(), EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.AGENT);
-
-        if (sameRelatedEntityId(existingRelated, newRelatedEntityId)) return;
-
-        for (EntityRelation rel : existingRelated) {
-            relationService.deleteRelation(tenantId, rel);
-        }
         if (newRelatedEntityId != null) {
             validateRelatedEntityNotManaged(tenantId, app, newRelatedEntityId);
-            relationService.saveRelation(tenantId, new EntityRelation(
-                    app.getId(), newRelatedEntityId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.AGENT));
         }
-    }
-
-    @Override
-    public UUID findRelatedEntityId(TenantId tenantId, AgentApplicationId applicationId) {
-        return relationService.findByFromAndType(
-                        tenantId, applicationId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.AGENT)
-                .stream()
-                .findFirst()
-                .map(rel -> rel.getTo().getId())
-                .orElse(null);
-    }
-
-    private boolean sameRelatedEntityId(List<EntityRelation> existing, EntityId newRelatedEntityId) {
-        UUID currentId = existing.stream()
-                .findFirst()
-                .map(r -> r.getTo().getId())
-                .orElse(null);
-
-        UUID newId = newRelatedEntityId != null ? newRelatedEntityId.getId() : null;
-
-        return Objects.equals(currentId, newId);
+        app.setRelatedEntityId(newRelatedEntityId);
     }
 
     private void validateRelatedEntityNotManaged(TenantId tenantId, AgentApplication app, EntityId relatedEntityId) {
-        boolean alreadyManaged = relationService.findByToAndType(
-                        tenantId, relatedEntityId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.AGENT)
-                .stream()
-                .anyMatch(r -> isAgentAppId(r.getFrom()) && !r.getFrom().getId().equals(app.getId().getId()));
-        if (alreadyManaged) {
+        AgentApplication existing = agentApplicationDao.findByRelatedEntity(
+                tenantId, relatedEntityId.getId(), relatedEntityId.getEntityType().name());
+        if (existing != null && (app.getId() == null || !existing.getUuidId().equals(app.getUuidId()))) {
             throw new DataValidationException("Entity is already managed by another agent application");
         }
     }
@@ -149,10 +109,6 @@ public class BaseAgentAppRelationService implements AgentAppRelationService {
             }
         }
         return null;
-    }
-
-    private static boolean isAgentAppId(EntityId appCandidateId) {
-        return appCandidateId.getEntityType() == EntityType.AGENT_APPLICATION;
     }
 
 }

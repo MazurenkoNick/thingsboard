@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.dao.agent;
+package org.thingsboard.server.service.agent.action;
 
-import org.thingsboard.server.common.data.agent.AgentApplication;
+import lombok.Value;
 import org.thingsboard.server.common.data.id.TenantId;
 
-public interface AgentAppRelationService {
-
-    void resolveRelatedEntity(TenantId tenantId, AgentApplication app);
+@Value
+public class AgentAppActionContext {
+    TenantId tenantId;
 }

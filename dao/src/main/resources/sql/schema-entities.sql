@@ -834,6 +834,8 @@ CREATE TABLE IF NOT EXISTS agent_application (
     origin varchar(32),
     application_profile_id uuid,
     profile_config_version BIGINT,
+    related_entity_id uuid,
+    related_entity_type varchar(32),
     version BIGINT DEFAULT 1,
     CONSTRAINT agent_application_project_name_unq_key UNIQUE (agent_id, project_name),
     CONSTRAINT fk_agent_application_agent FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE CASCADE,
@@ -841,6 +843,7 @@ CREATE TABLE IF NOT EXISTS agent_application (
     CONSTRAINT fk_agent_application_desired_template FOREIGN KEY (desired_template_id) REFERENCES agent_app_template(id) ON DELETE SET NULL,
     CONSTRAINT fk_agent_app_profile FOREIGN KEY (application_profile_id) REFERENCES agent_app_profile(id) ON DELETE SET NULL
 );
+
 
 CREATE TABLE IF NOT EXISTS agent_app_event (
     id uuid NOT NULL CONSTRAINT agent_app_event_pkey PRIMARY KEY,

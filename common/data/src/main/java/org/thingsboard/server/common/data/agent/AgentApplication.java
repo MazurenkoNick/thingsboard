@@ -31,6 +31,7 @@ import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.TenantId;
 
@@ -62,6 +63,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     private AgentAppProfileId applicationProfileId;
     @Getter
     private Long profileConfigVersion;
+    private EntityId relatedEntityId;
 
     public AgentApplication() {
         super();
@@ -85,6 +87,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         this.origin = application.getOrigin();
         this.applicationProfileId = application.getApplicationProfileId();
         this.profileConfigVersion = application.getProfileConfigVersion();
+        this.relatedEntityId = application.getRelatedEntityId();
     }
 
     public static AgentApplication fromTemplate(AgentAppTemplate template) {
@@ -146,6 +149,11 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
     @Schema(description = "Application Profile Id. When set, config is read-only and inherited from the profile.")
     public AgentAppProfileId getApplicationProfileId() {
         return applicationProfileId;
+    }
+
+    @Schema(description = "Related entity id (Edge or Gateway device) managed by this application.")
+    public EntityId getRelatedEntityId() {
+        return relatedEntityId;
     }
 
     public static String generateProjectName() {
