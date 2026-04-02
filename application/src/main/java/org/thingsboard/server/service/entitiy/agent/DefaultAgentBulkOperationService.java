@@ -29,7 +29,8 @@ import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
+import org.thingsboard.server.common.data.agent.AgentBulkAction;
+import org.thingsboard.server.common.data.agent.BulkOperationPreview;
 import org.thingsboard.server.common.data.agent.BulkOperationRequest;
 import org.thingsboard.server.common.data.agent.BulkOperationResult;
 import org.thingsboard.server.common.data.agent.BulkOperationResult.SkipReason;
@@ -37,22 +38,20 @@ import org.thingsboard.server.common.data.agent.BulkOperationResult.SkippedApp;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AgentAppProfileId;
-import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageDataIterable;
-import org.thingsboard.server.common.data.relation.EntityRelation;
-import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
 import org.thingsboard.server.dao.agent.AgentAppProfileService;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
-import org.thingsboard.server.dao.relation.RelationService;
+import org.thingsboard.server.dao.agent.AgentBulkActionService;
 import org.thingsboard.server.exception.DataValidationException;
-import org.thingsboard.server.service.agent.template.merge.MergeCredentialsToConfigRule;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -77,6 +76,7 @@ public class DefaultAgentBulkOperationService implements AgentBulkOperationServi
     private final AgentApplicationDao applicationDao;
     private final AgentAppEventService agentAppEventService;
     private final TbAgentApplicationService tbAgentApplicationService;
+    private final AgentBulkActionService agentBulkActionService;
 
     private ExecutorService executor;
 
@@ -94,7 +94,8 @@ public class DefaultAgentBulkOperationService implements AgentBulkOperationServi
     }
 
     @Override
-    public BulkOperationResult bulkOperation(TenantId tenantId, AgentGroupId groupId, AgentAppProfileId profileId, BulkOperationRequest request, boolean force, User user) {
+    public AgentBulkAction bulkOperation(TenantId tenantId, AgentGroupId groupId, AgentAppProfileId profileId,
+                                         BulkOperationRequest request, boolean force, User user) {
         AgentAppEventActionType actionType = request.getActionType();
         if (actionType == null || !ALLOWED_BULK_ACTIONS.contains(actionType)) {
             throw new DataValidationException("Action type '" + actionType + "' is not allowed for bulk operations");
@@ -104,17 +105,22 @@ public class DefaultAgentBulkOperationService implements AgentBulkOperationServi
         BulkOperationResult result = new BulkOperationResult();
         List<AgentApplication> eligibleApps = filterEligibleApps(groupId, result, profile, actionType, force);
 
+        AgentBulkAction bulkAction = saveBulkAction(tenantId, groupId, profileId, actionType);
+
         if (eligibleApps.isEmpty()) {
-            return result;
+            bulkAction.setTotal(result.getTotal().get());
+            bulkAction.setSkipCounts(buildSkipCounts(result));
+            return agentBulkActionService.save(tenantId, bulkAction);
         }
 
+        final UUID bulkActionId = bulkAction.getId().getId();
         CountDownLatch latch = new CountDownLatch(eligibleApps.size());
         SecurityContext securityContext = SecurityContextHolder.getContext();
 
         for (var app : eligibleApps) {
             DonAsynchron.submit(() -> {
                 SecurityContextHolder.setContext(securityContext);
-                return execBulkOperation(tenantId, request, app, actionType, user);
+                return execBulkOperation(tenantId, request, app, actionType, user, bulkActionId);
             }, success -> {
                 result.incrementSubmitted();
                 latch.countDown();
@@ -132,10 +138,50 @@ public class DefaultAgentBulkOperationService implements AgentBulkOperationServi
             throw new RuntimeException("Bulk operation interrupted", e);
         }
 
-        return result;
+        bulkAction.setTotal(result.getTotal().get());
+        bulkAction.setSubmitted(result.getSubmitted().get());
+        bulkAction.setSkipCounts(buildSkipCounts(result));
+        return agentBulkActionService.save(tenantId, bulkAction);
     }
 
-    private List<AgentApplication> filterEligibleApps(AgentGroupId groupId, BulkOperationResult result, AgentAppProfile profile, AgentAppEventActionType actionType, boolean force) {
+    @Override
+    public BulkOperationPreview preview(TenantId tenantId, AgentGroupId groupId, AgentAppProfileId profileId, BulkOperationRequest request) {
+        AgentAppEventActionType actionType = request.getActionType();
+        if (actionType == null || !ALLOWED_BULK_ACTIONS.contains(actionType)) {
+            throw new DataValidationException("Action type '" + actionType + "' is not allowed for bulk operations");
+        }
+        AgentAppProfile profile = profileService.findProfileById(tenantId, profileId);
+
+        BulkOperationResult result = new BulkOperationResult();
+        List<AgentApplication> eligibleApps = filterEligibleApps(groupId, result, profile, actionType, true);
+
+        BulkOperationPreview preview = new BulkOperationPreview();
+        preview.setTotal(result.getTotal().get());
+        preview.setEligible(eligibleApps.size());
+        preview.setSkipped(new ArrayList<>(result.getSkipped()));
+        return preview;
+    }
+
+    private Map<SkipReason, Integer> buildSkipCounts(BulkOperationResult result) {
+        Map<SkipReason, Integer> counts = new EnumMap<>(SkipReason.class);
+        for (SkippedApp skipped : result.getSkipped()) {
+            counts.merge(skipped.getReason(), 1, Integer::sum);
+        }
+        return counts;
+    }
+
+    private AgentBulkAction saveBulkAction(TenantId tenantId, AgentGroupId groupId, AgentAppProfileId profileId, AgentAppEventActionType actionType) {
+        AgentBulkAction bulkAction = new AgentBulkAction();
+
+        bulkAction.setTenantId(tenantId);
+        bulkAction.setGroupId(groupId.getId());
+        bulkAction.setProfileId(profileId.getId());
+        bulkAction.setActionType(actionType);
+        return agentBulkActionService.save(tenantId, bulkAction);
+    }
+
+    private List<AgentApplication> filterEligibleApps(AgentGroupId groupId, BulkOperationResult result, AgentAppProfile profile,
+                                                      AgentAppEventActionType actionType, boolean force) {
         PageDataIterable<AgentApplication> it = new PageDataIterable<>(
                 link -> applicationDao.findByApplicationProfileIdAndAgentGroupId(profile.getId().getId(), groupId.getId(), link),
                 100);
@@ -159,11 +205,13 @@ public class DefaultAgentBulkOperationService implements AgentBulkOperationServi
         return eligibleApps;
     }
 
-    private AgentApplication execBulkOperation(TenantId tenantId, BulkOperationRequest request, AgentApplication app, AgentAppEventActionType actionType, User user) throws Exception {
+    private AgentApplication execBulkOperation(TenantId tenantId, BulkOperationRequest request, AgentApplication app,
+                                               AgentAppEventActionType actionType, User user, UUID bulkActionId) throws Exception {
         AgentAppEventRequest eventRequest = new AgentAppEventRequest();
         eventRequest.setActionType(actionType);
         eventRequest.setApplication(app);
         eventRequest.setStepInputs(request.getStepInputs());
+        eventRequest.setBulkActionId(bulkActionId);
         boolean skipActiveEventCheck = true;
         tbAgentApplicationService.execActionEvent(tenantId, app.getId(), eventRequest, user, skipActiveEventCheck);
         return app;

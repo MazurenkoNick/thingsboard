@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent;
+package org.thingsboard.server.dao.agent;
 
-import lombok.Data;
-import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
+import org.thingsboard.server.common.data.agent.AgentBulkAction;
+import org.thingsboard.server.common.data.id.AgentBulkActionId;
+import org.thingsboard.server.common.data.id.TenantId;
 
-import java.util.Map;
-import java.util.UUID;
+public interface AgentBulkActionService {
 
-@Data
-public class AgentAppEventRequest {
+    AgentBulkAction save(TenantId tenantId, AgentBulkAction bulkAction);
 
-    private AgentAppEventActionType actionType;
-    private AgentApplication application;
-    private Map<UUID, AgentAppStepState> stepInputs;
-    private UUID bulkActionId;
+    AgentBulkAction findById(TenantId tenantId, AgentBulkActionId id);
+
+    void cleanUpExpiredBulkActions(long expirationTs);
 }

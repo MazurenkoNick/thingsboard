@@ -78,6 +78,9 @@ public final class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
     @Column(name = ModelConstants.AGENT_APP_EVENT_STEP_STATES_PROPERTY, columnDefinition = "jsonb")
     private JsonNode stepStates;
 
+    @Column(name = ModelConstants.AGENT_APP_EVENT_BULK_ACTION_ID_PROPERTY)
+    private UUID bulkActionId;
+
     public AgentAppEventEntity() {
         super();
     }
@@ -96,6 +99,7 @@ public final class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
         this.currentStepId = event.getCurrentStepId();
         this.updatedTime = event.getUpdatedTime();
         this.stepStates = JacksonUtil.convertValue(event.getStepStates(), JsonNode.class);
+        this.bulkActionId = event.getBulkActionId();
     }
 
     @Override
@@ -114,6 +118,7 @@ public final class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
         event.setCurrentStepId(currentStepId);
         event.setUpdatedTime(updatedTime);
         event.setStepStates(stepStates != null ? JacksonUtil.convertValue(stepStates, new TypeReference<Map<UUID, AgentAppStepState>>() {}) : null);
+        event.setBulkActionId(bulkActionId);
         return event;
     }
 }

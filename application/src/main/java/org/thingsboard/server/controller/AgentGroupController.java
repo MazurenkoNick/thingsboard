@@ -32,8 +32,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.agent.AgentGroup;
 import org.thingsboard.server.common.data.agent.AgentGroupInfo;
+import org.thingsboard.server.common.data.agent.AgentBulkAction;
+import org.thingsboard.server.common.data.agent.BulkOperationPreview;
 import org.thingsboard.server.common.data.agent.BulkOperationRequest;
-import org.thingsboard.server.common.data.agent.BulkOperationResult;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentGroupId;
@@ -238,11 +239,28 @@ public class AgentGroupController extends BaseController {
         agentGroupService.unassignProfileFromGroup(getTenantId(), groupId, profileId);
     }
 
+    @ApiOperation(value = "Preview Bulk Operation (previewBulkOperation)")
+    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    @PostMapping("/agent/group/{groupId}/profile/{profileId}/bulk/preview")
+    @ResponseBody
+    public BulkOperationPreview previewBulkOperation(
+            @PathVariable(GROUP_ID) String strGroupId,
+            @PathVariable(PROFILE_ID) String strProfileId,
+            @RequestBody BulkOperationRequest request) throws ThingsboardException {
+        checkParameter(GROUP_ID, strGroupId);
+        checkParameter(PROFILE_ID, strProfileId);
+        AgentGroupId groupId = new AgentGroupId(toUUID(strGroupId));
+        AgentAppProfileId profileId = new AgentAppProfileId(toUUID(strProfileId));
+        checkAgentGroupId(groupId, Operation.WRITE);
+        checkAgentAppProfileId(profileId, Operation.READ);
+        return agentBulkOperationService.preview(getTenantId(), groupId, profileId, request);
+    }
+
     @ApiOperation(value = "Bulk Operation (bulkOperation)")
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @PostMapping("/agent/group/{groupId}/profile/{profileId}/bulk")
     @ResponseBody
-    public BulkOperationResult bulkOperation(
+    public AgentBulkAction bulkOperation(
             @PathVariable(GROUP_ID) String strGroupId,
             @PathVariable(PROFILE_ID) String strProfileId,
             @RequestBody BulkOperationRequest request,

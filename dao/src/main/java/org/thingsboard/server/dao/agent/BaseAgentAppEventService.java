@@ -23,6 +23,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentBulkActionId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
@@ -104,6 +105,12 @@ public class BaseAgentAppEventService implements AgentAppEventService {
     public void deleteAllPendingByApplicationId(AgentApplicationId applicationId) {
         log.trace("Executing deleteAllPendingByApplicationId [{}]", applicationId);
         agentAppEventDao.deleteAllPendingByApplicationId(applicationId.getId());
+    }
+
+    @Override
+    public PageData<AgentAppEvent> findByBulkActionId(AgentBulkActionId bulkActionId, AgentAppEventStatus status, PageLink pageLink) {
+        log.trace("Executing findByBulkActionId [{}] status [{}]", bulkActionId, status);
+        return agentAppEventDao.findByBulkActionId(bulkActionId.getId(), status, pageLink);
     }
 
     @Override

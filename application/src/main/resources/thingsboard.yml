@@ -439,6 +439,10 @@ sql:
     api_keys:
       enabled: "${SQL_TTL_API_KEYS_ENABLED:true}" # Enable/disable TTL (Time To Live) for expired api keys records
       checking_interval_ms: "${SQL_TTL_API_KEYS_CHECKING_INTERVAL_MS:86400000}" # Default value - 1 day
+    agent_bulk_actions:
+      enabled: "${SQL_TTL_AGENT_BULK_ACTIONS_ENABLED:true}" # Enable/disable TTL (Time To Live) for agent bulk action records
+      ttl: "${SQL_TTL_AGENT_BULK_ACTIONS_SECS:604800}" # Default value - 7 days
+      execution_interval_ms: "${SQL_TTL_AGENT_BULK_ACTIONS_EXECUTION_INTERVAL_MS:86400000}" # Default value - 1 day
   relations:
     max_level: "${SQL_RELATIONS_MAX_LEVEL:50}" # This value has to be reasonably small to prevent infinite recursion as early as possible
     pool_size: "${SQL_RELATIONS_POOL_SIZE:4}" # This value has to be reasonably small to prevent the relation query from blocking all other DB calls

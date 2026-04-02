@@ -74,6 +74,7 @@ enum EntityTypeProto {
   AGENT_APP_UNIT                 = 49;
   AGENT_APP_PROFILE              = 50;
   AGENT_GROUP                    = 51;
+  AGENT_BULK_ACTION              = 52;
 }
 
 enum ApiUsageRecordKeyProto {
