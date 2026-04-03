@@ -90,6 +90,14 @@ public class JpaAgentAppEventDao extends JpaAbstractDao<AgentAppEventEntity, Age
     }
 
     @Override
+    public PageData<AgentAppEvent> findByBulkActionId(UUID bulkActionId, AgentAppEventStatus status, PageLink pageLink) {
+        return DaoUtil.pageToPageData(
+                repository.findByBulkActionId(bulkActionId, status, DaoUtil.toPageable(pageLink))
+                        .map(AgentAppEventEntity::toData)
+        );
+    }
+
+    @Override
     public PageData<AgentAppEvent> findByTenantIdAndApplicationId(TenantId tenantId, AgentApplicationId applicationId, PageLink pageLink) {
         return DaoUtil.pageToPageData(
                 repository.findByTenantIdAndApplicationId(

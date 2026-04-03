@@ -834,12 +834,28 @@ CREATE TABLE IF NOT EXISTS agent_application (
     origin varchar(32),
     application_profile_id uuid,
     profile_config_version BIGINT,
+    related_entity_id uuid,
+    related_entity_type varchar(32),
     version BIGINT DEFAULT 1,
     CONSTRAINT agent_application_project_name_unq_key UNIQUE (agent_id, project_name),
     CONSTRAINT fk_agent_application_agent FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE CASCADE,
     CONSTRAINT fk_agent_application_template FOREIGN KEY (template_id) REFERENCES agent_app_template(id) ON DELETE CASCADE,
     CONSTRAINT fk_agent_application_desired_template FOREIGN KEY (desired_template_id) REFERENCES agent_app_template(id) ON DELETE SET NULL,
     CONSTRAINT fk_agent_app_profile FOREIGN KEY (application_profile_id) REFERENCES agent_app_profile(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS agent_bulk_action (
+    id uuid NOT NULL CONSTRAINT agent_bulk_action_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    tenant_id uuid NOT NULL,
+    group_id uuid,
+    profile_id uuid,
+    action_type varchar(32) NOT NULL,
+    total int NOT NULL DEFAULT 0,
+    submitted int NOT NULL DEFAULT 0,
+    skip_counts jsonb,
+    CONSTRAINT fk_agent_bulk_action_group FOREIGN KEY (group_id) REFERENCES agent_group(id) ON DELETE CASCADE,
+    CONSTRAINT fk_agent_bulk_action_profile FOREIGN KEY (profile_id) REFERENCES agent_app_profile(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS agent_app_event (
@@ -853,9 +869,12 @@ CREATE TABLE IF NOT EXISTS agent_app_event (
     current_step_id uuid,
     updated_time bigint NOT NULL,
     step_states jsonb,
-    CONSTRAINT fk_agent_app_event_application FOREIGN KEY (application_id) REFERENCES agent_application(id) ON DELETE CASCADE
+    bulk_action_id uuid,
+    CONSTRAINT fk_agent_app_event_application FOREIGN KEY (application_id) REFERENCES agent_application(id) ON DELETE CASCADE,
+    CONSTRAINT fk_agent_app_event_bulk_action FOREIGN KEY (bulk_action_id) REFERENCES agent_bulk_action(id) ON DELETE SET NULL
 );
 CREATE INDEX IF NOT EXISTS idx_agent_app_event_app_delivery ON agent_app_event(application_id, delivery_state);
+CREATE INDEX IF NOT EXISTS idx_agent_app_event_bulk_action_status ON agent_app_event(bulk_action_id, status) WHERE bulk_action_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS agent_app_unit (
     id uuid NOT NULL CONSTRAINT agent_app_unit_pkey PRIMARY KEY,

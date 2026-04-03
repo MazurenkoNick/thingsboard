@@ -16,14 +16,9 @@
 package org.thingsboard.server.dao.agent;
 
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.TenantId;
-
-import java.util.UUID;
 
 public interface AgentAppRelationService {
 
-    void relateToParentEntityByConfig(TenantId tenantId, AgentApplication app);
-
-    UUID findRelatedEntityId(TenantId tenantId, AgentApplicationId applicationId);
+    void resolveRelatedEntity(TenantId tenantId, AgentApplication app);
 }

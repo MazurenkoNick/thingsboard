@@ -19,6 +19,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentBulkActionId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
@@ -45,6 +46,8 @@ public interface AgentAppEventService {
     void updateStatus(AgentAppEventId id, AgentAppEventStatus status, UUID currentStepId);
 
     void deleteAllPendingByApplicationId(AgentApplicationId applicationId);
+
+    PageData<AgentAppEvent> findByBulkActionId(AgentBulkActionId bulkActionId, AgentAppEventStatus status, PageLink pageLink);
 
     PageData<AgentAppEvent> findByApplicationId(TenantId tenantId, AgentApplicationId applicationId, PageLink pageLink);
 

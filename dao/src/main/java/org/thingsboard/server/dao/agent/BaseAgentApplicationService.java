@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.thingsboard.server.cache.agent.AgentApplicationCacheEvictEvent;
 import org.thingsboard.server.cache.agent.AgentApplicationCacheKey;
-import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
@@ -36,8 +35,6 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.relation.EntityRelation;
-import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.dao.entity.AbstractCachedEntityService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
@@ -92,9 +89,9 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         resolveOrigin(agentApplication, old);
         resolveTemplateId(agentApplication, old);
         resolveProjectName(agentApplication, old);
+        agentAppRelationService.resolveRelatedEntity(tenantId, agentApplication);
         agentApplicationValidator.validate(agentApplication, app -> tenantId);
         AgentApplication saved = agentApplicationDao.save(tenantId, agentApplication);
-        agentAppRelationService.relateToParentEntityByConfig(tenantId, saved);
         publishEvictEvent(new AgentApplicationCacheEvictEvent(saved.getId()));
         eventPublisher.publishEvent(SaveEntityEvent.builder()
                 .tenantId(tenantId)
@@ -157,14 +154,7 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         log.trace("Executing findByRelatedEntity, tenantId [{}], entityId [{}]", tenantId, entityId);
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validateId(entityId.getId(), id -> "Incorrect entityId " + id);
-        return relationService.findByToAndType(tenantId, entityId, EntityRelation.MANAGED_BY_AGENT_APP_TYPE, RelationTypeGroup.AGENT)
-                .stream()
-                .map(EntityRelation::getFrom)
-                .filter(BaseAgentApplicationService::isAgentAppId)
-                .map(id -> new AgentApplicationId(id.getId()))
-                .findFirst()
-                .map(id -> findById(tenantId, id))
-                .orElse(null);
+        return agentApplicationDao.findByRelatedEntity(tenantId, entityId.getId(), entityId.getEntityType().name());
     }
 
     @Override
@@ -238,7 +228,4 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         }
     }
 
-    private static boolean isAgentAppId(EntityId appCandidateId) {
-        return appCandidateId.getEntityType() == EntityType.AGENT_APPLICATION;
-    }
 }

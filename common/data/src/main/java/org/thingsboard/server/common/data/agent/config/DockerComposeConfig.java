@@ -67,7 +67,7 @@ public class DockerComposeConfig extends AgentAppConfig {
             throw new DataValidationException("Compose config must contain a service matching image pattern: " + imagePattern);
         }
         switch (appType) {
-            case EDGE -> requireEnvKeys(env, "CLOUD_ROUTING_KEY", "CLOUD_ROUTING_SECRET", "CLOUD_RPC_PORT");
+            case EDGE -> requireEnvKeys(env, "CLOUD_ROUTING_KEY", "CLOUD_ROUTING_SECRET", "CLOUD_RPC_HOST");
             case GATEWAY -> validateGatewayCredentialKeys(env);
         }
     }

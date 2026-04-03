@@ -282,7 +282,7 @@ class AgentAppTemplateSyncServiceTest {
                 [{"type": "COMPOSE_TEMPLATE", "id": "%s", "title": "Choose type", "composeTemplates": {"monolith": "%s"}}]
                 """.formatted(stepId, yamlCompose.replace("\n", "\\n"));
         when(gitSyncService.getFileContent("agent-app-templates", file.path()))
-                .thenReturn(templateJson("DOCKER_COMPOSE", null, null, startStepsJson));
+                .thenReturn(templateJson("DOCKER_COMPOSE", null, startStepsJson, "[]"));
         when(agentAppTemplateService.findByAppTypeAndConfigTypeAndVersion(any(), any(), any()))
                 .thenReturn(null);
 
@@ -312,7 +312,7 @@ class AgentAppTemplateSyncServiceTest {
                 [{"type": "COMPOSE_TEMPLATE", "id": "%s", "title": "Choose type", "composeTemplates": {"monolith": "compose/edge/1.0.0/monolith.yml"}}]
                 """.formatted(stepId);
         when(gitSyncService.getFileContent("agent-app-templates", file.path()))
-                .thenReturn(templateJson("DOCKER_COMPOSE", null, null, startStepsJson));
+                .thenReturn(templateJson("DOCKER_COMPOSE", null, startStepsJson, "[]"));
         when(gitSyncService.getFileContent("agent-app-templates", "compose/edge/1.0.0/monolith.yml"))
                 .thenReturn("services:\n  tb-core:\n    image: thingsboard/tb-core".getBytes());
         when(agentAppTemplateService.findByAppTypeAndConfigTypeAndVersion(any(), any(), any()))

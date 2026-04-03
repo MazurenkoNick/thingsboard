@@ -269,6 +269,18 @@ public class ModelConstants {
     public static final String AGENT_APPLICATION_ORIGIN_PROPERTY = "origin";
 
     /**
+     * Agent bulk action constants.
+     */
+    public static final String AGENT_BULK_ACTION_TABLE_NAME = "agent_bulk_action";
+    public static final String AGENT_BULK_ACTION_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String AGENT_BULK_ACTION_GROUP_ID_PROPERTY = "group_id";
+    public static final String AGENT_BULK_ACTION_PROFILE_ID_PROPERTY = "profile_id";
+    public static final String AGENT_BULK_ACTION_ACTION_TYPE_PROPERTY = "action_type";
+    public static final String AGENT_BULK_ACTION_TOTAL_PROPERTY = "total";
+    public static final String AGENT_BULK_ACTION_SUBMITTED_PROPERTY = "submitted";
+    public static final String AGENT_BULK_ACTION_SKIP_COUNTS_PROPERTY = "skip_counts";
+
+    /**
      * Agent app event constants.
      */
     public static final String AGENT_APP_EVENT_TABLE_NAME = "agent_app_event";
@@ -280,6 +292,7 @@ public class ModelConstants {
     public static final String AGENT_APP_EVENT_CURRENT_STEP_ID_PROPERTY = "current_step_id";
     public static final String AGENT_APP_EVENT_UPDATED_TIME_PROPERTY = "updated_time";
     public static final String AGENT_APP_EVENT_STEP_STATES_PROPERTY = "step_states";
+    public static final String AGENT_APP_EVENT_BULK_ACTION_ID_PROPERTY = "bulk_action_id";
 
     /**
      * Agent app template constants.
@@ -333,6 +346,8 @@ public class ModelConstants {
     public static final String AGENT_GROUP_ID_PROPERTY = "agent_group_id";
     public static final String AGENT_APP_PROFILE_ID_PROPERTY = "application_profile_id";
     public static final String AGENT_APPLICATION_PROFILE_CONFIG_VERSION_PROPERTY = "profile_config_version";
+    public static final String AGENT_APPLICATION_RELATED_ENTITY_ID_PROPERTY = "related_entity_id";
+    public static final String AGENT_APPLICATION_RELATED_ENTITY_TYPE_PROPERTY = "related_entity_type";
 
     /**
      * Alarm constants.

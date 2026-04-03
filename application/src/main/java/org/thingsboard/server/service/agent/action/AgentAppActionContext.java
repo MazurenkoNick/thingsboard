@@ -13,19 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.agent;
+package org.thingsboard.server.service.agent.action;
 
-import lombok.Data;
-import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
+import lombok.Value;
+import org.thingsboard.server.common.data.id.TenantId;
 
-import java.util.Map;
-import java.util.UUID;
-
-@Data
-public class AgentAppEventRequest {
-
-    private AgentAppEventActionType actionType;
-    private AgentApplication application;
-    private Map<UUID, AgentAppStepState> stepInputs;
-    private UUID bulkActionId;
+@Value
+public class AgentAppActionContext {
+    TenantId tenantId;
 }

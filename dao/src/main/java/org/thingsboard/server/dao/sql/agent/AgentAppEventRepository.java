@@ -25,6 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.dao.model.sql.AgentAppEventEntity;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -77,6 +80,15 @@ public interface AgentAppEventRepository extends JpaRepository<AgentAppEventEnti
     @Modifying
     @Query("DELETE FROM AgentAppEventEntity e WHERE e.applicationId = :appId AND e.deliveryState = 'PENDING'")
     void deleteAllPendingByApplicationId(@Param("appId") UUID applicationId);
+
+    @Query("""
+           SELECT e FROM AgentAppEventEntity e
+           WHERE e.bulkActionId = :bulkActionId
+           AND (:status IS NULL OR e.status = :status)
+           """)
+    Page<AgentAppEventEntity> findByBulkActionId(@Param("bulkActionId") UUID bulkActionId,
+                                                 @Param("status") AgentAppEventStatus status,
+                                                 Pageable pageable);
 
     Page<AgentAppEventEntity> findByTenantIdAndApplicationId(UUID tenantId, UUID applicationId, Pageable pageable);
 

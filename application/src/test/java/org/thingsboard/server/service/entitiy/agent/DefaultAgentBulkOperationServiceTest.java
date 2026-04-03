@@ -21,24 +21,28 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
+import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentBulkAction;
 import org.thingsboard.server.common.data.agent.BulkOperationRequest;
-import org.thingsboard.server.common.data.agent.BulkOperationResult;
 import org.thingsboard.server.common.data.agent.BulkOperationResult.SkipReason;
 import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentBulkActionId;
 import org.thingsboard.server.common.data.id.AgentGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
 import org.thingsboard.server.dao.agent.AgentAppProfileService;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
+import org.thingsboard.server.dao.agent.AgentBulkActionService;
 import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.Collections;
@@ -50,6 +54,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -69,13 +76,23 @@ class DefaultAgentBulkOperationServiceTest {
     private AgentAppEventService agentAppEventService;
     @Mock
     private TbAgentApplicationService tbAgentApplicationService;
+    @Mock
+    private AgentBulkActionService agentBulkActionService;
 
     private DefaultAgentBulkOperationService service;
 
     @BeforeEach
     void setUp() {
-        service = new DefaultAgentBulkOperationService(profileService, applicationDao, agentAppEventService, tbAgentApplicationService);
+        service = new DefaultAgentBulkOperationService(profileService, applicationDao, agentAppEventService, tbAgentApplicationService, agentBulkActionService);
         service.init();
+
+        lenient().when(agentBulkActionService.save(any(), any())).thenAnswer(invocation -> {
+            AgentBulkAction action = invocation.getArgument(1);
+            if (action.getId() == null) {
+                action.setId(new AgentBulkActionId(UUID.randomUUID()));
+            }
+            return action;
+        });
     }
 
     @AfterEach
@@ -115,9 +132,9 @@ class DefaultAgentBulkOperationServiceTest {
         when(applicationDao.findByApplicationProfileIdAndAgentGroupId(eq(PROFILE_ID.getId()), eq(GROUP_ID.getId()), any()))
                 .thenReturn(new PageData<>(Collections.emptyList(), 0, 0, false));
 
-        BulkOperationResult result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, false, USER);
+        AgentBulkAction result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, false, USER);
 
-        assertThat(result.getTotal().get()).isZero();
+        assertThat(result.getTotal()).isZero();
     }
 
     @Test
@@ -129,11 +146,11 @@ class DefaultAgentBulkOperationServiceTest {
         when(applicationDao.findByApplicationProfileIdAndAgentGroupId(eq(PROFILE_ID.getId()), eq(GROUP_ID.getId()), any()))
                 .thenReturn(new PageData<>(Collections.emptyList(), 0, 0, false));
 
-        BulkOperationResult result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, false, USER);
+        AgentBulkAction result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, false, USER);
 
-        assertThat(result.getTotal().get()).isZero();
-        assertThat(result.getSubmitted().get()).isZero();
-        assertThat(result.getSkipped()).isEmpty();
+        assertThat(result.getTotal()).isZero();
+        assertThat(result.getSubmitted()).isZero();
+        assertThat(result.getSkipCounts()).isNullOrEmpty();
     }
 
     @Test
@@ -147,11 +164,11 @@ class DefaultAgentBulkOperationServiceTest {
         when(applicationDao.findByApplicationProfileIdAndAgentGroupId(eq(PROFILE_ID.getId()), eq(GROUP_ID.getId()), any()))
                 .thenReturn(new PageData<>(apps, 1, apps.size(), false));
 
-        BulkOperationResult result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, true, USER);
+        AgentBulkAction result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, true, USER);
 
-        assertThat(result.getTotal().get()).isEqualTo(3);
-        assertThat(result.getSubmitted().get()).isEqualTo(3);
-        assertThat(result.getSkipped()).isEmpty();
+        assertThat(result.getTotal()).isEqualTo(3);
+        assertThat(result.getSubmitted()).isEqualTo(3);
+        assertThat(result.getSkipCounts()).isNullOrEmpty();
     }
 
     @Test
@@ -173,12 +190,12 @@ class DefaultAgentBulkOperationServiceTest {
         when(applicationDao.findByApplicationProfileIdAndAgentGroupId(eq(PROFILE_ID.getId()), eq(GROUP_ID.getId()), any()))
                 .thenReturn(new PageData<>(apps, 1, apps.size(), false));
 
-        BulkOperationResult result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, true, USER);
+        AgentBulkAction result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, true, USER);
 
-        assertThat(result.getTotal().get()).isEqualTo(3);
-        assertThat(result.getSubmitted().get()).isEqualTo(2);
-        assertThat(result.getSkipped()).hasSize(1);
-        assertThat(result.getSkipped().iterator().next().getReason()).isEqualTo(SkipReason.ACTIVE_EVENT);
+        assertThat(result.getTotal()).isEqualTo(3);
+        assertThat(result.getSubmitted()).isEqualTo(2);
+        assertThat(result.getSkipCounts()).hasSize(1);
+        assertThat(result.getSkipCounts()).containsKey(SkipReason.ACTIVE_EVENT);
     }
 
     @Test
@@ -212,12 +229,12 @@ class DefaultAgentBulkOperationServiceTest {
         when(applicationDao.findByApplicationProfileIdAndAgentGroupId(eq(PROFILE_ID.getId()), eq(GROUP_ID.getId()), any()))
                 .thenReturn(new PageData<>(List.of(app), 1, 1, false));
 
-        BulkOperationResult result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, true, USER);
+        AgentBulkAction result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, true, USER);
 
-        assertThat(result.getTotal().get()).isEqualTo(1);
-        assertThat(result.getSubmitted().get()).isZero();
-        assertThat(result.getSkipped()).hasSize(1);
-        assertThat(result.getSkipped().iterator().next().getReason()).isEqualTo(SkipReason.VERSION_MISMATCH);
+        assertThat(result.getTotal()).isEqualTo(1);
+        assertThat(result.getSubmitted()).isZero();
+        assertThat(result.getSkipCounts()).hasSize(1);
+        assertThat(result.getSkipCounts()).containsKey(SkipReason.VERSION_MISMATCH);
     }
 
     @Test
@@ -234,12 +251,62 @@ class DefaultAgentBulkOperationServiceTest {
         doThrow(new RuntimeException("DB error"))
                 .when(tbAgentApplicationService).execActionEvent(any(), any(), any(), any(), eq(true));
 
-        BulkOperationResult result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, true, USER);
+        AgentBulkAction result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, true, USER);
 
-        assertThat(result.getTotal().get()).isEqualTo(1);
-        assertThat(result.getSubmitted().get()).isZero();
-        assertThat(result.getSkipped()).hasSize(1);
-        assertThat(result.getSkipped().iterator().next().getReason()).isEqualTo(SkipReason.ERROR);
+        assertThat(result.getTotal()).isEqualTo(1);
+        assertThat(result.getSubmitted()).isZero();
+        assertThat(result.getSkipCounts()).hasSize(1);
+        assertThat(result.getSkipCounts()).containsKey(SkipReason.ERROR);
+    }
+
+    @Test
+    void bulkOperation_createsBulkActionWithCorrectMetadata() {
+        BulkOperationRequest request = createRequest(AgentAppEventActionType.UPDATE);
+
+        AgentAppProfile profile = createProfile();
+        when(profileService.findProfileById(TENANT_ID, PROFILE_ID)).thenReturn(profile);
+
+        List<AgentApplication> apps = List.of(createApp());
+        when(applicationDao.findByApplicationProfileIdAndAgentGroupId(eq(PROFILE_ID.getId()), eq(GROUP_ID.getId()), any()))
+                .thenReturn(new PageData<>(apps, 1, apps.size(), false));
+
+        service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, true, USER);
+
+        ArgumentCaptor<AgentBulkAction> captor = ArgumentCaptor.forClass(AgentBulkAction.class);
+        verify(agentBulkActionService, times(2)).save(eq(TENANT_ID), captor.capture());
+
+        AgentBulkAction firstSave = captor.getAllValues().get(0);
+        assertThat(firstSave.getTenantId()).isEqualTo(TENANT_ID);
+        assertThat(firstSave.getGroupId()).isEqualTo(GROUP_ID.getId());
+        assertThat(firstSave.getProfileId()).isEqualTo(PROFILE_ID.getId());
+        assertThat(firstSave.getActionType()).isEqualTo(AgentAppEventActionType.UPDATE);
+
+        AgentBulkAction finalSave = captor.getAllValues().get(1);
+        assertThat(finalSave.getTotal()).isEqualTo(1);
+        assertThat(finalSave.getSubmitted()).isEqualTo(1);
+        assertThat(finalSave.getSkipCounts()).isNullOrEmpty();
+    }
+
+    @Test
+    void bulkOperation_setsBulkActionIdOnEventRequest() throws Exception {
+        BulkOperationRequest request = createRequest(AgentAppEventActionType.UPDATE);
+
+        AgentAppProfile profile = createProfile();
+        when(profileService.findProfileById(TENANT_ID, PROFILE_ID)).thenReturn(profile);
+
+        List<AgentApplication> apps = List.of(createApp(), createApp());
+        when(applicationDao.findByApplicationProfileIdAndAgentGroupId(eq(PROFILE_ID.getId()), eq(GROUP_ID.getId()), any()))
+                .thenReturn(new PageData<>(apps, 1, apps.size(), false));
+
+        AgentBulkAction result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, true, USER);
+
+        ArgumentCaptor<AgentAppEventRequest> eventCaptor = ArgumentCaptor.forClass(AgentAppEventRequest.class);
+        verify(tbAgentApplicationService, times(2)).execActionEvent(any(), any(), eventCaptor.capture(), any(), eq(true));
+
+        UUID expectedBulkActionId = result.getId().getId();
+        for (AgentAppEventRequest capturedRequest : eventCaptor.getAllValues()) {
+            assertThat(capturedRequest.getBulkActionId()).isEqualTo(expectedBulkActionId);
+        }
     }
 
     // ==================== Helpers ====================

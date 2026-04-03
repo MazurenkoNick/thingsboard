@@ -79,7 +79,8 @@ public enum EntityType {
     AGENT_APP_EVENT(48),
     AGENT_APP_UNIT(49),
     AGENT_APP_PROFILE(50),
-    AGENT_GROUP(51);
+    AGENT_GROUP(51),
+    AGENT_BULK_ACTION(52);
 
     @Getter
     private final int protoNumber; // Corresponds to EntityTypeProto

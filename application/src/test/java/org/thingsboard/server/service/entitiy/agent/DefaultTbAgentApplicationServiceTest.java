@@ -20,10 +20,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
@@ -42,16 +42,21 @@ import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
+import org.thingsboard.server.common.data.id.EntityIdFactory;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
 import org.thingsboard.server.dao.agent.AgentAppProfileService;
-import org.thingsboard.server.dao.agent.AgentAppRelationService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
+import org.thingsboard.server.service.agent.ProfileConfigResolver;
 import org.thingsboard.server.service.agent.template.merge.AgentAppConfigMergeOrchestrator;
 import org.thingsboard.server.service.agent.template.merge.MergeCredentialsToConfigRule;
 import org.thingsboard.server.service.entitiy.TbLogEntityActionService;
+import org.thingsboard.server.service.agent.action.DeleteActionHandler;
+import org.thingsboard.server.service.agent.action.UpdateActionHandler;
+import org.thingsboard.server.service.agent.action.UpgradeActionHandler;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -75,25 +80,35 @@ class DefaultTbAgentApplicationServiceTest {
     @Mock
     private AgentAppProfileService profileService;
     @Mock
-    private AgentAppRelationService agentAppRelationService;
-    @Mock
     private AgentAppEventService agentAppEventService;
     @Mock
     private TbClusterService tbClusterService;
     @Mock
     private TbLogEntityActionService logEntityActionService;
 
-    @InjectMocks
     private DefaultTbAgentApplicationService service;
 
     private static final TenantId TENANT_ID = TenantId.fromUUID(UUID.randomUUID());
     private static final AgentApplicationId APP_ID = new AgentApplicationId(UUID.randomUUID());
     private static final AgentAppEventId EVENT_ID = new AgentAppEventId(UUID.randomUUID());
     private static final AgentId AGENT_ID = new AgentId(UUID.randomUUID());
-    private static final User USER = new User();
+    private static final User USER;
+
+    static {
+        USER = new User();
+        USER.setTenantId(TENANT_ID);
+    }
 
     @BeforeEach
     void setUp() {
+        ProfileConfigResolver profileConfigResolver = new ProfileConfigResolver(profileService, mergeCredentialsToConfigRule);
+        service = new DefaultTbAgentApplicationService(
+                templateMergeOrchestrator, profileConfigResolver, agentApplicationService, agentAppEventService, tbClusterService);
+        service.setActionHandlers(List.of(
+                new UpdateActionHandler(profileConfigResolver),
+                new UpgradeActionHandler(profileConfigResolver),
+                new DeleteActionHandler(agentAppEventService)
+        ));
         ReflectionTestUtils.setField(service, "logEntityActionService", logEntityActionService);
     }
 
@@ -110,12 +125,86 @@ class DefaultTbAgentApplicationServiceTest {
     @Test
     void update_existingApplication_savesAndLogsUpdate() throws Exception {
         AgentApplication app = newApplication(APP_ID);
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(newApplication(APP_ID));
         when(agentApplicationService.save(eq(TENANT_ID), eq(app))).thenReturn(app);
 
         AgentApplication result = service.update(app, USER);
 
         assertThat(result.getId()).isEqualTo(APP_ID);
         verify(agentAppEventService, never()).save(any(), any());
+    }
+
+    @Test
+    void update_withProfileId_nullRelatedEntityId_throws() {
+        AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
+        AgentApplication app = newApplication(APP_ID);
+        app.setApplicationProfileId(profileId);
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(newApplication(APP_ID));
+
+        assertThatThrownBy(() -> service.update(app, USER))
+                .isInstanceOf(org.thingsboard.server.exception.DataValidationException.class)
+                .hasMessageContaining("Related entity id");
+    }
+
+    @Test
+    void update_profileChanged_resolvesProfileConfig() throws Exception {
+        AgentAppProfileId oldProfileId = new AgentAppProfileId(UUID.randomUUID());
+        AgentAppProfileId newProfileId = new AgentAppProfileId(UUID.randomUUID());
+
+        AgentApplication old = newApplication(APP_ID);
+        old.setApplicationProfileId(oldProfileId);
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(old);
+
+        AgentApplication app = newApplication(APP_ID);
+        app.setApplicationProfileId(newProfileId);
+        app.setRelatedEntityId(EntityIdFactory.getByTypeAndUuid(EntityType.EDGE, UUID.randomUUID()));
+
+        AgentAppProfile profile = new AgentAppProfile();
+        profile.setConfig(createDockerComposeConfig("new-profile-compose"));
+        profile.setVersion(3L);
+        when(profileService.findProfileById(TENANT_ID, newProfileId)).thenReturn(profile);
+        when(agentApplicationService.save(eq(TENANT_ID), eq(app))).thenReturn(app);
+
+        service.update(app, USER);
+
+        assertThat(app.getConfig()).isNotNull();
+        assertThat(app.getProfileConfigVersion()).isEqualTo(3L);
+    }
+
+    @Test
+    void update_profileUnchanged_preservesOldConfigAndUpdatesTemplateFields() throws Exception {
+        AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
+        DockerComposeConfig oldConfig = createDockerComposeConfig("old-compose");
+
+        AgentApplication old = newApplication(APP_ID);
+        old.setApplicationProfileId(profileId);
+        old.setConfig(oldConfig);
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(old);
+
+        AgentApplication app = newApplication(APP_ID);
+        app.setApplicationProfileId(profileId);
+        app.setRelatedEntityId(EntityIdFactory.getByTypeAndUuid(EntityType.EDGE, UUID.randomUUID()));
+        when(mergeCredentialsToConfigRule.supports(any(), any())).thenReturn(true);
+        when(agentApplicationService.save(eq(TENANT_ID), eq(app))).thenReturn(app);
+
+        service.update(app, USER);
+
+        assertThat(app.getConfig()).isSameAs(oldConfig);
+        verify(mergeCredentialsToConfigRule).apply(eq(app), any());
+        verify(profileService, never()).findProfileById(any(), any());
+    }
+
+    @Test
+    void update_noProfile_doesNotResolveProfileConfig() throws Exception {
+        when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(newApplication(APP_ID));
+
+        AgentApplication app = newApplication(APP_ID);
+        when(agentApplicationService.save(eq(TENANT_ID), eq(app))).thenReturn(app);
+
+        service.update(app, USER);
+
+        verify(profileService, never()).findProfileById(any(), any());
+        verify(mergeCredentialsToConfigRule, never()).supports(any(), any());
     }
 
     // ==================== installEvent() ====================
@@ -269,7 +358,6 @@ class DefaultTbAgentApplicationServiceTest {
         assertThat(saved.getAgentId()).isEqualTo(AGENT_ID);
         assertThat(saved.getTemplateId()).isEqualTo(oldTemplateId);
         assertThat(saved.getDesiredTemplateId()).isEqualTo(newTemplateId);
-        assertThat(saved.getConfig()).isNotNull();
     }
 
     @Test
@@ -341,6 +429,7 @@ class DefaultTbAgentApplicationServiceTest {
         AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
         AgentApplication app = newApplication(null);
         app.setApplicationProfileId(profileId);
+        app.setRelatedEntityId(EntityIdFactory.getByTypeAndUuid(EntityType.EDGE, UUID.randomUUID()));
 
         AgentAppProfile profile = new AgentAppProfile();
         profile.setConfig(createDockerComposeConfig("profile-compose"));
@@ -370,6 +459,7 @@ class DefaultTbAgentApplicationServiceTest {
 
         AgentApplication app = newApplication(null);
         app.setApplicationProfileId(profileId);
+        app.setRelatedEntityId(EntityIdFactory.getByTypeAndUuid(EntityType.EDGE, relatedEntityId));
 
         AgentAppProfile profile = new AgentAppProfile();
         profile.setConfig(createDockerComposeConfig("profile-compose"));
@@ -382,18 +472,17 @@ class DefaultTbAgentApplicationServiceTest {
         AgentAppEventRequest request = new AgentAppEventRequest();
         request.setActionType(AgentAppEventActionType.INSTALL);
         request.setApplication(app);
-        request.setRelatedEntityId(relatedEntityId);
 
         service.install(TENANT_ID, request, USER);
 
         ArgumentCaptor<AppConfigMergeCtx> ctxCaptor = ArgumentCaptor.forClass(AppConfigMergeCtx.class);
         verify(mergeCredentialsToConfigRule).supports(any(), ctxCaptor.capture());
-        assertThat(ctxCaptor.getValue().getRelatedEntityId()).isEqualTo(relatedEntityId);
+        assertThat(ctxCaptor.getValue().getRelatedEntityId()).isEqualTo(EntityIdFactory.getByTypeAndUuid(EntityType.EDGE, relatedEntityId));
         verify(mergeCredentialsToConfigRule).apply(any(), any());
     }
 
     @Test
-    void install_withProfileId_noRelatedEntityId_skipsCredentialMerge() throws Exception {
+    void install_withProfileId_noRelatedEntityId_throws() {
         AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
         AgentApplication app = newApplication(null);
         app.setApplicationProfileId(profileId);
@@ -401,18 +490,14 @@ class DefaultTbAgentApplicationServiceTest {
         AgentAppProfile profile = new AgentAppProfile();
         profile.setConfig(createDockerComposeConfig("profile-compose"));
         when(profileService.findProfileById(TENANT_ID, profileId)).thenReturn(profile);
-        when(mergeCredentialsToConfigRule.supports(any(), any())).thenReturn(false);
-
-        AgentApplication savedApp = newApplication(APP_ID);
-        when(agentApplicationService.save(eq(TENANT_ID), any(AgentApplication.class))).thenReturn(savedApp);
 
         AgentAppEventRequest request = new AgentAppEventRequest();
         request.setActionType(AgentAppEventActionType.INSTALL);
         request.setApplication(app);
 
-        service.install(TENANT_ID, request, USER);
-
-        verify(mergeCredentialsToConfigRule, never()).apply(any(), any());
+        assertThatThrownBy(() -> service.install(TENANT_ID, request, USER))
+                .isInstanceOf(org.thingsboard.server.exception.DataValidationException.class)
+                .hasMessageContaining("Related entity id");
     }
 
     @Test
@@ -462,6 +547,7 @@ class DefaultTbAgentApplicationServiceTest {
         AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
         AgentApplication app = newApplication(APP_ID);
         app.setApplicationProfileId(profileId);
+        app.setRelatedEntityId(EntityIdFactory.getByTypeAndUuid(EntityType.EDGE, UUID.randomUUID()));
         when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
 
         AgentAppProfile profile = new AgentAppProfile();
@@ -489,6 +575,7 @@ class DefaultTbAgentApplicationServiceTest {
         AgentApplication app = newApplication(APP_ID);
         app.setApplicationProfileId(profileId);
         app.setTemplateId(oldTemplateId);
+        app.setRelatedEntityId(EntityIdFactory.getByTypeAndUuid(EntityType.EDGE, UUID.randomUUID()));
         when(agentApplicationService.findById(TENANT_ID, APP_ID)).thenReturn(app);
 
         AgentAppProfile profile = new AgentAppProfile();

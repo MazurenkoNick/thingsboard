@@ -37,5 +37,5 @@ public interface TbAgentApplicationService {
 
     void cancelEvent(TenantId tenantId, AgentAppEventId eventId) throws Exception;
 
-    AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application, AgentAppTemplate template, String composeType, UUID relatedEntityId);
+    AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application, AgentAppTemplate template, String composeType);
 }

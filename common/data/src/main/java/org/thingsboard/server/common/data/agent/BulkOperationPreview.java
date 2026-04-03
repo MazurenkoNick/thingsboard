@@ -15,17 +15,21 @@
  */
 package org.thingsboard.server.common.data.agent;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 
-import java.util.Map;
-import java.util.UUID;
+import java.util.List;
 
 @Data
-public class AgentAppEventRequest {
+@Schema
+public class BulkOperationPreview {
 
-    private AgentAppEventActionType actionType;
-    private AgentApplication application;
-    private Map<UUID, AgentAppStepState> stepInputs;
-    private UUID bulkActionId;
+    @Schema(description = "Total number of apps targeted by the bulk operation")
+    private int total;
+
+    @Schema(description = "Number of apps that would be submitted (total minus skipped)")
+    private int eligible;
+
+    @Schema(description = "List of apps that would be skipped with reasons")
+    private List<BulkOperationResult.SkippedApp> skipped;
 }

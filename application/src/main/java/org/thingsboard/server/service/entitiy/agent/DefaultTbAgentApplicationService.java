@@ -15,8 +15,8 @@
  */
 package org.thingsboard.server.service.entitiy.agent;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.cluster.TbClusterService;
@@ -27,52 +27,90 @@ import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
-import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationOrigin;
 import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
-
-import java.util.UUID;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
-import org.thingsboard.server.dao.agent.AgentAppProfileService;
-import org.thingsboard.server.dao.agent.AgentAppRelationService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.agent.ProfileConfigResolver;
 import org.thingsboard.server.service.agent.template.merge.AgentAppConfigMergeOrchestrator;
-import org.thingsboard.server.service.agent.template.merge.MergeCredentialsToConfigRule;
 import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
+import org.thingsboard.server.service.agent.action.AgentAppActionContext;
+import org.thingsboard.server.service.agent.action.AgentAppActionHandler;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @TbCoreComponent
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class DefaultTbAgentApplicationService extends AbstractTbEntityService implements TbAgentApplicationService {
 
     private final AgentAppConfigMergeOrchestrator configMergeOrchestrator;
-    private final MergeCredentialsToConfigRule mergeCredentialsToConfigRule;
+    private final ProfileConfigResolver profileConfigResolver;
     private final AgentApplicationService applicationService;
-    private final AgentAppProfileService profileService;
-    private final AgentAppRelationService agentAppRelationService;
     private final AgentAppEventService appEventService;
     private final TbClusterService tbClusterService;
+    private Map<AgentAppEventActionType, AgentAppActionHandler> actionHandlers;
+
+    @Autowired
+    public DefaultTbAgentApplicationService(AgentAppConfigMergeOrchestrator configMergeOrchestrator,
+                                            ProfileConfigResolver profileConfigResolver,
+                                            AgentApplicationService applicationService,
+                                            AgentAppEventService appEventService,
+                                            TbClusterService tbClusterService) {
+        this.configMergeOrchestrator = configMergeOrchestrator;
+        this.profileConfigResolver = profileConfigResolver;
+        this.applicationService = applicationService;
+        this.appEventService = appEventService;
+        this.tbClusterService = tbClusterService;
+    }
+
+    @Autowired
+    public void setActionHandlers(List<AgentAppActionHandler> handlers) {
+        this.actionHandlers = handlers.stream()
+                .collect(Collectors.toMap(AgentAppActionHandler::getActionType, Function.identity()));
+    }
 
     @Override
+    @Transactional
     public AgentApplication update(AgentApplication application, User user) throws Exception {
         if (application.getId() == null) {
             throw new IllegalStateException("Can't update state of the non-existent application!");
         }
-        if (application.getApplicationProfileId() != null && application.getConfig() != null) {
-            throw new DataValidationException("Cannot set config directly on a profile-managed application. Use bulk UPDATE to push profile config.");
+        TenantId tenantId = user.getTenantId();
+        AgentApplication old = applicationService.findById(tenantId, application.getId());
+
+        if (isApplicationProfileChangedOrAdded(application, old)) {
+            log.trace("[{}] Agent profile is added or changed for application {}", application.getTenantId(), application.getTenantId());
+            profileConfigResolver.resolve(tenantId, application, application.getRelatedEntityId());
+        } else if (application.getApplicationProfileId() != null) {
+            log.trace("[{}] Restoring old profile-based configuration for application {}", application.getTenantId(), application.getTenantId());
+            AgentAppConfig oldConfig = old.getConfig();
+            if (!Objects.equals(application.getConfig(), oldConfig)) {
+                throw new DataValidationException("Direct config update is not allowed for profile-managed applications!");
+            }
+            application.setConfig(oldConfig);
+            if (application.getRelatedEntityId() != null) {
+                profileConfigResolver.updateRelatedEntityIdTemplateFields(application, application.getRelatedEntityId());
+            }
         }
-        TenantId tenantId = application.getTenantId();
+
         try {
             AgentApplication savedApp = checkNotNull(applicationService.save(tenantId, application));
             logEntityActionService.logEntityAction(tenantId, savedApp.getId(), savedApp, ActionType.UPDATED, user);
@@ -91,7 +129,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         application.setTenantId(tenantId);
         application.setOrigin(AgentApplicationOrigin.INSTALLED);
 
-        resolveProfileConfig(tenantId, application, request.getRelatedEntityId());
+        profileConfigResolver.resolve(tenantId, application, application.getRelatedEntityId());
 
         AgentApplication savedApp = checkNotNull(applicationService.save(tenantId, application));
 
@@ -118,22 +156,9 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         AgentApplication application = checkNotNull(applicationService.findById(tenantId, applicationId));
         application.setDesiredTemplateId(null);
 
-        if (actionType == AgentAppEventActionType.UPDATE || actionType == AgentAppEventActionType.UPGRADE) {
-            resolveProfileConfig(tenantId, application, agentAppRelationService.findRelatedEntityId(tenantId, applicationId));
-        }
-
-        if (actionType == AgentAppEventActionType.DELETE) {
-            appEventService.deleteAllPendingByApplicationId(applicationId);
-            application.setPendingDeletion(true);
-        } else if (actionType == AgentAppEventActionType.UPGRADE) {
-            AgentApplication upgradedApp = request.getApplication();
-            if (upgradedApp == null) {
-                throw new DataValidationException("Upgrade request must include an application");
-            }
-            application.setDesiredTemplateId(upgradedApp.getTemplateId());
-            if (upgradedApp.getConfig() != null) {
-                application.setConfig(upgradedApp.getConfig());
-            }
+        AgentAppActionHandler handler = actionHandlers.get(actionType);
+        if (handler != null) {
+            handler.handle(application, request, new AgentAppActionContext(tenantId));
         }
 
         applicationService.save(tenantId, application);
@@ -155,7 +180,8 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
     }
 
     @Override
-    public AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application, AgentAppTemplate template, String composeType, UUID relatedEntityId) {
+    public AgentApplication mergeForPreview(TenantId tenantId, AgentApplication application, AgentAppTemplate template, String composeType) {
+        EntityId relatedEntityId = application.getRelatedEntityId();
         log.trace("Executing mergeForPreview, tenantId [{}], applicationId [{}], templateId [{}], composeType [{}], relatedEntityId [{}]",
                 tenantId, application.getId(), template.getId(), composeType, relatedEntityId);
 
@@ -168,23 +194,8 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         return application;
     }
 
-    private void resolveProfileConfig(TenantId tenantId, AgentApplication application, UUID relatedEntityId) {
-        if (application.getApplicationProfileId() == null) {
-            return;
-        }
-        AgentAppProfile profile = profileService.findProfileById(tenantId, application.getApplicationProfileId());
-        if (profile == null || profile.getConfig() == null) {
-            return;
-        }
-        application.setConfig(profile.getConfig().copy());
-        application.setProfileConfigVersion(profile.getVersion());
-
-        AppConfigMergeCtx ctx = AppConfigMergeCtx.builder()
-                .relatedEntityId(relatedEntityId)
-                .build();
-        if (mergeCredentialsToConfigRule.supports(application, ctx)) {
-            mergeCredentialsToConfigRule.apply(application, ctx);
-        }
+    private boolean isApplicationProfileChangedOrAdded(AgentApplication application, AgentApplication old) {
+        return application.getApplicationProfileId() != null && !application.getApplicationProfileId().equals(old.getApplicationProfileId());
     }
 
     private void saveEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventActionType actionType, AgentAppEventRequest request) {
@@ -195,6 +206,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         event.setDeliveryState(AgentAppEventDeliveryState.PENDING);
         event.setUpdatedTime(System.currentTimeMillis());
         event.setStepStates(request.getStepInputs());
+        event.setBulkActionId(request.getBulkActionId());
         appEventService.save(tenantId, event);
     }
 }

@@ -17,6 +17,7 @@ package org.thingsboard.server.dao.sql.agent;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.thingsboard.server.common.data.EntityType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -78,5 +79,7 @@ public interface AgentApplicationRepository extends JpaRepository<AgentApplicati
     Page<AgentApplicationEntity> findByApplicationProfileIdAndAgentGroupId(@Param("profileId") UUID profileId,
                                                                            @Param("groupId") UUID groupId,
                                                                            Pageable pageable);
+
+    AgentApplicationEntity findByRelatedEntityIdAndRelatedEntityType(UUID relatedEntityId, EntityType relatedEntityType);
 
 }
