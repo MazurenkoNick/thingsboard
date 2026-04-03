@@ -20,8 +20,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
-
-import java.util.UUID;
+import org.thingsboard.server.common.data.id.EntityId;
 
 @Data
 @Builder
@@ -31,7 +30,7 @@ public class AppConfigMergeCtx {
 
     private AgentAppTemplate template;
     private String selectedComposeType;
-    private UUID relatedEntityId;
+    private EntityId relatedEntityId;
 
     public static AppConfigMergeCtx empty() {
         return new AppConfigMergeCtx();

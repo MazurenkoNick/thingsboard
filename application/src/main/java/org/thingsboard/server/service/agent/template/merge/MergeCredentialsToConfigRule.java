@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
@@ -33,6 +34,7 @@ import org.thingsboard.server.common.data.device.credentials.BasicMqttCredential
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EdgeId;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.server.dao.device.DeviceCredentialsService;
@@ -109,7 +111,11 @@ public class MergeCredentialsToConfigRule implements AppConfigMergeRule {
     }
 
     private void applyEdgeCredentials(JsonNode compose, TenantId tenantId, AppConfigMergeCtx ctx) {
-        EdgeId edgeId = new EdgeId(ctx.getRelatedEntityId());
+        EntityId rId = ctx.getRelatedEntityId();
+        if (rId.getEntityType() != EntityType.EDGE) {
+            throw new IllegalArgumentException("Related entity id with EDGE entity type is expected, but found: " + rId.getEntityType());
+        }
+        EdgeId edgeId = (EdgeId) rId;
         Edge edge = edgeService.findEdgeById(tenantId, edgeId);
         if (edge == null) {
             log.warn("Edge not found for id [{}], skipping credentials merge", edgeId);
@@ -124,7 +130,11 @@ public class MergeCredentialsToConfigRule implements AppConfigMergeRule {
     }
 
     private void applyGatewayCredentials(JsonNode compose, TenantId tenantId, AppConfigMergeCtx ctx) {
-        DeviceId deviceId = new DeviceId(ctx.getRelatedEntityId());
+        EntityId rId = ctx.getRelatedEntityId();
+        if (rId.getEntityType() != EntityType.DEVICE) {
+            throw new IllegalArgumentException("Related entity id with DEVICE type is expected, but found: " + rId.getEntityType());
+        }
+        DeviceId deviceId = (DeviceId) rId;
         DeviceCredentials credentials = deviceCredentialsService.findDeviceCredentialsByDeviceId(tenantId, deviceId);
         if (credentials == null) {
             log.warn("Device credentials not found for device [{}], skipping credentials merge", deviceId);

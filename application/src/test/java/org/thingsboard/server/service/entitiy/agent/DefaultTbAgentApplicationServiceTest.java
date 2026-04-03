@@ -477,7 +477,7 @@ class DefaultTbAgentApplicationServiceTest {
 
         ArgumentCaptor<AppConfigMergeCtx> ctxCaptor = ArgumentCaptor.forClass(AppConfigMergeCtx.class);
         verify(mergeCredentialsToConfigRule).supports(any(), ctxCaptor.capture());
-        assertThat(ctxCaptor.getValue().getRelatedEntityId()).isEqualTo(relatedEntityId);
+        assertThat(ctxCaptor.getValue().getRelatedEntityId()).isEqualTo(EntityIdFactory.getByTypeAndUuid(EntityType.EDGE, relatedEntityId));
         verify(mergeCredentialsToConfigRule).apply(any(), any());
     }
 

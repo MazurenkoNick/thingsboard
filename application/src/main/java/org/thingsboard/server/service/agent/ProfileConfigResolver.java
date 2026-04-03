@@ -54,7 +54,7 @@ public class ProfileConfigResolver {
 
     public void updateRelatedEntityIdTemplateFields(AgentApplication application, EntityId relatedEntityId) {
         AppConfigMergeCtx ctx = AppConfigMergeCtx.builder()
-                .relatedEntityId(relatedEntityId.getId())
+                .relatedEntityId(relatedEntityId)
                 .build();
         if (mergeCredentialsToConfigRule.supports(application, ctx)) {
             mergeCredentialsToConfigRule.apply(application, ctx);

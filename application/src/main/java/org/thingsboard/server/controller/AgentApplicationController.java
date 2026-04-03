@@ -269,8 +269,7 @@ public class AgentApplicationController extends BaseController {
             application = AgentApplication.fromTemplate(template);
         }
         application.setTenantId(tenantId);
-        UUID relatedEntityUuid = application.getRelatedEntityId() != null ? application.getRelatedEntityId().getId() : null;
-        return tbAgentApplicationService.mergeForPreview(tenantId, application, template, composeType, relatedEntityUuid);
+        return tbAgentApplicationService.mergeForPreview(tenantId, application, template, composeType);
     }
 
     @ApiOperation(value = "Detach Application from Profile (detachFromProfile)",
