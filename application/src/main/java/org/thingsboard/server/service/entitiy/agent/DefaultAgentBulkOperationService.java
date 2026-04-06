@@ -246,10 +246,11 @@ public class DefaultAgentBulkOperationService implements AgentBulkOperationServi
     }
 
     private Map<UUID, AgentAppStepState> convertByteStringToStepInputs(ByteString stepInputsBytes) {
-        return JacksonUtil.fromString(
-                stepInputsBytes.toString(StandardCharsets.UTF_8),
-                new TypeReference<>() {
-                });
+        String json = stepInputsBytes.toString(StandardCharsets.UTF_8);
+        if (json.isBlank() || "null".equals(json)) {
+            return null;
+        }
+        return JacksonUtil.fromString(json, new TypeReference<>() {});
     }
 
     private Map<SkipReason, Integer> buildSkipCounts(BulkOperationResult result) {
