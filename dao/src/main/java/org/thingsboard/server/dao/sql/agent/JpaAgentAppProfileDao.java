@@ -30,6 +30,7 @@ import org.thingsboard.server.dao.model.sql.AgentAppProfileEntity;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -61,6 +62,11 @@ public class JpaAgentAppProfileDao extends JpaAbstractDao<AgentAppProfileEntity,
     @Override
     public Long countByTenantId(TenantId tenantId) {
         return profileRepository.countByTenantId(tenantId.getId());
+    }
+
+    @Override
+    public List<AgentAppProfile> findUninstalledProfilesForAgent(UUID groupId, UUID agentId) {
+        return DaoUtil.convertDataList(profileRepository.findUninstalledProfilesForAgentInGroup(groupId, agentId));
     }
 
     @Override

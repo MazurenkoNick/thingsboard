@@ -34,4 +34,15 @@ public interface AgentAppProfileRepository extends JpaRepository<AgentAppProfile
 
     @Query("SELECT count(*) FROM AgentAppProfileEntity p WHERE p.tenantId = :tenantId")
     Long countByTenantId(@Param("tenantId") UUID tenantId);
+
+    @Query("SELECT p FROM AgentAppProfileEntity p " +
+            "JOIN RelationEntity r ON r.toId = p.id " +
+            "WHERE r.fromId = :groupId " +
+            "AND r.fromType = 'AGENT_GROUP' " +
+            "AND r.relationTypeGroup = 'AGENT' " +
+            "AND r.relationType = 'HasProfile' " +
+            "AND NOT EXISTS (SELECT 1 FROM AgentApplicationEntity a " +
+            "                WHERE a.agentId = :agentId AND a.applicationProfileId = p.id)")
+    java.util.List<AgentAppProfileEntity> findUninstalledProfilesForAgentInGroup(@Param("groupId") UUID groupId,
+                                                                                 @Param("agentId") UUID agentId);
 }

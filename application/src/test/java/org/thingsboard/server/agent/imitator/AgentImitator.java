@@ -34,6 +34,7 @@ import org.thingsboard.server.gen.agent.v1.CommandProgress;
 import org.thingsboard.server.gen.agent.v1.CommandResult;
 import org.thingsboard.server.gen.agent.v1.Hello;
 import org.thingsboard.server.gen.agent.v1.HelloAck;
+import org.thingsboard.server.gen.agent.v1.InitialSyncComplete;
 import org.thingsboard.server.gen.agent.v1.ProjectStateSync;
 import org.thingsboard.server.gen.agent.v1.ProvisionRequest;
 import org.thingsboard.server.gen.agent.v1.ProvisionResponse;
@@ -248,6 +249,12 @@ public class AgentImitator {
     public void sendProjectSync(ProjectStateSync projectSync) {
         requestObserver.onNext(AgentToServer.newBuilder()
                 .setProjectSync(projectSync)
+                .build());
+    }
+
+    public void sendInitialSyncComplete() {
+        requestObserver.onNext(AgentToServer.newBuilder()
+                .setInitialSyncComplete(InitialSyncComplete.newBuilder().build())
                 .build());
     }
 

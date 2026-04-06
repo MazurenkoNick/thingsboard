@@ -34,8 +34,11 @@ message AgentToServer {
     CommandResult result = 4;
     ProjectStateSync projectSync = 5;
     ProvisionRequest provision = 6;
+    InitialSyncComplete initialSyncComplete = 7;
   }
 }
+
+message InitialSyncComplete {}
 
 message ProvisionRequest {
   string provisionKey = 1;
