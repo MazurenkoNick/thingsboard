@@ -2030,6 +2030,10 @@ queue:
     bulk-ops-pack-processing-timeout: "${TB_QUEUE_AGENT_BULK_OPS_PACK_PROCESSING_TIMEOUT_MS:600000}"
     # Interval for checking and failing stuck bulk actions (in milliseconds)
     bulk-ops-stuck-check-interval-ms: "${TB_QUEUE_AGENT_BULK_OPS_STUCK_CHECK_INTERVAL_MS:600000}"
+    # Number of threads for processing bulk operations concurrently
+    bulk-ops-processing-threads: "${TB_QUEUE_AGENT_BULK_OPS_PROCESSING_THREADS:2}"
+    # Max queue size for pending bulk operations before backpressure kicks in
+    bulk-ops-processing-queue-size: "${TB_QUEUE_AGENT_BULK_OPS_PROCESSING_QUEUE_SIZE:20}"
   tasks:
     # Poll interval in milliseconds for tasks topics
     poll_interval: "${TB_QUEUE_TASKS_POLL_INTERVAL_MS:500}"

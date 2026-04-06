@@ -96,13 +96,24 @@ public class DefaultAgentBulkOperationService implements AgentBulkOperationServi
         }
         long threshold = System.currentTimeMillis() - stuckActionThresholdMs;
         List<AgentBulkAction> stuckActions = agentBulkActionService.findByStatusIn(
-                List.of(AgentBulkActionStatus.IN_PROGRESS));
+                List.of(AgentBulkActionStatus.QUEUED, AgentBulkActionStatus.IN_PROGRESS));
         for (AgentBulkAction action : stuckActions) {
-            Long processingStartedTime = action.getProcessingStartedTime();
-            if (processingStartedTime != null && processingStartedTime < threshold) {
-                log.warn("Failing stuck bulk action {} (processing started at {}, threshold {})", action.getId(), processingStartedTime, threshold);
+            long referenceTime;
+            if (action.getStatus() == AgentBulkActionStatus.IN_PROGRESS) {
+                Long processingStartedTime = action.getProcessingStartedTime();
+                if (processingStartedTime == null) {
+                    continue;
+                }
+                referenceTime = processingStartedTime;
+            } else {
+                referenceTime = action.getCreatedTime();
+            }
+            if (referenceTime < threshold) {
+                AgentBulkActionStatus originalStatus = action.getStatus();
+                log.warn("Failing stuck bulk action {} in status {} (reference time {}, threshold {})",
+                        action.getId(), originalStatus, referenceTime, threshold);
                 action.setStatus(AgentBulkActionStatus.FAILED);
-                action.setErrorMsg("Stuck in IN_PROGRESS state, failed by cleanup job");
+                action.setErrorMsg("Stuck in " + originalStatus + " state, failed by cleanup job");
                 agentBulkActionService.save(action.getTenantId(), action);
             }
         }
@@ -218,7 +229,7 @@ public class DefaultAgentBulkOperationService implements AgentBulkOperationServi
         int processed = 0;
         for (var app : eligibleApps) {
             try {
-                execBulkOperation(tenantId, app, actionType, bulkActionId, stepInputs);
+                execAppActionEvent(tenantId, app, actionType, bulkActionId, stepInputs);
                 result.incrementSubmitted();
             } catch (Exception e) {
                 result.getSkipped().add(getSkippedOnFailure(e, app, actionType));
@@ -235,9 +246,9 @@ public class DefaultAgentBulkOperationService implements AgentBulkOperationServi
         }
     }
 
-    private void execBulkOperation(TenantId tenantId, AgentApplication app,
-                                   AgentAppEventActionType actionType,
-                                   UUID bulkActionId, Map<UUID, AgentAppStepState> stepInputs) throws Exception {
+    private void execAppActionEvent(TenantId tenantId, AgentApplication app,
+                                    AgentAppEventActionType actionType,
+                                    UUID bulkActionId, Map<UUID, AgentAppStepState> stepInputs) throws Exception {
         AgentAppEventRequest eventRequest = new AgentAppEventRequest();
         eventRequest.setActionType(actionType);
         eventRequest.setApplication(app);

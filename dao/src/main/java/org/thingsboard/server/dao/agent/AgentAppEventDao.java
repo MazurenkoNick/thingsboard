@@ -34,6 +34,8 @@ public interface AgentAppEventDao extends Dao<AgentAppEvent> {
 
     boolean hasActiveEventForApplication(UUID applicationId);
 
+    boolean existsByApplicationIdAndBulkActionId(UUID applicationId, UUID bulkActionId);
+
     Optional<AgentAppEvent> findActiveDeliveredByApplicationId(UUID applicationId);
 
     boolean markDelivered(UUID eventId);

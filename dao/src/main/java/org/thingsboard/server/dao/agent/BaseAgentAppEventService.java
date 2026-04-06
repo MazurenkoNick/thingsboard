@@ -31,7 +31,6 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.service.DataValidator;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -82,6 +81,11 @@ public class BaseAgentAppEventService implements AgentAppEventService {
     @Override
     public boolean hasActiveEventForApplication(AgentApplicationId applicationId) {
         return agentAppEventDao.hasActiveEventForApplication(applicationId.getId());
+    }
+
+    @Override
+    public boolean existsByApplicationIdAndBulkActionId(AgentApplicationId applicationId, UUID bulkActionId) {
+        return agentAppEventDao.existsByApplicationIdAndBulkActionId(applicationId.getId(), bulkActionId);
     }
 
     @Override

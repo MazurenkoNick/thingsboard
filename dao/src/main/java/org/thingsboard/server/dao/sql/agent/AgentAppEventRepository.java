@@ -48,6 +48,12 @@ public interface AgentAppEventRepository extends JpaRepository<AgentAppEventEnti
     boolean hasActiveEventForApplication(@Param("appId") UUID applicationId);
 
     @Query("""
+           SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM AgentAppEventEntity e
+           WHERE e.applicationId = :appId AND e.bulkActionId = :bulkActionId
+           """)
+    boolean existsByApplicationIdAndBulkActionId(@Param("appId") UUID applicationId, @Param("bulkActionId") UUID bulkActionId);
+
+    @Query("""
            SELECT e FROM AgentAppEventEntity e
            WHERE e.applicationId = :appId AND e.deliveryState = 'DELIVERED'
            AND (e.status IS NULL OR e.status NOT IN ('FINISHED', 'ERROR'))

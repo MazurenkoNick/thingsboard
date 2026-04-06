@@ -59,6 +59,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -143,9 +144,6 @@ class DefaultAgentBulkOperationServiceTest {
     void enqueueBulkOperation_allowedActionTypes(AgentAppEventActionType actionType) {
         BulkOperationRequest request = new BulkOperationRequest();
         request.setActionType(actionType);
-
-        AgentAppProfile profile = createProfile();
-        when(profileService.findProfileById(TENANT_ID, PROFILE_ID)).thenReturn(profile);
         request.setForce(false);
 
         AgentBulkAction result = service.enqueueBulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request);
@@ -158,9 +156,6 @@ class DefaultAgentBulkOperationServiceTest {
     void enqueueBulkOperation_savesWithQueuedStatusAndPublishes() {
         BulkOperationRequest request = createRequest(AgentAppEventActionType.UPDATE);
         request.setForce(true);
-
-        AgentAppProfile profile = createProfile();
-        when(profileService.findProfileById(TENANT_ID, PROFILE_ID)).thenReturn(profile);
 
         AgentBulkAction result = service.enqueueBulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request);
 
@@ -204,11 +199,14 @@ class DefaultAgentBulkOperationServiceTest {
 
         service.processBulkOperation(msg);
 
+        // save is called at least twice: first for IN_PROGRESS, then for COMPLETED.
+        // Since the same object is mutated, we verify processingStartedTime was set (during IN_PROGRESS)
+        // and final status is COMPLETED.
         ArgumentCaptor<AgentBulkAction> captor = ArgumentCaptor.forClass(AgentBulkAction.class);
-        verify(agentBulkActionService).save(any(), captor.capture());
-        // First save sets IN_PROGRESS with processingStartedTime
-        assertThat(captor.getValue().getStatus()).isEqualTo(AgentBulkActionStatus.IN_PROGRESS);
-        assertThat(captor.getValue().getProcessingStartedTime()).isNotNull();
+        verify(agentBulkActionService, atLeastOnce()).save(any(), captor.capture());
+        AgentBulkAction lastSaved = captor.getAllValues().get(captor.getAllValues().size() - 1);
+        assertThat(lastSaved.getProcessingStartedTime()).isNotNull();
+        assertThat(lastSaved.getStatus()).isEqualTo(AgentBulkActionStatus.COMPLETED);
     }
 
     @Test
@@ -226,9 +224,8 @@ class DefaultAgentBulkOperationServiceTest {
 
         service.processBulkOperation(msg);
 
-        // Verify final save is COMPLETED (last save call)
         ArgumentCaptor<AgentBulkAction> captor = ArgumentCaptor.forClass(AgentBulkAction.class);
-        verify(agentBulkActionService).save(any(), captor.capture());
+        verify(agentBulkActionService, atLeastOnce()).save(any(), captor.capture());
         List<AgentBulkAction> savedActions = captor.getAllValues();
         AgentBulkAction lastSaved = savedActions.get(savedActions.size() - 1);
         assertThat(lastSaved.getStatus()).isEqualTo(AgentBulkActionStatus.COMPLETED);
@@ -254,7 +251,7 @@ class DefaultAgentBulkOperationServiceTest {
         verify(tbAgentApplicationService).execActionEvent(any(), eq(app.getId()), any(), eq(true));
 
         ArgumentCaptor<AgentBulkAction> captor = ArgumentCaptor.forClass(AgentBulkAction.class);
-        verify(agentBulkActionService).save(any(), captor.capture());
+        verify(agentBulkActionService, atLeastOnce()).save(any(), captor.capture());
         List<AgentBulkAction> savedActions = captor.getAllValues();
         AgentBulkAction lastSaved = savedActions.get(savedActions.size() - 1);
         assertThat(lastSaved.getStatus()).isEqualTo(AgentBulkActionStatus.COMPLETED);
@@ -281,7 +278,7 @@ class DefaultAgentBulkOperationServiceTest {
         AgentBulkAction stuckAction = createBulkAction(new AgentBulkActionId(UUID.randomUUID()), AgentBulkActionStatus.IN_PROGRESS);
         stuckAction.setProcessingStartedTime(System.currentTimeMillis() - 700_000); // older than 600s threshold
 
-        when(agentBulkActionService.findByStatusIn(List.of(AgentBulkActionStatus.IN_PROGRESS)))
+        when(agentBulkActionService.findByStatusIn(List.of(AgentBulkActionStatus.QUEUED, AgentBulkActionStatus.IN_PROGRESS)))
                 .thenReturn(List.of(stuckAction));
 
         service.failStuckBulkActions();
@@ -300,8 +297,43 @@ class DefaultAgentBulkOperationServiceTest {
         AgentBulkAction recentAction = createBulkAction(new AgentBulkActionId(UUID.randomUUID()), AgentBulkActionStatus.IN_PROGRESS);
         recentAction.setProcessingStartedTime(System.currentTimeMillis() - 60_000); // only 60s old, within threshold
 
-        when(agentBulkActionService.findByStatusIn(List.of(AgentBulkActionStatus.IN_PROGRESS)))
+        when(agentBulkActionService.findByStatusIn(List.of(AgentBulkActionStatus.QUEUED, AgentBulkActionStatus.IN_PROGRESS)))
                 .thenReturn(List.of(recentAction));
+
+        service.failStuckBulkActions();
+
+        verify(agentBulkActionService, never()).save(any(), any());
+    }
+
+    @Test
+    void failStuckBulkActions_failsQueuedActionsOlderThanThreshold() {
+        TopicPartitionInfo tpi = new TopicPartitionInfo("topic", null, 0, true);
+        when(partitionService.resolve(ServiceType.TB_CORE, TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID)).thenReturn(tpi);
+
+        AgentBulkAction queuedAction = createBulkAction(new AgentBulkActionId(UUID.randomUUID()), AgentBulkActionStatus.QUEUED);
+        queuedAction.setCreatedTime(System.currentTimeMillis() - 700_000);
+
+        when(agentBulkActionService.findByStatusIn(List.of(AgentBulkActionStatus.QUEUED, AgentBulkActionStatus.IN_PROGRESS)))
+                .thenReturn(List.of(queuedAction));
+
+        service.failStuckBulkActions();
+
+        ArgumentCaptor<AgentBulkAction> captor = ArgumentCaptor.forClass(AgentBulkAction.class);
+        verify(agentBulkActionService).save(eq(TENANT_ID), captor.capture());
+        assertThat(captor.getValue().getStatus()).isEqualTo(AgentBulkActionStatus.FAILED);
+        assertThat(captor.getValue().getErrorMsg()).contains("Stuck in QUEUED");
+    }
+
+    @Test
+    void failStuckBulkActions_skipsRecentQueuedActions() {
+        TopicPartitionInfo tpi = new TopicPartitionInfo("topic", null, 0, true);
+        when(partitionService.resolve(ServiceType.TB_CORE, TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID)).thenReturn(tpi);
+
+        AgentBulkAction recentQueued = createBulkAction(new AgentBulkActionId(UUID.randomUUID()), AgentBulkActionStatus.QUEUED);
+        recentQueued.setCreatedTime(System.currentTimeMillis() - 60_000);
+
+        when(agentBulkActionService.findByStatusIn(List.of(AgentBulkActionStatus.QUEUED, AgentBulkActionStatus.IN_PROGRESS)))
+                .thenReturn(List.of(recentQueued));
 
         service.failStuckBulkActions();
 
@@ -323,7 +355,7 @@ class DefaultAgentBulkOperationServiceTest {
         service.processBulkOperation(msg);
 
         ArgumentCaptor<AgentBulkAction> captor = ArgumentCaptor.forClass(AgentBulkAction.class);
-        verify(agentBulkActionService).save(any(), captor.capture());
+        verify(agentBulkActionService, atLeastOnce()).save(any(), captor.capture());
         List<AgentBulkAction> saved = captor.getAllValues();
         AgentBulkAction lastSaved = saved.get(saved.size() - 1);
         assertThat(lastSaved.getStatus()).isEqualTo(AgentBulkActionStatus.FAILED);

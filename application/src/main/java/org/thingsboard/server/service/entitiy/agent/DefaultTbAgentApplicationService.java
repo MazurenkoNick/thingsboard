@@ -48,6 +48,7 @@ import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -125,6 +126,11 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         AgentAppEventActionType actionType = request.getActionType();
         if (!skipActiveEventCheck && appEventService.hasActiveEventForApplication(applicationId)) {
             throw new ThingsboardException("Cannot create event while another event is being processed", ThingsboardErrorCode.TOO_MANY_REQUESTS);
+        }
+        UUID bulkActionId = request.getBulkActionId();
+        if (bulkActionId != null && appEventService.existsByApplicationIdAndBulkActionId(applicationId, bulkActionId)) {
+            log.info("[{}] Skipping duplicate bulk event for app {} (bulkActionId {})", tenantId, applicationId, bulkActionId);
+            return;
         }
 
         AgentApplication application = checkNotNull(applicationService.findById(tenantId, applicationId));
