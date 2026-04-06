@@ -21,13 +21,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.agent.AgentBulkAction;
-import org.thingsboard.server.common.data.agent.AgentBulkActionStatus;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.agent.AgentBulkActionDao;
 import org.thingsboard.server.dao.model.sql.AgentBulkActionEntity;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
-import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -60,9 +61,9 @@ public class JpaAgentBulkActionDao extends JpaAbstractDao<AgentBulkActionEntity,
     }
 
     @Override
-    public List<AgentBulkAction> findByStatusIn(List<AgentBulkActionStatus> statuses) {
-        return repository.findByStatusIn(statuses).stream()
-                .map(AgentBulkActionEntity::toData)
-                .toList();
+    public PageData<AgentBulkAction> findStuckBulkActions(long threshold, PageLink pageLink) {
+        return DaoUtil.pageToPageData(
+                repository.findStuckBulkActions(threshold, DaoUtil.toPageable(pageLink))
+                        .map(AgentBulkActionEntity::toData));
     }
 }

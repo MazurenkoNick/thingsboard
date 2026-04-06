@@ -20,12 +20,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.agent.AgentBulkAction;
-import org.thingsboard.server.common.data.agent.AgentBulkActionStatus;
 import org.thingsboard.server.common.data.id.AgentBulkActionId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
-
-import java.util.List;
 
 import static org.thingsboard.server.dao.service.Validator.validateId;
 
@@ -62,8 +61,8 @@ public class BaseAgentBulkActionService implements AgentBulkActionService {
     }
 
     @Override
-    public List<AgentBulkAction> findByStatusIn(List<AgentBulkActionStatus> statuses) {
-        return agentBulkActionDao.findByStatusIn(statuses);
+    public PageData<AgentBulkAction> findStuckBulkActions(long threshold, PageLink pageLink) {
+        return agentBulkActionDao.findStuckBulkActions(threshold, pageLink);
     }
 
     @Override

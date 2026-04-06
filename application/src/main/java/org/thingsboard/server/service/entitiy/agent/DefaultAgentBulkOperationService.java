@@ -95,27 +95,15 @@ public class DefaultAgentBulkOperationService implements AgentBulkOperationServi
             return;
         }
         long threshold = System.currentTimeMillis() - stuckActionThresholdMs;
-        List<AgentBulkAction> stuckActions = agentBulkActionService.findByStatusIn(
-                List.of(AgentBulkActionStatus.QUEUED, AgentBulkActionStatus.IN_PROGRESS));
+        PageDataIterable<AgentBulkAction> stuckActions = new PageDataIterable<>(
+                link -> agentBulkActionService.findStuckBulkActions(threshold, link), 100);
         for (AgentBulkAction action : stuckActions) {
-            long referenceTime;
-            if (action.getStatus() == AgentBulkActionStatus.IN_PROGRESS) {
-                Long processingStartedTime = action.getProcessingStartedTime();
-                if (processingStartedTime == null) {
-                    continue;
-                }
-                referenceTime = processingStartedTime;
-            } else {
-                referenceTime = action.getCreatedTime();
-            }
-            if (referenceTime < threshold) {
-                AgentBulkActionStatus originalStatus = action.getStatus();
-                log.warn("Failing stuck bulk action {} in status {} (reference time {}, threshold {})",
-                        action.getId(), originalStatus, referenceTime, threshold);
-                action.setStatus(AgentBulkActionStatus.FAILED);
-                action.setErrorMsg("Stuck in " + originalStatus + " state, failed by cleanup job");
-                agentBulkActionService.save(action.getTenantId(), action);
-            }
+            AgentBulkActionStatus originalStatus = action.getStatus();
+            log.warn("Failing stuck bulk action {} in status {} (threshold {})",
+                    action.getId(), originalStatus, threshold);
+            action.setStatus(AgentBulkActionStatus.FAILED);
+            action.setErrorMsg("Stuck in " + originalStatus + " state, failed by cleanup job");
+            agentBulkActionService.save(action.getTenantId(), action);
         }
     }
 

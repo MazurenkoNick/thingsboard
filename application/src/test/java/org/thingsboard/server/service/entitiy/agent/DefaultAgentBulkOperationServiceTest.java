@@ -41,6 +41,7 @@ import org.thingsboard.server.common.data.id.AgentGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.msg.queue.ServiceType;
 import org.thingsboard.server.common.msg.queue.TopicPartitionInfo;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
@@ -58,6 +59,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.lenient;
@@ -271,15 +273,13 @@ class DefaultAgentBulkOperationServiceTest {
     }
 
     @Test
-    void failStuckBulkActions_failsActionsOlderThanThreshold() {
+    void failStuckBulkActions_failsStuckInProgressAction() {
         TopicPartitionInfo tpi = new TopicPartitionInfo("topic", null, 0, true);
         when(partitionService.resolve(ServiceType.TB_CORE, TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID)).thenReturn(tpi);
 
         AgentBulkAction stuckAction = createBulkAction(new AgentBulkActionId(UUID.randomUUID()), AgentBulkActionStatus.IN_PROGRESS);
-        stuckAction.setProcessingStartedTime(System.currentTimeMillis() - 700_000); // older than 600s threshold
-
-        when(agentBulkActionService.findByStatusIn(List.of(AgentBulkActionStatus.QUEUED, AgentBulkActionStatus.IN_PROGRESS)))
-                .thenReturn(List.of(stuckAction));
+        when(agentBulkActionService.findStuckBulkActions(anyLong(), any(PageLink.class)))
+                .thenReturn(new PageData<>(List.of(stuckAction), 1, 1, false));
 
         service.failStuckBulkActions();
 
@@ -290,31 +290,13 @@ class DefaultAgentBulkOperationServiceTest {
     }
 
     @Test
-    void failStuckBulkActions_skipsRecentActions() {
-        TopicPartitionInfo tpi = new TopicPartitionInfo("topic", null, 0, true);
-        when(partitionService.resolve(ServiceType.TB_CORE, TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID)).thenReturn(tpi);
-
-        AgentBulkAction recentAction = createBulkAction(new AgentBulkActionId(UUID.randomUUID()), AgentBulkActionStatus.IN_PROGRESS);
-        recentAction.setProcessingStartedTime(System.currentTimeMillis() - 60_000); // only 60s old, within threshold
-
-        when(agentBulkActionService.findByStatusIn(List.of(AgentBulkActionStatus.QUEUED, AgentBulkActionStatus.IN_PROGRESS)))
-                .thenReturn(List.of(recentAction));
-
-        service.failStuckBulkActions();
-
-        verify(agentBulkActionService, never()).save(any(), any());
-    }
-
-    @Test
-    void failStuckBulkActions_failsQueuedActionsOlderThanThreshold() {
+    void failStuckBulkActions_failsStuckQueuedAction() {
         TopicPartitionInfo tpi = new TopicPartitionInfo("topic", null, 0, true);
         when(partitionService.resolve(ServiceType.TB_CORE, TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID)).thenReturn(tpi);
 
         AgentBulkAction queuedAction = createBulkAction(new AgentBulkActionId(UUID.randomUUID()), AgentBulkActionStatus.QUEUED);
-        queuedAction.setCreatedTime(System.currentTimeMillis() - 700_000);
-
-        when(agentBulkActionService.findByStatusIn(List.of(AgentBulkActionStatus.QUEUED, AgentBulkActionStatus.IN_PROGRESS)))
-                .thenReturn(List.of(queuedAction));
+        when(agentBulkActionService.findStuckBulkActions(anyLong(), any(PageLink.class)))
+                .thenReturn(new PageData<>(List.of(queuedAction), 1, 1, false));
 
         service.failStuckBulkActions();
 
@@ -322,22 +304,6 @@ class DefaultAgentBulkOperationServiceTest {
         verify(agentBulkActionService).save(eq(TENANT_ID), captor.capture());
         assertThat(captor.getValue().getStatus()).isEqualTo(AgentBulkActionStatus.FAILED);
         assertThat(captor.getValue().getErrorMsg()).contains("Stuck in QUEUED");
-    }
-
-    @Test
-    void failStuckBulkActions_skipsRecentQueuedActions() {
-        TopicPartitionInfo tpi = new TopicPartitionInfo("topic", null, 0, true);
-        when(partitionService.resolve(ServiceType.TB_CORE, TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID)).thenReturn(tpi);
-
-        AgentBulkAction recentQueued = createBulkAction(new AgentBulkActionId(UUID.randomUUID()), AgentBulkActionStatus.QUEUED);
-        recentQueued.setCreatedTime(System.currentTimeMillis() - 60_000);
-
-        when(agentBulkActionService.findByStatusIn(List.of(AgentBulkActionStatus.QUEUED, AgentBulkActionStatus.IN_PROGRESS)))
-                .thenReturn(List.of(recentQueued));
-
-        service.failStuckBulkActions();
-
-        verify(agentBulkActionService, never()).save(any(), any());
     }
 
     // ==================== processBulkOperation error handling ====================
