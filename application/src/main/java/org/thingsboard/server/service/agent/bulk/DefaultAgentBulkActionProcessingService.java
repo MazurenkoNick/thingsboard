@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.entitiy.agent;
+package org.thingsboard.server.service.agent.bulk;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.protobuf.ByteString;
@@ -52,6 +52,7 @@ import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.gen.transport.TransportProtos.AgentBulkOperationMsg;
 import org.thingsboard.server.queue.discovery.PartitionService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.entitiy.agent.TbAgentApplicationService;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

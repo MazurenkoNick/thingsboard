@@ -28,7 +28,7 @@ import org.thingsboard.server.queue.common.TbProtoQueueMsg;
 import org.thingsboard.server.queue.common.consumer.QueueConsumerManager;
 import org.thingsboard.server.queue.provider.TbCoreQueueFactory;
 import org.thingsboard.server.queue.util.TbCoreComponent;
-import org.thingsboard.server.service.entitiy.agent.AgentBulkActionProcessingService;
+import org.thingsboard.server.service.agent.bulk.AgentBulkActionProcessingService;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;

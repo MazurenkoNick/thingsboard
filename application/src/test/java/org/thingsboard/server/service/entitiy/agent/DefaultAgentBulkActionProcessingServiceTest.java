@@ -51,6 +51,7 @@ import org.thingsboard.server.dao.agent.AgentBulkActionService;
 import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.gen.transport.TransportProtos.AgentBulkOperationMsg;
 import org.thingsboard.server.queue.discovery.PartitionService;
+import org.thingsboard.server.service.agent.bulk.DefaultAgentBulkActionProcessingService;
 
 import java.util.Collections;
 import java.util.List;
