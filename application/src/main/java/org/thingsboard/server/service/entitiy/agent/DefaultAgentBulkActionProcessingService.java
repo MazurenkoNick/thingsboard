@@ -66,7 +66,7 @@ import java.util.UUID;
 @TbCoreComponent
 @Service
 @Slf4j
-public class DefaultAgentBulkOperationService implements AgentBulkOperationService {
+public class DefaultAgentBulkActionProcessingService implements AgentBulkActionProcessingService {
 
     private static final int BATCH_UPDATE_SIZE = 50;
     private static final Set<AgentAppEventActionType> ALLOWED_BULK_ACTIONS = Set.of(

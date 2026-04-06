@@ -252,7 +252,7 @@ public class AgentGroupController extends BaseController {
         AgentAppProfileId profileId = new AgentAppProfileId(toUUID(strProfileId));
         checkAgentGroupId(groupId, Operation.WRITE);
         checkAgentAppProfileId(profileId, Operation.READ);
-        return agentBulkOperationService.preview(getTenantId(), groupId, profileId, request);
+        return agentBulkActionProcessingService.preview(getTenantId(), groupId, profileId, request);
     }
 
     @ApiOperation(value = "Bulk Operation (bulkOperation)")
@@ -269,6 +269,6 @@ public class AgentGroupController extends BaseController {
         AgentAppProfileId profileId = new AgentAppProfileId(toUUID(strProfileId));
         checkAgentGroupId(groupId, Operation.WRITE);
         checkAgentAppProfileId(profileId, Operation.READ);
-        return agentBulkOperationService.enqueueBulkOperation(getTenantId(), groupId, profileId, request);
+        return agentBulkActionProcessingService.enqueueBulkOperation(getTenantId(), groupId, profileId, request);
     }
 }

@@ -69,7 +69,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class DefaultAgentBulkOperationServiceTest {
+class DefaultAgentBulkActionProcessingServiceTest {
 
     private static final TenantId TENANT_ID = TenantId.fromUUID(UUID.randomUUID());
     private static final AgentGroupId GROUP_ID = new AgentGroupId(UUID.randomUUID());
@@ -92,7 +92,7 @@ class DefaultAgentBulkOperationServiceTest {
     @Mock
     private PartitionService partitionService;
 
-    private DefaultAgentBulkOperationService service;
+    private DefaultAgentBulkActionProcessingService service;
 
     @BeforeAll
     static void beforeAll() {
@@ -101,7 +101,7 @@ class DefaultAgentBulkOperationServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new DefaultAgentBulkOperationService(tbAgentApplicationService, profileService, applicationDao, agentAppEventService,
+        service = new DefaultAgentBulkActionProcessingService(tbAgentApplicationService, profileService, applicationDao, agentAppEventService,
                 agentBulkActionService, clusterService, partitionService);
         ReflectionTestUtils.setField(service, "stuckActionThresholdMs", 600_000L);
 

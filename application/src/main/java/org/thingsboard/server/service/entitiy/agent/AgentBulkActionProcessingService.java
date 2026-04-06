@@ -23,7 +23,7 @@ import org.thingsboard.server.common.data.id.AgentGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.gen.transport.TransportProtos.AgentBulkOperationMsg;
 
-public interface AgentBulkOperationService {
+public interface AgentBulkActionProcessingService {
 
     AgentBulkAction enqueueBulkOperation(TenantId tenantId, AgentGroupId groupId, AgentAppProfileId profileId, BulkOperationRequest request);
 
