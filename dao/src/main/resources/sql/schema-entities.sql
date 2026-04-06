@@ -767,6 +767,7 @@ CREATE TABLE IF NOT EXISTS agent_group (
     description varchar(255),
     provision_key varchar(255),
     provision_secret varchar(255),
+    provision_type varchar(32) NOT NULL DEFAULT 'DISABLED',
     version BIGINT DEFAULT 1,
     CONSTRAINT agent_group_name_unq_key UNIQUE (tenant_id, name),
     CONSTRAINT agent_group_provision_key_unq_key UNIQUE (provision_key)

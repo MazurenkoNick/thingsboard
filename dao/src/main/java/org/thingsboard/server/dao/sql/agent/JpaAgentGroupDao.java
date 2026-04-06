@@ -88,6 +88,11 @@ public class JpaAgentGroupDao extends JpaAbstractDao<AgentGroupEntity, AgentGrou
     }
 
     @Override
+    public AgentGroup findByProvisionKey(String provisionKey) {
+        return groupRepository.findByProvisionKey(provisionKey).map(AgentGroupEntity::toData).orElse(null);
+    }
+
+    @Override
     public EntityType getEntityType() {
         return EntityType.AGENT_GROUP;
     }

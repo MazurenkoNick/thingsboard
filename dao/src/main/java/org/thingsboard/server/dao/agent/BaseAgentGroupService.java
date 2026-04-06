@@ -28,6 +28,7 @@ import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.AgentGroup;
 import org.thingsboard.server.common.data.agent.AgentGroupInfo;
+import org.thingsboard.server.common.data.agent.AgentProvisionType;
 import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentGroupId;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -92,6 +93,14 @@ public class BaseAgentGroupService extends AbstractCachedEntityService<AgentGrou
 
     private AgentGroup doSaveGroup(AgentGroup group) {
         log.trace("Executing saveGroup [{}]", group);
+        if (group.getProvisionType() != null && group.getProvisionType() != AgentProvisionType.DISABLED) {
+            if (StringUtils.isEmpty(group.getProvisionKey())) {
+                group.setProvisionKey(StringUtils.randomAlphanumeric(20));
+            }
+            if (StringUtils.isEmpty(group.getProvisionSecret())) {
+                group.setProvisionSecret(StringUtils.randomAlphanumeric(20));
+            }
+        }
         AgentGroup oldGroup = groupValidator.validate(group, AgentGroup::getTenantId);
         String oldName = oldGroup != null ? oldGroup.getName() : null;
         AgentGroupCacheEvictEvent evictEvent = new AgentGroupCacheEvictEvent(group.getTenantId(), group.getName(), oldName);
@@ -114,6 +123,15 @@ public class BaseAgentGroupService extends AbstractCachedEntityService<AgentGrou
         log.trace("Executing findGroupById [{}]", groupId);
         validateId(groupId, id -> INCORRECT_GROUP_ID + id);
         return groupDao.findById(tenantId, groupId.getId());
+    }
+
+    @Override
+    public AgentGroup findGroupByProvisionKey(String provisionKey) {
+        log.trace("Executing findGroupByProvisionKey");
+        if (StringUtils.isEmpty(provisionKey)) {
+            return null;
+        }
+        return groupDao.findByProvisionKey(provisionKey);
     }
 
     @Override

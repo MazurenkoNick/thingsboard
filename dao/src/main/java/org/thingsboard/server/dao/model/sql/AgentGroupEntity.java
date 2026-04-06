@@ -17,10 +17,13 @@ package org.thingsboard.server.dao.model.sql;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.agent.AgentGroup;
+import org.thingsboard.server.common.data.agent.AgentProvisionType;
 import org.thingsboard.server.common.data.id.AgentGroupId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -53,6 +56,10 @@ public class AgentGroupEntity extends BaseVersionedEntity<AgentGroup> {
     @Column(name = ModelConstants.AGENT_GROUP_PROVISION_SECRET_PROPERTY)
     private String provisionSecret;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = ModelConstants.AGENT_GROUP_PROVISION_TYPE_PROPERTY)
+    private AgentProvisionType provisionType;
+
     public AgentGroupEntity() {
         super();
     }
@@ -69,6 +76,7 @@ public class AgentGroupEntity extends BaseVersionedEntity<AgentGroup> {
         this.description = group.getDescription();
         this.provisionKey = group.getProvisionKey();
         this.provisionSecret = group.getProvisionSecret();
+        this.provisionType = group.getProvisionType();
     }
 
     @Override
@@ -86,6 +94,7 @@ public class AgentGroupEntity extends BaseVersionedEntity<AgentGroup> {
         group.setDescription(description);
         group.setProvisionKey(provisionKey);
         group.setProvisionSecret(provisionSecret);
+        group.setProvisionType(provisionType);
         return group;
     }
 }

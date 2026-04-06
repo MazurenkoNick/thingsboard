@@ -342,6 +342,7 @@ public class ModelConstants {
     public static final String AGENT_GROUP_DESCRIPTION_PROPERTY = "description";
     public static final String AGENT_GROUP_PROVISION_KEY_PROPERTY = "provision_key";
     public static final String AGENT_GROUP_PROVISION_SECRET_PROPERTY = "provision_secret";
+    public static final String AGENT_GROUP_PROVISION_TYPE_PROPERTY = "provision_type";
 
     /**
      * Agent additional FK columns.

@@ -34,6 +34,8 @@ public interface AgentGroupService extends EntityDaoService {
 
     AgentGroup findGroupById(TenantId tenantId, AgentGroupId groupId);
 
+    AgentGroup findGroupByProvisionKey(String provisionKey);
+
     AgentGroupInfo findGroupInfoById(TenantId tenantId, AgentGroupId groupId);
 
     PageData<AgentGroup> findGroupsByTenantId(TenantId tenantId, PageLink pageLink);
