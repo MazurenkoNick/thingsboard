@@ -15,16 +15,9 @@
  */
 package org.thingsboard.server.common.data.agent;
 
-import lombok.Data;
-import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
-
-import java.util.Map;
-import java.util.UUID;
-
-@Data
-public class BulkOperationRequest {
-
-    private AgentAppEventActionType actionType;
-    private Map<UUID, AgentAppStepState> stepInputs;
-    private boolean force;
+public enum AgentBulkActionStatus {
+    QUEUED,
+    IN_PROGRESS,
+    COMPLETED,
+    FAILED
 }

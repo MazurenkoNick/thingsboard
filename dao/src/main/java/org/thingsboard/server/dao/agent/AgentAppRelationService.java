@@ -20,5 +20,5 @@ import org.thingsboard.server.common.data.id.TenantId;
 
 public interface AgentAppRelationService {
 
-    void resolveRelatedEntity(TenantId tenantId, AgentApplication app);
+    void resolveRelatedEntityFromConfig(TenantId tenantId, AgentApplication app);
 }

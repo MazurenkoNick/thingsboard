@@ -100,6 +100,11 @@ public class TbVersionControlProducerProvider implements TbQueueProducerProvider
     }
 
     @Override
+    public TbQueueProducer<TbProtoQueueMsg<TransportProtos.AgentBulkOperationMsg>> getAgentBulkOpsMsgProducer() {
+        throw new RuntimeException("Not Implemented! Should not be used by Version Control Service!");
+    }
+
+    @Override
     public TbQueueProducer<TbProtoQueueMsg<ToVersionControlServiceMsg>> getTbVersionControlMsgProducer() {
         throw new RuntimeException("Not Implemented! Should not be used by Version Control Service!");
     }

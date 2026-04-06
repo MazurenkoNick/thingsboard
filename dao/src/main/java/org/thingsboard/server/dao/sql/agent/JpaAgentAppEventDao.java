@@ -70,6 +70,11 @@ public class JpaAgentAppEventDao extends JpaAbstractDao<AgentAppEventEntity, Age
     }
 
     @Override
+    public boolean existsByApplicationIdAndBulkActionId(UUID applicationId, UUID bulkActionId) {
+        return repository.existsByApplicationIdAndBulkActionId(applicationId, bulkActionId);
+    }
+
+    @Override
     public Optional<AgentAppEvent> findActiveDeliveredByApplicationId(UUID applicationId) {
         return repository.findActiveDeliveredByApplicationId(applicationId).map(AgentAppEventEntity::toData);
     }

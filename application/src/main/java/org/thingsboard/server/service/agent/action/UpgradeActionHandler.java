@@ -20,8 +20,8 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.dao.agent.config.ProfileConfigResolver;
 import org.thingsboard.server.exception.DataValidationException;
-import org.thingsboard.server.service.agent.ProfileConfigResolver;
 
 @Component
 @RequiredArgsConstructor

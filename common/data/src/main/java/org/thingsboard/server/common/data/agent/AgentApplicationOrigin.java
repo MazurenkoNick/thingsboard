@@ -17,5 +17,6 @@ package org.thingsboard.server.common.data.agent;
 
 public enum AgentApplicationOrigin {
     INSTALLED,
-    DISCOVERED
+    DISCOVERED,
+    AUTO_PROVISIONED
 }

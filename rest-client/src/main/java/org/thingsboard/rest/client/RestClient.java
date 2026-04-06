@@ -77,6 +77,18 @@ import org.thingsboard.server.common.data.UpdateMessage;
 import org.thingsboard.server.common.data.UsageInfo;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.UserEmailInfo;
+import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
+import org.thingsboard.server.common.data.agent.AgentAppProfile;
+import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.AgentBulkAction;
+import org.thingsboard.server.common.data.agent.AgentGroup;
+import org.thingsboard.server.common.data.agent.AgentInfo;
+import org.thingsboard.server.common.data.agent.BulkOperationRequest;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.ai.AiModel;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmComment;
@@ -96,24 +108,18 @@ import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.device.DeviceSearchQuery;
 import org.thingsboard.server.common.data.domain.Domain;
 import org.thingsboard.server.common.data.domain.DomainInfo;
-import org.thingsboard.server.common.data.agent.Agent;
-import org.thingsboard.server.common.data.agent.AgentAppEvent;
-import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
-import org.thingsboard.server.common.data.agent.AgentAppProfile;
-import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.AgentGroup;
-import org.thingsboard.server.common.data.agent.BulkOperationRequest;
-import org.thingsboard.server.common.data.agent.BulkOperationResult;
-import org.thingsboard.server.common.data.agent.AgentInfo;
-import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
-import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.edge.EdgeEvent;
 import org.thingsboard.server.common.data.edge.EdgeInfo;
 import org.thingsboard.server.common.data.edge.EdgeInstructions;
 import org.thingsboard.server.common.data.edge.EdgeSearchQuery;
 import org.thingsboard.server.common.data.entityview.EntityViewSearchQuery;
+import org.thingsboard.server.common.data.id.AgentAppEventId;
+import org.thingsboard.server.common.data.id.AgentAppProfileId;
+import org.thingsboard.server.common.data.id.AgentAppTemplateId;
+import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentGroupId;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.AiModelId;
 import org.thingsboard.server.common.data.id.AlarmCommentId;
 import org.thingsboard.server.common.data.id.AlarmId;
@@ -126,12 +132,6 @@ import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.DeviceProfileId;
 import org.thingsboard.server.common.data.id.DomainId;
-import org.thingsboard.server.common.data.id.AgentAppEventId;
-import org.thingsboard.server.common.data.id.AgentAppProfileId;
-import org.thingsboard.server.common.data.id.AgentAppTemplateId;
-import org.thingsboard.server.common.data.id.AgentApplicationId;
-import org.thingsboard.server.common.data.id.AgentGroupId;
-import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.EdgeId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityViewId;
@@ -175,11 +175,11 @@ import org.thingsboard.server.common.data.oauth2.PlatformType;
 import org.thingsboard.server.common.data.ota.ChecksumAlgorithm;
 import org.thingsboard.server.common.data.ota.OtaPackageType;
 import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.pat.ApiKey;
-import org.thingsboard.server.common.data.pat.ApiKeyInfo;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.page.TimePageLink;
+import org.thingsboard.server.common.data.pat.ApiKey;
+import org.thingsboard.server.common.data.pat.ApiKeyInfo;
 import org.thingsboard.server.common.data.plugin.ComponentDescriptor;
 import org.thingsboard.server.common.data.plugin.ComponentType;
 import org.thingsboard.server.common.data.query.AlarmCountQuery;
@@ -4113,10 +4113,14 @@ public class RestClient implements Closeable {
                 null, Void.class, groupId.getId(), profileId.getId());
     }
 
-    public BulkOperationResult bulkOperation(AgentGroupId groupId, AgentAppProfileId profileId, BulkOperationRequest request, boolean force) {
+    public AgentBulkAction bulkOperation(AgentGroupId groupId, AgentAppProfileId profileId, BulkOperationRequest request, boolean force) {
         return restTemplate.postForEntity(
                 baseURL + "/api/agent/group/{groupId}/profile/{profileId}/bulk?force={force}",
-                request, BulkOperationResult.class, groupId.getId(), profileId.getId(), force).getBody();
+                request, AgentBulkAction.class, groupId.getId(), profileId.getId(), force).getBody();
+    }
+
+    public AgentBulkAction getAgentBulkAction(UUID bulkActionId) {
+        return restTemplate.getForObject(baseURL + "/api/agent/bulk/{bulkActionId}", AgentBulkAction.class, bulkActionId);
     }
 
     public UUID saveEntitiesVersion(VersionCreateRequest request) {

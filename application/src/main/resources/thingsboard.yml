@@ -1791,6 +1791,8 @@ queue:
       edqs-state: "${TB_QUEUE_KAFKA_EDQS_STATE_TOPIC_PROPERTIES:retention.ms:-1;segment.bytes:52428800;retention.bytes:-1;partitions:1;min.insync.replicas:1;cleanup.policy:compact}"
       # Kafka properties for tasks topics
       tasks: "${TB_QUEUE_KAFKA_TASKS_TOPIC_PROPERTIES:retention.ms:604800000;segment.bytes:52428800;retention.bytes:104857600;partitions:1;min.insync.replicas:1}"
+      # Kafka properties for agent bulk operations topic
+      agent-bulk-ops: "${TB_QUEUE_KAFKA_AGENT_BULK_OPS_TOPIC_PROPERTIES:retention.ms:604800000;segment.bytes:52428800;retention.bytes:104857600;partitions:10;min.insync.replicas:1}"
     consumer-stats:
       # Prints lag between consumer group offset and last messages offset in Kafka topics
       enabled: "${TB_QUEUE_KAFKA_CONSUMER_STATS_ENABLED:true}"
@@ -2020,6 +2022,18 @@ queue:
     poll-interval: "${TB_QUEUE_AGENT_NOTIFICATIONS_POLL_INTERVAL_MS:25}"
     # Timeout for processing a message pack by agent notification consumer
     pack-processing-timeout: "${TB_QUEUE_AGENT_NOTIFICATIONS_PACK_PROCESSING_TIMEOUT_MS:10000}"
+    # Topic for agent bulk operations (shared across all tb-core nodes)
+    bulk-ops-topic: "${TB_QUEUE_AGENT_BULK_OPS_TOPIC:tb_agent_bulk_ops}"
+    # Poll interval for agent bulk operations consumer
+    bulk-ops-poll-interval: "${TB_QUEUE_AGENT_BULK_OPS_POLL_INTERVAL_MS:1000}"
+    # Timeout for processing a bulk operation message
+    bulk-ops-pack-processing-timeout: "${TB_QUEUE_AGENT_BULK_OPS_PACK_PROCESSING_TIMEOUT_MS:600000}"
+    # Interval for checking and failing stuck bulk actions (in milliseconds)
+    bulk-ops-stuck-check-interval-ms: "${TB_QUEUE_AGENT_BULK_OPS_STUCK_CHECK_INTERVAL_MS:600000}"
+    # Number of threads for processing bulk operations concurrently
+    bulk-ops-processing-threads: "${TB_QUEUE_AGENT_BULK_OPS_PROCESSING_THREADS:2}"
+    # Max queue size for pending bulk operations before backpressure kicks in
+    bulk-ops-processing-queue-size: "${TB_QUEUE_AGENT_BULK_OPS_PROCESSING_QUEUE_SIZE:20}"
   tasks:
     # Poll interval in milliseconds for tasks topics
     poll_interval: "${TB_QUEUE_TASKS_POLL_INTERVAL_MS:500}"

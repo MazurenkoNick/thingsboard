@@ -18,9 +18,10 @@ package org.thingsboard.server.queue.provider;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.gen.transport.TransportProtos;
+import org.thingsboard.server.gen.transport.TransportProtos.AgentBulkOperationMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.ToAgentNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCalculatedFieldMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCalculatedFieldNotificationMsg;
-import org.thingsboard.server.gen.transport.TransportProtos.ToAgentNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCoreMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCoreNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToEdgeEventNotificationMsg;
@@ -55,6 +56,7 @@ public class TbCoreQueueProducerProvider implements TbQueueProducerProvider {
     private TbQueueProducer<TbProtoQueueMsg<ToCalculatedFieldMsg>> toCalculatedFields;
     private TbQueueProducer<TbProtoQueueMsg<ToCalculatedFieldNotificationMsg>> toCalculatedFieldNotifications;
     private TbQueueProducer<TbProtoQueueMsg<ToAgentNotificationMsg>> toAgentNotifications;
+    private TbQueueProducer<TbProtoQueueMsg<AgentBulkOperationMsg>> toAgentBulkOps;
 
     public TbCoreQueueProducerProvider(TbCoreQueueFactory tbQueueProvider) {
         this.tbQueueProvider = tbQueueProvider;
@@ -76,6 +78,7 @@ public class TbCoreQueueProducerProvider implements TbQueueProducerProvider {
         this.toCalculatedFields = tbQueueProvider.createToCalculatedFieldMsgProducer();
         this.toCalculatedFieldNotifications = tbQueueProvider.createToCalculatedFieldNotificationMsgProducer();
         this.toAgentNotifications = tbQueueProvider.createAgentNotificationsMsgProducer();
+        this.toAgentBulkOps = tbQueueProvider.createAgentBulkOpsMsgProducer();
     }
 
     @Override
@@ -136,6 +139,11 @@ public class TbCoreQueueProducerProvider implements TbQueueProducerProvider {
     @Override
     public TbQueueProducer<TbProtoQueueMsg<ToAgentNotificationMsg>> getTbAgentNotificationsMsgProducer() {
         return toAgentNotifications;
+    }
+
+    @Override
+    public TbQueueProducer<TbProtoQueueMsg<AgentBulkOperationMsg>> getAgentBulkOpsMsgProducer() {
+        return toAgentBulkOps;
     }
 
     @Override

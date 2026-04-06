@@ -53,6 +53,9 @@ public class TopicService {
     @Value("${queue.agent.notifications-topic:tb_agent.notifications}")
     private String tbAgentNotificationsTopic;
 
+    @Value("${queue.agent.bulk-ops-topic:tb_agent_bulk_ops}")
+    private String tbAgentBulkOpsTopic;
+
     private final ConcurrentMap<String, TopicPartitionInfo> tbCoreNotificationTopics = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, TopicPartitionInfo> tbRuleEngineNotificationTopics = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, TopicPartitionInfo> tbEdgeNotificationTopics = new ConcurrentHashMap<>();
@@ -96,6 +99,16 @@ public class TopicService {
 
     public TopicPartitionInfo getAgentNotificationsTopic(String serviceId) {
         return tbAgentNotificationTopics.computeIfAbsent(serviceId, id -> buildNotificationsTopicPartitionInfo(tbAgentNotificationsTopic, serviceId));
+    }
+
+    /**
+     * Returns a shared work queue topic for agent bulk operations.
+     * Currently, uses a flat Kafka topic with consumer group assignment (no hash-based TB-partitioning).
+     * If per-tenant/per-group local state is needed in the future, consider migrating to
+     * HashPartitionService-based routing — the proto already carries tenantId and groupId.
+     */
+    public TopicPartitionInfo getAgentBulkOpsTopic() {
+        return buildTopicPartitionInfo(buildTopicName(tbAgentBulkOpsTopic), null, null, true);
     }
 
     public TopicPartitionInfo getCalculatedFieldNotificationsTopic(String serviceId) {

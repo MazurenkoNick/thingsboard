@@ -18,12 +18,16 @@ package org.thingsboard.server.dao.agent;
 import org.thingsboard.server.common.data.agent.AgentBulkAction;
 import org.thingsboard.server.common.data.id.AgentBulkActionId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 
 public interface AgentBulkActionService {
 
     AgentBulkAction save(TenantId tenantId, AgentBulkAction bulkAction);
 
     AgentBulkAction findById(TenantId tenantId, AgentBulkActionId id);
+
+    PageData<AgentBulkAction> findStuckBulkActions(long threshold, PageLink pageLink);
 
     void cleanUpExpiredBulkActions(long expirationTs);
 }

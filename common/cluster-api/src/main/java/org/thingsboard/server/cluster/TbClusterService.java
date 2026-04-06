@@ -23,6 +23,8 @@ import org.thingsboard.server.common.data.TbResourceInfo;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentBulkAction;
+import org.thingsboard.server.common.data.agent.BulkOperationRequest;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.edge.EdgeEventActionType;
@@ -147,4 +149,6 @@ public interface TbClusterService extends TbQueueClusterService {
     void onAgentAppEvent(TenantId tenantId, AgentId agentId, AgentAppEvent event);
 
     void onAgentAppEventCancelled(TenantId tenantId, AgentId agentId, AgentAppEvent event);
+
+    void pushMsgToAgentBulkOps(AgentBulkAction bulkAction, BulkOperationRequest request);
 }

@@ -39,6 +39,8 @@ public interface AgentAppEventService {
 
     boolean hasActiveEventForApplication(AgentApplicationId applicationId);
 
+    boolean existsByApplicationIdAndBulkActionId(AgentApplicationId applicationId, UUID bulkActionId);
+
     Optional<AgentAppEvent> findActiveDeliveredByApplicationId(AgentApplicationId applicationId);
 
     boolean markDelivered(AgentAppEventId id);

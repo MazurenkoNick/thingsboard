@@ -22,13 +22,14 @@ import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
-import org.thingsboard.server.common.data.Device;
+import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationOrigin;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
@@ -45,6 +46,7 @@ import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.server.common.data.security.DeviceCredentialsType;
 import org.thingsboard.server.common.msg.EncryptionUtil;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
+import org.thingsboard.server.dao.agent.AgentAppProfileService;
 import org.thingsboard.server.dao.agent.AgentAppTemplateService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.agent.AgentService;
@@ -73,6 +75,8 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     DeviceService deviceService;
     @Autowired
     DeviceCredentialsService deviceCredentialsService;
+    @Autowired
+    AgentAppProfileService agentAppProfileService;
 
     @Test
     public void testSave() {
@@ -540,6 +544,157 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         Assert.assertTrue(events.isEmpty());
 
         agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    // ==================== Profile config resolution on save ====================
+
+    @Test
+    public void testSave_newApp_withProfile_resolvesProfileConfig() {
+        Agent agent = createAgent("Agent profile new");
+        Edge edge = createEdge("Profile Edge", "profile-rk-new");
+        AgentAppTemplate template = createTemplate();
+        AgentAppProfile profile = createProfile("Profile 1", template, createEdgeProfileComposeJson("profile-rk-new"));
+
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.EDGE);
+        app.setTemplateId(template.getId());
+        app.setApplicationProfileId(profile.getId());
+        app.setRelatedEntityId(edge.getId());
+
+        AgentApplication saved = agentApplicationService.save(tenantId, app);
+        Assert.assertNotNull(saved.getConfig());
+        Assert.assertEquals(profile.getVersion(), saved.getProfileConfigVersion());
+
+        agentApplicationService.delete(tenantId, saved.getId());
+        agentAppProfileService.deleteProfile(tenantId, profile.getId());
+        edgeService.deleteEdge(tenantId, edge.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testSave_newApp_withProfile_noRelatedEntityId_throws() {
+        Agent agent = createAgent("Agent profile no related");
+        AgentAppTemplate template = createTemplate();
+        AgentAppProfile profile = createProfile("Profile 2", template, createEdgeProfileComposeJson("rk"));
+
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.EDGE);
+        app.setTemplateId(template.getId());
+        app.setApplicationProfileId(profile.getId());
+
+        Assertions.assertThrows(DataValidationException.class, () ->
+                agentApplicationService.save(tenantId, app));
+
+        agentAppProfileService.deleteProfile(tenantId, profile.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testUpdate_profileChanged_resolvesNewProfileConfig() {
+        Agent agent = createAgent("Agent profile change");
+        Edge edge = createEdge("Profile Change Edge", "profile-change-rk");
+        AgentAppTemplate template = createTemplate();
+        AgentAppProfile profile1 = createProfile("Profile Old", template, createEdgeProfileComposeJson("profile-change-rk"));
+        AgentAppProfile profile2 = createProfile("Profile New", template, createEdgeProfileComposeJson("profile-change-rk"));
+
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.EDGE);
+        app.setTemplateId(template.getId());
+        app.setApplicationProfileId(profile1.getId());
+        app.setRelatedEntityId(edge.getId());
+        AgentApplication saved = agentApplicationService.save(tenantId, app);
+
+        saved.setApplicationProfileId(profile2.getId());
+        AgentApplication updated = agentApplicationService.save(tenantId, saved);
+        Assert.assertNotNull(updated.getProfileConfigVersion());
+
+        agentApplicationService.delete(tenantId, updated.getId());
+        agentAppProfileService.deleteProfile(tenantId, profile1.getId());
+        agentAppProfileService.deleteProfile(tenantId, profile2.getId());
+        edgeService.deleteEdge(tenantId, edge.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testUpdate_profileUnchanged_rejectsDirectConfigChange() {
+        Agent agent = createAgent("Agent profile unchanged");
+        Edge edge = createEdge("Unchanged Edge", "unchanged-rk");
+        AgentAppTemplate template = createTemplate();
+        AgentAppProfile profile = createProfile("Profile Unchanged", template, createEdgeProfileComposeJson("unchanged-rk"));
+
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.EDGE);
+        app.setTemplateId(template.getId());
+        app.setApplicationProfileId(profile.getId());
+        app.setRelatedEntityId(edge.getId());
+        AgentApplication saved = agentApplicationService.save(tenantId, app);
+
+        DockerComposeConfig differentConfig = new DockerComposeConfig();
+        differentConfig.setCompose(createEdgeComposeJson("modified-rk"));
+        saved.setConfig(differentConfig);
+
+        Assertions.assertThrows(DataValidationException.class, () ->
+                agentApplicationService.save(tenantId, saved));
+
+        agentApplicationService.delete(tenantId, saved.getId());
+        agentAppProfileService.deleteProfile(tenantId, profile.getId());
+        edgeService.deleteEdge(tenantId, edge.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testSave_withoutProfile_skipsProfileResolution() {
+        Agent agent = createAgent("Agent no profile");
+        AgentAppTemplate template = createTemplate();
+
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.GENERIC);
+        app.setTemplateId(template.getId());
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setCompose(createGenericComposeJson());
+        app.setConfig(config);
+
+        AgentApplication saved = agentApplicationService.save(tenantId, app);
+        Assert.assertNull(saved.getApplicationProfileId());
+        Assert.assertNull(saved.getProfileConfigVersion());
+
+        agentApplicationService.delete(tenantId, saved.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    private AgentAppProfile createProfile(String name, AgentAppTemplate template, JsonNode compose) {
+        AgentAppProfile profile = new AgentAppProfile();
+        profile.setTenantId(tenantId);
+        profile.setName(name);
+        profile.setAppType(AgentApplicationType.EDGE);
+        profile.setTemplateId(template.getId());
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setCompose(compose);
+        profile.setConfig(config);
+        return agentAppProfileService.saveProfile(profile);
+    }
+
+    private JsonNode createEdgeProfileComposeJson(String routingKey) {
+        ObjectNode env = JacksonUtil.newObjectNode();
+        if (routingKey != null) {
+            env.put("CLOUD_ROUTING_KEY", routingKey);
+        }
+        env.put("CLOUD_ROUTING_SECRET", "secret");
+        env.put("CLOUD_RPC_HOST", "localhost");
+        env.put("CLOUD_RPC_PORT", "7070");
+        ObjectNode service = JacksonUtil.newObjectNode();
+        service.put("image", "thingsboard/tb-edge:3.8.0");
+        service.set("environment", env);
+        ObjectNode services = JacksonUtil.newObjectNode();
+        services.set("mytbedge", service);
+        ObjectNode compose = JacksonUtil.newObjectNode();
+        compose.set("services", services);
+        return compose;
     }
 
     private Agent createAgent(String name) {

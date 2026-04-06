@@ -198,7 +198,7 @@ import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.action.EntityActionService;
 import org.thingsboard.server.service.component.ComponentDiscoveryService;
 import org.thingsboard.server.service.entitiy.TbLogEntityActionService;
-import org.thingsboard.server.service.entitiy.agent.AgentBulkOperationService;
+import org.thingsboard.server.service.agent.bulk.AgentBulkActionProcessingService;
 import org.thingsboard.server.service.entitiy.ai.TbAiModelService;
 import org.thingsboard.server.service.entitiy.user.TbUserSettingsService;
 import org.thingsboard.server.service.ota.OtaPackageStateService;
@@ -426,7 +426,7 @@ public abstract class BaseController {
     protected AgentGroupService agentGroupService;
 
     @Autowired
-    protected AgentBulkOperationService agentBulkOperationService;
+    protected AgentBulkActionProcessingService agentBulkActionProcessingService;
 
     @Value("${server.log_controller_error_stack_trace}")
     @Getter

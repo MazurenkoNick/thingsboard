@@ -34,28 +34,24 @@ import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
+import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.agent.AgentAppProfile;
-import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
+import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
-import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityIdFactory;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
-
-import java.util.UUID;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.config.annotations.ApiOperation;
-import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
+import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.agent.TbAgentApplicationService;
 import org.thingsboard.server.service.security.permission.Operation;
 
@@ -196,7 +192,7 @@ public class AgentApplicationController extends BaseController {
         AgentApplicationId agentApplicationId = new AgentApplicationId(toUUID(strAgentAppId));
         checkAgentAppId(agentApplicationId, Operation.WRITE);
         TenantId tenantId = getCurrentUser().getTenantId();
-        tbAgentApplicationService.execActionEvent(tenantId, agentApplicationId, request, getCurrentUser());
+        tbAgentApplicationService.execActionEvent(tenantId, agentApplicationId, request);
     }
 
     @ApiOperation(value = "Cancel Agent Application Event (cancelAgentAppEvent)",

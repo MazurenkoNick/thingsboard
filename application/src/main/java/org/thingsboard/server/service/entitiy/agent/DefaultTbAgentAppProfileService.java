@@ -27,8 +27,8 @@ import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppProfileService;
+import org.thingsboard.server.dao.agent.config.AgentAppConfigMergeOrchestrator;
 import org.thingsboard.server.queue.util.TbCoreComponent;
-import org.thingsboard.server.service.agent.template.merge.AgentAppConfigMergeOrchestrator;
 import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
 
 @AllArgsConstructor

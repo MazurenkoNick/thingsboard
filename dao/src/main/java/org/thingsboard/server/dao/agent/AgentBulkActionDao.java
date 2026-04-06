@@ -16,9 +16,13 @@
 package org.thingsboard.server.dao.agent;
 
 import org.thingsboard.server.common.data.agent.AgentBulkAction;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.Dao;
 
 public interface AgentBulkActionDao extends Dao<AgentBulkAction> {
 
     void cleanUpExpiredBulkActions(long expirationTs);
+
+    PageData<AgentBulkAction> findStuckBulkActions(long threshold, PageLink pageLink);
 }

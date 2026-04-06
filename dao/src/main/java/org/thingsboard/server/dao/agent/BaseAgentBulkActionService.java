@@ -22,6 +22,8 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.agent.AgentBulkAction;
 import org.thingsboard.server.common.data.id.AgentBulkActionId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 
 import static org.thingsboard.server.dao.service.Validator.validateId;
@@ -56,6 +58,11 @@ public class BaseAgentBulkActionService implements AgentBulkActionService {
         log.trace("Executing findAgentBulkActionById [{}]", id);
         validateId(id, i -> INCORRECT_AGENT_BULK_ACTION_ID + i);
         return agentBulkActionDao.findById(tenantId, id.getId());
+    }
+
+    @Override
+    public PageData<AgentBulkAction> findStuckBulkActions(long threshold, PageLink pageLink) {
+        return agentBulkActionDao.findStuckBulkActions(threshold, pageLink);
     }
 
     @Override

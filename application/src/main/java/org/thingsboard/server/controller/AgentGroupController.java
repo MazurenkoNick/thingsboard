@@ -30,9 +30,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.Customer;
+import org.thingsboard.server.common.data.agent.AgentBulkAction;
 import org.thingsboard.server.common.data.agent.AgentGroup;
 import org.thingsboard.server.common.data.agent.AgentGroupInfo;
-import org.thingsboard.server.common.data.agent.AgentBulkAction;
 import org.thingsboard.server.common.data.agent.BulkOperationPreview;
 import org.thingsboard.server.common.data.agent.BulkOperationRequest;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -47,7 +47,6 @@ import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.dao.model.ModelConstants;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.agent.TbAgentGroupService;
-import org.thingsboard.server.service.entitiy.agent.AgentBulkOperationService;
 import org.thingsboard.server.service.security.permission.Operation;
 import org.thingsboard.server.service.security.permission.Resource;
 
@@ -253,7 +252,7 @@ public class AgentGroupController extends BaseController {
         AgentAppProfileId profileId = new AgentAppProfileId(toUUID(strProfileId));
         checkAgentGroupId(groupId, Operation.WRITE);
         checkAgentAppProfileId(profileId, Operation.READ);
-        return agentBulkOperationService.preview(getTenantId(), groupId, profileId, request);
+        return agentBulkActionProcessingService.preview(getTenantId(), groupId, profileId, request);
     }
 
     @ApiOperation(value = "Bulk Operation (bulkOperation)")
@@ -263,14 +262,13 @@ public class AgentGroupController extends BaseController {
     public AgentBulkAction bulkOperation(
             @PathVariable(GROUP_ID) String strGroupId,
             @PathVariable(PROFILE_ID) String strProfileId,
-            @RequestBody BulkOperationRequest request,
-            @RequestParam(defaultValue = "false") boolean force) throws ThingsboardException {
+            @RequestBody BulkOperationRequest request) throws ThingsboardException {
         checkParameter(GROUP_ID, strGroupId);
         checkParameter(PROFILE_ID, strProfileId);
         AgentGroupId groupId = new AgentGroupId(toUUID(strGroupId));
         AgentAppProfileId profileId = new AgentAppProfileId(toUUID(strProfileId));
         checkAgentGroupId(groupId, Operation.WRITE);
         checkAgentAppProfileId(profileId, Operation.READ);
-        return agentBulkOperationService.bulkOperation(getTenantId(), groupId, profileId, request, force, getCurrentUser());
+        return agentBulkActionProcessingService.enqueueBulkOperation(getTenantId(), groupId, profileId, request);
     }
 }
