@@ -16,87 +16,74 @@
 package org.thingsboard.server.service.queue;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.thingsboard.server.actors.ActorSystemContext;
-import org.thingsboard.server.common.msg.queue.ServiceType;
-import org.thingsboard.server.common.msg.queue.TbCallback;
+import org.thingsboard.common.util.ThingsBoardExecutors;
 import org.thingsboard.server.gen.transport.TransportProtos.AgentBulkOperationMsg;
 import org.thingsboard.server.queue.TbQueueConsumer;
 import org.thingsboard.server.queue.common.TbProtoQueueMsg;
-import org.thingsboard.server.queue.discovery.event.PartitionChangeEvent;
+import org.thingsboard.server.queue.common.consumer.QueueConsumerManager;
 import org.thingsboard.server.queue.provider.TbCoreQueueFactory;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.agent.AgentBulkOperationService;
-import org.thingsboard.server.service.queue.processing.AbstractConsumerService;
 
-import java.util.UUID;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 @Service
 @TbCoreComponent
+@RequiredArgsConstructor
 @Slf4j
-public class DefaultTbAgentBulkOpsConsumerService extends AbstractConsumerService<AgentBulkOperationMsg> {
+public class DefaultTbAgentBulkOpsConsumerService {
 
     private static final String CONSUMER_NAME = "tb-agent-bulk-ops";
 
     @Value("${queue.agent.bulk-ops-poll-interval:1000}")
     private int pollInterval;
-    @Value("${queue.agent.bulk-ops-pack-processing-timeout:300000}")
-    private int packProcessingTimeout;
 
     private final TbCoreQueueFactory queueFactory;
     private final AgentBulkOperationService bulkOperationService;
 
-    public DefaultTbAgentBulkOpsConsumerService(TbCoreQueueFactory queueFactory,
-                                                ActorSystemContext actorContext,
-                                                AgentBulkOperationService bulkOperationService) {
-        super(actorContext, null, null, null, null, null, null, null, null, null);
-        this.queueFactory = queueFactory;
-        this.bulkOperationService = bulkOperationService;
-    }
+    private QueueConsumerManager<TbProtoQueueMsg<AgentBulkOperationMsg>> consumer;
+    private ExecutorService consumerExecutor;
 
     @PostConstruct
     public void init() {
-        super.init(CONSUMER_NAME);
+        consumerExecutor = ThingsBoardExecutors.newWorkStealingPool(1, CONSUMER_NAME);
+        consumer = QueueConsumerManager.<TbProtoQueueMsg<AgentBulkOperationMsg>>builder()
+                .name(CONSUMER_NAME)
+                .msgPackProcessor(this::processMessages)
+                .pollInterval(pollInterval)
+                .consumerCreator(queueFactory::createAgentBulkOpsMsgConsumer)
+                .consumerExecutor(consumerExecutor)
+                .threadPrefix(CONSUMER_NAME)
+                .build();
+        consumer.subscribe();
+        consumer.launch();
     }
 
-    @Override
-    protected ServiceType getServiceType() {
-        return ServiceType.TB_CORE;
+    private void processMessages(List<TbProtoQueueMsg<AgentBulkOperationMsg>> msgs,
+                                 TbQueueConsumer<TbProtoQueueMsg<AgentBulkOperationMsg>> consumer) {
+        for (var msg : msgs) {
+            try {
+                bulkOperationService.processBulkOperation(msg.getValue());
+            } catch (Exception e) {
+                log.error("Failed to process agent bulk operation message", e);
+            }
+        }
+        consumer.commit();
     }
 
-    @Override
-    protected long getNotificationPollDuration() {
-        return pollInterval;
-    }
-
-    @Override
-    protected long getNotificationPackProcessingTimeout() {
-        return packProcessingTimeout;
-    }
-
-    @Override
-    protected int getMgmtThreadPoolSize() {
-        return 4;
-    }
-
-    @Override
-    protected TbQueueConsumer<TbProtoQueueMsg<AgentBulkOperationMsg>> createNotificationsConsumer() {
-        return queueFactory.createAgentBulkOpsMsgConsumer();
-    }
-
-    @Override
-    protected void handleNotification(UUID id, TbProtoQueueMsg<AgentBulkOperationMsg> msg, TbCallback callback) {
-        try {
-            bulkOperationService.processBulkOperation(msg.getValue());
-            callback.onSuccess();
-        } catch (Exception e) {
-            log.error("Failed to process agent bulk operation message", e);
-            callback.onFailure(e);
+    @PreDestroy
+    public void destroy() {
+        if (consumer != null) {
+            consumer.stop();
+        }
+        if (consumerExecutor != null) {
+            consumerExecutor.shutdownNow();
         }
     }
-
-    @Override
-    protected void onTbApplicationEvent(PartitionChangeEvent event) {}
 }

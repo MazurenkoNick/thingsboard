@@ -16,14 +16,19 @@
 package org.thingsboard.server.dao.agent;
 
 import org.thingsboard.server.common.data.agent.AgentBulkAction;
+import org.thingsboard.server.common.data.agent.AgentBulkActionStatus;
 import org.thingsboard.server.common.data.id.AgentBulkActionId;
 import org.thingsboard.server.common.data.id.TenantId;
+
+import java.util.List;
 
 public interface AgentBulkActionService {
 
     AgentBulkAction save(TenantId tenantId, AgentBulkAction bulkAction);
 
     AgentBulkAction findById(TenantId tenantId, AgentBulkActionId id);
+
+    List<AgentBulkAction> findByStatusIn(List<AgentBulkActionStatus> statuses);
 
     void cleanUpExpiredBulkActions(long expirationTs);
 }

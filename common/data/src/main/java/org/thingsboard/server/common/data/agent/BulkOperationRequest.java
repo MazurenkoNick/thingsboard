@@ -26,4 +26,5 @@ public class BulkOperationRequest {
 
     private AgentAppEventActionType actionType;
     private Map<UUID, AgentAppStepState> stepInputs;
+    private boolean force;
 }

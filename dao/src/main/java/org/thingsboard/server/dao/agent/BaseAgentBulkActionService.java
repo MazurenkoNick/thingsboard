@@ -20,9 +20,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.agent.AgentBulkAction;
+import org.thingsboard.server.common.data.agent.AgentBulkActionStatus;
 import org.thingsboard.server.common.data.id.AgentBulkActionId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
+
+import java.util.List;
 
 import static org.thingsboard.server.dao.service.Validator.validateId;
 
@@ -56,6 +59,11 @@ public class BaseAgentBulkActionService implements AgentBulkActionService {
         log.trace("Executing findAgentBulkActionById [{}]", id);
         validateId(id, i -> INCORRECT_AGENT_BULK_ACTION_ID + i);
         return agentBulkActionDao.findById(tenantId, id.getId());
+    }
+
+    @Override
+    public List<AgentBulkAction> findByStatusIn(List<AgentBulkActionStatus> statuses) {
+        return agentBulkActionDao.findByStatusIn(statuses);
     }
 
     @Override

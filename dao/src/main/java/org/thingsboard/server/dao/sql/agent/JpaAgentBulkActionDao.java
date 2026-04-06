@@ -21,11 +21,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.agent.AgentBulkAction;
+import org.thingsboard.server.common.data.agent.AgentBulkActionStatus;
 import org.thingsboard.server.dao.agent.AgentBulkActionDao;
 import org.thingsboard.server.dao.model.sql.AgentBulkActionEntity;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -55,5 +57,12 @@ public class JpaAgentBulkActionDao extends JpaAbstractDao<AgentBulkActionEntity,
     public void cleanUpExpiredBulkActions(long expirationTs) {
         repository.deleteEventsByBulkActionCreatedTimeBefore(expirationTs);
         repository.deleteBulkActionsCreatedTimeBefore(expirationTs);
+    }
+
+    @Override
+    public List<AgentBulkAction> findByStatusIn(List<AgentBulkActionStatus> statuses) {
+        return repository.findByStatusIn(statuses).stream()
+                .map(AgentBulkActionEntity::toData)
+                .toList();
     }
 }

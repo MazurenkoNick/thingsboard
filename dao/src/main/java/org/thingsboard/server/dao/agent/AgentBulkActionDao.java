@@ -16,9 +16,14 @@
 package org.thingsboard.server.dao.agent;
 
 import org.thingsboard.server.common.data.agent.AgentBulkAction;
+import org.thingsboard.server.common.data.agent.AgentBulkActionStatus;
 import org.thingsboard.server.dao.Dao;
+
+import java.util.List;
 
 public interface AgentBulkActionDao extends Dao<AgentBulkAction> {
 
     void cleanUpExpiredBulkActions(long expirationTs);
+
+    List<AgentBulkAction> findByStatusIn(List<AgentBulkActionStatus> statuses);
 }

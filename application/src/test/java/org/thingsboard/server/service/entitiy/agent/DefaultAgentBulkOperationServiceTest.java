@@ -15,7 +15,7 @@
  */
 package org.thingsboard.server.service.entitiy.agent;
 
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,26 +24,32 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
-import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentBulkAction;
+import org.thingsboard.server.common.data.agent.AgentBulkActionStatus;
 import org.thingsboard.server.common.data.agent.BulkOperationRequest;
-import org.thingsboard.server.common.data.agent.BulkOperationResult.SkipReason;
 import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentBulkActionId;
 import org.thingsboard.server.common.data.id.AgentGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.msg.queue.ServiceType;
+import org.thingsboard.server.common.msg.queue.TopicPartitionInfo;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
 import org.thingsboard.server.dao.agent.AgentAppProfileService;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentBulkActionService;
 import org.thingsboard.server.exception.DataValidationException;
+import org.thingsboard.server.gen.transport.TransportProtos.AgentBulkOperationMsg;
+import org.thingsboard.server.queue.discovery.PartitionService;
 
 import java.util.Collections;
 import java.util.List;
@@ -53,10 +59,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -75,16 +81,26 @@ class DefaultAgentBulkOperationServiceTest {
     @Mock
     private AgentAppEventService agentAppEventService;
     @Mock
+    private AgentBulkActionService agentBulkActionService;
+    @Mock
+    private TbClusterService clusterService;
+    @Mock
     private TbAgentApplicationService tbAgentApplicationService;
     @Mock
-    private AgentBulkActionService agentBulkActionService;
+    private PartitionService partitionService;
 
     private DefaultAgentBulkOperationService service;
 
+    @BeforeAll
+    static void beforeAll() {
+        USER.setId(new UserId(UUID.randomUUID()));
+    }
+
     @BeforeEach
     void setUp() {
-        service = new DefaultAgentBulkOperationService(profileService, applicationDao, agentAppEventService, tbAgentApplicationService, agentBulkActionService);
-        service.init();
+        service = new DefaultAgentBulkOperationService(tbAgentApplicationService, profileService, applicationDao, agentAppEventService,
+                agentBulkActionService, clusterService, partitionService);
+        ReflectionTestUtils.setField(service, "stuckActionThresholdMs", 600_000L);
 
         lenient().when(agentBulkActionService.save(any(), any())).thenAnswer(invocation -> {
             AgentBulkAction action = invocation.getArgument(1);
@@ -95,218 +111,223 @@ class DefaultAgentBulkOperationServiceTest {
         });
     }
 
-    @AfterEach
-    void tearDown() {
-        service.destroy();
-    }
+    // ==================== enqueueBulkOperation ====================
 
     @Test
-    void bulkOperation_rejectsNullActionType() {
+    void enqueueBulkOperation_rejectsNullActionType() {
         BulkOperationRequest request = new BulkOperationRequest();
         request.setActionType(null);
+        request.setForce(false);
 
-        assertThatThrownBy(() -> service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, false, USER))
+        assertThatThrownBy(() -> service.enqueueBulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request))
                 .isInstanceOf(DataValidationException.class)
                 .hasMessageContaining("not allowed");
+        verifyNoInteractions(clusterService);
     }
 
     @ParameterizedTest
     @EnumSource(value = AgentAppEventActionType.class, names = {"INSTALL"})
-    void bulkOperation_restrictedActionTypes(AgentAppEventActionType actionType) {
+    void enqueueBulkOperation_restrictedActionTypes(AgentAppEventActionType actionType) {
         BulkOperationRequest request = new BulkOperationRequest();
         request.setActionType(actionType);
+        request.setForce(false);
 
-        assertThatThrownBy(() -> service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, false, USER))
+        assertThatThrownBy(() -> service.enqueueBulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request))
                 .isInstanceOf(DataValidationException.class)
                 .hasMessageContaining("not allowed");
+        verifyNoInteractions(clusterService);
     }
 
     @ParameterizedTest
     @EnumSource(value = AgentAppEventActionType.class, names = {"UPDATE", "DELETE", "RESTART", "ROLLBACK", "UPGRADE"})
-    void bulkOperation_allowedActionTypes(AgentAppEventActionType actionType) {
+    void enqueueBulkOperation_allowedActionTypes(AgentAppEventActionType actionType) {
         BulkOperationRequest request = new BulkOperationRequest();
         request.setActionType(actionType);
 
         AgentAppProfile profile = createProfile();
         when(profileService.findProfileById(TENANT_ID, PROFILE_ID)).thenReturn(profile);
-        when(applicationDao.findByApplicationProfileIdAndAgentGroupId(eq(PROFILE_ID.getId()), eq(GROUP_ID.getId()), any()))
-                .thenReturn(new PageData<>(Collections.emptyList(), 0, 0, false));
+        request.setForce(false);
 
-        AgentBulkAction result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, false, USER);
+        AgentBulkAction result = service.enqueueBulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request);
 
-        assertThat(result.getTotal()).isZero();
+        assertThat(result.getStatus()).isEqualTo(AgentBulkActionStatus.QUEUED);
+        verify(clusterService).pushMsgToAgentBulkOps(any(), eq(request));
     }
 
     @Test
-    void bulkOperation_noApps_returnsEmptyResult() {
+    void enqueueBulkOperation_savesWithQueuedStatusAndPublishes() {
         BulkOperationRequest request = createRequest(AgentAppEventActionType.UPDATE);
-
-        AgentAppProfile profile = createProfile();
-        when(profileService.findProfileById(TENANT_ID, PROFILE_ID)).thenReturn(profile);
-        when(applicationDao.findByApplicationProfileIdAndAgentGroupId(eq(PROFILE_ID.getId()), eq(GROUP_ID.getId()), any()))
-                .thenReturn(new PageData<>(Collections.emptyList(), 0, 0, false));
-
-        AgentBulkAction result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, false, USER);
-
-        assertThat(result.getTotal()).isZero();
-        assertThat(result.getSubmitted()).isZero();
-        assertThat(result.getSkipCounts()).isNullOrEmpty();
-    }
-
-    @Test
-    void bulkOperation_allEligible_submitsAll() {
-        BulkOperationRequest request = createRequest(AgentAppEventActionType.UPDATE);
+        request.setForce(true);
 
         AgentAppProfile profile = createProfile();
         when(profileService.findProfileById(TENANT_ID, PROFILE_ID)).thenReturn(profile);
 
-        List<AgentApplication> apps = List.of(createApp(), createApp(), createApp());
-        when(applicationDao.findByApplicationProfileIdAndAgentGroupId(eq(PROFILE_ID.getId()), eq(GROUP_ID.getId()), any()))
-                .thenReturn(new PageData<>(apps, 1, apps.size(), false));
+        AgentBulkAction result = service.enqueueBulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request);
 
-        AgentBulkAction result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, true, USER);
-
-        assertThat(result.getTotal()).isEqualTo(3);
-        assertThat(result.getSubmitted()).isEqualTo(3);
-        assertThat(result.getSkipCounts()).isNullOrEmpty();
-    }
-
-    @Test
-    void bulkOperation_forceTrue_skipsBlockedApps() {
-        BulkOperationRequest request = createRequest(AgentAppEventActionType.UPDATE);
-
-        AgentAppProfile profile = createProfile();
-        when(profileService.findProfileById(TENANT_ID, PROFILE_ID)).thenReturn(profile);
-
-        AgentApplication eligible1 = createApp();
-        AgentApplication eligible2 = createApp();
-        AgentApplication blocked = createApp();
-        when(agentAppEventService.hasActiveEventForApplication(any())).thenAnswer(invocation -> {
-            AgentApplicationId id = invocation.getArgument(0);
-            return id.equals(blocked.getId());
-        });
-
-        List<AgentApplication> apps = List.of(eligible1, blocked, eligible2);
-        when(applicationDao.findByApplicationProfileIdAndAgentGroupId(eq(PROFILE_ID.getId()), eq(GROUP_ID.getId()), any()))
-                .thenReturn(new PageData<>(apps, 1, apps.size(), false));
-
-        AgentBulkAction result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, true, USER);
-
-        assertThat(result.getTotal()).isEqualTo(3);
-        assertThat(result.getSubmitted()).isEqualTo(2);
-        assertThat(result.getSkipCounts()).hasSize(1);
-        assertThat(result.getSkipCounts()).containsKey(SkipReason.ACTIVE_EVENT);
-    }
-
-    @Test
-    void bulkOperation_forceFalse_throwsOnBlocker() {
-        BulkOperationRequest request = createRequest(AgentAppEventActionType.UPDATE);
-
-        AgentAppProfile profile = createProfile();
-        when(profileService.findProfileById(TENANT_ID, PROFILE_ID)).thenReturn(profile);
-
-        AgentApplication blocked = createApp();
-        when(agentAppEventService.hasActiveEventForApplication(blocked.getId())).thenReturn(true);
-
-        when(applicationDao.findByApplicationProfileIdAndAgentGroupId(eq(PROFILE_ID.getId()), eq(GROUP_ID.getId()), any()))
-                .thenReturn(new PageData<>(List.of(blocked), 1, 1, false));
-
-        assertThatThrownBy(() -> service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, false, USER))
-                .isInstanceOf(DataValidationException.class)
-                .hasMessageContaining("Bulk operation blocked");
-    }
-
-    @Test
-    void bulkOperation_upgrade_versionMismatch_skipped() {
-        BulkOperationRequest request = createRequest(AgentAppEventActionType.UPGRADE);
-
-        AgentAppProfile profile = createProfile();
-        when(profileService.findProfileById(TENANT_ID, PROFILE_ID)).thenReturn(profile);
-
-        AgentApplication app = createApp();
-        app.setTemplateId(new AgentAppTemplateId(UUID.randomUUID())); // different from profile's
-
-        when(applicationDao.findByApplicationProfileIdAndAgentGroupId(eq(PROFILE_ID.getId()), eq(GROUP_ID.getId()), any()))
-                .thenReturn(new PageData<>(List.of(app), 1, 1, false));
-
-        AgentBulkAction result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, true, USER);
-
-        assertThat(result.getTotal()).isEqualTo(1);
-        assertThat(result.getSubmitted()).isZero();
-        assertThat(result.getSkipCounts()).hasSize(1);
-        assertThat(result.getSkipCounts()).containsKey(SkipReason.VERSION_MISMATCH);
-    }
-
-    @Test
-    void bulkOperation_execFailure_recordedAsSkipped() throws Exception {
-        BulkOperationRequest request = createRequest(AgentAppEventActionType.UPDATE);
-
-        AgentAppProfile profile = createProfile();
-        when(profileService.findProfileById(TENANT_ID, PROFILE_ID)).thenReturn(profile);
-
-        AgentApplication app = createApp();
-        when(applicationDao.findByApplicationProfileIdAndAgentGroupId(eq(PROFILE_ID.getId()), eq(GROUP_ID.getId()), any()))
-                .thenReturn(new PageData<>(List.of(app), 1, 1, false));
-
-        doThrow(new RuntimeException("DB error"))
-                .when(tbAgentApplicationService).execActionEvent(any(), any(), any(), any(), eq(true));
-
-        AgentBulkAction result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, true, USER);
-
-        assertThat(result.getTotal()).isEqualTo(1);
-        assertThat(result.getSubmitted()).isZero();
-        assertThat(result.getSkipCounts()).hasSize(1);
-        assertThat(result.getSkipCounts()).containsKey(SkipReason.ERROR);
-    }
-
-    @Test
-    void bulkOperation_createsBulkActionWithCorrectMetadata() {
-        BulkOperationRequest request = createRequest(AgentAppEventActionType.UPDATE);
-
-        AgentAppProfile profile = createProfile();
-        when(profileService.findProfileById(TENANT_ID, PROFILE_ID)).thenReturn(profile);
-
-        List<AgentApplication> apps = List.of(createApp());
-        when(applicationDao.findByApplicationProfileIdAndAgentGroupId(eq(PROFILE_ID.getId()), eq(GROUP_ID.getId()), any()))
-                .thenReturn(new PageData<>(apps, 1, apps.size(), false));
-
-        service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, true, USER);
+        assertThat(result.getStatus()).isEqualTo(AgentBulkActionStatus.QUEUED);
+        assertThat(result.getTenantId()).isEqualTo(TENANT_ID);
+        assertThat(result.getGroupId()).isEqualTo(GROUP_ID.getId());
+        assertThat(result.getProfileId()).isEqualTo(PROFILE_ID.getId());
+        assertThat(result.getActionType()).isEqualTo(AgentAppEventActionType.UPDATE);
 
         ArgumentCaptor<AgentBulkAction> captor = ArgumentCaptor.forClass(AgentBulkAction.class);
-        verify(agentBulkActionService, times(2)).save(eq(TENANT_ID), captor.capture());
+        verify(agentBulkActionService).save(eq(TENANT_ID), captor.capture());
+        assertThat(captor.getValue().getStatus()).isEqualTo(AgentBulkActionStatus.QUEUED);
 
-        AgentBulkAction firstSave = captor.getAllValues().get(0);
-        assertThat(firstSave.getTenantId()).isEqualTo(TENANT_ID);
-        assertThat(firstSave.getGroupId()).isEqualTo(GROUP_ID.getId());
-        assertThat(firstSave.getProfileId()).isEqualTo(PROFILE_ID.getId());
-        assertThat(firstSave.getActionType()).isEqualTo(AgentAppEventActionType.UPDATE);
+        verify(clusterService).pushMsgToAgentBulkOps(any(), eq(request));
+    }
 
-        AgentBulkAction finalSave = captor.getAllValues().get(1);
-        assertThat(finalSave.getTotal()).isEqualTo(1);
-        assertThat(finalSave.getSubmitted()).isEqualTo(1);
-        assertThat(finalSave.getSkipCounts()).isNullOrEmpty();
+    // ==================== processBulkOperation ====================
+
+    @Test
+    void processBulkOperation_skipsWhenBulkActionNotFound() {
+        AgentBulkOperationMsg msg = buildProtoMsg(AgentAppEventActionType.UPDATE);
+
+        service.processBulkOperation(msg);
+
+        verify(agentBulkActionService).findById(any(), any());
+        verify(agentBulkActionService, never()).save(any(), any());
     }
 
     @Test
-    void bulkOperation_setsBulkActionIdOnEventRequest() throws Exception {
-        BulkOperationRequest request = createRequest(AgentAppEventActionType.UPDATE);
-
+    void processBulkOperation_setsInProgressAndExecutes() {
+        AgentBulkActionId bulkActionId = new AgentBulkActionId(UUID.randomUUID());
+        AgentBulkAction bulkAction = createBulkAction(bulkActionId, AgentBulkActionStatus.QUEUED);
         AgentAppProfile profile = createProfile();
-        when(profileService.findProfileById(TENANT_ID, PROFILE_ID)).thenReturn(profile);
 
-        List<AgentApplication> apps = List.of(createApp(), createApp());
-        when(applicationDao.findByApplicationProfileIdAndAgentGroupId(eq(PROFILE_ID.getId()), eq(GROUP_ID.getId()), any()))
-                .thenReturn(new PageData<>(apps, 1, apps.size(), false));
+        AgentBulkOperationMsg msg = buildProtoMsg(bulkActionId, AgentAppEventActionType.UPDATE);
 
-        AgentBulkAction result = service.bulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request, true, USER);
+        when(agentBulkActionService.findById(any(), eq(bulkActionId))).thenReturn(bulkAction);
+        when(profileService.findProfileById(any(), any())).thenReturn(profile);
+        when(applicationDao.findByApplicationProfileIdAndAgentGroupId(any(), any(), any()))
+                .thenReturn(new PageData<>(Collections.emptyList(), 0, 0, false));
 
-        ArgumentCaptor<AgentAppEventRequest> eventCaptor = ArgumentCaptor.forClass(AgentAppEventRequest.class);
-        verify(tbAgentApplicationService, times(2)).execActionEvent(any(), any(), eventCaptor.capture(), any(), eq(true));
+        service.processBulkOperation(msg);
 
-        UUID expectedBulkActionId = result.getId().getId();
-        for (AgentAppEventRequest capturedRequest : eventCaptor.getAllValues()) {
-            assertThat(capturedRequest.getBulkActionId()).isEqualTo(expectedBulkActionId);
-        }
+        ArgumentCaptor<AgentBulkAction> captor = ArgumentCaptor.forClass(AgentBulkAction.class);
+        verify(agentBulkActionService).save(any(), captor.capture());
+        // First save sets IN_PROGRESS with processingStartedTime
+        assertThat(captor.getValue().getStatus()).isEqualTo(AgentBulkActionStatus.IN_PROGRESS);
+        assertThat(captor.getValue().getProcessingStartedTime()).isNotNull();
+    }
+
+    @Test
+    void processBulkOperation_completesWithNoEligibleApps() {
+        AgentBulkActionId bulkActionId = new AgentBulkActionId(UUID.randomUUID());
+        AgentBulkAction bulkAction = createBulkAction(bulkActionId, AgentBulkActionStatus.QUEUED);
+        AgentAppProfile profile = createProfile();
+
+        AgentBulkOperationMsg msg = buildProtoMsg(bulkActionId, AgentAppEventActionType.UPDATE);
+
+        when(agentBulkActionService.findById(any(), eq(bulkActionId))).thenReturn(bulkAction);
+        when(profileService.findProfileById(any(), any())).thenReturn(profile);
+        when(applicationDao.findByApplicationProfileIdAndAgentGroupId(any(), any(), any()))
+                .thenReturn(new PageData<>(Collections.emptyList(), 0, 0, false));
+
+        service.processBulkOperation(msg);
+
+        // Verify final save is COMPLETED (last save call)
+        ArgumentCaptor<AgentBulkAction> captor = ArgumentCaptor.forClass(AgentBulkAction.class);
+        verify(agentBulkActionService).save(any(), captor.capture());
+        List<AgentBulkAction> savedActions = captor.getAllValues();
+        AgentBulkAction lastSaved = savedActions.get(savedActions.size() - 1);
+        assertThat(lastSaved.getStatus()).isEqualTo(AgentBulkActionStatus.COMPLETED);
+    }
+
+    @Test
+    void processBulkOperation_executesForEligibleApps() throws Exception {
+        AgentBulkActionId bulkActionId = new AgentBulkActionId(UUID.randomUUID());
+        AgentBulkAction bulkAction = createBulkAction(bulkActionId, AgentBulkActionStatus.QUEUED);
+        AgentAppProfile profile = createProfile();
+
+        AgentApplication app = createApplication();
+
+        AgentBulkOperationMsg msg = buildProtoMsg(bulkActionId, AgentAppEventActionType.UPDATE);
+
+        when(agentBulkActionService.findById(any(), eq(bulkActionId))).thenReturn(bulkAction);
+        when(profileService.findProfileById(any(), any())).thenReturn(profile);
+        when(applicationDao.findByApplicationProfileIdAndAgentGroupId(any(), any(), any()))
+                .thenReturn(new PageData<>(List.of(app), 1, 1, false));
+
+        service.processBulkOperation(msg);
+
+        verify(tbAgentApplicationService).execActionEvent(any(), eq(app.getId()), any(), eq(true));
+
+        ArgumentCaptor<AgentBulkAction> captor = ArgumentCaptor.forClass(AgentBulkAction.class);
+        verify(agentBulkActionService).save(any(), captor.capture());
+        List<AgentBulkAction> savedActions = captor.getAllValues();
+        AgentBulkAction lastSaved = savedActions.get(savedActions.size() - 1);
+        assertThat(lastSaved.getStatus()).isEqualTo(AgentBulkActionStatus.COMPLETED);
+        assertThat(lastSaved.getSubmitted()).isEqualTo(1);
+    }
+
+    // ==================== failStuckBulkActions ====================
+
+    @Test
+    void failStuckBulkActions_skipsWhenNotMyPartition() {
+        TopicPartitionInfo tpi = new TopicPartitionInfo("topic", null, 0, false);
+        when(partitionService.resolve(ServiceType.TB_CORE, TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID)).thenReturn(tpi);
+
+        service.failStuckBulkActions();
+
+        verifyNoInteractions(agentBulkActionService);
+    }
+
+    @Test
+    void failStuckBulkActions_failsActionsOlderThanThreshold() {
+        TopicPartitionInfo tpi = new TopicPartitionInfo("topic", null, 0, true);
+        when(partitionService.resolve(ServiceType.TB_CORE, TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID)).thenReturn(tpi);
+
+        AgentBulkAction stuckAction = createBulkAction(new AgentBulkActionId(UUID.randomUUID()), AgentBulkActionStatus.IN_PROGRESS);
+        stuckAction.setProcessingStartedTime(System.currentTimeMillis() - 700_000); // older than 600s threshold
+
+        when(agentBulkActionService.findByStatusIn(List.of(AgentBulkActionStatus.IN_PROGRESS)))
+                .thenReturn(List.of(stuckAction));
+
+        service.failStuckBulkActions();
+
+        ArgumentCaptor<AgentBulkAction> captor = ArgumentCaptor.forClass(AgentBulkAction.class);
+        verify(agentBulkActionService).save(eq(TENANT_ID), captor.capture());
+        assertThat(captor.getValue().getStatus()).isEqualTo(AgentBulkActionStatus.FAILED);
+        assertThat(captor.getValue().getErrorMsg()).contains("Stuck in IN_PROGRESS");
+    }
+
+    @Test
+    void failStuckBulkActions_skipsRecentActions() {
+        TopicPartitionInfo tpi = new TopicPartitionInfo("topic", null, 0, true);
+        when(partitionService.resolve(ServiceType.TB_CORE, TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID)).thenReturn(tpi);
+
+        AgentBulkAction recentAction = createBulkAction(new AgentBulkActionId(UUID.randomUUID()), AgentBulkActionStatus.IN_PROGRESS);
+        recentAction.setProcessingStartedTime(System.currentTimeMillis() - 60_000); // only 60s old, within threshold
+
+        when(agentBulkActionService.findByStatusIn(List.of(AgentBulkActionStatus.IN_PROGRESS)))
+                .thenReturn(List.of(recentAction));
+
+        service.failStuckBulkActions();
+
+        verify(agentBulkActionService, never()).save(any(), any());
+    }
+
+    // ==================== processBulkOperation error handling ====================
+
+    @Test
+    void processBulkOperation_unexpectedException_savesFailedStatus() {
+        AgentBulkActionId bulkActionId = new AgentBulkActionId(UUID.randomUUID());
+        AgentBulkAction bulkAction = createBulkAction(bulkActionId, AgentBulkActionStatus.QUEUED);
+
+        AgentBulkOperationMsg msg = buildProtoMsg(bulkActionId, AgentAppEventActionType.UPDATE);
+
+        when(agentBulkActionService.findById(any(), eq(bulkActionId))).thenReturn(bulkAction);
+        when(profileService.findProfileById(any(), any())).thenThrow(new RuntimeException("DB connection lost"));
+
+        service.processBulkOperation(msg);
+
+        ArgumentCaptor<AgentBulkAction> captor = ArgumentCaptor.forClass(AgentBulkAction.class);
+        verify(agentBulkActionService).save(any(), captor.capture());
+        List<AgentBulkAction> saved = captor.getAllValues();
+        AgentBulkAction lastSaved = saved.get(saved.size() - 1);
+        assertThat(lastSaved.getStatus()).isEqualTo(AgentBulkActionStatus.FAILED);
+        assertThat(lastSaved.getErrorMsg()).contains("DB connection lost");
     }
 
     // ==================== Helpers ====================
@@ -324,11 +345,46 @@ class DefaultAgentBulkOperationServiceTest {
         return profile;
     }
 
-    private AgentApplication createApp() {
+    private AgentBulkAction createBulkAction(AgentBulkActionId id, AgentBulkActionStatus status) {
+        AgentBulkAction action = new AgentBulkAction(id);
+        action.setTenantId(TENANT_ID);
+        action.setGroupId(GROUP_ID.getId());
+        action.setProfileId(PROFILE_ID.getId());
+        action.setActionType(AgentAppEventActionType.UPDATE);
+        action.setStatus(status);
+        return action;
+    }
+
+    private AgentApplication createApplication() {
         AgentApplication app = new AgentApplication();
         app.setId(new AgentApplicationId(UUID.randomUUID()));
-        app.setName("app-" + app.getId().getId().toString().substring(0, 8));
+        app.setTenantId(TENANT_ID);
+        app.setName("test-app");
         app.setTemplateId(TEMPLATE_ID);
         return app;
+    }
+
+    private AgentBulkOperationMsg buildProtoMsg(AgentAppEventActionType actionType) {
+        return buildProtoMsg(new AgentBulkActionId(UUID.randomUUID()), actionType);
+    }
+
+    private AgentBulkOperationMsg buildProtoMsg(AgentBulkActionId bulkActionId, AgentAppEventActionType actionType) {
+        UUID tenantUuid = TENANT_ID.getId();
+        UUID bulkUuid = bulkActionId.getId();
+        UUID groupUuid = GROUP_ID.getId();
+        UUID profileUuid = PROFILE_ID.getId();
+
+        return AgentBulkOperationMsg.newBuilder()
+                .setTenantIdMSB(tenantUuid.getMostSignificantBits())
+                .setTenantIdLSB(tenantUuid.getLeastSignificantBits())
+                .setBulkActionIdMSB(bulkUuid.getMostSignificantBits())
+                .setBulkActionIdLSB(bulkUuid.getLeastSignificantBits())
+                .setGroupIdMSB(groupUuid.getMostSignificantBits())
+                .setGroupIdLSB(groupUuid.getLeastSignificantBits())
+                .setProfileIdMSB(profileUuid.getMostSignificantBits())
+                .setProfileIdLSB(profileUuid.getLeastSignificantBits())
+                .setActionType(actionType.name())
+                .setForce(false)
+                .build();
     }
 }

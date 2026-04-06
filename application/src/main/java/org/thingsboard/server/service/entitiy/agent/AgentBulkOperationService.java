@@ -15,17 +15,19 @@
  */
 package org.thingsboard.server.service.entitiy.agent;
 
-import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.agent.AgentBulkAction;
 import org.thingsboard.server.common.data.agent.BulkOperationPreview;
 import org.thingsboard.server.common.data.agent.BulkOperationRequest;
 import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.gen.transport.TransportProtos.AgentBulkOperationMsg;
 
 public interface AgentBulkOperationService {
 
-    AgentBulkAction bulkOperation(TenantId tenantId, AgentGroupId groupId, AgentAppProfileId profileId, BulkOperationRequest request, boolean force, User user);
+    AgentBulkAction enqueueBulkOperation(TenantId tenantId, AgentGroupId groupId, AgentAppProfileId profileId, BulkOperationRequest request);
+
+    void processBulkOperation(AgentBulkOperationMsg msg);
 
     BulkOperationPreview preview(TenantId tenantId, AgentGroupId groupId, AgentAppProfileId profileId, BulkOperationRequest request);
 }

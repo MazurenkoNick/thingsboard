@@ -18,6 +18,7 @@ package org.thingsboard.server.queue.provider;
 import org.thingsboard.server.common.data.queue.Queue;
 import org.thingsboard.server.common.msg.queue.TopicPartitionInfo;
 import org.thingsboard.server.gen.js.JsInvokeProtos;
+import org.thingsboard.server.gen.transport.TransportProtos.AgentBulkOperationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.CalculatedFieldStateProto;
 import org.thingsboard.server.gen.transport.TransportProtos.ToAgentNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCalculatedFieldMsg;
@@ -88,6 +89,8 @@ public interface TbRuleEngineQueueFactory extends TbUsageStatsClientQueueFactory
     }
 
     TbQueueProducer<TbProtoQueueMsg<ToAgentNotificationMsg>> createAgentNotificationsMsgProducer();
+
+    TbQueueProducer<TbProtoQueueMsg<AgentBulkOperationMsg>> createAgentBulkOpsMsgProducer();
 
     /**
      * Used to consume messages about firmware update notifications to TB Core Service

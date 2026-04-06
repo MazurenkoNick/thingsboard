@@ -20,11 +20,16 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
+import org.thingsboard.server.common.data.agent.AgentBulkActionStatus;
 import org.thingsboard.server.dao.model.sql.AgentBulkActionEntity;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 public interface AgentBulkActionRepository extends JpaRepository<AgentBulkActionEntity, UUID> {
+
+    List<AgentBulkActionEntity> findByStatusIn(Collection<AgentBulkActionStatus> status);
 
     @Transactional
     @Modifying

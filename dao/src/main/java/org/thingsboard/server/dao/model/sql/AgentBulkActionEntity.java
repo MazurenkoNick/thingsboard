@@ -28,8 +28,9 @@ import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLJsonPGObjectJsonbType;
 import org.thingsboard.common.util.JacksonUtil;
-import org.thingsboard.server.common.data.agent.AgentBulkAction;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
+import org.thingsboard.server.common.data.agent.AgentBulkAction;
+import org.thingsboard.server.common.data.agent.AgentBulkActionStatus;
 import org.thingsboard.server.common.data.agent.BulkOperationResult;
 import org.thingsboard.server.common.data.id.AgentBulkActionId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -59,6 +60,16 @@ public final class AgentBulkActionEntity extends BaseSqlEntity<AgentBulkAction> 
     @Column(name = ModelConstants.AGENT_BULK_ACTION_ACTION_TYPE_PROPERTY)
     private AgentAppEventActionType actionType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = ModelConstants.AGENT_BULK_ACTION_STATUS_PROPERTY)
+    private AgentBulkActionStatus status;
+
+    @Column(name = ModelConstants.AGENT_BULK_ACTION_ERROR_MSG_PROPERTY)
+    private String errorMsg;
+
+    @Column(name = ModelConstants.AGENT_BULK_ACTION_PROCESSING_STARTED_TIME_PROPERTY)
+    private Long processingStartedTime;
+
     @Column(name = ModelConstants.AGENT_BULK_ACTION_TOTAL_PROPERTY)
     private int total;
 
@@ -82,6 +93,9 @@ public final class AgentBulkActionEntity extends BaseSqlEntity<AgentBulkAction> 
         this.groupId = action.getGroupId();
         this.profileId = action.getProfileId();
         this.actionType = action.getActionType();
+        this.status = action.getStatus();
+        this.errorMsg = action.getErrorMsg();
+        this.processingStartedTime = action.getProcessingStartedTime();
         this.total = action.getTotal();
         this.submitted = action.getSubmitted();
         this.skipCounts = JacksonUtil.convertValue(action.getSkipCounts(), JsonNode.class);
@@ -97,6 +111,9 @@ public final class AgentBulkActionEntity extends BaseSqlEntity<AgentBulkAction> 
         action.setGroupId(groupId);
         action.setProfileId(profileId);
         action.setActionType(actionType);
+        action.setStatus(status);
+        action.setErrorMsg(errorMsg);
+        action.setProcessingStartedTime(processingStartedTime);
         action.setTotal(total);
         action.setSubmitted(submitted);
         action.setSkipCounts(skipCounts != null

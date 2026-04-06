@@ -33,19 +33,21 @@ import org.thingsboard.server.common.data.DeviceProfile;
 import org.thingsboard.server.common.data.EdgeUtils;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.HasName;
-import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.HasRuleEngineProfile;
 import org.thingsboard.server.common.data.ResourceType;
 import org.thingsboard.server.common.data.TbResourceInfo;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.TenantProfile;
+import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
+import org.thingsboard.server.common.data.agent.AgentBulkAction;
+import org.thingsboard.server.common.data.agent.BulkOperationRequest;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.edge.EdgeEventActionType;
 import org.thingsboard.server.common.data.edge.EdgeEventType;
-import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.AgentId;
+import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.AssetProfileId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.DeviceProfileId;
@@ -75,6 +77,7 @@ import org.thingsboard.server.common.msg.rule.engine.DeviceNameOrTypeUpdateMsg;
 import org.thingsboard.server.common.util.ProtoUtils;
 import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.gen.transport.TransportProtos;
+import org.thingsboard.server.gen.transport.TransportProtos.AgentAppEventNotificationProto;
 import org.thingsboard.server.gen.transport.TransportProtos.ComponentLifecycleMsgProto;
 import org.thingsboard.server.gen.transport.TransportProtos.DeviceStateServiceMsgProto;
 import org.thingsboard.server.gen.transport.TransportProtos.EdgeNotificationMsgProto;
@@ -84,10 +87,9 @@ import org.thingsboard.server.gen.transport.TransportProtos.QueueDeleteMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.QueueUpdateMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ResourceDeleteMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ResourceUpdateMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.ToAgentNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCalculatedFieldMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCalculatedFieldNotificationMsg;
-import org.thingsboard.server.gen.transport.TransportProtos.ToAgentNotificationMsg;
-import org.thingsboard.server.gen.transport.TransportProtos.AgentAppEventNotificationProto;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCoreMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCoreNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToEdgeMsg;
@@ -109,6 +111,7 @@ import org.thingsboard.server.service.ota.OtaPackageStateService;
 import org.thingsboard.server.service.profile.TbAssetProfileCache;
 import org.thingsboard.server.service.profile.TbDeviceProfileCache;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -808,6 +811,32 @@ public class DefaultTbClusterService implements TbClusterService {
         TopicPartitionInfo tpi = topicService.getAgentNotificationsTopic(serviceId);
         TbQueueProducer<TbProtoQueueMsg<ToAgentNotificationMsg>> producer = producerProvider.getTbAgentNotificationsMsgProducer();
         producer.send(tpi, new TbProtoQueueMsg<>(UUID.randomUUID(), msg), null);
+    }
+
+    @Override
+    public void pushMsgToAgentBulkOps(AgentBulkAction bulkAction, BulkOperationRequest request) {
+        UUID bulkActionId = bulkAction.getId().getId();
+        UUID tenantId = bulkAction.getTenantId().getId();
+
+        TransportProtos.AgentBulkOperationMsg.Builder builder = TransportProtos.AgentBulkOperationMsg.newBuilder()
+                .setBulkActionIdMSB(bulkActionId.getMostSignificantBits())
+                .setBulkActionIdLSB(bulkActionId.getLeastSignificantBits())
+                .setTenantIdMSB(tenantId.getMostSignificantBits())
+                .setTenantIdLSB(tenantId.getLeastSignificantBits())
+                .setGroupIdMSB(bulkAction.getGroupId().getMostSignificantBits())
+                .setGroupIdLSB(bulkAction.getGroupId().getLeastSignificantBits())
+                .setProfileIdMSB(bulkAction.getProfileId().getMostSignificantBits())
+                .setProfileIdLSB(bulkAction.getProfileId().getLeastSignificantBits())
+                .setActionType(bulkAction.getActionType().name())
+                .setForce(request.isForce());
+
+        if (request.getStepInputs() != null) {
+            builder.setStepInputs(com.google.protobuf.ByteString.copyFrom(
+                    JacksonUtil.toString(request.getStepInputs()).getBytes(StandardCharsets.UTF_8)));
+        }
+
+        producerProvider.getAgentBulkOpsMsgProducer().send(topicService.getAgentBulkOpsTopic(),
+                new TbProtoQueueMsg<>(bulkActionId, builder.build()), null);
     }
 
     @Override

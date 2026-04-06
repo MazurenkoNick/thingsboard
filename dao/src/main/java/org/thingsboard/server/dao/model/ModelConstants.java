@@ -276,6 +276,9 @@ public class ModelConstants {
     public static final String AGENT_BULK_ACTION_GROUP_ID_PROPERTY = "group_id";
     public static final String AGENT_BULK_ACTION_PROFILE_ID_PROPERTY = "profile_id";
     public static final String AGENT_BULK_ACTION_ACTION_TYPE_PROPERTY = "action_type";
+    public static final String AGENT_BULK_ACTION_STATUS_PROPERTY = "status";
+    public static final String AGENT_BULK_ACTION_ERROR_MSG_PROPERTY = "error_msg";
+    public static final String AGENT_BULK_ACTION_PROCESSING_STARTED_TIME_PROPERTY = "processing_started_time";
     public static final String AGENT_BULK_ACTION_TOTAL_PROPERTY = "total";
     public static final String AGENT_BULK_ACTION_SUBMITTED_PROPERTY = "submitted";
     public static final String AGENT_BULK_ACTION_SKIP_COUNTS_PROPERTY = "skip_counts";

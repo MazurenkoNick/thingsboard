@@ -41,6 +41,9 @@ public class AgentBulkAction extends BaseData<AgentBulkActionId> implements HasI
     private UUID groupId;
     private UUID profileId;
     private AgentAppEventActionType actionType;
+    private AgentBulkActionStatus status;
+    private String errorMsg;
+    private Long processingStartedTime;
     private int total;
     private int submitted;
     private Map<SkipReason, Integer> skipCounts;
@@ -59,6 +62,9 @@ public class AgentBulkAction extends BaseData<AgentBulkActionId> implements HasI
         this.groupId = action.getGroupId();
         this.profileId = action.getProfileId();
         this.actionType = action.getActionType();
+        this.status = action.getStatus();
+        this.errorMsg = action.getErrorMsg();
+        this.processingStartedTime = action.getProcessingStartedTime();
         this.total = action.getTotal();
         this.submitted = action.getSubmitted();
         this.skipCounts = action.getSkipCounts();

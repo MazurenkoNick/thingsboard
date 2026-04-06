@@ -1961,3 +1961,17 @@ message AgentAppEventNotificationProto {
   bool delivered = 10;
   bool cancelled = 11;
 }
+
+message AgentBulkOperationMsg {
+  int64 bulkActionIdMSB = 1;
+  int64 bulkActionIdLSB = 2;
+  int64 tenantIdMSB = 3;
+  int64 tenantIdLSB = 4;
+  int64 groupIdMSB = 5;
+  int64 groupIdLSB = 6;
+  int64 profileIdMSB = 7;
+  int64 profileIdLSB = 8;
+  string actionType = 9;
+  bool force = 10;
+  bytes stepInputs = 11;
+}
