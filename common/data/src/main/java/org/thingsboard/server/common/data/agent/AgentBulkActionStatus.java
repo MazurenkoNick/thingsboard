@@ -15,8 +15,7 @@
  */
 package org.thingsboard.server.common.data.agent;
 
-public enum AgentApplicationOrigin {
-    INSTALLED,
-    DISCOVERED,
-    AUTO_PROVISIONED
+public enum AgentBulkActionStatus {
+    IN_PROGRESS,
+    COMPLETED
 }

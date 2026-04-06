@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.agent;
+package org.thingsboard.server.dao.agent.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -24,7 +24,6 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppProfileService;
 import org.thingsboard.server.exception.DataValidationException;
-import org.thingsboard.server.service.agent.template.merge.MergeCredentialsToConfigRule;
 
 @Component
 @RequiredArgsConstructor
@@ -39,7 +38,7 @@ public class ProfileConfigResolver {
         }
         AgentAppProfile profile = profileService.findProfileById(tenantId, application.getApplicationProfileId());
         if (profile == null || profile.getConfig() == null) {
-            return;
+            throw new IllegalArgumentException("Couldn't find profile with id: " + application.getApplicationProfileId());
         }
         if (relatedEntityId == null && application.getAppType().getRelatedEntityType() != null) {
             throw new DataValidationException("Related entity id must be specified!");

@@ -23,17 +23,15 @@ import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.TenantId;
 
-import java.util.UUID;
-
 public interface TbAgentApplicationService {
 
     AgentApplication update(AgentApplication application, User user) throws Exception;
 
     AgentApplication install(TenantId tenantId, AgentAppEventRequest request, User user) throws Exception;
 
-    void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, User user) throws Exception;
+    void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request) throws Exception;
 
-    void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, User user, boolean skipActiveEventCheck) throws Exception;
+    void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, boolean skipActiveEventCheck) throws Exception;
 
     void cancelEvent(TenantId tenantId, AgentAppEventId eventId) throws Exception;
 

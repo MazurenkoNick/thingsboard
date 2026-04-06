@@ -41,7 +41,7 @@ public class BaseAgentAppRelationService implements AgentAppRelationService {
     private final AgentApplicationDao agentApplicationDao;
 
     @Override
-    public void resolveRelatedEntity(TenantId tenantId, AgentApplication app) {
+    public void resolveRelatedEntityFromConfig(TenantId tenantId, AgentApplication app) {
         if (app.getAppType() == null || app.getConfig() == null) {
             return;
         }

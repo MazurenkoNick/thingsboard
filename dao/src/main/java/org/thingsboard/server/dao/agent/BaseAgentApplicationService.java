@@ -26,6 +26,7 @@ import org.thingsboard.server.cache.agent.AgentApplicationCacheKey;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
@@ -35,13 +36,16 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.dao.agent.config.ProfileConfigResolver;
 import org.thingsboard.server.dao.entity.AbstractCachedEntityService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.service.DataValidator;
+import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.Collections;
+import java.util.Objects;
 
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validatePageLink;
@@ -73,6 +77,9 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
     @Autowired
     private DataValidator<AgentApplication> agentApplicationValidator;
 
+    @Autowired
+    private ProfileConfigResolver profileConfigResolver;
+
     @Override
     @TransactionalEventListener
     public void handleEvictEvent(AgentApplicationCacheEvictEvent event) {
@@ -81,24 +88,44 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
 
     @Override
     @Transactional
-    public AgentApplication save(TenantId tenantId, AgentApplication agentApplication) {
-        log.trace("Executing saveAgentApplication [{}]", agentApplication);
-        AgentApplication old = agentApplication.getId() != null
-                ? agentApplicationDao.findById(tenantId, agentApplication.getUuidId())
+    public AgentApplication save(TenantId tenantId, AgentApplication application) {
+        log.trace("Executing saveAgentApplication [{}]", application);
+        AgentApplication old = application.getId() != null
+                ? agentApplicationDao.findById(tenantId, application.getUuidId())
                 : null;
-        resolveOrigin(agentApplication, old);
-        resolveTemplateId(agentApplication, old);
-        resolveProjectName(agentApplication, old);
-        agentAppRelationService.resolveRelatedEntity(tenantId, agentApplication);
-        agentApplicationValidator.validate(agentApplication, app -> tenantId);
-        AgentApplication saved = agentApplicationDao.save(tenantId, agentApplication);
+        if (old == null) {
+            profileConfigResolver.resolve(tenantId, application, application.getRelatedEntityId());
+        } else {
+            EntityId newRelatedEntityId = application.getRelatedEntityId();
+            EntityId oldRelatedEntityId = old.getRelatedEntityId();
+            if (isApplicationProfileChangedOrAdded(application, old)) {
+                log.trace("[{}] Agent profile is added or changed for application {}", application.getTenantId(), application.getTenantId());
+                profileConfigResolver.resolve(tenantId, application, newRelatedEntityId);
+            } else if (application.getApplicationProfileId() != null) {
+                log.trace("[{}] Restoring old profile-based configuration for application {}", application.getTenantId(), application.getTenantId());
+                AgentAppConfig oldConfig = old.getConfig();
+                if (!Objects.equals(application.getConfig(), oldConfig)) {
+                    throw new DataValidationException("Direct config update is not allowed for profile-managed applications!");
+                }
+                application.setConfig(oldConfig);
+                if (newRelatedEntityId != null && !newRelatedEntityId.equals(oldRelatedEntityId)) {
+                    profileConfigResolver.updateRelatedEntityIdTemplateFields(application, newRelatedEntityId);
+                }
+            }
+        }
+        resolveOrigin(application, old);
+        resolveTemplateId(application, old);
+        resolveProjectName(application, old);
+        agentAppRelationService.resolveRelatedEntityFromConfig(tenantId, application);
+        agentApplicationValidator.validate(application, app -> tenantId);
+        AgentApplication saved = agentApplicationDao.save(tenantId, application);
         publishEvictEvent(new AgentApplicationCacheEvictEvent(saved.getId()));
         eventPublisher.publishEvent(SaveEntityEvent.builder()
                 .tenantId(tenantId)
                 .entityId(saved.getId())
                 .entity(saved)
                 .oldEntity(old)
-                .created(agentApplication.getId() == null)
+                .created(application.getId() == null)
                 .build());
         return saved;
     }
@@ -226,6 +253,10 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         } else if (agentApplication.getProjectName() == null) {
             agentApplication.setProjectName(AgentApplication.generateProjectName());
         }
+    }
+
+    private boolean isApplicationProfileChangedOrAdded(AgentApplication application, AgentApplication old) {
+        return application.getApplicationProfileId() != null && !application.getApplicationProfileId().equals(old.getApplicationProfileId());
     }
 
 }
