@@ -38,6 +38,10 @@ import {
   AgentAppDeleteDialogComponent,
   AgentAppDeleteDialogData
 } from '@home/pages/agent/dialog/agent-app-delete-dialog.component';
+import {
+  AgentAppUpgradeWizardComponent,
+  AgentAppUpgradeWizardData
+} from '@home/pages/agent/wizard/agent-app-upgrade-wizard.component';
 
 @Injectable()
 export class AgentApplicationsTableConfigResolver {
@@ -177,13 +181,26 @@ export class AgentApplicationsTableConfigResolver {
     });
   }
 
-  // Slice 1 placeholder — replaced by AgentAppUpgradeWizardComponent in slice 4.
   private openUpgradeWizard($event: Event, app: AgentApplicationInfo) {
     if ($event) { $event.stopPropagation(); }
-    this.dialogService.alert(
-      this.translate.instant('agent.app-upgrade-title-simple', { name: app.name }),
-      this.translate.instant('agent.app-upgrade-todo')
-    );
+    this.agentService.getAgentApplicationById(app.id.id).subscribe({
+      next: full => this.showUpgradeWizard(full),
+      error: () => this.showUpgradeWizard(app as any)
+    });
+  }
+
+  private showUpgradeWizard(application: any) {
+    this.dialog.open<AgentAppUpgradeWizardComponent, AgentAppUpgradeWizardData, boolean>(
+      AgentAppUpgradeWizardComponent, {
+        disableClose: false,
+        panelClass: ['tb-dialog'],
+        data: { application }
+      }
+    ).afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.config.updateData();
+      }
+    });
   }
 
   // Slice 1 placeholder — replaced by AgentAppInstallWizardComponent in slice 3.

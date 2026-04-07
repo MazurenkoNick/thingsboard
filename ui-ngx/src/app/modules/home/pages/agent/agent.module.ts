@@ -32,6 +32,9 @@ import {
 import {
   AgentAppDeleteDialogComponent
 } from '@home/pages/agent/dialog/agent-app-delete-dialog.component';
+import {
+  AgentAppUpgradeWizardComponent
+} from '@home/pages/agent/wizard/agent-app-upgrade-wizard.component';
 
 @NgModule({
   declarations: [
@@ -43,6 +46,7 @@ import {
     AgentAppProfileTabsComponent,
     AgentInstallInstructionsDialogComponent,
     AgentAppDeleteDialogComponent,
+    AgentAppUpgradeWizardComponent,
   ],
   imports: [
     CommonModule,
