@@ -48,6 +48,7 @@ import {
   AddEntitiesToCustomerDialogData
 } from '@modules/home/dialogs/add-entities-to-customer-dialog.component';
 import { AgentInfo } from '@shared/models/agent.models';
+import { AgentId } from '@shared/models/id/agent-id';
 import { AgentService } from '@core/http/agent.service';
 import { AgentComponent } from '@home/pages/agent/agent.component';
 import { AgentTabsComponent } from '@home/pages/agent/agent-tabs.component';
@@ -126,14 +127,36 @@ export class AgentsTableConfigResolver {
   configureColumns(agentScope: string): Array<EntityTableColumn<AgentInfo>> {
     const columns: Array<EntityTableColumn<AgentInfo>> = [
       new DateEntityTableColumn<AgentInfo>('createdTime', 'common.created-time', this.datePipe, '150px'),
-      new EntityTableColumn<AgentInfo>('name', 'agent.name', '33%'),
+      new EntityTableColumn<AgentInfo>('name', 'agent.name', '25%'),
     ];
-    if (agentScope === 'tenant') {
+    if (agentScope === 'tenant' || agentScope === 'customer') {
       columns.push(
-        new EntityTableColumn<AgentInfo>('customerTitle', 'customer.customer', '33%'),
+        new EntityTableColumn<AgentInfo>('customerTitle', 'customer.customer', '25%'),
       );
     }
+    columns.push(
+      new EntityTableColumn<AgentInfo>('active', 'agent.status', '140px',
+        entity => this.agentStatus(entity), entity => this.agentStatusStyle(entity))
+    );
     return columns;
+  }
+
+  private agentStatus(agent: AgentInfo): string {
+    const isOnline = !!agent.active;
+    const dotColor = isOnline ? '#4caf50' : 'rgba(0,0,0,0.38)';
+    const label = this.translate.instant(isOnline ? 'agent.online' : 'agent.offline');
+    return `<span style="display:inline-flex; align-items:center; white-space:nowrap;">
+      <span style="display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; background:${dotColor};"></span>
+      ${label}
+    </span>`;
+  }
+
+  private agentStatusStyle(agent: AgentInfo): object {
+    return {
+      fontSize: '13px',
+      fontWeight: '500',
+      color: agent.active ? '#4caf50' : 'rgba(0,0,0,0.38)'
+    };
   }
 
   configureEntityFunctions(agentScope: string): void {
@@ -160,7 +183,7 @@ export class AgentsTableConfigResolver {
         name: this.translate.instant('agent.assign-to-customer'),
         icon: 'assignment_ind',
         isEnabled: (entity) => !entity.customerId || entity.customerId.id === NULL_UUID,
-        onAction: ($event, entity) => this.assignToCustomer($event, [entity.id.id])
+        onAction: ($event, entity) => this.assignToCustomer($event, [entity.id])
       });
       actions.push({
         name: this.translate.instant('agent.unassign-from-customer'),
@@ -187,7 +210,7 @@ export class AgentsTableConfigResolver {
         name: this.translate.instant('agent.assign-agents-to-customer'),
         icon: 'assignment_ind',
         isEnabled: true,
-        onAction: ($event, entities) => this.assignToCustomer($event, entities.map(e => e.id.id))
+        onAction: ($event, entities) => this.assignToCustomer($event, entities.map(e => e.id))
       });
     }
     if (agentScope === 'customer') {
@@ -206,7 +229,7 @@ export class AgentsTableConfigResolver {
     return [];
   }
 
-  assignToCustomer($event: Event, agentIds: string[]) {
+  assignToCustomer($event: Event, agentIds: AgentId[]) {
     if ($event) {
       $event.stopPropagation();
     }
@@ -267,7 +290,7 @@ export class AgentsTableConfigResolver {
   onAgentAction(action: EntityAction<AgentInfo>, config: EntityTableConfig<AgentInfo>): boolean {
     switch (action.action) {
       case 'assignToCustomer':
-        this.assignToCustomer(action.event, [action.entity.id.id]);
+        this.assignToCustomer(action.event, [action.entity.id]);
         return true;
       case 'unassignFromCustomer':
         this.unassignFromCustomer(action.event, action.entity);

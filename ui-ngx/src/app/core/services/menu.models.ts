@@ -104,6 +104,10 @@ export enum MenuId {
   edges = 'edges',
   edge_instances = 'edge_instances',
   rulechain_templates = 'rulechain_templates',
+  agents = 'agents',
+  agent_groups = 'agent_groups',
+  agent_app_profiles = 'agent_app_profiles',
+  agent_templates = 'agent_templates',
   features = 'features',
   otaUpdates = 'otaUpdates',
   version_control = 'version_control',
@@ -691,6 +695,46 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
     }
   ],
   [
+    MenuId.agents,
+    {
+      id: MenuId.agents,
+      name: 'agent.agents',
+      type: 'link',
+      path: '/edgeManagement/agents',
+      icon: 'memory'
+    }
+  ],
+  [
+    MenuId.agent_groups,
+    {
+      id: MenuId.agent_groups,
+      name: 'agent.agent-groups',
+      type: 'link',
+      path: '/edgeManagement/agentGroups',
+      icon: 'group_work'
+    }
+  ],
+  [
+    MenuId.agent_app_profiles,
+    {
+      id: MenuId.agent_app_profiles,
+      name: 'agent.app-profiles',
+      type: 'link',
+      path: '/edgeManagement/agentAppProfiles',
+      icon: 'description'
+    }
+  ],
+  [
+    MenuId.agent_templates,
+    {
+      id: MenuId.agent_templates,
+      name: 'agent.agent-templates',
+      type: 'link',
+      path: '/edgeManagement/agentTemplates',
+      icon: 'view_list'
+    }
+  ],
+  [
     MenuId.features,
     {
       id: MenuId.features,
@@ -856,7 +900,11 @@ const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
         id: MenuId.edge_management,
         pages: [
           {id: MenuId.edges},
-          {id: MenuId.rulechain_templates}
+          {id: MenuId.rulechain_templates},
+          {id: MenuId.agents},
+          {id: MenuId.agent_templates},
+          {id: MenuId.agent_groups},
+          {id: MenuId.agent_app_profiles}
         ]
       },
       {

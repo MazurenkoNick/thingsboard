@@ -99,6 +99,16 @@ export class AgentGroupComponent extends EntityComponent<AgentGroupInfo> {
     }));
   }
 
+  onGroupIdCopied() {
+    this.store.dispatch(new ActionNotificationShow({
+      message: this.translate.instant('agent.group-id-copied-message'),
+      type: 'success',
+      duration: 750,
+      verticalPosition: 'bottom',
+      horizontalPosition: 'right'
+    }));
+  }
+
   private generateProvisionCredentials(form: UntypedFormGroup) {
     form.get('provisionKey').patchValue(generateSecret(20), {emitEvent: false});
     form.get('provisionSecret').patchValue(generateSecret(20), {emitEvent: false});

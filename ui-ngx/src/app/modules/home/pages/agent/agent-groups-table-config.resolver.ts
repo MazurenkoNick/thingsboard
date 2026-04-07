@@ -17,6 +17,7 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Router } from '@angular/router';
 import {
+  CellActionDescriptor,
   DateEntityTableColumn,
   EntityTableColumn,
   EntityTableConfig,
@@ -25,17 +26,20 @@ import { TranslateService } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared/models/entity-type.models';
 import { EntityAction } from '@home/models/entity/entity-component.models';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { select, Store } from '@ngrx/store';
 import { selectAuthUser } from '@core/auth/auth.selectors';
-import { map, mergeMap, take, tap } from 'rxjs/operators';
+import { map, mergeMap, take } from 'rxjs/operators';
 import { AppState } from '@core/core.state';
 import { Authority } from '@shared/models/authority.enum';
+import { NULL_UUID } from '@shared/models/id/has-uuid';
+import { MatDialog } from '@angular/material/dialog';
+import { DialogService } from '@core/services/dialog.service';
 import {
-  AgentGroupInfo,
-  AgentProvisionType,
-  agentProvisionTypeTranslationMap
-} from '@shared/models/agent.models';
+  AssignToCustomerDialogComponent,
+  AssignToCustomerDialogData
+} from '@modules/home/dialogs/assign-to-customer-dialog.component';
+import { AgentGroupInfo } from '@shared/models/agent.models';
 import { AgentService } from '@core/http/agent.service';
 import { AgentGroupComponent } from '@home/pages/agent/agent-group.component';
 import { AgentGroupTabsComponent } from '@home/pages/agent/agent-group-tabs.component';
@@ -47,9 +51,11 @@ export class AgentGroupsTableConfigResolver {
 
   constructor(private store: Store<AppState>,
               private agentService: AgentService,
+              private dialogService: DialogService,
               private translate: TranslateService,
               private datePipe: DatePipe,
-              private router: Router) {
+              private router: Router,
+              private dialog: MatDialog) {
 
     this.config.entityType = EntityType.AGENT_GROUP;
     this.config.entityComponent = AgentGroupComponent;
@@ -75,7 +81,8 @@ export class AgentGroupsTableConfigResolver {
     return this.store.pipe(select(selectAuthUser), take(1)).pipe(
       map((authUser) => {
         this.config.tableTitle = this.translate.instant('agent.agent-groups');
-        this.config.columns = this.configureColumns();
+        this.config.columns = this.configureColumns(authUser.authority);
+        this.config.cellActionDescriptors = this.configureCellActions(authUser.authority);
         this.config.entitiesFetchFunction = pageLink =>
           this.agentService.getTenantAgentGroupInfos(pageLink);
         this.config.deleteEntity = id => this.agentService.deleteAgentGroup(id.id);
@@ -88,16 +95,80 @@ export class AgentGroupsTableConfigResolver {
     );
   }
 
-  configureColumns(): Array<EntityTableColumn<AgentGroupInfo>> {
-    return [
+  configureColumns(authority: Authority): Array<EntityTableColumn<AgentGroupInfo>> {
+    const columns: Array<EntityTableColumn<AgentGroupInfo>> = [
       new DateEntityTableColumn<AgentGroupInfo>('createdTime', 'common.created-time', this.datePipe, '150px'),
-      new EntityTableColumn<AgentGroupInfo>('name', 'agent.group-name', '33%'),
-      new EntityTableColumn<AgentGroupInfo>('provisionType', 'agent.provision-type', '33%',
-        entity => {
-          const type = entity.provisionType || AgentProvisionType.DISABLED;
-          return this.translate.instant(agentProvisionTypeTranslationMap.get(type));
-        }),
+      new EntityTableColumn<AgentGroupInfo>('name', 'agent.group-name', '25%'),
     ];
+    if (authority === Authority.TENANT_ADMIN) {
+      columns.push(
+        new EntityTableColumn<AgentGroupInfo>('customerTitle', 'customer.customer', '25%'),
+      );
+    }
+    columns.push(
+      new EntityTableColumn<AgentGroupInfo>('agentsCount', 'agent.agents-count', '100px',
+        entity => entity.agentsCount != null ? String(entity.agentsCount) : '—'),
+      new EntityTableColumn<AgentGroupInfo>('profilesCount', 'agent.profiles-count', '100px',
+        entity => entity.profilesCount != null ? String(entity.profilesCount) : '—'),
+    );
+    return columns;
+  }
+
+  configureCellActions(authority: Authority): Array<CellActionDescriptor<AgentGroupInfo>> {
+    const actions: Array<CellActionDescriptor<AgentGroupInfo>> = [];
+    if (authority === Authority.TENANT_ADMIN) {
+      actions.push({
+        name: this.translate.instant('agent.assign-to-customer'),
+        icon: 'assignment_ind',
+        isEnabled: (entity) => !entity.customerId || entity.customerId.id === NULL_UUID,
+        onAction: ($event, entity) => this.assignToCustomer($event, [entity.id.id])
+      });
+      actions.push({
+        name: this.translate.instant('agent.unassign-from-customer'),
+        icon: 'assignment_return',
+        isEnabled: (entity) => entity.customerId && entity.customerId.id !== NULL_UUID,
+        onAction: ($event, entity) => this.unassignFromCustomer($event, entity)
+      });
+    }
+    return actions;
+  }
+
+  private assignToCustomer($event: Event, groupIds: string[]) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    this.dialog.open<AssignToCustomerDialogComponent, AssignToCustomerDialogData>(
+      AssignToCustomerDialogComponent, {
+        disableClose: true,
+        panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+        data: {
+          entityIds: groupIds,
+          entityType: EntityType.AGENT_GROUP
+        } as AssignToCustomerDialogData
+      }).afterClosed().subscribe((res) => {
+      if (res) {
+        this.config.updateData();
+      }
+    });
+  }
+
+  private unassignFromCustomer($event: Event, group: AgentGroupInfo) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    this.dialogService.confirm(
+      this.translate.instant('agent.unassign-group-title', {groupName: group.name}),
+      this.translate.instant('agent.unassign-group-text'),
+      this.translate.instant('action.no'),
+      this.translate.instant('action.yes'),
+      true
+    ).subscribe((res) => {
+      if (res) {
+        this.agentService.unassignAgentGroupFromCustomer(group.id.id).subscribe(() => {
+          this.config.updateData();
+        });
+      }
+    });
   }
 
   onGroupAction(action: EntityAction<AgentGroupInfo>): boolean {

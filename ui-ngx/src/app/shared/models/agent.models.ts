@@ -153,6 +153,8 @@ export interface Agent extends BaseData<AgentId> {
 export interface AgentInfo extends Agent {
   customerTitle: string;
   customerIsPublic: boolean;
+  // Derived state (backend may populate from ACTIVITY_STATE telemetry).
+  active?: boolean;
 }
 
 export interface AgentGroup extends BaseData<AgentGroupId> {
@@ -169,6 +171,9 @@ export interface AgentGroup extends BaseData<AgentGroupId> {
 export interface AgentGroupInfo extends AgentGroup {
   customerTitle: string;
   customerIsPublic: boolean;
+  // Derived counts (backend may populate).
+  agentsCount?: number;
+  profilesCount?: number;
 }
 
 export interface AgentAppConfig {
@@ -238,6 +243,7 @@ export interface AgentAppTemplate extends BaseData<AgentAppTemplateId> {
   config?: AgentAppConfig;
   imageDigest?: string;
   currentVersion: string;
+  previousVersion?: string;
   nextVersion?: string;
   startSteps?: AgentAppStep[];
   upgradeSteps?: AgentAppStep[];

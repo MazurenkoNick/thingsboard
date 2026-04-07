@@ -46,16 +46,20 @@ export class AgentTemplateComponent extends EntityComponent<AgentAppTemplate> {
   buildForm(entity: AgentAppTemplate): UntypedFormGroup {
     return this.fb.group({
       appType: this.fb.control({value: entity ? entity.appType : null, disabled: true}),
+      configType: this.fb.control({value: entity?.config?.type || 'DOCKER_COMPOSE', disabled: true}),
       currentVersion: this.fb.control({value: entity ? entity.currentVersion : null, disabled: true}),
-      nextVersion: this.fb.control({value: entity?.nextVersion || '-', disabled: true}),
+      previousVersion: this.fb.control({value: entity?.previousVersion || '—', disabled: true}),
+      nextVersion: this.fb.control({value: entity?.nextVersion || '—', disabled: true}),
     });
   }
 
   updateForm(entity: AgentAppTemplate) {
     this.entityForm.patchValue({
       appType: entity.appType,
+      configType: entity.config?.type || 'DOCKER_COMPOSE',
       currentVersion: entity.currentVersion,
-      nextVersion: entity.nextVersion || '-',
+      previousVersion: entity.previousVersion || '—',
+      nextVersion: entity.nextVersion || '—',
     });
   }
 }

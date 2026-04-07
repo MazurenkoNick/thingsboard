@@ -31,10 +31,7 @@ import { selectAuthUser } from '@core/auth/auth.selectors';
 import { map, take } from 'rxjs/operators';
 import { AppState } from '@core/core.state';
 import { Authority } from '@shared/models/authority.enum';
-import {
-  AgentAppProfile,
-  agentApplicationTypeTranslationMap
-} from '@shared/models/agent.models';
+import { AgentAppProfile } from '@shared/models/agent.models';
 import { AgentService } from '@core/http/agent.service';
 import { AgentAppProfileComponent } from '@home/pages/agent/agent-app-profile.component';
 import { AgentAppProfileTabsComponent } from '@home/pages/agent/agent-app-profile-tabs.component';
@@ -86,12 +83,22 @@ export class AgentAppProfilesTableConfigResolver {
   configureColumns(): Array<EntityTableColumn<AgentAppProfile>> {
     return [
       new DateEntityTableColumn<AgentAppProfile>('createdTime', 'common.created-time', this.datePipe, '150px'),
-      new EntityTableColumn<AgentAppProfile>('name', 'agent.profile-name', '33%'),
-      new EntityTableColumn<AgentAppProfile>('appType', 'agent.app-type', '33%',
-        entity => {
-          return this.translate.instant(agentApplicationTypeTranslationMap.get(entity.appType));
-        }),
+      new EntityTableColumn<AgentAppProfile>('name', 'agent.name', '30%'),
+      new EntityTableColumn<AgentAppProfile>('appType', 'agent.app-type', '180px',
+        entity => this.appTypeBadge(entity.appType), () => ({}), false),
+      new EntityTableColumn<AgentAppProfile>('templateId', 'agent.template', '30%',
+        entity => entity.templateId ? `<span style="font-family:'Roboto Mono',monospace;font-size:12px;">${entity.templateId.id.substring(0, 8)}…</span>` : '—'),
     ];
+  }
+
+  private appTypeBadge(appType: string): string {
+    const typeClasses: Record<string, string> = {
+      EDGE: 'background:#e8eaf6;color:#283593;',
+      GATEWAY: 'background:#e0f2f1;color:#00695c;',
+      GENERIC: 'background:#f3e5f5;color:#6a1b9a;'
+    };
+    const style = typeClasses[appType] || 'background:#eeeeee;color:#616161;';
+    return `<span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;letter-spacing:0.5px;${style}">${appType}</span>`;
   }
 
   onProfileAction(action: EntityAction<AgentAppProfile>): boolean {

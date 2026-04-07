@@ -68,6 +68,7 @@ export class AgentComponent extends EntityComponent<AgentInfo> {
       name: [entity ? entity.name : '', [Validators.required, Validators.maxLength(255)]],
       routingKey: this.fb.control({value: entity ? entity.routingKey : null, disabled: true}),
       secret: this.fb.control({value: entity ? entity.secret : null, disabled: true}),
+      agentGroupId: this.fb.control({value: entity?.agentGroupId?.id || null, disabled: true}),
       description: [entity ? entity.description : '']
     });
     this.generateRoutingKeyAndSecret(entity, form);
@@ -79,6 +80,7 @@ export class AgentComponent extends EntityComponent<AgentInfo> {
       name: entity.name,
       routingKey: entity.routingKey,
       secret: entity.secret,
+      agentGroupId: entity.agentGroupId?.id || null,
       description: entity.description
     });
     this.generateRoutingKeyAndSecret(entity, this.entityForm);
@@ -88,6 +90,7 @@ export class AgentComponent extends EntityComponent<AgentInfo> {
     super.updateFormState();
     this.entityForm.get('routingKey').disable({emitEvent: false});
     this.entityForm.get('secret').disable({emitEvent: false});
+    this.entityForm.get('agentGroupId').disable({emitEvent: false});
   }
 
   onAgentInfoCopied(type: string) {

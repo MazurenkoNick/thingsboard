@@ -17,7 +17,6 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Router } from '@angular/router';
 import {
-  DateEntityTableColumn,
   EntityTableColumn,
   EntityTableConfig,
 } from '@home/models/entity/entities-table-config.models';
@@ -28,10 +27,7 @@ import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AppState } from '@core/core.state';
 import { Store } from '@ngrx/store';
-import {
-  AgentAppTemplate,
-  agentApplicationTypeTranslationMap
-} from '@shared/models/agent.models';
+import { AgentAppTemplate } from '@shared/models/agent.models';
 import { AgentService } from '@core/http/agent.service';
 import { AgentTemplateComponent } from '@home/pages/agent/agent-template.component';
 import { AgentTemplateTabsComponent } from '@home/pages/agent/agent-template-tabs.component';
@@ -74,13 +70,30 @@ export class AgentTemplatesTableConfigResolver {
   }
 
   configureColumns(): Array<EntityTableColumn<AgentAppTemplate>> {
+    const mono = (v?: string) => v
+      ? `<span style="font-family:'Roboto Mono',monospace;font-size:12px;">${v}</span>`
+      : `<span style="font-family:'Roboto Mono',monospace;font-size:12px;color:rgba(0,0,0,0.38);">—</span>`;
     return [
-      new DateEntityTableColumn<AgentAppTemplate>('createdTime', 'common.created-time', this.datePipe, '150px'),
-      new EntityTableColumn<AgentAppTemplate>('appType', 'agent.app-type', '25%',
-        entity => this.translate.instant(agentApplicationTypeTranslationMap.get(entity.appType))),
-      new EntityTableColumn<AgentAppTemplate>('currentVersion', 'agent.current-version', '25%'),
-      new EntityTableColumn<AgentAppTemplate>('nextVersion', 'agent.next-version', '25%',
-        entity => entity.nextVersion || '-'),
+      new EntityTableColumn<AgentAppTemplate>('appType', 'agent.app-type', '180px',
+        entity => this.appTypeBadge(entity.appType), () => ({}), false),
+      new EntityTableColumn<AgentAppTemplate>('configType', 'agent.config-type', '180px',
+        entity => entity.config?.type || 'DOCKER_COMPOSE'),
+      new EntityTableColumn<AgentAppTemplate>('currentVersion', 'agent.current-version', '20%',
+        entity => mono(entity.currentVersion)),
+      new EntityTableColumn<AgentAppTemplate>('previousVersion', 'agent.previous-version', '20%',
+        entity => mono(entity.previousVersion)),
+      new EntityTableColumn<AgentAppTemplate>('nextVersion', 'agent.next-version', '20%',
+        entity => mono(entity.nextVersion)),
     ];
+  }
+
+  private appTypeBadge(appType: string): string {
+    const typeClasses: Record<string, string> = {
+      EDGE: 'background:#e8eaf6;color:#283593;',
+      GATEWAY: 'background:#e0f2f1;color:#00695c;',
+      GENERIC: 'background:#f3e5f5;color:#6a1b9a;'
+    };
+    const style = typeClasses[appType] || 'background:#eeeeee;color:#616161;';
+    return `<span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;letter-spacing:0.5px;${style}">${appType}</span>`;
   }
 }
