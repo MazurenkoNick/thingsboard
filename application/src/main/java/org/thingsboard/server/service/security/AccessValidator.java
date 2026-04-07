@@ -38,8 +38,10 @@ import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetProfile;
+import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.ApiUsageStateId;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.AssetProfileId;
@@ -67,6 +69,7 @@ import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.device.DeviceProfileService;
 import org.thingsboard.server.dao.device.DeviceService;
+import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.exception.DataValidationException;
@@ -99,6 +102,7 @@ public class AccessValidator {
     public static final String SYSTEM_ADMINISTRATOR_IS_NOT_ALLOWED_TO_PERFORM_THIS_OPERATION = "System administrator is not allowed to perform this operation!";
     public static final String DEVICE_WITH_REQUESTED_ID_NOT_FOUND = "Device with requested id wasn't found!";
     public static final String EDGE_WITH_REQUESTED_ID_NOT_FOUND = "Edge with requested id wasn't found!";
+    public static final String AGENT_WITH_REQUESTED_ID_NOT_FOUND = "Agent with requested id wasn't found!";
     public static final String ENTITY_VIEW_WITH_REQUESTED_ID_NOT_FOUND = "Entity-view with requested id wasn't found!";
 
     @Autowired
@@ -133,6 +137,9 @@ public class AccessValidator {
 
     @Autowired(required = false)
     protected EdgeService edgeService;
+
+    @Autowired(required = false)
+    protected AgentService agentService;
 
     @Autowired
     protected AccessControlService accessControlService;
@@ -219,6 +226,7 @@ public class AccessValidator {
             case USER -> validateUser(currentUser, operation, entityId, callback);
             case ENTITY_VIEW -> validateEntityView(currentUser, operation, entityId, callback);
             case EDGE -> validateEdge(currentUser, operation, entityId, callback);
+            case AGENT -> validateAgent(currentUser, operation, entityId, callback);
             case API_USAGE_STATE -> validateApiUsageState(currentUser, operation, entityId, callback);
             case TB_RESOURCE -> validateResource(currentUser, operation, entityId, callback);
             case OTA_PACKAGE -> validateOtaPackage(currentUser, operation, entityId, callback);
@@ -521,6 +529,26 @@ public class AccessValidator {
                         return ValidationResult.accessDenied(e.getMessage());
                     }
                     return ValidationResult.ok(edge);
+                }
+            }), executor);
+        }
+    }
+
+    private void validateAgent(final SecurityUser currentUser, Operation operation, EntityId entityId, FutureCallback<ValidationResult> callback) {
+        if (currentUser.isSystemAdmin()) {
+            callback.onSuccess(ValidationResult.accessDenied(SYSTEM_ADMINISTRATOR_IS_NOT_ALLOWED_TO_PERFORM_THIS_OPERATION));
+        } else {
+            Agent agent = agentService.findAgentById(currentUser.getTenantId(), new AgentId(entityId.getId()));
+            Futures.addCallback(Futures.immediateFuture(agent), getCallback(callback, a -> {
+                if (a == null) {
+                    return ValidationResult.entityNotFound(AGENT_WITH_REQUESTED_ID_NOT_FOUND);
+                } else {
+                    try {
+                        accessControlService.checkPermission(currentUser, Resource.AGENT, operation, entityId, a);
+                    } catch (ThingsboardException e) {
+                        return ValidationResult.accessDenied(e.getMessage());
+                    }
+                    return ValidationResult.ok(a);
                 }
             }), executor);
         }
