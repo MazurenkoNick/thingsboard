@@ -27,7 +27,7 @@ import {
 import { TranslateService } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared/models/entity-type.models';
-import { EntityAction } from '@home/models/entity/entity-component.models';
+import { AddEntityDialogData, EntityAction } from '@home/models/entity/entity-component.models';
 import { forkJoin, Observable, of } from 'rxjs';
 import { select, Store } from '@ngrx/store';
 import { selectAuthUser } from '@core/auth/auth.selectors';
@@ -52,6 +52,13 @@ import { AgentId } from '@shared/models/id/agent-id';
 import { AgentService } from '@core/http/agent.service';
 import { AgentComponent } from '@home/pages/agent/agent.component';
 import { AgentTabsComponent } from '@home/pages/agent/agent-tabs.component';
+import {
+  AgentInstallInstructionsDialogComponent,
+  AgentInstallInstructionsDialogData
+} from '@home/pages/agent/agent-install-instructions-dialog.component';
+import {
+  AddEntityDialogComponent
+} from '@home/components/entity/add-entity-dialog.component';
 
 @Injectable()
 export class AgentsTableConfigResolver {
@@ -87,6 +94,7 @@ export class AgentsTableConfigResolver {
     };
     this.config.onEntityAction = action => this.onAgentAction(action, this.config);
     this.config.detailsReadonly = () => this.config.componentsData.agentScope === 'customer_user';
+    this.config.addEntity = () => { this.addAgent(); return of(null); };
   }
 
   resolve(route: ActivatedRouteSnapshot): Observable<EntityTableConfig<AgentInfo>> {
@@ -287,6 +295,41 @@ export class AgentsTableConfigResolver {
     });
   }
 
+  addAgent() {
+    this.dialog.open<AddEntityDialogComponent, AddEntityDialogData<AgentInfo>, AgentInfo>(
+      AddEntityDialogComponent, {
+        disableClose: true,
+        panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+        data: {
+          entitiesTableConfig: this.config
+        }
+      }).afterClosed().subscribe((entity) => {
+        if (entity) {
+          this.openInstallInstructions(null, entity, true);
+        }
+      });
+  }
+
+  openInstallInstructions($event: Event, agent: AgentInfo, afterAdd = false) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    this.dialog.open<AgentInstallInstructionsDialogComponent, AgentInstallInstructionsDialogData>(
+      AgentInstallInstructionsDialogComponent, {
+        disableClose: false,
+        panelClass: ['tb-dialog'],
+        data: {
+          agent,
+          afterAdd
+        }
+      }).afterClosed().subscribe(() => {
+        if (afterAdd) {
+          this.config.updateData();
+          this.config.entityAdded(agent);
+        }
+      });
+  }
+
   onAgentAction(action: EntityAction<AgentInfo>, config: EntityTableConfig<AgentInfo>): boolean {
     switch (action.action) {
       case 'assignToCustomer':
@@ -294,6 +337,9 @@ export class AgentsTableConfigResolver {
         return true;
       case 'unassignFromCustomer':
         this.unassignFromCustomer(action.event, action.entity);
+        return true;
+      case 'openInstallInstructions':
+        this.openInstallInstructions(action.event, action.entity);
         return true;
     }
     return false;
