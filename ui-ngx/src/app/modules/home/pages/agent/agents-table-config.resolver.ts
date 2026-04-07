@@ -14,7 +14,7 @@
 /// limitations under the License.
 ///
 
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { ActivatedRouteSnapshot, Router } from '@angular/router';
 import {
   CellActionDescriptor,
@@ -59,12 +59,18 @@ import {
 import {
   AddEntityDialogComponent
 } from '@home/components/entity/add-entity-dialog.component';
+import { TelemetryWebsocketService } from '@core/ws/telemetry-websocket.service';
+import {
+  AttributeScope,
+  TelemetrySubscriber
+} from '@shared/models/telemetry/telemetry.models';
 
 @Injectable()
 export class AgentsTableConfigResolver {
 
   private readonly config: EntityTableConfig<AgentInfo> = new EntityTableConfig<AgentInfo>();
   private customerId: string;
+  private activeSubs = new Map<string, TelemetrySubscriber>();
 
   constructor(private store: Store<AppState>,
               private agentService: AgentService,
@@ -73,7 +79,9 @@ export class AgentsTableConfigResolver {
               private translate: TranslateService,
               private datePipe: DatePipe,
               private router: Router,
-              private dialog: MatDialog) {
+              private dialog: MatDialog,
+              private telemetryWsService: TelemetryWebsocketService,
+              private zone: NgZone) {
 
     this.config.entityType = EntityType.AGENT;
     this.config.entityComponent = AgentComponent;
@@ -152,35 +160,105 @@ export class AgentsTableConfigResolver {
   private agentStatus(agent: AgentInfo): string {
     const isOnline = !!agent.active;
     const dotColor = isOnline ? '#4caf50' : 'rgba(0,0,0,0.38)';
+    const color = isOnline ? '#4caf50' : 'rgba(0,0,0,0.38)';
     const label = this.translate.instant(isOnline ? 'agent.online' : 'agent.offline');
-    return `<span style="display:inline-flex; align-items:center; white-space:nowrap;">
-      <span style="display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; background:${dotColor};"></span>
-      ${label}
+    return `<span class="tb-agent-status-cell" data-agent-id="${agent.id.id}"
+      style="display:inline-flex; align-items:center; white-space:nowrap; font-size:13px; font-weight:500; color:${color};">
+      <span class="dot" style="display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; background:${dotColor};"></span>
+      <span class="label">${label}</span>
     </span>`;
   }
 
   private agentStatusStyle(agent: AgentInfo): object {
     return {
       fontSize: '13px',
-      fontWeight: '500',
-      color: agent.active ? '#4caf50' : 'rgba(0,0,0,0.38)'
+      fontWeight: '500'
     };
+  }
+
+  private updateAgentStatusDom(agentId: string, active: boolean) {
+    const nodes = document.querySelectorAll(
+      `.tb-agent-status-cell[data-agent-id="${agentId}"]`);
+    if (!nodes || nodes.length === 0) {
+      return;
+    }
+    const color = active ? '#4caf50' : 'rgba(0,0,0,0.38)';
+    const label = this.translate.instant(active ? 'agent.online' : 'agent.offline');
+    nodes.forEach(node => {
+      const el = node as HTMLElement;
+      el.style.color = color;
+      const dot = el.querySelector('.dot') as HTMLElement | null;
+      if (dot) {
+        dot.style.background = color;
+      }
+      const lbl = el.querySelector('.label');
+      if (lbl) {
+        lbl.textContent = label;
+      }
+    });
+  }
+
+  private subscribeAgentActive(agent: AgentInfo) {
+    const id = agent.id.id;
+    if (this.activeSubs.has(id)) {
+      return;
+    }
+    const subscriber = TelemetrySubscriber.createEntityAttributesSubscription(
+      this.telemetryWsService,
+      agent.id,
+      AttributeScope.SERVER_SCOPE,
+      this.zone,
+      ['active']
+    );
+    subscriber.data$.subscribe(update => {
+      if (!update || !update.data) {
+        return;
+      }
+      const activeEntries = update.data['active'];
+      if (activeEntries && activeEntries.length) {
+        const rawValue = activeEntries[0][1];
+        const active = rawValue === true || rawValue === 'true';
+        agent.active = active;
+        this.zone.run(() => this.updateAgentStatusDom(id, active));
+      }
+    });
+    subscriber.subscribe();
+    this.activeSubs.set(id, subscriber);
+  }
+
+  private reconcileActiveSubscriptions(agents: AgentInfo[]) {
+    const visibleIds = new Set(agents.map(a => a.id.id));
+    // Unsubscribe from agents that are no longer on the page.
+    this.activeSubs.forEach((sub, id) => {
+      if (!visibleIds.has(id)) {
+        sub.unsubscribe();
+        sub.complete();
+        this.activeSubs.delete(id);
+      }
+    });
+    agents.forEach(a => this.subscribeAgentActive(a));
   }
 
   configureEntityFunctions(agentScope: string): void {
     if (agentScope === 'tenant') {
       this.config.entitiesFetchFunction = pageLink =>
-        this.agentService.getTenantAgentInfos(pageLink);
+        this.agentService.getTenantAgentInfos(pageLink).pipe(tap(page =>
+          this.reconcileActiveSubscriptions(page.data)
+        ));
       this.config.deleteEntity = id => this.agentService.deleteAgent(id.id);
     }
     if (agentScope === 'customer') {
       this.config.entitiesFetchFunction = pageLink =>
-        this.agentService.getCustomerAgentInfos(this.customerId, pageLink);
+        this.agentService.getCustomerAgentInfos(this.customerId, pageLink).pipe(tap(page =>
+          this.reconcileActiveSubscriptions(page.data)
+        ));
       this.config.deleteEntity = id => this.agentService.unassignAgentFromCustomer(id.id);
     }
     if (agentScope === 'customer_user') {
       this.config.entitiesFetchFunction = pageLink =>
-        this.agentService.getCustomerAgentInfos(this.customerId, pageLink);
+        this.agentService.getCustomerAgentInfos(this.customerId, pageLink).pipe(tap(page =>
+          this.reconcileActiveSubscriptions(page.data)
+        ));
     }
   }
 
