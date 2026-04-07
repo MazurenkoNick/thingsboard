@@ -1,0 +1,89 @@
+<!--
+
+    Copyright © 2016-2026 The Thingsboard Authors
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<div class="tb-details-buttons xs:flex xs:flex-col">
+  <button mat-raised-button color="primary"
+          [disabled]="(isLoading$ | async)"
+          (click)="onEntityAction($event, 'open')"
+          [class.!hidden]="isEdit || isDetailsPage">
+    {{'common.open-details-page' | translate }}
+  </button>
+  <button mat-raised-button color="primary"
+          [disabled]="(isLoading$ | async)"
+          (click)="onEntityAction($event, 'delete')"
+          [class.!hidden]="hideDelete() || isEdit">
+    {{'agent.delete-group' | translate }}
+  </button>
+  <div class="flex flex-row flex-wrap xs:flex-col">
+    <button mat-raised-button
+            ngxClipboard
+            (cbOnSuccess)="onProvisionCopied(false)"
+            [cbContent]="entity?.id?.id"
+            [disabled]="(isLoading$ | async)"
+            [class.!hidden]="isEdit">
+      <mat-icon svgIcon="mdi:clipboard-arrow-left"></mat-icon>
+      <span translate>agent.copy-group-id</span>
+    </button>
+  </div>
+</div>
+<div class="mat-padding flex flex-col">
+  <form [formGroup]="entityForm">
+    <fieldset [disabled]="(isLoading$ | async) || !isEdit">
+      <mat-form-field class="mat-block">
+        <mat-label translate>agent.group-name</mat-label>
+        <input matInput formControlName="name" required>
+        <mat-error *ngIf="entityForm.get('name').hasError('required')">
+          {{ 'agent.group-name-required' | translate }}
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field class="mat-block">
+        <mat-label translate>agent.description</mat-label>
+        <textarea matInput formControlName="description" rows="2"></textarea>
+      </mat-form-field>
+      <mat-form-field class="mat-block">
+        <mat-label translate>agent.provision-type</mat-label>
+        <mat-select formControlName="provisionType">
+          <mat-option *ngFor="let type of agentProvisionTypes" [value]="type">
+            {{ agentProvisionTypeTranslationMap.get(type) | translate }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </fieldset>
+    <div class="flex flex-row" *ngIf="entityForm.get('provisionType').value !== 'DISABLED'">
+      <mat-form-field class="mat-block flex-1">
+        <mat-label translate>agent.provision-key</mat-label>
+        <input matInput formControlName="provisionKey">
+      </mat-form-field>
+      <button mat-icon-button type="button" ngxClipboard (cbOnSuccess)="onProvisionCopied(true)"
+              [cbContent]="entityForm?.get('provisionKey').value"
+              matTooltip="{{'agent.copy-provision-key' | translate}}">
+        <mat-icon svgIcon="mdi:clipboard-arrow-left"></mat-icon>
+      </button>
+    </div>
+    <div class="flex flex-row" *ngIf="entityForm.get('provisionType').value !== 'DISABLED'">
+      <mat-form-field class="mat-block flex-1">
+        <mat-label translate>agent.provision-secret</mat-label>
+        <input matInput formControlName="provisionSecret">
+      </mat-form-field>
+      <button mat-icon-button type="button" ngxClipboard (cbOnSuccess)="onProvisionCopied(false)"
+              [cbContent]="entityForm?.get('provisionSecret').value"
+              matTooltip="{{'agent.copy-provision-secret' | translate}}">
+        <mat-icon svgIcon="mdi:clipboard-arrow-left"></mat-icon>
+      </button>
+    </div>
+  </form>
+</div>
