@@ -75,6 +75,13 @@
       <mat-icon>terminal</mat-icon>
       <span translate>agent.install-instructions</span>
     </button>
+    <button mat-raised-button color="primary"
+            [disabled]="(isLoading$ | async)"
+            (click)="onManageApplications($event)"
+            [class.!hidden]="isEdit || !entity?.id">
+      <mat-icon>apps</mat-icon>
+      <span translate>agent.manage-applications</span>
+    </button>
   </div>
 </div>
 <div class="mat-padding flex flex-col">

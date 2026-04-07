@@ -15,6 +15,7 @@
 ///
 
 import { ChangeDetectorRef, Component, Inject, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { EntityComponent } from '@home/components/entity/entity.component';
@@ -44,6 +45,7 @@ export class AgentComponent extends EntityComponent<AgentInfo> implements OnInit
   constructor(protected store: Store<AppState>,
               protected translate: TranslateService,
               private agentService: AgentService,
+              private router: Router,
               @Inject('entity') protected entityValue: AgentInfo,
               @Inject('entitiesTableConfig') protected entitiesTableConfigValue: EntityTableConfig<AgentInfo>,
               public fb: UntypedFormBuilder,
@@ -115,6 +117,15 @@ export class AgentComponent extends EntityComponent<AgentInfo> implements OnInit
       ? new AgentGroupId(prepared.agentGroupId)
       : null;
     return prepared;
+  }
+
+  onManageApplications($event: Event) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    if (this.entity?.id?.id) {
+      this.router.navigateByUrl(`/edgeManagement/agents/${this.entity.id.id}/applications`);
+    }
   }
 
   onAgentInfoCopied(type: string) {

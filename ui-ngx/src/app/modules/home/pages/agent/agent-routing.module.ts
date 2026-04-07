@@ -26,6 +26,7 @@ import { MenuId } from '@core/services/menu.models';
 import { AgentsTableConfigResolver } from '@home/pages/agent/agents-table-config.resolver';
 import { AgentGroupsTableConfigResolver } from '@home/pages/agent/agent-groups-table-config.resolver';
 import { AgentAppProfilesTableConfigResolver } from '@home/pages/agent/agent-app-profiles-table-config.resolver';
+import { AgentApplicationsTableConfigResolver } from '@home/pages/agent/agent-applications-table-config.resolver';
 
 const routes: Routes = [
   {
@@ -72,6 +73,28 @@ const routes: Routes = [
             resolve: {
               entitiesTableConfig: AgentsTableConfigResolver
             }
+          },
+          {
+            path: ':agentId/applications',
+            data: {
+              breadcrumb: {
+                label: 'agent.applications',
+                icon: 'apps'
+              }
+            },
+            children: [
+              {
+                path: '',
+                component: EntitiesTableComponent,
+                data: {
+                  auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+                  title: 'agent.applications'
+                },
+                resolve: {
+                  entitiesTableConfig: AgentApplicationsTableConfigResolver
+                }
+              }
+            ]
           }
         ]
       },
@@ -159,7 +182,8 @@ const routes: Routes = [
   providers: [
     AgentsTableConfigResolver,
     AgentGroupsTableConfigResolver,
-    AgentAppProfilesTableConfigResolver
+    AgentAppProfilesTableConfigResolver,
+    AgentApplicationsTableConfigResolver
   ]
 })
 export class AgentRoutingModule {

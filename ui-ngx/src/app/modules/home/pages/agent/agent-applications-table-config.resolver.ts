@@ -1,0 +1,183 @@
+///
+/// Copyright © 2016-2026 The Thingsboard Authors
+///
+/// Licensed under the Apache License, Version 2.0 (the "License");
+/// you may not use this file except in compliance with the License.
+/// You may obtain a copy of the License at
+///
+///     http://www.apache.org/licenses/LICENSE-2.0
+///
+/// Unless required by applicable law or agreed to in writing, software
+/// distributed under the License is distributed on an "AS IS" BASIS,
+/// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+/// See the License for the specific language governing permissions and
+/// limitations under the License.
+///
+
+import { Injectable } from '@angular/core';
+import { ActivatedRouteSnapshot, Router } from '@angular/router';
+import {
+  CellActionDescriptor,
+  EntityTableColumn,
+  EntityTableConfig,
+} from '@home/models/entity/entities-table-config.models';
+import { TranslateService } from '@ngx-translate/core';
+import { DatePipe } from '@angular/common';
+import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared/models/entity-type.models';
+import { Observable, of } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { MatDialog } from '@angular/material/dialog';
+import { DialogService } from '@core/services/dialog.service';
+import {
+  AgentApplicationInfo,
+  AgentAppEventActionType,
+  AgentInfo
+} from '@shared/models/agent.models';
+import { AgentService } from '@core/http/agent.service';
+
+@Injectable()
+export class AgentApplicationsTableConfigResolver {
+
+  private readonly config: EntityTableConfig<AgentApplicationInfo> = new EntityTableConfig<AgentApplicationInfo>();
+  private agentId: string;
+  private agent: AgentInfo;
+
+  constructor(private agentService: AgentService,
+              private translate: TranslateService,
+              private datePipe: DatePipe,
+              private router: Router,
+              private dialog: MatDialog,
+              private dialogService: DialogService) {
+
+    this.config.entityType = EntityType.AGENT_APPLICATION;
+    this.config.entityTranslations = entityTypeTranslations.get(EntityType.AGENT_APPLICATION);
+    this.config.entityResources = entityTypeResources.get(EntityType.AGENT_APPLICATION);
+    this.config.addEnabled = true;
+    this.config.entitiesDeleteEnabled = false;
+    this.config.selectionEnabled = false;
+    this.config.detailsPanelEnabled = false;
+    this.config.loadEntity = id => this.agentService.getAgentApplicationInfoById(id.id);
+    this.config.addEntity = () => { this.openInstallWizard(); return of(null); };
+  }
+
+  resolve(route: ActivatedRouteSnapshot): Observable<EntityTableConfig<AgentApplicationInfo>> {
+    this.agentId = route.params.agentId;
+    return this.agentService.getAgentInfoById(this.agentId).pipe(
+      map(agent => {
+        this.agent = agent;
+        this.config.tableTitle = agent.name + ': ' + this.translate.instant('agent.applications');
+        this.config.componentsData = { agentId: this.agentId, agent };
+        this.config.columns = this.configureColumns();
+        this.config.cellActionDescriptors = this.configureCellActions();
+        this.config.entitiesFetchFunction = pageLink =>
+          this.agentService.getAgentApplicationsByAgentId(this.agentId, pageLink);
+        return this.config;
+      })
+    );
+  }
+
+  private configureColumns(): Array<EntityTableColumn<AgentApplicationInfo>> {
+    return [
+      new EntityTableColumn<AgentApplicationInfo>('name', 'agent.app-name', '35%'),
+      new EntityTableColumn<AgentApplicationInfo>('appType', 'agent.app-type', '160px',
+        e => this.appTypeBadge(e.appType), () => ({}), false),
+      new EntityTableColumn<AgentApplicationInfo>('currentVersion', 'agent.app-template', '30%',
+        e => this.templateCell(e), () => ({}), false),
+      new EntityTableColumn<AgentApplicationInfo>('unitsCount', 'agent.app-units', '90px',
+        () => '—', () => ({}), false),
+    ];
+  }
+
+  private appTypeBadge(appType: string): string {
+    const styles: Record<string, string> = {
+      EDGE: 'background:#e8eaf6;color:#283593;',
+      GATEWAY: 'background:#e0f2f1;color:#00695c;',
+      GENERIC: 'background:#f3e5f5;color:#6a1b9a;'
+    };
+    const style = styles[appType] || 'background:#eeeeee;color:#616161;';
+    return `<span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;letter-spacing:0.5px;${style}">${appType}</span>`;
+  }
+
+  private templateCell(e: AgentApplicationInfo): string {
+    if (!e.currentVersion) {
+      return `<span style="font-family:'Roboto Mono',monospace;font-size:12px;color:rgba(0,0,0,0.38);">—</span>`;
+    }
+    const label = `${e.appType} ${e.currentVersion}`;
+    return `<span style="font-family:'Roboto Mono',monospace;font-size:12px;">${label}</span>`;
+  }
+
+  private configureCellActions(): Array<CellActionDescriptor<AgentApplicationInfo>> {
+    return [
+      {
+        name: this.translate.instant('agent.app-restart'),
+        icon: 'restart_alt',
+        isEnabled: () => true,
+        onAction: ($event, e) => this.restart($event, e)
+      },
+      {
+        name: this.translate.instant('agent.app-upgrade'),
+        icon: 'arrow_upward',
+        isEnabled: e => !!e.nextVersion,
+        onAction: ($event, e) => this.openUpgradeWizard($event, e)
+      },
+      {
+        name: this.translate.instant('agent.app-delete'),
+        icon: 'delete',
+        isEnabled: () => true,
+        onAction: ($event, e) => this.openDeleteDialog($event, e)
+      }
+    ];
+  }
+
+  private restart($event: Event, app: AgentApplicationInfo) {
+    if ($event) { $event.stopPropagation(); }
+    this.dialogService.confirm(
+      this.translate.instant('agent.app-restart-title', { name: app.name }),
+      this.translate.instant('agent.app-restart-text'),
+      this.translate.instant('action.no'),
+      this.translate.instant('action.yes'),
+      true
+    ).subscribe(res => {
+      if (res) {
+        this.agentService.createAgentAppEvent(app.id.id, {
+          actionType: AgentAppEventActionType.RESTART
+        }).subscribe(() => this.config.updateData());
+      }
+    });
+  }
+
+  // Slice 1 placeholder — replaced by AgentAppDeleteDialogComponent in slice 2.
+  private openDeleteDialog($event: Event, app: AgentApplicationInfo) {
+    if ($event) { $event.stopPropagation(); }
+    this.dialogService.confirm(
+      this.translate.instant('agent.app-delete-title-simple', { name: app.name }),
+      this.translate.instant('agent.app-delete-text-simple'),
+      this.translate.instant('action.no'),
+      this.translate.instant('action.yes'),
+      true
+    ).subscribe(res => {
+      if (res) {
+        this.agentService.createAgentAppEvent(app.id.id, {
+          actionType: AgentAppEventActionType.DELETE
+        }).subscribe(() => this.config.updateData());
+      }
+    });
+  }
+
+  // Slice 1 placeholder — replaced by AgentAppUpgradeWizardComponent in slice 4.
+  private openUpgradeWizard($event: Event, app: AgentApplicationInfo) {
+    if ($event) { $event.stopPropagation(); }
+    this.dialogService.alert(
+      this.translate.instant('agent.app-upgrade-title-simple', { name: app.name }),
+      this.translate.instant('agent.app-upgrade-todo')
+    );
+  }
+
+  // Slice 1 placeholder — replaced by AgentAppInstallWizardComponent in slice 3.
+  private openInstallWizard() {
+    this.dialogService.alert(
+      this.translate.instant('agent.app-install-title'),
+      this.translate.instant('agent.app-install-todo')
+    );
+  }
+}
