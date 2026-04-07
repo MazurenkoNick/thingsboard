@@ -119,10 +119,15 @@
         <mat-icon svgIcon="mdi:clipboard-arrow-left"></mat-icon>
       </button>
     </div>
-    <fieldset>
+    <fieldset [disabled]="(isLoading$ | async) || !isEdit">
       <mat-form-field class="mat-block" [class.!hidden]="agentScope === 'customer_user'">
         <mat-label translate>agent.agent-group</mat-label>
-        <input matInput formControlName="agentGroupId">
+        <mat-select formControlName="agentGroupId">
+          <mat-option [value]="null">{{ 'agent.no-group' | translate }}</mat-option>
+          <mat-option *ngFor="let group of agentGroups" [value]="group.id.id">
+            {{ group.name }}
+          </mat-option>
+        </mat-select>
       </mat-form-field>
     </fieldset>
     <fieldset [disabled]="(isLoading$ | async) || !isEdit">

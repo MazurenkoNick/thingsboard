@@ -3056,6 +3056,7 @@
         "online": "Online",
         "offline": "Offline",
         "agent-group": "Agent group",
+        "no-group": "No group",
         "agents-count": "Agents",
         "profiles-count": "Profiles",
         "template": "Template",

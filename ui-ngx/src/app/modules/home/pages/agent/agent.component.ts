@@ -14,31 +14,36 @@
 /// limitations under the License.
 ///
 
-import { ChangeDetectorRef, Component, Inject } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { EntityComponent } from '@home/components/entity/entity.component';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { EntityType } from '@shared/models/entity-type.models';
-import { AgentInfo } from '@shared/models/agent.models';
+import { AgentGroup, AgentInfo } from '@shared/models/agent.models';
+import { AgentGroupId } from '@shared/models/id/agent-group-id';
 import { TranslateService } from '@ngx-translate/core';
 import { NULL_UUID } from '@shared/models/id/has-uuid';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
 import { generateSecret, guid } from '@core/utils';
 import { EntityTableConfig } from '@home/models/entity/entities-table-config.models';
+import { AgentService } from '@core/http/agent.service';
+import { PageLink } from '@shared/models/page/page-link';
 
 @Component({
   selector: 'tb-agent',
   templateUrl: './agent.component.html',
   styleUrls: []
 })
-export class AgentComponent extends EntityComponent<AgentInfo> {
+export class AgentComponent extends EntityComponent<AgentInfo> implements OnInit {
 
   entityType = EntityType;
   agentScope: 'tenant' | 'customer' | 'customer_user';
+  agentGroups: AgentGroup[] = [];
 
   constructor(protected store: Store<AppState>,
               protected translate: TranslateService,
+              private agentService: AgentService,
               @Inject('entity') protected entityValue: AgentInfo,
               @Inject('entitiesTableConfig') protected entitiesTableConfigValue: EntityTableConfig<AgentInfo>,
               public fb: UntypedFormBuilder,
@@ -49,6 +54,16 @@ export class AgentComponent extends EntityComponent<AgentInfo> {
   ngOnInit() {
     this.agentScope = this.entitiesTableConfig.componentsData.agentScope;
     super.ngOnInit();
+    this.loadAgentGroups();
+  }
+
+  private loadAgentGroups() {
+    // Simple fetch; pull first 1000 groups — enough for a dropdown picker.
+    const pageLink = new PageLink(1000);
+    this.agentService.getTenantAgentGroups(pageLink).subscribe(page => {
+      this.agentGroups = page.data;
+      this.cd.markForCheck();
+    });
   }
 
   hideDelete() {
@@ -68,7 +83,7 @@ export class AgentComponent extends EntityComponent<AgentInfo> {
       name: [entity ? entity.name : '', [Validators.required, Validators.maxLength(255)]],
       routingKey: this.fb.control({value: entity ? entity.routingKey : null, disabled: true}),
       secret: this.fb.control({value: entity ? entity.secret : null, disabled: true}),
-      agentGroupId: this.fb.control({value: entity?.agentGroupId?.id || null, disabled: true}),
+      agentGroupId: [entity?.agentGroupId?.id || null],
       description: [entity ? entity.description : '']
     });
     this.generateRoutingKeyAndSecret(entity, form);
@@ -90,7 +105,16 @@ export class AgentComponent extends EntityComponent<AgentInfo> {
     super.updateFormState();
     this.entityForm.get('routingKey').disable({emitEvent: false});
     this.entityForm.get('secret').disable({emitEvent: false});
-    this.entityForm.get('agentGroupId').disable({emitEvent: false});
+  }
+
+  prepareFormValue(formValue: any): any {
+    const prepared = super.prepareFormValue(formValue);
+    // Form stores the group id as a plain string; convert back to AgentGroupId
+    // object so the backend receives the expected nested structure.
+    prepared.agentGroupId = prepared.agentGroupId
+      ? new AgentGroupId(prepared.agentGroupId)
+      : null;
+    return prepared;
   }
 
   onAgentInfoCopied(type: string) {
