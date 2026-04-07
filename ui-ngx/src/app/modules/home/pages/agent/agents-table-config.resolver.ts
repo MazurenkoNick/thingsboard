@@ -71,6 +71,7 @@ export class AgentsTableConfigResolver {
   private readonly config: EntityTableConfig<AgentInfo> = new EntityTableConfig<AgentInfo>();
   private customerId: string;
   private activeSubs = new Map<string, TelemetrySubscriber>();
+  private activeStates = new Map<string, boolean>();
 
   constructor(private store: Store<AppState>,
               private agentService: AgentService,
@@ -200,6 +201,12 @@ export class AgentsTableConfigResolver {
 
   private subscribeAgentActive(agent: AgentInfo) {
     const id = agent.id.id;
+    // Seed the fresh AgentInfo with the last known state so its initial
+    // render picks the right colour even before the WS replays.
+    const cached = this.activeStates.get(id);
+    if (cached !== undefined) {
+      agent.active = cached;
+    }
     if (this.activeSubs.has(id)) {
       return;
     }
@@ -218,6 +225,7 @@ export class AgentsTableConfigResolver {
       if (activeEntries && activeEntries.length) {
         const rawValue = activeEntries[0][1];
         const active = rawValue === true || rawValue === 'true';
+        this.activeStates.set(id, active);
         agent.active = active;
         this.zone.run(() => this.updateAgentStatusDom(id, active));
       }
@@ -234,9 +242,23 @@ export class AgentsTableConfigResolver {
         sub.unsubscribe();
         sub.complete();
         this.activeSubs.delete(id);
+        this.activeStates.delete(id);
       }
     });
     agents.forEach(a => this.subscribeAgentActive(a));
+    // Defer until Angular has rendered the fresh rows, then patch the DOM
+    // with the latest known state for every visible agent. This is what
+    // brings the indicators back after navigating away and returning —
+    // otherwise the already-open subscription only re-emits on change.
+    setTimeout(() => {
+      agents.forEach(a => {
+        const id = a.id.id;
+        const known = this.activeStates.get(id);
+        if (known !== undefined) {
+          this.updateAgentStatusDom(id, known);
+        }
+      });
+    }, 0);
   }
 
   configureEntityFunctions(agentScope: string): void {
