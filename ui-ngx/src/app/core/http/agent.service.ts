@@ -202,9 +202,13 @@ export class AgentService {
       defaultHttpOptionsFromConfig(config));
   }
 
-  public mergeForPreview(templateId: string, application?: AgentApplication, config?: RequestConfig): Observable<AgentApplication> {
-    return this.http.post<AgentApplication>(`/api/agent/app/merge/${templateId}/preview`,
-      application || null, defaultHttpOptionsFromConfig(config));
+  public mergeForPreview(templateId: string, application?: AgentApplication,
+                          composeType?: string, config?: RequestConfig): Observable<AgentApplication> {
+    let url = `/api/agent/app/merge/${templateId}/preview`;
+    if (composeType) {
+      url += `?composeType=${encodeURIComponent(composeType)}`;
+    }
+    return this.http.post<AgentApplication>(url, application || null, defaultHttpOptionsFromConfig(config));
   }
 
   public detachFromProfile(applicationId: string, config?: RequestConfig): Observable<void> {

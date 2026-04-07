@@ -42,6 +42,10 @@ import {
   AgentAppUpgradeWizardComponent,
   AgentAppUpgradeWizardData
 } from '@home/pages/agent/wizard/agent-app-upgrade-wizard.component';
+import {
+  AgentAppInstallWizardComponent,
+  AgentAppInstallWizardData
+} from '@home/pages/agent/wizard/agent-app-install-wizard.component';
 
 @Injectable()
 export class AgentApplicationsTableConfigResolver {
@@ -203,11 +207,17 @@ export class AgentApplicationsTableConfigResolver {
     });
   }
 
-  // Slice 1 placeholder — replaced by AgentAppInstallWizardComponent in slice 3.
   private openInstallWizard() {
-    this.dialogService.alert(
-      this.translate.instant('agent.app-install-title'),
-      this.translate.instant('agent.app-install-todo')
-    );
+    this.dialog.open<AgentAppInstallWizardComponent, AgentAppInstallWizardData, boolean>(
+      AgentAppInstallWizardComponent, {
+        disableClose: false,
+        panelClass: ['tb-dialog'],
+        data: { agentId: this.agentId, agent: this.agent }
+      }
+    ).afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.config.updateData();
+      }
+    });
   }
 }

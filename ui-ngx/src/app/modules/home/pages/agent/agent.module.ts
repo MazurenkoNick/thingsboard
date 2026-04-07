@@ -35,6 +35,9 @@ import {
 import {
   AgentAppUpgradeWizardComponent
 } from '@home/pages/agent/wizard/agent-app-upgrade-wizard.component';
+import {
+  AgentAppInstallWizardComponent
+} from '@home/pages/agent/wizard/agent-app-install-wizard.component';
 
 @NgModule({
   declarations: [
@@ -47,6 +50,7 @@ import {
     AgentInstallInstructionsDialogComponent,
     AgentAppDeleteDialogComponent,
     AgentAppUpgradeWizardComponent,
+    AgentAppInstallWizardComponent,
   ],
   imports: [
     CommonModule,

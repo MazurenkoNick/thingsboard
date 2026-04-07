@@ -1,0 +1,90 @@
+///
+/// Copyright © 2016-2026 The Thingsboard Authors
+///
+/// Licensed under the Apache License, Version 2.0 (the "License");
+/// you may not use this file except in compliance with the License.
+/// You may obtain a copy of the License at
+///
+///     http://www.apache.org/licenses/LICENSE-2.0
+///
+/// Unless required by applicable law or agreed to in writing, software
+/// distributed under the License is distributed on an "AS IS" BASIS,
+/// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+/// See the License for the specific language governing permissions and
+/// limitations under the License.
+///
+
+:host { display: block; min-width: 720px; max-width: 880px; }
+
+.tb-install-wizard-header {
+  display: flex; align-items: flex-start; gap: 16px; margin: 0;
+  .title-block { flex: 1;
+    h2 { font-size: 20px; font-weight: 400; margin: 0 0 4px; }
+    .step-info { font-size: 13px; color: rgba(0, 0, 0, 0.54); }
+  }
+}
+
+.tb-install-wizard-body { padding: 8px 24px 16px; max-height: 80vh; overflow-y: auto; }
+
+.hint { font-size: 13px; color: rgba(0, 0, 0, 0.54); margin: 0 0 16px; }
+
+.type-cards { display: flex; gap: 16px; margin-bottom: 16px; }
+.type-card {
+  flex: 1; border: 2px solid rgba(0, 0, 0, 0.12); border-radius: 8px;
+  padding: 20px; text-align: center; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  &:hover { border-color: #527dad; background: rgba(48, 86, 128, 0.04); }
+  &.selected { border-color: #305680; background: rgba(48, 86, 128, 0.08); }
+  mat-icon { font-size: 36px; width: 36px; height: 36px; color: #305680; margin-bottom: 8px; }
+  h4 { font-size: 16px; font-weight: 500; margin: 0 0 4px; }
+  p { font-size: 13px; color: rgba(0, 0, 0, 0.54); margin: 0; }
+}
+
+.loading-state, .error-state {
+  display: flex; align-items: center; gap: 12px; padding: 12px; color: rgba(0, 0, 0, 0.54);
+}
+.error-state mat-icon { color: #dd2c00; }
+
+.yaml-label {
+  display: block; font-size: 12px; color: rgba(0, 0, 0, 0.54); margin: 8px 0 4px;
+}
+.yaml-editor {
+  width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px; background: #fafafa;
+  font-family: "Roboto Mono", "Courier New", monospace; font-size: 12px; line-height: 1.6;
+  resize: vertical;
+}
+
+.pull-images { display: block; margin-top: 12px; }
+
+.summary-card {
+  background: #fff; border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 4px;
+  padding: 12px 16px; margin-bottom: 16px;
+  .summary-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 0; font-size: 13px;
+    .label { color: rgba(0, 0, 0, 0.54); }
+    .value { color: rgba(0, 0, 0, 0.87); font-weight: 500; }
+  }
+}
+
+.tb-type-badge {
+  display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 12px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+  &.edge { background: #e8eaf6; color: #283593; }
+  &.gateway { background: #e0f2f1; color: #00695c; }
+  &.generic { background: #f3e5f5; color: #6a1b9a; }
+}
+
+.info-box {
+  display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px;
+  background: #e3f2fd; color: #1565c0; border-radius: 4px; font-size: 13px;
+  line-height: 1.5; margin-bottom: 16px;
+  mat-icon { flex-shrink: 0; font-size: 20px; width: 20px; height: 20px; }
+}
+
+.step-footer {
+  display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+  padding: 12px 0 4px; border-top: 1px solid rgba(0, 0, 0, 0.08); margin-top: 16px;
+  button mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
