@@ -37,11 +37,14 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ComposeMigrationStep extends StatefulStep<ComposeMigrationStepState> {
+public class ComposeMigrationStep extends StepWithDefaultState<ComposeMigrationStepState> {
 
     private List<ServiceOverride> serviceOverrides;
     @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
     private ComposeMigrationStepState state;
+
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
+    private ComposeMigrationStepState defaultState;
 
     @Override
     public AgentAppStepType getType() {
@@ -61,9 +64,7 @@ public class ComposeMigrationStep extends StatefulStep<ComposeMigrationStepState
         res.put("compose", compose.toString());
         res.put("abortOnContainerExit", "true");
 
-        if (resolvedState != null) {
-            res.putAll(resolvedState.getCommandMetadata());
-        }
+        res.putAll(super.getCommandMetadata(application, resolvedState));
         return res;
     }
 
