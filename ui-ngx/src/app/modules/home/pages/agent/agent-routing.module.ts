@@ -93,6 +93,22 @@ const routes: Routes = [
                 resolve: {
                   entitiesTableConfig: AgentApplicationsTableConfigResolver
                 }
+              },
+              {
+                path: ':entityId',
+                component: EntityDetailsPageComponent,
+                canDeactivate: [ConfirmOnExitGuard],
+                data: {
+                  breadcrumb: {
+                    labelFunction: entityDetailsPageBreadcrumbLabelFunction,
+                    icon: 'apps'
+                  } as BreadCrumbConfig<EntityDetailsPageComponent>,
+                  auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+                  title: 'agent.applications'
+                },
+                resolve: {
+                  entitiesTableConfig: AgentApplicationsTableConfigResolver
+                }
               }
             ]
           }

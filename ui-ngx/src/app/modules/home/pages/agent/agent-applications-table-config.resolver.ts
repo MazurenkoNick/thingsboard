@@ -25,7 +25,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared/models/entity-type.models';
 import { Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, mergeMap } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogService } from '@core/services/dialog.service';
 import {
@@ -34,6 +34,8 @@ import {
   AgentInfo
 } from '@shared/models/agent.models';
 import { AgentService } from '@core/http/agent.service';
+import { AgentApplicationComponent } from '@home/pages/agent/agent-application.component';
+import { AgentApplicationTabsComponent } from '@home/pages/agent/agent-application-tabs.component';
 import {
   AgentAppDeleteDialogComponent,
   AgentAppDeleteDialogData
@@ -62,13 +64,16 @@ export class AgentApplicationsTableConfigResolver {
               private dialogService: DialogService) {
 
     this.config.entityType = EntityType.AGENT_APPLICATION;
+    this.config.entityComponent = AgentApplicationComponent;
+    this.config.entityTabsComponent = AgentApplicationTabsComponent;
     this.config.entityTranslations = entityTypeTranslations.get(EntityType.AGENT_APPLICATION);
     this.config.entityResources = entityTypeResources.get(EntityType.AGENT_APPLICATION);
     this.config.addEnabled = true;
     this.config.entitiesDeleteEnabled = false;
     this.config.selectionEnabled = false;
-    this.config.detailsPanelEnabled = false;
     this.config.loadEntity = id => this.agentService.getAgentApplicationInfoById(id.id);
+    this.config.saveEntity = (app: any) => this.agentService.updateAgentApplication(app)
+      .pipe(mergeMap((saved: any) => this.agentService.getAgentApplicationInfoById(saved.id.id)));
     this.config.addEntity = () => { this.openInstallWizard(); return of(null); };
   }
 
@@ -111,15 +116,27 @@ export class AgentApplicationsTableConfigResolver {
   }
 
   private templateCell(e: AgentApplicationInfo): string {
-    if (!e.currentVersion) {
+    const parts: string[] = [];
+    if (e.appType) {
+      parts.push(String(e.appType));
+    }
+    if (e.currentVersion) {
+      parts.push(e.currentVersion);
+    }
+    if (!parts.length) {
       return `<span style="font-family:'Roboto Mono',monospace;font-size:12px;color:rgba(0,0,0,0.38);">—</span>`;
     }
-    const label = `${e.appType} ${e.currentVersion}`;
-    return `<span style="font-family:'Roboto Mono',monospace;font-size:12px;">${label}</span>`;
+    return `<span style="font-family:'Roboto Mono',monospace;font-size:12px;">${parts.join(' ')}</span>`;
   }
 
   private configureCellActions(): Array<CellActionDescriptor<AgentApplicationInfo>> {
     return [
+      {
+        name: this.translate.instant('agent.app-update'),
+        icon: 'sync',
+        isEnabled: () => true,
+        onAction: ($event, e) => this.update($event, e)
+      },
       {
         name: this.translate.instant('agent.app-restart'),
         icon: 'restart_alt',
@@ -139,6 +156,23 @@ export class AgentApplicationsTableConfigResolver {
         onAction: ($event, e) => this.openDeleteDialog($event, e)
       }
     ];
+  }
+
+  private update($event: Event, app: AgentApplicationInfo) {
+    if ($event) { $event.stopPropagation(); }
+    this.dialogService.confirm(
+      this.translate.instant('agent.app-update-title', { name: app.name }),
+      this.translate.instant('agent.app-update-text'),
+      this.translate.instant('action.no'),
+      this.translate.instant('action.yes'),
+      true
+    ).subscribe(res => {
+      if (res) {
+        this.agentService.createAgentAppEvent(app.id.id, {
+          actionType: AgentAppEventActionType.UPDATE
+        }).subscribe(() => this.config.updateData());
+      }
+    });
   }
 
   private restart($event: Event, app: AgentApplicationInfo) {
