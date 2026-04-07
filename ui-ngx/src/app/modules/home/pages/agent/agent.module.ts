@@ -26,8 +26,6 @@ import { AgentGroupComponent } from '@home/pages/agent/agent-group.component';
 import { AgentGroupTabsComponent } from '@home/pages/agent/agent-group-tabs.component';
 import { AgentAppProfileComponent } from '@home/pages/agent/agent-app-profile.component';
 import { AgentAppProfileTabsComponent } from '@home/pages/agent/agent-app-profile-tabs.component';
-import { AgentTemplateComponent } from '@home/pages/agent/agent-template.component';
-import { AgentTemplateTabsComponent } from '@home/pages/agent/agent-template-tabs.component';
 import {
   AgentInstallInstructionsDialogComponent
 } from '@home/pages/agent/agent-install-instructions-dialog.component';
@@ -40,8 +38,6 @@ import {
     AgentGroupTabsComponent,
     AgentAppProfileComponent,
     AgentAppProfileTabsComponent,
-    AgentTemplateComponent,
-    AgentTemplateTabsComponent,
     AgentInstallInstructionsDialogComponent,
   ],
   imports: [

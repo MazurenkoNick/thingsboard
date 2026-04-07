@@ -26,7 +26,6 @@ import { MenuId } from '@core/services/menu.models';
 import { AgentsTableConfigResolver } from '@home/pages/agent/agents-table-config.resolver';
 import { AgentGroupsTableConfigResolver } from '@home/pages/agent/agent-groups-table-config.resolver';
 import { AgentAppProfilesTableConfigResolver } from '@home/pages/agent/agent-app-profiles-table-config.resolver';
-import { AgentTemplatesTableConfigResolver } from '@home/pages/agent/agent-templates-table-config.resolver';
 
 const routes: Routes = [
   {
@@ -150,43 +149,6 @@ const routes: Routes = [
           }
         ]
       },
-      {
-        path: 'agentTemplates',
-        data: {
-          breadcrumb: {
-            menuId: MenuId.agent_templates
-          }
-        },
-        children: [
-          {
-            path: '',
-            component: EntitiesTableComponent,
-            data: {
-              auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-              title: 'agent.templates'
-            },
-            resolve: {
-              entitiesTableConfig: AgentTemplatesTableConfigResolver
-            }
-          },
-          {
-            path: ':entityId',
-            component: EntityDetailsPageComponent,
-            canDeactivate: [ConfirmOnExitGuard],
-            data: {
-              breadcrumb: {
-                labelFunction: entityDetailsPageBreadcrumbLabelFunction,
-                icon: 'view_list'
-              } as BreadCrumbConfig<EntityDetailsPageComponent>,
-              auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-              title: 'agent.templates'
-            },
-            resolve: {
-              entitiesTableConfig: AgentTemplatesTableConfigResolver
-            }
-          }
-        ]
-      }
     ]
   }
 ];
@@ -197,8 +159,7 @@ const routes: Routes = [
   providers: [
     AgentsTableConfigResolver,
     AgentGroupsTableConfigResolver,
-    AgentAppProfilesTableConfigResolver,
-    AgentTemplatesTableConfigResolver
+    AgentAppProfilesTableConfigResolver
   ]
 })
 export class AgentRoutingModule {

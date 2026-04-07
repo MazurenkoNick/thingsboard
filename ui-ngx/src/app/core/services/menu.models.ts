@@ -107,7 +107,6 @@ export enum MenuId {
   agents = 'agents',
   agent_groups = 'agent_groups',
   agent_app_profiles = 'agent_app_profiles',
-  agent_templates = 'agent_templates',
   features = 'features',
   otaUpdates = 'otaUpdates',
   version_control = 'version_control',
@@ -725,16 +724,6 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
     }
   ],
   [
-    MenuId.agent_templates,
-    {
-      id: MenuId.agent_templates,
-      name: 'agent.agent-templates',
-      type: 'link',
-      path: '/edgeManagement/agentTemplates',
-      icon: 'view_list'
-    }
-  ],
-  [
     MenuId.features,
     {
       id: MenuId.features,
@@ -902,7 +891,6 @@ const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.edges},
           {id: MenuId.rulechain_templates},
           {id: MenuId.agents},
-          {id: MenuId.agent_templates},
           {id: MenuId.agent_groups},
           {id: MenuId.agent_app_profiles}
         ]
