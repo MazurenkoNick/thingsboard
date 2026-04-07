@@ -66,6 +66,7 @@ export class AgentAppInstallWizardComponent
 
   selectedType: AgentApplicationType | null = null;
   template: AgentAppTemplate | null = null;
+  composeType: string | null = null;
   loadingTemplate = false;
   loadError = '';
 
@@ -97,25 +98,18 @@ export class AgentAppInstallWizardComponent
     }
     this.selectedType = type;
     this.template = null;
+    this.composeType = null;
     this.composeYaml = '';
     this.mergedApp = null;
     this.appName = this.defaultAppName(type);
     this.loadError = '';
-
-    if (type === AgentApplicationType.GENERIC) {
-      // Generic: blank YAML, no template fetch needed
-      this.composeYaml = '# Paste your Docker Compose YAML here\nservices:\n  app:\n    image: nginx:latest\n';
-      this.template = null;
-      this.hasPullImagesStep = false;
-      this.pullImagesStep = null;
-      return;
-    }
 
     this.loadingTemplate = true;
     this.agentService.getLatestAgentAppTemplate(type, 'DOCKER_COMPOSE').subscribe({
       next: tpl => {
         this.template = tpl;
         this.scanStartSteps(tpl);
+        this.composeType = this.pickComposeType(tpl);
         // Build a draft app and merge for preview to populate the YAML editor
         const draft: AgentApplication = {
           name: this.appName,
@@ -124,7 +118,7 @@ export class AgentAppInstallWizardComponent
           templateId: tpl.id,
           origin: AgentApplicationOrigin.INSTALLED
         } as any;
-        this.agentService.mergeForPreview(tpl.id.id, draft).subscribe({
+        this.agentService.mergeForPreview(tpl.id.id, draft, this.composeType || undefined).subscribe({
           next: merged => {
             this.mergedApp = merged;
             this.composeYaml = this.dumpCompose(merged);
@@ -141,6 +135,27 @@ export class AgentAppInstallWizardComponent
         this.loadingTemplate = false;
       }
     });
+  }
+
+  /**
+   * Find the first compose type key from the template's COMPOSE_TEMPLATE step
+   * (ComposeTypeChoiceStep). For GENERIC and GATEWAY templates this is usually
+   * a single entry; for EDGE it's typically `in_memory`/`kafka`/`hybrid` and
+   * we pick the first one as a v1 default. Falls back to the literal string
+   * "default" so the request still carries a value (the BE requires the param).
+   */
+  private pickComposeType(template: AgentAppTemplate): string {
+    const steps = (template.startSteps || []);
+    for (const step of steps) {
+      const anyStep = step as any;
+      if (step.type === AgentAppStepType.COMPOSE_TEMPLATE && anyStep.composeTemplates) {
+        const keys = Object.keys(anyStep.composeTemplates);
+        if (keys.length) {
+          return keys[0];
+        }
+      }
+    }
+    return 'default';
   }
 
   private scanStartSteps(template: AgentAppTemplate) {

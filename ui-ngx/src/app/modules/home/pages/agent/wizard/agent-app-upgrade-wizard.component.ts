@@ -125,9 +125,14 @@ export class AgentAppUpgradeWizardComponent
     this.toVersion = template.currentVersion || null;
     this.upgradeSteps = (template.upgradeSteps || []).filter(s => !s.templateOnly);
     this.backupVolumeStep = this.upgradeSteps.find(s => s.type === AgentAppStepType.BACKUP_VOLUME) || null;
+    // composeType is required by the BE; pick the first key from the
+    // template's COMPOSE_TEMPLATE step. For app upgrades the chosen variant
+    // typically matches the existing app, but we don't have that info on the
+    // request — first key is a v1 default.
+    const composeType = this.pickComposeType(template);
     // Call mergeForPreview to get the merged compose for the diff and to power
     // the volume keys list (the merged compose may add or rename volumes).
-    this.agentService.mergeForPreview(template.id.id, this.application).subscribe({
+    this.agentService.mergeForPreview(template.id.id, this.application, composeType).subscribe({
       next: merged => {
         this.mergedApp = merged;
         this.templateYaml = this.dumpCompose(merged);
@@ -136,6 +141,20 @@ export class AgentAppUpgradeWizardComponent
       },
       error: () => this.failLoad('agent.app-upgrade-merge-failed')
     });
+  }
+
+  private pickComposeType(template: AgentAppTemplate): string {
+    const steps = (template.startSteps || []).concat(template.upgradeSteps || []);
+    for (const step of steps) {
+      const anyStep = step as any;
+      if (step.type === AgentAppStepType.COMPOSE_TEMPLATE && anyStep.composeTemplates) {
+        const keys = Object.keys(anyStep.composeTemplates);
+        if (keys.length) {
+          return keys[0];
+        }
+      }
+    }
+    return 'default';
   }
 
   private failLoad(messageKey: string) {
