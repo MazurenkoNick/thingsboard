@@ -3062,6 +3062,7 @@
         "app-name": "Name",
         "app-template": "Template",
         "app-units": "Units",
+        "app-origin": "Origin",
         "app-restart": "Restart",
         "app-upgrade": "Upgrade",
         "app-delete": "Delete",

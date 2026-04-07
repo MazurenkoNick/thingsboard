@@ -99,19 +99,13 @@ export class AgentGroupsTableConfigResolver {
   configureColumns(authority: Authority): Array<EntityTableColumn<AgentGroupInfo>> {
     const columns: Array<EntityTableColumn<AgentGroupInfo>> = [
       new DateEntityTableColumn<AgentGroupInfo>('createdTime', 'common.created-time', this.datePipe, '150px'),
-      new EntityTableColumn<AgentGroupInfo>('name', 'agent.group-name', '25%'),
+      new EntityTableColumn<AgentGroupInfo>('name', 'agent.group-name', '40%'),
     ];
     if (authority === Authority.TENANT_ADMIN) {
       columns.push(
-        new EntityTableColumn<AgentGroupInfo>('customerTitle', 'customer.customer', '25%'),
+        new EntityTableColumn<AgentGroupInfo>('customerTitle', 'customer.customer', '40%'),
       );
     }
-    columns.push(
-      new EntityTableColumn<AgentGroupInfo>('agentsCount', 'agent.agents-count', '100px',
-        entity => entity.agentsCount != null ? String(entity.agentsCount) : '—'),
-      new EntityTableColumn<AgentGroupInfo>('profilesCount', 'agent.profiles-count', '100px',
-        entity => entity.profilesCount != null ? String(entity.profilesCount) : '—'),
-    );
     return columns;
   }
 

@@ -95,14 +95,28 @@ export class AgentApplicationsTableConfigResolver {
 
   private configureColumns(): Array<EntityTableColumn<AgentApplicationInfo>> {
     return [
-      new EntityTableColumn<AgentApplicationInfo>('name', 'agent.app-name', '35%'),
-      new EntityTableColumn<AgentApplicationInfo>('appType', 'agent.app-type', '160px',
+      new EntityTableColumn<AgentApplicationInfo>('name', 'agent.app-name', '30%'),
+      new EntityTableColumn<AgentApplicationInfo>('appType', 'agent.app-type', '140px',
         e => this.appTypeBadge(e.appType), () => ({}), false),
-      new EntityTableColumn<AgentApplicationInfo>('currentVersion', 'agent.app-template', '30%',
+      new EntityTableColumn<AgentApplicationInfo>('currentVersion', 'agent.app-template', '25%',
         e => this.templateCell(e), () => ({}), false),
-      new EntityTableColumn<AgentApplicationInfo>('unitsCount', 'agent.app-units', '90px',
-        () => '—', () => ({}), false),
+      new EntityTableColumn<AgentApplicationInfo>('origin', 'agent.app-origin', '140px',
+        e => this.originBadge((e as any).origin), () => ({}), false),
     ];
+  }
+
+  private originBadge(origin: string | undefined): string {
+    if (!origin) {
+      return `<span style="color:rgba(0,0,0,0.38);font-size:12px;">—</span>`;
+    }
+    const styles: Record<string, string> = {
+      INSTALLED: 'background:#e8f5e9;color:#2e7d32;',
+      DISCOVERED: 'background:#e3f2fd;color:#1565c0;',
+      AUTO_PROVISIONED: 'background:#f3e5f5;color:#6a1b9a;'
+    };
+    const style = styles[origin] || 'background:#eeeeee;color:#616161;';
+    const label = origin.charAt(0) + origin.slice(1).toLowerCase().replace('_', ' ');
+    return `<span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;letter-spacing:0.5px;${style}">${label}</span>`;
   }
 
   private appTypeBadge(appType: string): string {
@@ -132,16 +146,16 @@ export class AgentApplicationsTableConfigResolver {
   private configureCellActions(): Array<CellActionDescriptor<AgentApplicationInfo>> {
     return [
       {
-        name: this.translate.instant('agent.app-update'),
-        icon: 'sync',
-        isEnabled: () => true,
-        onAction: ($event, e) => this.update($event, e)
-      },
-      {
         name: this.translate.instant('agent.app-restart'),
         icon: 'restart_alt',
         isEnabled: () => true,
         onAction: ($event, e) => this.restart($event, e)
+      },
+      {
+        name: this.translate.instant('agent.app-update'),
+        icon: 'sync_alt',
+        isEnabled: () => true,
+        onAction: ($event, e) => this.update($event, e)
       },
       {
         name: this.translate.instant('agent.app-upgrade'),
