@@ -34,7 +34,10 @@ import org.thingsboard.server.gen.agent.v1.CommandProgress;
 import org.thingsboard.server.gen.agent.v1.CommandResult;
 import org.thingsboard.server.gen.agent.v1.Hello;
 import org.thingsboard.server.gen.agent.v1.HelloAck;
+import org.thingsboard.server.gen.agent.v1.InitialSyncComplete;
 import org.thingsboard.server.gen.agent.v1.ProjectStateSync;
+import org.thingsboard.server.gen.agent.v1.ProvisionRequest;
+import org.thingsboard.server.gen.agent.v1.ProvisionResponse;
 import org.thingsboard.server.gen.agent.v1.ServerToAgent;
 import org.thingsboard.server.gen.agent.v1.StepId;
 
@@ -52,8 +55,8 @@ public class AgentImitator {
 
     private final String host;
     private final int port;
-    private final String routingKey;
-    private final String routingSecret;
+    private String routingKey;
+    private String routingSecret;
 
     private ManagedChannel channel;
     private StreamObserver<AgentToServer> requestObserver;
@@ -64,10 +67,13 @@ public class AgentImitator {
     @Getter
     private volatile HelloAck helloAck;
     @Getter
+    private volatile ProvisionResponse provisionResponse;
+    @Getter
     private final List<ServerToAgent> downlinkMsgs = new ArrayList<>();
 
     private volatile Throwable streamError;
     private final CountDownLatch helloAckLatch = new CountDownLatch(1);
+    private final CountDownLatch provisionLatch = new CountDownLatch(1);
 
     public AgentImitator(String host, int port, String routingKey, String routingSecret) {
         this.host = host;
@@ -78,6 +84,10 @@ public class AgentImitator {
     }
 
     public void connect() throws InterruptedException {
+        if (channel != null && !channel.isShutdown()) {
+            channel.shutdownNow();
+            channel.awaitTermination(5, TimeUnit.SECONDS);
+        }
         channel = ManagedChannelBuilder.forAddress(host, port)
                 .usePlaintext()
                 .keepAliveTime(300, TimeUnit.SECONDS)
@@ -187,8 +197,51 @@ public class AgentImitator {
         }
     }
 
-    public Throwable getStreamError() {
-        return streamError;
+    /**
+     * Opens a control stream and sends a {@link ProvisionRequest}. Blocks until the
+     * {@link ProvisionResponse} arrives. The server closes the stream after responding,
+     * so callers should treat this imitator as single-use after provisioning.
+     */
+    public void provision(String provisionKey, String provisionSecret) throws InterruptedException {
+        channel = ManagedChannelBuilder.forAddress(host, port)
+                .usePlaintext()
+                .build();
+
+        AgentRpcServiceGrpc.AgentRpcServiceStub stub = AgentRpcServiceGrpc.newStub(channel);
+
+        requestObserver = stub.controlStream(new StreamObserver<>() {
+            @Override
+            public void onNext(ServerToAgent msg) {
+                if (msg.hasProvisionResponse()) {
+                    provisionResponse = msg.getProvisionResponse();
+                    routingSecret = provisionResponse.getRoutingSecret();
+                    routingKey = provisionResponse.getRoutingKey();
+                    provisionLatch.countDown();
+                }
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                streamError = t;
+                provisionLatch.countDown();
+                log.info("Provision stream error: {}", t.getMessage());
+            }
+
+            @Override
+            public void onCompleted() {
+                provisionLatch.countDown();
+            }
+        });
+
+        requestObserver.onNext(AgentToServer.newBuilder()
+                .setProvision(ProvisionRequest.newBuilder()
+                        .setProvisionKey(provisionKey)
+                        .setProvisionSecret(provisionSecret)
+                        .build())
+                .build());
+
+        Assert.assertTrue("Timed out waiting for ProvisionResponse",
+                provisionLatch.await(AbstractWebTest.TIMEOUT, TimeUnit.SECONDS));
     }
 
     // --- Sending messages ---
@@ -196,6 +249,12 @@ public class AgentImitator {
     public void sendProjectSync(ProjectStateSync projectSync) {
         requestObserver.onNext(AgentToServer.newBuilder()
                 .setProjectSync(projectSync)
+                .build());
+    }
+
+    public void sendInitialSyncComplete() {
+        requestObserver.onNext(AgentToServer.newBuilder()
+                .setInitialSyncComplete(InitialSyncComplete.newBuilder().build())
                 .build());
     }
 

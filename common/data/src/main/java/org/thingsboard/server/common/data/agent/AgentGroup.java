@@ -52,6 +52,7 @@ public class AgentGroup extends BaseData<AgentGroupId> implements HasId<AgentGro
     @NoXss
     @Length(fieldName = "provisionSecret")
     private String provisionSecret;
+    private AgentProvisionType provisionType;
     @Getter
     private Long version;
 
@@ -71,6 +72,7 @@ public class AgentGroup extends BaseData<AgentGroupId> implements HasId<AgentGro
         this.description = group.getDescription();
         this.provisionKey = group.getProvisionKey();
         this.provisionSecret = group.getProvisionSecret();
+        this.provisionType = group.getProvisionType();
         this.version = group.getVersion();
     }
 
@@ -117,5 +119,10 @@ public class AgentGroup extends BaseData<AgentGroupId> implements HasId<AgentGro
     @Schema(description = "Provision secret for future auto-provisioning")
     public String getProvisionSecret() {
         return provisionSecret;
+    }
+
+    @Schema(description = "Provisioning strategy. DISABLED by default.")
+    public AgentProvisionType getProvisionType() {
+        return provisionType;
     }
 }

@@ -24,10 +24,13 @@ import org.thingsboard.server.common.data.agent.step.state.BackupVolumesStepStat
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class BackupVolumesStep extends StatefulStep<BackupVolumesStepState> {
+public class BackupVolumesStep extends StepWithDefaultState<BackupVolumesStepState> {
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
     private BackupVolumesStepState state;
+
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
+    private BackupVolumesStepState defaultState;
 
     @Override
     public AgentAppStepType getType() {

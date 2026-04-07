@@ -17,10 +17,14 @@ package org.thingsboard.server.dao.agent;
 
 import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.id.AgentAppProfileId;
+import org.thingsboard.server.common.data.id.AgentGroupId;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.entity.EntityDaoService;
+
+import java.util.List;
 
 public interface AgentAppProfileService extends EntityDaoService {
 
@@ -31,4 +35,6 @@ public interface AgentAppProfileService extends EntityDaoService {
     PageData<AgentAppProfile> findProfilesByTenantId(TenantId tenantId, PageLink pageLink);
 
     void deleteProfile(TenantId tenantId, AgentAppProfileId profileId);
+
+    List<AgentAppProfile> findUninstalledProfilesForAgent(TenantId tenantId, AgentGroupId groupId, AgentId agentId);
 }

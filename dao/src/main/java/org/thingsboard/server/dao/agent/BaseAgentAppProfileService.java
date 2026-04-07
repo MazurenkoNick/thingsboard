@@ -29,6 +29,8 @@ import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.id.AgentAppProfileId;
+import org.thingsboard.server.common.data.id.AgentGroupId;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -42,6 +44,7 @@ import org.thingsboard.server.dao.service.PaginatedRemover;
 import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -111,6 +114,15 @@ public class BaseAgentAppProfileService extends AbstractCachedEntityService<Agen
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validatePageLink(pageLink);
         return profileDao.findByTenantId(tenantId.getId(), pageLink);
+    }
+
+    @Override
+    public List<AgentAppProfile> findUninstalledProfilesForAgent(TenantId tenantId, AgentGroupId groupId, AgentId agentId) {
+        log.trace("Executing findUninstalledProfilesForAgent, groupId [{}], agentId [{}]", groupId, agentId);
+        if (groupId == null || agentId == null) {
+            return Collections.emptyList();
+        }
+        return profileDao.findUninstalledProfilesForAgent(groupId.getId(), agentId.getId());
     }
 
     @Override

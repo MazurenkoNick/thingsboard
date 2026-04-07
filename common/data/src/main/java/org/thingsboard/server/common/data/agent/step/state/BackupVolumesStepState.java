@@ -38,7 +38,11 @@ public class BackupVolumesStepState extends AgentAppStepState {
     }
 
     @Override
-    public void validate() throws DataValidationException {}
+    public void validate() throws DataValidationException {
+        if (backupVolumes == null) {
+            throw new DataValidationException("Validation error: backupVolumes must not be null");
+        }
+    }
 
     @Override
     public Map<String, String> getCommandMetadata() {

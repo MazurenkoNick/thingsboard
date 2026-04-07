@@ -29,6 +29,8 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.gen.agent.v1.AgentRpcServiceGrpc;
 import org.thingsboard.server.gen.agent.v1.AgentToServer;
+import org.thingsboard.server.gen.agent.v1.ProvisionRequest;
+import org.thingsboard.server.gen.agent.v1.ProvisionResponse;
 import org.thingsboard.server.gen.agent.v1.ServerToAgent;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.agent.msg.inbound.AgentInboundMessageDispatcher;
@@ -53,6 +55,7 @@ public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBas
     private final AgentInboundMessageDispatcher inboundMessageDispatcher;
     private final AgentStateService agentStateService;
     private final AgentSessionRegistry sessions;
+    private final AgentProvisionService agentProvisionService;
 
     private ListeningExecutorService writer;
 
@@ -152,6 +155,10 @@ public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBas
 
     private void tryInitSession(AgentToServer msg, ServerCallStreamObserver<ServerToAgent> responseObserver,
                                 AtomicReference<AgentSession> sessionRef, AtomicBoolean initializing) {
+        if (msg.hasProvision()) {
+            handleProvisionRequest(msg.getProvision(), responseObserver, initializing);
+            return;
+        }
         if (!msg.hasHello()) {
             initializing.set(false);
             responseObserver.onError(Status.UNAUTHENTICATED
@@ -160,6 +167,31 @@ public class AgentGrpcService extends AgentRpcServiceGrpc.AgentRpcServiceImplBas
             return;
         }
         ensureStateInit(msg, responseObserver, sessionRef, initializing);
+    }
+
+    private void handleProvisionRequest(ProvisionRequest request, ServerCallStreamObserver<ServerToAgent> responseObserver,
+                                        AtomicBoolean initializing) {
+        ProvisionResponse.Builder responseBuilder = ProvisionResponse.newBuilder();
+        try {
+            AgentProvisionService.ProvisionResult result = agentProvisionService.provision(
+                    request.getProvisionKey(), request.getProvisionSecret());
+            if (result.success()) {
+                responseBuilder.setSuccess(true)
+                        .setRoutingKey(result.routingKey())
+                        .setRoutingSecret(result.routingSecret());
+            } else {
+                responseBuilder.setSuccess(false).setErrorMessage(result.errorMessage());
+            }
+        } catch (Exception e) {
+            log.error("Failed to provision agent", e);
+            responseBuilder.setSuccess(false).setErrorMessage("Failed to provision agent: " + e.getMessage());
+        }
+        try {
+            responseObserver.onNext(ServerToAgent.newBuilder().setProvisionResponse(responseBuilder.build()).build());
+            responseObserver.onCompleted();
+        } finally {
+            initializing.set(false);
+        }
     }
 
     private void ensureStateInit(AgentToServer msg, ServerCallStreamObserver<ServerToAgent> responseObserver,

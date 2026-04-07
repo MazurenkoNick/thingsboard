@@ -33,7 +33,23 @@ message AgentToServer {
     CommandProgress progress = 3;
     CommandResult result = 4;
     ProjectStateSync projectSync = 5;
+    ProvisionRequest provision = 6;
+    InitialSyncComplete initialSyncComplete = 7;
   }
+}
+
+message InitialSyncComplete {}
+
+message ProvisionRequest {
+  string provisionKey = 1;
+  string provisionSecret = 2;
+}
+
+message ProvisionResponse {
+  bool success = 1;
+  string routingKey = 2;
+  string routingSecret = 3;
+  optional string errorMessage = 4;
 }
 
 message ProjectStateSync {
@@ -58,6 +74,7 @@ message ServerToAgent {
   oneof msg {
     HelloAck helloAck = 1;
     AppCommand appCommand = 2;
+    ProvisionResponse provisionResponse = 3;
   }
 }
 

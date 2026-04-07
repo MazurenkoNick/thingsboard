@@ -23,6 +23,7 @@ import org.springframework.data.repository.query.Param;
 import org.thingsboard.server.dao.model.sql.AgentGroupEntity;
 import org.thingsboard.server.dao.model.sql.AgentGroupInfoEntity;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface AgentGroupRepository extends JpaRepository<AgentGroupEntity, UUID> {
@@ -59,4 +60,7 @@ public interface AgentGroupRepository extends JpaRepository<AgentGroupEntity, UU
 
     @Query("SELECT count(*) FROM AgentGroupEntity g WHERE g.tenantId = :tenantId")
     Long countByTenantId(@Param("tenantId") UUID tenantId);
+
+    Optional<AgentGroupEntity> findByProvisionKey(String provisionKey);
+
 }
