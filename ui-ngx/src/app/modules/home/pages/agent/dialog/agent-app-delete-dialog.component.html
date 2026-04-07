@@ -1,0 +1,76 @@
+<!--
+
+    Copyright © 2016-2026 The Thingsboard Authors
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<div mat-dialog-title class="tb-app-delete-dialog-header">
+  <mat-icon class="warn-icon">warning</mat-icon>
+  <h2 translate>agent.app-delete-title-header</h2>
+  <button mat-icon-button (click)="cancel()" tabindex="-1">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<div mat-dialog-content class="tb-app-delete-dialog-body">
+
+  <p class="warning-text">
+    {{ 'agent.app-delete-warning' | translate: { name: application?.name } }}
+  </p>
+
+  <div class="app-summary">
+    <div class="summary-row">
+      <span class="label" translate>agent.app-name</span>
+      <span class="value">{{ application?.name }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="label" translate>agent.app-type</span>
+      <span class="value">
+        <span class="tb-type-badge"
+              [class.edge]="application?.appType === 'EDGE'"
+              [class.gateway]="application?.appType === 'GATEWAY'"
+              [class.generic]="application?.appType === 'GENERIC'">
+          {{ application?.appType }}
+        </span>
+      </span>
+    </div>
+    <div class="summary-row" *ngIf="agentName">
+      <span class="label" translate>agent.agent-details</span>
+      <span class="value">{{ agentName }}</span>
+    </div>
+  </div>
+
+  <div class="volume-option">
+    <mat-checkbox [(ngModel)]="removeVolumes" color="warn">
+      <span class="option-label" translate>agent.app-delete-remove-volumes</span>
+    </mat-checkbox>
+    <div class="option-hint" translate>agent.app-delete-remove-volumes-hint</div>
+    <div class="volumes-list" *ngIf="volumeKeys.length">
+      <span class="volume-chip" *ngFor="let key of volumeKeys">{{ key }}</span>
+    </div>
+    <div class="volumes-list empty" *ngIf="!volumeKeys.length" translate>
+      agent.app-delete-no-volumes
+    </div>
+  </div>
+</div>
+
+<div mat-dialog-actions align="end" class="tb-app-delete-dialog-footer">
+  <button mat-button (click)="cancel()" [disabled]="submitting">
+    {{ 'action.cancel' | translate }}
+  </button>
+  <button mat-raised-button color="warn" (click)="confirm()" [disabled]="submitting || loading">
+    <mat-icon>delete</mat-icon>
+    <span translate>agent.app-delete-cta</span>
+  </button>
+</div>

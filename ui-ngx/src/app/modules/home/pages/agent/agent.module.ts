@@ -29,6 +29,9 @@ import { AgentAppProfileTabsComponent } from '@home/pages/agent/agent-app-profil
 import {
   AgentInstallInstructionsDialogComponent
 } from '@home/pages/agent/agent-install-instructions-dialog.component';
+import {
+  AgentAppDeleteDialogComponent
+} from '@home/pages/agent/dialog/agent-app-delete-dialog.component';
 
 @NgModule({
   declarations: [
@@ -39,6 +42,7 @@ import {
     AgentAppProfileComponent,
     AgentAppProfileTabsComponent,
     AgentInstallInstructionsDialogComponent,
+    AgentAppDeleteDialogComponent,
   ],
   imports: [
     CommonModule,

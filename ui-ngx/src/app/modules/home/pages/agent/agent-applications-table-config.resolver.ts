@@ -34,6 +34,10 @@ import {
   AgentInfo
 } from '@shared/models/agent.models';
 import { AgentService } from '@core/http/agent.service';
+import {
+  AgentAppDeleteDialogComponent,
+  AgentAppDeleteDialogData
+} from '@home/pages/agent/dialog/agent-app-delete-dialog.component';
 
 @Injectable()
 export class AgentApplicationsTableConfigResolver {
@@ -146,20 +150,29 @@ export class AgentApplicationsTableConfigResolver {
     });
   }
 
-  // Slice 1 placeholder — replaced by AgentAppDeleteDialogComponent in slice 2.
   private openDeleteDialog($event: Event, app: AgentApplicationInfo) {
     if ($event) { $event.stopPropagation(); }
-    this.dialogService.confirm(
-      this.translate.instant('agent.app-delete-title-simple', { name: app.name }),
-      this.translate.instant('agent.app-delete-text-simple'),
-      this.translate.instant('action.no'),
-      this.translate.instant('action.yes'),
-      true
-    ).subscribe(res => {
-      if (res) {
-        this.agentService.createAgentAppEvent(app.id.id, {
-          actionType: AgentAppEventActionType.DELETE
-        }).subscribe(() => this.config.updateData());
+    // Fetch the full application so the dialog can render volume keys from
+    // config.compose. Falls back to the list-row entity if the fetch fails.
+    this.agentService.getAgentApplicationById(app.id.id).subscribe({
+      next: full => this.showDeleteDialog(full),
+      error: () => this.showDeleteDialog(app)
+    });
+  }
+
+  private showDeleteDialog(application: any) {
+    this.dialog.open<AgentAppDeleteDialogComponent, AgentAppDeleteDialogData, boolean>(
+      AgentAppDeleteDialogComponent, {
+        disableClose: false,
+        panelClass: ['tb-dialog'],
+        data: {
+          application,
+          agentName: this.agent?.name
+        }
+      }
+    ).afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.config.updateData();
       }
     });
   }
