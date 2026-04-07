@@ -39,6 +39,7 @@ import {
   AssignToCustomerDialogComponent,
   AssignToCustomerDialogData
 } from '@modules/home/dialogs/assign-to-customer-dialog.component';
+import { AgentGroupId } from '@shared/models/id/agent-group-id';
 import { AgentGroupInfo } from '@shared/models/agent.models';
 import { AgentService } from '@core/http/agent.service';
 import { AgentGroupComponent } from '@home/pages/agent/agent-group.component';
@@ -121,7 +122,7 @@ export class AgentGroupsTableConfigResolver {
         name: this.translate.instant('agent.assign-to-customer'),
         icon: 'assignment_ind',
         isEnabled: (entity) => !entity.customerId || entity.customerId.id === NULL_UUID,
-        onAction: ($event, entity) => this.assignToCustomer($event, [entity.id.id])
+        onAction: ($event, entity) => this.assignToCustomer($event, [entity.id])
       });
       actions.push({
         name: this.translate.instant('agent.unassign-from-customer'),
@@ -133,7 +134,7 @@ export class AgentGroupsTableConfigResolver {
     return actions;
   }
 
-  private assignToCustomer($event: Event, groupIds: string[]) {
+  private assignToCustomer($event: Event, groupIds: AgentGroupId[]) {
     if ($event) {
       $event.stopPropagation();
     }

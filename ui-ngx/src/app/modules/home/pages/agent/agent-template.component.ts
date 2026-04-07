@@ -20,7 +20,7 @@ import { AppState } from '@core/core.state';
 import { EntityComponent } from '@home/components/entity/entity.component';
 import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
 import { EntityType } from '@shared/models/entity-type.models';
-import { AgentAppTemplate, agentApplicationTypeTranslationMap } from '@shared/models/agent.models';
+import { AgentAppTemplate } from '@shared/models/agent.models';
 import { TranslateService } from '@ngx-translate/core';
 import { EntityTableConfig } from '@home/models/entity/entities-table-config.models';
 
@@ -32,7 +32,6 @@ import { EntityTableConfig } from '@home/models/entity/entities-table-config.mod
 export class AgentTemplateComponent extends EntityComponent<AgentAppTemplate> {
 
   entityType = EntityType;
-  agentApplicationTypeTranslationMap = agentApplicationTypeTranslationMap;
 
   constructor(protected store: Store<AppState>,
               protected translate: TranslateService,
