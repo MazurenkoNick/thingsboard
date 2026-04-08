@@ -21,7 +21,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.agent.AgentAppUnit;
+import org.thingsboard.server.common.data.agent.AgentAppUnitFilter;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.agent.AgentAppUnitDao;
 import org.thingsboard.server.dao.model.sql.AgentAppUnitEntity;
@@ -29,6 +32,7 @@ import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Component
@@ -54,9 +58,29 @@ public class JpaAgentAppUnitDao extends JpaAbstractDao<AgentAppUnitEntity, Agent
         return EntityType.AGENT_APP_UNIT;
     }
 
+    private static final Map<String, String> UNIT_COLUMN_MAP = Map.of(
+            "createdTime", "created_time",
+            "identifier", "identifier",
+            "type", "type"
+    );
+
     @Override
     public List<AgentAppUnit> findByAgentApplicationId(TenantId tenantId, UUID agentApplicationId) {
         return DaoUtil.convertDataList(agentAppUnitRepository.findByAgentApplicationId(agentApplicationId));
+    }
+
+    @Override
+    public PageData<AgentAppUnit> findByFilter(AgentAppUnitFilter filter, PageLink pageLink) {
+        String ts = pageLink.getTextSearch();
+        String textSearch = (ts == null || ts.isBlank()) ? null : ts.trim();
+        return DaoUtil.pageToPageData(
+                agentAppUnitRepository.findByFilter(
+                                filter.getApplicationId().getId(),
+                                filter.getType() != null ? filter.getType().name() : null,
+                                textSearch,
+                                DaoUtil.toPageable(pageLink, UNIT_COLUMN_MAP))
+                        .map(AgentAppUnitEntity::toData)
+        );
     }
 
     @Override

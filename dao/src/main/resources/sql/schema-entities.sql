@@ -871,6 +871,8 @@ CREATE TABLE IF NOT EXISTS agent_app_event (
     delivery_state varchar(32) NOT NULL DEFAULT 'PENDING',
     status varchar(32),
     current_step_id uuid,
+    current_activity varchar,
+    error_message varchar,
     updated_time bigint NOT NULL,
     step_states jsonb,
     bulk_action_id uuid,
@@ -883,6 +885,7 @@ CREATE INDEX IF NOT EXISTS idx_agent_app_event_bulk_action_status ON agent_app_e
 CREATE TABLE IF NOT EXISTS agent_app_unit (
     id uuid NOT NULL CONSTRAINT agent_app_unit_pkey PRIMARY KEY,
     created_time bigint NOT NULL,
+    tenant_id uuid NOT NULL,
     agent_application_id uuid NOT NULL,
     identifier varchar(255) NOT NULL,
     type varchar(255) NOT NULL,

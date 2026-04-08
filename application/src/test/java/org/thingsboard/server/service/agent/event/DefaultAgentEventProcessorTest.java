@@ -26,6 +26,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
+import org.thingsboard.server.common.data.agent.AgentAppEventStatusUpdate;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.ErrorOrigin;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
@@ -112,7 +113,8 @@ class DefaultAgentEventProcessorTest {
             processor.processNextStepOrFinish(TENANT_ID, AGENT_ID, event);
         }
 
-        verify(appEventService).updateStatus(EVENT_ID, AgentAppEventStatus.PENDING, STEP_2_ID);
+        verify(appEventService).updateStatus(EVENT_ID, AgentAppEventStatusUpdate.builder()
+                .status(AgentAppEventStatus.PENDING).currentStepId(STEP_2_ID).build());
     }
 
     @Test
@@ -129,7 +131,8 @@ class DefaultAgentEventProcessorTest {
 
         processor.processNextStepOrFinish(TENANT_ID, AGENT_ID, event);
 
-        verify(appEventService).updateStatus(EVENT_ID, AgentAppEventStatus.FINISHED, STEP_1_ID);
+        verify(appEventService).updateStatus(EVENT_ID, AgentAppEventStatusUpdate.builder()
+                .status(AgentAppEventStatus.FINISHED).currentStepId(STEP_1_ID).build());
         verify(eventWatchdog).cancel(AGENT_ID, EVENT_ID);
     }
 
@@ -145,7 +148,8 @@ class DefaultAgentEventProcessorTest {
 
         processor.processNextStepOrFinish(TENANT_ID, AGENT_ID, event);
 
-        verify(appEventService).updateStatus(EVENT_ID, AgentAppEventStatus.FINISHED, STEP_1_ID);
+        verify(appEventService).updateStatus(EVENT_ID, AgentAppEventStatusUpdate.builder()
+                .status(AgentAppEventStatus.FINISHED).currentStepId(STEP_1_ID).build());
         verify(appService).delete(TENANT_ID, APP_ID);
     }
 
@@ -157,7 +161,8 @@ class DefaultAgentEventProcessorTest {
 
         processor.processNextStepOrFinish(TENANT_ID, AGENT_ID, event);
 
-        verify(appEventService).updateStatus(EVENT_ID, AgentAppEventStatus.ERROR, STEP_1_ID);
+        verify(appEventService).updateStatus(EVENT_ID, AgentAppEventStatusUpdate.builder()
+                .status(AgentAppEventStatus.ERROR).currentStepId(STEP_1_ID).build());
     }
 
     @Test
@@ -167,7 +172,7 @@ class DefaultAgentEventProcessorTest {
 
         processor.processNextStepOrFinish(TENANT_ID, AGENT_ID, event);
 
-        verify(eventErrorHandler).onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER);
+        verify(eventErrorHandler).onFailure(eq(TENANT_ID), eq(AGENT_ID), eq(EVENT_ID), eq(ErrorOrigin.SERVER), any());
     }
 
     // ==================== processNextEventForApp (dispatch) ====================
@@ -226,7 +231,8 @@ class DefaultAgentEventProcessorTest {
             processor.processNextEventForApp(TENANT_ID, AGENT_ID, app);
         }
 
-        verify(appEventService).updateStatus(EVENT_ID, AgentAppEventStatus.PENDING, STEP_1_ID);
+        verify(appEventService).updateStatus(EVENT_ID, AgentAppEventStatusUpdate.builder()
+                .status(AgentAppEventStatus.PENDING).currentStepId(STEP_1_ID).build());
     }
 
     @Test
@@ -241,7 +247,7 @@ class DefaultAgentEventProcessorTest {
 
         processor.processNextEventForApp(TENANT_ID, AGENT_ID, app);
 
-        verify(eventErrorHandler).onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER);
+        verify(eventErrorHandler).onFailure(eq(TENANT_ID), eq(AGENT_ID), eq(EVENT_ID), eq(ErrorOrigin.SERVER), any());
     }
 
     // ==================== resumeEventsOnReconnect ====================
@@ -266,7 +272,8 @@ class DefaultAgentEventProcessorTest {
             processor.resumeEventsOnReconnect(TENANT_ID, AGENT_ID);
         }
 
-        verify(appEventService).updateStatus(EVENT_ID, AgentAppEventStatus.PENDING, STEP_1_ID);
+        verify(appEventService).updateStatus(EVENT_ID, AgentAppEventStatusUpdate.builder()
+                .status(AgentAppEventStatus.PENDING).currentStepId(STEP_1_ID).build());
     }
 
     @Test
@@ -296,7 +303,7 @@ class DefaultAgentEventProcessorTest {
 
         processor.resumeEventsOnReconnect(TENANT_ID, AGENT_ID);
 
-        verify(eventErrorHandler).onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER);
+        verify(eventErrorHandler).onFailure(eq(TENANT_ID), eq(AGENT_ID), eq(EVENT_ID), eq(ErrorOrigin.SERVER), any());
     }
 
     @Test
@@ -344,7 +351,7 @@ class DefaultAgentEventProcessorTest {
 
         verify(appService, never()).findById(any(), any());
         verify(appEventService, never()).findOldestPendingByApplicationId(any());
-        verify(eventErrorHandler, never()).onFailure(any(), any(), any(), any());
+        verify(eventErrorHandler, never()).onFailure(any(), any(), any(), any(), any());
     }
 
     @Test

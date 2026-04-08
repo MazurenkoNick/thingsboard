@@ -226,6 +226,8 @@ export interface AgentAppEvent extends BaseData<AgentAppEventId> {
   deliveryState: AgentAppEventDeliveryState;
   status: AgentAppEventStatus;
   currentStepId?: string;
+  currentActivity?: string;
+  errorMessage?: string;
   updatedTime: number;
   stepStates?: { [stepId: string]: AgentAppStepState };
   bulkActionId?: string;
@@ -235,6 +237,10 @@ export interface AgentAppUnit extends BaseData<AgentAppUnitId> {
   agentApplicationId: AgentApplicationId;
   identifier: string;
   type: AgentAppUnitType;
+  /** Client-side enrichment: SERVER_SCOPE attribute, populated by the UI. */
+  image?: string;
+  /** Client-side enrichment: SERVER_SCOPE attribute, populated by the UI. */
+  state?: string;
 }
 
 export interface AgentAppTemplate extends BaseData<AgentAppTemplateId> {

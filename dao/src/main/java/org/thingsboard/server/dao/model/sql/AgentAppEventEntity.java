@@ -70,6 +70,12 @@ public final class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
     @Column(name = ModelConstants.AGENT_APP_EVENT_CURRENT_STEP_ID_PROPERTY)
     private UUID currentStepId;
 
+    @Column(name = ModelConstants.AGENT_APP_EVENT_CURRENT_ACTIVITY_PROPERTY)
+    private String currentActivity;
+
+    @Column(name = ModelConstants.AGENT_APP_EVENT_ERROR_MESSAGE_PROPERTY)
+    private String errorMessage;
+
     @Column(name = ModelConstants.AGENT_APP_EVENT_UPDATED_TIME_PROPERTY)
     private long updatedTime;
 
@@ -97,6 +103,8 @@ public final class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
         this.deliveryState = event.getDeliveryState();
         this.status = event.getStatus();
         this.currentStepId = event.getCurrentStepId();
+        this.currentActivity = event.getCurrentActivity();
+        this.errorMessage = event.getErrorMessage();
         this.updatedTime = event.getUpdatedTime();
         this.stepStates = JacksonUtil.convertValue(event.getStepStates(), JsonNode.class);
         this.bulkActionId = event.getBulkActionId();
@@ -116,6 +124,8 @@ public final class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
         event.setDeliveryState(deliveryState);
         event.setStatus(status);
         event.setCurrentStepId(currentStepId);
+        event.setCurrentActivity(currentActivity);
+        event.setErrorMessage(errorMessage);
         event.setUpdatedTime(updatedTime);
         event.setStepStates(stepStates != null ? JacksonUtil.convertValue(stepStates, new TypeReference<Map<UUID, AgentAppStepState>>() {}) : null);
         event.setBulkActionId(bulkActionId);

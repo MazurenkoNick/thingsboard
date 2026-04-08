@@ -75,28 +75,68 @@ public interface AgentAppEventRepository extends JpaRepository<AgentAppEventEnti
            UPDATE AgentAppEventEntity e SET
                        e.status = COALESCE(:status, e.status),
                        e.currentStepId = COALESCE(:stepId, e.currentStepId),
+                       e.currentActivity = COALESCE(:activity, e.currentActivity),
+                       e.errorMessage = COALESCE(:errorMessage, e.errorMessage),
                        e.updatedTime = :now
            WHERE e.id = :eventId
            AND (e.status IS NULL OR e.status NOT IN ('FINISHED', 'ERROR'))
            """)
     void updateStatus(@Param("eventId") UUID eventId, @Param("status") AgentAppEventStatus status,
-                      @Param("stepId") UUID currentStepId, @Param("now") long now);
+                      @Param("stepId") UUID currentStepId, @Param("activity") String currentActivity,
+                      @Param("errorMessage") String errorMessage, @Param("now") long now);
 
     @Transactional
     @Modifying
     @Query("DELETE FROM AgentAppEventEntity e WHERE e.applicationId = :appId AND e.deliveryState = 'PENDING'")
     void deleteAllPendingByApplicationId(@Param("appId") UUID applicationId);
 
-    @Query("""
-           SELECT e FROM AgentAppEventEntity e
-           WHERE e.bulkActionId = :bulkActionId
-           AND (:status IS NULL OR e.status = :status)
-           """)
+    @Query(value = """
+           SELECT * FROM agent_app_event e
+           WHERE e.bulk_action_id = :bulkActionId
+           AND (CAST(:status AS varchar) IS NULL OR e.status = CAST(:status AS varchar))
+           AND (CAST(:textSearch AS varchar) IS NULL
+                OR LOWER(e.action_type) LIKE LOWER(CONCAT('%', CAST(:textSearch AS varchar), '%'))
+                OR LOWER(e.status) LIKE LOWER(CONCAT('%', CAST(:textSearch AS varchar), '%')))
+           """,
+           countQuery = """
+           SELECT count(*) FROM agent_app_event e
+           WHERE e.bulk_action_id = :bulkActionId
+           AND (CAST(:status AS varchar) IS NULL OR e.status = CAST(:status AS varchar))
+           AND (CAST(:textSearch AS varchar) IS NULL
+                OR LOWER(e.action_type) LIKE LOWER(CONCAT('%', CAST(:textSearch AS varchar), '%'))
+                OR LOWER(e.status) LIKE LOWER(CONCAT('%', CAST(:textSearch AS varchar), '%')))
+           """,
+           nativeQuery = true)
     Page<AgentAppEventEntity> findByBulkActionId(@Param("bulkActionId") UUID bulkActionId,
-                                                 @Param("status") AgentAppEventStatus status,
+                                                 @Param("status") String status,
+                                                 @Param("textSearch") String textSearch,
                                                  Pageable pageable);
 
-    Page<AgentAppEventEntity> findByTenantIdAndApplicationId(UUID tenantId, UUID applicationId, Pageable pageable);
+    @Query(value = """
+           SELECT * FROM agent_app_event e
+           WHERE e.tenant_id = :tenantId AND e.application_id = :applicationId
+           AND (CAST(:actionType AS varchar) IS NULL OR e.action_type = CAST(:actionType AS varchar))
+           AND (CAST(:status AS varchar) IS NULL OR e.status = CAST(:status AS varchar))
+           AND (CAST(:textSearch AS varchar) IS NULL
+                OR LOWER(e.action_type) LIKE LOWER(CONCAT('%', CAST(:textSearch AS varchar), '%'))
+                OR LOWER(e.status) LIKE LOWER(CONCAT('%', CAST(:textSearch AS varchar), '%')))
+           """,
+           countQuery = """
+           SELECT count(*) FROM agent_app_event e
+           WHERE e.tenant_id = :tenantId AND e.application_id = :applicationId
+           AND (CAST(:actionType AS varchar) IS NULL OR e.action_type = CAST(:actionType AS varchar))
+           AND (CAST(:status AS varchar) IS NULL OR e.status = CAST(:status AS varchar))
+           AND (CAST(:textSearch AS varchar) IS NULL
+                OR LOWER(e.action_type) LIKE LOWER(CONCAT('%', CAST(:textSearch AS varchar), '%'))
+                OR LOWER(e.status) LIKE LOWER(CONCAT('%', CAST(:textSearch AS varchar), '%')))
+           """,
+           nativeQuery = true)
+    Page<AgentAppEventEntity> findByFilter(@Param("tenantId") UUID tenantId,
+                                           @Param("applicationId") UUID applicationId,
+                                           @Param("actionType") String actionType,
+                                           @Param("status") String status,
+                                           @Param("textSearch") String textSearch,
+                                           Pageable pageable);
 
     @Query("""
            SELECT e FROM AgentAppEventEntity e

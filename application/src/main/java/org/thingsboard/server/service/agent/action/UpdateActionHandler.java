@@ -35,6 +35,18 @@ public class UpdateActionHandler implements AgentAppActionHandler {
 
     @Override
     public void handle(AgentApplication application, AgentAppEventRequest request, AgentAppActionContext ctx) {
-        profileConfigResolver.resolve(ctx.getTenantId(), application, application.getRelatedEntityId());
+        if (application.getApplicationProfileId() != null) {
+            profileConfigResolver.resolve(ctx.getTenantId(), application, application.getRelatedEntityId());
+            return;
+        }
+        AgentApplication incoming = request.getApplication();
+        if (incoming != null) {
+            if (incoming.getName() != null && !incoming.getName().isBlank()) {
+                application.setName(incoming.getName());
+            }
+            if (incoming.getConfig() != null) {
+                application.setConfig(incoming.getConfig());
+            }
+        }
     }
 }

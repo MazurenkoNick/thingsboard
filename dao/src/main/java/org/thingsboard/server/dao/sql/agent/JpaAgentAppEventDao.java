@@ -21,8 +21,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppEventFilter;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
-import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.agent.AgentAppEventStatusUpdate;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
@@ -33,6 +34,7 @@ import org.thingsboard.server.dao.model.sql.AgentAppEventEntity;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -43,6 +45,13 @@ public class JpaAgentAppEventDao extends JpaAbstractDao<AgentAppEventEntity, Age
 
     @Autowired
     private AgentAppEventRepository repository;
+
+    private static final Map<String, String> EVENT_COLUMN_MAP = Map.of(
+            "createdTime", "created_time",
+            "updatedTime", "updated_time",
+            "actionType", "action_type",
+            "status", "status"
+    );
 
     @Override
     protected Class<AgentAppEventEntity> getEntityClass() {
@@ -85,8 +94,9 @@ public class JpaAgentAppEventDao extends JpaAbstractDao<AgentAppEventEntity, Age
     }
 
     @Override
-    public void updateStatus(UUID eventId, AgentAppEventStatus status, UUID currentStepId) {
-        repository.updateStatus(eventId, status, currentStepId, System.currentTimeMillis());
+    public void updateStatus(UUID eventId, AgentAppEventStatusUpdate update) {
+        repository.updateStatus(eventId, update.getStatus(), update.getCurrentStepId(),
+                update.getCurrentActivity(), update.getErrorMessage(), System.currentTimeMillis());
     }
 
     @Override
@@ -97,20 +107,32 @@ public class JpaAgentAppEventDao extends JpaAbstractDao<AgentAppEventEntity, Age
     @Override
     public PageData<AgentAppEvent> findByBulkActionId(UUID bulkActionId, AgentAppEventStatus status, PageLink pageLink) {
         return DaoUtil.pageToPageData(
-                repository.findByBulkActionId(bulkActionId, status, DaoUtil.toPageable(pageLink))
+                repository.findByBulkActionId(
+                                bulkActionId,
+                                status != null ? status.name() : null,
+                                normalizeTextSearch(pageLink),
+                                DaoUtil.toPageable(pageLink, EVENT_COLUMN_MAP))
                         .map(AgentAppEventEntity::toData)
         );
     }
 
     @Override
-    public PageData<AgentAppEvent> findByTenantIdAndApplicationId(TenantId tenantId, AgentApplicationId applicationId, PageLink pageLink) {
+    public PageData<AgentAppEvent> findByFilter(AgentAppEventFilter filter, PageLink pageLink) {
         return DaoUtil.pageToPageData(
-                repository.findByTenantIdAndApplicationId(
-                                tenantId.getId(),
-                                applicationId.getId(),
-                                DaoUtil.toPageable(pageLink))
+                repository.findByFilter(
+                                filter.getTenantId().getId(),
+                                filter.getApplicationId().getId(),
+                                filter.getActionType() != null ? filter.getActionType().name() : null,
+                                filter.getStatus() != null ? filter.getStatus().name() : null,
+                                normalizeTextSearch(pageLink),
+                                DaoUtil.toPageable(pageLink, EVENT_COLUMN_MAP))
                         .map(AgentAppEventEntity::toData)
         );
+    }
+
+    private static String normalizeTextSearch(PageLink pageLink) {
+        String ts = pageLink.getTextSearch();
+        return (ts == null || ts.isBlank()) ? null : ts.trim();
     }
 
     @Override

@@ -27,6 +27,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
+import org.thingsboard.server.common.data.agent.AgentAppEventStatusUpdate;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.ErrorOrigin;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
@@ -90,9 +91,10 @@ class AgentEventErrorHandlerTest {
         when(appEventService.findById(TENANT_ID, EVENT_ID)).thenReturn(newEvent(AgentAppEventActionType.INSTALL));
         when(appService.findByEventId(TENANT_ID, EVENT_ID)).thenReturn(newApplication());
 
-        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER);
+        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER, null);
 
-        verify(appEventService).updateStatus(EVENT_ID, AgentAppEventStatus.ERROR, null);
+        verify(appEventService).updateStatus(EVENT_ID, AgentAppEventStatusUpdate.builder()
+                .status(AgentAppEventStatus.ERROR).build());
         verify(eventWatchdog).cancel(AGENT_ID, EVENT_ID);
     }
 
@@ -104,7 +106,7 @@ class AgentEventErrorHandlerTest {
         AgentApplication app = newApplication();
         when(appService.findByEventId(TENANT_ID, EVENT_ID)).thenReturn(app);
 
-        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER);
+        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER, null);
 
         verify(agentEventProcessor).processNextEventForApp(TENANT_ID, AGENT_ID, app);
     }
@@ -115,7 +117,7 @@ class AgentEventErrorHandlerTest {
         AgentApplication app = newApplication();
         when(appService.findByEventId(TENANT_ID, EVENT_ID)).thenReturn(app);
 
-        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.AGENT);
+        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.AGENT, null);
 
         verify(agentEventProcessor).processNextEventForApp(TENANT_ID, AGENT_ID, app);
     }
@@ -126,7 +128,7 @@ class AgentEventErrorHandlerTest {
         AgentApplication app = newApplication();
         when(appService.findByEventId(TENANT_ID, EVENT_ID)).thenReturn(app);
 
-        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.AGENT);
+        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.AGENT, null);
 
         verify(agentEventProcessor).processNextEventForApp(TENANT_ID, AGENT_ID, app);
     }
@@ -137,7 +139,7 @@ class AgentEventErrorHandlerTest {
         AgentApplication app = newApplication();
         when(appService.findByEventId(TENANT_ID, EVENT_ID)).thenReturn(app);
 
-        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER);
+        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER, null);
 
         verify(agentEventProcessor).processNextEventForApp(TENANT_ID, AGENT_ID, app);
     }
@@ -147,7 +149,7 @@ class AgentEventErrorHandlerTest {
         when(appEventService.findById(TENANT_ID, EVENT_ID)).thenReturn(newEvent(AgentAppEventActionType.INSTALL));
         when(appService.findByEventId(TENANT_ID, EVENT_ID)).thenReturn(null);
 
-        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER);
+        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER, null);
 
         verify(agentEventProcessor, never()).processNextEventForApp(any(), any(), any());
     }
@@ -162,7 +164,7 @@ class AgentEventErrorHandlerTest {
         when(appService.findById(TENANT_ID, APP_ID)).thenReturn(app);
         when(appService.findByEventId(TENANT_ID, EVENT_ID)).thenReturn(app);
 
-        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.AGENT);
+        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.AGENT, null);
 
         assertThat(app.isPendingDeletion()).isFalse();
         verify(appService).save(TENANT_ID, app);
@@ -175,7 +177,7 @@ class AgentEventErrorHandlerTest {
         when(appService.findById(TENANT_ID, APP_ID)).thenReturn(app);
         when(appService.findByEventId(TENANT_ID, EVENT_ID)).thenReturn(app);
 
-        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER);
+        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER, null);
 
         verify(agentEventProcessor).processNextEventForApp(TENANT_ID, AGENT_ID, app);
     }
@@ -187,7 +189,7 @@ class AgentEventErrorHandlerTest {
         when(appService.findById(TENANT_ID, APP_ID)).thenReturn(app);
         when(appService.findByEventId(TENANT_ID, EVENT_ID)).thenReturn(app);
 
-        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER);
+        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER, null);
 
         verify(appEventService, never()).save(any(), any());
     }
@@ -201,7 +203,7 @@ class AgentEventErrorHandlerTest {
         when(appService.findById(TENANT_ID, APP_ID)).thenReturn(app);
         when(stepsResolver.resolveSteps(app, AgentAppEventActionType.ROLLBACK)).thenReturn(List.of(newRollbackStep()));
 
-        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER);
+        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER, null);
 
         ArgumentCaptor<AgentAppEvent> captor = ArgumentCaptor.forClass(AgentAppEvent.class);
         verify(appEventService).save(eq(TENANT_ID), captor.capture());
@@ -223,7 +225,7 @@ class AgentEventErrorHandlerTest {
         when(appService.findById(TENANT_ID, APP_ID)).thenReturn(app);
         when(stepsResolver.resolveSteps(app, AgentAppEventActionType.ROLLBACK)).thenReturn(List.of(newRollbackStep()));
 
-        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER);
+        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER, null);
 
         verify(agentEventProcessor, never()).processNextEventForApp(any(), any(), any());
     }
@@ -236,7 +238,7 @@ class AgentEventErrorHandlerTest {
         AgentApplication app = newApplication();
         when(appService.findByEventId(TENANT_ID, EVENT_ID)).thenReturn(app);
 
-        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.AGENT);
+        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.AGENT, null);
 
         verify(appEventService, never()).save(any(), any());
         verify(agentEventProcessor).processNextEventForApp(TENANT_ID, AGENT_ID, app);
@@ -250,7 +252,7 @@ class AgentEventErrorHandlerTest {
         AgentApplication app = newApplication();
         when(appService.findByEventId(TENANT_ID, EVENT_ID)).thenReturn(app);
 
-        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER);
+        errorHandler.onFailure(TENANT_ID, AGENT_ID, EVENT_ID, ErrorOrigin.SERVER, null);
 
         verify(appEventService, never()).save(any(), any());
         verify(agentEventProcessor).processNextEventForApp(TENANT_ID, AGENT_ID, app);

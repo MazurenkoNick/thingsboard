@@ -15,23 +15,23 @@
     limitations under the License.
 
 -->
-<div mat-dialog-title class="tb-install-wizard-header">
-  <div class="title-block">
-    <h2 translate>agent.app-install-title</h2>
-    <div class="step-info" *ngIf="agent">
-      {{ 'agent.app-install-on-agent' | translate: { name: agent.name } }}
-    </div>
+<mat-toolbar color="primary" class="tb-install-wizard-toolbar">
+  <div class="tb-install-wizard-toolbar-content">
+    <h2>{{ titleKey | translate }}<ng-container *ngIf="(mode === 'update' ? existingApplication : agent)">:</ng-container></h2>
+    <span class="flex-1" *ngIf="(mode === 'update' ? existingApplication : agent)">
+      {{ subtitleKey | translate: subtitleParams }}
+    </span>
   </div>
-  <button mat-icon-button (click)="cancel()" tabindex="-1">
+  <button mat-icon-button (click)="cancel()" type="button" tabindex="-1">
     <mat-icon>close</mat-icon>
   </button>
-</div>
+</mat-toolbar>
 
 <div mat-dialog-content class="tb-install-wizard-body">
 
-  <mat-stepper linear="false" #stepper>
+  <mat-stepper linear #stepper>
 
-    <mat-step [label]="'agent.app-install-step1' | translate">
+    <mat-step [label]="'agent.app-install-step1' | translate" *ngIf="mode === 'install'" [completed]="canProceedFromType()">
       <p class="hint" translate>agent.app-install-pick-type</p>
       <div class="type-cards">
         <div class="type-card" *ngFor="let card of typeCards"
@@ -62,7 +62,7 @@
       </div>
     </mat-step>
 
-    <mat-step [label]="'agent.app-install-step3' | translate">
+    <mat-step [label]="'agent.app-install-step3' | translate" [completed]="canSubmit()">
 
       <mat-form-field class="mat-block">
         <mat-label translate>agent.app-install-name</mat-label>
@@ -78,7 +78,7 @@
       </mat-checkbox>
 
       <div class="step-footer">
-        <button mat-button matStepperPrevious [disabled]="submitting">
+        <button mat-button matStepperPrevious [disabled]="submitting" *ngIf="mode === 'install'">
           <mat-icon>chevron_left</mat-icon>
           {{ 'action.back' | translate }}
         </button>
@@ -131,7 +131,7 @@
         </button>
         <button mat-raised-button color="primary" (click)="submit()" [disabled]="!canSubmit()">
           <mat-icon>rocket_launch</mat-icon>
-          <span translate>agent.app-install-cta</span>
+          <span>{{ ctaKey | translate }}</span>
         </button>
       </div>
     </mat-step>

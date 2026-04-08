@@ -24,6 +24,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
+import org.thingsboard.server.common.data.agent.AgentAppEventStatusUpdate;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.ErrorOrigin;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
@@ -56,24 +57,29 @@ public class AgentEventErrorHandler {
     private final AgentEventProcessor agentEventProcessor;
     private final TransactionTemplate transactionTemplate;
 
-    public void onFailure(TenantId tenantId, AgentId agentId, AgentAppEventId failedEventId, ErrorOrigin errorOrigin) {
+    public void onFailure(TenantId tenantId, AgentId agentId, AgentAppEventId failedEventId, ErrorOrigin errorOrigin, String errorMsg) {
         try {
-            boolean shouldDispatchNext = doOnFailure(tenantId, agentId, failedEventId, errorOrigin);
+            boolean shouldDispatchNext = doOnFailure(tenantId, agentId, failedEventId, errorOrigin, errorMsg);
             eventWatchdog.cancel(agentId, failedEventId);
             if (shouldDispatchNext) {
                 dispatchNextIfAppExists(tenantId, agentId, failedEventId);
             }
         } catch (Exception e) {
-            appEventService.updateStatus(failedEventId, AgentAppEventStatus.ERROR, null);
+            appEventService.updateStatus(failedEventId, AgentAppEventStatusUpdate.builder()
+                    .status(AgentAppEventStatus.ERROR)
+                    .build());
             log.error("[{}][{}] Failed to process error for event {}", tenantId, agentId, failedEventId, e);
         }
     }
 
-    private boolean doOnFailure(TenantId tenantId, AgentId agentId, AgentAppEventId failedEventId, ErrorOrigin errorOrigin) {
+    private boolean doOnFailure(TenantId tenantId, AgentId agentId, AgentAppEventId failedEventId, ErrorOrigin errorOrigin, String errorMsg) {
         return Boolean.TRUE.equals(transactionTemplate.execute(status -> {
             log.trace("[{}][{}] Processing after error for event {}", tenantId, agentId, failedEventId);
 
-            appEventService.updateStatus(failedEventId, AgentAppEventStatus.ERROR, null);
+            appEventService.updateStatus(failedEventId, AgentAppEventStatusUpdate.builder()
+                    .status(AgentAppEventStatus.ERROR)
+                    .errorMessage(errorMsg)
+                    .build());
             boolean dispatchNextEvent = true;
 
             AgentAppEvent event = appEventService.findById(tenantId, failedEventId);

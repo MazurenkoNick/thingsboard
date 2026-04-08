@@ -89,6 +89,8 @@ export class EntityDetailsPageComponent extends EntityDetailsPanelComponent impl
     this.subscriptions.push(this.entityAction.subscribe((action) => {
       if (action.action === 'delete') {
         this.deleteEntity(action.event, action.entity);
+      } else if (action.action === 'reload') {
+        this.reload();
       }
     }));
     this.subscriptions.push(this.route.paramMap.subscribe( paramMap => {

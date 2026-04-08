@@ -44,6 +44,8 @@ public class AgentAppEvent extends BaseData<AgentAppEventId> implements HasId<Ag
     private AgentAppEventDeliveryState deliveryState;
     private AgentAppEventStatus status;
     private UUID currentStepId;
+    private String currentActivity;
+    private String errorMessage;
     private long updatedTime;
     private Map<UUID, AgentAppStepState> stepStates;
     private UUID bulkActionId;
@@ -64,6 +66,8 @@ public class AgentAppEvent extends BaseData<AgentAppEventId> implements HasId<Ag
         this.deliveryState = event.getDeliveryState();
         this.status = event.getStatus();
         this.currentStepId = event.getCurrentStepId();
+        this.currentActivity = event.getCurrentActivity();
+        this.errorMessage = event.getErrorMessage();
         this.updatedTime = event.getUpdatedTime();
         this.stepStates = event.getStepStates();
         this.bulkActionId = event.getBulkActionId();

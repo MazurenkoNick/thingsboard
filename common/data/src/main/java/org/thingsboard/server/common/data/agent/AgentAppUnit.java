@@ -21,16 +21,19 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.thingsboard.server.common.data.BaseData;
+import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.id.AgentAppUnitId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.HasId;
+import org.thingsboard.server.common.data.id.TenantId;
 
 @Schema
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter
-public class AgentAppUnit extends BaseData<AgentAppUnitId> implements HasId<AgentAppUnitId> {
+public class AgentAppUnit extends BaseData<AgentAppUnitId> implements HasId<AgentAppUnitId>, HasTenantId {
 
+    private TenantId tenantId;
     private AgentApplicationId agentApplicationId;
     private String identifier;
     private AgentAppUnitType type;
@@ -45,6 +48,7 @@ public class AgentAppUnit extends BaseData<AgentAppUnitId> implements HasId<Agen
 
     public AgentAppUnit(AgentAppUnit unit) {
         super(unit);
+        this.tenantId = unit.getTenantId();
         this.agentApplicationId = unit.getAgentApplicationId();
         this.identifier = unit.getIdentifier();
         this.type = unit.getType();
@@ -60,6 +64,12 @@ public class AgentAppUnit extends BaseData<AgentAppUnitId> implements HasId<Agen
     @Override
     public long getCreatedTime() {
         return super.getCreatedTime();
+    }
+
+    @Override
+    @Schema(description = "Tenant this unit belongs to", requiredMode = Schema.RequiredMode.REQUIRED)
+    public TenantId getTenantId() {
+        return tenantId;
     }
 
     @Schema(description = "Agent application this unit belongs to", requiredMode = Schema.RequiredMode.REQUIRED)

@@ -31,15 +31,43 @@
 
 :host { display: block; min-width: 720px; max-width: 880px; }
 
-.tb-install-wizard-header {
-  display: flex; align-items: flex-start; gap: 16px; margin: 0;
-  .title-block { flex: 1;
-    h2 { font-size: 20px; font-weight: 400; margin: 0 0 4px; }
-    .step-info { font-size: 13px; color: rgba(0, 0, 0, 0.54); }
+.tb-install-wizard-toolbar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 8px 0 16px;
+  min-height: 56px;
+  .tb-install-wizard-toolbar-content {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: row; align-items: center; gap: 8px;
+    h2 { font-size: 20px; font-weight: 400; margin: 0; color: inherit; }
+    span { font-size: 20px; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   }
 }
 
-.tb-install-wizard-body { padding: 8px 24px 16px; max-height: 80vh; overflow-y: auto; }
+.tb-install-wizard-body { padding: 16px 24px !important; max-height: 80vh; overflow-y: auto; }
+
+:host ::ng-deep .mat-horizontal-stepper-wrapper {
+  margin-top: 0;
+}
+:host ::ng-deep .mat-horizontal-stepper-header-container {
+  margin-top: 0;
+  height: 56px;
+}
+:host ::ng-deep .mat-horizontal-stepper-header {
+  height: 56px;
+  padding: 0 12px;
+}
+:host ::ng-deep .mat-horizontal-content-container {
+  padding: 0 0 12px;
+}
+:host ::ng-deep .mat-step-header {
+  // Kill the hover/focus background — navigation works, but no visual fill.
+  &:hover,
+  &.cdk-program-focused,
+  &.cdk-mouse-focused,
+  &.cdk-focused {
+    background-color: transparent !important;
+  }
+}
 
 .hint { font-size: 13px; color: rgba(0, 0, 0, 0.54); margin: 0 0 16px; }
 

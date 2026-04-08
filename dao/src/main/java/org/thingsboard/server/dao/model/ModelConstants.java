@@ -293,6 +293,8 @@ public class ModelConstants {
     public static final String AGENT_APP_EVENT_DELIVERY_STATE_PROPERTY = "delivery_state";
     public static final String AGENT_APP_EVENT_STATUS_PROPERTY = "status";
     public static final String AGENT_APP_EVENT_CURRENT_STEP_ID_PROPERTY = "current_step_id";
+    public static final String AGENT_APP_EVENT_CURRENT_ACTIVITY_PROPERTY = "current_activity";
+    public static final String AGENT_APP_EVENT_ERROR_MESSAGE_PROPERTY = "error_message";
     public static final String AGENT_APP_EVENT_UPDATED_TIME_PROPERTY = "updated_time";
     public static final String AGENT_APP_EVENT_STEP_STATES_PROPERTY = "step_states";
     public static final String AGENT_APP_EVENT_BULK_ACTION_ID_PROPERTY = "bulk_action_id";
@@ -317,6 +319,7 @@ public class ModelConstants {
      * Agent app unit constants.
      */
     public static final String AGENT_APP_UNIT_TABLE_NAME = "agent_app_unit";
+    public static final String AGENT_APP_UNIT_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
     public static final String AGENT_APP_UNIT_AGENT_APPLICATION_ID_PROPERTY = "agent_application_id";
     public static final String AGENT_APP_UNIT_IDENTIFIER_PROPERTY = "identifier";
     public static final String AGENT_APP_UNIT_TYPE_PROPERTY = "type";

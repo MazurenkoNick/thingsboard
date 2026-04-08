@@ -1,0 +1,102 @@
+<!--
+
+    Copyright © 2016-2026 The Thingsboard Authors
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<mat-toolbar color="primary" class="tb-progress-toolbar">
+  <div class="tb-progress-toolbar-content">
+    <h2>{{ 'agent.app-event-progress-title' | translate }}</h2>
+    <span class="flex-1">{{ application?.name }}</span>
+  </div>
+  <button mat-icon-button (click)="cancel()" type="button" tabindex="-1">
+    <mat-icon>close</mat-icon>
+  </button>
+</mat-toolbar>
+
+<div mat-dialog-content class="tb-progress-body">
+  <div *ngIf="loading" class="tb-progress-loading">
+    <mat-spinner diameter="20"></mat-spinner>
+    <span translate>agent.app-event-progress-loading</span>
+  </div>
+
+  <div *ngIf="!loading && loadError" class="tb-progress-error">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ loadError }}</span>
+  </div>
+
+  <ng-container *ngIf="!loading && !loadError">
+    <!-- Event summary -->
+    <div class="tb-progress-summary">
+      <div class="info-col">
+        <div class="info-label" translate>agent.app-name</div>
+        <div class="info-value">{{ application?.name }}</div>
+      </div>
+      <div class="info-col">
+        <div class="info-label" translate>agent.app-event-action</div>
+        <div class="info-value">{{ actionKey | translate }}</div>
+      </div>
+      <div class="info-col">
+        <div class="info-label" translate>agent.app-event-status</div>
+        <div class="info-value">
+          <span class="tb-status-badge" [ngClass]="statusBadgeClass">{{ statusKey | translate }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Current activity banner -->
+    <div *ngIf="event?.currentActivity && !isTerminal" class="tb-progress-current">
+      <div class="progress-spinner"></div>
+      <div class="progress-body">
+        <div class="progress-label" translate>agent.app-event-current-activity</div>
+        <div class="progress-text">{{ event.currentActivity }}</div>
+      </div>
+    </div>
+
+    <!-- Step list -->
+    <ul class="tb-step-progress">
+      <li *ngFor="let s of steps" class="tb-step-item" [ngClass]="s.state">
+        <div class="step-icon">
+          <mat-icon *ngIf="s.state === 'completed'" class="step-check">check</mat-icon>
+          <span *ngIf="s.state === 'processing'" class="step-spinner"></span>
+          <mat-icon *ngIf="s.state === 'error'">close</mat-icon>
+          <span *ngIf="s.state === 'pending'" class="step-num">{{ s.index }}</span>
+        </div>
+        <div class="step-content">
+          <div class="step-title">
+            {{ s.step.title }}
+            <span class="step-type-label">{{ s.step.type }}</span>
+          </div>
+          <div class="step-meta">
+            <ng-container [ngSwitch]="s.state">
+              <span *ngSwitchCase="'completed'" translate>agent.app-event-step-completed</span>
+              <span *ngSwitchCase="'processing'" translate>agent.app-event-step-processing</span>
+              <span *ngSwitchCase="'error'" translate>agent.app-event-step-error</span>
+              <span *ngSwitchDefault translate>agent.app-event-step-waiting</span>
+            </ng-container>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </ng-container>
+</div>
+
+<div mat-dialog-actions class="tb-progress-actions">
+  <button *ngIf="canCancel" mat-button color="warn" (click)="cancelEvent($event)">
+    <mat-icon>cancel</mat-icon>
+    {{ 'agent.app-event-cancel' | translate }}
+  </button>
+  <span class="flex-1"></span>
+  <button mat-button (click)="cancel()">{{ 'action.close' | translate }}</button>
+</div>

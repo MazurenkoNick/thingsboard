@@ -23,9 +23,12 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import org.thingsboard.server.cache.agent.AgentAppUnitCacheEvictEvent;
 import org.thingsboard.server.cache.agent.AgentAppUnitCacheKey;
 import org.thingsboard.server.common.data.agent.AgentAppUnit;
+import org.thingsboard.server.common.data.agent.AgentAppUnitFilter;
 import org.thingsboard.server.common.data.id.AgentAppUnitId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.entity.AbstractCachedEntityService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
@@ -60,6 +63,7 @@ public class BaseAgentAppUnitService extends AbstractCachedEntityService<AgentAp
     @Transactional
     public AgentAppUnit saveAgentAppUnit(TenantId tenantId, AgentAppUnit agentAppUnit) {
         log.trace("Executing saveAgentAppUnit [{}]", agentAppUnit);
+        agentAppUnit.setTenantId(tenantId);
         AgentAppUnit old = agentAppUnitValidator.validate(agentAppUnit, unit -> tenantId);
         AgentAppUnit saved = agentAppUnitDao.save(tenantId, agentAppUnit);
         publishEvictEvent(new AgentAppUnitCacheEvictEvent(saved.getId()));
@@ -79,6 +83,14 @@ public class BaseAgentAppUnitService extends AbstractCachedEntityService<AgentAp
         validateId(agentAppUnitId, id -> INCORRECT_AGENT_APP_UNIT_ID + id);
         return cache.getAndPutInTransaction(AgentAppUnitCacheKey.from(agentAppUnitId),
                 () -> agentAppUnitDao.findById(tenantId, agentAppUnitId.getId()), true);
+    }
+
+    @Override
+    public PageData<AgentAppUnit> findByFilter(AgentAppUnitFilter filter, PageLink pageLink) {
+        log.trace("Executing findByFilter [{}]", filter);
+        validateId(filter.getTenantId(), id -> INCORRECT_TENANT_ID + id);
+        validateId(filter.getApplicationId(), id -> INCORRECT_AGENT_APPLICATION_ID + id);
+        return agentAppUnitDao.findByFilter(filter, pageLink);
     }
 
     @Override

@@ -15,6 +15,8 @@
  */
 package org.thingsboard.server.dao.sql.agent;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -28,6 +30,26 @@ import java.util.UUID;
 public interface AgentAppUnitRepository extends JpaRepository<AgentAppUnitEntity, UUID> {
 
     List<AgentAppUnitEntity> findByAgentApplicationId(UUID agentApplicationId);
+
+    @Query(value = """
+           SELECT * FROM agent_app_unit u
+           WHERE u.agent_application_id = :applicationId
+           AND (CAST(:type AS varchar) IS NULL OR u.type = CAST(:type AS varchar))
+           AND (CAST(:textSearch AS varchar) IS NULL
+                OR LOWER(u.identifier) LIKE LOWER(CONCAT('%', CAST(:textSearch AS varchar), '%')))
+           """,
+           countQuery = """
+           SELECT count(*) FROM agent_app_unit u
+           WHERE u.agent_application_id = :applicationId
+           AND (CAST(:type AS varchar) IS NULL OR u.type = CAST(:type AS varchar))
+           AND (CAST(:textSearch AS varchar) IS NULL
+                OR LOWER(u.identifier) LIKE LOWER(CONCAT('%', CAST(:textSearch AS varchar), '%')))
+           """,
+           nativeQuery = true)
+    Page<AgentAppUnitEntity> findByFilter(@Param("applicationId") UUID applicationId,
+                                          @Param("type") String type,
+                                          @Param("textSearch") String textSearch,
+                                          Pageable pageable);
 
     @Transactional
     @Modifying

@@ -22,6 +22,43 @@
           [class.!hidden]="isEdit || isDetailsPage">
     {{'common.open-details-page' | translate }}
   </button>
+  <button mat-raised-button color="primary"
+          [disabled]="(isLoading$ | async)"
+          (click)="onUpdate($event)"
+          [class.!hidden]="isEdit">
+    <mat-icon>sync_alt</mat-icon>
+    <span translate>agent.app-update</span>
+  </button>
+  <button mat-raised-button color="primary"
+          [disabled]="(isLoading$ | async)"
+          (click)="onRestart($event)"
+          [class.!hidden]="isEdit">
+    <mat-icon>restart_alt</mat-icon>
+    <span translate>agent.app-restart</span>
+  </button>
+  <button mat-raised-button color="primary"
+          [disabled]="(isLoading$ | async) || !entity?.nextVersion"
+          (click)="onUpgrade($event)"
+          [class.!hidden]="isEdit">
+    <mat-icon>arrow_upward</mat-icon>
+    <span translate>agent.app-upgrade</span>
+  </button>
+  <button mat-raised-button color="warn"
+          [disabled]="(isLoading$ | async)"
+          (click)="onDelete($event)"
+          [class.!hidden]="isEdit">
+    <mat-icon>delete</mat-icon>
+    <span translate>agent.app-delete</span>
+  </button>
+  <button mat-raised-button
+          ngxClipboard
+          (cbOnSuccess)="onAppIdCopied()"
+          [cbContent]="entity?.id?.id"
+          [disabled]="(isLoading$ | async)"
+          [class.!hidden]="isEdit">
+    <mat-icon svgIcon="mdi:clipboard-arrow-left"></mat-icon>
+    <span translate>agent.app-copy-id</span>
+  </button>
 </div>
 <div class="mat-padding flex flex-col">
   <form [formGroup]="entityForm">
@@ -37,12 +74,25 @@
 
     <mat-form-field class="mat-block">
       <mat-label translate>agent.app-type</mat-label>
-      <input matInput formControlName="appType">
+      <mat-select [value]="entity?.appType" [disabled]="true">
+        <mat-option *ngFor="let type of agentApplicationTypes" [value]="type">
+          {{ agentApplicationTypeTranslationMap.get(type) | translate }}
+        </mat-option>
+      </mat-select>
     </mat-form-field>
 
     <mat-form-field class="mat-block">
       <mat-label translate>agent.app-template</mat-label>
-      <input matInput formControlName="currentVersion">
+      <input matInput [value]="templateVersion" disabled>
+      <mat-hint *ngIf="entity?.nextVersion" class="tb-app-upgrade-hint">
+        <mat-icon>info</mat-icon>
+        {{ 'agent.app-upgrade-available' | translate:{ version: entity.nextVersion } }}
+      </mat-hint>
+    </mat-form-field>
+
+    <mat-form-field class="mat-block" *ngIf="entity?.origin">
+      <mat-label translate>agent.app-origin</mat-label>
+      <input matInput [value]="entity.origin" disabled>
     </mat-form-field>
 
     <fieldset [disabled]="(isLoading$ | async) || !isEdit">

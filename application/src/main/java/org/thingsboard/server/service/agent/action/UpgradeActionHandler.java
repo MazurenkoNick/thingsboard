@@ -36,11 +36,14 @@ public class UpgradeActionHandler implements AgentAppActionHandler {
 
     @Override
     public void handle(AgentApplication application, AgentAppEventRequest request, AgentAppActionContext ctx) {
-        profileConfigResolver.resolve(ctx.getTenantId(), application, application.getRelatedEntityId());
-
         AgentApplication upgradedApp = request.getApplication();
         if (upgradedApp == null) {
             throw new DataValidationException("Upgrade request must include an application");
+        }
+        if (application.getApplicationProfileId() != null) {
+            profileConfigResolver.resolve(ctx.getTenantId(), application, application.getRelatedEntityId());
+        } else if (upgradedApp.getConfig() != null) {
+            application.setConfig(upgradedApp.getConfig());
         }
         application.setDesiredTemplateId(upgradedApp.getTemplateId());
     }

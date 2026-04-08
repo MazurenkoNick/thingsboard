@@ -1,0 +1,47 @@
+<!--
+
+    Copyright © 2016-2026 The Thingsboard Authors
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<form class="mat-content mat-padding flex flex-col tb-agent-app-filter-panel" (ngSubmit)="apply()">
+  <div class="tb-form-panel no-padding no-border">
+    <div class="tb-form-row column-xs">
+      <div class="fixed-title-width" translate>agent.app-event-action</div>
+      <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
+        <mat-select [(ngModel)]="draft.actionType" [ngModelOptions]="{ standalone: true }"
+                    placeholder="{{ 'common.all' | translate }}">
+          <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
+          <mat-option *ngFor="let action of actionOptions" [value]="action">{{ action }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div class="tb-form-row column-xs">
+      <div class="fixed-title-width" translate>agent.app-event-status</div>
+      <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
+        <mat-select [(ngModel)]="draft.status" [ngModelOptions]="{ standalone: true }"
+                    placeholder="{{ 'common.all' | translate }}">
+          <mat-option [value]="null">{{ 'common.all' | translate }}</mat-option>
+          <mat-option *ngFor="let status of statusOptions" [value]="status">{{ status }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
+  <div class="tb-panel-actions flex flex-row items-center justify-end">
+    <button type="button" mat-button color="primary" (click)="reset()">{{ 'action.reset' | translate }}</button>
+    <span class="flex-1"></span>
+    <button type="button" mat-button (click)="cancel()">{{ 'action.cancel' | translate }}</button>
+    <button type="submit" mat-raised-button color="primary">{{ 'action.update' | translate }}</button>
+  </div>
+</form>

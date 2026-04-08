@@ -15,7 +15,7 @@
 ///
 
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { SharedModule } from '@shared/shared.module';
 import { HomeDialogsModule } from '@home/dialogs/home-dialogs.module';
 import { HomeComponentsModule } from '@home/components/home-components.module';
@@ -33,6 +33,9 @@ import {
   AgentAppDeleteDialogComponent
 } from '@home/pages/agent/dialog/agent-app-delete-dialog.component';
 import {
+  AgentAppEventProgressDialogComponent
+} from '@home/pages/agent/dialog/agent-app-event-progress-dialog.component';
+import {
   AgentAppUpgradeWizardComponent
 } from '@home/pages/agent/wizard/agent-app-upgrade-wizard.component';
 import {
@@ -40,6 +43,18 @@ import {
 } from '@home/pages/agent/wizard/agent-app-install-wizard.component';
 import { AgentApplicationComponent } from '@home/pages/agent/agent-application.component';
 import { AgentApplicationTabsComponent } from '@home/pages/agent/agent-application-tabs.component';
+import {
+  AgentAppEventTableComponent
+} from '@home/pages/agent/table/agent-app-event-table.component';
+import {
+  AgentAppEventFilterPanelComponent
+} from '@home/pages/agent/table/agent-app-event-filter-panel.component';
+import {
+  AgentAppUnitTableComponent
+} from '@home/pages/agent/table/agent-app-unit-table.component';
+import {
+  AgentAppUnitFilterPanelComponent
+} from '@home/pages/agent/table/agent-app-unit-filter-panel.component';
 
 @NgModule({
   declarations: [
@@ -51,10 +66,15 @@ import { AgentApplicationTabsComponent } from '@home/pages/agent/agent-applicati
     AgentAppProfileTabsComponent,
     AgentInstallInstructionsDialogComponent,
     AgentAppDeleteDialogComponent,
+    AgentAppEventProgressDialogComponent,
     AgentAppUpgradeWizardComponent,
     AgentAppInstallWizardComponent,
     AgentApplicationComponent,
     AgentApplicationTabsComponent,
+    AgentAppEventTableComponent,
+    AgentAppEventFilterPanelComponent,
+    AgentAppUnitTableComponent,
+    AgentAppUnitFilterPanelComponent,
   ],
   imports: [
     CommonModule,
@@ -62,6 +82,9 @@ import { AgentApplicationTabsComponent } from '@home/pages/agent/agent-applicati
     HomeDialogsModule,
     HomeComponentsModule,
     AgentRoutingModule,
+  ],
+  providers: [
+    DatePipe,
   ]
 })
 export class AgentModule { }

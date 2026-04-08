@@ -162,7 +162,10 @@ export class AgentService {
   }
 
   public getAgentApplicationInfoById(applicationId: string, config?: RequestConfig): Observable<AgentApplicationInfo> {
-    return this.http.get<AgentApplicationInfo>(`/api/agent/app/info/${applicationId}`, defaultHttpOptionsFromConfig(config));
+    // Backend exposes only GET /agent/app/{id} returning AgentApplication.
+    // AgentApplicationInfo extends AgentApplication, so a cast is safe —
+    // list-only fields (currentVersion/nextVersion) stay undefined on detail fetches.
+    return this.http.get<AgentApplicationInfo>(`/api/agent/app/${applicationId}`, defaultHttpOptionsFromConfig(config));
   }
 
   public getAgentApplicationsByAgentId(agentId: string, pageLink: PageLink, config?: RequestConfig): Observable<PageData<AgentApplicationInfo>> {
@@ -192,9 +195,17 @@ export class AgentService {
       defaultHttpOptionsFromConfig(config));
   }
 
-  public getAgentAppEvents(applicationId: string, pageLink: PageLink, config?: RequestConfig): Observable<PageData<AgentAppEvent>> {
-    return this.http.get<PageData<AgentAppEvent>>(`/api/agent/app/${applicationId}/events${pageLink.toQuery()}`,
-      defaultHttpOptionsFromConfig(config));
+  public getAgentAppEvents(applicationId: string, pageLink: PageLink,
+                           actionType?: string, status?: string,
+                           config?: RequestConfig): Observable<PageData<AgentAppEvent>> {
+    let url = `/api/agent/app/${applicationId}/events${pageLink.toQuery()}`;
+    if (actionType) {
+      url += `&actionType=${actionType}`;
+    }
+    if (status) {
+      url += `&status=${status}`;
+    }
+    return this.http.get<PageData<AgentAppEvent>>(url, defaultHttpOptionsFromConfig(config));
   }
 
   public getAgentAppEventsByAgentId(agentId: string, pageLink: PageLink, config?: RequestConfig): Observable<PageData<AgentAppEvent>> {
@@ -267,9 +278,14 @@ export class AgentService {
 
   // --- Agent App Unit (read-only) ---
 
-  public getAgentAppUnits(applicationId: string, pageLink: PageLink, config?: RequestConfig): Observable<PageData<AgentAppUnit>> {
-    return this.http.get<PageData<AgentAppUnit>>(`/api/agent/app/${applicationId}/units${pageLink.toQuery()}`,
-      defaultHttpOptionsFromConfig(config));
+  public getAgentAppUnits(applicationId: string, pageLink: PageLink,
+                          type?: string,
+                          config?: RequestConfig): Observable<PageData<AgentAppUnit>> {
+    let url = `/api/agent/app/${applicationId}/units${pageLink.toQuery()}`;
+    if (type) {
+      url += `&type=${type}`;
+    }
+    return this.http.get<PageData<AgentAppUnit>>(url, defaultHttpOptionsFromConfig(config));
   }
 
   // --- Agent Bulk Action ---

@@ -33,10 +33,13 @@ import {
   AgentApplicationOrigin
 } from '@shared/models/agent.models';
 import { AgentId } from '@shared/models/id/agent-id';
+import * as YAML from 'yaml';
 
 export interface AgentAppInstallWizardData {
   agentId: string;
   agent: AgentInfo;
+  mode?: 'install' | 'update';
+  application?: AgentApplication;
 }
 
 interface TypeCard {
@@ -57,6 +60,8 @@ export class AgentAppInstallWizardComponent
 
   agentId: string;
   agent: AgentInfo;
+  mode: 'install' | 'update' = 'install';
+  existingApplication: AgentApplication | null = null;
 
   typeCards: TypeCard[] = [
     { type: AgentApplicationType.GENERIC, icon: 'inventory_2', labelKey: 'agent.app-install-type-generic', descKey: 'agent.app-install-type-generic-desc' },
@@ -88,9 +93,35 @@ export class AgentAppInstallWizardComponent
     super(store, router, dialogRef);
     this.agentId = data.agentId;
     this.agent = data.agent;
+    this.mode = data.mode || 'install';
+    this.existingApplication = data.application || null;
   }
 
-  ngOnInit() { /* no-op; type selection drives everything */ }
+  ngOnInit() {
+    if (this.mode === 'update' && this.existingApplication) {
+      // Pre-seed from existing app and load template + merge for preview.
+      this.appName = this.existingApplication.name;
+      this.selectType(this.existingApplication.appType);
+    }
+  }
+
+  get titleKey(): string {
+    return this.mode === 'update' ? 'agent.app-update-wizard-title' : 'agent.app-install-title';
+  }
+
+  get ctaKey(): string {
+    return this.mode === 'update' ? 'agent.app-update-cta' : 'agent.app-install-cta';
+  }
+
+  get subtitleParams(): any {
+    return this.mode === 'update'
+      ? { name: this.existingApplication?.name }
+      : { name: this.agent?.name };
+  }
+
+  get subtitleKey(): string {
+    return this.mode === 'update' ? 'agent.app-update-on-app' : 'agent.app-install-on-agent';
+  }
 
   selectType(type: AgentApplicationType) {
     if (this.selectedType === type) {
@@ -101,7 +132,9 @@ export class AgentAppInstallWizardComponent
     this.composeType = null;
     this.composeYaml = '';
     this.mergedApp = null;
-    this.appName = this.defaultAppName(type);
+    if (this.mode !== 'update') {
+      this.appName = this.defaultAppName(type);
+    }
     this.loadError = '';
 
     this.loadingTemplate = true;
@@ -110,14 +143,17 @@ export class AgentAppInstallWizardComponent
         this.template = tpl;
         this.scanStartSteps(tpl);
         this.composeType = this.pickComposeType(tpl);
-        // Build a draft app and merge for preview to populate the YAML editor
-        const draft: AgentApplication = {
-          name: this.appName,
-          appType: type,
-          agentId: new AgentId(this.agentId) as any,
-          templateId: tpl.id,
-          origin: AgentApplicationOrigin.INSTALLED
-        } as any;
+        // Build a draft app and merge for preview to populate the YAML editor.
+        // In update mode use the existing application so the merge reflects current state.
+        const draft: AgentApplication = this.mode === 'update' && this.existingApplication
+          ? ({ ...this.existingApplication, templateId: tpl.id } as any)
+          : ({
+              name: this.appName,
+              appType: type,
+              agentId: new AgentId(this.agentId) as any,
+              templateId: tpl.id,
+              origin: AgentApplicationOrigin.INSTALLED
+            } as any);
         this.agentService.mergeForPreview(tpl.id.id, draft, this.composeType || undefined).subscribe({
           next: merged => {
             this.mergedApp = merged;
@@ -194,8 +230,18 @@ export class AgentAppInstallWizardComponent
 
     // Build the application body. For EDGE/GATEWAY use the merged app and
     // overlay user-edited compose; for GENERIC build a fresh body.
+    // In update mode start from the existing application so we preserve id/agentId/etc.
     let application: any;
-    if (this.selectedType === AgentApplicationType.GENERIC) {
+    if (this.mode === 'update' && this.existingApplication) {
+      application = {
+        ...this.existingApplication,
+        name: this.appName.trim(),
+        config: {
+          ...((this.existingApplication.config as any) || { type: 'DOCKER_COMPOSE' }),
+          compose: this.parseYamlBestEffort(this.composeYaml)
+        }
+      };
+    } else if (this.selectedType === AgentApplicationType.GENERIC) {
       application = {
         name: this.appName.trim(),
         appType: AgentApplicationType.GENERIC,
@@ -222,33 +268,43 @@ export class AgentAppInstallWizardComponent
       };
     }
 
-    this.agentService.installAgentApp({
-      actionType: AgentAppEventActionType.INSTALL,
-      application,
-      stepInputs
-    }).subscribe({
-      next: () => this.dialogRef.close(true),
-      error: () => {
-        this.submitting = false;
-      }
-    });
+    if (this.mode === 'update' && this.existingApplication) {
+      this.agentService.createAgentAppEvent(this.existingApplication.id.id, {
+        actionType: AgentAppEventActionType.UPDATE,
+        application,
+        stepInputs
+      }).subscribe({
+        next: () => this.dialogRef.close(true),
+        error: () => {
+          this.submitting = false;
+        }
+      });
+    } else {
+      this.agentService.installAgentApp({
+        actionType: AgentAppEventActionType.INSTALL,
+        application,
+        stepInputs
+      }).subscribe({
+        next: () => this.dialogRef.close(true),
+        error: () => {
+          this.submitting = false;
+        }
+      });
+    }
   }
 
-  /**
-   * Pass-through for the YAML editor: we keep the parsed compose object as the
-   * raw user-edited string and let the backend re-parse it. Since the edits are
-   * round-tripped from JSON to our minimal YAML dumper and back, we re-emit
-   * the merged compose unchanged when no user edits are made. For now we
-   * forward the YAML as a string under a non-standard key so the BE either
-   * accepts it or rejects with a clear error. v1 compromise.
-   */
   private parseYamlBestEffort(yaml: string): any {
-    // If we have a merged app, prefer its parsed compose (no user-edits round-trip).
+    if (yaml && yaml.trim().length > 0) {
+      try {
+        return YAML.parse(yaml);
+      } catch (e) {
+        // Fall through to merged-app fallback below.
+      }
+    }
     if (this.mergedApp && this.mergedApp.config && (this.mergedApp.config as any).compose) {
       return (this.mergedApp.config as any).compose;
     }
-    // Generic fallback: emit a minimal compose so the BE has something valid.
-    return { services: {}, _raw: yaml };
+    return { services: {} };
   }
 
   private dumpCompose(app: AgentApplication): string {

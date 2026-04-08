@@ -16,6 +16,16 @@
 
 -->
 <mat-tab *ngIf="entity"
+         label="{{ 'agent.app-units' | translate }}" #unitsTab="matTab">
+  <tb-agent-app-unit-table [application]="entity" [active]="unitsTab.isActive"></tb-agent-app-unit-table>
+</mat-tab>
+
+<mat-tab *ngIf="entity"
+         label="{{ 'agent.app-events' | translate }}" #eventsTab="matTab">
+  <tb-agent-app-event-table [application]="entity" [active]="eventsTab.isActive"></tb-agent-app-event-table>
+</mat-tab>
+
+<mat-tab *ngIf="entity"
          label="{{ 'attribute.attributes' | translate }}" #attributesTab="matTab">
   <tb-attribute-table [defaultAttributeScope]="attributeScopes.SERVER_SCOPE"
                       [active]="attributesTab.isActive"

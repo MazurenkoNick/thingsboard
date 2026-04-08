@@ -19,13 +19,16 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { AgentApplicationInfo } from '@shared/models/agent.models';
 import { EntityTabsComponent } from '@home/components/entity/entity-tabs.component';
+import { AttributeScope } from '@shared/models/telemetry/telemetry.models';
 
 @Component({
   selector: 'tb-agent-application-tabs',
   templateUrl: './agent-application-tabs.component.html',
-  styleUrls: []
+  styleUrls: ['./agent-application-tabs.component.scss']
 })
 export class AgentApplicationTabsComponent extends EntityTabsComponent<AgentApplicationInfo> {
+
+  readonly attributeScopes = AttributeScope;
 
   constructor(protected store: Store<AppState>) {
     super(store);

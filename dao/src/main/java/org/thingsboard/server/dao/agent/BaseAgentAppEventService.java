@@ -20,7 +20,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppEventFilter;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
+import org.thingsboard.server.common.data.agent.AgentAppEventStatusUpdate;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentBulkActionId;
@@ -100,9 +102,9 @@ public class BaseAgentAppEventService implements AgentAppEventService {
     }
 
     @Override
-    public void updateStatus(AgentAppEventId id, AgentAppEventStatus status, UUID currentStepId) {
-        log.trace("Executing updateStatus [{}] status [{}] stepId [{}]", id, status, currentStepId);
-        agentAppEventDao.updateStatus(id.getId(), status, currentStepId);
+    public void updateStatus(AgentAppEventId id, AgentAppEventStatusUpdate update) {
+        log.trace("Executing updateStatus [{}] update [{}]", id, update);
+        agentAppEventDao.updateStatus(id.getId(), update);
     }
 
     @Override
@@ -118,9 +120,9 @@ public class BaseAgentAppEventService implements AgentAppEventService {
     }
 
     @Override
-    public PageData<AgentAppEvent> findByApplicationId(TenantId tenantId, AgentApplicationId applicationId, PageLink pageLink) {
-        log.trace("Executing findAgentAppEventsByApplicationId [{}]", applicationId);
-        return agentAppEventDao.findByTenantIdAndApplicationId(tenantId, applicationId, pageLink);
+    public PageData<AgentAppEvent> findByFilter(AgentAppEventFilter filter, PageLink pageLink) {
+        log.trace("Executing findAgentAppEventsByFilter [{}]", filter);
+        return agentAppEventDao.findByFilter(filter, pageLink);
     }
 
     @Override

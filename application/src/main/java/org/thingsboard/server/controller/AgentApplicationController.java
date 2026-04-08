@@ -33,8 +33,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
+import org.thingsboard.server.common.data.agent.AgentAppEventFilter;
+import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentAppProfile;
+import org.thingsboard.server.common.data.agent.AgentAppUnit;
+import org.thingsboard.server.common.data.agent.AgentAppUnitFilter;
+import org.thingsboard.server.common.data.agent.AgentAppUnitType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
@@ -51,6 +56,7 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.dao.agent.AgentAppEventService;
+import org.thingsboard.server.dao.agent.AgentAppUnitService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.agent.TbAgentApplicationService;
 import org.thingsboard.server.service.security.permission.Operation;
@@ -80,6 +86,7 @@ public class AgentApplicationController extends BaseController {
 
     private final TbAgentApplicationService tbAgentApplicationService;
     private final AgentAppEventService agentAppEventService;
+    private final AgentAppUnitService agentAppUnitService;
 
     @ApiOperation(value = "Get Agent Application (getAgentApplicationById)",
             notes = "Fetch the Agent Application object based on the provided Agent Application Id."
@@ -213,6 +220,42 @@ public class AgentApplicationController extends BaseController {
         tbAgentApplicationService.cancelEvent(tenantId, agentAppEventId);
     }
 
+    @ApiOperation(value = "Get Agent Application Units (getAgentAppUnits)",
+            notes = "Returns a page of units (containers, volumes, networks) for the specified agent application. "
+                    + "Live per-unit data such as `image` and `state` lives in server-scope attributes on each unit "
+                    + "and should be fetched separately via the standard telemetry/attributes API."
+                    + PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @GetMapping(value = "/agent/app/{agentApplicationId}/units", params = {"pageSize", "page"})
+    @ResponseBody
+    public PageData<AgentAppUnit> getAgentAppUnits(
+            @Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
+            @PathVariable(AGENT_APP_ID) String strAgentAppId,
+            @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
+            @RequestParam int pageSize,
+            @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true)
+            @RequestParam int page,
+            @Parameter(description = "Case-insensitive substring match against the unit identifier")
+            @RequestParam(required = false) String textSearch,
+            @Parameter(description = "Optional unit type filter (CONTAINER, VOLUME, NETWORK)")
+            @RequestParam(required = false) AgentAppUnitType type,
+            @Parameter(description = SORT_PROPERTY_DESCRIPTION, schema = @Schema(allowableValues = {"createdTime", "identifier", "type"}))
+            @RequestParam(required = false) String sortProperty,
+            @Parameter(description = SORT_ORDER_DESCRIPTION, schema = @Schema(allowableValues = {"ASC", "DESC"}))
+            @RequestParam(required = false) String sortOrder) throws ThingsboardException {
+        checkParameter(AGENT_APP_ID, strAgentAppId);
+        AgentApplicationId agentApplicationId = new AgentApplicationId(toUUID(strAgentAppId));
+        checkAgentAppId(agentApplicationId, Operation.READ);
+        TenantId tenantId = getCurrentUser().getTenantId();
+        PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
+        AgentAppUnitFilter filter = AgentAppUnitFilter.builder()
+                .tenantId(tenantId)
+                .applicationId(agentApplicationId)
+                .type(type)
+                .build();
+        return agentAppUnitService.findByFilter(filter, pageLink);
+    }
+
     @ApiOperation(value = "Get Agent Application Events (getAgentAppEvents)",
             notes = "Returns a page of events for the specified agent application. "
                     + PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
@@ -228,6 +271,10 @@ public class AgentApplicationController extends BaseController {
             @RequestParam int page,
             @Parameter(description = "Optional String value reserved for future event filtering")
             @RequestParam(required = false) String textSearch,
+            @Parameter(description = "Optional action type filter")
+            @RequestParam(required = false) AgentAppEventActionType actionType,
+            @Parameter(description = "Optional status filter")
+            @RequestParam(required = false) AgentAppEventStatus status,
             @Parameter(description = SORT_PROPERTY_DESCRIPTION, schema = @Schema(allowableValues = {"createdTime", "updatedTime"}))
             @RequestParam(required = false) String sortProperty,
             @Parameter(description = SORT_ORDER_DESCRIPTION, schema = @Schema(allowableValues = {"ASC", "DESC"}))
@@ -237,7 +284,13 @@ public class AgentApplicationController extends BaseController {
         checkAgentAppId(agentApplicationId, Operation.READ);
         TenantId tenantId = getCurrentUser().getTenantId();
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
-        return agentAppEventService.findByApplicationId(tenantId, agentApplicationId, pageLink);
+        AgentAppEventFilter filter = AgentAppEventFilter.builder()
+                .tenantId(tenantId)
+                .applicationId(agentApplicationId)
+                .actionType(actionType)
+                .status(status)
+                .build();
+        return agentAppEventService.findByFilter(filter, pageLink);
     }
 
     @ApiOperation(value = "Merge template into application for preview (mergeForPreview)",

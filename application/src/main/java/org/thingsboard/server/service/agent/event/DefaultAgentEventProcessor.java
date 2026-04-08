@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
+import org.thingsboard.server.common.data.agent.AgentAppEventStatusUpdate;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.ErrorOrigin;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
@@ -83,7 +84,7 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         if (notification.getCancelled()) {
             AgentAppEventId eventId = new AgentAppEventId(new UUID(notification.getEventIdMSB(), notification.getEventIdLSB()));
             log.trace("[{}][{}] Processing cancel notification for event {}", tenantId, agentId, eventId);
-            eventErrorHandler.onFailure(tenantId, agentId, eventId, ErrorOrigin.SERVER);
+            eventErrorHandler.onFailure(tenantId, agentId, eventId, ErrorOrigin.SERVER, "Processing cancel notification");
             return;
         }
 
@@ -131,7 +132,10 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
             AgentApplication application = appService.findById(tenantId, event.getApplicationId());
             if (application == null) {
                 log.warn("[{}] Application not found for event {}", tenantId, event.getApplicationId());
-                appEventService.updateStatus(event.getId(), AgentAppEventStatus.ERROR, event.getCurrentStepId());
+                appEventService.updateStatus(event.getId(), AgentAppEventStatusUpdate.builder()
+                        .status(AgentAppEventStatus.ERROR)
+                        .currentStepId(event.getCurrentStepId())
+                        .build());
                 return;
             }
             List<AgentAppStep> steps = resolveSteps(application, event.getActionType());
@@ -143,13 +147,16 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         } catch (Exception e) {
             log.error("[{}][{}] Failed to process next step for event {}, marking as ERROR",
                     tenantId, agentId, event.getId(), e);
-            eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.SERVER);
+            eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.SERVER, e.getMessage());
         }
     }
 
     private void finishEvent(TenantId tenantId, AgentId agentId, AgentAppEvent event, AgentApplication application) {
         log.trace("[{}][{}] Finishing event {} with action type {}", tenantId, agentId, event.getId(), event.getActionType());
-        appEventService.updateStatus(event.getId(), AgentAppEventStatus.FINISHED, event.getCurrentStepId());
+        appEventService.updateStatus(event.getId(), AgentAppEventStatusUpdate.builder()
+                .status(AgentAppEventStatus.FINISHED)
+                .currentStepId(event.getCurrentStepId())
+                .build());
         eventWatchdog.cancel(agentId, event.getId());
         if (event.getActionType() == AgentAppEventActionType.DELETE) {
             log.trace("[{}][{}] Deleting application {} after DELETE event", tenantId, agentId, application.getId());
@@ -178,7 +185,7 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
             } catch (Exception e) {
                 log.error("[{}][{}] Failed to resume in-flight event {} for application {}, marking as ERROR",
                         tenantId, agentId, event.getId(), application.getId(), e);
-                eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.SERVER);
+                eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.SERVER, e.getMessage());
             }
         });
         return inFlightEvent.isPresent();
@@ -215,7 +222,7 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
             sendStep(event, application, firstStep, steps.size());
         } catch (Exception e) {
             log.error("[{}][{}] Failed to dispatch event {}, marking as ERROR", tenantId, agentId, event.getId(), e);
-            eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.SERVER);
+            eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.SERVER, e.getMessage());
         }
     }
 
@@ -223,13 +230,16 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         try {
             log.trace("[{}][{}] Sending step {} for event {}", application.getTenantId(), application.getAgentId(), step.getId(), event.getId());
             ServerToAgent msg = AgentMsgConstructorUtils.buildAppCommand(event, application, step, totalSteps);
-            appEventService.updateStatus(event.getId(), AgentAppEventStatus.PENDING, step.getId());
+            appEventService.updateStatus(event.getId(), AgentAppEventStatusUpdate.builder()
+                    .status(AgentAppEventStatus.PENDING)
+                    .currentStepId(step.getId())
+                    .build());
             eventWatchdog.schedule(application, event, new DefaultAgentEventResender(totalSteps, event));
             trySend(application, event, msg);
         } catch (Exception e) {
             log.error("[{}][{}] Failed to send step {} for event {}, marking as ERROR",
                     application.getTenantId(), application.getAgentId(), step.getId(), event.getId(), e);
-            eventErrorHandler.onFailure(application.getTenantId(), application.getAgentId(), event.getId(), ErrorOrigin.SERVER);
+            eventErrorHandler.onFailure(application.getTenantId(), application.getAgentId(), event.getId(), ErrorOrigin.SERVER, e.getMessage());
         }
     }
 
@@ -291,7 +301,7 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
 
         @Override
         public void onError(AgentAppEventId eventId, AgentApplication application) {
-            eventErrorHandler.onFailure(application.getTenantId(), application.getAgentId(), event.getId(), ErrorOrigin.SERVER);
+            eventErrorHandler.onFailure(application.getTenantId(), application.getAgentId(), event.getId(), ErrorOrigin.SERVER, null);
         }
     }
 }

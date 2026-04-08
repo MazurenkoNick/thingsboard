@@ -14,32 +14,94 @@
 /// limitations under the License.
 ///
 
-import { ChangeDetectorRef, Component, Inject } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, Inject, OnDestroy } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { EntityComponent } from '@home/components/entity/entity.component';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { EntityType } from '@shared/models/entity-type.models';
-import { AgentApplicationInfo } from '@shared/models/agent.models';
+import {
+  AgentApplicationInfo,
+  AgentApplicationType,
+  agentApplicationTypeTranslationMap,
+  AgentAppEventActionType
+} from '@shared/models/agent.models';
+import * as YAML from 'yaml';
 import { TranslateService } from '@ngx-translate/core';
 import { EntityTableConfig } from '@home/models/entity/entities-table-config.models';
+import { AgentService } from '@core/http/agent.service';
+import { DialogService } from '@core/services/dialog.service';
+import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
+import { ActionNotificationShow } from '@core/notification/notification.actions';
+import {
+  AgentAppDeleteDialogComponent,
+  AgentAppDeleteDialogData
+} from '@home/pages/agent/dialog/agent-app-delete-dialog.component';
+import {
+  AgentAppUpgradeWizardComponent,
+  AgentAppUpgradeWizardData
+} from '@home/pages/agent/wizard/agent-app-upgrade-wizard.component';
+import {
+  AgentAppInstallWizardComponent,
+  AgentAppInstallWizardData
+} from '@home/pages/agent/wizard/agent-app-install-wizard.component';
+import { mergeMap } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'tb-agent-application',
   templateUrl: './agent-application.component.html',
-  styleUrls: []
+  styleUrls: ['./agent-application.component.scss']
 })
-export class AgentApplicationComponent extends EntityComponent<AgentApplicationInfo> {
+export class AgentApplicationComponent extends EntityComponent<AgentApplicationInfo>
+  implements AfterViewInit, OnDestroy {
 
   entityType = EntityType;
+  private fullscreenHost: HTMLElement | null = null;
+
+  agentApplicationTypes = Object.values(AgentApplicationType);
+  agentApplicationTypeTranslationMap = agentApplicationTypeTranslationMap;
+
+  templateVersion = '';
 
   constructor(protected store: Store<AppState>,
               protected translate: TranslateService,
               @Inject('entity') protected entityValue: AgentApplicationInfo,
               @Inject('entitiesTableConfig') protected entitiesTableConfigValue: EntityTableConfig<AgentApplicationInfo>,
               public fb: UntypedFormBuilder,
-              protected cd: ChangeDetectorRef) {
+              protected cd: ChangeDetectorRef,
+              private agentService: AgentService,
+              private dialogService: DialogService,
+              private dialog: MatDialog,
+              private router: Router,
+              private hostElementRef: ElementRef<HTMLElement>) {
     super(store, fb, entityValue, entitiesTableConfigValue, cd);
+  }
+
+  ngAfterViewInit(): void {
+    // The shared entity-details-page wraps us in a .settings-card capped at
+    // 60–80% width. Mark that card so our scoped override can widen it.
+    // Defer to a microtask so the lookup runs after the tab body finishes
+    // attaching the host element to the DOM.
+    Promise.resolve().then(() => {
+      let card: HTMLElement | null =
+        this.hostElementRef.nativeElement.closest('.settings-card') as HTMLElement | null;
+      if (!card) {
+        card = document.querySelector('.settings-card');
+      }
+      if (card) {
+        this.fullscreenHost = card;
+        this.fullscreenHost.classList.add('tb-agent-app-fullscreen');
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.fullscreenHost) {
+      this.fullscreenHost.classList.remove('tb-agent-app-fullscreen');
+      this.fullscreenHost = null;
+    }
   }
 
   hideDelete() {
@@ -49,8 +111,6 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
   buildForm(entity: AgentApplicationInfo): UntypedFormGroup {
     return this.fb.group({
       name: [entity ? entity.name : '', [Validators.required, Validators.maxLength(255)]],
-      appType: this.fb.control({ value: entity?.appType || '', disabled: true }),
-      currentVersion: this.fb.control({ value: entity?.currentVersion || '', disabled: true }),
       composeYaml: [this.dumpCompose(entity)]
     });
   }
@@ -58,17 +118,31 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
   updateForm(entity: AgentApplicationInfo) {
     this.entityForm.patchValue({
       name: entity.name,
-      appType: entity.appType,
-      currentVersion: entity.currentVersion || '',
       composeYaml: this.dumpCompose(entity)
     });
+    this.templateVersion = entity?.currentVersion || '';
+    // The detail GET returns AgentApplication (no currentVersion). Resolve it
+    // from the linked template so the field renders the actual version.
+    if (!entity?.currentVersion && entity?.templateId?.id) {
+      this.agentService.getAgentAppTemplateById(entity.templateId.id).subscribe(tpl => {
+        if (tpl?.currentVersion) {
+          this.templateVersion = tpl.currentVersion;
+        }
+      });
+    }
   }
 
   prepareFormValue(formValue: any): any {
     const prepared = super.prepareFormValue(formValue);
-    // Re-attach the parsed compose to the existing app config so the BE
-    // round-trip preserves the rest of the AgentApplication body.
-    const compose = (this.entity?.config as any)?.compose;
+    let compose = (this.entity?.config as any)?.compose;
+    const yamlText: string = formValue?.composeYaml;
+    if (yamlText && yamlText.trim().length > 0) {
+      try {
+        compose = YAML.parse(yamlText);
+      } catch (e) {
+        compose = (this.entity?.config as any)?.compose;
+      }
+    }
     prepared.config = {
       ...((this.entity?.config as any) || { type: 'DOCKER_COMPOSE' }),
       compose
@@ -77,6 +151,101 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
     delete prepared.appType;
     delete prepared.currentVersion;
     return prepared;
+  }
+
+  onUpdate($event: Event) {
+    if ($event) { $event.stopPropagation(); }
+    this.agentService.getAgentApplicationById(this.entity.id.id).subscribe(full => {
+      this.dialog.open<AgentAppInstallWizardComponent, AgentAppInstallWizardData, boolean>(
+        AgentAppInstallWizardComponent, {
+          disableClose: false,
+          panelClass: ['tb-dialog'],
+          data: {
+            agentId: (full.agentId as any).id,
+            agent: null as any,
+            mode: 'update',
+            application: full
+          }
+        }
+      ).afterClosed().subscribe(confirmed => {
+        if (confirmed) {
+          this.reloadEntity();
+        }
+      });
+    });
+  }
+
+  onRestart($event: Event) {
+    if ($event) { $event.stopPropagation(); }
+    this.dialogService.confirm(
+      this.translate.instant('agent.app-restart-title', { name: this.entity.name }),
+      this.translate.instant('agent.app-restart-text'),
+      this.translate.instant('action.no'),
+      this.translate.instant('action.yes'),
+      true
+    ).subscribe(res => {
+      if (res) {
+        this.agentService.createAgentAppEvent(this.entity.id.id, {
+          actionType: AgentAppEventActionType.RESTART
+        }).subscribe(() => this.reloadEntity());
+      }
+    });
+  }
+
+  onUpgrade($event: Event) {
+    if ($event) { $event.stopPropagation(); }
+    this.agentService.getAgentApplicationById(this.entity.id.id).subscribe(full => {
+      this.dialog.open<AgentAppUpgradeWizardComponent, AgentAppUpgradeWizardData, boolean>(
+        AgentAppUpgradeWizardComponent, {
+          disableClose: false,
+          panelClass: ['tb-dialog'],
+          data: { application: full }
+        }
+      ).afterClosed().subscribe(confirmed => {
+        if (confirmed) {
+          this.reloadEntity();
+        }
+      });
+    });
+  }
+
+  onDelete($event: Event) {
+    if ($event) { $event.stopPropagation(); }
+    this.agentService.getAgentApplicationById(this.entity.id.id).pipe(
+      mergeMap(full => this.dialog.open<AgentAppDeleteDialogComponent, AgentAppDeleteDialogData, boolean>(
+        AgentAppDeleteDialogComponent, {
+          disableClose: false,
+          panelClass: ['tb-dialog'],
+          data: { application: full }
+        }
+      ).afterClosed())
+    ).subscribe(confirmed => {
+      if (confirmed) {
+        const agentId = (this.entity.agentId as any)?.id;
+        if (agentId) {
+          this.router.navigateByUrl(`/edgeManagement/agents/${agentId}/applications`);
+        }
+      }
+    });
+  }
+
+  onAppIdCopied() {
+    this.store.dispatch(new ActionNotificationShow({
+      message: this.translate.instant('agent.app-id-copied-message'),
+      type: 'success',
+      duration: 750,
+      verticalPosition: 'bottom',
+      horizontalPosition: 'left'
+    }));
+  }
+
+  private reloadEntity() {
+    // Ask the parent details page to refetch + reinject the entity. This is
+    // critical because EntityDetailsPageComponent caches `this.entity` and
+    // re-clones it on every edit-mode toggle — patching only our local copy
+    // would be silently overwritten the next time the user clicks the pencil.
+    this.entityAction.emit({ event: null, action: 'reload', entity: this.entity });
+    return of(null);
   }
 
   private dumpCompose(entity: AgentApplicationInfo): string {

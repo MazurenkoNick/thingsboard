@@ -16,7 +16,9 @@
 package org.thingsboard.server.dao.agent;
 
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppEventFilter;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
+import org.thingsboard.server.common.data.agent.AgentAppEventStatusUpdate;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentBulkActionId;
@@ -45,13 +47,13 @@ public interface AgentAppEventService {
 
     boolean markDelivered(AgentAppEventId id);
 
-    void updateStatus(AgentAppEventId id, AgentAppEventStatus status, UUID currentStepId);
+    void updateStatus(AgentAppEventId id, AgentAppEventStatusUpdate update);
 
     void deleteAllPendingByApplicationId(AgentApplicationId applicationId);
 
     PageData<AgentAppEvent> findByBulkActionId(AgentBulkActionId bulkActionId, AgentAppEventStatus status, PageLink pageLink);
 
-    PageData<AgentAppEvent> findByApplicationId(TenantId tenantId, AgentApplicationId applicationId, PageLink pageLink);
+    PageData<AgentAppEvent> findByFilter(AgentAppEventFilter filter, PageLink pageLink);
 
     PageData<AgentAppEvent> findByAgentId(TenantId tenantId, AgentId agentId, PageLink pageLink);
 }

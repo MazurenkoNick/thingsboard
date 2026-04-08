@@ -96,6 +96,9 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
         if (old == null) {
             profileConfigResolver.resolve(tenantId, application, application.getRelatedEntityId());
         } else {
+            if (application.getAppType() != old.getAppType()) {
+                application.setAppType(old.getAppType());
+            }
             EntityId newRelatedEntityId = application.getRelatedEntityId();
             EntityId oldRelatedEntityId = old.getRelatedEntityId();
             if (isApplicationProfileChangedOrAdded(application, old)) {

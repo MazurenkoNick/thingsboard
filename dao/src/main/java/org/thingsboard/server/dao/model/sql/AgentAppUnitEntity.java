@@ -26,6 +26,7 @@ import org.thingsboard.server.common.data.agent.AgentAppUnit;
 import org.thingsboard.server.common.data.agent.AgentAppUnitType;
 import org.thingsboard.server.common.data.id.AgentAppUnitId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.model.BaseSqlEntity;
 import org.thingsboard.server.dao.model.ModelConstants;
 
@@ -36,6 +37,9 @@ import java.util.UUID;
 @Entity
 @Table(name = ModelConstants.AGENT_APP_UNIT_TABLE_NAME)
 public final class AgentAppUnitEntity extends BaseSqlEntity<AgentAppUnit> {
+
+    @Column(name = ModelConstants.AGENT_APP_UNIT_TENANT_ID_PROPERTY)
+    private UUID tenantId;
 
     @Column(name = ModelConstants.AGENT_APP_UNIT_AGENT_APPLICATION_ID_PROPERTY)
     private UUID agentApplicationId;
@@ -53,6 +57,9 @@ public final class AgentAppUnitEntity extends BaseSqlEntity<AgentAppUnit> {
 
     public AgentAppUnitEntity(AgentAppUnit unit) {
         super(unit);
+        if (unit.getTenantId() != null) {
+            this.tenantId = unit.getTenantId().getId();
+        }
         if (unit.getAgentApplicationId() != null) {
             this.agentApplicationId = unit.getAgentApplicationId().getId();
         }
@@ -64,6 +71,9 @@ public final class AgentAppUnitEntity extends BaseSqlEntity<AgentAppUnit> {
     public AgentAppUnit toData() {
         AgentAppUnit unit = new AgentAppUnit(new AgentAppUnitId(id));
         unit.setCreatedTime(createdTime);
+        if (tenantId != null) {
+            unit.setTenantId(TenantId.fromUUID(tenantId));
+        }
         if (agentApplicationId != null) {
             unit.setAgentApplicationId(new AgentApplicationId(agentApplicationId));
         }

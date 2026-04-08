@@ -16,9 +16,12 @@
 package org.thingsboard.server.dao.agent;
 
 import org.thingsboard.server.common.data.agent.AgentAppUnit;
+import org.thingsboard.server.common.data.agent.AgentAppUnitFilter;
 import org.thingsboard.server.common.data.id.AgentAppUnitId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 
 import java.util.List;
 
@@ -27,6 +30,7 @@ public interface AgentAppUnitService {
     AgentAppUnit saveAgentAppUnit(TenantId tenantId, AgentAppUnit agentAppUnit);
     AgentAppUnit findAgentAppUnitById(TenantId tenantId, AgentAppUnitId agentAppUnitId);
     List<AgentAppUnit> findAgentAppUnitsByAgentAppId(TenantId tenantId, AgentApplicationId agentAppId);
+    PageData<AgentAppUnit> findByFilter(AgentAppUnitFilter filter, PageLink pageLink);
     void deleteAgentAppUnit(TenantId tenantId, AgentAppUnitId agentAppUnitId);
     void deleteByAgentApplicationId(TenantId tenantId, AgentApplicationId agentAppId);
 

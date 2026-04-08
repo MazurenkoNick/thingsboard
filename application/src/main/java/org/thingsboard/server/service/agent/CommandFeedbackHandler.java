@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
+import org.thingsboard.server.common.data.agent.AgentAppEventStatusUpdate;
 import org.thingsboard.server.common.data.agent.ErrorOrigin;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -53,7 +54,7 @@ public class CommandFeedbackHandler {
 
     public void onCommandAck(TenantId tenantId, AgentId agentId, CommandAck ack) {
         AgentAppEventId eventId = toEventId(ack.getCommandId());
-        log.trace("[{}][{}] Received CommandAck for event {}, status: {}", tenantId, agentId, eventId, ack.getStatus());
+        log.trace("[{}][{}] Received  for event {}, status: {}", tenantId, agentId, eventId, ack.getStatus());
 
         getExecutor().submit(() -> doOnCommandAck(tenantId, agentId, ack, eventId));
     }
@@ -61,9 +62,13 @@ public class CommandFeedbackHandler {
     private void doOnCommandAck(TenantId tenantId, AgentId agentId, CommandAck ack, AgentAppEventId eventId) {
         doWithFallback(tenantId, agentId, eventId, () -> {
             if (ack.getStatus() == AckStatus.ACCEPTED) {
-                appEventService.updateStatus(eventId, AgentAppEventStatus.QUEUED, null);
+                appEventService.updateStatus(eventId, AgentAppEventStatusUpdate.builder()
+                        .status(AgentAppEventStatus.QUEUED)
+                        .currentActivity(ack.hasMessage() ? ack.getMessage() : null)
+                        .build());
             } else {
-                eventErrorHandler.onFailure(tenantId, agentId, eventId, ErrorOrigin.AGENT);
+                eventErrorHandler.onFailure(tenantId, agentId, eventId, ErrorOrigin.AGENT,
+                        ack.hasMessage() ? ack.getMessage() : null);
             }
         });
     }
@@ -73,7 +78,10 @@ public class CommandFeedbackHandler {
         log.trace("[{}][{}] Received CommandProgress for event {}, stage: {}", tenantId, agentId, eventId, progress.getStage());
         getExecutor().submit(() ->
                 doWithFallback(tenantId, agentId, eventId, () ->
-                        appEventService.updateStatus(eventId, AgentAppEventStatus.PROCESSING, null))
+                        appEventService.updateStatus(eventId, AgentAppEventStatusUpdate.builder()
+                                .status(AgentAppEventStatus.PROCESSING)
+                                .currentActivity(progress.hasMessage() ? progress.getMessage() : null)
+                                .build()))
         );
     }
 
@@ -92,14 +100,17 @@ public class CommandFeedbackHandler {
                 return;
             }
             if (!result.getSuccess()) {
-                eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.AGENT);
+                eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.AGENT, result.getMessage());
                 return;
             }
             if (event.getActionType() == AgentAppEventActionType.DELETE) {
                 appService.delete(tenantId, event.getApplicationId());
                 return;
             }
-            appEventService.updateStatus(eventId, AgentAppEventStatus.PROCESSING, null);
+            appEventService.updateStatus(eventId, AgentAppEventStatusUpdate.builder()
+                    .status(AgentAppEventStatus.PROCESSING)
+                    .currentActivity(result.hasMessage() ? result.getMessage() : null)
+                    .build());
             agentEventProcessor.processNextStepOrFinish(tenantId, agentId, event);
         });
     }
@@ -109,7 +120,7 @@ public class CommandFeedbackHandler {
             runnable.run();
         } catch (Exception e) {
             log.error("[{}][{}] Failed to process feedback for event {}", tenantId, agentId, eventId, e);
-            eventErrorHandler.onFailure(tenantId, agentId, eventId, ErrorOrigin.SERVER);
+            eventErrorHandler.onFailure(tenantId, agentId, eventId, ErrorOrigin.SERVER, e.getMessage());
         }
     }
 

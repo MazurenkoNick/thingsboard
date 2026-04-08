@@ -75,6 +75,18 @@ export class AgentApplicationsTableConfigResolver {
     this.config.saveEntity = (app: any) => this.agentService.updateAgentApplication(app)
       .pipe(mergeMap((saved: any) => this.agentService.getAgentApplicationInfoById(saved.id.id)));
     this.config.addEntity = () => { this.openInstallWizard(); return of(null); };
+    this.config.handleRowClick = ($event: Event, app) => {
+      if ($event) { $event.stopPropagation(); }
+      this.router.navigateByUrl(`/edgeManagement/agents/${this.agentId}/applications/${app.id.id}`);
+      return true;
+    };
+    this.config.onEntityAction = (action) => {
+      if (action.action === 'open') {
+        this.router.navigateByUrl(`/edgeManagement/agents/${this.agentId}/applications/${action.entity.id.id}`);
+        return true;
+      }
+      return false;
+    };
   }
 
   resolve(route: ActivatedRouteSnapshot): Observable<EntityTableConfig<AgentApplicationInfo>> {
@@ -130,17 +142,10 @@ export class AgentApplicationsTableConfigResolver {
   }
 
   private templateCell(e: AgentApplicationInfo): string {
-    const parts: string[] = [];
-    if (e.appType) {
-      parts.push(String(e.appType));
-    }
-    if (e.currentVersion) {
-      parts.push(e.currentVersion);
-    }
-    if (!parts.length) {
+    if (!e.currentVersion) {
       return `<span style="font-family:'Roboto Mono',monospace;font-size:12px;color:rgba(0,0,0,0.38);">—</span>`;
     }
-    return `<span style="font-family:'Roboto Mono',monospace;font-size:12px;">${parts.join(' ')}</span>`;
+    return `<span style="font-family:'Roboto Mono',monospace;font-size:12px;">${e.currentVersion}</span>`;
   }
 
   private configureCellActions(): Array<CellActionDescriptor<AgentApplicationInfo>> {
@@ -174,18 +179,23 @@ export class AgentApplicationsTableConfigResolver {
 
   private update($event: Event, app: AgentApplicationInfo) {
     if ($event) { $event.stopPropagation(); }
-    this.dialogService.confirm(
-      this.translate.instant('agent.app-update-title', { name: app.name }),
-      this.translate.instant('agent.app-update-text'),
-      this.translate.instant('action.no'),
-      this.translate.instant('action.yes'),
-      true
-    ).subscribe(res => {
-      if (res) {
-        this.agentService.createAgentAppEvent(app.id.id, {
-          actionType: AgentAppEventActionType.UPDATE
-        }).subscribe(() => this.config.updateData());
-      }
+    this.agentService.getAgentApplicationById(app.id.id).subscribe(full => {
+      this.dialog.open<AgentAppInstallWizardComponent, AgentAppInstallWizardData, boolean>(
+        AgentAppInstallWizardComponent, {
+          disableClose: false,
+          panelClass: ['tb-dialog'],
+          data: {
+            agentId: this.agentId,
+            agent: this.agent,
+            mode: 'update',
+            application: full
+          }
+        }
+      ).afterClosed().subscribe(confirmed => {
+        if (confirmed) {
+          this.config.updateData();
+        }
+      });
     });
   }
 
