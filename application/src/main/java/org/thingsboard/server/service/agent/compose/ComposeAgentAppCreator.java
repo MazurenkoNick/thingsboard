@@ -61,7 +61,7 @@ public class ComposeAgentAppCreator {
         newApp.setAgentId(agentId);
         newApp.setName(composeInfo.generatePlaceholderAppName(projectName));
         newApp.setProjectName(projectName);
-        newApp.setAppType(composeInfo.appType());
+        newApp.setAppType(template.getAppType());
         newApp.setTemplateId(template.getId());
         newApp.setOrigin(AgentApplicationOrigin.DISCOVERED);
 
@@ -76,8 +76,13 @@ public class ComposeAgentAppCreator {
     }
 
     private AgentAppTemplate resolveTemplate(ComposeInfo composeInfo) {
-        return templateService.findByAppTypeAndConfigTypeAndCurrentVersion(
+        AgentAppTemplate byAppType = templateService.findByAppTypeAndConfigTypeAndCurrentVersion(
                 composeInfo.appType(), AgentAppConfigType.DOCKER_COMPOSE, composeInfo.version());
+        if (byAppType != null) {
+            return byAppType;
+        }
+        AgentApplicationType genericType = AgentApplicationType.GENERIC;
+        return templateService.findByAppTypeAndConfigTypeAndCurrentVersion(genericType, AgentAppConfigType.DOCKER_COMPOSE, genericType.getDefaultVersion());
     }
 
     private ComposeInfo getComposeInfo(JsonNode compose) {
