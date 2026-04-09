@@ -50,6 +50,7 @@ public class JpaAgentAppEventDao extends JpaAbstractDao<AgentAppEventEntity, Age
             "createdTime", "created_time",
             "updatedTime", "updated_time",
             "actionType", "action_type",
+            "deliveryState", "delivery_state",
             "status", "status"
     );
 

@@ -36,6 +36,7 @@ import {
   AgentAppEvent,
   AgentAppEventActionType,
   agentAppEventActionTypeTranslationMap,
+  AgentAppEventDeliveryState,
   AgentAppEventStatus,
   agentAppEventStatusTranslationMap,
   AgentApplicationInfo
@@ -86,12 +87,23 @@ export class AgentAppEventTableConfig extends EntityTableConfig<AgentAppEvent> {
     this.columns.push(
       new EntityTableColumn<AgentAppEvent>('actionType',
         'agent.app-event-action', '160px',
-        (e) => this.translate.instant(agentAppEventActionTypeTranslationMap.get(e.actionType) || e.actionType),
+        (e) => {
+          const key = agentAppEventActionTypeTranslationMap.get(e.actionType) || e.actionType;
+          return key ? this.translate.instant(key) : '';
+        },
+        () => ({}), true),
+      new EntityTableColumn<AgentAppEvent>('deliveryState',
+        'agent.app-event-execution', '140px',
+        (e) => this.translate.instant(
+          e.deliveryState === AgentAppEventDeliveryState.DELIVERED
+            ? 'agent.app-event-execution-started'
+            : 'agent.app-event-execution-not-started'),
         () => ({}), true),
       new EntityTableColumn<AgentAppEvent>('status',
         'agent.app-event-status', '160px',
         (e) => {
-          const label = this.translate.instant(agentAppEventStatusTranslationMap.get(e.status) || e.status);
+          const key = agentAppEventStatusTranslationMap.get(e.status) || e.status;
+          const label = key ? this.translate.instant(key) : '';
           return this.canCancel(e)
             ? `<span class="tb-agent-app-event-inflight">${label}</span>`
             : label;
