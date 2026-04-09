@@ -37,7 +37,7 @@
     <span translate>agent.app-restart</span>
   </button>
   <button mat-raised-button color="primary"
-          [disabled]="(isLoading$ | async) || !entity?.nextVersion"
+          [disabled]="(isLoading$ | async) || !canUpgrade()"
           (click)="onUpgrade($event)"
           [class.!hidden]="isEdit">
     <mat-icon>arrow_upward</mat-icon>
@@ -84,7 +84,7 @@
     <mat-form-field class="mat-block">
       <mat-label translate>agent.app-template</mat-label>
       <input matInput [value]="templateVersion" disabled>
-      <mat-hint *ngIf="entity?.nextVersion" class="tb-app-upgrade-hint">
+      <mat-hint *ngIf="canUpgrade()" class="tb-app-upgrade-hint">
         <mat-icon>info</mat-icon>
         {{ 'agent.app-upgrade-available' | translate:{ version: entity.nextVersion } }}
       </mat-hint>
@@ -95,9 +95,7 @@
       <input matInput [value]="entity.origin" disabled>
     </mat-form-field>
 
-    <fieldset [disabled]="(isLoading$ | async) || !isEdit">
-      <label class="tb-mat-label" translate>agent.app-compose</label>
-      <textarea class="tb-app-compose-editor" formControlName="composeYaml" spellcheck="false" rows="20"></textarea>
-    </fieldset>
+    <label class="tb-mat-label" translate>agent.app-compose</label>
+    <div class="tb-app-compose-editor tb-app-compose-editor-ace" #composeAceEditor></div>
   </form>
 </div>

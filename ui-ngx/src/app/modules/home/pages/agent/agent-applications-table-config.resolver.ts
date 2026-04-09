@@ -41,10 +41,6 @@ import {
   AgentAppDeleteDialogData
 } from '@home/pages/agent/dialog/agent-app-delete-dialog.component';
 import {
-  AgentAppUpgradeWizardComponent,
-  AgentAppUpgradeWizardData
-} from '@home/pages/agent/wizard/agent-app-upgrade-wizard.component';
-import {
   AgentAppInstallWizardComponent,
   AgentAppInstallWizardData
 } from '@home/pages/agent/wizard/agent-app-install-wizard.component';
@@ -252,11 +248,16 @@ export class AgentApplicationsTableConfigResolver {
   }
 
   private showUpgradeWizard(application: any) {
-    this.dialog.open<AgentAppUpgradeWizardComponent, AgentAppUpgradeWizardData, boolean>(
-      AgentAppUpgradeWizardComponent, {
+    this.dialog.open<AgentAppInstallWizardComponent, AgentAppInstallWizardData, boolean>(
+      AgentAppInstallWizardComponent, {
         disableClose: false,
         panelClass: ['tb-dialog'],
-        data: { application }
+        data: {
+          agentId: this.agentId,
+          agent: this.agent,
+          mode: 'upgrade',
+          application
+        }
       }
     ).afterClosed().subscribe(confirmed => {
       if (confirmed) {

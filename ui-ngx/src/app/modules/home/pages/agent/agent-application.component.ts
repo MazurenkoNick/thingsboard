@@ -14,7 +14,9 @@
 /// limitations under the License.
 ///
 
-import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, Inject, OnDestroy } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, Inject, OnDestroy, ViewChild } from '@angular/core';
+import { Ace } from 'ace-builds';
+import { getAce } from '@shared/models/ace/ace.models';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { EntityComponent } from '@home/components/entity/entity.component';
@@ -39,10 +41,6 @@ import {
   AgentAppDeleteDialogData
 } from '@home/pages/agent/dialog/agent-app-delete-dialog.component';
 import {
-  AgentAppUpgradeWizardComponent,
-  AgentAppUpgradeWizardData
-} from '@home/pages/agent/wizard/agent-app-upgrade-wizard.component';
-import {
   AgentAppInstallWizardComponent,
   AgentAppInstallWizardData
 } from '@home/pages/agent/wizard/agent-app-install-wizard.component';
@@ -64,6 +62,16 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
   agentApplicationTypeTranslationMap = agentApplicationTypeTranslationMap;
 
   templateVersion = '';
+
+  private composeEditor: Ace.Editor | null = null;
+  private composeEditorSettingValue = false;
+  private pendingComposeValue: string | null = null;
+  @ViewChild('composeAceEditor', { static: false })
+  set composeAceRef(ref: ElementRef<HTMLElement> | undefined) {
+    if (ref && !this.composeEditor) {
+      this.initComposeEditor(ref.nativeElement);
+    }
+  }
 
   constructor(protected store: Store<AppState>,
               protected translate: TranslateService,
@@ -102,10 +110,107 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
       this.fullscreenHost.classList.remove('tb-agent-app-fullscreen');
       this.fullscreenHost = null;
     }
+    if (this.composeEditor) {
+      try { this.composeEditor.destroy(); } catch (_) { /* no-op */ }
+      this.composeEditor = null;
+    }
+  }
+
+  updateFormState() {
+    super.updateFormState();
+    this.applyComposeEditorReadOnly();
+  }
+
+  private initComposeEditor(host: HTMLElement) {
+    getAce().subscribe((ace) => {
+      const editor: Ace.Editor = ace.edit(host);
+      editor.setTheme('ace/theme/textmate');
+      editor.session.setMode('ace/mode/yaml');
+      editor.session.setUseWrapMode(false);
+      editor.setShowPrintMargin(false);
+      (editor as any).setOption('scrollPastEnd', false);
+      editor.renderer.setScrollMargin(0, 0, 0, 0);
+      editor.setFontSize(12);
+      // Override the global .ace_editor { font-size: 16px !important } from
+      // styles.scss by setting font-size inline with !important.
+      const container = (editor as any).container as HTMLElement | undefined;
+      container?.style?.setProperty('font-size', '12px', 'important');
+      editor.setOption('tabSize', 2);
+      editor.setOption('useSoftTabs', true);
+      editor.setOption('showLineNumbers', true);
+      editor.setOption('highlightActiveLine', false);
+      const initial = this.pendingComposeValue
+        ?? (this.entityForm?.get('composeYaml')?.value as string)
+        ?? '';
+      editor.setValue(initial, -1);
+      this.pendingComposeValue = null;
+      editor.getSession().on('change', () => {
+        if (this.composeEditorSettingValue) {
+          return;
+        }
+        const ctrl = this.entityForm?.get('composeYaml');
+        if (ctrl && ctrl.value !== editor.getValue()) {
+          ctrl.setValue(editor.getValue());
+          ctrl.markAsDirty();
+        }
+      });
+      this.composeEditor = editor;
+      // Confine wheel input to this editor. stopPropagation alone won't
+      // work — ace uses virtual scrolling and doesn't preventDefault on
+      // deltas it can't consume, so those spill into the browser's default
+      // scroll chain and scroll the surrounding details page. Instead we
+      // preventDefault on the container and manually forward the delta
+      // into ace's scrollTop/scrollLeft so the editor still scrolls while
+      // it has room to move.
+      container?.addEventListener('wheel', (ev: WheelEvent) => {
+        ev.preventDefault();
+        const session = editor.getSession();
+        session.setScrollTop(session.getScrollTop() + ev.deltaY);
+        if (ev.deltaX) {
+          session.setScrollLeft(session.getScrollLeft() + ev.deltaX);
+        }
+      }, { passive: false });
+      this.applyComposeEditorReadOnly();
+      setTimeout(() => editor.resize(true), 0);
+    });
+  }
+
+  private pushComposeToEditor(yaml: string) {
+    if (!this.composeEditor) {
+      this.pendingComposeValue = yaml;
+      return;
+    }
+    if (this.composeEditor.getValue() === yaml) {
+      return;
+    }
+    this.composeEditorSettingValue = true;
+    this.composeEditor.setValue(yaml || '', -1);
+    this.composeEditorSettingValue = false;
+  }
+
+  private applyComposeEditorReadOnly() {
+    if (!this.composeEditor) {
+      return;
+    }
+    const readOnly = !this.isEdit;
+    this.composeEditor.setReadOnly(readOnly);
+    const cursorLayer = (this.composeEditor.renderer as any).$cursorLayer;
+    if (cursorLayer?.element?.style) {
+      cursorLayer.element.style.display = readOnly ? 'none' : '';
+    }
   }
 
   hideDelete() {
     return true;
+  }
+
+  /**
+   * Upgrade is allowed only for standalone apps (no profile) that have a
+   * linked template with a newer version available. Profile-bound apps are
+   * upgraded through the bulk action in the profile section instead.
+   */
+  canUpgrade(): boolean {
+    return !!this.entity?.nextVersion && !this.entity?.applicationProfileId;
   }
 
   buildForm(entity: AgentApplicationInfo): UntypedFormGroup {
@@ -116,17 +221,29 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
   }
 
   updateForm(entity: AgentApplicationInfo) {
+    const yaml = this.dumpCompose(entity);
     this.entityForm.patchValue({
       name: entity.name,
-      composeYaml: this.dumpCompose(entity)
+      composeYaml: yaml
     });
+    this.pushComposeToEditor(yaml);
+    this.applyComposeEditorReadOnly();
     this.templateVersion = entity?.currentVersion || '';
-    // The detail GET returns AgentApplication (no currentVersion). Resolve it
-    // from the linked template so the field renders the actual version.
-    if (!entity?.currentVersion && entity?.templateId?.id) {
+    // The detail GET returns AgentApplication (no currentVersion / nextVersion
+    // — those are only joined on the list endpoint). Resolve them from the
+    // linked template so templateVersion renders the actual version AND the
+    // upgrade button / hint can read entity.nextVersion.
+    if (entity?.templateId?.id && (!entity.currentVersion || !entity.nextVersion)) {
       this.agentService.getAgentAppTemplateById(entity.templateId.id).subscribe(tpl => {
         if (tpl?.currentVersion) {
           this.templateVersion = tpl.currentVersion;
+          if (!entity.currentVersion) {
+            entity.currentVersion = tpl.currentVersion;
+          }
+        }
+        if (tpl?.nextVersion && !entity.nextVersion) {
+          entity.nextVersion = tpl.nextVersion;
+          this.cd.markForCheck();
         }
       });
     }
@@ -195,11 +312,16 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
   onUpgrade($event: Event) {
     if ($event) { $event.stopPropagation(); }
     this.agentService.getAgentApplicationById(this.entity.id.id).subscribe(full => {
-      this.dialog.open<AgentAppUpgradeWizardComponent, AgentAppUpgradeWizardData, boolean>(
-        AgentAppUpgradeWizardComponent, {
+      this.dialog.open<AgentAppInstallWizardComponent, AgentAppInstallWizardData, boolean>(
+        AgentAppInstallWizardComponent, {
           disableClose: false,
           panelClass: ['tb-dialog'],
-          data: { application: full }
+          data: {
+            agentId: (full.agentId as any).id,
+            agent: null as any,
+            mode: 'upgrade',
+            application: full
+          }
         }
       ).afterClosed().subscribe(confirmed => {
         if (confirmed) {

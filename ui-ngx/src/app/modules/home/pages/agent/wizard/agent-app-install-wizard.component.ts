@@ -14,7 +14,7 @@
 /// limitations under the License.
 ///
 
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, ElementRef, Inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
@@ -34,12 +34,19 @@ import {
 } from '@shared/models/agent.models';
 import { AgentId } from '@shared/models/id/agent-id';
 import * as YAML from 'yaml';
+import { getAce, getAceDiff } from '@shared/models/ace/ace.models';
+import { Ace } from 'ace-builds';
 
 export interface AgentAppInstallWizardData {
   agentId: string;
   agent: AgentInfo;
-  mode?: 'install' | 'update';
+  mode?: 'install' | 'update' | 'upgrade';
   application?: AgentApplication;
+}
+
+interface VolumeChoice {
+  key: string;
+  selected: boolean;
 }
 
 interface TypeCard {
@@ -56,12 +63,41 @@ interface TypeCard {
 })
 export class AgentAppInstallWizardComponent
   extends DialogComponent<AgentAppInstallWizardComponent, boolean>
-  implements OnInit {
+  implements OnInit, OnDestroy {
+
+  @ViewChild('diffViewer', { static: false })
+  diffViewerElmRef: ElementRef<HTMLElement>;
+
+  // Install-mode single yaml editor. Element only appears when step 2 renders,
+  // so we use a setter to init the editor lazily on first attach.
+  private installEditor: Ace.Editor | null = null;
+  private installEditorSettingValue = false;
+  @ViewChild('installYamlEditor', { static: false })
+  set installYamlEditorRef(ref: ElementRef<HTMLElement> | undefined) {
+    if (ref && !this.installEditor && this.mode === 'install') {
+      this.initInstallEditor(ref.nativeElement);
+    }
+  }
 
   agentId: string;
   agent: AgentInfo;
-  mode: 'install' | 'update' = 'install';
+  mode: 'install' | 'update' | 'upgrade' = 'install';
   existingApplication: AgentApplication | null = null;
+
+  // Upgrade-mode state. Populated when mode === 'upgrade' in ngOnInit.
+  fromVersion: string | null = null;
+  toVersion: string | null = null;
+  upgradeSteps: AgentAppStep[] = [];
+  backupVolumeStep: AgentAppStep | null = null;
+  backupVolumes: VolumeChoice[] = [];
+
+  // Update mode: side-by-side diff state.
+  // Left (read-only): merged template preview (what the template would add).
+  // Right (editable): currently persisted compose — this is what gets saved.
+  proposedYaml = '';
+  currentYaml = '';
+  private differ: any = null;
+  private pendingDiffInit = false;
 
   typeCards: TypeCard[] = [
     { type: AgentApplicationType.GENERIC, icon: 'inventory_2', labelKey: 'agent.app-install-type-generic', descKey: 'agent.app-install-type-generic-desc' },
@@ -84,6 +120,11 @@ export class AgentAppInstallWizardComponent
   mergedApp: AgentApplication | null = null;
   submitting = false;
 
+  // Template cache so re-selecting a type in the install wizard is instant.
+  // Install mode pre-warms all three types on open; selectType reads from here
+  // and skips the HTTP round-trip (and the "Loading template…" flash).
+  private templateCache = new Map<AgentApplicationType, AgentAppTemplate>();
+
   constructor(protected store: Store<AppState>,
               protected router: Router,
               protected translate: TranslateService,
@@ -98,29 +139,63 @@ export class AgentAppInstallWizardComponent
   }
 
   ngOnInit() {
-    if (this.mode === 'update' && this.existingApplication) {
+    if (this.mode === 'upgrade' && this.existingApplication) {
+      this.appName = this.existingApplication.name;
+      this.selectedType = this.existingApplication.appType;
+      this.fromVersion = (this.existingApplication as any).currentVersion || null;
+      this.loadingTemplate = true;
+      this.resolveUpgradeTemplate();
+    } else if (this.mode === 'update' && this.existingApplication) {
       // Pre-seed from existing app and load template + merge for preview.
       this.appName = this.existingApplication.name;
       this.selectType(this.existingApplication.appType);
+    } else if (this.mode === 'install') {
+      // Prefetch all three templates in the background so clicking a type card
+      // doesn't trigger a visible "Loading template…" flash on the first click.
+      this.typeCards.forEach(card => {
+        this.agentService.getLatestAgentAppTemplate(card.type, 'DOCKER_COMPOSE').subscribe({
+          next: tpl => this.templateCache.set(card.type, tpl),
+          error: () => { /* swallow — selectType will retry on demand */ }
+        });
+      });
     }
   }
 
   get titleKey(): string {
-    return this.mode === 'update' ? 'agent.app-update-wizard-title' : 'agent.app-install-title';
+    switch (this.mode) {
+      case 'upgrade': return 'agent.app-upgrade-title';
+      case 'update': return 'agent.app-update-wizard-title';
+      default: return 'agent.app-install-title';
+    }
   }
 
   get ctaKey(): string {
-    return this.mode === 'update' ? 'agent.app-update-cta' : 'agent.app-install-cta';
+    switch (this.mode) {
+      case 'upgrade': return 'agent.app-upgrade-cta';
+      case 'update': return 'agent.app-update-cta';
+      default: return 'agent.app-install-cta';
+    }
   }
 
   get subtitleParams(): any {
+    if (this.mode === 'upgrade') {
+      return {
+        name: this.existingApplication?.name,
+        from: this.fromVersion || '—',
+        to: this.toVersion || '—'
+      };
+    }
     return this.mode === 'update'
       ? { name: this.existingApplication?.name }
       : { name: this.agent?.name };
   }
 
   get subtitleKey(): string {
-    return this.mode === 'update' ? 'agent.app-update-on-app' : 'agent.app-install-on-agent';
+    switch (this.mode) {
+      case 'upgrade': return 'agent.app-upgrade-heading';
+      case 'update': return 'agent.app-update-on-app';
+      default: return 'agent.app-install-on-agent';
+    }
   }
 
   selectType(type: AgentApplicationType) {
@@ -137,40 +212,173 @@ export class AgentAppInstallWizardComponent
     }
     this.loadError = '';
 
+    const cached = this.templateCache.get(type);
+    if (cached) {
+      this.applyTemplate(cached);
+      return;
+    }
     this.loadingTemplate = true;
     this.agentService.getLatestAgentAppTemplate(type, 'DOCKER_COMPOSE').subscribe({
       next: tpl => {
-        this.template = tpl;
-        this.scanStartSteps(tpl);
-        this.composeType = this.pickComposeType(tpl);
-        // Build a draft app and merge for preview to populate the YAML editor.
-        // In update mode use the existing application so the merge reflects current state.
-        const draft: AgentApplication = this.mode === 'update' && this.existingApplication
-          ? ({ ...this.existingApplication, templateId: tpl.id } as any)
-          : ({
-              name: this.appName,
-              appType: type,
-              agentId: new AgentId(this.agentId) as any,
-              templateId: tpl.id,
-              origin: AgentApplicationOrigin.INSTALLED
-            } as any);
-        this.agentService.mergeForPreview(tpl.id.id, draft, this.composeType || undefined).subscribe({
-          next: merged => {
-            this.mergedApp = merged;
-            this.composeYaml = this.dumpCompose(merged);
-            this.loadingTemplate = false;
-          },
-          error: () => {
-            this.loadError = this.translate.instant('agent.app-install-merge-failed');
-            this.loadingTemplate = false;
-          }
-        });
+        this.templateCache.set(type, tpl);
+        this.applyTemplate(tpl);
       },
       error: () => {
         this.loadError = this.translate.instant('agent.app-install-template-failed');
         this.loadingTemplate = false;
       }
     });
+  }
+
+  private applyTemplate(tpl: AgentAppTemplate) {
+    this.loadingTemplate = false;
+    this.template = tpl;
+    this.scanStartSteps(tpl);
+    this.composeType = this.pickComposeType(tpl);
+    this.runMergeForPreview(tpl);
+  }
+
+  private runMergeForPreview(tpl: AgentAppTemplate) {
+    const type = this.selectedType!;
+    const draft: AgentApplication = this.mode === 'update' && this.existingApplication
+      ? ({ ...this.existingApplication, templateId: tpl.id } as any)
+      : ({
+          name: this.appName,
+          appType: type,
+          agentId: new AgentId(this.agentId) as any,
+          templateId: tpl.id,
+          origin: AgentApplicationOrigin.INSTALLED
+        } as any);
+    this.agentService.mergeForPreview(tpl.id.id, draft, this.composeType || undefined).subscribe({
+      next: merged => {
+        this.mergedApp = merged;
+        if (this.mode === 'update' && this.existingApplication) {
+          this.proposedYaml = this.dumpCompose(merged);
+          this.currentYaml = this.dumpCompose(this.existingApplication);
+          this.composeYaml = this.currentYaml;
+          this.scheduleDiffInit();
+        } else {
+          this.composeYaml = this.dumpCompose(merged);
+          this.syncInstallEditor();
+        }
+      },
+      error: () => {
+        this.loadError = this.translate.instant('agent.app-install-merge-failed');
+      }
+    });
+  }
+
+  // -------- Upgrade mode (mode === 'upgrade') --------
+
+  private resolveUpgradeTemplate() {
+    const app = this.existingApplication!;
+    const desiredId = (app as any).desiredTemplateId?.id;
+    if (desiredId) {
+      this.agentService.getAgentAppTemplateById(desiredId).subscribe({
+        next: t => this.applyUpgradeTemplate(t),
+        error: () => this.failUpgradeLoad('agent.app-upgrade-load-failed')
+      });
+      return;
+    }
+    if (!app.templateId?.id) {
+      this.failUpgradeLoad('agent.app-upgrade-no-template');
+      return;
+    }
+    this.agentService.getAgentAppTemplateById(app.templateId.id).subscribe({
+      next: current => {
+        if (!current.nextVersion) {
+          this.failUpgradeLoad('agent.app-upgrade-no-next-version');
+          return;
+        }
+        // The detail endpoint doesn't populate currentVersion on the
+        // application, so fromVersion is usually null coming in from
+        // ngOnInit. Resolve it from the linked template so the "from → to"
+        // row doesn't show a dash.
+        if (!this.fromVersion && current.currentVersion) {
+          this.fromVersion = current.currentVersion;
+        }
+        // Fetch the template whose currentVersion matches the current
+        // template's nextVersion pointer — single-hop upgrade. Do NOT fall
+        // back to "latest" because that would skip any intermediate versions
+        // (and their upgradeSteps / migrations) on multi-hop chains.
+        const configType = current.config?.type || 'DOCKER_COMPOSE';
+        this.agentService.getAgentAppTemplateByVersion(
+          current.appType, configType, current.nextVersion
+        ).subscribe({
+          next: next => this.applyUpgradeTemplate(next),
+          error: () => this.failUpgradeLoad('agent.app-upgrade-load-failed')
+        });
+      },
+      error: () => this.failUpgradeLoad('agent.app-upgrade-load-failed')
+    });
+  }
+
+  private applyUpgradeTemplate(template: AgentAppTemplate) {
+    this.template = template;
+    this.toVersion = template.currentVersion || null;
+    this.upgradeSteps = (template.upgradeSteps || []).filter(s => !s.templateOnly);
+
+    // Scan upgradeSteps for input-required steps (backup volumes, pull images).
+    this.backupVolumeStep = this.upgradeSteps.find(s => s.type === AgentAppStepType.BACKUP_VOLUME) || null;
+    this.pullImagesStep = this.upgradeSteps.find(s =>
+      (s.type === AgentAppStepType.COMPOSE_MIGRATION || s.type === AgentAppStepType.COMPOSE)
+      && (s.state as any) && 'pullImages' in (s.state as any)
+    ) || null;
+    this.hasPullImagesStep = !!this.pullImagesStep;
+    if (this.pullImagesStep) {
+      this.pullImages = !!(this.pullImagesStep.state as any)?.pullImages;
+    }
+
+    // Volumes are backed up from the CURRENT app — the data we need to
+    // preserve through the upgrade lives in the existing volumes.
+    this.backupVolumes = this.parseVolumeKeys(this.existingApplication!)
+      .map(key => ({ key, selected: true }));
+
+    // Side-by-side diff: left = raw new template compose (no mergeForPreview),
+    // right = current persisted compose. Both panes are read-only in upgrade
+    // mode — this is preview-and-confirm, not edit.
+    this.proposedYaml = this.dumpRawTemplateCompose(template);
+    this.currentYaml = this.dumpCompose(this.existingApplication!);
+    this.composeYaml = this.currentYaml;
+    this.loadingTemplate = false;
+    this.scheduleDiffInit();
+  }
+
+  private failUpgradeLoad(messageKey: string) {
+    this.loadError = this.translate.instant(messageKey);
+    this.loadingTemplate = false;
+  }
+
+  private dumpRawTemplateCompose(template: AgentAppTemplate): string {
+    const steps = (template.startSteps || []);
+    for (const step of steps) {
+      const anyStep = step as any;
+      if (step.type === AgentAppStepType.COMPOSE_TEMPLATE && anyStep.composeTemplates) {
+        const keys = Object.keys(anyStep.composeTemplates);
+        if (keys.length) {
+          const compose = anyStep.composeTemplates[keys[0]];
+          return this.dumpYaml(compose, 0).trimEnd() + '\n';
+        }
+      }
+    }
+    const compose: any = (template.config as any)?.compose;
+    return compose ? (this.dumpYaml(compose, 0).trimEnd() + '\n') : '';
+  }
+
+  private parseVolumeKeys(app: AgentApplication): string[] {
+    const compose: any = app?.config && (app.config as any).compose;
+    if (!compose || !compose.volumes || typeof compose.volumes !== 'object') {
+      return [];
+    }
+    return Object.keys(compose.volumes);
+  }
+
+  toggleBackupVolume(v: VolumeChoice) {
+    v.selected = !v.selected;
+  }
+
+  get selectedBackupVolumeCount(): number {
+    return this.backupVolumes.filter(v => v.selected).length;
   }
 
   /**
@@ -210,6 +418,185 @@ export class AgentAppInstallWizardComponent
     }
   }
 
+  ngOnDestroy(): void {
+    if (this.differ) {
+      try { this.differ.destroy(); } catch (_) { /* no-op */ }
+      this.differ = null;
+    }
+    if (this.installEditor) {
+      try { this.installEditor.destroy(); } catch (_) { /* no-op */ }
+      this.installEditor = null;
+    }
+  }
+
+  /**
+   * Override the global `.ace_editor { font-size: 16px !important; }` rule
+   * (styles.scss:271) by applying font-size inline with CSS !important, which
+   * wins against any stylesheet-level !important. Also forces ace to re-measure
+   * character/row dimensions so its layout (and ace-diff's arrow positions)
+   * match the new size — without this, ace-diff places copy arrows using the
+   * stale (larger) row height and they end up past the last real line.
+   */
+  /**
+   * Confine wheel input to an ace editor so the parent wizard body never
+   * scrolls when the pointer is over this editor.
+   *
+   * stopPropagation alone is not enough: ace uses its own virtual scrolling
+   * and does not call preventDefault on wheel deltas that it can't consume
+   * (i.e. when the editor is already at top/bottom). Those spilled deltas
+   * then travel up the browser's default scroll chain and scroll the next
+   * native scroll container — the wizard body. To block that, we
+   * preventDefault on the outer container (halting the default scroll
+   * chain) and manually forward the delta into ace's session scrollTop, so
+   * the editor still scrolls while it has room to move.
+   *
+   * Requires a non-passive listener so preventDefault is honoured.
+   */
+  private confineWheelToEditor(host: HTMLElement | null | undefined, editor: Ace.Editor | null) {
+    if (!host || !editor) { return; }
+    host.addEventListener('wheel', (ev: WheelEvent) => {
+      ev.preventDefault();
+      // Stop bubbling so outer listeners (e.g. the .diff-viewer host
+      // listener that catches the center gutter) don't also handle the
+      // same event and apply the delta twice — that was the bug where
+      // scrolling the left pane also scrolled the right pane.
+      ev.stopPropagation();
+      const session = editor.getSession();
+      const top = session.getScrollTop();
+      session.setScrollTop(top + ev.deltaY);
+      if (ev.deltaX) {
+        const left = session.getScrollLeft();
+        session.setScrollLeft(left + ev.deltaX);
+      }
+    }, { passive: false });
+  }
+
+  private forceEditorFontSize(editor: Ace.Editor, px: number) {
+    const container = (editor as any).container as HTMLElement | undefined;
+    if (container?.style) {
+      container.style.setProperty('font-size', `${px}px`, 'important');
+    }
+    editor.setFontSize(px);
+    const renderer: any = editor.renderer;
+    if (typeof renderer.updateFontSize === 'function') {
+      renderer.updateFontSize();
+    }
+    if (typeof renderer.onResize === 'function') {
+      renderer.onResize(true);
+    }
+  }
+
+  private initInstallEditor(host: HTMLElement) {
+    getAce().subscribe((ace) => {
+      const editor: Ace.Editor = ace.edit(host);
+      editor.setTheme('ace/theme/textmate');
+      editor.session.setMode('ace/mode/yaml');
+      editor.session.setUseWrapMode(false);
+      editor.setShowPrintMargin(false);
+      (editor as any).setOption('scrollPastEnd', false);
+      editor.renderer.setScrollMargin(0, 0, 0, 0);
+      this.forceEditorFontSize(editor, 12);
+      editor.setOption('tabSize', 2);
+      editor.setOption('useSoftTabs', true);
+      editor.setOption('showLineNumbers', true);
+      editor.setOption('highlightActiveLine', false);
+      editor.setValue(this.composeYaml || '', -1);
+      editor.getSession().on('change', () => {
+        this.installEditorSettingValue = true;
+        this.composeYaml = editor.getValue();
+        this.installEditorSettingValue = false;
+      });
+      this.installEditor = editor;
+      this.confineWheelToEditor((editor as any).container, editor);
+      // If composeYaml updates later (async mergeForPreview), push into editor.
+      setTimeout(() => editor.resize(true), 0);
+    });
+  }
+
+  // Called from selectType / mergeForPreview when composeYaml changes programmatically.
+  private syncInstallEditor() {
+    if (this.installEditor && !this.installEditorSettingValue) {
+      const current = this.installEditor.getValue();
+      if (current !== (this.composeYaml || '')) {
+        this.installEditor.setValue(this.composeYaml || '', -1);
+      }
+    }
+  }
+
+  private scheduleDiffInit() {
+    if (this.pendingDiffInit) {
+      return;
+    }
+    this.pendingDiffInit = true;
+    // Defer until the step body is attached to the DOM.
+    setTimeout(() => this.initDiff(), 0);
+  }
+
+  private initDiff() {
+    this.pendingDiffInit = false;
+    if (!this.diffViewerElmRef || !this.diffViewerElmRef.nativeElement) {
+      // Element not yet in DOM (stepper step not rendered). Retry.
+      setTimeout(() => this.initDiff(), 50);
+      return;
+    }
+    if (this.differ) {
+      try { this.differ.destroy(); } catch (_) { /* no-op */ }
+      this.differ = null;
+    }
+    getAceDiff().subscribe((AceDiffCtor) => {
+      this.differ = new AceDiffCtor({
+        element: this.diffViewerElmRef.nativeElement,
+        mode: 'ace/mode/text',
+        left: {
+          // Copy arrows enabled in both update and upgrade — users need to
+          // cherry-pick template changes into their compose on the right.
+          copyLinkEnabled: true,
+          editable: false,
+          content: this.proposedYaml
+        },
+        right: {
+          copyLinkEnabled: false,
+          editable: true,
+          content: this.currentYaml
+        }
+      });
+      const leftEditor: Ace.Editor = this.differ.getEditors().left;
+      const rightEditor: Ace.Editor = this.differ.getEditors().right;
+      leftEditor.setShowFoldWidgets(false);
+      rightEditor.setShowFoldWidgets(false);
+      leftEditor.getSession().setMode('ace/mode/yaml');
+      rightEditor.getSession().setMode('ace/mode/yaml');
+      (leftEditor as any).setOption('scrollPastEnd', false);
+      (rightEditor as any).setOption('scrollPastEnd', false);
+      leftEditor.renderer.setScrollMargin(0, 0, 0, 0);
+      rightEditor.renderer.setScrollMargin(0, 0, 0, 0);
+      this.forceEditorFontSize(leftEditor, 12);
+      this.forceEditorFontSize(rightEditor, 12);
+      this.confineWheelToEditor((leftEditor as any).container, leftEditor);
+      this.confineWheelToEditor((rightEditor as any).container, rightEditor);
+      // Also confine wheel on the diff-viewer host itself so swipes on the
+      // center gutter (copy arrows) don't leak to the wizard body. Route
+      // those through the right (editable) editor since that's the pane
+      // that gets saved — its scroll position is the more user-relevant one.
+      this.confineWheelToEditor(this.diffViewerElmRef?.nativeElement, rightEditor);
+      // Keep composeYaml in sync with the editable right side so
+      // canSubmit/submit read fresh content.
+      rightEditor.getSession().on('change', () => {
+        this.composeYaml = rightEditor.getValue();
+        if (this.differ) { this.differ.diff(); }
+      });
+      // Force a layout pass and re-run the diff so the copy arrows line up with
+      // the actual rendered rows. Single pass — re-calling forceEditorFontSize
+      // inside realign causes ace-diff to mis-position arrows when its row
+      // metrics shift mid-render.
+      setTimeout(() => {
+        leftEditor.resize(true);
+        rightEditor.resize(true);
+        if (this.differ) { this.differ.diff(); }
+      }, 50);
+    });
+  }
+
   cancel() {
     this.dialogRef.close(false);
   }
@@ -219,6 +606,9 @@ export class AgentAppInstallWizardComponent
   }
 
   canSubmit(): boolean {
+    if (this.mode === 'upgrade') {
+      return !!this.template && !!this.existingApplication && !this.submitting && !this.loadError;
+    }
     return !!this.selectedType && !!this.appName?.trim() && !!this.composeYaml?.trim() && !this.submitting;
   }
 
@@ -227,6 +617,49 @@ export class AgentAppInstallWizardComponent
       return;
     }
     this.submitting = true;
+
+    // Upgrade path: ship the existing app with the new templateId, plus the
+    // upgrade step inputs (backup volumes + pullImages). The BE's
+    // UpgradeActionHandler re-resolves config from profile for profile-bound
+    // apps and overlays the incoming config otherwise.
+    if (this.mode === 'upgrade' && this.existingApplication && this.template) {
+      // Ship existing app + new templateId. If the user merged chunks from
+      // the new template (left) into the right pane, composeYaml now carries
+      // their edited compose — overlay it onto existingApplication.config so
+      // the UpgradeActionHandler picks up the customized version.
+      const outbound: any = {
+        ...this.existingApplication,
+        templateId: this.template.id,
+        config: {
+          ...((this.existingApplication.config as any) || { type: 'DOCKER_COMPOSE' }),
+          compose: this.parseYamlBestEffort(this.composeYaml)
+        }
+      };
+      const stepInputs: { [stepId: string]: any } = {};
+      if (this.backupVolumeStep) {
+        stepInputs[this.backupVolumeStep.id] = {
+          backupVolumes: this.backupVolumes.filter(v => v.selected).map(v => v.key),
+          type: AgentAppStepType.BACKUP_VOLUME
+        };
+      }
+      if (this.pullImagesStep) {
+        stepInputs[this.pullImagesStep.id] = {
+          pullImages: this.pullImages,
+          type: this.pullImagesStep.type
+        };
+      }
+      this.agentService.createAgentAppEvent(this.existingApplication.id.id, {
+        actionType: AgentAppEventActionType.UPGRADE,
+        application: outbound,
+        stepInputs
+      }).subscribe({
+        next: () => this.dialogRef.close(true),
+        error: () => {
+          this.submitting = false;
+        }
+      });
+      return;
+    }
 
     // Build the application body. For EDGE/GATEWAY use the merged app and
     // overlay user-edited compose; for GENERIC build a fresh body.

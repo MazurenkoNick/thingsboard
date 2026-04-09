@@ -17,8 +17,8 @@
 -->
 <mat-toolbar color="primary" class="tb-install-wizard-toolbar">
   <div class="tb-install-wizard-toolbar-content">
-    <h2>{{ titleKey | translate }}<ng-container *ngIf="(mode === 'update' ? existingApplication : agent)">:</ng-container></h2>
-    <span class="flex-1" *ngIf="(mode === 'update' ? existingApplication : agent)">
+    <h2>{{ titleKey | translate }}<ng-container *ngIf="((mode === 'install') ? agent : existingApplication)">:</ng-container></h2>
+    <span class="flex-1" *ngIf="((mode === 'install') ? agent : existingApplication)">
       {{ subtitleKey | translate: subtitleParams }}
     </span>
   </div>
@@ -29,7 +29,16 @@
 
 <div mat-dialog-content class="tb-install-wizard-body">
 
-  <mat-stepper linear #stepper>
+  <div class="loading-state" *ngIf="mode === 'upgrade' && loadingTemplate">
+    <mat-spinner diameter="24"></mat-spinner>
+    <span translate>agent.app-upgrade-loading</span>
+  </div>
+  <div class="error-state" *ngIf="mode === 'upgrade' && !loadingTemplate && loadError">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ loadError }}</span>
+  </div>
+
+  <mat-stepper linear #stepper *ngIf="!(mode === 'upgrade' && (loadingTemplate || loadError))">
 
     <mat-step [label]="'agent.app-install-step1' | translate" *ngIf="mode === 'install'" [completed]="canProceedFromType()">
       <p class="hint" translate>agent.app-install-pick-type</p>
@@ -64,18 +73,63 @@
 
     <mat-step [label]="'agent.app-install-step3' | translate" [completed]="canSubmit()">
 
-      <mat-form-field class="mat-block">
+      <mat-form-field class="mat-block" *ngIf="mode !== 'upgrade'">
         <mat-label translate>agent.app-install-name</mat-label>
         <input matInput [(ngModel)]="appName" required>
       </mat-form-field>
 
-      <label class="yaml-label" translate>agent.app-install-yaml</label>
-      <textarea class="yaml-editor" [(ngModel)]="composeYaml" spellcheck="false"
-                rows="18"></textarea>
+      <ng-container *ngIf="mode === 'install'">
+        <label class="yaml-label" translate>agent.app-install-yaml</label>
+        <div class="yaml-editor yaml-editor-ace" #installYamlEditor></div>
+      </ng-container>
 
-      <mat-checkbox *ngIf="hasPullImagesStep" [(ngModel)]="pullImages" class="pull-images">
-        <span translate>agent.app-install-pull-images</span>
-      </mat-checkbox>
+      <ng-container *ngIf="mode === 'update'">
+        <div class="diff-header-row">
+          <div class="diff-header added">{{ 'agent.app-update-diff-proposed' | translate }}</div>
+          <div class="diff-header removed">{{ 'agent.app-update-diff-current' | translate }}</div>
+        </div>
+        <div class="diff-viewer" #diffViewer></div>
+        <p class="diff-hint" translate>agent.app-update-diff-hint</p>
+      </ng-container>
+
+      <ng-container *ngIf="mode === 'upgrade'">
+        <div class="diff-header-row">
+          <div class="diff-header added">
+            {{ 'agent.app-upgrade-template-new' | translate: { version: toVersion || '—' } }}
+          </div>
+          <div class="diff-header removed" translate>agent.app-upgrade-current</div>
+        </div>
+        <div class="diff-viewer" #diffViewer></div>
+        <p class="diff-hint" translate>agent.app-upgrade-diff-hint</p>
+
+        <div class="config-section" *ngIf="backupVolumeStep">
+          <div class="config-section-header">
+            {{ backupVolumeStep.title }}
+            <span class="step-type-label">{{ backupVolumeStep.type }}</span>
+          </div>
+          <p class="hint" translate>agent.app-upgrade-backup-volumes-hint</p>
+          <div class="volume-list" *ngIf="backupVolumes.length">
+            <label class="volume-row" *ngFor="let v of backupVolumes">
+              <mat-checkbox [checked]="v.selected" (change)="toggleBackupVolume(v)">
+                <span class="volume-name">{{ v.key }}</span>
+              </mat-checkbox>
+            </label>
+          </div>
+          <div class="volume-empty" *ngIf="!backupVolumes.length" translate>
+            agent.app-upgrade-no-volumes
+          </div>
+        </div>
+      </ng-container>
+
+      <div class="config-section" *ngIf="hasPullImagesStep && pullImagesStep">
+        <div class="config-section-header">
+          {{ pullImagesStep.title || ('agent.app-install-pull-images' | translate) }}
+          <span class="step-type-label">{{ pullImagesStep.type }}</span>
+        </div>
+        <mat-checkbox [(ngModel)]="pullImages">
+          <span translate>agent.app-install-pull-images</span>
+        </mat-checkbox>
+      </div>
 
       <div class="step-footer">
         <button mat-button matStepperPrevious [disabled]="submitting" *ngIf="mode === 'install'">
@@ -99,18 +153,28 @@
           <span class="label" translate>agent.app-name</span>
           <span class="value">{{ appName }}</span>
         </div>
-        <div class="summary-row">
+        <div class="summary-row" *ngIf="mode !== 'upgrade'">
           <span class="label" translate>agent.app-type</span>
           <span class="value"><span class="tb-type-badge"
             [class.edge]="selectedType === 'EDGE'"
             [class.gateway]="selectedType === 'GATEWAY'"
             [class.generic]="selectedType === 'GENERIC'">{{ selectedType }}</span></span>
         </div>
-        <div class="summary-row" *ngIf="template">
+        <div class="summary-row" *ngIf="mode !== 'upgrade' && template">
           <span class="label" translate>agent.app-template</span>
           <span class="value">{{ template.appType }} {{ template.currentVersion }}</span>
         </div>
-        <div class="summary-row" *ngIf="agent">
+        <div class="summary-row" *ngIf="mode === 'upgrade'">
+          <span class="label" translate>agent.app-upgrade-summary-versions</span>
+          <span class="value">{{ fromVersion || '—' }} → {{ toVersion || '—' }}</span>
+        </div>
+        <div class="summary-row" *ngIf="mode === 'upgrade' && backupVolumeStep">
+          <span class="label" translate>agent.app-upgrade-summary-volumes-label</span>
+          <span class="value">
+            {{ 'agent.app-upgrade-summary-volumes' | translate: { count: selectedBackupVolumeCount } }}
+          </span>
+        </div>
+        <div class="summary-row" *ngIf="agent && mode !== 'upgrade'">
           <span class="label" translate>agent.agents</span>
           <span class="value">{{ agent.name }}</span>
         </div>
@@ -118,7 +182,8 @@
 
       <div class="info-box">
         <mat-icon>info</mat-icon>
-        <span translate>agent.app-install-confirm-info</span>
+        <span *ngIf="mode !== 'upgrade'" translate>agent.app-install-confirm-info</span>
+        <span *ngIf="mode === 'upgrade'" translate>agent.app-upgrade-rollback-info</span>
       </div>
 
       <div class="step-footer">
@@ -130,7 +195,7 @@
           {{ 'action.cancel' | translate }}
         </button>
         <button mat-raised-button color="primary" (click)="submit()" [disabled]="!canSubmit()">
-          <mat-icon>rocket_launch</mat-icon>
+          <mat-icon>{{ mode === 'upgrade' ? 'upgrade' : 'rocket_launch' }}</mat-icon>
           <span>{{ ctaKey | translate }}</span>
         </button>
       </div>

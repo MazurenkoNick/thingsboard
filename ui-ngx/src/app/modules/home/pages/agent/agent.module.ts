@@ -36,9 +36,6 @@ import {
   AgentAppEventProgressDialogComponent
 } from '@home/pages/agent/dialog/agent-app-event-progress-dialog.component';
 import {
-  AgentAppUpgradeWizardComponent
-} from '@home/pages/agent/wizard/agent-app-upgrade-wizard.component';
-import {
   AgentAppInstallWizardComponent
 } from '@home/pages/agent/wizard/agent-app-install-wizard.component';
 import { AgentApplicationComponent } from '@home/pages/agent/agent-application.component';
@@ -67,7 +64,6 @@ import {
     AgentInstallInstructionsDialogComponent,
     AgentAppDeleteDialogComponent,
     AgentAppEventProgressDialogComponent,
-    AgentAppUpgradeWizardComponent,
     AgentAppInstallWizardComponent,
     AgentApplicationComponent,
     AgentApplicationTabsComponent,
