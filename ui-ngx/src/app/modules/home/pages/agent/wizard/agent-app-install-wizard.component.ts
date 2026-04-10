@@ -455,6 +455,7 @@ export class AgentAppInstallWizardComponent
   private confineWheelToEditor(host: HTMLElement | null | undefined, editor: Ace.Editor | null) {
     if (!host || !editor) { return; }
     host.addEventListener('wheel', (ev: WheelEvent) => {
+      if (!editor.isFocused()) { return; }
       ev.preventDefault();
       // Stop bubbling so outer listeners (e.g. the .diff-viewer host
       // listener that catches the center gutter) don't also handle the

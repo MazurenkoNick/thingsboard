@@ -16,6 +16,13 @@
 
 -->
 <div class="tb-details-buttons xs:flex xs:flex-col">
+  <button mat-raised-button color="accent"
+          [disabled]="(isLoading$ | async)"
+          (click)="onManageApplications($event)"
+          [class.!hidden]="isEdit || !entity?.id">
+    <mat-icon>apps</mat-icon>
+    <span translate>agent.manage-applications</span>
+  </button>
   <button mat-raised-button color="primary"
           [disabled]="(isLoading$ | async)"
           (click)="onEntityAction($event, 'open')"
@@ -68,19 +75,14 @@
       <mat-icon svgIcon="mdi:clipboard-arrow-left"></mat-icon>
       <span translate>agent.copy-secret</span>
     </button>
+  </div>
+  <div class="flex flex-row flex-wrap xs:flex-col">
     <button mat-raised-button color="primary"
             [disabled]="(isLoading$ | async)"
             (click)="onEntityAction($event, 'openInstallInstructions')"
             [class.!hidden]="isEdit || agentScope === 'customer_user'">
       <mat-icon>terminal</mat-icon>
       <span translate>agent.install-instructions</span>
-    </button>
-    <button mat-raised-button color="primary"
-            [disabled]="(isLoading$ | async)"
-            (click)="onManageApplications($event)"
-            [class.!hidden]="isEdit || !entity?.id">
-      <mat-icon>apps</mat-icon>
-      <span translate>agent.manage-applications</span>
     </button>
   </div>
 </div>

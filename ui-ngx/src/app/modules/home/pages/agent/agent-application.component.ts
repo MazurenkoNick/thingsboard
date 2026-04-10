@@ -163,6 +163,7 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
       // into ace's scrollTop/scrollLeft so the editor still scrolls while
       // it has room to move.
       container?.addEventListener('wheel', (ev: WheelEvent) => {
+        if (!this.isEdit || !editor.isFocused()) { return; }
         ev.preventDefault();
         const session = editor.getSession();
         session.setScrollTop(session.getScrollTop() + ev.deltaY);
