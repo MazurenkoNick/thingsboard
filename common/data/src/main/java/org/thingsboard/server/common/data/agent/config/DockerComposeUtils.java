@@ -22,7 +22,9 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
@@ -89,6 +91,34 @@ public class DockerComposeUtils {
             if (env.has(entry.getKey())) {
                 env.set(entry.getKey(), new TextNode(entry.getValue()));
             }
+        }
+    }
+
+    /**
+     * Compare two compose documents for semantic equality while ignoring the
+     * given env keys on the main service (identified by {@code imagePattern}).
+     * Both inputs are deep-copied, so the originals are not modified.
+     */
+    public static boolean equalsIgnoringEnvKeys(JsonNode a, JsonNode b, Pattern imagePattern, List<String> envKeysToIgnore) {
+        if (a == b) {
+            return true;
+        }
+        JsonNode aCopy = a != null ? a.deepCopy() : null;
+        JsonNode bCopy = b != null ? b.deepCopy() : null;
+        if (imagePattern != null && envKeysToIgnore != null && !envKeysToIgnore.isEmpty()) {
+            removeEnvKeys(aCopy, imagePattern, envKeysToIgnore);
+            removeEnvKeys(bCopy, imagePattern, envKeysToIgnore);
+        }
+        return Objects.equals(aCopy, bCopy);
+    }
+
+    private static void removeEnvKeys(JsonNode compose, Pattern imagePattern, List<String> keys) {
+        ObjectNode env = findServiceEnvironment(compose, imagePattern);
+        if (env == null) {
+            return;
+        }
+        for (String key : keys) {
+            env.remove(key);
         }
     }
 

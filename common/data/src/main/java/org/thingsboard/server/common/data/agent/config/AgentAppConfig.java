@@ -23,6 +23,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 
+import java.util.Objects;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({
@@ -42,5 +44,28 @@ public abstract class AgentAppConfig {
     }
 
     public void validateForProfile(AgentApplicationType appType) {
+    }
+
+    /**
+     * Compare two configs for equality while ignoring the credential env vars
+     * declared by the given app type. Used by service/validator paths that
+     * allow rotating credentials independently of "real" config edits.
+     */
+    public static boolean equalsIgnoringCreds(AgentApplicationType appType, AgentAppConfig a, AgentAppConfig b) {
+        if (a == b) {
+            return true;
+        }
+        if (a == null || b == null) {
+            return false;
+        }
+        if (!(a instanceof DockerComposeConfig aDc) || !(b instanceof DockerComposeConfig bDc)) {
+            return Objects.equals(a, b);
+        }
+        if (appType == null) {
+            return Objects.equals(aDc.getCompose(), bDc.getCompose());
+        }
+        return DockerComposeUtils.equalsIgnoringEnvKeys(
+                aDc.getCompose(), bDc.getCompose(),
+                appType.getMainImagePattern(), appType.getCredentialEnvKeys());
     }
 }
