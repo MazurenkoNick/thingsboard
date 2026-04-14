@@ -73,23 +73,108 @@
 
     <mat-step [label]="'agent.app-install-step3' | translate" [completed]="canSubmit()">
 
-      <mat-form-field class="mat-block" *ngIf="mode !== 'upgrade'">
+      <div class="config-toggle" *ngIf="mode === 'install'">
+        <tb-toggle-select [(ngModel)]="useProfile" (ngModelChange)="toggleUseProfile($event)" appearance="fill">
+          <tb-toggle-option [value]="false">{{ 'agent.app-install-custom-config' | translate }}</tb-toggle-option>
+          <tb-toggle-option [value]="true">{{ 'agent.app-install-from-profile' | translate }}</tb-toggle-option>
+        </tb-toggle-select>
+      </div>
+
+      <mat-form-field class="mat-block" *ngIf="mode === 'install' && useProfile">
+        <mat-label translate>agent.app-install-name</mat-label>
+        <input matInput [(ngModel)]="appName" required>
+      </mat-form-field>
+
+      <mat-form-field class="mat-block" *ngIf="mode === 'install' && useProfile">
+        <mat-label translate>agent.app-install-select-profile</mat-label>
+        <mat-select [value]="selectedProfile?.id?.id" (selectionChange)="selectProfile(findProfileById($event.value))">
+          <mat-option *ngFor="let p of availableProfiles" [value]="p.id.id">
+            {{ p.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="loading-state" *ngIf="loadingProfiles">
+        <mat-spinner diameter="20"></mat-spinner>
+        <span translate>agent.app-install-loading-template</span>
+      </div>
+
+      <mat-form-field class="mat-block" *ngIf="mode !== 'upgrade' && !useProfile">
         <mat-label translate>agent.app-install-name</mat-label>
         <input matInput [(ngModel)]="appName" required>
       </mat-form-field>
 
       <ng-container *ngIf="mode === 'install'">
+        <div class="cred-section" *ngIf="showCredentialForm">
+          <div class="cred-section-header">
+            <span translate>agent.app-install-cred-title</span>
+            <span class="cred-section-hint" translate>agent.app-install-cred-hint</span>
+          </div>
+          <ng-container *ngFor="let field of visibleCredentialFields">
+            <mat-form-field class="mat-block" *ngIf="field.type !== 'select'">
+              <mat-label>{{ field.labelKey | translate }}</mat-label>
+              <input matInput
+                     [type]="field.type"
+                     [ngModel]="credentialValues[field.key]"
+                     (ngModelChange)="onCredentialChange(field, $event)">
+            </mat-form-field>
+            <mat-form-field class="mat-block" *ngIf="field.type === 'select'">
+              <mat-label>{{ field.labelKey | translate }}</mat-label>
+              <mat-select [ngModel]="credentialValues[field.key]"
+                          (ngModelChange)="onCredentialChange(field, $event)">
+                <mat-option *ngFor="let opt of field.options" [value]="opt.value">
+                  {{ opt.labelKey | translate }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </ng-container>
+        </div>
+
         <label class="yaml-label" translate>agent.app-install-yaml</label>
         <div class="yaml-editor yaml-editor-ace" #installYamlEditor></div>
       </ng-container>
 
-      <ng-container *ngIf="mode === 'update'">
+      <ng-container *ngIf="mode === 'update' && !isProfileManagedUpdate">
         <div class="diff-header-row">
           <div class="diff-header added">{{ 'agent.app-update-diff-proposed' | translate }}</div>
           <div class="diff-header removed">{{ 'agent.app-update-diff-current' | translate }}</div>
         </div>
         <div class="diff-viewer" #diffViewer></div>
         <p class="diff-hint" translate>agent.app-update-diff-hint</p>
+      </ng-container>
+
+      <ng-container *ngIf="mode === 'update' && isProfileManagedUpdate">
+        <div class="cred-section" *ngIf="showCredentialForm">
+          <div class="cred-section-header">
+            <span translate>agent.app-install-cred-title</span>
+            <span class="cred-section-hint" translate>agent.app-update-cred-hint</span>
+          </div>
+          <ng-container *ngFor="let field of visibleCredentialFields">
+            <mat-form-field class="mat-block" *ngIf="field.type !== 'select'">
+              <mat-label>{{ field.labelKey | translate }}</mat-label>
+              <input matInput
+                     [type]="field.type"
+                     [ngModel]="credentialValues[field.key]"
+                     (ngModelChange)="onCredentialChange(field, $event)">
+            </mat-form-field>
+            <mat-form-field class="mat-block" *ngIf="field.type === 'select'">
+              <mat-label>{{ field.labelKey | translate }}</mat-label>
+              <mat-select [ngModel]="credentialValues[field.key]"
+                          (ngModelChange)="onCredentialChange(field, $event)">
+                <mat-option *ngFor="let opt of field.options" [value]="opt.value">
+                  {{ opt.labelKey | translate }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </ng-container>
+        </div>
+
+        <div class="config-section">
+          <mat-checkbox [(ngModel)]="skipProfileRefetch">
+            <span translate>agent.app-update-skip-profile-refetch</span>
+          </mat-checkbox>
+          <p class="hint" translate>agent.app-update-skip-profile-refetch-hint</p>
+        </div>
       </ng-container>
 
       <ng-container *ngIf="mode === 'upgrade'">

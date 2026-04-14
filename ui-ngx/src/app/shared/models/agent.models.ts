@@ -288,6 +288,7 @@ export interface AgentAppEventRequest {
   application?: AgentApplication;
   stepInputs?: { [stepId: string]: AgentAppStepState };
   bulkActionId?: string;
+  skipProfileRefetch?: boolean;
 }
 
 export interface BulkOperationRequest {

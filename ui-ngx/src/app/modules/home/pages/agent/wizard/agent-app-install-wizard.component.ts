@@ -25,6 +25,7 @@ import { AgentService } from '@core/http/agent.service';
 import {
   AgentApplication,
   AgentAppEventActionType,
+  AgentAppProfile,
   AgentAppStep,
   AgentAppStepType,
   AgentApplicationType,
@@ -36,6 +37,14 @@ import { AgentId } from '@shared/models/id/agent-id';
 import * as YAML from 'yaml';
 import { getAce, getAceDiff } from '@shared/models/ace/ace.models';
 import { Ace } from 'ace-builds';
+import { confineWheelToAceEditor } from '@home/pages/agent/util/ace-wheel-confine';
+import {
+  applyCredentialValuesToCompose,
+  CredField,
+  credentialSchemaFor,
+  extractCredentialValues,
+  visibleCredentialFields as visibleCredFieldsFor
+} from '@home/pages/agent/util/agent-credentials';
 
 export interface AgentAppInstallWizardData {
   agentId: string;
@@ -55,6 +64,7 @@ interface TypeCard {
   labelKey: string;
   descKey: string;
 }
+
 
 @Component({
   selector: 'tb-agent-app-install-wizard',
@@ -124,6 +134,26 @@ export class AgentAppInstallWizardComponent
   // Install mode pre-warms all three types on open; selectType reads from here
   // and skips the HTTP round-trip (and the "Loading template…" flash).
   private templateCache = new Map<AgentApplicationType, AgentAppTemplate>();
+
+  // Profile-based install state
+  useProfile = false;
+  availableProfiles: AgentAppProfile[] = [];
+  selectedProfile: AgentAppProfile | null = null;
+  loadingProfiles = false;
+
+  // Profile-based install: credential env values extracted from the compose so
+  // the user can edit them even though the compose editor is read-only. Keys
+  // match AgentApplicationType.credentialEnvKeys on the backend.
+  credentialValues: Record<string, string> = {};
+
+  // Update mode for profile-managed apps: when checked, the backend won't
+  // re-resolve compose from the (possibly upgraded) profile — only the
+  // credentials carried by the request are applied.
+  skipProfileRefetch = false;
+
+  get isProfileManagedUpdate(): boolean {
+    return this.mode === 'update' && !!this.existingApplication?.applicationProfileId;
+  }
 
   constructor(protected store: Store<AppState>,
               protected router: Router,
@@ -207,11 +237,120 @@ export class AgentAppInstallWizardComponent
     this.composeType = null;
     this.composeYaml = '';
     this.mergedApp = null;
+    this.selectedProfile = null;
+    this.availableProfiles = [];
     if (this.mode !== 'update') {
       this.appName = this.defaultAppName(type);
     }
     this.loadError = '';
 
+    if (this.useProfile) {
+      this.loadProfilesForType(type);
+    } else {
+      this.loadTemplateForType(type);
+    }
+  }
+
+  toggleUseProfile(value: boolean) {
+    this.useProfile = value;
+    this.selectedProfile = null;
+    this.template = null;
+    this.composeYaml = '';
+    this.mergedApp = null;
+    this.loadError = '';
+    this.credentialValues = {};
+    this.syncInstallEditor();
+    this.applyInstallEditorReadOnly();
+    if (this.selectedType) {
+      if (value) {
+        this.loadProfilesForType(this.selectedType);
+      } else {
+        this.availableProfiles = [];
+        this.loadTemplateForType(this.selectedType);
+      }
+    }
+  }
+
+  selectProfile(profile: AgentAppProfile) {
+    if (!profile) { return; }
+    this.selectedProfile = profile;
+    this.appName = profile.name;
+    // Load the template from the profile to get step inputs
+    if (profile.templateId?.id) {
+      this.loadingTemplate = true;
+      this.agentService.getAgentAppTemplateById(profile.templateId.id).subscribe({
+        next: tpl => {
+          this.template = tpl;
+          this.scanStartSteps(tpl);
+          this.composeType = this.pickComposeType(tpl);
+          this.composeYaml = this.dumpCompose(profile as any);
+          this.initCredentialValues();
+          this.syncInstallEditor();
+          this.applyInstallEditorReadOnly();
+          this.loadingTemplate = false;
+        },
+        error: () => {
+          this.loadError = this.translate.instant('agent.app-install-template-failed');
+          this.loadingTemplate = false;
+        }
+      });
+    }
+  }
+
+  get showCredentialForm(): boolean {
+    if (!this.selectedType || credentialSchemaFor(this.selectedType).length === 0) {
+      return false;
+    }
+    if (this.mode === 'install') {
+      return this.useProfile && !!this.selectedProfile;
+    }
+    if (this.mode === 'update') {
+      return !!this.existingApplication?.applicationProfileId;
+    }
+    return false;
+  }
+
+  get visibleCredentialFields(): CredField[] {
+    return visibleCredFieldsFor(this.selectedType, this.credentialValues);
+  }
+
+  onCredentialChange(field: CredField, value: string) {
+    this.credentialValues[field.key] = value ?? '';
+    this.writeCredentialsToCompose();
+  }
+
+  private initCredentialValues() {
+    const parsed = this.parseYamlBestEffort(this.composeYaml);
+    this.credentialValues = extractCredentialValues(parsed, this.selectedType);
+  }
+
+  private writeCredentialsToCompose() {
+    if (!this.selectedType) { return; }
+    const parsed = this.parseYamlBestEffort(this.composeYaml);
+    applyCredentialValuesToCompose(parsed, this.selectedType, this.credentialValues);
+    this.composeYaml = this.dumpYaml(parsed, 0).trimEnd() + '\n';
+    this.syncInstallEditor();
+  }
+
+  findProfileById(id: string): AgentAppProfile | undefined {
+    return this.availableProfiles.find(p => p.id.id === id);
+  }
+
+  private loadProfilesForType(type: AgentApplicationType) {
+    this.loadingProfiles = true;
+    this.agentService.getAgentAppProfilesByAppType(type).subscribe({
+      next: profiles => {
+        this.availableProfiles = profiles;
+        this.loadingProfiles = false;
+      },
+      error: () => {
+        this.loadError = this.translate.instant('agent.app-install-template-failed');
+        this.loadingProfiles = false;
+      }
+    });
+  }
+
+  private loadTemplateForType(type: AgentApplicationType) {
     const cached = this.templateCache.get(type);
     if (cached) {
       this.applyTemplate(cached);
@@ -235,6 +374,14 @@ export class AgentAppInstallWizardComponent
     this.template = tpl;
     this.scanStartSteps(tpl);
     this.composeType = this.pickComposeType(tpl);
+    // Profile-managed update: skip diff/preview merge — the user can only
+    // edit credentials, so we hydrate the form from the existing app and
+    // expose a skip-refetch checkbox below the cred inputs.
+    if (this.mode === 'update' && this.existingApplication?.applicationProfileId) {
+      this.composeYaml = this.dumpCompose(this.existingApplication);
+      this.initCredentialValues();
+      return;
+    }
     this.runMergeForPreview(tpl);
   }
 
@@ -429,45 +576,15 @@ export class AgentAppInstallWizardComponent
     }
   }
 
-  /**
-   * Override the global `.ace_editor { font-size: 16px !important; }` rule
-   * (styles.scss:271) by applying font-size inline with CSS !important, which
-   * wins against any stylesheet-level !important. Also forces ace to re-measure
-   * character/row dimensions so its layout (and ace-diff's arrow positions)
-   * match the new size — without this, ace-diff places copy arrows using the
-   * stale (larger) row height and they end up past the last real line.
-   */
-  /**
-   * Confine wheel input to an ace editor so the parent wizard body never
-   * scrolls when the pointer is over this editor.
-   *
-   * stopPropagation alone is not enough: ace uses its own virtual scrolling
-   * and does not call preventDefault on wheel deltas that it can't consume
-   * (i.e. when the editor is already at top/bottom). Those spilled deltas
-   * then travel up the browser's default scroll chain and scroll the next
-   * native scroll container — the wizard body. To block that, we
-   * preventDefault on the outer container (halting the default scroll
-   * chain) and manually forward the delta into ace's session scrollTop, so
-   * the editor still scrolls while it has room to move.
-   *
-   * Requires a non-passive listener so preventDefault is honoured.
-   */
   private confineWheelToEditor(host: HTMLElement | null | undefined, editor: Ace.Editor | null) {
     if (!host || !editor) { return; }
     host.addEventListener('wheel', (ev: WheelEvent) => {
-      if (!editor.isFocused()) { return; }
       ev.preventDefault();
-      // Stop bubbling so outer listeners (e.g. the .diff-viewer host
-      // listener that catches the center gutter) don't also handle the
-      // same event and apply the delta twice — that was the bug where
-      // scrolling the left pane also scrolled the right pane.
       ev.stopPropagation();
       const session = editor.getSession();
-      const top = session.getScrollTop();
-      session.setScrollTop(top + ev.deltaY);
+      session.setScrollTop(session.getScrollTop() + ev.deltaY);
       if (ev.deltaX) {
-        const left = session.getScrollLeft();
-        session.setScrollLeft(left + ev.deltaX);
+        session.setScrollLeft(session.getScrollLeft() + ev.deltaX);
       }
     }, { passive: false });
   }
@@ -508,10 +625,21 @@ export class AgentAppInstallWizardComponent
         this.installEditorSettingValue = false;
       });
       this.installEditor = editor;
+      this.applyInstallEditorReadOnly();
       this.confineWheelToEditor((editor as any).container, editor);
       // If composeYaml updates later (async mergeForPreview), push into editor.
       setTimeout(() => editor.resize(true), 0);
     });
+  }
+
+  private applyInstallEditorReadOnly() {
+    if (!this.installEditor) { return; }
+    const readOnly = this.useProfile && !!this.selectedProfile;
+    this.installEditor.setReadOnly(readOnly);
+    const cursorLayer = (this.installEditor.renderer as any).$cursorLayer;
+    if (cursorLayer?.element?.style) {
+      cursorLayer.element.style.display = readOnly ? 'none' : '';
+    }
   }
 
   // Called from selectType / mergeForPreview when composeYaml changes programmatically.
@@ -573,13 +701,18 @@ export class AgentAppInstallWizardComponent
       rightEditor.renderer.setScrollMargin(0, 0, 0, 0);
       this.forceEditorFontSize(leftEditor, 12);
       this.forceEditorFontSize(rightEditor, 12);
-      this.confineWheelToEditor((leftEditor as any).container, leftEditor);
-      this.confineWheelToEditor((rightEditor as any).container, rightEditor);
-      // Also confine wheel on the diff-viewer host itself so swipes on the
-      // center gutter (copy arrows) don't leak to the wizard body. Route
-      // those through the right (editable) editor since that's the pane
-      // that gets saved — its scroll position is the more user-relevant one.
-      this.confineWheelToEditor(this.diffViewerElmRef?.nativeElement, rightEditor);
+      // Only confine the wheel when the target editor is focused, so the
+      // wizard body can scroll past the diff viewer while neither pane is
+      // active — matching the detail-page compose editor behavior.
+      confineWheelToAceEditor((leftEditor as any).container, leftEditor,
+        () => leftEditor.isFocused());
+      confineWheelToAceEditor((rightEditor as any).container, rightEditor,
+        () => rightEditor.isFocused());
+      // Wheel on the diff-viewer host itself (e.g. center gutter with copy
+      // arrows) is routed through the right/editable editor, but only while
+      // one of the panes is focused.
+      confineWheelToAceEditor(this.diffViewerElmRef?.nativeElement, rightEditor,
+        () => leftEditor.isFocused() || rightEditor.isFocused());
       // Keep composeYaml in sync with the editable right side so
       // canSubmit/submit read fresh content.
       rightEditor.getSession().on('change', () => {
@@ -609,6 +742,9 @@ export class AgentAppInstallWizardComponent
   canSubmit(): boolean {
     if (this.mode === 'upgrade') {
       return !!this.template && !!this.existingApplication && !this.submitting && !this.loadError;
+    }
+    if (this.useProfile) {
+      return !!this.selectedType && !!this.selectedProfile && !!this.appName?.trim() && !!this.composeYaml?.trim() && !this.submitting;
     }
     return !!this.selectedType && !!this.appName?.trim() && !!this.composeYaml?.trim() && !this.submitting;
   }
@@ -684,14 +820,29 @@ export class AgentAppInstallWizardComponent
         origin: AgentApplicationOrigin.INSTALLED
       };
     } else {
+      // Profile-based installs skip mergeForPreview, so mergedApp is null here
+      // and we must populate the mandatory fields (agentId, appType, origin)
+      // ourselves — otherwise the server rejects with "Agent application should
+      // be assigned to agent!".
+      const base: any = this.mergedApp || {
+        agentId: { id: this.agentId, entityType: 'AGENT' },
+        appType: this.selectedType,
+        origin: AgentApplicationOrigin.INSTALLED
+      };
       application = {
-        ...(this.mergedApp || {}),
+        ...base,
         name: this.appName.trim(),
         config: {
           ...((this.mergedApp && this.mergedApp.config) || { type: 'DOCKER_COMPOSE' }),
           compose: this.parseYamlBestEffort(this.composeYaml)
         }
       };
+    }
+
+    // Attach profile reference if using a profile-based install
+    if (this.useProfile && this.selectedProfile) {
+      application.applicationProfileId = this.selectedProfile.id;
+      application.templateId = this.selectedProfile.templateId;
     }
 
     const stepInputs: { [stepId: string]: any } = {};
@@ -706,7 +857,8 @@ export class AgentAppInstallWizardComponent
       this.agentService.createAgentAppEvent(this.existingApplication.id.id, {
         actionType: AgentAppEventActionType.UPDATE,
         application,
-        stepInputs
+        stepInputs,
+        ...(this.isProfileManagedUpdate ? { skipProfileRefetch: this.skipProfileRefetch } : {})
       }).subscribe({
         next: () => this.dialogRef.close(true),
         error: () => {

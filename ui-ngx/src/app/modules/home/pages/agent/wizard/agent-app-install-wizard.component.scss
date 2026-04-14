@@ -161,6 +161,21 @@
 
 .pull-images { display: block; margin-top: 12px; }
 
+.cred-section {
+  margin: 8px 0 16px; padding: 14px 16px 4px;
+  background: #fffbea;
+  border: 1px solid #f0d97a; border-radius: 4px;
+  .cred-section-header {
+    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    margin-bottom: 8px;
+    font-size: 14px; font-weight: 500; color: #6d4c00;
+    .cred-section-hint {
+      font-size: 12px; font-weight: 400; color: #8b6d2a;
+    }
+  }
+  mat-form-field { width: 100%; }
+}
+
 // Upgrade-mode sections (backup volume selector). Config-section mirrors the
 // pattern previously in the standalone upgrade wizard SCSS.
 .config-section {
@@ -328,6 +343,10 @@
   background: #e3f2fd; color: #1565c0; border-radius: 4px; font-size: 13px;
   line-height: 1.5; margin-bottom: 16px;
   mat-icon { flex-shrink: 0; font-size: 20px; width: 20px; height: 20px; }
+}
+
+.config-toggle {
+  display: flex; justify-content: center; margin-bottom: 16px;
 }
 
 .step-footer {
