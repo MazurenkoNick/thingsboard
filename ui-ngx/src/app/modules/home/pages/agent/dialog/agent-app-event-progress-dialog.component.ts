@@ -223,9 +223,11 @@ export class AgentAppEventProgressDialogComponent
     let raw: AgentAppStep[] | undefined;
     switch (action) {
       case AgentAppEventActionType.INSTALL:
-      case AgentAppEventActionType.RESTART:
       case AgentAppEventActionType.UPDATE:
         raw = template.startSteps;
+        break;
+      case AgentAppEventActionType.RESTART:
+        raw = template.restartSteps;
         break;
       case AgentAppEventActionType.UPGRADE:
         raw = template.upgradeSteps;

@@ -259,6 +259,7 @@ export interface AgentAppTemplate extends BaseData<AgentAppTemplateId> {
   upgradeSteps?: AgentAppStep[];
   deleteSteps?: AgentAppStep[];
   rollbackSteps?: AgentAppStep[];
+  restartSteps?: AgentAppStep[];
   version?: number;
 }
 
