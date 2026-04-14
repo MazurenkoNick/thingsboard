@@ -18,16 +18,21 @@ package org.thingsboard.server.dao.service.validator;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppEventDao;
+import org.thingsboard.server.dao.agent.AgentAppProfileService;
 import org.thingsboard.server.dao.agent.AgentAppTemplateDao;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.exception.DataValidationException;
+
+import java.util.Objects;
 
 @Component
 @AllArgsConstructor
@@ -37,6 +42,7 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
     private final AgentApplicationDao agentApplicationDao;
     private final AgentAppTemplateDao agentAppTemplateDao;
     private final AgentAppEventDao agentAppEventDao;
+    private final AgentAppProfileService agentAppProfileService;
 
     @Override
     protected AgentApplication validateUpdate(TenantId tenantId, AgentApplication agentApplication) {
@@ -53,8 +59,52 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
         }
         if (agentApplication.getDesiredTemplateId() != null) {
             validateUpgradeVersion(old, agentApplication);
+        } else {
+            validateConfigNotChangedWhenTemplateStale(tenantId, old, agentApplication);
+            validateProfileManagedConfigChange(old, agentApplication);
         }
         return old;
+    }
+
+    private void validateProfileManagedConfigChange(AgentApplication old, AgentApplication application) {
+        if (application.getApplicationProfileId() == null) {
+            return;
+        }
+        if (isApplicationProfileChangedOrAdded(application, old)) {
+            return;
+        }
+        boolean profileRefetched = !Objects.equals(application.getProfileConfigVersion(), old.getProfileConfigVersion());
+        if (profileRefetched) {
+            return;
+        }
+        if (!AgentAppConfig.equalsIgnoringCreds(application.getAppType(), application.getConfig(), old.getConfig())) {
+            throw new DataValidationException(
+                    "Direct config update is not allowed for profile-managed applications (only credential fields can be modified).");
+        }
+    }
+
+    private boolean isApplicationProfileChangedOrAdded(AgentApplication application, AgentApplication old) {
+        return application.getApplicationProfileId() != null
+                && !application.getApplicationProfileId().equals(old.getApplicationProfileId());
+    }
+    // Block plain updates that also change the config when the app's profile was upgraded, app wasn't yet.
+    // Upgrades (desiredTemplateId != null) are the correct path to resolve that drift, so we only enforce this on non-upgrade updates.
+    // Template ids uniquely identify (appType, version), so UUID inequality is sufficient to detect a version drift.
+    private void validateConfigNotChangedWhenTemplateStale(TenantId tenantId, AgentApplication old, AgentApplication agentApplication) {
+        if (old.getApplicationProfileId() == null) {
+            return;
+        }
+        AgentAppProfile profile = agentAppProfileService.findProfileById(tenantId, old.getApplicationProfileId());
+        if (profile == null || profile.getTemplateId() == null || old.getTemplateId() == null) {
+            return;
+        }
+        if (Objects.equals(old.getTemplateId(), profile.getTemplateId())) {
+            return;
+        }
+        if (!AgentAppConfig.equalsIgnoringCreds(old.getAppType(), old.getConfig(), agentApplication.getConfig())) {
+            throw new DataValidationException(
+                    "Cannot update configuration: the application's template is out of sync with its profile. Run an upgrade first.");
+        }
     }
 
     @Override

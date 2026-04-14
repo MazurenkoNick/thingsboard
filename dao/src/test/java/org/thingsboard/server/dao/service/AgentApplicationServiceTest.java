@@ -34,6 +34,7 @@ import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationOrigin;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
+import org.thingsboard.server.common.data.agent.config.DockerComposeUtils;
 import org.thingsboard.server.common.data.agent.step.ComposeStartStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.edge.Edge;
@@ -573,10 +574,13 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     }
 
     @Test
-    public void testSave_newApp_withProfile_noRelatedEntityId_throws() {
-        Agent agent = createAgent("Agent profile no related");
+    public void testSave_newApp_withProfile_noMatchingEntity_savesWithoutRelation() {
+        // No edge exists for the profile's placeholder routing key and the incoming app
+        // carries no creds of its own, so relation resolution yields null — but the app
+        // must still save (no explicit relatedEntityId is required anymore).
+        Agent agent = createAgent("Agent profile no matching entity");
         AgentAppTemplate template = createTemplate();
-        AgentAppProfile profile = createProfile("Profile 2", template, createEdgeProfileComposeJson("rk"));
+        AgentAppProfile profile = createProfile("Profile no match", template, createEdgeProfileComposeJson("no-edge-for-this-rk"));
 
         AgentApplication app = new AgentApplication();
         app.setAgentId(agent.getId());
@@ -584,10 +588,124 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         app.setTemplateId(template.getId());
         app.setApplicationProfileId(profile.getId());
 
-        Assertions.assertThrows(DataValidationException.class, () ->
-                agentApplicationService.save(tenantId, app));
+        AgentApplication saved = agentApplicationService.save(tenantId, app);
+        Assert.assertNotNull(saved);
+        Assert.assertNull(saved.getRelatedEntityId());
+        Assert.assertEquals(profile.getVersion(), saved.getProfileConfigVersion());
 
+        agentApplicationService.delete(tenantId, saved.getId());
         agentAppProfileService.deleteProfile(tenantId, profile.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testSave_newApp_withProfile_edge_preservesIncomingCredsAndResolvesEntity() {
+        // Profile carries placeholder creds; incoming compose carries the real
+        // routing key. ProfileConfigResolver must preserve the incoming CLOUD_ROUTING_KEY
+        // across the profile-config overwrite so that resolveRelatedEntityFromConfig
+        // can look up the edge from it.
+        Agent agent = createAgent("Agent preserve edge creds");
+        Edge edge = createEdge("Preserve Creds Edge", "real-edge-rk");
+        AgentAppTemplate template = createTemplate();
+        AgentAppProfile profile = createProfile("Profile edge placeholder",
+                template, createEdgeProfileComposeJson("PROFILE_PLACEHOLDER"));
+
+        DockerComposeConfig incomingConfig = new DockerComposeConfig();
+        incomingConfig.setCompose(createEdgeProfileComposeJson("real-edge-rk"));
+
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.EDGE);
+        app.setTemplateId(template.getId());
+        app.setApplicationProfileId(profile.getId());
+        app.setConfig(incomingConfig);
+
+        AgentApplication saved = agentApplicationService.save(tenantId, app);
+        Assert.assertNotNull(saved.getConfig());
+        Assert.assertEquals(edge.getId(), saved.getRelatedEntityId());
+        Assert.assertEquals("real-edge-rk", saved.getConfig().getEdgeRoutingKey());
+        Assert.assertEquals(profile.getVersion(), saved.getProfileConfigVersion());
+
+        agentApplicationService.delete(tenantId, saved.getId());
+        agentAppProfileService.deleteProfile(tenantId, profile.getId());
+        edgeService.deleteEdge(tenantId, edge.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testSave_newApp_withProfile_gateway_preservesAccessTokenAndResolvesDevice() {
+        Agent agent = createAgent("Agent preserve gateway access token");
+        Device device = createDevice("Preserve Token Device");
+        DeviceCredentials deviceCreds = deviceCredentialsService.findDeviceCredentialsByDeviceId(tenantId, device.getId());
+        String accessToken = deviceCreds.getCredentialsId();
+
+        AgentAppTemplate template = createTemplate();
+        AgentAppProfile profile = createGatewayProfile("Gateway profile placeholder",
+                template, createGatewayAccessTokenCompose("PROFILE_PLACEHOLDER_TOKEN"));
+
+        DockerComposeConfig incomingConfig = new DockerComposeConfig();
+        incomingConfig.setCompose(createGatewayAccessTokenCompose(accessToken));
+
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.GATEWAY);
+        app.setTemplateId(template.getId());
+        app.setApplicationProfileId(profile.getId());
+        app.setConfig(incomingConfig);
+
+        AgentApplication saved = agentApplicationService.save(tenantId, app);
+        Assert.assertNotNull(saved.getConfig());
+        Assert.assertEquals(device.getId(), saved.getRelatedEntityId());
+        String preservedToken = DockerComposeUtils.getEnvVariable(
+                ((DockerComposeConfig) saved.getConfig()).getCompose(),
+                AgentApplicationType.GATEWAY.getMainImagePattern(), "TB_GW_ACCESS_TOKEN");
+        Assert.assertEquals(accessToken, preservedToken);
+
+        agentApplicationService.delete(tenantId, saved.getId());
+        agentAppProfileService.deleteProfile(tenantId, profile.getId());
+        deviceService.deleteDevice(tenantId, device.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testSave_newApp_withProfile_gateway_preservesMqttBasicCredsAndResolvesDevice() {
+        Agent agent = createAgent("Agent preserve gateway mqtt creds");
+        Device device = createDevice("Preserve Mqtt Device");
+        DeviceCredentials creds = deviceCredentialsService.findDeviceCredentialsByDeviceId(tenantId, device.getId());
+        creds.setCredentialsType(DeviceCredentialsType.MQTT_BASIC);
+        creds.setCredentialsId("realGwUser");
+        creds.setCredentialsValue("{\"userName\":\"realGwUser\",\"password\":\"pass\"}");
+        deviceCredentialsService.updateDeviceCredentials(tenantId, creds);
+
+        AgentAppTemplate template = createTemplate();
+        AgentAppProfile profile = createGatewayProfile("Gateway profile mqtt placeholder",
+                template, createGatewayMqttBasicFullCompose("placeholderClient", "placeholderUser", "placeholderPass"));
+
+        DockerComposeConfig incomingConfig = new DockerComposeConfig();
+        // Clear TB_GW_CLIENT_ID explicitly so the cred carry-over overwrites the
+        // profile's placeholder and relation resolution uses the username path.
+        incomingConfig.setCompose(createGatewayMqttBasicFullCompose("", "realGwUser", "realPass"));
+
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.GATEWAY);
+        app.setTemplateId(template.getId());
+        app.setApplicationProfileId(profile.getId());
+        app.setConfig(incomingConfig);
+
+        AgentApplication saved = agentApplicationService.save(tenantId, app);
+        Assert.assertEquals(device.getId(), saved.getRelatedEntityId());
+        JsonNode savedCompose = ((DockerComposeConfig) saved.getConfig()).getCompose();
+        Assert.assertEquals("usernamePassword",
+                DockerComposeUtils.getEnvVariable(savedCompose,
+                        AgentApplicationType.GATEWAY.getMainImagePattern(), "TB_GW_SECURITY_TYPE"));
+        Assert.assertEquals("realGwUser",
+                DockerComposeUtils.getEnvVariable(savedCompose,
+                        AgentApplicationType.GATEWAY.getMainImagePattern(), "TB_GW_USERNAME"));
+
+        agentApplicationService.delete(tenantId, saved.getId());
+        agentAppProfileService.deleteProfile(tenantId, profile.getId());
+        deviceService.deleteDevice(tenantId, device.getId());
         agentService.deleteAgent(tenantId, agent.getId());
     }
 
@@ -619,7 +737,10 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     }
 
     @Test
-    public void testUpdate_profileUnchanged_rejectsDirectConfigChange() {
+    public void testUpdate_profileUnchanged_rejectsNonCredConfigChange() {
+        // A config change on a non-credential field (image tag here) on a
+        // profile-managed app must still be rejected — the profile is the
+        // source of truth for everything except creds.
         Agent agent = createAgent("Agent profile unchanged");
         Edge edge = createEdge("Unchanged Edge", "unchanged-rk");
         AgentAppTemplate template = createTemplate();
@@ -633,8 +754,10 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         app.setRelatedEntityId(edge.getId());
         AgentApplication saved = agentApplicationService.save(tenantId, app);
 
+        ObjectNode tweaked = ((DockerComposeConfig) saved.getConfig()).getCompose().deepCopy();
+        ((ObjectNode) tweaked.get("services").get("mytbedge")).put("image", "thingsboard/tb-edge:9.9.9");
         DockerComposeConfig differentConfig = new DockerComposeConfig();
-        differentConfig.setCompose(createEdgeComposeJson("modified-rk"));
+        differentConfig.setCompose(tweaked);
         saved.setConfig(differentConfig);
 
         Assertions.assertThrows(DataValidationException.class, () ->
@@ -643,6 +766,92 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         agentApplicationService.delete(tenantId, saved.getId());
         agentAppProfileService.deleteProfile(tenantId, profile.getId());
         edgeService.deleteEdge(tenantId, edge.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testUpdate_profileRefetched_acceptsNewConfigFromProfile() {
+        // Simulate an UPDATE action where the profile has drifted since the
+        // app was last synced: the action handler has already replaced
+        // application.config with the new profile compose and bumped
+        // profileConfigVersion. save() must accept that (non-cred) whole-
+        // compose replacement instead of throwing the "Direct config update
+        // is not allowed" guard.
+        Agent agent = createAgent("Agent profile refetch");
+        Edge edge = createEdge("Refetch Edge", "refetch-rk");
+        AgentAppTemplate template = createTemplate();
+        AgentAppProfile profile = createProfile("Profile refetch", template, createEdgeProfileComposeJson("refetch-rk"));
+
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.EDGE);
+        app.setTemplateId(template.getId());
+        app.setApplicationProfileId(profile.getId());
+        app.setRelatedEntityId(edge.getId());
+        AgentApplication saved = agentApplicationService.save(tenantId, app);
+        Long originalProfileVersion = saved.getProfileConfigVersion();
+
+        // Profile drift: swap the image tag (non-cred change) and re-save the
+        // profile so its version increments.
+        ObjectNode driftedCompose = ((DockerComposeConfig) profile.getConfig()).getCompose().deepCopy();
+        ((ObjectNode) driftedCompose.get("services").get("mytbedge")).put("image", "thingsboard/tb-edge:9.9.9");
+        ((DockerComposeConfig) profile.getConfig()).setCompose(driftedCompose);
+        AgentAppProfile bumpedProfile = agentAppProfileService.saveProfile(profile);
+
+        // Stand in for what UpdateActionHandler + ProfileConfigResolver.resolve
+        // does: replace config with new profile compose and bump the version.
+        DockerComposeConfig resolvedConfig = new DockerComposeConfig();
+        resolvedConfig.setCompose(driftedCompose.deepCopy());
+        saved.setConfig(resolvedConfig);
+        saved.setProfileConfigVersion(bumpedProfile.getVersion());
+
+        AgentApplication updated = agentApplicationService.save(tenantId, saved);
+        Assert.assertEquals(bumpedProfile.getVersion(), updated.getProfileConfigVersion());
+        Assert.assertNotEquals(originalProfileVersion, updated.getProfileConfigVersion());
+        Assert.assertEquals("thingsboard/tb-edge:9.9.9",
+                ((DockerComposeConfig) updated.getConfig()).getCompose()
+                        .get("services").get("mytbedge").get("image").asText());
+
+        agentApplicationService.delete(tenantId, updated.getId());
+        agentAppProfileService.deleteProfile(tenantId, bumpedProfile.getId());
+        edgeService.deleteEdge(tenantId, edge.getId());
+        agentService.deleteAgent(tenantId, agent.getId());
+    }
+
+    @Test
+    public void testUpdate_profileUnchanged_allowsCredOnlyConfigChange() {
+        // Cred-only diffs are now permitted for profile-managed apps so users
+        // can rotate routing keys / tokens without having to detach the
+        // profile or trigger a refetch.
+        Agent agent = createAgent("Agent profile cred rotation");
+        Edge edge = createEdge("Cred Rotation Edge", "old-rk");
+        Edge newEdge = createEdge("Cred Rotation Edge new", "new-rk");
+        AgentAppTemplate template = createTemplate();
+        AgentAppProfile profile = createProfile("Profile Cred Rotation", template, createEdgeProfileComposeJson("old-rk"));
+
+        AgentApplication app = new AgentApplication();
+        app.setAgentId(agent.getId());
+        app.setAppType(AgentApplicationType.EDGE);
+        app.setTemplateId(template.getId());
+        app.setApplicationProfileId(profile.getId());
+        app.setRelatedEntityId(edge.getId());
+        AgentApplication saved = agentApplicationService.save(tenantId, app);
+
+        ObjectNode rotated = ((DockerComposeConfig) saved.getConfig()).getCompose().deepCopy();
+        ((ObjectNode) rotated.get("services").get("mytbedge").get("environment"))
+                .put("CLOUD_ROUTING_KEY", "new-rk");
+        DockerComposeConfig newConfig = new DockerComposeConfig();
+        newConfig.setCompose(rotated);
+        saved.setConfig(newConfig);
+
+        AgentApplication updated = agentApplicationService.save(tenantId, saved);
+        Assert.assertEquals("new-rk", updated.getConfig().getEdgeRoutingKey());
+        Assert.assertEquals(newEdge.getId(), updated.getRelatedEntityId());
+
+        agentApplicationService.delete(tenantId, updated.getId());
+        agentAppProfileService.deleteProfile(tenantId, profile.getId());
+        edgeService.deleteEdge(tenantId, edge.getId());
+        edgeService.deleteEdge(tenantId, newEdge.getId());
         agentService.deleteAgent(tenantId, agent.getId());
     }
 
@@ -668,10 +877,18 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
     }
 
     private AgentAppProfile createProfile(String name, AgentAppTemplate template, JsonNode compose) {
+        return createProfile(name, AgentApplicationType.EDGE, template, compose);
+    }
+
+    private AgentAppProfile createGatewayProfile(String name, AgentAppTemplate template, JsonNode compose) {
+        return createProfile(name, AgentApplicationType.GATEWAY, template, compose);
+    }
+
+    private AgentAppProfile createProfile(String name, AgentApplicationType appType, AgentAppTemplate template, JsonNode compose) {
         AgentAppProfile profile = new AgentAppProfile();
         profile.setTenantId(tenantId);
         profile.setName(name);
-        profile.setAppType(AgentApplicationType.EDGE);
+        profile.setAppType(appType);
         profile.setTemplateId(template.getId());
         DockerComposeConfig config = new DockerComposeConfig();
         config.setCompose(compose);
@@ -797,6 +1014,15 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         if (userName != null) {
             env.put("TB_GW_USERNAME", userName);
         }
+        return createGatewayComposeWithEnv(env);
+    }
+
+    private JsonNode createGatewayMqttBasicFullCompose(String clientId, String userName, String password) {
+        ObjectNode env = JacksonUtil.newObjectNode();
+        env.put("TB_GW_SECURITY_TYPE", "usernamePassword");
+        env.put("TB_GW_CLIENT_ID", clientId);
+        env.put("TB_GW_USERNAME", userName);
+        env.put("TB_GW_PASSWORD", password);
         return createGatewayComposeWithEnv(env);
     }
 

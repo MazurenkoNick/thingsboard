@@ -20,16 +20,21 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
+import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppEventDao;
+import org.thingsboard.server.dao.agent.AgentAppProfileService;
 import org.thingsboard.server.dao.agent.AgentAppTemplateDao;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentService;
@@ -55,6 +60,8 @@ class AgentApplicationDataValidatorTest {
     AgentAppTemplateDao agentAppTemplateDao;
     @MockitoBean
     AgentAppEventDao agentAppEventDao;
+    @MockitoBean
+    AgentAppProfileService agentAppProfileService;
     @Autowired
     AgentApplicationDataValidator validator;
 
@@ -179,11 +186,24 @@ class AgentApplicationDataValidatorTest {
     // ==================== Config validation tests ====================
 
     @Test
-    void testValidateDataImpl_nullConfig_thenOK() {
+    void testValidateDataImpl_nullConfigWithProfile_thenOK() {
+        // A null config is allowed when the app is managed by a profile —
+        // the config will be resolved from the profile server-side.
+        AgentApplication app = createValidApplication();
+        app.setConfig(null);
+        app.setApplicationProfileId(new AgentAppProfileId(UUID.randomUUID()));
+
+        assertDoesNotThrow(() -> validator.validateDataImpl(tenantId, app));
+    }
+
+    @Test
+    void testValidateDataImpl_nullConfigWithoutProfile_thenException() {
         AgentApplication app = createValidApplication();
         app.setConfig(null);
 
-        assertDoesNotThrow(() -> validator.validateDataImpl(tenantId, app));
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> validator.validateDataImpl(tenantId, app));
+        assertThat(exception.getMessage()).containsIgnoringCase("config must not be null");
     }
 
     @Test
@@ -366,13 +386,174 @@ class AgentApplicationDataValidatorTest {
         assertThat(result).isEqualTo(oldApp);
     }
 
+    // ==================== Stale-template config-guard tests ====================
+
+    @Test
+    void testValidateUpdate_staleTemplate_noProfile_thenOK() {
+        AgentApplication oldApp = createValidApplication();
+        oldApp.setId(applicationId);
+        oldApp.setConfig(createEdgeComposeConfig("rk-1", "tb.cloud"));
+        willReturn(oldApp).given(agentApplicationDao).findById(eq(tenantId), eq(applicationId.getId()));
+
+        AgentApplication newApp = createValidApplication();
+        newApp.setId(applicationId);
+        newApp.setConfig(createEdgeComposeConfig("rk-2", "other.cloud"));
+
+        assertDoesNotThrow(() -> validator.validateUpdate(tenantId, newApp));
+    }
+
+    @Test
+    void testValidateUpdate_staleTemplate_profileMissing_credOnlyChange_thenOK() {
+        // When the profile lookup fails but config diff is cred-only, the
+        // profile-managed guard passes and the stale-template guard also
+        // returns early (can't check versions without the profile).
+        AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
+        AgentApplication oldApp = createProfileManagedApplication(profileId);
+        oldApp.setConfig(createEdgeComposeConfig("rk-1", "tb.cloud"));
+        willReturn(oldApp).given(agentApplicationDao).findById(eq(tenantId), eq(applicationId.getId()));
+        willReturn(null).given(agentAppProfileService).findProfileById(eq(tenantId), eq(profileId));
+
+        AgentApplication newApp = createProfileManagedApplication(profileId);
+        newApp.setConfig(createEdgeComposeConfig("rotated-rk", "tb.cloud"));
+
+        assertDoesNotThrow(() -> validator.validateUpdate(tenantId, newApp));
+    }
+
+    @Test
+    void testValidateUpdate_staleTemplate_sameTemplateId_credOnlyChange_thenOK() {
+        // Template IDs match so the stale-template guard skips. The profile-
+        // managed guard still enforces cred-only diffs.
+        AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
+        AgentApplication oldApp = createProfileManagedApplication(profileId);
+        oldApp.setConfig(createEdgeComposeConfig("rk-1", "tb.cloud"));
+        willReturn(oldApp).given(agentApplicationDao).findById(eq(tenantId), eq(applicationId.getId()));
+        willReturn(profileWithTemplate(profileId, templateId)).given(agentAppProfileService).findProfileById(eq(tenantId), eq(profileId));
+
+        AgentApplication newApp = createProfileManagedApplication(profileId);
+        newApp.setConfig(createEdgeComposeConfig("rk-2", "tb.cloud"));
+
+        assertDoesNotThrow(() -> validator.validateUpdate(tenantId, newApp));
+    }
+
+    @Test
+    void testValidateUpdate_staleTemplate_differentTemplateId_configUnchanged_thenOK() {
+        AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
+        AgentAppTemplateId profileTemplateId = new AgentAppTemplateId(UUID.randomUUID());
+        AgentApplication oldApp = createProfileManagedApplication(profileId);
+        oldApp.setConfig(createEdgeComposeConfig("rk-1", "tb.cloud"));
+        willReturn(oldApp).given(agentApplicationDao).findById(eq(tenantId), eq(applicationId.getId()));
+        willReturn(profileWithTemplate(profileId, profileTemplateId)).given(agentAppProfileService).findProfileById(eq(tenantId), eq(profileId));
+
+        AgentApplication newApp = createProfileManagedApplication(profileId);
+        newApp.setConfig(createEdgeComposeConfig("rk-1", "tb.cloud"));
+
+        assertDoesNotThrow(() -> validator.validateUpdate(tenantId, newApp));
+    }
+
+    @Test
+    void testValidateUpdate_staleTemplate_differentTemplateId_onlyCredsChanged_thenOK() {
+        AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
+        AgentAppTemplateId profileTemplateId = new AgentAppTemplateId(UUID.randomUUID());
+        AgentApplication oldApp = createProfileManagedApplication(profileId);
+        oldApp.setConfig(createEdgeComposeConfig("rk-1", "tb.cloud"));
+        willReturn(oldApp).given(agentApplicationDao).findById(eq(tenantId), eq(applicationId.getId()));
+        willReturn(profileWithTemplate(profileId, profileTemplateId)).given(agentAppProfileService).findProfileById(eq(tenantId), eq(profileId));
+
+        AgentApplication newApp = createProfileManagedApplication(profileId);
+        newApp.setConfig(createEdgeComposeConfig("rotated-rk", "tb.cloud"));
+
+        assertDoesNotThrow(() -> validator.validateUpdate(tenantId, newApp));
+    }
+
+    @Test
+    void testValidateUpdate_staleTemplate_differentTemplateId_nonCredConfigChanged_thenException() {
+        AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
+        AgentAppTemplateId profileTemplateId = new AgentAppTemplateId(UUID.randomUUID());
+        AgentApplication oldApp = createProfileManagedApplication(profileId);
+        oldApp.setConfig(createEdgeComposeConfig("rk-1", "tb.cloud"));
+        willReturn(oldApp).given(agentApplicationDao).findById(eq(tenantId), eq(applicationId.getId()));
+        willReturn(profileWithTemplate(profileId, profileTemplateId)).given(agentAppProfileService).findProfileById(eq(tenantId), eq(profileId));
+
+        AgentApplication newApp = createProfileManagedApplication(profileId);
+        newApp.setConfig(createEdgeComposeConfig("rk-1", "other.cloud"));
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> validator.validateUpdate(tenantId, newApp));
+        assertThat(exception.getMessage()).contains("out of sync");
+    }
+
+    @Test
+    void testValidateUpdate_staleTemplate_withDesiredTemplate_skipsStaleGuard() {
+        // Upgrade path (desiredTemplateId != null) routes to validateUpgradeVersion
+        // and must not trip the stale-template guard even if the config changed.
+        AgentAppProfileId profileId = new AgentAppProfileId(UUID.randomUUID());
+        AgentApplication oldApp = createProfileManagedApplication(profileId);
+        oldApp.setConfig(createEdgeComposeConfig("rk-1", "tb.cloud"));
+        willReturn(oldApp).given(agentApplicationDao).findById(eq(tenantId), eq(applicationId.getId()));
+
+        AgentAppTemplate currentTemplate = new AgentAppTemplate();
+        currentTemplate.setId(templateId);
+        currentTemplate.setCurrentVersion("1.0");
+        currentTemplate.setNextVersion("2.0");
+        willReturn(currentTemplate).given(agentAppTemplateDao).findById(eq(TenantId.SYS_TENANT_ID), eq(templateId.getId()));
+
+        AgentAppTemplateId desiredTemplateId = new AgentAppTemplateId(UUID.randomUUID());
+        AgentAppTemplate desiredTemplate = new AgentAppTemplate();
+        desiredTemplate.setId(desiredTemplateId);
+        desiredTemplate.setCurrentVersion("2.0");
+        willReturn(desiredTemplate).given(agentAppTemplateDao).findById(eq(TenantId.SYS_TENANT_ID), eq(desiredTemplateId.getId()));
+
+        AgentApplication newApp = createProfileManagedApplication(profileId);
+        newApp.setConfig(createEdgeComposeConfig("rk-1", "other.cloud"));
+        newApp.setDesiredTemplateId(desiredTemplateId);
+
+        assertDoesNotThrow(() -> validator.validateUpdate(tenantId, newApp));
+    }
+
     // ==================== Helper methods ====================
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private AgentApplication createValidApplication() {
         AgentApplication app = new AgentApplication();
         app.setAgentId(agentId);
         app.setAppType(AgentApplicationType.EDGE);
         app.setTemplateId(templateId);
+        app.setConfig(createEdgeComposeConfig("rk-valid", "tb.cloud"));
         return app;
+    }
+
+    private AgentApplication createProfileManagedApplication(AgentAppProfileId profileId) {
+        AgentApplication app = createValidApplication();
+        app.setId(applicationId);
+        app.setApplicationProfileId(profileId);
+        return app;
+    }
+
+    private AgentAppProfile profileWithTemplate(AgentAppProfileId id, AgentAppTemplateId tmpl) {
+        AgentAppProfile profile = new AgentAppProfile(id);
+        profile.setTemplateId(tmpl);
+        return profile;
+    }
+
+    private DockerComposeConfig createEdgeComposeConfig(String routingKey, String rpcHost) {
+        ObjectNode env = MAPPER.createObjectNode();
+        env.put("CLOUD_ROUTING_KEY", routingKey);
+        env.put("CLOUD_ROUTING_SECRET", "secret");
+        env.put("CLOUD_RPC_HOST", rpcHost);
+
+        ObjectNode service = MAPPER.createObjectNode();
+        service.put("image", "thingsboard/tb-edge:3.8.0");
+        service.set("environment", env);
+
+        ObjectNode services = MAPPER.createObjectNode();
+        services.set("mytbedge", service);
+
+        ObjectNode compose = MAPPER.createObjectNode();
+        compose.set("services", services);
+
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setCompose(compose);
+        return config;
     }
 }

@@ -23,10 +23,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.thingsboard.server.cache.agent.AgentApplicationCacheEvictEvent;
 import org.thingsboard.server.cache.agent.AgentApplicationCacheKey;
+import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
-import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
@@ -42,10 +42,8 @@ import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.service.DataValidator;
-import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.Collections;
-import java.util.Objects;
 
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validatePageLink;
@@ -94,26 +92,21 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
                 ? agentApplicationDao.findById(tenantId, application.getUuidId())
                 : null;
         if (old == null) {
-            profileConfigResolver.resolve(tenantId, application, application.getRelatedEntityId());
+            AgentAppProfile profile = profileConfigResolver.resolve(tenantId, application);
+            if (profile != null) {
+                application.setTemplateId(profile.getTemplateId());
+            }
         } else {
             if (application.getAppType() != old.getAppType()) {
                 application.setAppType(old.getAppType());
             }
-            EntityId newRelatedEntityId = application.getRelatedEntityId();
-            EntityId oldRelatedEntityId = old.getRelatedEntityId();
+            // Template id is set explicitly only at creation; on update we lock it to the persisted value,
+            // so profile reassignments and incoming payloads can't silently rewrite it.
+            // Upgrades flow through desiredTemplateId, not templateId.
+            application.setTemplateId(old.getTemplateId());
             if (isApplicationProfileChangedOrAdded(application, old)) {
                 log.trace("[{}] Agent profile is added or changed for application {}", application.getTenantId(), application.getTenantId());
-                profileConfigResolver.resolve(tenantId, application, newRelatedEntityId);
-            } else if (application.getApplicationProfileId() != null) {
-                log.trace("[{}] Restoring old profile-based configuration for application {}", application.getTenantId(), application.getTenantId());
-                AgentAppConfig oldConfig = old.getConfig();
-                if (!Objects.equals(application.getConfig(), oldConfig)) {
-                    throw new DataValidationException("Direct config update is not allowed for profile-managed applications!");
-                }
-                application.setConfig(oldConfig);
-                if (newRelatedEntityId != null && !newRelatedEntityId.equals(oldRelatedEntityId)) {
-                    profileConfigResolver.updateRelatedEntityIdTemplateFields(application, newRelatedEntityId);
-                }
+                profileConfigResolver.resolve(tenantId, application);
             }
         }
         resolveOrigin(application, old);
