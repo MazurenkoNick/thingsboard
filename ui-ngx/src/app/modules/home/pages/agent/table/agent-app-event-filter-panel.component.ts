@@ -40,7 +40,8 @@ export const AGENT_APP_EVENT_FILTER_PANEL_DATA =
 })
 export class AgentAppEventFilterPanelComponent {
 
-  readonly actionOptions = Object.values(AgentAppEventActionType);
+  readonly actionOptions = Object.values(AgentAppEventActionType)
+    .filter(a => a !== AgentAppEventActionType.ROLLBACK);
   readonly statusOptions = Object.values(AgentAppEventStatus);
 
   draft: AgentAppEventFilterValue;

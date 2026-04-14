@@ -23,6 +23,7 @@ import { PageData } from '@shared/models/page/page-data';
 import {
   Agent,
   AgentAppEvent,
+  AgentAppEventInfo,
   AgentAppEventRequest,
   AgentAppProfile,
   AgentAppTemplate,
@@ -208,6 +209,19 @@ export class AgentService {
   public getAgentAppEventsByAgentId(agentId: string, pageLink: PageLink, config?: RequestConfig): Observable<PageData<AgentAppEvent>> {
     return this.http.get<PageData<AgentAppEvent>>(`/api/agent/${agentId}/events${pageLink.toQuery()}`,
       defaultHttpOptionsFromConfig(config));
+  }
+
+  public getAgentAppEventInfosByAgentId(agentId: string, pageLink: PageLink,
+                                        actionType?: string, status?: string,
+                                        config?: RequestConfig): Observable<PageData<AgentAppEventInfo>> {
+    let url = `/api/agent/${agentId}/eventInfos${pageLink.toQuery()}`;
+    if (actionType) {
+      url += `&actionType=${actionType}`;
+    }
+    if (status) {
+      url += `&status=${status}`;
+    }
+    return this.http.get<PageData<AgentAppEventInfo>>(url, defaultHttpOptionsFromConfig(config));
   }
 
   public mergeForPreview(templateId: string, application?: AgentApplication,

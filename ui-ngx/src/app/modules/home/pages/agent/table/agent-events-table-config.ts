@@ -1,0 +1,266 @@
+///
+/// Copyright © 2016-2026 The Thingsboard Authors
+///
+/// Licensed under the Apache License, Version 2.0 (the "License");
+/// you may not use this file except in compliance with the License.
+/// You may obtain a copy of the License at
+///
+///     http://www.apache.org/licenses/LICENSE-2.0
+///
+/// Unless required by applicable law or agreed to in writing, software
+/// distributed under the License is distributed on an "AS IS" BASIS,
+/// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+/// See the License for the specific language governing permissions and
+/// limitations under the License.
+///
+
+import { DatePipe } from '@angular/common';
+import { Injector, StaticProvider, ViewContainerRef } from '@angular/core';
+import { Overlay, OverlayConfig, OverlayRef } from '@angular/cdk/overlay';
+import { ComponentPortal } from '@angular/cdk/portal';
+import { MatDialog } from '@angular/material/dialog';
+import { TranslateService } from '@ngx-translate/core';
+import { Observable } from 'rxjs';
+
+import { AgentService } from '@core/http/agent.service';
+import { DialogService } from '@core/services/dialog.service';
+import {
+  DateEntityTableColumn,
+  EntityTableColumn,
+  EntityTableConfig
+} from '@home/models/entity/entities-table-config.models';
+import { Direction } from '@shared/models/page/sort-order';
+import { PageLink } from '@shared/models/page/page-link';
+import { PageData } from '@shared/models/page/page-data';
+import {
+  AgentAppEventActionType,
+  agentAppEventActionTypeTranslationMap,
+  AgentAppEventDeliveryState,
+  AgentAppEventInfo,
+  AgentAppEventStatus,
+  agentAppEventStatusTranslationMap,
+  AgentInfo
+} from '@shared/models/agent.models';
+import {
+  AGENT_APP_EVENT_FILTER_PANEL_DATA,
+  AgentAppEventFilterPanelComponent,
+  AgentAppEventFilterPanelData,
+  AgentAppEventFilterValue
+} from './agent-app-event-filter-panel.component';
+import {
+  AgentAppEventProgressDialogComponent,
+  AgentAppEventProgressDialogData
+} from '@home/pages/agent/dialog/agent-app-event-progress-dialog.component';
+
+export class AgentEventsTableConfig extends EntityTableConfig<AgentAppEventInfo> {
+
+  private filter: AgentAppEventFilterValue = { actionType: null, status: null };
+
+  constructor(private readonly agentId: string,
+              private readonly agent: AgentInfo | null,
+              private readonly agentService: AgentService,
+              private readonly dialogService: DialogService,
+              private readonly dialog: MatDialog,
+              private readonly translate: TranslateService,
+              private readonly datePipe: DatePipe,
+              private readonly overlay: Overlay,
+              private readonly viewContainerRef: ViewContainerRef) {
+    super();
+
+    this.tableTitle = (agent?.name ? agent.name + ': ' : '') + this.translate.instant('agent.app-events');
+    this.detailsPanelEnabled = false;
+    this.selectionEnabled = false;
+    this.searchEnabled = true;
+    this.addEnabled = false;
+    this.entitiesDeleteEnabled = false;
+    this.defaultSortOrder = { property: 'createdTime', direction: Direction.DESC };
+
+    this.entityTranslations = { noEntities: 'agent.app-no-events' } as any;
+    this.entityResources = {} as any;
+
+    this.columns.push(
+      new EntityTableColumn<AgentAppEventInfo>('applicationName',
+        'agent.app-event-app-name', '25%',
+        (e) => e.applicationName || '', () => ({}), false),
+      new EntityTableColumn<AgentAppEventInfo>('actionType',
+        'agent.app-event-action', '140px',
+        (e) => {
+          const key = agentAppEventActionTypeTranslationMap.get(e.actionType) || e.actionType;
+          return key ? this.translate.instant(key) : '';
+        },
+        () => ({}), true),
+      new EntityTableColumn<AgentAppEventInfo>('deliveryState',
+        'agent.app-event-execution', '140px',
+        (e) => this.translate.instant(
+          e.deliveryState === AgentAppEventDeliveryState.DELIVERED
+            ? 'agent.app-event-execution-started'
+            : 'agent.app-event-execution-not-started'),
+        () => ({}), true),
+      new EntityTableColumn<AgentAppEventInfo>('status',
+        'agent.app-event-status', '140px',
+        (e) => {
+          const key = agentAppEventStatusTranslationMap.get(e.status) || e.status;
+          const label = key ? this.translate.instant(key) : '';
+          return this.canCancel(e)
+            ? `<span class="tb-agent-app-event-inflight">${label}</span>`
+            : label;
+        },
+        () => ({}), true),
+      new DateEntityTableColumn<AgentAppEventInfo>('createdTime',
+        'agent.app-event-created', this.datePipe, '180px', 'yyyy-MM-dd HH:mm:ss'),
+      new DateEntityTableColumn<AgentAppEventInfo>('updatedTime',
+        'agent.app-event-updated', this.datePipe, '180px', 'yyyy-MM-dd HH:mm:ss')
+    );
+
+    this.cellActionDescriptors.push({
+      name: this.translate.instant('agent.app-event-cancel'),
+      nameFunction: (e) => this.isErrorRow(e)
+        ? this.translate.instant('agent.app-event-show-error')
+        : this.translate.instant('agent.app-event-cancel'),
+      icon: 'cancel',
+      iconFunction: (e) => {
+        if (this.isErrorRow(e)) { return 'more_horiz'; }
+        if (this.canCancel(e))  { return 'cancel'; }
+        return '';
+      },
+      style: {},
+      isEnabled: (e) => this.canCancel(e) || this.isErrorRow(e),
+      onAction: ($event, e) => {
+        if (this.isErrorRow(e)) {
+          this.showEventError($event, e);
+        } else if (this.canCancel(e)) {
+          this.cancelEvent($event, e);
+        }
+      }
+    });
+
+    this.headerActionDescriptors.push(
+      {
+        name: this.translate.instant('agent.app-event-filter'),
+        icon: 'filter_list',
+        isEnabled: () => true,
+        onAction: ($event) => this.openFilterPanel($event)
+      },
+      {
+        name: this.translate.instant('action.clear'),
+        icon: 'mdi:filter-variant-remove',
+        isEnabled: () => this.hasActiveFilter(),
+        onAction: () => this.clearFilter()
+      }
+    );
+
+    this.entitiesFetchFunction = (pageLink) => this.fetch(pageLink);
+
+    this.handleRowClick = ($event, e) => this.onRowClick($event, e);
+  }
+
+  private onRowClick($event: Event, e: AgentAppEventInfo): boolean {
+    if (!this.canCancel(e) || !e.applicationId) {
+      return false;
+    }
+    if ($event) { $event.stopPropagation(); }
+    this.agentService.getAgentApplicationById(e.applicationId.id).subscribe(application => {
+      this.dialog.open<AgentAppEventProgressDialogComponent, AgentAppEventProgressDialogData, boolean>(
+        AgentAppEventProgressDialogComponent, {
+          disableClose: false,
+          panelClass: ['tb-dialog'],
+          data: { application, event: e }
+        }
+      ).afterClosed().subscribe(() => this.updateData());
+    });
+    return true;
+  }
+
+  private fetch(pageLink: PageLink): Observable<PageData<AgentAppEventInfo>> {
+    return this.agentService.getAgentAppEventInfosByAgentId(
+      this.agentId,
+      pageLink,
+      this.filter.actionType || undefined,
+      this.filter.status || undefined
+    );
+  }
+
+  private hasActiveFilter(): boolean {
+    return !!(this.filter.actionType || this.filter.status);
+  }
+
+  private clearFilter(): void {
+    if (!this.hasActiveFilter()) { return; }
+    this.filter = { actionType: null, status: null };
+    this.getTable().paginator.pageIndex = 0;
+    this.updateData();
+  }
+
+  private openFilterPanel($event: MouseEvent): void {
+    if ($event) { $event.stopPropagation(); }
+    const target = ($event.target || $event.currentTarget) as HTMLElement;
+    const config = new OverlayConfig({
+      panelClass: 'tb-panel-container',
+      backdropClass: 'cdk-overlay-transparent-backdrop',
+      hasBackdrop: true,
+      height: 'fit-content',
+      maxHeight: '65vh'
+    });
+    config.positionStrategy = this.overlay.position()
+      .flexibleConnectedTo(target)
+      .withPositions([
+        { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top' },
+        { originX: 'end',   originY: 'bottom', overlayX: 'end',   overlayY: 'top' }
+      ]);
+    const overlayRef = this.overlay.create(config);
+    overlayRef.backdropClick().subscribe(() => overlayRef.dispose());
+
+    const providers: StaticProvider[] = [
+      {
+        provide: AGENT_APP_EVENT_FILTER_PANEL_DATA,
+        useValue: { value: { ...this.filter } } as AgentAppEventFilterPanelData
+      },
+      { provide: OverlayRef, useValue: overlayRef }
+    ];
+    const injector = Injector.create({ parent: this.viewContainerRef.injector, providers });
+    const ref = overlayRef.attach(new ComponentPortal(
+      AgentAppEventFilterPanelComponent, this.viewContainerRef, injector));
+    ref.onDestroy(() => {
+      const result = ref.instance.result;
+      if (result && (result.actionType !== this.filter.actionType || result.status !== this.filter.status)) {
+        this.filter = result;
+        this.getTable().paginator.pageIndex = 0;
+        this.updateData();
+      }
+    });
+  }
+
+  private canCancel(e: AgentAppEventInfo): boolean {
+    return e.status === AgentAppEventStatus.PENDING
+      || e.status === AgentAppEventStatus.QUEUED
+      || e.status === AgentAppEventStatus.PROCESSING;
+  }
+
+  private isErrorRow(e: AgentAppEventInfo): boolean {
+    return e.status === AgentAppEventStatus.ERROR && !!e.errorMessage;
+  }
+
+  private cancelEvent($event: Event, e: AgentAppEventInfo): void {
+    if ($event) { $event.stopPropagation(); }
+    this.dialogService.confirm(
+      this.translate.instant('agent.app-event-cancel-title'),
+      this.translate.instant('agent.app-event-cancel-text'),
+      this.translate.instant('action.no'),
+      this.translate.instant('action.yes'),
+      true
+    ).subscribe(res => {
+      if (res && e.applicationId) {
+        this.agentService.cancelAgentAppEvent(e.applicationId.id, e.id.id)
+          .subscribe(() => this.updateData());
+      }
+    });
+  }
+
+  private showEventError($event: Event, e: AgentAppEventInfo): void {
+    if ($event) { $event.stopPropagation(); }
+    this.dialogService.alert(
+      this.translate.instant('agent.app-event-error-title'),
+      e.errorMessage || ''
+    );
+  }
+}

@@ -33,6 +33,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
+import org.thingsboard.server.common.data.agent.AgentAppEventInfo;
+import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentInfo;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -112,6 +115,39 @@ public class AgentController extends BaseController {
         TenantId tenantId = getCurrentUser().getTenantId();
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         return agentAppEventService.findByAgentId(tenantId, agentId, pageLink);
+    }
+
+    @ApiOperation(value = "Get Agent App Event Infos by Agent Id (getAgentAppEventInfosByAgentId)",
+            notes = "Returns a page of agent application events for all applications belonging to the specified agent, " +
+                    "enriched with the application name for each event. Supports optional filtering by action type and status, " +
+                    "and text search over the application name. "
+                    + PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @RequestMapping(value = "/agent/{agentId}/eventInfos", params = {"pageSize", "page"}, method = RequestMethod.GET)
+    @ResponseBody
+    public PageData<AgentAppEventInfo> getAgentAppEventInfosByAgentId(
+            @Parameter(description = AGENT_ID_PARAM_DESCRIPTION)
+            @PathVariable(AGENT_ID) String strAgentId,
+            @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
+            @RequestParam int pageSize,
+            @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true)
+            @RequestParam int page,
+            @Parameter(description = "Optional text value to match against the application name")
+            @RequestParam(required = false) String textSearch,
+            @Parameter(description = SORT_PROPERTY_DESCRIPTION, schema = @Schema(allowableValues = {"createdTime", "updatedTime", "actionType", "deliveryState", "status"}))
+            @RequestParam(required = false) String sortProperty,
+            @Parameter(description = SORT_ORDER_DESCRIPTION, schema = @Schema(allowableValues = {"ASC", "DESC"}))
+            @RequestParam(required = false) String sortOrder,
+            @Parameter(description = "Optional filter by event action type")
+            @RequestParam(required = false) AgentAppEventActionType actionType,
+            @Parameter(description = "Optional filter by event status")
+            @RequestParam(required = false) AgentAppEventStatus status) throws ThingsboardException {
+        checkParameter(AGENT_ID, strAgentId);
+        AgentId agentId = new AgentId(toUUID(strAgentId));
+        checkAgentId(agentId, Operation.READ);
+        TenantId tenantId = getCurrentUser().getTenantId();
+        PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
+        return agentAppEventService.findInfosByAgentId(tenantId, agentId, actionType, status, pageLink);
     }
 
     @ApiOperation(value = "Get Agent Info (getAgentInfoById)",

@@ -130,7 +130,7 @@ export class RouterTabsComponent extends PageComponent implements OnInit {
     });
     if (children.length) {
       return children.map(tab => ({
-        id: tab.component.name,
+        id: tab.component?.name ?? tab.path,
         type: 'link',
         name: tab.data?.breadcrumb?.label ?? '',
         icon: tab.data?.breadcrumb?.icon ?? '',

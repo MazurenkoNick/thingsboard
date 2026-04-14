@@ -16,6 +16,7 @@
 
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Router } from '@angular/router';
+import { resolveAgentIdParam } from '@home/pages/agent/util/agent-route-params';
 import {
   CellActionDescriptor,
   EntityTableColumn,
@@ -89,7 +90,7 @@ export class AgentApplicationsTableConfigResolver {
   }
 
   resolve(route: ActivatedRouteSnapshot): Observable<EntityTableConfig<AgentApplicationInfo>> {
-    this.agentId = route.params.agentId;
+    this.agentId = resolveAgentIdParam(route);
     return this.agentService.getAgentInfoById(this.agentId).pipe(
       map(agent => {
         this.agent = agent;

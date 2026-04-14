@@ -58,6 +58,7 @@ import {
 import {
   AgentAppUnitFilterPanelComponent
 } from '@home/pages/agent/table/agent-app-unit-filter-panel.component';
+import { AgentEventsPageComponent } from '@home/pages/agent/agent-events-page.component';
 
 @NgModule({
   declarations: [
@@ -79,6 +80,7 @@ import {
     AgentAppEventFilterPanelComponent,
     AgentAppUnitTableComponent,
     AgentAppUnitFilterPanelComponent,
+    AgentEventsPageComponent,
   ],
   imports: [
     CommonModule,

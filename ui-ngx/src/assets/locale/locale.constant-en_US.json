@@ -3204,7 +3204,7 @@
         "app-unit-filter-with-values": "Filter: {{values}}",
         "app-no-units": "No units found.",
         "app-no-events": "No events found.",
-        "app-event-app-name": "App name",
+        "app-event-app-name": "Application",
         "app-event-action": "Action",
         "app-event-status": "Execution status",
         "app-event-execution": "Execution",

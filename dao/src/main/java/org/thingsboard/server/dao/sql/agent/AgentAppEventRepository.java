@@ -22,8 +22,10 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
+import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.dao.model.sql.AgentAppEventEntity;
+import org.thingsboard.server.dao.model.sql.AgentAppEventInfoEntity;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -146,4 +148,29 @@ public interface AgentAppEventRepository extends JpaRepository<AgentAppEventEnti
     Page<AgentAppEventEntity> findByTenantIdAndAgentId(@Param("tenantId") UUID tenantId,
                                                        @Param("agentId") UUID agentId,
                                                        Pageable pageable);
+
+    @Query(value = """
+           SELECT new org.thingsboard.server.dao.model.sql.AgentAppEventInfoEntity(e, a.name)
+           FROM AgentAppEventEntity e
+           JOIN AgentApplicationEntity a ON e.applicationId = a.id
+           WHERE e.tenantId = :tenantId AND a.agentId = :agentId
+           AND (:actionType IS NULL OR e.actionType = :actionType)
+           AND (:status IS NULL OR e.status = :status)
+           AND (:textSearch IS NULL OR ilike(a.name, CONCAT('%', :textSearch, '%')) = true)
+           """,
+           countQuery = """
+           SELECT COUNT(e)
+           FROM AgentAppEventEntity e
+           JOIN AgentApplicationEntity a ON e.applicationId = a.id
+           WHERE e.tenantId = :tenantId AND a.agentId = :agentId
+           AND (:actionType IS NULL OR e.actionType = :actionType)
+           AND (:status IS NULL OR e.status = :status)
+           AND (:textSearch IS NULL OR ilike(a.name, CONCAT('%', :textSearch, '%')) = true)
+           """)
+    Page<AgentAppEventInfoEntity> findInfosByTenantIdAndAgentId(@Param("tenantId") UUID tenantId,
+                                                                @Param("agentId") UUID agentId,
+                                                                @Param("actionType") AgentAppEventActionType actionType,
+                                                                @Param("status") AgentAppEventStatus status,
+                                                                @Param("textSearch") String textSearch,
+                                                                Pageable pageable);
 }

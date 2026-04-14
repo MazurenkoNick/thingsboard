@@ -20,7 +20,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventFilter;
+import org.thingsboard.server.common.data.agent.AgentAppEventInfo;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatusUpdate;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
@@ -129,5 +131,15 @@ public class BaseAgentAppEventService implements AgentAppEventService {
     public PageData<AgentAppEvent> findByAgentId(TenantId tenantId, AgentId agentId, PageLink pageLink) {
         log.trace("Executing findAgentAppEventsByAgentId [{}]", agentId);
         return agentAppEventDao.findByTenantIdAndAgentId(tenantId, agentId, pageLink);
+    }
+
+    @Override
+    public PageData<AgentAppEventInfo> findInfosByAgentId(TenantId tenantId, AgentId agentId,
+                                                          AgentAppEventActionType actionType,
+                                                          AgentAppEventStatus status,
+                                                          PageLink pageLink) {
+        log.trace("Executing findAgentAppEventInfosByAgentId [{}] actionType [{}] status [{}]",
+                agentId, actionType, status);
+        return agentAppEventDao.findInfosByTenantIdAndAgentId(tenantId, agentId, actionType, status, pageLink);
     }
 }

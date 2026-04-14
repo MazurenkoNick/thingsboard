@@ -233,6 +233,10 @@ export interface AgentAppEvent extends BaseData<AgentAppEventId> {
   bulkActionId?: string;
 }
 
+export interface AgentAppEventInfo extends AgentAppEvent {
+  applicationName?: string;
+}
+
 export interface AgentAppUnit extends BaseData<AgentAppUnitId> {
   agentApplicationId: AgentApplicationId;
   identifier: string;

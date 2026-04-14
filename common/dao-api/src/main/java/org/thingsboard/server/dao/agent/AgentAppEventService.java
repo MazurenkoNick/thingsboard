@@ -16,7 +16,9 @@
 package org.thingsboard.server.dao.agent;
 
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventFilter;
+import org.thingsboard.server.common.data.agent.AgentAppEventInfo;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatusUpdate;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
@@ -56,4 +58,9 @@ public interface AgentAppEventService {
     PageData<AgentAppEvent> findByFilter(AgentAppEventFilter filter, PageLink pageLink);
 
     PageData<AgentAppEvent> findByAgentId(TenantId tenantId, AgentId agentId, PageLink pageLink);
+
+    PageData<AgentAppEventInfo> findInfosByAgentId(TenantId tenantId, AgentId agentId,
+                                                   AgentAppEventActionType actionType,
+                                                   AgentAppEventStatus status,
+                                                   PageLink pageLink);
 }

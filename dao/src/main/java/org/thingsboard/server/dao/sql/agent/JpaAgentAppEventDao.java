@@ -21,7 +21,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventFilter;
+import org.thingsboard.server.common.data.agent.AgentAppEventInfo;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatusUpdate;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -31,6 +33,7 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.agent.AgentAppEventDao;
 import org.thingsboard.server.dao.model.sql.AgentAppEventEntity;
+import org.thingsboard.server.dao.model.sql.AgentAppEventInfoEntity;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
@@ -144,6 +147,23 @@ public class JpaAgentAppEventDao extends JpaAbstractDao<AgentAppEventEntity, Age
                                 agentId.getId(),
                                 DaoUtil.toPageable(pageLink))
                         .map(AgentAppEventEntity::toData)
+        );
+    }
+
+    @Override
+    public PageData<AgentAppEventInfo> findInfosByTenantIdAndAgentId(TenantId tenantId, AgentId agentId,
+                                                                     AgentAppEventActionType actionType,
+                                                                     AgentAppEventStatus status,
+                                                                     PageLink pageLink) {
+        return DaoUtil.pageToPageData(
+                repository.findInfosByTenantIdAndAgentId(
+                                tenantId.getId(),
+                                agentId.getId(),
+                                actionType,
+                                status,
+                                normalizeTextSearch(pageLink),
+                                DaoUtil.toPageable(pageLink))
+                        .map(AgentAppEventInfoEntity::toData)
         );
     }
 }

@@ -27,6 +27,8 @@ import { AgentsTableConfigResolver } from '@home/pages/agent/agents-table-config
 import { AgentGroupsTableConfigResolver } from '@home/pages/agent/agent-groups-table-config.resolver';
 import { AgentAppProfilesTableConfigResolver } from '@home/pages/agent/agent-app-profiles-table-config.resolver';
 import { AgentApplicationsTableConfigResolver } from '@home/pages/agent/agent-applications-table-config.resolver';
+import { AgentEventsPageComponent } from '@home/pages/agent/agent-events-page.component';
+import { RouterTabsComponent } from '@home/components/router-tabs.component';
 
 const routes: Routes = [
   {
@@ -59,6 +61,7 @@ const routes: Routes = [
           },
           {
             path: ':entityId',
+            pathMatch: 'full',
             component: EntityDetailsPageComponent,
             canDeactivate: [ConfirmOnExitGuard],
             data: {
@@ -75,8 +78,11 @@ const routes: Routes = [
             }
           },
           {
-            path: ':agentId/applications',
+            path: ':agentId',
+            component: RouterTabsComponent,
             data: {
+              auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+              useChildrenRoutesForTabs: true,
               breadcrumb: {
                 label: 'agent.applications',
                 icon: 'apps'
@@ -85,29 +91,60 @@ const routes: Routes = [
             children: [
               {
                 path: '',
-                component: EntitiesTableComponent,
-                data: {
-                  auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-                  title: 'agent.applications'
-                },
-                resolve: {
-                  entitiesTableConfig: AgentApplicationsTableConfigResolver
-                }
+                pathMatch: 'full',
+                redirectTo: 'applications'
               },
               {
-                path: ':entityId',
-                component: EntityDetailsPageComponent,
-                canDeactivate: [ConfirmOnExitGuard],
+                path: 'applications',
                 data: {
-                  breadcrumb: {
-                    labelFunction: entityDetailsPageBreadcrumbLabelFunction,
-                    icon: 'apps'
-                  } as BreadCrumbConfig<EntityDetailsPageComponent>,
                   auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-                  title: 'agent.applications'
+                  breadcrumb: {
+                    label: 'agent.applications',
+                    icon: 'apps'
+                  }
                 },
-                resolve: {
-                  entitiesTableConfig: AgentApplicationsTableConfigResolver
+                children: [
+                  {
+                    path: '',
+                    component: EntitiesTableComponent,
+                    data: {
+                      auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+                      title: 'agent.applications',
+                      isPage: true
+                    },
+                    resolve: {
+                      entitiesTableConfig: AgentApplicationsTableConfigResolver
+                    }
+                  },
+                  {
+                    path: ':entityId',
+                    component: EntityDetailsPageComponent,
+                    canDeactivate: [ConfirmOnExitGuard],
+                    data: {
+                      breadcrumb: {
+                        labelFunction: entityDetailsPageBreadcrumbLabelFunction,
+                        icon: 'apps'
+                      } as BreadCrumbConfig<EntityDetailsPageComponent>,
+                      auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+                      title: 'agent.applications'
+                    },
+                    resolve: {
+                      entitiesTableConfig: AgentApplicationsTableConfigResolver
+                    }
+                  }
+                ]
+              },
+              {
+                path: 'events',
+                component: AgentEventsPageComponent,
+                data: {
+                  auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+                  title: 'agent.app-events',
+                  isPage: true,
+                  breadcrumb: {
+                    label: 'agent.app-events',
+                    icon: 'history'
+                  }
                 }
               }
             ]
