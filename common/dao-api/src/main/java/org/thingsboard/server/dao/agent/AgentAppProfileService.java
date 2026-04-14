@@ -16,6 +16,7 @@
 package org.thingsboard.server.dao.agent;
 
 import org.thingsboard.server.common.data.agent.AgentAppProfile;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentGroupId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -33,6 +34,8 @@ public interface AgentAppProfileService extends EntityDaoService {
     AgentAppProfile findProfileById(TenantId tenantId, AgentAppProfileId profileId);
 
     PageData<AgentAppProfile> findProfilesByTenantId(TenantId tenantId, PageLink pageLink);
+
+    List<AgentAppProfile> findProfilesByTenantIdAndAppType(TenantId tenantId, AgentApplicationType appType);
 
     void deleteProfile(TenantId tenantId, AgentAppProfileId profileId);
 

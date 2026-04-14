@@ -22,9 +22,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.thingsboard.server.dao.model.sql.AgentAppProfileEntity;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface AgentAppProfileRepository extends JpaRepository<AgentAppProfileEntity, UUID> {
+
+    @Query("SELECT p FROM AgentAppProfileEntity p WHERE p.tenantId = :tenantId AND p.appType = :appType ORDER BY p.name ASC")
+    List<AgentAppProfileEntity> findByTenantIdAndAppType(@Param("tenantId") UUID tenantId,
+                                                          @Param("appType") org.thingsboard.server.common.data.agent.AgentApplicationType appType);
 
     @Query("SELECT p FROM AgentAppProfileEntity p WHERE p.tenantId = :tenantId " +
             "AND (:textSearch IS NULL OR ilike(p.name, CONCAT('%', :textSearch, '%')) = true)")

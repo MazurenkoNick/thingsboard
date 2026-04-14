@@ -28,6 +28,7 @@ import org.thingsboard.server.cache.agent.AgentAppProfileCacheKey;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.agent.AgentAppProfile;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentGroupId;
 import org.thingsboard.server.common.data.id.AgentId;
@@ -114,6 +115,13 @@ public class BaseAgentAppProfileService extends AbstractCachedEntityService<Agen
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validatePageLink(pageLink);
         return profileDao.findByTenantId(tenantId.getId(), pageLink);
+    }
+
+    @Override
+    public List<AgentAppProfile> findProfilesByTenantIdAndAppType(TenantId tenantId, AgentApplicationType appType) {
+        log.trace("Executing findProfilesByTenantIdAndAppType, tenantId [{}], appType [{}]", tenantId, appType);
+        validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
+        return profileDao.findByTenantIdAndAppType(tenantId.getId(), appType);
     }
 
     @Override

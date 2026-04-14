@@ -32,6 +32,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
+
+import java.util.List;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AgentAppProfileId;
@@ -124,6 +127,18 @@ public class AgentAppProfileController extends BaseController {
 
         appProfile.setTenantId(tenantId);
         return tbProfileService.mergeForPreview(tenantId, appProfile, template, composeType);
+    }
+
+    @ApiOperation(value = "Get Agent Application Profiles by app type (getAgentAppProfilesByAppType)",
+            notes = "Returns a list of agent application profiles filtered by application type."
+                    + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @RequestMapping(value = "/agent/app/profiles/{appType}", method = RequestMethod.GET)
+    @ResponseBody
+    public List<AgentAppProfile> getAgentAppProfilesByAppType(
+            @PathVariable @Parameter(description = "Application type, e.g. 'EDGE', 'GATEWAY', 'GENERIC'") AgentApplicationType appType) throws ThingsboardException {
+        TenantId tenantId = getCurrentUser().getTenantId();
+        return checkNotNull(agentAppProfileService.findProfilesByTenantIdAndAppType(tenantId, appType));
     }
 
     @ApiOperation(value = "Get Tenant Agent Application Profiles (getTenantAgentAppProfiles)",

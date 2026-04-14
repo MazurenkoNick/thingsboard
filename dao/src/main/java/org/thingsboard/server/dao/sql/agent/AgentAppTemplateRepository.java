@@ -18,10 +18,9 @@ package org.thingsboard.server.dao.sql.agent;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
-import org.thingsboard.server.dao.model.ToData;
 import org.thingsboard.server.dao.model.sql.AgentAppTemplateEntity;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface AgentAppTemplateRepository extends JpaRepository<AgentAppTemplateEntity, UUID> {
@@ -30,6 +29,13 @@ public interface AgentAppTemplateRepository extends JpaRepository<AgentAppTempla
             "AND config ->> 'type' = :configType AND next_version IS NULL LIMIT 1",
             nativeQuery = true)
     AgentAppTemplateEntity findLatestByAppTypeAndConfigType(
+            @Param("appType") String appType,
+            @Param("configType") String configType);
+
+    @Query(value = "SELECT * FROM agent_app_template WHERE app_type = :appType " +
+            "AND config ->> 'type' = :configType ORDER BY created_time DESC",
+            nativeQuery = true)
+    List<AgentAppTemplateEntity> findByAppTypeAndConfigType(
             @Param("appType") String appType,
             @Param("configType") String configType);
 

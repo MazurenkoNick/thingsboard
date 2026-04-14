@@ -31,6 +31,8 @@ public interface AgentAppTemplateDao extends Dao<AgentAppTemplate> {
     AgentAppTemplate findByAppTypeAndConfigTypeAndVersion(TenantId tenantId, AgentApplicationType appType,
                                                           AgentAppConfigType configType, String currentVersion);
 
+    List<AgentAppTemplate> findByAppTypeAndConfigType(TenantId tenantId, AgentApplicationType appType, AgentAppConfigType configType);
+
     List<AgentAppTemplate> findAll(TenantId tenantId);
 
     void removeById(TenantId tenantId, UUID id);

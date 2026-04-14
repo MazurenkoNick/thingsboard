@@ -33,6 +33,8 @@ public interface AgentAppTemplateService {
 
     AgentAppTemplate findByAppTypeAndConfigTypeAndVersion(AgentApplicationType appType, AgentAppConfigType configType, String currentVersion);
 
+    List<AgentAppTemplate> findByAppTypeAndConfigType(AgentApplicationType appType, AgentAppConfigType configType);
+
     List<AgentAppTemplate> findAll(TenantId tenantId);
 
     void delete(TenantId tenantId, AgentAppTemplateId templateId);

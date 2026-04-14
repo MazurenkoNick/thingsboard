@@ -84,6 +84,12 @@ public class BaseAgentAppTemplateService extends AbstractEntityService implement
     }
 
     @Override
+    public List<AgentAppTemplate> findByAppTypeAndConfigType(AgentApplicationType appType, AgentAppConfigType configType) {
+        log.trace("Executing findByAppTypeAndConfigType appType [{}], configType [{}]", appType, configType);
+        return agentAppTemplateDao.findByAppTypeAndConfigType(TenantId.SYS_TENANT_ID, appType, configType);
+    }
+
+    @Override
     public List<AgentAppTemplate> findAll(TenantId tenantId) {
         log.trace("Executing findAll, tenantId [{}]", tenantId);
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);

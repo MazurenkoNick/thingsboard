@@ -89,6 +89,18 @@ public class AgentAppTemplateController extends BaseController {
         return checkNotNull(agentAppTemplateService.findByAppTypeAndConfigTypeAndVersion(appType, configType, currentVersion));
     }
 
+    @ApiOperation(value = "Get Agent App Templates by type (getAgentAppTemplatesByAppType)",
+            notes = "Returns a list of agent app templates filtered by application type and config type."
+                    + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @RequestMapping(value = "/agent/app/templates/{appType}/{configType}", method = RequestMethod.GET)
+    @ResponseBody
+    public List<AgentAppTemplate> getAgentAppTemplatesByAppType(
+            @PathVariable @Parameter(description = APP_TYPE_PARAM_DESCRIPTION) AgentApplicationType appType,
+            @PathVariable @Parameter(description = CONFIG_TYPE_PARAM_DESCRIPTION) AgentAppConfigType configType) throws ThingsboardException {
+        return checkNotNull(agentAppTemplateService.findByAppTypeAndConfigType(appType, configType));
+    }
+
     @ApiOperation(value = "Get all Agent App Templates (getAgentAppTemplates)",
             notes = "Returns a list of all agent app templates available for the current tenant."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
