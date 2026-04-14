@@ -25,27 +25,35 @@ import { TranslateService } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared/models/entity-type.models';
 import { EntityAction } from '@home/models/entity/entity-component.models';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { select, Store } from '@ngrx/store';
 import { selectAuthUser } from '@core/auth/auth.selectors';
-import { map, take } from 'rxjs/operators';
+import { catchError, map, switchMap, take } from 'rxjs/operators';
 import { AppState } from '@core/core.state';
 import { Authority } from '@shared/models/authority.enum';
-import { AgentAppProfile } from '@shared/models/agent.models';
+import { AgentAppProfile, AgentAppTemplate } from '@shared/models/agent.models';
+import { versionTag } from '@home/pages/agent/util/version-tag';
 import { AgentService } from '@core/http/agent.service';
 import { AgentAppProfileComponent } from '@home/pages/agent/agent-app-profile.component';
 import { AgentAppProfileTabsComponent } from '@home/pages/agent/agent-app-profile-tabs.component';
+import { MatDialog } from '@angular/material/dialog';
+import {
+  AgentAppProfileWizardComponent,
+  AgentAppProfileWizardData
+} from '@home/pages/agent/wizard/agent-app-profile-wizard.component';
 
 @Injectable()
 export class AgentAppProfilesTableConfigResolver {
 
   private readonly config: EntityTableConfig<AgentAppProfile> = new EntityTableConfig<AgentAppProfile>();
+  private templateCache = new Map<string, AgentAppTemplate>();
 
   constructor(private store: Store<AppState>,
               private agentService: AgentService,
               private translate: TranslateService,
               private datePipe: DatePipe,
-              private router: Router) {
+              private router: Router,
+              private dialog: MatDialog) {
 
     this.config.entityType = EntityType.AGENT_APP_PROFILE;
     this.config.entityComponent = AgentAppProfileComponent;
@@ -61,6 +69,7 @@ export class AgentAppProfilesTableConfigResolver {
     this.config.loadEntity = id => this.agentService.getAgentAppProfileById(id.id);
     this.config.saveEntity = profile => this.agentService.saveAgentAppProfile(profile);
     this.config.onEntityAction = action => this.onProfileAction(action);
+    this.config.addEntity = () => { this.openProfileWizard(); return of(null); };
   }
 
   resolve(route: ActivatedRouteSnapshot): Observable<EntityTableConfig<AgentAppProfile>> {
@@ -69,7 +78,9 @@ export class AgentAppProfilesTableConfigResolver {
         this.config.tableTitle = this.translate.instant('agent.app-profiles');
         this.config.columns = this.configureColumns();
         this.config.entitiesFetchFunction = pageLink =>
-          this.agentService.getTenantAgentAppProfiles(pageLink);
+          this.agentService.getTenantAgentAppProfiles(pageLink).pipe(
+            switchMap(page => this.enrichWithTemplates(page))
+          );
         this.config.deleteEntity = id => this.agentService.deleteAgentAppProfile(id.id);
         this.config.addEnabled = authUser.authority === Authority.TENANT_ADMIN;
         this.config.entitiesDeleteEnabled = authUser.authority === Authority.TENANT_ADMIN;
@@ -87,8 +98,32 @@ export class AgentAppProfilesTableConfigResolver {
       new EntityTableColumn<AgentAppProfile>('appType', 'agent.app-type', '180px',
         entity => this.appTypeBadge(entity.appType), () => ({}), false),
       new EntityTableColumn<AgentAppProfile>('templateId', 'agent.template', '30%',
-        entity => entity.templateId ? `<span style="font-family:'Roboto Mono',monospace;font-size:12px;">${entity.templateId.id.substring(0, 8)}…</span>` : '—'),
+        entity => this.templateCell(entity), () => ({}), false),
     ];
+  }
+
+  private templateCell(entity: AgentAppProfile): string {
+    if (!entity.templateId) {
+      return versionTag(null);
+    }
+    const template = this.templateCache.get(entity.templateId.id);
+    return versionTag(template?.currentVersion);
+  }
+
+  private enrichWithTemplates(page: any): Observable<any> {
+    const hasMissing = page.data.some((p: AgentAppProfile) =>
+      p.templateId?.id && !this.templateCache.has(p.templateId.id)
+    );
+    if (!hasMissing) {
+      return of(page);
+    }
+    return this.agentService.getAgentAppTemplates().pipe(
+      map(templates => {
+        templates.forEach(t => this.templateCache.set(t.id.id, t));
+        return page;
+      }),
+      catchError(() => of(page))
+    );
   }
 
   private appTypeBadge(appType: string): string {
@@ -99,6 +134,21 @@ export class AgentAppProfilesTableConfigResolver {
     };
     const style = typeClasses[appType] || 'background:#eeeeee;color:#616161;';
     return `<span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;letter-spacing:0.5px;${style}">${appType}</span>`;
+  }
+
+  private openProfileWizard() {
+    this.dialog.open<AgentAppProfileWizardComponent, AgentAppProfileWizardData, AgentAppProfile>(
+      AgentAppProfileWizardComponent, {
+        disableClose: false,
+        panelClass: ['tb-dialog'],
+        data: {}
+      }
+    ).afterClosed().subscribe(saved => {
+      if (saved) {
+        this.templateCache.clear();
+        this.config.updateData();
+      }
+    });
   }
 
   onProfileAction(action: EntityAction<AgentAppProfile>): boolean {

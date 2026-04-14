@@ -25,14 +25,16 @@ import { TranslateService } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared/models/entity-type.models';
 import { Observable, of } from 'rxjs';
-import { map, mergeMap } from 'rxjs/operators';
+import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogService } from '@core/services/dialog.service';
 import {
   AgentApplicationInfo,
   AgentAppEventActionType,
+  AgentAppTemplate,
   AgentInfo
 } from '@shared/models/agent.models';
+import { versionTag } from '@home/pages/agent/util/version-tag';
 import { AgentService } from '@core/http/agent.service';
 import { AgentApplicationComponent } from '@home/pages/agent/agent-application.component';
 import { AgentApplicationTabsComponent } from '@home/pages/agent/agent-application-tabs.component';
@@ -51,6 +53,7 @@ export class AgentApplicationsTableConfigResolver {
   private readonly config: EntityTableConfig<AgentApplicationInfo> = new EntityTableConfig<AgentApplicationInfo>();
   private agentId: string;
   private agent: AgentInfo;
+  private templateCache = new Map<string, AgentAppTemplate>();
 
   constructor(private agentService: AgentService,
               private translate: TranslateService,
@@ -95,7 +98,9 @@ export class AgentApplicationsTableConfigResolver {
         this.config.columns = this.configureColumns();
         this.config.cellActionDescriptors = this.configureCellActions();
         this.config.entitiesFetchFunction = pageLink =>
-          this.agentService.getAgentApplicationsByAgentId(this.agentId, pageLink);
+          this.agentService.getAgentApplicationsByAgentId(this.agentId, pageLink).pipe(
+            switchMap(page => this.enrichWithTemplates(page))
+          );
         return this.config;
       })
     );
@@ -117,14 +122,14 @@ export class AgentApplicationsTableConfigResolver {
     if (!origin) {
       return `<span style="color:rgba(0,0,0,0.38);font-size:12px;">—</span>`;
     }
-    const styles: Record<string, string> = {
-      INSTALLED: 'background:#e8f5e9;color:#2e7d32;',
-      DISCOVERED: 'background:#e3f2fd;color:#1565c0;',
-      AUTO_PROVISIONED: 'background:#f3e5f5;color:#6a1b9a;'
+    const config: Record<string, { icon: string; color: string }> = {
+      INSTALLED: { icon: 'file_download', color: '#1565c0' },
+      DISCOVERED: { icon: 'check_circle', color: '#2e7d32' },
+      AUTO_PROVISIONED: { icon: 'settings_suggest', color: '#6a1b9a' }
     };
-    const style = styles[origin] || 'background:#eeeeee;color:#616161;';
+    const c = config[origin] || { icon: 'help_outline', color: '#616161' };
     const label = origin.charAt(0) + origin.slice(1).toLowerCase().replace('_', ' ');
-    return `<span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;letter-spacing:0.5px;${style}">${label}</span>`;
+    return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:500;color:${c.color};"><span class="material-icons" style="font-size:18px;">${c.icon}</span>${label}</span>`;
   }
 
   private appTypeBadge(appType: string): string {
@@ -138,10 +143,38 @@ export class AgentApplicationsTableConfigResolver {
   }
 
   private templateCell(e: AgentApplicationInfo): string {
-    if (!e.currentVersion) {
-      return `<span style="font-family:'Roboto Mono',monospace;font-size:12px;color:rgba(0,0,0,0.38);">—</span>`;
+    // currentVersion may come from BE (AgentApplicationInfo) or from our enrichment
+    if (e.currentVersion) {
+      return versionTag(e.currentVersion);
     }
-    return `<span style="font-family:'Roboto Mono',monospace;font-size:12px;">${e.currentVersion}</span>`;
+    // Fallback: look up from template cache
+    const tpl = e.templateId ? this.templateCache.get((e.templateId as any).id || e.templateId) : null;
+    return versionTag(tpl?.currentVersion);
+  }
+
+  private enrichWithTemplates(page: any): Observable<any> {
+    const hasMissing = page.data.some((app: AgentApplicationInfo) =>
+      !app.currentVersion && app.templateId
+    );
+    if (!hasMissing) {
+      return of(page);
+    }
+    return this.agentService.getAgentAppTemplates().pipe(
+      map(templates => {
+        templates.forEach(t => this.templateCache.set(t.id.id, t));
+        page.data.forEach((app: AgentApplicationInfo) => {
+          if (!app.currentVersion && app.templateId) {
+            const tid = (app.templateId as any).id || app.templateId;
+            const tpl = this.templateCache.get(tid);
+            if (tpl) {
+              app.currentVersion = tpl.currentVersion;
+            }
+          }
+        });
+        return page;
+      }),
+      catchError(() => of(page))
+    );
   }
 
   private configureCellActions(): Array<CellActionDescriptor<AgentApplicationInfo>> {

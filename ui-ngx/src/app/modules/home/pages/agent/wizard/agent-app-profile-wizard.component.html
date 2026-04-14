@@ -1,0 +1,149 @@
+<!--
+
+    Copyright © 2016-2026 The Thingsboard Authors
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<mat-toolbar color="primary" class="tb-install-wizard-toolbar">
+  <div class="tb-install-wizard-toolbar-content">
+    <h2>{{ titleKey | translate }}</h2>
+  </div>
+  <button mat-icon-button (click)="cancel()" type="button" tabindex="-1">
+    <mat-icon>close</mat-icon>
+  </button>
+</mat-toolbar>
+
+<div mat-dialog-content class="tb-install-wizard-body">
+
+  <mat-stepper linear #stepper>
+
+    <!-- Step 1: Type selection + template version -->
+    <mat-step [label]="'agent.app-install-step1' | translate" [completed]="canProceedFromType()">
+      <p class="hint" translate>agent.app-install-pick-type</p>
+      <div class="type-cards">
+        <div class="type-card" *ngFor="let card of typeCards"
+             [class.selected]="selectedType === card.type"
+             (click)="selectType(card.type)">
+          <mat-icon>{{ card.icon }}</mat-icon>
+          <h4>{{ card.labelKey | translate }}</h4>
+          <p>{{ card.descKey | translate }}</p>
+        </div>
+      </div>
+
+      <mat-form-field class="mat-block" *ngIf="selectedType && availableTemplates.length">
+        <mat-label translate>agent.template</mat-label>
+        <mat-select [value]="selectedTemplateId" (selectionChange)="onTemplateSelected($event.value)">
+          <mat-option *ngFor="let tpl of availableTemplates" [value]="tpl.id.id">
+            {{ tpl.currentVersion }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="loading-state" *ngIf="loadingTemplate || loadingTemplates">
+        <mat-spinner diameter="20"></mat-spinner>
+        <span translate>agent.app-install-loading-template</span>
+      </div>
+
+      <div class="error-state" *ngIf="loadError">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ loadError }}</span>
+      </div>
+
+      <div class="step-footer">
+        <button mat-button (click)="cancel()">{{ 'action.cancel' | translate }}</button>
+        <button mat-raised-button color="primary" matStepperNext [disabled]="!canProceedFromType()">
+          {{ 'action.next' | translate }}
+          <mat-icon iconPositionEnd>chevron_right</mat-icon>
+        </button>
+      </div>
+    </mat-step>
+
+    <!-- Step 2: Name + YAML editor -->
+    <mat-step [label]="'agent.app-install-step3' | translate" [completed]="canSubmit()">
+
+      <mat-form-field class="mat-block">
+        <mat-label translate>agent.app-profile-name</mat-label>
+        <input matInput [(ngModel)]="profileName" required>
+      </mat-form-field>
+
+      <mat-form-field class="mat-block">
+        <mat-label translate>agent.app-profile-description</mat-label>
+        <input matInput [(ngModel)]="profileDescription">
+      </mat-form-field>
+
+      <label class="yaml-label" translate>agent.app-install-yaml</label>
+      <div class="yaml-editor yaml-editor-ace" #installYamlEditor></div>
+
+      <div class="step-footer">
+        <button mat-button matStepperPrevious [disabled]="submitting">
+          <mat-icon>chevron_left</mat-icon>
+          {{ 'action.back' | translate }}
+        </button>
+        <button mat-button (click)="cancel()" [disabled]="submitting">
+          {{ 'action.cancel' | translate }}
+        </button>
+        <button mat-raised-button color="primary" matStepperNext [disabled]="!canSubmit()">
+          {{ 'action.next' | translate }}
+          <mat-icon iconPositionEnd>chevron_right</mat-icon>
+        </button>
+      </div>
+    </mat-step>
+
+    <!-- Step 3: Summary + Confirm -->
+    <mat-step [label]="'agent.app-install-step4' | translate">
+
+      <div class="summary-card">
+        <div class="summary-row">
+          <span class="label" translate>agent.app-profile-name</span>
+          <span class="value">{{ profileName }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="label" translate>agent.app-type</span>
+          <span class="value"><span class="tb-type-badge"
+            [class.edge]="selectedType === 'EDGE'"
+            [class.gateway]="selectedType === 'GATEWAY'"
+            [class.generic]="selectedType === 'GENERIC'">{{ selectedType }}</span></span>
+        </div>
+        <div class="summary-row" *ngIf="template">
+          <span class="label" translate>agent.app-template</span>
+          <span class="value">{{ template.currentVersion }}</span>
+        </div>
+        <div class="summary-row" *ngIf="profileDescription">
+          <span class="label" translate>agent.app-profile-description</span>
+          <span class="value">{{ profileDescription }}</span>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <mat-icon>info</mat-icon>
+        <span translate>agent.app-profile-wizard-confirm-info</span>
+      </div>
+
+      <div class="step-footer">
+        <button mat-button matStepperPrevious [disabled]="submitting">
+          <mat-icon>chevron_left</mat-icon>
+          {{ 'action.back' | translate }}
+        </button>
+        <button mat-button (click)="cancel()" [disabled]="submitting">
+          {{ 'action.cancel' | translate }}
+        </button>
+        <button mat-raised-button color="primary" (click)="submit()" [disabled]="!canSubmit()">
+          <mat-icon>save</mat-icon>
+          <span>{{ 'action.save' | translate }}</span>
+        </button>
+      </div>
+    </mat-step>
+
+  </mat-stepper>
+</div>

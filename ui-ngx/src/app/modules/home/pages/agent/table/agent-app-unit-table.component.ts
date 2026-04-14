@@ -14,12 +14,13 @@
 /// limitations under the License.
 ///
 
-import { AfterViewInit, Component, Input, OnChanges, SimpleChanges, ViewChild, ViewContainerRef } from '@angular/core';
+import { AfterViewInit, Component, Input, NgZone, OnChanges, OnDestroy, SimpleChanges, ViewChild, ViewContainerRef } from '@angular/core';
 import { Overlay } from '@angular/cdk/overlay';
 import { TranslateService } from '@ngx-translate/core';
 
 import { AgentService } from '@core/http/agent.service';
 import { AttributeService } from '@core/http/attribute.service';
+import { TelemetryWebsocketService } from '@core/ws/telemetry-websocket.service';
 import { EntitiesTableComponent } from '@home/components/entity/entities-table.component';
 import { AgentApplicationInfo } from '@shared/models/agent.models';
 import { AgentAppUnitTableConfig } from './agent-app-unit-table-config';
@@ -29,7 +30,7 @@ import { AgentAppUnitTableConfig } from './agent-app-unit-table-config';
   template: '<tb-entities-table [entitiesTableConfig]="tableConfig"></tb-entities-table>',
   styles: [':host { display: block; height: 100%; }']
 })
-export class AgentAppUnitTableComponent implements AfterViewInit, OnChanges {
+export class AgentAppUnitTableComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   @Input() application: AgentApplicationInfo;
   @Input() active: boolean;
@@ -42,7 +43,9 @@ export class AgentAppUnitTableComponent implements AfterViewInit, OnChanges {
               private attributeService: AttributeService,
               private translate: TranslateService,
               private overlay: Overlay,
-              private viewContainerRef: ViewContainerRef) {}
+              private viewContainerRef: ViewContainerRef,
+              private telemetryWsService: TelemetryWebsocketService,
+              private zone: NgZone) {}
 
   ngAfterViewInit(): void {
     this.rebuild();
@@ -54,15 +57,22 @@ export class AgentAppUnitTableComponent implements AfterViewInit, OnChanges {
     }
   }
 
+  ngOnDestroy(): void {
+    this.tableConfig?.destroySubscriptions();
+  }
+
   private rebuild(): void {
     if (!this.application) { return; }
+    this.tableConfig?.destroySubscriptions();
     this.tableConfig = new AgentAppUnitTableConfig(
       this.application,
       this.agentService,
       this.attributeService,
       this.translate,
       this.overlay,
-      this.viewContainerRef
+      this.viewContainerRef,
+      this.telemetryWsService,
+      this.zone
     );
   }
 }

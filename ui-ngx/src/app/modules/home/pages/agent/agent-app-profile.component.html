@@ -16,6 +16,13 @@
 
 -->
 <div class="tb-details-buttons xs:flex xs:flex-col">
+  <button mat-raised-button color="accent"
+          [disabled]="(isLoading$ | async) || !canUpgrade()"
+          (click)="onUpgrade($event)"
+          [class.!hidden]="isEdit">
+    <mat-icon>arrow_upward</mat-icon>
+    <span translate>agent.app-upgrade</span>
+  </button>
   <button mat-raised-button color="primary"
           [disabled]="(isLoading$ | async)"
           (click)="onEntityAction($event, 'open')"
@@ -28,6 +35,17 @@
           [class.!hidden]="isEdit">
     {{'agent.delete-app-profile' | translate }}
   </button>
+  <div class="flex flex-row flex-wrap xs:flex-col">
+    <button mat-raised-button
+            ngxClipboard
+            (cbOnSuccess)="onProfileIdCopied()"
+            [cbContent]="entity?.id?.id"
+            [disabled]="(isLoading$ | async)"
+            [class.!hidden]="isEdit">
+      <mat-icon svgIcon="mdi:clipboard-arrow-left"></mat-icon>
+      <span translate>agent.copy-profile-id</span>
+    </button>
+  </div>
 </div>
 <div class="mat-padding flex flex-col">
   <form [formGroup]="entityForm">
@@ -47,10 +65,22 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
+    </fieldset>
+    <mat-form-field class="mat-block" *ngIf="templateVersion">
+      <mat-label translate>agent.template</mat-label>
+      <input matInput [value]="templateVersion" disabled>
+      <mat-hint *ngIf="canUpgrade()" class="tb-app-upgrade-hint">
+        <mat-icon>info</mat-icon>
+        {{ 'agent.app-upgrade-available' | translate:{ version: nextVersion } }}
+      </mat-hint>
+    </mat-form-field>
+    <fieldset [disabled]="(isLoading$ | async) || !isEdit">
       <mat-form-field class="mat-block">
         <mat-label translate>agent.description</mat-label>
         <textarea matInput formControlName="description" rows="2"></textarea>
       </mat-form-field>
     </fieldset>
   </form>
+  <label class="tb-mat-label" translate>agent.app-compose</label>
+  <div class="tb-app-compose-editor tb-app-compose-editor-ace" #composeAceEditor></div>
 </div>

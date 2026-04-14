@@ -1,0 +1,69 @@
+<!--
+
+    Copyright © 2016-2026 The Thingsboard Authors
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<mat-toolbar color="primary" class="tb-install-wizard-toolbar">
+  <div class="tb-install-wizard-toolbar-content">
+    <h2>{{ 'agent.app-upgrade-title' | translate }}:</h2>
+    <span class="flex-1">{{ profile.name }}</span>
+  </div>
+  <button mat-icon-button (click)="cancel()" type="button" tabindex="-1">
+    <mat-icon>close</mat-icon>
+  </button>
+</mat-toolbar>
+
+<div mat-dialog-content class="tb-install-wizard-body">
+
+  <div class="loading-state" *ngIf="loadingTemplate">
+    <mat-spinner diameter="24"></mat-spinner>
+    <span translate>agent.app-upgrade-loading</span>
+  </div>
+  <div class="error-state" *ngIf="!loadingTemplate && loadError">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ loadError }}</span>
+    <div class="step-footer">
+      <button mat-button (click)="cancel()">{{ 'action.close' | translate }}</button>
+    </div>
+  </div>
+
+  <ng-container *ngIf="!loadingTemplate && !loadError">
+    <div class="summary-card" style="margin-bottom: 16px;">
+      <div class="summary-row">
+        <span class="label" translate>agent.app-upgrade-summary-versions</span>
+        <span class="value">{{ fromVersion || '—' }} → {{ toVersion || '—' }}</span>
+      </div>
+    </div>
+
+    <div class="diff-header-row">
+      <div class="diff-header added">
+        {{ 'agent.app-upgrade-template-new' | translate: { version: toVersion || '—' } }}
+      </div>
+      <div class="diff-header removed" translate>agent.app-upgrade-current</div>
+    </div>
+    <div class="diff-viewer" #diffViewer></div>
+    <p class="diff-hint" translate>agent.app-upgrade-diff-hint</p>
+
+    <div class="step-footer">
+      <button mat-button (click)="cancel()" [disabled]="submitting">
+        {{ 'action.cancel' | translate }}
+      </button>
+      <button mat-raised-button color="primary" (click)="submit()" [disabled]="!canSubmit()">
+        <mat-icon>upgrade</mat-icon>
+        <span>{{ 'agent.app-upgrade-cta' | translate }}</span>
+      </button>
+    </div>
+  </ng-container>
+</div>

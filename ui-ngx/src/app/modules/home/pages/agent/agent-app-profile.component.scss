@@ -1,0 +1,55 @@
+/**
+ * Copyright © 2016-2026 The Thingsboard Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+::ng-deep .settings-card.tb-agent-app-profile-fullscreen.tb-agent-app-profile-fullscreen {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+:host ::ng-deep {
+  .tb-app-upgrade-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #ef6c00;
+    font-weight: 500;
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+  }
+  .tb-app-compose-editor {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 4px;
+    background: #fafafa;
+  }
+  .tb-app-compose-editor-ace {
+    height: 480px;
+    overflow: hidden;
+    ::ng-deep .ace_editor {
+      font-family: "JetBrains Mono", "Fira Code", "Roboto Mono", "Menlo", "Courier New", monospace !important;
+      background: transparent;
+    }
+    ::ng-deep .ace_gutter {
+      background: #f5f5f5;
+      color: rgba(0, 0, 0, 0.42);
+    }
+  }
+}

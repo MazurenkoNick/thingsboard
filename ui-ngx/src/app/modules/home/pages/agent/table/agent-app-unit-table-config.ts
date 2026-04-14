@@ -14,7 +14,7 @@
 /// limitations under the License.
 ///
 
-import { Injector, StaticProvider, ViewContainerRef } from '@angular/core';
+import { Injector, NgZone, StaticProvider, ViewContainerRef } from '@angular/core';
 import { Overlay, OverlayConfig, OverlayRef } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { TranslateService } from '@ngx-translate/core';
@@ -23,6 +23,7 @@ import { catchError, map, switchMap } from 'rxjs/operators';
 
 import { AgentService } from '@core/http/agent.service';
 import { AttributeService } from '@core/http/attribute.service';
+import { TelemetryWebsocketService } from '@core/ws/telemetry-websocket.service';
 import {
   EntityTableColumn,
   EntityTableConfig
@@ -36,7 +37,10 @@ import {
   AgentAppUnitType,
   agentAppUnitTypeTranslationMap
 } from '@shared/models/agent.models';
-import { AttributeScope } from '@shared/models/telemetry/telemetry.models';
+import {
+  AttributeScope,
+  TelemetrySubscriber
+} from '@shared/models/telemetry/telemetry.models';
 import { EntityType } from '@shared/models/entity-type.models';
 import {
   AGENT_APP_UNIT_FILTER_PANEL_DATA,
@@ -51,18 +55,23 @@ const typeBadgeStyles: Record<string, string> = {
   NETWORK:   'background:#f3e5f5;color:#6a1b9a;'
 };
 
-const stateBadgeStyles: Record<string, string> = {
-  running:    'background:#e8f5e9;color:#2e7d32;',
-  exited:     'background:#ffebee;color:#c62828;',
-  dead:       'background:#ffebee;color:#c62828;',
-  paused:     'background:#fff8e1;color:#f57c00;',
-  restarting: 'background:#fff8e1;color:#f57c00;',
-  created:    'background:#fff8e1;color:#f57c00;'
+const stateConfig: Record<string, { icon: string; color: string }> = {
+  running:    { icon: 'check_circle', color: '#2e7d32' },
+  exited:     { icon: 'cancel', color: '#c62828' },
+  dead:       { icon: 'cancel', color: '#c62828' },
+  paused:     { icon: 'pause_circle', color: '#f57c00' },
+  restarting: { icon: 'autorenew', color: '#f57c00' },
+  created:    { icon: 'hourglass_empty', color: '#f57c00' }
 };
 
 function badge(value: string, style: string): string {
   return `<span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:12px;`
     + `font-size:11px;font-weight:600;letter-spacing:0.5px;${style}">${value}</span>`;
+}
+
+function stateBadge(state: string): string {
+  const c = stateConfig[state] || { icon: 'help_outline', color: '#616161' };
+  return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:500;color:${c.color};"><span class="material-icons" style="font-size:18px;">${c.icon}</span>${state}</span>`;
 }
 
 function muted(): string {
@@ -72,13 +81,16 @@ function muted(): string {
 export class AgentAppUnitTableConfig extends EntityTableConfig<AgentAppUnit> {
 
   private filter: AgentAppUnitFilterValue = { type: null };
+  private activeSubs = new Map<string, TelemetrySubscriber>();
 
   constructor(private readonly application: AgentApplicationInfo,
               private readonly agentService: AgentService,
               private readonly attributeService: AttributeService,
               private readonly translate: TranslateService,
               private readonly overlay: Overlay,
-              private readonly viewContainerRef: ViewContainerRef) {
+              private readonly viewContainerRef: ViewContainerRef,
+              private readonly telemetryWsService: TelemetryWebsocketService,
+              private readonly zone: NgZone) {
     super();
 
     this.tableTitle = this.translate.instant('agent.app-units');
@@ -114,7 +126,7 @@ export class AgentAppUnitTableConfig extends EntityTableConfig<AgentAppUnit> {
       new EntityTableColumn<AgentAppUnit>('state',
         'agent.app-unit-state', '140px',
         (u) => u.state
-          ? badge(u.state, stateBadgeStyles[u.state] || 'background:#eeeeee;color:#616161;')
+          ? stateBadge(u.state)
           : muted(),
         () => ({}), false
       )
@@ -171,8 +183,60 @@ export class AgentAppUnitTableConfig extends EntityTableConfig<AgentAppUnit> {
           if (attr.key === 'state') { unit.state = attr.value as string; }
         }
       });
+      this.reconcileSubscriptions(containers);
       return page;
     }));
+  }
+
+  private reconcileSubscriptions(containers: AgentAppUnit[]) {
+    const visibleIds = new Set(containers.map(u => u.id.id));
+    this.activeSubs.forEach((sub, id) => {
+      if (!visibleIds.has(id)) {
+        sub.unsubscribe();
+        sub.complete();
+        this.activeSubs.delete(id);
+      }
+    });
+    containers.forEach(u => this.subscribeUnitAttributes(u));
+  }
+
+  private subscribeUnitAttributes(unit: AgentAppUnit) {
+    const id = unit.id.id;
+    if (this.activeSubs.has(id)) { return; }
+    const subscriber = TelemetrySubscriber.createEntityAttributesSubscription(
+      this.telemetryWsService,
+      unit.id,
+      AttributeScope.SERVER_SCOPE,
+      this.zone,
+      ['image', 'state']
+    );
+    subscriber.data$.subscribe(update => {
+      if (!update?.data) { return; }
+      let changed = false;
+      const imageEntries = update.data['image'];
+      if (imageEntries?.length) {
+        unit.image = imageEntries[0][1] as string;
+        changed = true;
+      }
+      const stateEntries = update.data['state'];
+      if (stateEntries?.length) {
+        unit.state = stateEntries[0][1] as string;
+        changed = true;
+      }
+      if (changed) {
+        this.zone.run(() => this.updateData());
+      }
+    });
+    subscriber.subscribe();
+    this.activeSubs.set(id, subscriber);
+  }
+
+  destroySubscriptions() {
+    this.activeSubs.forEach(sub => {
+      sub.unsubscribe();
+      sub.complete();
+    });
+    this.activeSubs.clear();
   }
 
   private hasActiveFilter(): boolean {

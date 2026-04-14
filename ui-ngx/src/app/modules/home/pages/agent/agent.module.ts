@@ -36,8 +36,14 @@ import {
   AgentAppEventProgressDialogComponent
 } from '@home/pages/agent/dialog/agent-app-event-progress-dialog.component';
 import {
+  AgentAppProfileUpgradeDialogComponent
+} from '@home/pages/agent/dialog/agent-app-profile-upgrade-dialog.component';
+import {
   AgentAppInstallWizardComponent
 } from '@home/pages/agent/wizard/agent-app-install-wizard.component';
+import {
+  AgentAppProfileWizardComponent
+} from '@home/pages/agent/wizard/agent-app-profile-wizard.component';
 import { AgentApplicationComponent } from '@home/pages/agent/agent-application.component';
 import { AgentApplicationTabsComponent } from '@home/pages/agent/agent-application-tabs.component';
 import {
@@ -64,7 +70,9 @@ import {
     AgentInstallInstructionsDialogComponent,
     AgentAppDeleteDialogComponent,
     AgentAppEventProgressDialogComponent,
+    AgentAppProfileUpgradeDialogComponent,
     AgentAppInstallWizardComponent,
+    AgentAppProfileWizardComponent,
     AgentApplicationComponent,
     AgentApplicationTabsComponent,
     AgentAppEventTableComponent,
