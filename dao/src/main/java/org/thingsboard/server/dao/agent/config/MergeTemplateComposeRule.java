@@ -90,24 +90,20 @@ public class MergeTemplateComposeRule implements AppConfigMergeRule {
     }
 
     /**
-     * Recursively merges {@code templateNode} into {@code appNode}:
+     * Overlays {@code templateNode} onto {@code appNode}:
      * <ul>
-     *   <li>Keys in template but not in app → added (deep-copied from template)</li>
-     *   <li>Keys in app but not in template → preserved (user customizations kept)</li>
-     *   <li>Keys in both, both objects → recurse</li>
-     *   <li>Keys in both, different or non-object types → app value preserved</li>
+     *   <li>Every key declared by the template replaces the corresponding app value (deep-copied).</li>
+     *   <li>Keys the app has but the template doesn't are preserved as-is.</li>
      * </ul>
+     * Credential env vars wiped by this overlay are re-populated downstream by
+     * {@link MergeCredentialsToConfigRule} whenever the merge context carries a
+     * {@code relatedEntityId}.
      */
     private void deepMerge(ObjectNode appNode, JsonNode templateNode) {
         Iterator<String> templateFields = templateNode.fieldNames();
         while (templateFields.hasNext()) {
             String key = templateFields.next();
-            JsonNode templateValue = templateNode.get(key);
-            if (!appNode.has(key)) {
-                appNode.set(key, templateValue.deepCopy());
-            } else if (appNode.get(key).isObject() && templateValue.isObject()) {
-                deepMerge((ObjectNode) appNode.get(key), templateValue);
-            }
+            appNode.set(key, templateNode.get(key).deepCopy());
         }
     }
 

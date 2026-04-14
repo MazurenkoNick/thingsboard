@@ -179,7 +179,9 @@ class MergeTemplateComposeRuleTest {
     // ==================== apply() - deep merge: add keys ====================
 
     @Test
-    void apply_shouldAddTopLevelKeysFromTemplate() {
+    void apply_shouldOverwriteWithTemplateValues_andAddNewKeys() {
+        // Template-wins: existing keys take the template value and new keys
+        // declared by the template are added.
         ObjectNode appCompose = MAPPER.createObjectNode().put("existing", "value");
         ObjectNode templateCompose = MAPPER.createObjectNode()
                 .put("existing", "template-value")
@@ -195,7 +197,7 @@ class MergeTemplateComposeRuleTest {
         rule.apply(app, ctx);
 
         JsonNode result = getAppCompose(app);
-        assertEquals("value", result.get("existing").asText());
+        assertEquals("template-value", result.get("existing").asText());
         assertEquals("new-value", result.get("newKey").asText());
     }
 
@@ -203,6 +205,8 @@ class MergeTemplateComposeRuleTest {
 
     @Test
     void apply_shouldPreserveTopLevelKeysNotInTemplate() {
+        // App-only keys at the top level are kept; keys also declared by the
+        // template take the template value.
         ObjectNode appCompose = MAPPER.createObjectNode()
                 .put("keep", "kept-value")
                 .set("userKey", MAPPER.createObjectNode()
@@ -219,7 +223,7 @@ class MergeTemplateComposeRuleTest {
         rule.apply(app, ctx);
 
         JsonNode result = getAppCompose(app);
-        assertEquals("kept-value", result.get("keep").asText());
+        assertEquals("template-value", result.get("keep").asText());
         assertNotNull(result.get("userKey"));
         assertEquals("v1", result.get("userKey").get("k1").asText());
     }
@@ -227,7 +231,7 @@ class MergeTemplateComposeRuleTest {
     // ==================== apply() - deep merge: preserve values ====================
 
     @Test
-    void apply_shouldPreserveExistingLeafValues() {
+    void apply_shouldOverwriteLeafValues_whenBothDeclareTheKey() {
         ObjectNode appCompose = MAPPER.createObjectNode()
                 .put("port", 9090)
                 .put("host", "custom-host");
@@ -245,14 +249,16 @@ class MergeTemplateComposeRuleTest {
         rule.apply(app, ctx);
 
         JsonNode result = getAppCompose(app);
-        assertEquals(9090, result.get("port").asInt());
-        assertEquals("custom-host", result.get("host").asText());
+        assertEquals(8080, result.get("port").asInt());
+        assertEquals("default-host", result.get("host").asText());
     }
 
     // ==================== apply() - deep merge: nested objects ====================
 
     @Test
-    void apply_shouldRecurseIntoNestedObjects() {
+    void apply_shouldReplaceNestedObjectWholesale_whenBothDeclareKey() {
+        // No deep recursion: the template's "service" object replaces the
+        // app's "service" object entirely.
         ObjectNode appNested = MAPPER.createObjectNode().put("existingProp", "custom");
         ObjectNode appCompose = MAPPER.createObjectNode();
         appCompose.set("service", appNested);
@@ -273,12 +279,14 @@ class MergeTemplateComposeRuleTest {
         rule.apply(app, ctx);
 
         JsonNode resultService = getAppCompose(app).get("service");
-        assertEquals("custom", resultService.get("existingProp").asText());
+        assertEquals("default", resultService.get("existingProp").asText());
         assertEquals("added", resultService.get("newProp").asText());
     }
 
     @Test
-    void apply_shouldPreserveNestedKeysNotInTemplate() {
+    void apply_shouldDropAppOnlyNestedKeys_whenTemplateDeclaresParent() {
+        // Wholesale replacement means app-only nested keys are dropped if the
+        // template also declares the parent object.
         ObjectNode appNested = MAPPER.createObjectNode()
                 .put("keep", "val")
                 .put("userCustom", "preserved");
@@ -299,12 +307,12 @@ class MergeTemplateComposeRuleTest {
         rule.apply(app, ctx);
 
         JsonNode resultService = getAppCompose(app).get("service");
-        assertEquals("val", resultService.get("keep").asText());
-        assertEquals("preserved", resultService.get("userCustom").asText());
+        assertEquals("default", resultService.get("keep").asText());
+        assertNull(resultService.get("userCustom"));
     }
 
     @Test
-    void apply_shouldRecurseDeeplyIntoMultipleLevels() {
+    void apply_shouldReplaceTopLevelObject_andLoseDeeperAppOnlyKeys() {
         // app: { a: { b: { existing: "custom", userProp: "keep" } } }
         ObjectNode appLevel3 = MAPPER.createObjectNode()
                 .put("existing", "custom")
@@ -333,16 +341,16 @@ class MergeTemplateComposeRuleTest {
         rule.apply(app, ctx);
 
         JsonNode result = getAppCompose(app).get("a").get("b");
-        assertEquals("custom", result.get("existing").asText());
+        assertEquals("default", result.get("existing").asText());
         assertEquals("new", result.get("added").asText());
-        assertEquals("keep", result.get("userProp").asText());
+        assertNull(result.get("userProp"));
     }
 
     // ==================== apply() - deep merge: type mismatches ====================
 
     @Test
-    void apply_shouldPreserveAppValue_whenTypesDoNotMatch() {
-        // app has a leaf, template has an object at the same key
+    void apply_shouldOverwriteAppLeaf_whenTemplateHasObject() {
+        // app has a leaf, template has an object at the same key — template wins.
         ObjectNode appCompose = MAPPER.createObjectNode().put("config", "flat-string");
         ObjectNode templateNested = MAPPER.createObjectNode().put("nested", "value");
         ObjectNode templateCompose = MAPPER.createObjectNode();
@@ -357,12 +365,14 @@ class MergeTemplateComposeRuleTest {
 
         rule.apply(app, ctx);
 
-        assertEquals("flat-string", getAppCompose(app).get("config").asText());
+        JsonNode resultConfig = getAppCompose(app).get("config");
+        assertTrue(resultConfig.isObject());
+        assertEquals("value", resultConfig.get("nested").asText());
     }
 
     @Test
-    void apply_shouldPreserveAppObject_whenTemplateHasLeaf() {
-        // app has an object, template has a leaf at the same key
+    void apply_shouldOverwriteAppObject_whenTemplateHasLeaf() {
+        // app has an object, template has a leaf at the same key — template wins.
         ObjectNode appNested = MAPPER.createObjectNode().put("inner", "val");
         ObjectNode appCompose = MAPPER.createObjectNode();
         appCompose.set("config", appNested);
@@ -378,8 +388,7 @@ class MergeTemplateComposeRuleTest {
 
         rule.apply(app, ctx);
 
-        assertTrue(getAppCompose(app).get("config").isObject());
-        assertEquals("val", getAppCompose(app).get("config").get("inner").asText());
+        assertEquals("flat", getAppCompose(app).get("config").asText());
     }
 
     // ==================== apply() - deep merge: deep copy isolation ====================
@@ -445,7 +454,9 @@ class MergeTemplateComposeRuleTest {
     // ==================== apply() - combined add and preserve ====================
 
     @Test
-    void apply_shouldAddNewKeysAndPreserveUserKeys() {
+    void apply_shouldAddNewTemplateKeysAndOverwriteSharedKeys() {
+        // Template-wins: shared keys take template values; template-only keys
+        // are added; app-only keys at the same level are preserved.
         ObjectNode appCompose = MAPPER.createObjectNode()
                 .put("keep", "app-val")
                 .put("userKey1", "user1")
@@ -466,7 +477,7 @@ class MergeTemplateComposeRuleTest {
 
         JsonNode result = getAppCompose(app);
         assertEquals(5, result.size());
-        assertEquals("app-val", result.get("keep").asText());
+        assertEquals("tpl-val", result.get("keep").asText());
         assertEquals("new1", result.get("add1").asText());
         assertEquals("new2", result.get("add2").asText());
         assertEquals("user1", result.get("userKey1").asText());
@@ -523,7 +534,7 @@ class MergeTemplateComposeRuleTest {
     }
 
     @Test
-    void apply_shouldMergeIntoExistingProfileConfig() {
+    void apply_shouldOverwriteExistingProfileConfig_withTemplateValues() {
         ObjectNode appCompose = MAPPER.createObjectNode().put("custom", "value");
         ObjectNode templateCompose = MAPPER.createObjectNode()
                 .put("custom", "template-value")
@@ -541,7 +552,7 @@ class MergeTemplateComposeRuleTest {
         rule.apply(profile, ctx);
 
         JsonNode result = ((DockerComposeConfig) profile.getConfig()).getCompose();
-        assertEquals("value", result.get("custom").asText());
+        assertEquals("template-value", result.get("custom").asText());
         assertEquals("new", result.get("added").asText());
     }
 
