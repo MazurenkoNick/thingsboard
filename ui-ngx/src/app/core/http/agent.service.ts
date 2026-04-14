@@ -157,14 +157,11 @@ export class AgentService {
 
   // --- Agent Application ---
 
-  public getAgentApplicationById(applicationId: string, config?: RequestConfig): Observable<AgentApplication> {
-    return this.http.get<AgentApplication>(`/api/agent/app/${applicationId}`, defaultHttpOptionsFromConfig(config));
+  public getAgentApplicationById(applicationId: string, config?: RequestConfig): Observable<AgentApplicationInfo> {
+    return this.http.get<AgentApplicationInfo>(`/api/agent/app/${applicationId}`, defaultHttpOptionsFromConfig(config));
   }
 
   public getAgentApplicationInfoById(applicationId: string, config?: RequestConfig): Observable<AgentApplicationInfo> {
-    // Backend exposes only GET /agent/app/{id} returning AgentApplication.
-    // AgentApplicationInfo extends AgentApplication, so a cast is safe —
-    // list-only fields (currentVersion/nextVersion) stay undefined on detail fetches.
     return this.http.get<AgentApplicationInfo>(`/api/agent/app/${applicationId}`, defaultHttpOptionsFromConfig(config));
   }
 
@@ -247,8 +244,18 @@ export class AgentService {
       defaultHttpOptionsFromConfig(config));
   }
 
-  public getAgentAppTemplates(pageLink: PageLink, config?: RequestConfig): Observable<PageData<AgentAppTemplate>> {
-    return this.http.get<PageData<AgentAppTemplate>>(`/api/agent/app/templates${pageLink.toQuery()}`,
+  public getAgentAppTemplates(config?: RequestConfig): Observable<AgentAppTemplate[]> {
+    return this.http.get<AgentAppTemplate[]>('/api/agent/app/templates',
+      defaultHttpOptionsFromConfig(config));
+  }
+
+  public getAgentAppProfilesByAppType(appType: string, config?: RequestConfig): Observable<AgentAppProfile[]> {
+    return this.http.get<AgentAppProfile[]>(`/api/agent/app/profiles/${appType}`,
+      defaultHttpOptionsFromConfig(config));
+  }
+
+  public getAgentAppTemplatesByAppType(appType: string, configType: string = 'DOCKER_COMPOSE', config?: RequestConfig): Observable<AgentAppTemplate[]> {
+    return this.http.get<AgentAppTemplate[]>(`/api/agent/app/templates/${appType}/${configType}`,
       defaultHttpOptionsFromConfig(config));
   }
 
@@ -271,9 +278,13 @@ export class AgentService {
       defaultHttpOptionsFromConfig(config));
   }
 
-  public mergeProfileForPreview(templateId: string, profile?: AgentAppProfile, config?: RequestConfig): Observable<AgentAppProfile> {
-    return this.http.post<AgentAppProfile>(`/api/agent/app/profiles/merge/${templateId}/preview`,
-      profile || null, defaultHttpOptionsFromConfig(config));
+  public mergeProfileForPreview(templateId: string, profile?: AgentAppProfile,
+                                composeType?: string, config?: RequestConfig): Observable<AgentAppProfile> {
+    let url = `/api/agent/app/profiles/merge/${templateId}/preview`;
+    if (composeType) {
+      url += `?composeType=${encodeURIComponent(composeType)}`;
+    }
+    return this.http.post<AgentAppProfile>(url, profile || null, defaultHttpOptionsFromConfig(config));
   }
 
   // --- Agent App Unit (read-only) ---

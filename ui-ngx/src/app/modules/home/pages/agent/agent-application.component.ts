@@ -23,6 +23,7 @@ import { EntityComponent } from '@home/components/entity/entity.component';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { EntityType } from '@shared/models/entity-type.models';
 import {
+  AgentAppProfile,
   AgentApplicationInfo,
   AgentApplicationType,
   agentApplicationTypeTranslationMap,
@@ -45,6 +46,14 @@ import {
   AgentAppInstallWizardData
 } from '@home/pages/agent/wizard/agent-app-install-wizard.component';
 import { mergeMap } from 'rxjs/operators';
+import { confineWheelToAceEditor } from '@home/pages/agent/util/ace-wheel-confine';
+import {
+  applyCredentialValuesToCompose,
+  CredField,
+  credentialSchemaFor,
+  extractCredentialValues,
+  visibleCredentialFields as visibleCredFieldsFor
+} from '@home/pages/agent/util/agent-credentials';
 import { of } from 'rxjs';
 
 @Component({
@@ -62,6 +71,18 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
   agentApplicationTypeTranslationMap = agentApplicationTypeTranslationMap;
 
   templateVersion = '';
+
+  availableProfiles: AgentAppProfile[] = [];
+  loadingProfiles = false;
+  // Cached compose YAML of the previously non-profile state so the user can
+  // restore it by clearing the profile selector. Captured on first switch to
+  // a profile and cleared once they detach it.
+  private detachedComposeYaml: string | null = null;
+
+  // Profile-managed apps: only these env keys are editable on the detail page.
+  // The compose editor stays read-only and the form below patches the creds
+  // into the compose on save.
+  credentialValues: Record<string, string> = {};
 
   private composeEditor: Ace.Editor | null = null;
   private composeEditorSettingValue = false;
@@ -162,15 +183,7 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
       // preventDefault on the container and manually forward the delta
       // into ace's scrollTop/scrollLeft so the editor still scrolls while
       // it has room to move.
-      container?.addEventListener('wheel', (ev: WheelEvent) => {
-        if (!this.isEdit || !editor.isFocused()) { return; }
-        ev.preventDefault();
-        const session = editor.getSession();
-        session.setScrollTop(session.getScrollTop() + ev.deltaY);
-        if (ev.deltaX) {
-          session.setScrollLeft(session.getScrollLeft() + ev.deltaX);
-        }
-      }, { passive: false });
+      confineWheelToAceEditor(container, editor, () => !!this.isEdit && editor.isFocused());
       this.applyComposeEditorReadOnly();
       setTimeout(() => editor.resize(true), 0);
     });
@@ -193,12 +206,127 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
     if (!this.composeEditor) {
       return;
     }
-    const readOnly = !this.isEdit;
+    // Profile-managed apps are always read-only — credential edits go through
+    // the credentials form below and are merged into the compose on save.
+    const readOnly = !this.isEdit || this.isProfileManaged;
     this.composeEditor.setReadOnly(readOnly);
     const cursorLayer = (this.composeEditor.renderer as any).$cursorLayer;
     if (cursorLayer?.element?.style) {
       cursorLayer.element.style.display = readOnly ? 'none' : '';
     }
+  }
+
+  get isProfileManaged(): boolean {
+    return !!this.selectedProfileId;
+  }
+
+  get selectedProfileId(): string | null {
+    // Once the form exists it is the source of truth — `??` would have fallen
+    // back to the persisted entity when the user explicitly cleared the
+    // selector (value === null), making the credentials form linger.
+    const ctrl = this.entityForm?.get('applicationProfileId');
+    if (ctrl) {
+      return ctrl.value ?? null;
+    }
+    return this.entity?.applicationProfileId?.id ?? null;
+  }
+
+  onProfileChange(profileId: string | null) {
+    // Called from mat-select selectionChange AND from the clear button. The
+    // select path has already written via formControlName; the clear button
+    // hasn't, so we setValue unconditionally — both paths converge here.
+    const ctrl = this.entityForm.get('applicationProfileId');
+    if (ctrl.value !== (profileId ?? null)) {
+      ctrl.setValue(profileId ?? null);
+    }
+    ctrl.markAsDirty();
+
+    if (profileId) {
+      if (this.detachedComposeYaml == null) {
+        this.detachedComposeYaml = this.entityForm.get('composeYaml')?.value ?? this.dumpCompose(this.entity);
+      }
+      const profile = this.availableProfiles.find(p => p.id.id === profileId);
+      if (profile) {
+        this.applyProfileConfig(profile);
+      } else if (this.entity?.appType) {
+        this.agentService.getAgentAppProfilesByAppType(this.entity.appType).subscribe(list => {
+          this.availableProfiles = list;
+          const match = list.find(p => p.id.id === profileId);
+          if (match) { this.applyProfileConfig(match); }
+        });
+      }
+    } else {
+      // Detached — restore the previous compose so the editor becomes editable
+      // again. Credentials form hides via isProfileManaged → false.
+      const restored = this.detachedComposeYaml ?? this.dumpCompose(this.entity);
+      this.entityForm.get('composeYaml').setValue(restored);
+      this.entityForm.get('composeYaml').markAsDirty();
+      this.pushComposeToEditor(restored);
+      this.credentialValues = {};
+      this.detachedComposeYaml = null;
+    }
+    this.applyComposeEditorReadOnly();
+  }
+
+  private applyProfileConfig(profile: AgentAppProfile) {
+    const profileCompose: any = (profile.config as any)?.compose;
+    if (!profileCompose) { return; }
+    const yaml = this.dumpYaml(profileCompose, 0).trimEnd() + '\n';
+    this.entityForm.get('composeYaml').setValue(yaml);
+    this.entityForm.get('composeYaml').markAsDirty();
+    this.pushComposeToEditor(yaml);
+    this.credentialValues = extractCredentialValues(profileCompose, this.entity?.appType);
+  }
+
+  private loadProfilesForType(appType: AgentApplicationType | undefined) {
+    if (!appType) { return; }
+    this.loadingProfiles = true;
+    this.agentService.getAgentAppProfilesByAppType(appType).subscribe({
+      next: profiles => {
+        this.availableProfiles = profiles;
+        this.loadingProfiles = false;
+      },
+      error: () => { this.loadingProfiles = false; }
+    });
+  }
+
+  get showCredentialForm(): boolean {
+    return this.isProfileManaged && credentialSchemaFor(this.entity?.appType).length > 0;
+  }
+
+  get visibleCredentialFields(): CredField[] {
+    return visibleCredFieldsFor(this.entity?.appType, this.credentialValues);
+  }
+
+  onCredentialChange(field: CredField, value: string) {
+    this.credentialValues[field.key] = value ?? '';
+    // Reflect the change in the compose YAML form control + the editor preview
+    // so what the user sees matches what gets sent on save.
+    const yamlText: string = this.entityForm?.get('composeYaml')?.value ?? '';
+    let parsed: any;
+    try {
+      parsed = yamlText ? YAML.parse(yamlText) : null;
+    } catch (_) {
+      parsed = null;
+    }
+    if (!parsed) {
+      parsed = (this.entity?.config as any)?.compose;
+    }
+    if (!parsed) { return; }
+    applyCredentialValuesToCompose(parsed, this.entity?.appType, this.credentialValues);
+    const newYaml = this.dumpYaml(parsed, 0).trimEnd() + '\n';
+    this.entityForm.get('composeYaml').setValue(newYaml);
+    this.entityForm.get('composeYaml').markAsDirty();
+    this.pushComposeToEditor(newYaml);
+  }
+
+  private initCredentialValues(entity: AgentApplicationInfo) {
+    if (!entity?.applicationProfileId) {
+      this.credentialValues = {};
+      return;
+    }
+    const compose: any = entity?.config && (entity.config as any).compose;
+    this.credentialValues = extractCredentialValues(compose, entity.appType);
   }
 
   hideDelete() {
@@ -217,6 +345,7 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
   buildForm(entity: AgentApplicationInfo): UntypedFormGroup {
     return this.fb.group({
       name: [entity ? entity.name : '', [Validators.required, Validators.maxLength(255)]],
+      applicationProfileId: [entity?.applicationProfileId?.id ?? null],
       composeYaml: [this.dumpCompose(entity)]
     });
   }
@@ -225,9 +354,13 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
     const yaml = this.dumpCompose(entity);
     this.entityForm.patchValue({
       name: entity.name,
+      applicationProfileId: entity?.applicationProfileId?.id ?? null,
       composeYaml: yaml
     });
     this.pushComposeToEditor(yaml);
+    this.initCredentialValues(entity);
+    this.detachedComposeYaml = entity?.applicationProfileId ? null : yaml;
+    this.loadProfilesForType(entity?.appType);
     this.applyComposeEditorReadOnly();
     this.templateVersion = entity?.currentVersion || '';
     // The detail GET returns AgentApplication (no currentVersion / nextVersion
@@ -265,6 +398,10 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
       ...((this.entity?.config as any) || { type: 'DOCKER_COMPOSE' }),
       compose
     };
+    const profileId: string | null = formValue?.applicationProfileId ?? null;
+    prepared.applicationProfileId = profileId
+        ? { id: profileId, entityType: 'AGENT_APP_PROFILE' }
+        : null;
     delete prepared.composeYaml;
     delete prepared.appType;
     delete prepared.currentVersion;

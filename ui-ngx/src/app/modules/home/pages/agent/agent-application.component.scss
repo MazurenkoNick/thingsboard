@@ -37,6 +37,48 @@
       height: 14px;
     }
   }
+  .tb-app-profile-outdated {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    margin: 4px 0 16px;
+    background: #fff3e0;
+    border: 1px solid #ef6c00;
+    border-radius: 4px;
+    color: #b34600;
+    font-size: 13px;
+    line-height: 1.4;
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+    }
+  }
+  .tb-app-cred-section {
+    margin: 8px 0 16px;
+    padding: 14px 16px 4px;
+    background: #fffbea;
+    border: 1px solid #f0d97a;
+    border-radius: 4px;
+    .tb-app-cred-section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #6d4c00;
+      .tb-app-cred-section-hint {
+        font-size: 12px;
+        font-weight: 400;
+        color: #8b6d2a;
+      }
+    }
+    mat-form-field { width: 100%; }
+  }
   .tb-app-compose-editor {
     width: 100%;
     box-sizing: border-box;

@@ -73,6 +73,21 @@
     </fieldset>
 
     <mat-form-field class="mat-block">
+      <mat-label translate>agent.app-profile</mat-label>
+      <mat-select formControlName="applicationProfileId"
+                  [disabled]="!isEdit"
+                  (selectionChange)="onProfileChange($event.value)">
+        <mat-option *ngFor="let p of availableProfiles" [value]="p.id.id">{{ p.name }}</mat-option>
+      </mat-select>
+      <button *ngIf="selectedProfileId && isEdit"
+              type="button"
+              matSuffix mat-icon-button aria-label="Clear"
+              (click)="$event.stopPropagation(); onProfileChange(null)">
+        <mat-icon class="material-icons">close</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <mat-form-field class="mat-block">
       <mat-label translate>agent.app-type</mat-label>
       <mat-select [value]="entity?.appType" [disabled]="true">
         <mat-option *ngFor="let type of agentApplicationTypes" [value]="type">
@@ -90,10 +105,47 @@
       </mat-hint>
     </mat-form-field>
 
+    <mat-form-field class="mat-block" *ngIf="entity?.projectName">
+      <mat-label translate>agent.app-project-name</mat-label>
+      <input matInput [value]="entity.projectName" disabled>
+    </mat-form-field>
+
+    <div class="tb-app-profile-outdated" *ngIf="entity?.profileConfigOutdated">
+      <mat-icon>info</mat-icon>
+      <span translate>agent.app-profile-outdated-hint</span>
+    </div>
+
     <mat-form-field class="mat-block" *ngIf="entity?.origin">
       <mat-label translate>agent.app-origin</mat-label>
       <input matInput [value]="entity.origin" disabled>
     </mat-form-field>
+
+    <div class="tb-app-cred-section" *ngIf="isEdit && showCredentialForm">
+      <div class="tb-app-cred-section-header">
+        <span translate>agent.app-install-cred-title</span>
+        <span class="tb-app-cred-section-hint" translate>agent.app-update-cred-hint</span>
+      </div>
+      <ng-container *ngFor="let field of visibleCredentialFields">
+        <mat-form-field class="mat-block" *ngIf="field.type !== 'select'">
+          <mat-label>{{ field.labelKey | translate }}</mat-label>
+          <input matInput
+                 [type]="field.type"
+                 [ngModel]="credentialValues[field.key]"
+                 [ngModelOptions]="{ standalone: true }"
+                 (ngModelChange)="onCredentialChange(field, $event)">
+        </mat-form-field>
+        <mat-form-field class="mat-block" *ngIf="field.type === 'select'">
+          <mat-label>{{ field.labelKey | translate }}</mat-label>
+          <mat-select [ngModel]="credentialValues[field.key]"
+                      [ngModelOptions]="{ standalone: true }"
+                      (ngModelChange)="onCredentialChange(field, $event)">
+            <mat-option *ngFor="let opt of field.options" [value]="opt.value">
+              {{ opt.labelKey | translate }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </ng-container>
+    </div>
 
     <label class="tb-mat-label" translate>agent.app-compose</label>
     <div class="tb-app-compose-editor tb-app-compose-editor-ace" #composeAceEditor></div>
