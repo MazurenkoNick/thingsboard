@@ -92,7 +92,7 @@ public class JpaAgentDao extends JpaAbstractDao<AgentEntity, Agent> implements A
                 .findAgentInfosByTenantId(
                         tenantId,
                         pageLink.getTextSearch(),
-                        DaoUtil.toPageable(pageLink)));
+                        DaoUtil.toPageable(pageLink, AgentInfoEntity.agentInfoColumnMap)));
     }
 
     @Override

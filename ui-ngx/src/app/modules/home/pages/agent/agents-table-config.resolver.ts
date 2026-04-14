@@ -153,7 +153,7 @@ export class AgentsTableConfigResolver {
     }
     columns.push(
       new EntityTableColumn<AgentInfo>('active', 'agent.status', '140px',
-        entity => this.agentStatus(entity), entity => this.agentStatusStyle(entity))
+        entity => this.agentStatus(entity), entity => this.agentStatusStyle(entity), false)
     );
     return columns;
   }
