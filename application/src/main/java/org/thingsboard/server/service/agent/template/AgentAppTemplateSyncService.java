@@ -115,10 +115,12 @@ public class AgentAppTemplateSyncService {
                 template.setNextVersion(parsedFile.getNextVersion());
 
                 convertComposeTemplatesFromYamlToJson(f.name(), parsedFile.getStartSteps());
+                convertComposeTemplatesFromYamlToJson(f.name(), parsedFile.getRestartSteps());
                 template.setStartSteps(parsedFile.getStartSteps());
                 template.setUpgradeSteps(parsedFile.getUpgradeSteps());
                 template.setDeleteSteps(parsedFile.getDeleteSteps());
                 template.setRollbackSteps(parsedFile.getRollbackSteps());
+                template.setRestartSteps(parsedFile.getRestartSteps());
 
                 agentAppTemplateService.save(TenantId.SYS_TENANT_ID, template);
             } catch (Exception e) {
@@ -237,6 +239,7 @@ public class AgentAppTemplateSyncService {
         private List<AgentAppStep> upgradeSteps = new ArrayList<>();
         private List<AgentAppStep> deleteSteps = new ArrayList<>();
         private List<AgentAppStep> rollbackSteps = new ArrayList<>();
+        private List<AgentAppStep> restartSteps = new ArrayList<>();
 
         public AgentAppConfigType getConfigType() {
             return config.getType();

@@ -803,6 +803,7 @@ CREATE TABLE IF NOT EXISTS agent_app_template (
     upgrade_steps jsonb,
     delete_steps jsonb,
     rollback_steps jsonb,
+    restart_steps jsonb,
     version BIGINT DEFAULT 1
 );
 

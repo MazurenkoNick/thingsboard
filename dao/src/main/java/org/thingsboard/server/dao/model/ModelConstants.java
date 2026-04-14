@@ -306,7 +306,6 @@ public class ModelConstants {
     public static final String AGENT_APP_TEMPLATE_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
     public static final String AGENT_APP_TEMPLATE_APP_TYPE_PROPERTY = "app_type";
     public static final String AGENT_APP_TEMPLATE_CURRENT_VERSION_PROPERTY = "current_version";
-    public static final String AGENT_APP_TEMPLATE_PREVIOUS_VERSION_PROPERTY = "previous_version";
     public static final String AGENT_APP_TEMPLATE_NEXT_VERSION_PROPERTY = "next_version";
     public static final String AGENT_APP_TEMPLATE_CONFIG_PROPERTY = "config";
     public static final String AGENT_APP_TEMPLATE_START_STEPS_PROPERTY = "start_steps";
@@ -314,6 +313,7 @@ public class ModelConstants {
     public static final String AGENT_APP_TEMPLATE_DELETE_STEPS_PROPERTY = "delete_steps";
     public static final String AGENT_APP_TEMPLATE_IMAGE_DIGEST_PROPERTY = "image_digest";
     public static final String AGENT_APP_TEMPLATE_ROLLBACK_STEPS_PROPERTY = "rollback_steps";
+    public static final String AGENT_APP_TEMPLATE_RESTART_STEPS_PROPERTY = "restart_steps";
 
     /**
      * Agent app unit constants.

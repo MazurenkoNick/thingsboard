@@ -15,14 +15,19 @@
  */
 package org.thingsboard.server.common.data.agent.step;
 
-public enum AgentAppStepType {
-    COMPOSE_TEMPLATE,
-    COMPOSE,
-    COMPOSE_START,
-    COMPOSE_DOWN,
-    ROLLBACK,
-    BACKUP_VOLUME,
-    BACKUP_VOLUME_REMOVE,
-    COMPOSE_MIGRATION,
-    COMPOSE_RESTART,
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import static org.thingsboard.server.common.data.agent.step.AgentAppStepType.COMPOSE_RESTART;
+
+@Data
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class ComposeRestartStep extends AgentAppStep {
+
+    @Override
+    public AgentAppStepType getType() {
+        return COMPOSE_RESTART;
+    }
 }

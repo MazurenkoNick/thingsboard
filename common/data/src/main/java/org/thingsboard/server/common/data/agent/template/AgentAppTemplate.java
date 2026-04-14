@@ -48,6 +48,7 @@ public class AgentAppTemplate extends BaseData<AgentAppTemplateId> implements Ha
     private List<AgentAppStep> upgradeSteps;
     private List<AgentAppStep> deleteSteps;
     private List<AgentAppStep> rollbackSteps;
+    private List<AgentAppStep> restartSteps;
     @Getter
     private Long version;
 
@@ -70,6 +71,7 @@ public class AgentAppTemplate extends BaseData<AgentAppTemplateId> implements Ha
         this.upgradeSteps = template.getUpgradeSteps();
         this.deleteSteps = template.getDeleteSteps();
         this.rollbackSteps = template.getRollbackSteps();
+        this.restartSteps = template.getRestartSteps();
         this.version = template.getVersion();
     }
 
@@ -134,5 +136,10 @@ public class AgentAppTemplate extends BaseData<AgentAppTemplateId> implements Ha
     @Schema(description = "Rollback steps")
     public List<AgentAppStep> getRollbackSteps() {
         return rollbackSteps;
+    }
+
+    @Schema(description = "Restart steps")
+    public List<AgentAppStep> getRestartSteps() {
+        return restartSteps;
     }
 }
