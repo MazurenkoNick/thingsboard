@@ -41,6 +41,7 @@ import org.thingsboard.server.common.data.agent.AgentAppUnit;
 import org.thingsboard.server.common.data.agent.AgentAppUnitFilter;
 import org.thingsboard.server.common.data.agent.AgentAppUnitType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -94,11 +95,12 @@ public class AgentApplicationController extends BaseController {
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @GetMapping(value = "/agent/app/{agentApplicationId}")
     @ResponseBody
-    public AgentApplication getAgentApplicationById(@Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
-                                                    @PathVariable(AGENT_APP_ID) String strAgentAppId) throws ThingsboardException {
+    public AgentApplicationInfo getAgentApplicationById(@Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
+                                                        @PathVariable(AGENT_APP_ID) String strAgentAppId) throws ThingsboardException {
         checkParameter(AGENT_APP_ID, strAgentAppId);
         AgentApplicationId agentApplicationId = new AgentApplicationId(toUUID(strAgentAppId));
-        return checkAgentAppId(agentApplicationId, Operation.READ);
+        checkAgentAppId(agentApplicationId, Operation.READ);
+        return agentAppService.findInfoById(getTenantId(), agentApplicationId);
     }
 
     @ApiOperation(value = "Get Agent Applications by Agent Id (getAgentApplicationsByAgentId)",
