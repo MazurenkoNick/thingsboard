@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
+import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.dao.agent.config.ProfileConfigResolver;
 import org.thingsboard.server.exception.DataValidationException;
@@ -41,10 +42,11 @@ public class UpgradeActionHandler implements AgentAppActionHandler {
             throw new DataValidationException("Upgrade request must include an application");
         }
         if (application.getApplicationProfileId() != null) {
-            profileConfigResolver.resolve(ctx.getTenantId(), application, application.getRelatedEntityId());
+            var profile = profileConfigResolver.resolve(ctx.getTenantId(), application);
+            application.setDesiredTemplateId(profile.getTemplateId());
         } else if (upgradedApp.getConfig() != null) {
             application.setConfig(upgradedApp.getConfig());
+            application.setDesiredTemplateId(upgradedApp.getTemplateId());
         }
-        application.setDesiredTemplateId(upgradedApp.getTemplateId());
     }
 }

@@ -81,6 +81,7 @@ public class AgentApplication extends BaseData<AgentApplicationId> implements Ha
         this.name = application.getName();
         this.templateId = application.getTemplateId();
         this.desiredTemplateId = application.getDesiredTemplateId();
+        this.config = application.getConfig();
         this.projectName = application.getProjectName();
         this.version = application.getVersion();
         this.pendingDeletion = application.isPendingDeletion();

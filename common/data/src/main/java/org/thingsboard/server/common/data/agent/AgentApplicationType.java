@@ -18,12 +18,16 @@ package org.thingsboard.server.common.data.agent;
 import lombok.Getter;
 import org.thingsboard.server.common.data.EntityType;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public enum AgentApplicationType {
-    GENERIC(null, "1.0.0", null),
-    EDGE("thingsboard/tb-edge:.+", null, EntityType.EDGE),
-    GATEWAY("thingsboard/tb-gateway:.+", null, EntityType.DEVICE);
+    GENERIC(null, "1.0.0", null, Collections.emptyList()),
+    EDGE("thingsboard/tb-edge:.+", null, EntityType.EDGE,
+            List.of("CLOUD_ROUTING_KEY", "CLOUD_ROUTING_SECRET")),
+    GATEWAY("thingsboard/tb-gateway:.+", null, EntityType.DEVICE,
+            List.of("TB_GW_SECURITY_TYPE", "TB_GW_ACCESS_TOKEN", "TB_GW_CLIENT_ID", "TB_GW_USERNAME", "TB_GW_PASSWORD"));
 
     @Getter
     private final Pattern mainImagePattern;
@@ -31,10 +35,14 @@ public enum AgentApplicationType {
     private final String defaultVersion;
     @Getter
     private final EntityType relatedEntityType;
+    @Getter
+    private final List<String> credentialEnvKeys;
 
-    AgentApplicationType(String mainImageRegex, String defaultVersion, EntityType relatedEntityType) {
+    AgentApplicationType(String mainImageRegex, String defaultVersion, EntityType relatedEntityType,
+                         List<String> credentialEnvKeys) {
         this.mainImagePattern = mainImageRegex != null ? Pattern.compile(mainImageRegex) : null;
         this.defaultVersion = defaultVersion;
         this.relatedEntityType = relatedEntityType;
+        this.credentialEnvKeys = credentialEnvKeys;
     }
 }

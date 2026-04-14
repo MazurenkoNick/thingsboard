@@ -35,11 +35,23 @@ public class UpdateActionHandler implements AgentAppActionHandler {
 
     @Override
     public void handle(AgentApplication application, AgentAppEventRequest request, AgentAppActionContext ctx) {
+        AgentApplication incoming = request.getApplication();
         if (application.getApplicationProfileId() != null) {
-            profileConfigResolver.resolve(ctx.getTenantId(), application, application.getRelatedEntityId());
+            // Profile-managed: by default re-resolve compose from the profile so any profile/template drift is picked up.
+            // When the caller asks to skip the refetch (credentials-only update), keep the existing compose and
+            // apply just the incoming creds via setConfig.
+            if (request.isSkipProfileRefetch()) {
+                if (incoming != null && incoming.getConfig() != null) {
+                    application.setConfig(incoming.getConfig());
+                }
+            } else {
+                profileConfigResolver.resolve(ctx.getTenantId(), application);
+            }
+            if (incoming != null && incoming.getName() != null && !incoming.getName().isBlank()) {
+                application.setName(incoming.getName());
+            }
             return;
         }
-        AgentApplication incoming = request.getApplication();
         if (incoming != null) {
             if (incoming.getName() != null && !incoming.getName().isBlank()) {
                 application.setName(incoming.getName());
