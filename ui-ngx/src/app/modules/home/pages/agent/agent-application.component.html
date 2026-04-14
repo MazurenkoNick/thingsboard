@@ -85,6 +85,10 @@
               (click)="$event.stopPropagation(); onProfileChange(null)">
         <mat-icon class="material-icons">close</mat-icon>
       </button>
+      <mat-hint *ngIf="entity?.profileConfigOutdated" class="tb-app-upgrade-hint">
+        <mat-icon>info</mat-icon>
+        {{ 'agent.app-profile-outdated-hint' | translate }}
+      </mat-hint>
     </mat-form-field>
 
     <mat-form-field class="mat-block">
@@ -109,11 +113,6 @@
       <mat-label translate>agent.app-project-name</mat-label>
       <input matInput [value]="entity.projectName" disabled>
     </mat-form-field>
-
-    <div class="tb-app-profile-outdated" *ngIf="entity?.profileConfigOutdated">
-      <mat-icon>info</mat-icon>
-      <span translate>agent.app-profile-outdated-hint</span>
-    </div>
 
     <mat-form-field class="mat-block" *ngIf="entity?.origin">
       <mat-label translate>agent.app-origin</mat-label>
