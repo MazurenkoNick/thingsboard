@@ -35,6 +35,9 @@ public interface AgentBulkActionRepository extends JpaRepository<AgentBulkAction
            """)
     Page<AgentBulkActionEntity> findStuckBulkActions(@Param("threshold") long threshold, Pageable pageable);
 
+    @Query("SELECT a FROM AgentBulkActionEntity a WHERE a.groupId = :groupId")
+    Page<AgentBulkActionEntity> findByGroupId(@Param("groupId") UUID groupId, Pageable pageable);
+
     @Transactional
     @Modifying
     @Query("DELETE FROM AgentAppEventEntity e WHERE e.bulkActionId IS NOT NULL AND e.createdTime < :expirationTs")

@@ -44,6 +44,7 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.config.annotations.ApiOperation;
+import org.thingsboard.server.dao.agent.AgentBulkActionService;
 import org.thingsboard.server.dao.model.ModelConstants;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.agent.TbAgentGroupService;
@@ -69,6 +70,7 @@ public class AgentGroupController extends BaseController {
     private static final String PROFILE_ID = "profileId";
 
     private final TbAgentGroupService tbGroupService;
+    private final AgentBulkActionService agentBulkActionService;
 
     @ApiOperation(value = "Get Agent Group (getAgentGroupById)")
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
@@ -253,6 +255,23 @@ public class AgentGroupController extends BaseController {
         checkAgentGroupId(groupId, Operation.WRITE);
         checkAgentAppProfileId(profileId, Operation.READ);
         return agentBulkActionProcessingService.preview(getTenantId(), groupId, profileId, request);
+    }
+
+    @ApiOperation(value = "Get Bulk Actions for Group (getGroupBulkActions)")
+    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    @RequestMapping(value = "/agent/group/{groupId}/bulk", params = {"pageSize", "page"}, method = RequestMethod.GET)
+    @ResponseBody
+    public PageData<AgentBulkAction> getGroupBulkActions(
+            @PathVariable(GROUP_ID) String strGroupId,
+            @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true) @RequestParam int pageSize,
+            @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true) @RequestParam int page,
+            @Parameter(description = SORT_PROPERTY_DESCRIPTION) @RequestParam(required = false) String sortProperty,
+            @Parameter(description = SORT_ORDER_DESCRIPTION) @RequestParam(required = false) String sortOrder) throws ThingsboardException {
+        checkParameter(GROUP_ID, strGroupId);
+        AgentGroupId groupId = new AgentGroupId(toUUID(strGroupId));
+        checkAgentGroupId(groupId, Operation.READ);
+        PageLink pageLink = createPageLink(pageSize, page, null, sortProperty, sortOrder);
+        return agentBulkActionService.findByGroupId(getTenantId(), groupId, pageLink);
     }
 
     @ApiOperation(value = "Bulk Operation (bulkOperation)")

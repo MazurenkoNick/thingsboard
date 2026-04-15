@@ -21,6 +21,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.agent.AgentBulkAction;
 import org.thingsboard.server.common.data.id.AgentBulkActionId;
+import org.thingsboard.server.common.data.id.AgentGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -63,6 +64,13 @@ public class BaseAgentBulkActionService implements AgentBulkActionService {
     @Override
     public PageData<AgentBulkAction> findStuckBulkActions(long threshold, PageLink pageLink) {
         return agentBulkActionDao.findStuckBulkActions(threshold, pageLink);
+    }
+
+    @Override
+    public PageData<AgentBulkAction> findByGroupId(TenantId tenantId, AgentGroupId groupId, PageLink pageLink) {
+        log.trace("Executing findBulkActionsByGroupId [{}]", groupId);
+        validateId(groupId, id -> "Incorrect groupId " + id);
+        return agentBulkActionDao.findByGroupId(groupId, pageLink);
     }
 
     @Override
