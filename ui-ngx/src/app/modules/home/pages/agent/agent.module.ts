@@ -30,6 +30,16 @@ import {
   AgentInstallInstructionsDialogComponent
 } from '@home/pages/agent/agent-install-instructions-dialog.component';
 import {
+  AgentGroupCreatedDialogComponent
+} from '@home/pages/agent/agent-group-created-dialog.component';
+import { AgentGroupProfilesComponent } from '@home/pages/agent/agent-group-profiles.component';
+import {
+  AgentGroupProvisioningComponent
+} from '@home/pages/agent/agent-group-provisioning.component';
+import {
+  AgentGroupAssignProfileDialogComponent
+} from '@home/pages/agent/dialog/agent-group-assign-profile-dialog.component';
+import {
   AgentAppDeleteDialogComponent
 } from '@home/pages/agent/dialog/agent-app-delete-dialog.component';
 import {
@@ -69,6 +79,10 @@ import { AgentEventsPageComponent } from '@home/pages/agent/agent-events-page.co
     AgentAppProfileComponent,
     AgentAppProfileTabsComponent,
     AgentInstallInstructionsDialogComponent,
+    AgentGroupCreatedDialogComponent,
+    AgentGroupProfilesComponent,
+    AgentGroupProvisioningComponent,
+    AgentGroupAssignProfileDialogComponent,
     AgentAppDeleteDialogComponent,
     AgentAppEventProgressDialogComponent,
     AgentAppProfileUpgradeDialogComponent,

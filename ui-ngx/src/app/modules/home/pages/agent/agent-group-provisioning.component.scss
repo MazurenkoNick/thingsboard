@@ -1,0 +1,121 @@
+/**
+ * Copyright © 2016-2026 The Thingsboard Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+:host {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.tb-agent-group-provisioning {
+  max-width: 760px;
+}
+
+.tb-section-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.76);
+  margin: 16px 0 8px;
+}
+
+.tb-hint-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.72);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 8px;
+
+  mat-icon {
+    flex-shrink: 0;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: rgba(0, 0, 0, 0.54);
+  }
+
+  .tb-hint-title {
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.87);
+    margin-bottom: 2px;
+  }
+
+  ol {
+    margin: 6px 0 0;
+    padding-left: 20px;
+    line-height: 1.6;
+  }
+
+  &.info {
+    background: rgba(48, 86, 128, 0.06);
+    color: rgba(0, 0, 0, 0.72);
+
+    mat-icon {
+      color: #305680;
+    }
+  }
+}
+
+.tb-command-block {
+  position: relative;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin: 0 0 12px;
+  font-family: "Roboto Mono", "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-x: auto;
+
+  pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  .tb-copy-command-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    min-width: 0;
+    padding: 0 10px;
+    line-height: 26px;
+    height: 26px;
+    font-size: 12px;
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.85);
+
+    mat-icon {
+      font-size: 15px;
+      width: 15px;
+      height: 15px;
+      margin-right: 4px;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+  }
+}

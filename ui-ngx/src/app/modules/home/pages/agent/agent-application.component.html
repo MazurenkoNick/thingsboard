@@ -91,14 +91,35 @@
       </mat-hint>
     </mat-form-field>
 
-    <mat-form-field class="mat-block">
-      <mat-label translate>agent.app-type</mat-label>
-      <mat-select [value]="entity?.appType" [disabled]="true">
-        <mat-option *ngFor="let type of agentApplicationTypes" [value]="type">
-          {{ agentApplicationTypeTranslationMap.get(type) | translate }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+    <div class="flex flex-row gap-4" *ngIf="relatedEntity; else appTypeOnly">
+      <mat-form-field class="flex-1">
+        <mat-label translate>agent.app-type</mat-label>
+        <mat-select [value]="entity?.appType" [disabled]="true">
+          <mat-option *ngFor="let type of agentApplicationTypes" [value]="type">
+            {{ agentApplicationTypeTranslationMap.get(type) | translate }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field class="flex-1 tb-related-entity-field">
+        <mat-label>{{ relatedEntity.typeLabel }}</mat-label>
+        <input matInput [value]="relatedEntity.name" disabled class="!hidden">
+        <a class="tb-related-entity-link"
+           aria-label="Open related entity"
+           [routerLink]="relatedEntity.url">
+          {{ relatedEntity.name }}
+        </a>
+      </mat-form-field>
+    </div>
+    <ng-template #appTypeOnly>
+      <mat-form-field class="mat-block">
+        <mat-label translate>agent.app-type</mat-label>
+        <mat-select [value]="entity?.appType" [disabled]="true">
+          <mat-option *ngFor="let type of agentApplicationTypes" [value]="type">
+            {{ agentApplicationTypeTranslationMap.get(type) | translate }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </ng-template>
 
     <mat-form-field class="mat-block">
       <mat-label translate>agent.app-template</mat-label>

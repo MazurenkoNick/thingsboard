@@ -130,6 +130,11 @@ export const agentProvisionTypeTranslationMap = new Map<AgentProvisionType, stri
   [AgentProvisionType.ALLOW_CREATE_NEW_AGENTS, 'agent.provision-type-allow-create'],
 ]);
 
+export const agentProvisionTypeDescriptionMap = new Map<AgentProvisionType, string>([
+  [AgentProvisionType.DISABLED, 'agent.provision-type-disabled-description'],
+  [AgentProvisionType.ALLOW_CREATE_NEW_AGENTS, 'agent.provision-type-allow-create-description'],
+]);
+
 export enum AgentBulkActionStatus {
   QUEUED = 'QUEUED',
   IN_PROGRESS = 'IN_PROGRESS',

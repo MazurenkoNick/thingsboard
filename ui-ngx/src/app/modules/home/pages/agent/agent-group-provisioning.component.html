@@ -1,0 +1,105 @@
+<!--
+
+    Copyright © 2016-2026 The Thingsboard Authors
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<div class="tb-agent-group-provisioning mat-padding flex flex-col">
+
+  <mat-form-field class="mat-block">
+    <mat-label translate>agent.provisioning-strategy</mat-label>
+    <input matInput [value]="agentProvisionTypeTranslationMap.get(provisionType) | translate" readonly disabled>
+  </mat-form-field>
+
+  <div class="tb-hint-note">
+    <mat-icon>help_outline</mat-icon>
+    <div>
+      <div class="tb-hint-title">
+        {{ 'agent.provisioning-strategy-label' | translate: {
+          strategy: agentProvisionTypeTranslationMap.get(provisionType) | translate
+        } }}
+      </div>
+      <div>{{ agentProvisionTypeDescriptionMap.get(provisionType) | translate }}</div>
+    </div>
+  </div>
+
+  <ng-container *ngIf="isEnabled">
+    <div class="tb-section-title" translate>agent.provisioning-credentials</div>
+
+    <div class="flex flex-row items-center">
+      <mat-form-field class="mat-block flex-1">
+        <mat-label translate>agent.provision-key</mat-label>
+        <input matInput [value]="group?.provisionKey || ''" readonly>
+      </mat-form-field>
+      <button mat-icon-button type="button"
+              ngxClipboard
+              [cbContent]="group?.provisionKey"
+              (cbOnSuccess)="onCopied('key')"
+              [disabled]="!group?.provisionKey"
+              [matTooltip]="'agent.copy-provision-key' | translate">
+        <mat-icon svgIcon="mdi:clipboard-arrow-left"></mat-icon>
+      </button>
+    </div>
+
+    <div class="flex flex-row items-center">
+      <mat-form-field class="mat-block flex-1">
+        <mat-label translate>agent.provision-secret</mat-label>
+        <input matInput
+               [type]="showSecret ? 'text' : 'password'"
+               [value]="group?.provisionSecret || ''"
+               readonly>
+      </mat-form-field>
+      <button mat-icon-button type="button"
+              (click)="toggleSecret()"
+              [disabled]="!group?.provisionSecret"
+              [matTooltip]="(showSecret ? 'action.hide' : 'action.show') | translate">
+        <mat-icon>{{ showSecret ? 'visibility_off' : 'visibility' }}</mat-icon>
+      </button>
+      <button mat-icon-button type="button"
+              ngxClipboard
+              [cbContent]="group?.provisionSecret"
+              (cbOnSuccess)="onCopied('secret')"
+              [disabled]="!group?.provisionSecret"
+              [matTooltip]="'agent.copy-provision-secret' | translate">
+        <mat-icon svgIcon="mdi:clipboard-arrow-left"></mat-icon>
+      </button>
+    </div>
+
+    <div class="tb-section-title" translate>agent.docker-run-command</div>
+
+    <div class="tb-command-block">
+      <button mat-flat-button class="tb-copy-command-btn"
+              ngxClipboard
+              [cbContent]="dockerCommand"
+              (cbOnSuccess)="onCopied('command')">
+        <mat-icon>content_copy</mat-icon>
+        <span translate>action.copy</span>
+      </button>
+      <pre>{{ dockerCommand }}</pre>
+    </div>
+
+    <div class="tb-hint-note info">
+      <mat-icon>info_outline</mat-icon>
+      <div>
+        <div>{{ 'agent.agent-group-created-hint' | translate }}</div>
+        <ol>
+          <li>{{ 'agent.agent-group-created-step-1' | translate }}</li>
+          <li>{{ 'agent.agent-group-created-step-2' | translate }}</li>
+          <li>{{ 'agent.agent-group-created-step-3' | translate }}</li>
+        </ol>
+      </div>
+    </div>
+  </ng-container>
+
+</div>

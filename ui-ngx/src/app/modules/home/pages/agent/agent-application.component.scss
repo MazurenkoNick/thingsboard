@@ -25,6 +25,16 @@
 }
 
 :host ::ng-deep {
+  // Match other disabled mat-form-fields (e.g. "Application type"): no hover
+  // state change, no emphasised underline, just the standard disabled styling.
+  .tb-related-entity-field {
+    .tb-related-entity-link {
+      color: #305680;
+      text-decoration: none;
+      &:hover { text-decoration: underline; }
+      &:focus { outline: none; }
+    }
+  }
   .tb-app-upgrade-hint {
     display: inline-flex;
     align-items: center;

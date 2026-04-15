@@ -20,23 +20,28 @@ import { AppState } from '@core/core.state';
 import { EntityComponent } from '@home/components/entity/entity.component';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { EntityType } from '@shared/models/entity-type.models';
-import { AgentGroupInfo, AgentProvisionType, agentProvisionTypeTranslationMap } from '@shared/models/agent.models';
+import {
+  AgentGroupInfo,
+  AgentProvisionType,
+  agentProvisionTypeDescriptionMap,
+  agentProvisionTypeTranslationMap
+} from '@shared/models/agent.models';
 import { TranslateService } from '@ngx-translate/core';
 import { NULL_UUID } from '@shared/models/id/has-uuid';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
-import { generateSecret } from '@core/utils';
 import { EntityTableConfig } from '@home/models/entity/entities-table-config.models';
 
 @Component({
   selector: 'tb-agent-group',
   templateUrl: './agent-group.component.html',
-  styleUrls: []
+  styleUrls: ['./agent-group.component.scss']
 })
 export class AgentGroupComponent extends EntityComponent<AgentGroupInfo> {
 
   entityType = EntityType;
   agentProvisionTypes = Object.values(AgentProvisionType);
   agentProvisionTypeTranslationMap = agentProvisionTypeTranslationMap;
+  agentProvisionTypeDescriptionMap = agentProvisionTypeDescriptionMap;
 
   constructor(protected store: Store<AppState>,
               protected translate: TranslateService,
@@ -60,17 +65,11 @@ export class AgentGroupComponent extends EntityComponent<AgentGroupInfo> {
   }
 
   buildForm(entity: AgentGroupInfo): UntypedFormGroup {
-    const form = this.fb.group({
+    return this.fb.group({
       name: [entity ? entity.name : '', [Validators.required, Validators.maxLength(255)]],
       description: [entity ? entity.description : ''],
       provisionType: [entity?.provisionType || AgentProvisionType.DISABLED],
-      provisionKey: this.fb.control({value: entity?.provisionKey || null, disabled: true}),
-      provisionSecret: this.fb.control({value: entity?.provisionSecret || null, disabled: true}),
     });
-    if (entity && !entity.id) {
-      this.generateProvisionCredentials(form);
-    }
-    return form;
   }
 
   updateForm(entity: AgentGroupInfo) {
@@ -78,25 +77,7 @@ export class AgentGroupComponent extends EntityComponent<AgentGroupInfo> {
       name: entity.name,
       description: entity.description,
       provisionType: entity.provisionType || AgentProvisionType.DISABLED,
-      provisionKey: entity.provisionKey,
-      provisionSecret: entity.provisionSecret,
     });
-  }
-
-  updateFormState() {
-    super.updateFormState();
-    this.entityForm.get('provisionKey').disable({emitEvent: false});
-    this.entityForm.get('provisionSecret').disable({emitEvent: false});
-  }
-
-  onProvisionCopied(isKey: boolean) {
-    this.store.dispatch(new ActionNotificationShow({
-      message: this.translate.instant(isKey ? 'agent.provision-key-copied-message' : 'agent.provision-secret-copied-message'),
-      type: 'success',
-      duration: 750,
-      verticalPosition: 'bottom',
-      horizontalPosition: 'right'
-    }));
   }
 
   onGroupIdCopied() {
@@ -107,10 +88,5 @@ export class AgentGroupComponent extends EntityComponent<AgentGroupInfo> {
       verticalPosition: 'bottom',
       horizontalPosition: 'right'
     }));
-  }
-
-  private generateProvisionCredentials(form: UntypedFormGroup) {
-    form.get('provisionKey').patchValue(generateSecret(20), {emitEvent: false});
-    form.get('provisionSecret').patchValue(generateSecret(20), {emitEvent: false});
   }
 }

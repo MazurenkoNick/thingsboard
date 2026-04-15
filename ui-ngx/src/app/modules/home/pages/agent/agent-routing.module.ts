@@ -83,10 +83,11 @@ const routes: Routes = [
             data: {
               auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
               useChildrenRoutesForTabs: true,
+              // Skip the parent breadcrumb — the tab host has no meaningful
+              // label, and children (applications / events) supply their own.
               breadcrumb: {
-                label: 'agent.applications',
-                icon: 'apps'
-              }
+                skip: true
+              } as BreadCrumbConfig<RouterTabsComponent>
             },
             children: [
               {

@@ -37,6 +37,9 @@ import { DialogService } from '@core/services/dialog.service';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
+import { EntityService } from '@core/http/entity.service';
+import { baseDetailsPageByEntityType } from '@shared/models/entity-type.models';
+import { EntityId } from '@shared/models/id/entity-id';
 import {
   AgentAppDeleteDialogComponent,
   AgentAppDeleteDialogData
@@ -72,6 +75,8 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
 
   templateVersion = '';
 
+  relatedEntity: { name: string; url: string; typeLabel: string } | null = null;
+
   availableProfiles: AgentAppProfile[] = [];
   loadingProfiles = false;
   // Cached compose YAML of the previously non-profile state so the user can
@@ -101,6 +106,7 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
               public fb: UntypedFormBuilder,
               protected cd: ChangeDetectorRef,
               private agentService: AgentService,
+              private entityService: EntityService,
               private dialogService: DialogService,
               private dialog: MatDialog,
               private router: Router,
@@ -363,6 +369,7 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
     this.loadProfilesForType(entity?.appType);
     this.applyComposeEditorReadOnly();
     this.templateVersion = entity?.currentVersion || '';
+    this.resolveRelatedEntity(entity?.relatedEntityId);
     // The detail GET returns AgentApplication (no currentVersion / nextVersion
     // — those are only joined on the list endpoint). Resolve them from the
     // linked template so templateVersion renders the actual version AND the
@@ -380,6 +387,41 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
           this.cd.markForCheck();
         }
       });
+    }
+  }
+
+  private resolveRelatedEntity(relatedEntityId: EntityId | undefined | null) {
+    this.relatedEntity = null;
+    if (!relatedEntityId?.id || !relatedEntityId?.entityType) {
+      return;
+    }
+    const basePath = baseDetailsPageByEntityType.get(relatedEntityId.entityType as EntityType);
+    if (!basePath) {
+      return;
+    }
+    const url = `${basePath}/${relatedEntityId.id}`;
+    const typeLabel = this.translate.instant(`entity.type-${relatedEntityId.entityType.toLowerCase()}`);
+    // Show the id as a fallback so the field isn't blank while the name loads
+    // (or if the lookup fails — e.g. the related entity was deleted).
+    this.relatedEntity = { name: relatedEntityId.id, url, typeLabel };
+    this.entityService.getEntity(
+      relatedEntityId.entityType as EntityType,
+      relatedEntityId.id,
+      { ignoreLoading: true, ignoreErrors: true } as any
+    ).subscribe({
+      next: (e: any) => {
+        if (this.relatedEntity) {
+          this.relatedEntity = { ...this.relatedEntity, name: e?.name || relatedEntityId.id };
+          this.cd.markForCheck();
+        }
+      }
+    });
+  }
+
+  openRelatedEntity($event: Event) {
+    if ($event) { $event.stopPropagation(); $event.preventDefault(); }
+    if (this.relatedEntity?.url) {
+      this.router.navigateByUrl(this.relatedEntity.url);
     }
   }
 

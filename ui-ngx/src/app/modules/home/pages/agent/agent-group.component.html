@@ -50,24 +50,6 @@
       <mat-icon svgIcon="mdi:clipboard-arrow-left"></mat-icon>
       <span translate>agent.copy-group-id</span>
     </button>
-    <button mat-raised-button
-            ngxClipboard
-            (cbOnSuccess)="onProvisionCopied(true)"
-            [cbContent]="entity?.provisionKey"
-            [disabled]="(isLoading$ | async)"
-            [class.!hidden]="isEdit || !entity?.provisionKey">
-      <mat-icon svgIcon="mdi:clipboard-arrow-left"></mat-icon>
-      <span translate>agent.copy-provision-key</span>
-    </button>
-    <button mat-raised-button
-            ngxClipboard
-            (cbOnSuccess)="onProvisionCopied(false)"
-            [cbContent]="entity?.provisionSecret"
-            [disabled]="(isLoading$ | async)"
-            [class.!hidden]="isEdit || !entity?.provisionSecret">
-      <mat-icon svgIcon="mdi:clipboard-arrow-left"></mat-icon>
-      <span translate>agent.copy-provision-secret</span>
-    </button>
   </div>
 </div>
 <div class="mat-padding flex flex-col">
@@ -86,7 +68,11 @@
         </mat-error>
       </mat-form-field>
       <mat-form-field class="mat-block">
-        <mat-label translate>agent.provision-type</mat-label>
+        <mat-label translate>agent.description</mat-label>
+        <textarea matInput formControlName="description" rows="2"></textarea>
+      </mat-form-field>
+      <mat-form-field class="mat-block">
+        <mat-label translate>agent.provisioning-strategy</mat-label>
         <mat-select formControlName="provisionType">
           <mat-option *ngFor="let type of agentProvisionTypes" [value]="type">
             {{ agentProvisionTypeTranslationMap.get(type) | translate }}
@@ -94,35 +80,18 @@
         </mat-select>
       </mat-form-field>
     </fieldset>
-
-    <div class="flex flex-row" *ngIf="entityForm.get('provisionType').value !== 'DISABLED'">
-      <mat-form-field class="mat-block flex-1">
-        <mat-label translate>agent.provision-key</mat-label>
-        <input matInput formControlName="provisionKey">
-      </mat-form-field>
-      <button mat-icon-button type="button" ngxClipboard (cbOnSuccess)="onProvisionCopied(true)"
-              [cbContent]="entityForm?.get('provisionKey').value"
-              matTooltip="{{'agent.copy-provision-key' | translate}}">
-        <mat-icon svgIcon="mdi:clipboard-arrow-left"></mat-icon>
-      </button>
+    <div class="tb-agent-group-strategy-hint">
+      <mat-icon class="hint-icon">help_outline</mat-icon>
+      <div>
+        <div class="hint-title">
+          {{ 'agent.provisioning-strategy-label' | translate: {
+            strategy: agentProvisionTypeTranslationMap.get(entityForm.get('provisionType').value) | translate
+          } }}
+        </div>
+        <div class="hint-body">
+          {{ agentProvisionTypeDescriptionMap.get(entityForm.get('provisionType').value) | translate }}
+        </div>
+      </div>
     </div>
-    <div class="flex flex-row" *ngIf="entityForm.get('provisionType').value !== 'DISABLED'">
-      <mat-form-field class="mat-block flex-1">
-        <mat-label translate>agent.provision-secret</mat-label>
-        <input matInput formControlName="provisionSecret">
-      </mat-form-field>
-      <button mat-icon-button type="button" ngxClipboard (cbOnSuccess)="onProvisionCopied(false)"
-              [cbContent]="entityForm?.get('provisionSecret').value"
-              matTooltip="{{'agent.copy-provision-secret' | translate}}">
-        <mat-icon svgIcon="mdi:clipboard-arrow-left"></mat-icon>
-      </button>
-    </div>
-
-    <fieldset [disabled]="(isLoading$ | async) || !isEdit">
-      <mat-form-field class="mat-block">
-        <mat-label translate>agent.description</mat-label>
-        <textarea matInput formControlName="description" rows="2"></textarea>
-      </mat-form-field>
-    </fieldset>
   </form>
 </div>

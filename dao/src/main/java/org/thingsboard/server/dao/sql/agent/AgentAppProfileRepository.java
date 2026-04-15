@@ -29,13 +29,13 @@ public interface AgentAppProfileRepository extends JpaRepository<AgentAppProfile
 
     @Query("SELECT p FROM AgentAppProfileEntity p WHERE p.tenantId = :tenantId AND p.appType = :appType ORDER BY p.name ASC")
     List<AgentAppProfileEntity> findByTenantIdAndAppType(@Param("tenantId") UUID tenantId,
-                                                          @Param("appType") org.thingsboard.server.common.data.agent.AgentApplicationType appType);
+                                                         @Param("appType") org.thingsboard.server.common.data.agent.AgentApplicationType appType);
 
     @Query("SELECT p FROM AgentAppProfileEntity p WHERE p.tenantId = :tenantId " +
             "AND (:textSearch IS NULL OR ilike(p.name, CONCAT('%', :textSearch, '%')) = true)")
     Page<AgentAppProfileEntity> findByTenantId(@Param("tenantId") UUID tenantId,
-                                                        @Param("textSearch") String textSearch,
-                                                        Pageable pageable);
+                                               @Param("textSearch") String textSearch,
+                                               Pageable pageable);
 
     @Query("SELECT count(*) FROM AgentAppProfileEntity p WHERE p.tenantId = :tenantId")
     Long countByTenantId(@Param("tenantId") UUID tenantId);
@@ -47,7 +47,11 @@ public interface AgentAppProfileRepository extends JpaRepository<AgentAppProfile
             "AND r.relationTypeGroup = 'AGENT' " +
             "AND r.relationType = 'HasProfile' " +
             "AND NOT EXISTS (SELECT 1 FROM AgentApplicationEntity a " +
-            "                WHERE a.agentId = :agentId AND a.templateId = p.templateId)")
-    java.util.List<AgentAppProfileEntity> findUninstalledProfilesForAgentInGroup(@Param("groupId") UUID groupId,
-                                                                                 @Param("agentId") UUID agentId);
+            "                WHERE a.agentId = :agentId " +
+            "                AND ((p.appType = org.thingsboard.server.common.data.agent.AgentApplicationType.GENERIC " +
+            "                      AND a.applicationProfileId = p.id) " +
+            "                  OR (p.appType <> org.thingsboard.server.common.data.agent.AgentApplicationType.GENERIC " +
+            "                      AND a.templateId = p.templateId)))")
+    List<AgentAppProfileEntity> findUninstalledProfilesForAgentInGroup(@Param("groupId") UUID groupId,
+                                                                       @Param("agentId") UUID agentId);
 }

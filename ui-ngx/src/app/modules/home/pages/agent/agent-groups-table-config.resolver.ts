@@ -40,10 +40,14 @@ import {
   AssignToCustomerDialogData
 } from '@modules/home/dialogs/assign-to-customer-dialog.component';
 import { AgentGroupId } from '@shared/models/id/agent-group-id';
-import { AgentGroupInfo } from '@shared/models/agent.models';
+import { AgentGroupInfo, AgentProvisionType } from '@shared/models/agent.models';
 import { AgentService } from '@core/http/agent.service';
 import { AgentGroupComponent } from '@home/pages/agent/agent-group.component';
 import { AgentGroupTabsComponent } from '@home/pages/agent/agent-group-tabs.component';
+import {
+  AgentGroupCreatedDialogComponent,
+  AgentGroupCreatedDialogData
+} from '@home/pages/agent/agent-group-created-dialog.component';
 
 @Injectable()
 export class AgentGroupsTableConfigResolver {
@@ -76,6 +80,20 @@ export class AgentGroupsTableConfigResolver {
       );
     };
     this.config.onEntityAction = action => this.onGroupAction(action);
+    this.config.entityAdded = (group) => {
+      if (group.provisionType === AgentProvisionType.ALLOW_CREATE_NEW_AGENTS) {
+        this.openGroupCreatedInstructions(group);
+      }
+    };
+  }
+
+  private openGroupCreatedInstructions(group: AgentGroupInfo) {
+    this.dialog.open<AgentGroupCreatedDialogComponent, AgentGroupCreatedDialogData>(
+      AgentGroupCreatedDialogComponent, {
+        disableClose: false,
+        panelClass: ['tb-dialog'],
+        data: { group }
+      });
   }
 
   resolve(route: ActivatedRouteSnapshot): Observable<EntityTableConfig<AgentGroupInfo>> {
