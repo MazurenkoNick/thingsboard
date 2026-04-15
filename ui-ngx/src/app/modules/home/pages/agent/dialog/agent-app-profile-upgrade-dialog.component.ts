@@ -29,6 +29,7 @@ import {
 } from '@shared/models/agent.models';
 import * as YAML from 'yaml';
 import { getAceDiff } from '@shared/models/ace/ace.models';
+import { confineWheelToAceEditor } from '@home/pages/agent/util/ace-wheel-confine';
 import { Ace } from 'ace-builds';
 
 export interface AgentAppProfileUpgradeDialogData {
@@ -172,6 +173,17 @@ export class AgentAppProfileUpgradeDialogComponent
       rightEditor.renderer.setScrollMargin(0, 0, 0, 0);
       this.forceEditorFontSize(leftEditor, 12);
       this.forceEditorFontSize(rightEditor, 12);
+      // Confine wheel/trackpad scroll so ace doesn't spill deltas it can't
+      // consume into the page's default scroll chain — that's what causes
+      // touchpad two-finger gestures to trigger browser back-navigation on
+      // the diff viewer. Only confine while the target pane is focused so
+      // the dialog body can still scroll past the diff when it isn't.
+      confineWheelToAceEditor((leftEditor as any).container, leftEditor,
+        () => leftEditor.isFocused());
+      confineWheelToAceEditor((rightEditor as any).container, rightEditor,
+        () => rightEditor.isFocused());
+      confineWheelToAceEditor(this.diffViewerElmRef?.nativeElement, rightEditor,
+        () => leftEditor.isFocused() || rightEditor.isFocused());
       rightEditor.getSession().on('change', () => {
         this.composeYaml = rightEditor.getValue();
         if (this.differ) { this.differ.diff(); }

@@ -178,6 +178,13 @@ export class AgentAppProfileComponent extends EntityComponent<AgentAppProfile>
   }
 
   private loadTemplateVersion() {
+    // Clear cached state up front. Otherwise a reload after a successful
+    // profile upgrade leaves the stale `nextVersion` active until the async
+    // template fetch resolves, keeping the Upgrade button on the header
+    // enabled for a frame (and "forever" if the fetch is swallowed).
+    this.templateVersion = '';
+    this.nextVersion = null;
+    this.cd.markForCheck();
     if (this.entity?.templateId?.id) {
       this.agentService.getAgentAppTemplateById(this.entity.templateId.id).subscribe({
         next: tpl => {

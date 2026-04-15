@@ -109,14 +109,26 @@ export class AgentApplicationsTableConfigResolver {
 
   private configureColumns(): Array<EntityTableColumn<AgentApplicationInfo>> {
     return [
-      new EntityTableColumn<AgentApplicationInfo>('name', 'agent.app-name', '30%'),
-      new EntityTableColumn<AgentApplicationInfo>('appType', 'agent.app-type', '140px',
+      new EntityTableColumn<AgentApplicationInfo>('name', 'agent.app-name', '25%'),
+      new EntityTableColumn<AgentApplicationInfo>('appType', 'agent.app-type', '120px',
         e => this.appTypeBadge(e.appType), () => ({}), false),
-      new EntityTableColumn<AgentApplicationInfo>('currentVersion', 'agent.app-template', '25%',
+      new EntityTableColumn<AgentApplicationInfo>('profileName', 'agent.app-profile', '20%',
+        e => this.profileCell(e), () => ({}), false),
+      new EntityTableColumn<AgentApplicationInfo>('currentVersion', 'agent.app-template', '20%',
         e => this.templateCell(e), () => ({}), false),
       new EntityTableColumn<AgentApplicationInfo>('origin', 'agent.app-origin', '140px',
         e => this.originBadge((e as any).origin), () => ({}), false),
     ];
+  }
+
+  private profileCell(app: AgentApplicationInfo): string {
+    const profileId = (app as any).applicationProfileId?.id;
+    if (!profileId || !app.profileName) {
+      return `<span style="color:rgba(0,0,0,0.38);font-size:12px;">—</span>`;
+    }
+    const href = `/edgeManagement/agentAppProfiles/${profileId}`;
+    const safeName = String(app.profileName).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return `<a href="${href}" onclick="event.stopPropagation();" style="color:#305680;font-weight:500;text-decoration:none;">${safeName}</a>`;
   }
 
   private originBadge(origin: string | undefined): string {

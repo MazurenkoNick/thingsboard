@@ -37,8 +37,17 @@ import {
   AgentGroupProvisioningComponent
 } from '@home/pages/agent/agent-group-provisioning.component';
 import {
+  AgentGroupBulkActionsComponent
+} from '@home/pages/agent/agent-group-bulk-actions.component';
+import {
   AgentGroupAssignProfileDialogComponent
 } from '@home/pages/agent/dialog/agent-group-assign-profile-dialog.component';
+import {
+  AgentGroupBulkActionDialogComponent
+} from '@home/pages/agent/dialog/agent-group-bulk-action-dialog.component';
+import {
+  AgentGroupBulkActionDetailsDialogComponent
+} from '@home/pages/agent/dialog/agent-group-bulk-action-details-dialog.component';
 import {
   AgentAppDeleteDialogComponent
 } from '@home/pages/agent/dialog/agent-app-delete-dialog.component';
@@ -82,7 +91,10 @@ import { AgentEventsPageComponent } from '@home/pages/agent/agent-events-page.co
     AgentGroupCreatedDialogComponent,
     AgentGroupProfilesComponent,
     AgentGroupProvisioningComponent,
+    AgentGroupBulkActionsComponent,
     AgentGroupAssignProfileDialogComponent,
+    AgentGroupBulkActionDialogComponent,
+    AgentGroupBulkActionDetailsDialogComponent,
     AgentAppDeleteDialogComponent,
     AgentAppEventProgressDialogComponent,
     AgentAppProfileUpgradeDialogComponent,

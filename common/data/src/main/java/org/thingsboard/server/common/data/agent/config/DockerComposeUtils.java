@@ -16,6 +16,7 @@
 package org.thingsboard.server.common.data.agent.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import lombok.AccessLevel;
@@ -25,7 +26,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -33,10 +33,11 @@ public class DockerComposeUtils {
 
     /**
      * Finds the environment node of the first service whose image matches the given pattern.
+     * The returned node may be an {@link ObjectNode} (map form) or {@link ArrayNode} (list form).
      *
-     * @return the environment {@link ObjectNode}, or {@code null} if not found
+     * @return the environment node, or {@code null} if no matching service has an env block
      */
-    public static ObjectNode findServiceEnvironment(JsonNode compose, Pattern imagePattern) {
+    public static JsonNode findServiceEnvironment(JsonNode compose, Pattern imagePattern) {
         if (compose == null || compose.isNull() || imagePattern == null) {
             return null;
         }
@@ -55,8 +56,8 @@ public class DockerComposeUtils {
                 continue;
             }
             JsonNode environment = service.get("environment");
-            if (environment != null && environment.isObject()) {
-                return (ObjectNode) environment;
+            if (environment != null && (environment.isObject() || environment.isArray())) {
+                return environment;
             }
         }
         return null;
@@ -68,11 +69,7 @@ public class DockerComposeUtils {
      * @return the variable value, or {@code null} if the service or variable is not found
      */
     public static String getEnvVariable(JsonNode compose, Pattern imagePattern, String envVarName) {
-        ObjectNode env = findServiceEnvironment(compose, imagePattern);
-        if (env != null && env.has(envVarName)) {
-            return env.get(envVarName).asText();
-        }
-        return null;
+        return envGet(findServiceEnvironment(compose, imagePattern), envVarName);
     }
 
     /**
@@ -83,13 +80,24 @@ public class DockerComposeUtils {
         if (envVars.isEmpty()) {
             return;
         }
-        ObjectNode env = findServiceEnvironment(compose, imagePattern);
+        JsonNode env = findServiceEnvironment(compose, imagePattern);
         if (env == null) {
             return;
         }
+        if (env.isObject()) {
+            ObjectNode obj = (ObjectNode) env;
+            for (Map.Entry<String, String> entry : envVars.entrySet()) {
+                if (obj.has(entry.getKey())) {
+                    obj.set(entry.getKey(), new TextNode(entry.getValue()));
+                }
+            }
+            return;
+        }
+        ArrayNode arr = (ArrayNode) env;
         for (Map.Entry<String, String> entry : envVars.entrySet()) {
-            if (env.has(entry.getKey())) {
-                env.set(entry.getKey(), new TextNode(entry.getValue()));
+            int idx = findArrayEntryIndex(arr, entry.getKey());
+            if (idx >= 0) {
+                arr.set(idx, new TextNode(entry.getKey() + "=" + entry.getValue()));
             }
         }
     }
@@ -113,13 +121,72 @@ public class DockerComposeUtils {
     }
 
     private static void removeEnvKeys(JsonNode compose, Pattern imagePattern, List<String> keys) {
-        ObjectNode env = findServiceEnvironment(compose, imagePattern);
+        JsonNode env = findServiceEnvironment(compose, imagePattern);
         if (env == null) {
             return;
         }
-        for (String key : keys) {
-            env.remove(key);
+        if (env.isObject()) {
+            ObjectNode obj = (ObjectNode) env;
+            for (String key : keys) {
+                obj.remove(key);
+            }
+            return;
         }
+        ArrayNode arr = (ArrayNode) env;
+        for (String key : keys) {
+            int idx = findArrayEntryIndex(arr, key);
+            if (idx >= 0) {
+                arr.remove(idx);
+            }
+        }
+    }
+
+    /** True when the env node (map or list) declares the given key. */
+    public static boolean envHasKey(JsonNode env, String key) {
+        if (env == null) {
+            return false;
+        }
+        if (env.isObject()) {
+            return env.has(key);
+        }
+        if (env.isArray()) {
+            return findArrayEntryIndex((ArrayNode) env, key) >= 0;
+        }
+        return false;
+    }
+
+    /** Reads a value from either a map-form or list-form env node. */
+    public static String envGet(JsonNode env, String key) {
+        if (env == null) {
+            return null;
+        }
+        if (env.isObject()) {
+            return env.has(key) ? env.get(key).asText() : null;
+        }
+        if (env.isArray()) {
+            int idx = findArrayEntryIndex((ArrayNode) env, key);
+            if (idx < 0) {
+                return null;
+            }
+            String entry = env.get(idx).asText();
+            int eq = entry.indexOf('=');
+            return eq >= 0 ? entry.substring(eq + 1) : "";
+        }
+        return null;
+    }
+
+    private static int findArrayEntryIndex(ArrayNode arr, String key) {
+        String prefix = key + "=";
+        for (int i = 0; i < arr.size(); i++) {
+            JsonNode item = arr.get(i);
+            if (item != null && item.isTextual()) {
+                String v = item.asText();
+                if (v.equals(key) || v.startsWith(prefix)) {
+                    return i;
+                }
+            }
+        }
+        return -1;
     }
 
 }

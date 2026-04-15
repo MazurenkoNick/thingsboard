@@ -27,8 +27,10 @@
 :host ::ng-deep {
   // Match other disabled mat-form-fields (e.g. "Application type"): no hover
   // state change, no emphasised underline, just the standard disabled styling.
-  .tb-related-entity-field {
-    .tb-related-entity-link {
+  .tb-related-entity-field,
+  .tb-profile-field {
+    .tb-related-entity-link,
+    .tb-profile-link {
       color: #305680;
       text-decoration: none;
       &:hover { text-decoration: underline; }

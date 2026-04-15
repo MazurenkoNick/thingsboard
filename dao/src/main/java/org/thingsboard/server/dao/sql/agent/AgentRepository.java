@@ -30,9 +30,10 @@ import java.util.UUID;
 
 public interface AgentRepository extends JpaRepository<AgentEntity, UUID> {
 
-    @Query("SELECT new org.thingsboard.server.dao.model.sql.AgentInfoEntity(a, c.title, c.additionalInfo) " +
+    @Query("SELECT new org.thingsboard.server.dao.model.sql.AgentInfoEntity(a, c.title, c.additionalInfo, g.name) " +
             "FROM AgentEntity a " +
             "LEFT JOIN CustomerEntity c on c.id = a.customerId " +
+            "LEFT JOIN AgentGroupEntity g on g.id = a.agentGroupId " +
             "WHERE a.id = :agentId")
     AgentInfoEntity findAgentInfoById(@Param("agentId") UUID agentId);
 
@@ -44,9 +45,10 @@ public interface AgentRepository extends JpaRepository<AgentEntity, UUID> {
                                                    @Param("textSearch") String textSearch,
                                                    Pageable pageable);
 
-    @Query("SELECT new org.thingsboard.server.dao.model.sql.AgentInfoEntity(a, c.title, c.additionalInfo) " +
+    @Query("SELECT new org.thingsboard.server.dao.model.sql.AgentInfoEntity(a, c.title, c.additionalInfo, g.name) " +
             "FROM AgentEntity a " +
             "LEFT JOIN CustomerEntity c on c.id = a.customerId " +
+            "LEFT JOIN AgentGroupEntity g on g.id = a.agentGroupId " +
             "WHERE a.tenantId = :tenantId " +
             "AND a.customerId = :customerId " +
             "AND (:textSearch IS NULL OR ilike(a.name, CONCAT('%', :textSearch, '%')) = true " +
@@ -67,9 +69,10 @@ public interface AgentRepository extends JpaRepository<AgentEntity, UUID> {
                                      @Param("textSearch") String textSearch,
                                      Pageable pageable);
 
-    @Query("SELECT new org.thingsboard.server.dao.model.sql.AgentInfoEntity(a, c.title, c.additionalInfo) " +
+    @Query("SELECT new org.thingsboard.server.dao.model.sql.AgentInfoEntity(a, c.title, c.additionalInfo, g.name) " +
             "FROM AgentEntity a " +
             "LEFT JOIN CustomerEntity c on c.id = a.customerId " +
+            "LEFT JOIN AgentGroupEntity g on g.id = a.agentGroupId " +
             "WHERE a.tenantId = :tenantId " +
             "AND (:textSearch IS NULL OR ilike(a.name, CONCAT('%', :textSearch, '%')) = true " +
             "  OR ilike(c.title, CONCAT('%', :textSearch, '%')) = true)")

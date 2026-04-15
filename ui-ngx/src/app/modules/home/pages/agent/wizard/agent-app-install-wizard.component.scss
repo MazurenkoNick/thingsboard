@@ -194,9 +194,13 @@
   .volume-list { display: flex; flex-direction: column; gap: 4px; }
   .volume-row {
     display: flex; align-items: center; padding: 4px 0;
+    // Match the surrounding UI (hints, labels, section headers): default
+    // system font, 13px, dark text. The previous monospace treatment read
+    // like inline code, out of place next to "Backup specified volumes".
     .volume-name {
-      font-family: "JetBrains Mono", "Fira Code", "Roboto Mono", "Menlo", "Courier New", monospace;
-      font-size: 13px; margin-left: 4px;
+      font-size: 13px;
+      color: rgba(0, 0, 0, 0.87);
+      margin-left: 4px;
     }
   }
   .volume-empty {

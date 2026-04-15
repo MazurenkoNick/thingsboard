@@ -43,6 +43,7 @@ import {
   CredField,
   credentialSchemaFor,
   extractCredentialValues,
+  normalizeCredValue,
   visibleCredentialFields as visibleCredFieldsFor
 } from '@home/pages/agent/util/agent-credentials';
 
@@ -153,6 +154,13 @@ export class AgentAppInstallWizardComponent
 
   get isProfileManagedUpdate(): boolean {
     return this.mode === 'update' && !!this.existingApplication?.applicationProfileId;
+  }
+
+  // Profile-bound upgrades share the semantics of profile-managed updates:
+  // compose comes from the profile, the user only edits credentials. Steps
+  // (backup volumes, pull images) still apply.
+  get isProfileBoundUpgrade(): boolean {
+    return this.mode === 'upgrade' && !!this.existingApplication?.applicationProfileId;
   }
 
   constructor(protected store: Store<AppState>,
@@ -315,7 +323,7 @@ export class AgentAppInstallWizardComponent
   }
 
   onCredentialChange(field: CredField, value: string) {
-    this.credentialValues[field.key] = value ?? '';
+    this.credentialValues[field.key] = normalizeCredValue(field.key, value);
     this.writeCredentialsToCompose();
   }
 
@@ -483,12 +491,20 @@ export class AgentAppInstallWizardComponent
 
     // Side-by-side diff: left = raw new template compose (no mergeForPreview),
     // right = current persisted compose. Both panes are read-only in upgrade
-    // mode — this is preview-and-confirm, not edit.
+    // mode — this is preview-and-confirm, not edit. Profile-bound upgrades
+    // skip the diff entirely (compose is authoritative from the profile) and
+    // expose the credentials form instead — seed it from the app's compose.
     this.proposedYaml = this.dumpRawTemplateCompose(template);
     this.currentYaml = this.dumpCompose(this.existingApplication!);
     this.composeYaml = this.currentYaml;
+    if (this.isProfileBoundUpgrade) {
+      const compose: any = (this.existingApplication?.config as any)?.compose;
+      this.credentialValues = extractCredentialValues(compose, this.selectedType);
+    }
     this.loadingTemplate = false;
-    this.scheduleDiffInit();
+    if (!this.isProfileBoundUpgrade) {
+      this.scheduleDiffInit();
+    }
   }
 
   private failUpgradeLoad(messageKey: string) {
@@ -760,16 +776,27 @@ export class AgentAppInstallWizardComponent
     // UpgradeActionHandler re-resolves config from profile for profile-bound
     // apps and overlays the incoming config otherwise.
     if (this.mode === 'upgrade' && this.existingApplication && this.template) {
-      // Ship existing app + new templateId. If the user merged chunks from
-      // the new template (left) into the right pane, composeYaml now carries
-      // their edited compose — overlay it onto existingApplication.config so
-      // the UpgradeActionHandler picks up the customized version.
+      // Ship existing app + new templateId. For standalone upgrades the user
+      // may have merged chunks from the new template (left) into the right
+      // pane, so composeYaml carries their edited compose — overlay it.
+      // For profile-bound upgrades the compose comes from the profile and we
+      // only patch credentials into the existing compose; UpgradeActionHandler
+      // re-resolves from the profile regardless.
+      let outboundCompose: any;
+      if (this.isProfileBoundUpgrade) {
+        outboundCompose = (this.existingApplication.config as any)?.compose;
+        if (outboundCompose) {
+          applyCredentialValuesToCompose(outboundCompose, this.selectedType, this.credentialValues);
+        }
+      } else {
+        outboundCompose = this.parseYamlBestEffort(this.composeYaml);
+      }
       const outbound: any = {
         ...this.existingApplication,
         templateId: this.template.id,
         config: {
           ...((this.existingApplication.config as any) || { type: 'DOCKER_COMPOSE' }),
-          compose: this.parseYamlBestEffort(this.composeYaml)
+          compose: outboundCompose
         }
       };
       const stepInputs: { [stepId: string]: any } = {};
@@ -955,8 +982,20 @@ export class AgentAppInstallWizardComponent
   private scalarYaml(value: any): string {
     if (typeof value === 'string') {
       const needsQuote = /^(true|false|null|yes|no|on|off|\d|-)/i.test(value)
-        || value.includes(':') || value.includes('#') || value.includes('\n');
-      return needsQuote ? `"${value.replace(/"/g, '\\"')}"` : value;
+        || value.includes(':') || value.includes('#')
+        || value.includes('\n') || value.includes('\r') || value.includes('\t')
+        || value.includes('"') || value.includes('\\');
+      if (needsQuote) {
+        // Double-quoted YAML scalars: escape backslash first, then other specials.
+        const escaped = value
+          .replace(/\\/g, '\\\\')
+          .replace(/"/g, '\\"')
+          .replace(/\n/g, '\\n')
+          .replace(/\r/g, '\\r')
+          .replace(/\t/g, '\\t');
+        return `"${escaped}"`;
+      }
+      return value;
     }
     return String(value);
   }

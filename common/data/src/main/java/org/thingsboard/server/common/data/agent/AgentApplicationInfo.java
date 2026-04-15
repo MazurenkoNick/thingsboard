@@ -33,6 +33,9 @@ public class AgentApplicationInfo extends AgentApplication {
     @Schema(description = "True if the app's config is outdated relative to its profile.", accessMode = Schema.AccessMode.READ_ONLY)
     private boolean profileConfigOutdated;
 
+    @Schema(description = "Name of the application profile this app is based on.", accessMode = Schema.AccessMode.READ_ONLY)
+    private String profileName;
+
     public AgentApplicationInfo() {
         super();
     }

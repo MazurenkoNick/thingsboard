@@ -30,10 +30,12 @@ public class AgentInfoEntity extends AbstractAgentEntity<AgentInfo> {
     public static final Map<String, String> agentInfoColumnMap = new HashMap<>();
     static {
         agentInfoColumnMap.put("customerTitle", "c.title");
+        agentInfoColumnMap.put("groupName", "g.name");
     }
 
     private String customerTitle;
     private boolean customerIsPublic;
+    private String groupName;
 
     public AgentInfoEntity() {
         super();
@@ -41,7 +43,8 @@ public class AgentInfoEntity extends AbstractAgentEntity<AgentInfo> {
 
     public AgentInfoEntity(AgentEntity agentEntity,
                            String customerTitle,
-                           Object customerAdditionalInfo) {
+                           Object customerAdditionalInfo,
+                           String groupName) {
         super(agentEntity);
         this.customerTitle = customerTitle;
         if (customerAdditionalInfo != null && ((JsonNode) customerAdditionalInfo).has("isPublic")) {
@@ -49,10 +52,11 @@ public class AgentInfoEntity extends AbstractAgentEntity<AgentInfo> {
         } else {
             this.customerIsPublic = false;
         }
+        this.groupName = groupName;
     }
 
     @Override
     public AgentInfo toData() {
-        return new AgentInfo(super.toAgent(), customerTitle, customerIsPublic);
+        return new AgentInfo(super.toAgent(), customerTitle, customerIsPublic, groupName);
     }
 }

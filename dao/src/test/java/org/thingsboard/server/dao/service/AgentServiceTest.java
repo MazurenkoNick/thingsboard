@@ -238,7 +238,7 @@ public class AgentServiceTest extends AbstractServiceTest {
             String name = title1 + suffix;
             name = i % 2 == 0 ? name.toLowerCase() : name.toUpperCase();
             Agent savedAgent = agentService.saveAgent(newAgent(name));
-            agentsTitle1.add(new AgentInfo(savedAgent, null, false));
+            agentsTitle1.add(new AgentInfo(savedAgent, null, false, null));
         }
         String title2 = "Agent title 2";
         List<AgentInfo> agentsTitle2 = new ArrayList<>();
@@ -247,7 +247,7 @@ public class AgentServiceTest extends AbstractServiceTest {
             String name = title2 + suffix;
             name = i % 2 == 0 ? name.toLowerCase() : name.toUpperCase();
             Agent savedAgent = agentService.saveAgent(newAgent(name));
-            agentsTitle2.add(new AgentInfo(savedAgent, null, false));
+            agentsTitle2.add(new AgentInfo(savedAgent, null, false, null));
         }
 
         List<AgentInfo> loadedAgentsTitle1 = new ArrayList<>();
@@ -366,7 +366,7 @@ public class AgentServiceTest extends AbstractServiceTest {
             Agent agent = agentService.saveAgent(newAgent(tenantId, "Agent" + i));
             agent.setCustomerId(customerId);
             agent = agentService.saveAgent(agent);
-            agentInfos.add(new AgentInfo(agent, customer.getTitle(), false));
+            agentInfos.add(new AgentInfo(agent, customer.getTitle(), false, null));
         }
 
         List<AgentInfo> loadedAgentInfos = new ArrayList<>();

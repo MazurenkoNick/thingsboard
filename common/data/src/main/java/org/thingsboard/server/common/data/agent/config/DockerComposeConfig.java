@@ -17,7 +17,6 @@ package org.thingsboard.server.common.data.agent.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -62,7 +61,7 @@ public class DockerComposeConfig extends AgentAppConfig {
         if (imagePattern == null) {
             return;
         }
-        ObjectNode env = DockerComposeUtils.findServiceEnvironment(compose, imagePattern);
+        JsonNode env = DockerComposeUtils.findServiceEnvironment(compose, imagePattern);
         if (env == null) {
             throw new DataValidationException("Compose config must contain a service matching image pattern: " + imagePattern);
         }
@@ -72,9 +71,9 @@ public class DockerComposeConfig extends AgentAppConfig {
         }
     }
 
-    private void validateGatewayCredentialKeys(ObjectNode env) {
+    private void validateGatewayCredentialKeys(JsonNode env) {
         requireEnvKeys(env, "TB_GW_SECURITY_TYPE");
-        String securityType = env.get("TB_GW_SECURITY_TYPE").asText();
+        String securityType = DockerComposeUtils.envGet(env, "TB_GW_SECURITY_TYPE");
         switch (securityType) {
             case "accessToken" -> requireEnvKeys(env, "TB_GW_ACCESS_TOKEN");
             case "usernamePassword" -> requireEnvKeys(env, "TB_GW_CLIENT_ID", "TB_GW_USERNAME", "TB_GW_PASSWORD");
@@ -83,10 +82,10 @@ public class DockerComposeConfig extends AgentAppConfig {
         }
     }
 
-    private void requireEnvKeys(ObjectNode env, String... keys) {
+    private void requireEnvKeys(JsonNode env, String... keys) {
         List<String> missing = new ArrayList<>();
         for (String key : keys) {
-            if (!env.has(key)) {
+            if (!DockerComposeUtils.envHasKey(env, key)) {
                 missing.add(key);
             }
         }

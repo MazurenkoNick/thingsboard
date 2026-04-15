@@ -55,6 +55,7 @@ import {
   CredField,
   credentialSchemaFor,
   extractCredentialValues,
+  normalizeCredValue,
   visibleCredentialFields as visibleCredFieldsFor
 } from '@home/pages/agent/util/agent-credentials';
 import { of } from 'rxjs';
@@ -305,7 +306,7 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
   }
 
   onCredentialChange(field: CredField, value: string) {
-    this.credentialValues[field.key] = value ?? '';
+    this.credentialValues[field.key] = normalizeCredValue(field.key, value);
     // Reflect the change in the compose YAML form control + the editor preview
     // so what the user sees matches what gets sent on save.
     const yamlText: string = this.entityForm?.get('composeYaml')?.value ?? '';
@@ -340,12 +341,22 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
   }
 
   /**
-   * Upgrade is allowed only for standalone apps (no profile) that have a
-   * linked template with a newer version available. Profile-bound apps are
-   * upgraded through the bulk action in the profile section instead.
+   * Upgrade is allowed when the app's linked template has a newer version.
+   * For profile-bound apps we additionally require that the profile has
+   * already moved to a different template (usually newer) — that's the
+   * scenario where triggering an app-level upgrade realigns the app with
+   * the profile's current template, i.e. profile.template.currentVersion
+   * matches app.template.nextVersion. When the profile still points at
+   * the app's current template, the user should upgrade the profile first
+   * (or use the bulk action from the agent group).
    */
   canUpgrade(): boolean {
-    return !!this.entity?.nextVersion && !this.entity?.applicationProfileId;
+    if (!this.entity?.nextVersion) { return false; }
+    const profileId = this.entity.applicationProfileId?.id;
+    if (!profileId) { return true; }
+    const profile = this.availableProfiles.find(p => p.id.id === profileId);
+    if (!profile?.templateId?.id) { return false; }
+    return profile.templateId.id !== this.entity.templateId?.id;
   }
 
   buildForm(entity: AgentApplicationInfo): UntypedFormGroup {
@@ -416,6 +427,15 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
         }
       }
     });
+  }
+
+  get selectedProfileName(): string {
+    const id = this.selectedProfileId;
+    if (!id) { return ''; }
+    const match = this.availableProfiles.find(p => p.id.id === id);
+    // Fall back to the profileName the info endpoint joined onto the entity —
+    // covers the window before `availableProfiles` resolves on first render.
+    return match?.name || (this.entity as any)?.profileName || '';
   }
 
   openRelatedEntity($event: Event) {
@@ -612,8 +632,19 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
   private scalarYaml(value: any): string {
     if (typeof value === 'string') {
       const needsQuote = /^(true|false|null|yes|no|on|off|\d|-)/i.test(value)
-        || value.includes(':') || value.includes('#') || value.includes('\n');
-      return needsQuote ? `"${value.replace(/"/g, '\\"')}"` : value;
+        || value.includes(':') || value.includes('#')
+        || value.includes('\n') || value.includes('\r') || value.includes('\t')
+        || value.includes('"') || value.includes('\\');
+      if (needsQuote) {
+        const escaped = value
+          .replace(/\\/g, '\\\\')
+          .replace(/"/g, '\\"')
+          .replace(/\n/g, '\\n')
+          .replace(/\r/g, '\\r')
+          .replace(/\t/g, '\\t');
+        return `"${escaped}"`;
+      }
+      return value;
     }
     return String(value);
   }

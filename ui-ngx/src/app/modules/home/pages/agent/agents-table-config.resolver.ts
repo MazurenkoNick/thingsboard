@@ -145,10 +145,12 @@ export class AgentsTableConfigResolver {
     const columns: Array<EntityTableColumn<AgentInfo>> = [
       new DateEntityTableColumn<AgentInfo>('createdTime', 'common.created-time', this.datePipe, '150px'),
       new EntityTableColumn<AgentInfo>('name', 'agent.name', '25%'),
+      new EntityTableColumn<AgentInfo>('groupName', 'agent.agent-group', '20%',
+        entity => this.groupCell(entity), () => ({}), false)
     ];
     if (agentScope === 'tenant' || agentScope === 'customer') {
       columns.push(
-        new EntityTableColumn<AgentInfo>('customerTitle', 'customer.customer', '25%'),
+        new EntityTableColumn<AgentInfo>('customerTitle', 'customer.customer', '20%'),
       );
     }
     columns.push(
@@ -156,6 +158,15 @@ export class AgentsTableConfigResolver {
         entity => this.agentStatus(entity), entity => this.agentStatusStyle(entity), false)
     );
     return columns;
+  }
+
+  private groupCell(agent: AgentInfo): string {
+    if (!agent.groupName || !agent.agentGroupId?.id) {
+      return `<span style="color:rgba(0,0,0,0.38);font-size:12px;">—</span>`;
+    }
+    const href = `/edgeManagement/agentGroups/${agent.agentGroupId.id}`;
+    const safeName = String(agent.groupName).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return `<a href="${href}" onclick="event.stopPropagation();" style="color:#305680;font-weight:500;text-decoration:none;">${safeName}</a>`;
   }
 
   private agentStatus(agent: AgentInfo): string {

@@ -1,0 +1,122 @@
+<!--
+
+    Copyright © 2016-2026 The Thingsboard Authors
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<div mat-dialog-title class="tb-bulk-details-header">
+  <h2 translate>agent.bulk-action-details</h2>
+  <button mat-icon-button (click)="close()" tabindex="-1">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<div mat-dialog-content class="tb-bulk-details-body">
+
+  <!-- Bulk action summary -->
+  <div class="tb-bulk-summary">
+    <div class="tb-summary-main">
+      <span class="tb-summary-status" [style.color]="bulkStatusColor()">
+        {{ bulkAction.status }}
+      </span>
+      <span class="tb-summary-action">{{ bulkAction.actionType }}</span>
+    </div>
+    <div class="tb-summary-grid">
+      <div class="tb-summary-cell">
+        <span class="label" translate>common.created-time</span>
+        <span class="value">{{ bulkAction.createdTime | date: 'yyyy-MM-dd HH:mm:ss' }}</span>
+      </div>
+      <div class="tb-summary-cell" *ngIf="bulkAction.processingStartedTime">
+        <span class="label" translate>agent.bulk-processing-started</span>
+        <span class="value">{{ bulkAction.processingStartedTime | date: 'yyyy-MM-dd HH:mm:ss' }}</span>
+      </div>
+      <div class="tb-summary-cell">
+        <span class="label" translate>agent.bulk-submitted</span>
+        <span class="value">
+          <span style="color:#2e7d32;font-weight:500;">{{ bulkAction.submitted }}</span>
+          / {{ bulkAction.total }}
+        </span>
+      </div>
+      <div class="tb-summary-cell" *ngIf="skippedTotal > 0">
+        <span class="label" translate>agent.bulk-skipped</span>
+        <span class="value skipped-count">{{ skippedTotal }}</span>
+      </div>
+    </div>
+
+    <div class="tb-skip-counts" *ngIf="skipReasons.length">
+      <div class="tb-skip-chip" *ngFor="let entry of skipReasons">
+        <span class="reason">{{ entry.reason }}</span>
+        <span class="count">{{ entry.count }}</span>
+      </div>
+    </div>
+
+    <div class="tb-bulk-error" *ngIf="bulkAction.errorMsg">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ bulkAction.errorMsg }}</span>
+    </div>
+  </div>
+
+  <!-- Events section -->
+  <div class="tb-bulk-events-section">
+    <div class="tb-bulk-events-toolbar">
+      <div class="tb-bulk-events-title" translate>agent.bulk-events</div>
+      <mat-form-field appearance="outline" class="tb-status-filter">
+        <mat-label translate>agent.bulk-event-filter-status</mat-label>
+        <mat-select [ngModel]="statusFilter" (ngModelChange)="onStatusFilterChange($event)">
+          <mat-option [value]="null" translate>agent.bulk-event-filter-all</mat-option>
+          <mat-option *ngFor="let s of statusOptions.slice(1)" [value]="s">
+            {{ eventStatusTranslationMap.get(s) | translate }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="tb-bulk-events-loading" *ngIf="loading">
+      <mat-progress-spinner mode="indeterminate" diameter="24"></mat-progress-spinner>
+    </div>
+
+    <div class="tb-bulk-events-empty" *ngIf="!loading && !events.length" translate>
+      agent.bulk-no-events
+    </div>
+
+    <table class="tb-bulk-events-table" *ngIf="!loading && events.length">
+      <thead>
+        <tr>
+          <th translate>agent.app-event-app-name</th>
+          <th translate>agent.app-event-status</th>
+          <th translate>agent.bulk-event-current-step</th>
+          <th translate>agent.bulk-event-updated</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let event of events; trackBy: trackByEventId" (click)="openEventProgress(event)">
+          <td>{{ event.applicationName || event.applicationId?.id }}</td>
+          <td [style.color]="statusColor(event.status)" class="status-cell">
+            {{ eventStatusTranslationMap.get(event.status) | translate }}
+          </td>
+          <td class="mono">{{ event.currentActivity || event.currentStepId || '' }}</td>
+          <td>{{ event.updatedTime | date: 'HH:mm:ss' }}</td>
+          <td class="action-cell">
+            <mat-icon>chevron_right</mat-icon>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div mat-dialog-actions align="end" class="tb-bulk-details-footer">
+  <button mat-button (click)="close()">{{ 'action.close' | translate }}</button>
+</div>

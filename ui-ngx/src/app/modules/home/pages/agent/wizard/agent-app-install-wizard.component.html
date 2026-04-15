@@ -178,14 +178,41 @@
       </ng-container>
 
       <ng-container *ngIf="mode === 'upgrade'">
-        <div class="diff-header-row">
-          <div class="diff-header added">
-            {{ 'agent.app-upgrade-template-new' | translate: { version: toVersion || '—' } }}
+        <ng-container *ngIf="!isProfileBoundUpgrade">
+          <div class="diff-header-row">
+            <div class="diff-header added">
+              {{ 'agent.app-upgrade-template-new' | translate: { version: toVersion || '—' } }}
+            </div>
+            <div class="diff-header removed" translate>agent.app-upgrade-current</div>
           </div>
-          <div class="diff-header removed" translate>agent.app-upgrade-current</div>
+          <div class="diff-viewer" #diffViewer></div>
+          <p class="diff-hint" translate>agent.app-upgrade-diff-hint</p>
+        </ng-container>
+
+        <div class="cred-section" *ngIf="isProfileBoundUpgrade && showCredentialForm">
+          <div class="cred-section-header">
+            <span translate>agent.app-install-cred-title</span>
+            <span class="cred-section-hint" translate>agent.app-update-cred-hint</span>
+          </div>
+          <ng-container *ngFor="let field of visibleCredentialFields">
+            <mat-form-field class="mat-block" *ngIf="field.type !== 'select'">
+              <mat-label>{{ field.labelKey | translate }}</mat-label>
+              <input matInput
+                     [type]="field.type"
+                     [ngModel]="credentialValues[field.key]"
+                     (ngModelChange)="onCredentialChange(field, $event)">
+            </mat-form-field>
+            <mat-form-field class="mat-block" *ngIf="field.type === 'select'">
+              <mat-label>{{ field.labelKey | translate }}</mat-label>
+              <mat-select [ngModel]="credentialValues[field.key]"
+                          (ngModelChange)="onCredentialChange(field, $event)">
+                <mat-option *ngFor="let opt of field.options" [value]="opt.value">
+                  {{ opt.labelKey | translate }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </ng-container>
         </div>
-        <div class="diff-viewer" #diffViewer></div>
-        <p class="diff-hint" translate>agent.app-upgrade-diff-hint</p>
 
         <div class="config-section" *ngIf="backupVolumeStep">
           <div class="config-section-header">

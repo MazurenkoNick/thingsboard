@@ -72,13 +72,20 @@
       </mat-form-field>
     </fieldset>
 
-    <mat-form-field class="mat-block">
+    <mat-form-field class="mat-block tb-profile-field">
       <mat-label translate>agent.app-profile</mat-label>
       <mat-select formControlName="applicationProfileId"
                   [disabled]="!isEdit"
-                  (selectionChange)="onProfileChange($event.value)">
+                  (selectionChange)="onProfileChange($event.value)"
+                  [class.!hidden]="!isEdit && selectedProfileId">
         <mat-option *ngFor="let p of availableProfiles" [value]="p.id.id">{{ p.name }}</mat-option>
       </mat-select>
+      <a *ngIf="!isEdit && selectedProfileId"
+         class="tb-profile-link"
+         aria-label="Open profile"
+         [routerLink]="'/edgeManagement/agentAppProfiles/' + selectedProfileId">
+        {{ selectedProfileName }}
+      </a>
       <button *ngIf="selectedProfileId && isEdit"
               type="button"
               matSuffix mat-icon-button aria-label="Clear"

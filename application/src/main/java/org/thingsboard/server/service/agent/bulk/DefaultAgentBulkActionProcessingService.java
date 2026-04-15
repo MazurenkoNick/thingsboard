@@ -102,7 +102,7 @@ public class DefaultAgentBulkActionProcessingService implements AgentBulkActionP
             AgentBulkActionStatus originalStatus = action.getStatus();
             log.warn("Failing stuck bulk action {} in status {} (threshold {})",
                     action.getId(), originalStatus, threshold);
-            action.setStatus(AgentBulkActionStatus.FAILED);
+            action.setStatus(AgentBulkActionStatus.START_FAILED);
             action.setErrorMsg("Stuck in " + originalStatus + " state, failed by cleanup job");
             agentBulkActionService.save(action.getTenantId(), action);
         }
@@ -172,7 +172,7 @@ public class DefaultAgentBulkActionProcessingService implements AgentBulkActionP
             try {
                 AgentBulkAction bulkAction = agentBulkActionService.findById(tenantId, bulkActionId);
                 if (bulkAction != null) {
-                    bulkAction.setStatus(AgentBulkActionStatus.FAILED);
+                    bulkAction.setStatus(AgentBulkActionStatus.START_FAILED);
                     bulkAction.setErrorMsg("Unexpected error: " + e.getMessage());
                     agentBulkActionService.save(tenantId, bulkAction);
                 }
@@ -191,7 +191,7 @@ public class DefaultAgentBulkActionProcessingService implements AgentBulkActionP
             eligibleApps = filterEligibleApps(groupId, result, profile, actionType, force);
         } catch (Exception e) {
             log.error("Bulk operation {} failed during filtering for bulkAction {}", actionType, bulkAction.getId(), e);
-            bulkAction.setStatus(AgentBulkActionStatus.FAILED);
+            bulkAction.setStatus(AgentBulkActionStatus.START_FAILED);
             bulkAction.setErrorMsg(e.getMessage());
             agentBulkActionService.save(tenantId, bulkAction);
             return;
@@ -200,7 +200,7 @@ public class DefaultAgentBulkActionProcessingService implements AgentBulkActionP
         bulkAction.setTotal(result.getTotal().get());
 
         if (eligibleApps.isEmpty()) {
-            bulkAction.setStatus(AgentBulkActionStatus.COMPLETED);
+            bulkAction.setStatus(AgentBulkActionStatus.STARTED);
             bulkAction.setSkipCounts(buildSkipCounts(result));
             agentBulkActionService.save(tenantId, bulkAction);
             return;
@@ -228,7 +228,7 @@ public class DefaultAgentBulkActionProcessingService implements AgentBulkActionP
                 bulkAction.setSubmitted(result.getSubmitted().get());
                 bulkAction.setSkipCounts(buildSkipCounts(result));
                 if (processed == eligibleApps.size()) {
-                    bulkAction.setStatus(AgentBulkActionStatus.COMPLETED);
+                    bulkAction.setStatus(AgentBulkActionStatus.STARTED);
                 }
                 agentBulkActionService.save(tenantId, bulkAction);
             }

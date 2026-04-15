@@ -109,7 +109,7 @@ public class AgentApplicationController extends BaseController {
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @GetMapping(value = "/agent/{agentId}/apps", params = {"pageSize", "page"})
     @ResponseBody
-    public PageData<AgentApplication> getAgentApplicationsByAgentId(
+    public PageData<AgentApplicationInfo> getAgentApplicationsByAgentId(
             @Parameter(description = AGENT_ID_PARAM_DESCRIPTION)
             @PathVariable(AGENT_ID) String strAgentId,
             @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
@@ -127,7 +127,7 @@ public class AgentApplicationController extends BaseController {
         checkAgentId(agentId, Operation.READ);
         TenantId tenantId = getCurrentUser().getTenantId();
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
-        return checkNotNull(agentAppService.findByAgentId(tenantId, agentId, pageLink));
+        return checkNotNull(agentAppService.findInfosByAgentId(tenantId, agentId, pageLink));
     }
 
     @ApiOperation(value = "Get Agent Application by Related Entity (getAgentApplicationByRelatedEntity)",

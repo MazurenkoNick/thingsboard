@@ -34,6 +34,8 @@ public class AgentInfo extends Agent {
     private String customerTitle;
     @Schema(description = "Indicates special 'Public' Customer that is auto-generated to use the agents on public dashboards.", accessMode = Schema.AccessMode.READ_ONLY)
     private boolean customerIsPublic;
+    @Schema(description = "Name of the Agent Group the agent belongs to.", accessMode = Schema.AccessMode.READ_ONLY)
+    private String groupName;
 
     public AgentInfo() {
         super();
@@ -43,9 +45,10 @@ public class AgentInfo extends Agent {
         super(agentId);
     }
 
-    public AgentInfo(Agent agent, String customerTitle, boolean customerIsPublic) {
+    public AgentInfo(Agent agent, String customerTitle, boolean customerIsPublic, String groupName) {
         super(agent);
         this.customerTitle = customerTitle;
         this.customerIsPublic = customerIsPublic;
+        this.groupName = groupName;
     }
 }

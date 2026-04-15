@@ -68,6 +68,11 @@ export function visibleCredentialFields(type: AgentApplicationType | null | unde
   );
 }
 
+// Returns the env node of the main service. Compose env may be either:
+//   - map form: { KEY: "VAL", ... }    (returned as a plain object)
+//   - list form: [ "KEY=VAL", ... ]   (returned as an array)
+// Both are valid Docker Compose syntax; agents emit the list form when they
+// reconstruct compose from `docker inspect`. Callers must branch on Array.
 export function findMainServiceEnv(compose: any, type: AgentApplicationType | null | undefined): any | null {
   if (!type) { return null; }
   const pattern = MAIN_IMAGE_PATTERNS[type];
@@ -76,20 +81,60 @@ export function findMainServiceEnv(compose: any, type: AgentApplicationType | nu
   }
   for (const service of Object.values<any>(compose.services)) {
     if (service && typeof service.image === 'string' && pattern.test(service.image)
-        && service.environment && typeof service.environment === 'object') {
+        && service.environment != null
+        && (Array.isArray(service.environment) || typeof service.environment === 'object')) {
       return service.environment;
     }
   }
   return null;
 }
 
+function envHasKey(env: any, key: string): boolean {
+  if (!env) { return false; }
+  if (Array.isArray(env)) {
+    const prefix = `${key}=`;
+    return env.some((e: any) => typeof e === 'string' && (e === key || e.startsWith(prefix)));
+  }
+  return key in env;
+}
+
+function envGet(env: any, key: string): string | null {
+  if (!env) { return null; }
+  if (Array.isArray(env)) {
+    const prefix = `${key}=`;
+    for (const e of env) {
+      if (typeof e !== 'string') { continue; }
+      if (e === key) { return ''; }
+      if (e.startsWith(prefix)) { return e.substring(prefix.length); }
+    }
+    return null;
+  }
+  return env[key] != null ? String(env[key]) : null;
+}
+
+function envSet(env: any, key: string, value: string): void {
+  if (!env) { return; }
+  if (Array.isArray(env)) {
+    const prefix = `${key}=`;
+    const idx = env.findIndex((e: any) => typeof e === 'string' && (e === key || e.startsWith(prefix)));
+    if (idx >= 0) {
+      env[idx] = `${key}=${value ?? ''}`;
+    } else {
+      env.push(`${key}=${value ?? ''}`);
+    }
+    return;
+  }
+  env[key] = value ?? '';
+}
+
 export function extractCredentialValues(compose: any, type: AgentApplicationType | null | undefined): Record<string, string> {
   const values: Record<string, string> = {};
   const schema = credentialSchemaFor(type);
   if (!schema.length) { return values; }
-  const env = findMainServiceEnv(compose, type) || {};
+  const env = findMainServiceEnv(compose, type);
   for (const field of schema) {
-    values[field.key] = env[field.key] != null ? String(env[field.key]) : '';
+    const v = envGet(env, field.key);
+    values[field.key] = v != null ? v : '';
   }
   return values;
 }
@@ -104,8 +149,35 @@ export function applyCredentialValuesToCompose(compose: any,
   if (!env) { return; }
   for (const field of credentialSchemaFor(type)) {
     const v = values[field.key];
-    if (field.key in env || (v != null && v !== '')) {
-      env[field.key] = v ?? '';
+    if (envHasKey(env, field.key) || (v != null && v !== '')) {
+      envSet(env, field.key, v ?? '');
     }
   }
+}
+
+// Normalises a raw value that the user typed or pasted into a credential
+// input. Handles the common case where the user pastes a full YAML list
+// entry (e.g. `      - CLOUD_ROUTING_KEY=abc` or the concatenation of two
+// entries). Without this, multi-line pastes corrupt the surrounding
+// compose YAML when the value is serialised back out.
+export function normalizeCredValue(key: string, raw: string): string {
+  if (raw == null) { return ''; }
+  // Collapse newlines so the value remains single-line — prevents breaking
+  // the compose YAML dump downstream.
+  let v = String(raw).replace(/\r?\n/g, ' ').trim();
+  // Strip leading YAML list marker ("- ") if the user pasted a compose env entry.
+  v = v.replace(/^-\s*/, '');
+  // Strip "KEY=" prefix (case-insensitive match on the env var name).
+  const prefix = `${key}=`;
+  if (v.toUpperCase().startsWith(prefix.toUpperCase())) {
+    v = v.substring(prefix.length);
+  }
+  // If the paste contained two env-var entries concatenated (user copied
+  // multiple lines), keep only the value of the first one — the next one
+  // begins at " - OTHER_KEY=" or just " OTHER_KEY=".
+  const tail = v.match(/^(.*?)\s+-?\s*[A-Z][A-Z0-9_]{3,}\s*=/);
+  if (tail) {
+    v = tail[1];
+  }
+  return v.trim();
 }

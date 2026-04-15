@@ -209,7 +209,7 @@ class DefaultAgentBulkActionProcessingServiceTest {
         verify(agentBulkActionService, atLeastOnce()).save(any(), captor.capture());
         AgentBulkAction lastSaved = captor.getAllValues().get(captor.getAllValues().size() - 1);
         assertThat(lastSaved.getProcessingStartedTime()).isNotNull();
-        assertThat(lastSaved.getStatus()).isEqualTo(AgentBulkActionStatus.COMPLETED);
+        assertThat(lastSaved.getStatus()).isEqualTo(AgentBulkActionStatus.STARTED);
     }
 
     @Test
@@ -231,7 +231,7 @@ class DefaultAgentBulkActionProcessingServiceTest {
         verify(agentBulkActionService, atLeastOnce()).save(any(), captor.capture());
         List<AgentBulkAction> savedActions = captor.getAllValues();
         AgentBulkAction lastSaved = savedActions.get(savedActions.size() - 1);
-        assertThat(lastSaved.getStatus()).isEqualTo(AgentBulkActionStatus.COMPLETED);
+        assertThat(lastSaved.getStatus()).isEqualTo(AgentBulkActionStatus.STARTED);
     }
 
     @Test
@@ -257,7 +257,7 @@ class DefaultAgentBulkActionProcessingServiceTest {
         verify(agentBulkActionService, atLeastOnce()).save(any(), captor.capture());
         List<AgentBulkAction> savedActions = captor.getAllValues();
         AgentBulkAction lastSaved = savedActions.get(savedActions.size() - 1);
-        assertThat(lastSaved.getStatus()).isEqualTo(AgentBulkActionStatus.COMPLETED);
+        assertThat(lastSaved.getStatus()).isEqualTo(AgentBulkActionStatus.STARTED);
         assertThat(lastSaved.getSubmitted()).isEqualTo(1);
     }
 
@@ -286,7 +286,7 @@ class DefaultAgentBulkActionProcessingServiceTest {
 
         ArgumentCaptor<AgentBulkAction> captor = ArgumentCaptor.forClass(AgentBulkAction.class);
         verify(agentBulkActionService).save(eq(TENANT_ID), captor.capture());
-        assertThat(captor.getValue().getStatus()).isEqualTo(AgentBulkActionStatus.FAILED);
+        assertThat(captor.getValue().getStatus()).isEqualTo(AgentBulkActionStatus.START_FAILED);
         assertThat(captor.getValue().getErrorMsg()).contains("Stuck in IN_PROGRESS");
     }
 
@@ -303,7 +303,7 @@ class DefaultAgentBulkActionProcessingServiceTest {
 
         ArgumentCaptor<AgentBulkAction> captor = ArgumentCaptor.forClass(AgentBulkAction.class);
         verify(agentBulkActionService).save(eq(TENANT_ID), captor.capture());
-        assertThat(captor.getValue().getStatus()).isEqualTo(AgentBulkActionStatus.FAILED);
+        assertThat(captor.getValue().getStatus()).isEqualTo(AgentBulkActionStatus.START_FAILED);
         assertThat(captor.getValue().getErrorMsg()).contains("Stuck in QUEUED");
     }
 
@@ -325,7 +325,7 @@ class DefaultAgentBulkActionProcessingServiceTest {
         verify(agentBulkActionService, atLeastOnce()).save(any(), captor.capture());
         List<AgentBulkAction> saved = captor.getAllValues();
         AgentBulkAction lastSaved = saved.get(saved.size() - 1);
-        assertThat(lastSaved.getStatus()).isEqualTo(AgentBulkActionStatus.FAILED);
+        assertThat(lastSaved.getStatus()).isEqualTo(AgentBulkActionStatus.START_FAILED);
         assertThat(lastSaved.getErrorMsg()).contains("DB connection lost");
     }
 

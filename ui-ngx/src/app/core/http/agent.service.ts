@@ -319,6 +319,13 @@ export class AgentService {
     return this.http.get<AgentBulkAction>(`/api/agent/bulk/${bulkActionId}`, defaultHttpOptionsFromConfig(config));
   }
 
+  public getGroupBulkActions(groupId: string, pageLink: PageLink,
+                             config?: RequestConfig): Observable<PageData<AgentBulkAction>> {
+    return this.http.get<PageData<AgentBulkAction>>(
+      `/api/agent/group/${groupId}/bulk${pageLink.toQuery()}`,
+      defaultHttpOptionsFromConfig(config));
+  }
+
   public getAgentBulkActionEvents(bulkActionId: string, pageLink: PageLink, status?: string,
                                   config?: RequestConfig): Observable<PageData<AgentAppEvent>> {
     let url = `/api/agent/bulk/${bulkActionId}/events${pageLink.toQuery()}`;

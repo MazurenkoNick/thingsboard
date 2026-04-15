@@ -30,6 +30,7 @@ import { PageLink } from '@shared/models/page/page-link';
 import { PageData } from '@shared/models/page/page-data';
 import { AgentService } from '@core/http/agent.service';
 import {
+  AgentAppEventActionType,
   AgentAppProfile,
   AgentGroupInfo,
   agentApplicationTypeTranslationMap
@@ -38,6 +39,10 @@ import {
   AgentGroupAssignProfileDialogComponent,
   AgentGroupAssignProfileDialogData
 } from '@home/pages/agent/dialog/agent-group-assign-profile-dialog.component';
+import {
+  AgentGroupBulkActionDialogComponent,
+  AgentGroupBulkActionDialogData
+} from '@home/pages/agent/dialog/agent-group-bulk-action-dialog.component';
 
 const typeBadgeStyles: Record<string, string> = {
   EDGE:    'background:#e8eaf6;color:#283593;',
@@ -108,12 +113,51 @@ export class AgentGroupProfilesTableConfig extends EntityTableConfig<AgentAppPro
   private buildActions(): Array<CellActionDescriptor<AgentAppProfile>> {
     return [
       {
+        name: this.translate.instant('agent.bulk-restart'),
+        icon: 'restart_alt',
+        isEnabled: () => true,
+        onAction: ($event, p) => this.openBulk($event, p, AgentAppEventActionType.RESTART)
+      },
+      {
+        name: this.translate.instant('agent.bulk-update'),
+        icon: 'sync_alt',
+        isEnabled: () => true,
+        onAction: ($event, p) => this.openBulk($event, p, AgentAppEventActionType.UPDATE)
+      },
+      {
+        name: this.translate.instant('agent.bulk-upgrade'),
+        icon: 'arrow_upward',
+        isEnabled: () => true,
+        onAction: ($event, p) => this.openBulk($event, p, AgentAppEventActionType.UPGRADE)
+      },
+      {
+        name: this.translate.instant('agent.bulk-delete'),
+        icon: 'delete',
+        isEnabled: () => true,
+        onAction: ($event, p) => this.openBulk($event, p, AgentAppEventActionType.DELETE)
+      },
+      {
         name: this.translate.instant('agent.unassign-profile'),
         icon: 'link_off',
         isEnabled: () => true,
         onAction: ($event, p) => this.unassign($event, p)
       }
     ];
+  }
+
+  private openBulk($event: Event, profile: AgentAppProfile, actionType: AgentAppEventActionType) {
+    if ($event) { $event.stopPropagation(); }
+    this.dialog.open<AgentGroupBulkActionDialogComponent, AgentGroupBulkActionDialogData>(
+      AgentGroupBulkActionDialogComponent, {
+        disableClose: false,
+        panelClass: ['tb-dialog'],
+        data: { group: this.group, profile, actionType }
+      }
+    ).afterClosed().subscribe((bulkAction) => {
+      if (bulkAction) {
+        this.updateData();
+      }
+    });
   }
 
   private fetch(pageLink: PageLink): Observable<PageData<AgentAppProfile>> {

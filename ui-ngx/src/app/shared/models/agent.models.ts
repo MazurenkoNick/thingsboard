@@ -138,8 +138,8 @@ export const agentProvisionTypeDescriptionMap = new Map<AgentProvisionType, stri
 export enum AgentBulkActionStatus {
   QUEUED = 'QUEUED',
   IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED'
+  STARTED = 'STARTED',
+  START_FAILED = 'START_FAILED'
 }
 
 // --- Entities ---
@@ -158,6 +158,7 @@ export interface Agent extends BaseData<AgentId> {
 export interface AgentInfo extends Agent {
   customerTitle: string;
   customerIsPublic: boolean;
+  groupName?: string;
   // Derived state (backend may populate from ACTIVITY_STATE telemetry).
   active?: boolean;
 }
@@ -208,6 +209,7 @@ export interface AgentApplicationInfo extends AgentApplication {
   currentVersion?: string;
   nextVersion?: string;
   profileConfigOutdated?: boolean;
+  profileName?: string;
 }
 
 export interface AgentAppStep {
