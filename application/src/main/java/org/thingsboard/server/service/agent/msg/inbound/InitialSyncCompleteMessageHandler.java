@@ -46,8 +46,6 @@ public class InitialSyncCompleteMessageHandler implements AgentInboundMessageHan
         TenantId tenantId = msgCtx.sessionState().getTenantId();
         AgentId agentId = msgCtx.sessionState().getAgentId();
         log.debug("[{}][{}] Received InitialSyncComplete, scheduling auto-install", tenantId, agentId);
-        // Offload to the event executor so the gRPC thread is not blocked waiting on
-        // in-flight syncs to drain before the write lock can be acquired.
         try {
             agentCtx.getAgentEventExecutor().submit(() -> runAutoInstall(tenantId, agentId));
         } catch (RejectedExecutionException e) {

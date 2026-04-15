@@ -81,7 +81,7 @@ public class ComposeProjectSyncMessageHandler implements AgentInboundMessageHand
         log.trace("[{}][{}] Processing externalCompose sync for project [{}], hasComposeJson: {}, containerStates: {}",
                 tenantId, agentId, projectName, externalCompose.hasComposeJson(), externalCompose.getContainerStatesMap().keySet());
 
-        AgentApplication app = appService.findByProjectName(tenantId, projectName);
+        AgentApplication app = appService.findByProjectName(tenantId, agentId, projectName);
         if (app == null) {
             if (!externalCompose.hasComposeJson()) {
                 log.warn("[{}][{}] No agent application found for project [{}] and no externalComposeJson provided, skipping", tenantId, agentId, projectName);
@@ -97,10 +97,6 @@ public class ComposeProjectSyncMessageHandler implements AgentInboundMessageHand
             } finally {
                 lock.unlock();
             }
-        } else if (!app.getAgentId().equals(agentId)) {
-            log.warn("[{}] Application [{}] is already managed by another agent [{}], expected [{}]",
-                    tenantId, app.getId(), app.getAgentId(), agentId);
-            return;
         }
 
         Map<String, ContainerInfo> containerStates = externalCompose.getContainerStatesMap();

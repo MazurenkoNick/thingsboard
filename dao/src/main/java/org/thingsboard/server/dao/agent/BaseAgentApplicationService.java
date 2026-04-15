@@ -142,9 +142,9 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
     }
 
     @Override
-    public AgentApplication findByProjectName(TenantId tenantId, String projectName) {
+    public AgentApplication findByProjectName(TenantId tenantId, AgentId agentId, String projectName) {
         log.trace("Executing findAgentApplicationByProjectName [{}]", projectName);
-        return agentApplicationDao.findByProjectName(tenantId, projectName);
+        return agentApplicationDao.findByProjectName(tenantId, agentId, projectName);
     }
 
     @Override

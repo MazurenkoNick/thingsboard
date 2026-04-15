@@ -17,6 +17,7 @@ package org.thingsboard.server.dao.agent;
 
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -37,7 +38,7 @@ public interface AgentApplicationDao extends Dao<AgentApplication> {
 
     List<AgentApplication> findByTemplateId(TenantId tenantId, UUID templateId);
 
-    AgentApplication findByProjectName(TenantId tenantId, String projectName);
+    AgentApplication findByProjectName(TenantId tenantId, AgentId agentId, String projectName);
 
     AgentApplication findByEventId(TenantId tenantId, UUID eventId);
 

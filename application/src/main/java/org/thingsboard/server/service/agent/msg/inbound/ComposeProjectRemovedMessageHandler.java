@@ -47,7 +47,7 @@ public class ComposeProjectRemovedMessageHandler implements AgentInboundMessageH
         ProjectStateSync projectSync = msgCtx.msg().getProjectSync();
 
         try {
-            AgentApplication app = appService.findByProjectName(tenantId, projectSync.getProjectName());
+            AgentApplication app = appService.findByProjectName(tenantId, agentId, projectSync.getProjectName());
             if (app == null) {
                 return;
             }
