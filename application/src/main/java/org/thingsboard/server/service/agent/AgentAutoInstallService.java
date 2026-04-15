@@ -29,6 +29,8 @@ import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationOrigin;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.config.DockerComposeUtils;
 import org.thingsboard.server.common.data.device.credentials.BasicMqttCredentials;
@@ -45,6 +47,7 @@ import org.thingsboard.server.dao.agent.AgentAppProfileService;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.agent.AgentGroupService;
 import org.thingsboard.server.dao.agent.AgentService;
+import org.thingsboard.server.dao.agent.config.AgentAppConfigMergeOrchestrator;
 import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -58,10 +61,10 @@ import java.util.List;
 public class AgentAutoInstallService {
 
     private final AgentService agentService;
-    private final AgentGroupService agentGroupService;
     private final AgentAppProfileService profileService;
     private final AgentApplicationService applicationService;
     private final AgentAppEventService appEventService;
+    private final AgentAppConfigMergeOrchestrator configMergeOrchestrator;
     private final EdgeService edgeService;
     private final DeviceService deviceService;
 
@@ -100,9 +103,7 @@ public class AgentAutoInstallService {
         app.setTemplateId(profile.getTemplateId());
         app.setApplicationProfileId(profile.getId());
         app.setOrigin(AgentApplicationOrigin.AUTO_PROVISIONED);
-        app.setRelatedEntityId(relatedEntityId);
-        // save() invokes profileConfigResolver.resolve() which copies profile config
-        // and runs MergeCredentialsToConfigRule to inject related-entity credentials.
+        setConfigCredentials(app, profile, relatedEntityId);
         AgentApplication savedApp = applicationService.save(tenantId, app);
         log.info("[{}][{}] Auto-provisioned application [{}] for profile [{}]",
                 tenantId, agent.getId(), savedApp.getId(), profile.getId());
@@ -114,6 +115,20 @@ public class AgentAutoInstallService {
         event.setDeliveryState(AgentAppEventDeliveryState.PENDING);
         event.setUpdatedTime(System.currentTimeMillis());
         appEventService.save(tenantId, event);
+    }
+
+    private void setConfigCredentials(AgentApplication app, AgentAppProfile profile, EntityId relatedEntityId) {
+        if (profile.getConfig() == null) {
+            return;
+        }
+        AgentAppConfig configCopy = profile.getConfig().copy();
+        app.setConfig(configCopy);
+        if (relatedEntityId == null) {
+            return;
+        }
+        configMergeOrchestrator.merge(app, AppConfigMergeCtx.builder()
+                .relatedEntityId(relatedEntityId)
+                .build());
     }
 
     private EntityId createRelatedEntityIfNeeded(TenantId tenantId, AgentAppProfile profile) {

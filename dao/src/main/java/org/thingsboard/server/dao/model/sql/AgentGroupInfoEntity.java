@@ -20,6 +20,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.agent.AgentGroup;
 import org.thingsboard.server.common.data.agent.AgentGroupInfo;
+import org.thingsboard.server.common.data.agent.AgentProvisionType;
 import org.thingsboard.server.common.data.id.AgentGroupId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -44,6 +45,7 @@ public class AgentGroupInfoEntity extends BaseVersionedEntity<AgentGroupInfo> {
     private String description;
     private String provisionKey;
     private String provisionSecret;
+    private AgentProvisionType provisionType;
     private String customerTitle;
     private boolean customerIsPublic;
 
@@ -63,6 +65,7 @@ public class AgentGroupInfoEntity extends BaseVersionedEntity<AgentGroupInfo> {
         this.description = groupEntity.getDescription();
         this.provisionKey = groupEntity.getProvisionKey();
         this.provisionSecret = groupEntity.getProvisionSecret();
+        this.provisionType = groupEntity.getProvisionType();
         this.customerTitle = customerTitle;
         if (customerAdditionalInfo != null && ((JsonNode) customerAdditionalInfo).has("isPublic")) {
             this.customerIsPublic = ((JsonNode) customerAdditionalInfo).get("isPublic").asBoolean();
@@ -86,6 +89,7 @@ public class AgentGroupInfoEntity extends BaseVersionedEntity<AgentGroupInfo> {
         group.setDescription(description);
         group.setProvisionKey(provisionKey);
         group.setProvisionSecret(provisionSecret);
+        group.setProvisionType(provisionType);
         return new AgentGroupInfo(group, customerTitle, customerIsPublic);
     }
 }

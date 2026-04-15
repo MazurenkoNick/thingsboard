@@ -47,7 +47,7 @@ public interface AgentAppProfileRepository extends JpaRepository<AgentAppProfile
             "AND r.relationTypeGroup = 'AGENT' " +
             "AND r.relationType = 'HasProfile' " +
             "AND NOT EXISTS (SELECT 1 FROM AgentApplicationEntity a " +
-            "                WHERE a.agentId = :agentId AND a.applicationProfileId = p.id)")
+            "                WHERE a.agentId = :agentId AND a.templateId = p.templateId)")
     java.util.List<AgentAppProfileEntity> findUninstalledProfilesForAgentInGroup(@Param("groupId") UUID groupId,
                                                                                  @Param("agentId") UUID agentId);
 }

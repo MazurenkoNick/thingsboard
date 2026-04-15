@@ -34,6 +34,9 @@ import org.thingsboard.server.service.agent.compose.ComposeUnitsSynchronizer;
 import org.thingsboard.server.service.agent.compose.ImageDigestChecker;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Component
 @Slf4j
@@ -44,6 +47,8 @@ public class ComposeProjectSyncMessageHandler implements AgentInboundMessageHand
     private final ComposeAgentAppCreator appCreator;
     private final ComposeUnitsSynchronizer unitsSynchronizer;
     private final ImageDigestChecker imageDigestChecker;
+    private final AgentAppAutoInstallLockRegistry autoInstallLockRegistry;
+    private final Map<AgentId, ReentrantLock> appCreationLock = new ConcurrentHashMap<>();
 
     @Override
     public boolean canHandle(AgentInboundMsgCtx msgCtx) {
@@ -59,10 +64,14 @@ public class ComposeProjectSyncMessageHandler implements AgentInboundMessageHand
         TenantId tenantId = msgCtx.sessionState().getTenantId();
         AgentId agentId = msgCtx.sessionState().getAgentId();
 
+        Lock readLock = autoInstallLockRegistry.forAgent(agentId).readLock();
+        readLock.lock();
         try {
             doHandle(tenantId, agentId, projectSync);
         } catch (Exception e) {
             log.error("[{}][{}] Failed to process compose sync for project: {}", tenantId, agentId, projectSync.getProjectName(), e);
+        } finally {
+            readLock.unlock();
         }
     }
 
@@ -78,10 +87,20 @@ public class ComposeProjectSyncMessageHandler implements AgentInboundMessageHand
                 log.warn("[{}][{}] No agent application found for project [{}] and no externalComposeJson provided, skipping", tenantId, agentId, projectName);
                 return;
             }
-            app = appCreator.createApp(tenantId, agentId, projectName, externalCompose);
-            if (app == null) {
-                return;
+            ReentrantLock lock = appCreationLock.computeIfAbsent(agentId, k -> new ReentrantLock());
+            lock.lock();
+            try {
+                app = appCreator.createApp(tenantId, agentId, projectName, externalCompose);
+                if (app == null) {
+                    return;
+                }
+            } finally {
+                lock.unlock();
             }
+        } else if (!app.getAgentId().equals(agentId)) {
+            log.warn("[{}] Application [{}] is already managed by another agent [{}], expected [{}]",
+                    tenantId, app.getId(), app.getAgentId(), agentId);
+            return;
         }
 
         Map<String, ContainerInfo> containerStates = externalCompose.getContainerStatesMap();
