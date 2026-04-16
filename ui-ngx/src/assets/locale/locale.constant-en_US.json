@@ -3022,6 +3022,7 @@
         "assign-to-customer": "Assign to customer",
         "unassign-from-customer": "Unassign from customer",
         "assign-agents-to-customer": "Assign agent(s) to customer",
+        "assign-to-customer-text": "Please select the customer to assign the agent(s)",
         "unassign-agents-from-customer": "Unassign agent(s) from customer",
         "delete": "Delete agent",
         "delete-group": "Delete group",
