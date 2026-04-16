@@ -154,14 +154,18 @@ export class AgentAppProfileComponent extends EntityComponent<AgentAppProfile>
 
   onUpgrade($event: Event) {
     if ($event) { $event.stopPropagation(); }
-    this.dialog.open<AgentAppProfileUpgradeDialogComponent, AgentAppProfileUpgradeDialogData, boolean>(
+    this.dialog.open<AgentAppProfileUpgradeDialogComponent, AgentAppProfileUpgradeDialogData, AgentAppProfile | null>(
       AgentAppProfileUpgradeDialogComponent, {
         disableClose: false,
         panelClass: ['tb-dialog'],
         data: { profile: this.entity }
       }
-    ).afterClosed().subscribe(confirmed => {
-      if (confirmed) {
+    ).afterClosed().subscribe(saved => {
+      if (saved) {
+        // Assign into the entity setter so updateForm() + loadTemplateVersion()
+        // run. The table side-panel ignores 'reload' actions, so we can't rely
+        // on reloadEntity() alone to refresh templateVersion / nextVersion.
+        this.entity = saved;
         this.reloadEntity();
       }
     });

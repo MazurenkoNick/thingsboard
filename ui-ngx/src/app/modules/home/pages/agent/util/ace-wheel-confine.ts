@@ -41,10 +41,19 @@ export function confineWheelToAceEditor(
     ev.preventDefault();
     ev.stopPropagation();
     const session = editor.getSession();
+    const renderer: any = editor.renderer;
     if (Math.abs(ev.deltaX) > Math.abs(ev.deltaY)) {
-      session.setScrollLeft(session.getScrollLeft() + ev.deltaX);
+      const maxLeft = Math.max(0,
+        (renderer.layerConfig?.width || 0) - (renderer.$size?.scrollerWidth || 0));
+      const curLeft = session.getScrollLeft();
+      const nextLeft = Math.max(0, Math.min(maxLeft, curLeft + ev.deltaX));
+      if (nextLeft !== curLeft) { session.setScrollLeft(nextLeft); }
     } else if (captureVertical) {
-      session.setScrollTop(session.getScrollTop() + ev.deltaY);
+      const maxTop = Math.max(0,
+        (renderer.layerConfig?.maxHeight || 0) - (renderer.$size?.scrollerHeight || 0));
+      const curTop = session.getScrollTop();
+      const nextTop = Math.max(0, Math.min(maxTop, curTop + ev.deltaY));
+      if (nextTop !== curTop) { session.setScrollTop(nextTop); }
     }
   }, { passive: false });
 }

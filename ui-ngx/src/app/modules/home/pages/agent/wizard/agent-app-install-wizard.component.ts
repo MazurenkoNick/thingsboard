@@ -267,8 +267,12 @@ export class AgentAppInstallWizardComponent
     this.mergedApp = null;
     this.loadError = '';
     this.credentialValues = {};
-    this.syncInstallEditor();
-    this.applyInstallEditorReadOnly();
+    // The two branches live in different *ngIf subtrees — the opposite
+    // branch's editor/diff is about to be removed from the DOM, so tear it
+    // down now. The ViewChild setter will re-init against the freshly
+    // attached element.
+    this.destroyInstallEditor();
+    this.destroyDiffViewer();
     if (this.selectedType) {
       if (value) {
         this.loadProfilesForType(this.selectedType);
@@ -277,6 +281,21 @@ export class AgentAppInstallWizardComponent
         this.loadTemplateForType(this.selectedType);
       }
     }
+  }
+
+  private destroyInstallEditor() {
+    if (this.installEditor) {
+      try { this.installEditor.destroy(); } catch (_) { /* no-op */ }
+      this.installEditor = null;
+    }
+  }
+
+  private destroyDiffViewer() {
+    if (this.differ) {
+      try { this.differ.destroy(); } catch (_) { /* no-op */ }
+      this.differ = null;
+    }
+    this.pendingDiffInit = false;
   }
 
   selectProfile(profile: AgentAppProfile) {
@@ -388,6 +407,17 @@ export class AgentAppInstallWizardComponent
     if (this.mode === 'update' && this.existingApplication?.applicationProfileId) {
       this.composeYaml = this.dumpCompose(this.existingApplication);
       this.initCredentialValues();
+      return;
+    }
+    // Install with custom config: show side-by-side — left is the raw
+    // template compose (read-only), right is the same compose, editable.
+    // Skip mergeForPreview; the backend merges/overlays during the actual
+    // install when it runs the start steps.
+    if (this.mode === 'install' && !this.useProfile) {
+      this.proposedYaml = this.dumpRawTemplateCompose(tpl);
+      this.currentYaml = this.proposedYaml;
+      this.composeYaml = this.currentYaml;
+      this.scheduleDiffInit();
       return;
     }
     this.runMergeForPreview(tpl);
@@ -582,14 +612,8 @@ export class AgentAppInstallWizardComponent
   }
 
   ngOnDestroy(): void {
-    if (this.differ) {
-      try { this.differ.destroy(); } catch (_) { /* no-op */ }
-      this.differ = null;
-    }
-    if (this.installEditor) {
-      try { this.installEditor.destroy(); } catch (_) { /* no-op */ }
-      this.installEditor = null;
-    }
+    this.destroyDiffViewer();
+    this.destroyInstallEditor();
   }
 
   private confineWheelToEditor(host: HTMLElement | null | undefined, editor: Ace.Editor | null) {
@@ -847,13 +871,15 @@ export class AgentAppInstallWizardComponent
         origin: AgentApplicationOrigin.INSTALLED
       };
     } else {
-      // Profile-based installs skip mergeForPreview, so mergedApp is null here
-      // and we must populate the mandatory fields (agentId, appType, origin)
-      // ourselves — otherwise the server rejects with "Agent application should
-      // be assigned to agent!".
+      // Custom-config installs skip mergeForPreview (we render the diff from
+      // the raw template instead), so mergedApp is null and we must populate
+      // the mandatory fields (agentId, appType, templateId, origin) ourselves
+      // — otherwise the server rejects with "Agent application should be
+      // assigned to agent!".
       const base: any = this.mergedApp || {
         agentId: { id: this.agentId, entityType: 'AGENT' },
         appType: this.selectedType,
+        templateId: this.template?.id,
         origin: AgentApplicationOrigin.INSTALLED
       };
       application = {

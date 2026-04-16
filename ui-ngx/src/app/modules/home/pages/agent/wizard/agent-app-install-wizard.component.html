@@ -130,8 +130,19 @@
           </ng-container>
         </div>
 
-        <label class="yaml-label" translate>agent.app-install-yaml</label>
-        <div class="yaml-editor yaml-editor-ace" #installYamlEditor></div>
+        <ng-container *ngIf="useProfile">
+          <label class="yaml-label" translate>agent.app-install-yaml</label>
+          <div class="yaml-editor yaml-editor-ace" #installYamlEditor></div>
+        </ng-container>
+
+        <ng-container *ngIf="!useProfile">
+          <div class="diff-header-row">
+            <div class="diff-header added" translate>agent.app-install-diff-template</div>
+            <div class="diff-header removed" translate>agent.app-install-diff-editable</div>
+          </div>
+          <div class="diff-viewer" #diffViewer></div>
+          <p class="diff-hint" translate>agent.app-install-diff-hint</p>
+        </ng-container>
       </ng-container>
 
       <ng-container *ngIf="mode === 'update' && !isProfileManagedUpdate">

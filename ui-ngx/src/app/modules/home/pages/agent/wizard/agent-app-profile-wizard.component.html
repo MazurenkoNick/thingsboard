@@ -82,8 +82,12 @@
         <input matInput [(ngModel)]="profileDescription">
       </mat-form-field>
 
-      <label class="yaml-label" translate>agent.app-install-yaml</label>
-      <div class="yaml-editor yaml-editor-ace" #installYamlEditor></div>
+      <div class="diff-header-row">
+        <div class="diff-header added" translate>agent.app-install-diff-template</div>
+        <div class="diff-header removed" translate>agent.app-install-diff-editable</div>
+      </div>
+      <div class="diff-viewer" #diffViewer></div>
+      <p class="diff-hint" translate>agent.app-install-diff-hint</p>
 
       <div class="step-footer">
         <button mat-button matStepperPrevious [disabled]="submitting">

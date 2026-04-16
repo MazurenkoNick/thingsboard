@@ -29,7 +29,7 @@ import {
   AgentAppTemplate,
 } from '@shared/models/agent.models';
 import * as YAML from 'yaml';
-import { getAce } from '@shared/models/ace/ace.models';
+import { getAceDiff } from '@shared/models/ace/ace.models';
 import { Ace } from 'ace-builds';
 import { confineWheelToAceEditor } from '@home/pages/agent/util/ace-wheel-confine';
 
@@ -53,14 +53,15 @@ export class AgentAppProfileWizardComponent
   extends DialogComponent<AgentAppProfileWizardComponent, AgentAppProfile>
   implements OnInit, OnDestroy {
 
-  private installEditor: Ace.Editor | null = null;
-  private installEditorSettingValue = false;
-  @ViewChild('installYamlEditor', { static: false })
-  set installYamlEditorRef(ref: ElementRef<HTMLElement> | undefined) {
-    if (ref && !this.installEditor) {
-      this.initInstallEditor(ref.nativeElement);
-    }
-  }
+  @ViewChild('diffViewer', { static: false })
+  diffViewerElmRef: ElementRef<HTMLElement>;
+  private differ: any = null;
+  private pendingDiffInit = false;
+
+  // Left (read-only) = raw template compose; right (editable) = same content,
+  // user-editable. This is the value persisted on submit.
+  proposedYaml = '';
+  currentYaml = '';
 
   typeCards: TypeCard[] = [
     { type: AgentApplicationType.GENERIC, icon: 'inventory_2', labelKey: 'agent.app-install-type-generic', descKey: 'agent.app-install-type-generic-desc' },
@@ -84,7 +85,6 @@ export class AgentAppProfileWizardComponent
   profileDescription = '';
   composeYaml = '';
 
-  mergedProfile: AgentAppProfile | null = null;
   submitting = false;
 
   constructor(protected store: Store<AppState>,
@@ -118,7 +118,6 @@ export class AgentAppProfileWizardComponent
     this.template = null;
     this.composeType = null;
     this.composeYaml = '';
-    this.mergedProfile = null;
     this.selectedTemplateId = null;
     this.profileName = this.defaultProfileName(type);
     this.loadError = '';
@@ -159,26 +158,27 @@ export class AgentAppProfileWizardComponent
     this.loadingTemplate = false;
     this.template = tpl;
     this.composeType = this.pickComposeType(tpl);
-    this.runMergeForPreview(tpl);
+    // Side-by-side preview seeded from the raw template compose. No
+    // mergeForPreview call — the server will apply profile semantics on save.
+    this.proposedYaml = this.dumpRawTemplateCompose(tpl);
+    this.currentYaml = this.proposedYaml;
+    this.composeYaml = this.currentYaml;
+    this.scheduleDiffInit();
   }
 
-  private runMergeForPreview(tpl: AgentAppTemplate) {
-    const type = this.selectedType!;
-    const draft: any = {
-      name: this.profileName,
-      appType: type,
-      templateId: tpl.id,
-    };
-    this.agentService.mergeProfileForPreview(tpl.id.id, draft, this.composeType || undefined).subscribe({
-      next: merged => {
-        this.mergedProfile = merged;
-        this.composeYaml = this.dumpCompose(merged);
-        this.syncInstallEditor();
-      },
-      error: () => {
-        this.loadError = this.translate.instant('agent.app-install-merge-failed');
+  private dumpRawTemplateCompose(template: AgentAppTemplate): string {
+    const steps = (template.startSteps || []);
+    for (const step of steps) {
+      const anyStep = step as any;
+      if (step.type === AgentAppStepType.COMPOSE_TEMPLATE && anyStep.composeTemplates) {
+        const keys = Object.keys(anyStep.composeTemplates);
+        if (keys.length) {
+          return this.dumpYaml(anyStep.composeTemplates[keys[0]], 0).trimEnd() + '\n';
+        }
       }
-    });
+    }
+    const compose: any = (template.config as any)?.compose;
+    return compose ? (this.dumpYaml(compose, 0).trimEnd() + '\n') : '';
   }
 
   cancel() {
@@ -220,51 +220,65 @@ export class AgentAppProfileWizardComponent
   }
 
   ngOnDestroy(): void {
-    if (this.installEditor) {
-      try { this.installEditor.destroy(); } catch (_) {}
-      this.installEditor = null;
+    if (this.differ) {
+      try { this.differ.destroy(); } catch (_) {}
+      this.differ = null;
     }
   }
 
-  // --- Ace editor ---
+  // --- Diff viewer ---
 
-  private initInstallEditor(host: HTMLElement) {
-    getAce().subscribe((ace) => {
-      const editor: Ace.Editor = ace.edit(host);
-      editor.setTheme('ace/theme/textmate');
-      editor.session.setMode('ace/mode/yaml');
-      editor.session.setUseWrapMode(false);
-      editor.setShowPrintMargin(false);
-      (editor as any).setOption('scrollPastEnd', false);
-      editor.renderer.setScrollMargin(0, 0, 0, 0);
-      this.forceEditorFontSize(editor, 12);
-      editor.setOption('tabSize', 2);
-      editor.setOption('useSoftTabs', true);
-      editor.setOption('showLineNumbers', true);
-      editor.setOption('highlightActiveLine', false);
-      editor.setValue(this.composeYaml || '', -1);
-      editor.getSession().on('change', () => {
-        this.installEditorSettingValue = true;
-        this.composeYaml = editor.getValue();
-        this.installEditorSettingValue = false;
+  private scheduleDiffInit() {
+    if (this.pendingDiffInit) { return; }
+    this.pendingDiffInit = true;
+    setTimeout(() => this.initDiff(), 0);
+  }
+
+  private initDiff() {
+    this.pendingDiffInit = false;
+    if (!this.diffViewerElmRef || !this.diffViewerElmRef.nativeElement) {
+      setTimeout(() => this.initDiff(), 50);
+      return;
+    }
+    if (this.differ) {
+      try { this.differ.destroy(); } catch (_) {}
+      this.differ = null;
+    }
+    getAceDiff().subscribe((AceDiffCtor) => {
+      this.differ = new AceDiffCtor({
+        element: this.diffViewerElmRef.nativeElement,
+        mode: 'ace/mode/text',
+        left:  { copyLinkEnabled: true,  editable: false, content: this.proposedYaml },
+        right: { copyLinkEnabled: false, editable: true,  content: this.currentYaml }
       });
-      this.installEditor = editor;
-      this.confineWheelToEditor((editor as any).container, editor);
-      setTimeout(() => editor.resize(true), 0);
+      const leftEditor: Ace.Editor = this.differ.getEditors().left;
+      const rightEditor: Ace.Editor = this.differ.getEditors().right;
+      leftEditor.setShowFoldWidgets(false);
+      rightEditor.setShowFoldWidgets(false);
+      leftEditor.getSession().setMode('ace/mode/yaml');
+      rightEditor.getSession().setMode('ace/mode/yaml');
+      (leftEditor as any).setOption('scrollPastEnd', false);
+      (rightEditor as any).setOption('scrollPastEnd', false);
+      leftEditor.renderer.setScrollMargin(0, 0, 0, 0);
+      rightEditor.renderer.setScrollMargin(0, 0, 0, 0);
+      this.forceEditorFontSize(leftEditor, 12);
+      this.forceEditorFontSize(rightEditor, 12);
+      confineWheelToAceEditor((leftEditor as any).container, leftEditor,
+        () => leftEditor.isFocused());
+      confineWheelToAceEditor((rightEditor as any).container, rightEditor,
+        () => rightEditor.isFocused());
+      confineWheelToAceEditor(this.diffViewerElmRef?.nativeElement, rightEditor,
+        () => leftEditor.isFocused() || rightEditor.isFocused());
+      rightEditor.getSession().on('change', () => {
+        this.composeYaml = rightEditor.getValue();
+        if (this.differ) { this.differ.diff(); }
+      });
+      setTimeout(() => {
+        leftEditor.resize(true);
+        rightEditor.resize(true);
+        if (this.differ) { this.differ.diff(); }
+      }, 50);
     });
-  }
-
-  private syncInstallEditor() {
-    if (this.installEditor && !this.installEditorSettingValue) {
-      const current = this.installEditor.getValue();
-      if (current !== (this.composeYaml || '')) {
-        this.installEditor.setValue(this.composeYaml || '', -1);
-      }
-    }
-  }
-
-  private confineWheelToEditor(host: HTMLElement | null | undefined, editor: Ace.Editor | null) {
-    confineWheelToAceEditor(host, editor);
   }
 
   private forceEditorFontSize(editor: Ace.Editor, px: number) {
@@ -300,18 +314,9 @@ export class AgentAppProfileWizardComponent
     }
   }
 
-  private dumpCompose(entity: any): string {
-    const compose: any = entity?.config && (entity.config as any).compose;
-    if (!compose) { return ''; }
-    return this.dumpYaml(compose, 0).trimEnd() + '\n';
-  }
-
   private parseYamlBestEffort(yaml: string): any {
     if (yaml?.trim()) {
       try { return YAML.parse(yaml); } catch (_) {}
-    }
-    if (this.mergedProfile?.config && (this.mergedProfile.config as any).compose) {
-      return (this.mergedProfile.config as any).compose;
     }
     return { services: {} };
   }

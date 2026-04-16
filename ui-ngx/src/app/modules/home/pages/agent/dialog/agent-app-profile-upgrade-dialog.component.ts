@@ -42,7 +42,7 @@ export interface AgentAppProfileUpgradeDialogData {
   styleUrls: ['../wizard/agent-app-install-wizard.component.scss']
 })
 export class AgentAppProfileUpgradeDialogComponent
-  extends DialogComponent<AgentAppProfileUpgradeDialogComponent, boolean>
+  extends DialogComponent<AgentAppProfileUpgradeDialogComponent, AgentAppProfile | null>
   implements OnInit, OnDestroy {
 
   @ViewChild('diffViewer', { static: false })
@@ -67,7 +67,7 @@ export class AgentAppProfileUpgradeDialogComponent
               protected translate: TranslateService,
               private agentService: AgentService,
               @Inject(MAT_DIALOG_DATA) public data: AgentAppProfileUpgradeDialogData,
-              public dialogRef: MatDialogRef<AgentAppProfileUpgradeDialogComponent, boolean>) {
+              public dialogRef: MatDialogRef<AgentAppProfileUpgradeDialogComponent, AgentAppProfile | null>) {
     super(store, router, dialogRef);
     this.profile = data.profile;
   }
@@ -84,7 +84,7 @@ export class AgentAppProfileUpgradeDialogComponent
   }
 
   cancel() {
-    this.dialogRef.close(false);
+    this.dialogRef.close(null);
   }
 
   canSubmit(): boolean {
@@ -105,7 +105,7 @@ export class AgentAppProfileUpgradeDialogComponent
     };
 
     this.agentService.saveAgentAppProfile(updated).subscribe({
-      next: () => this.dialogRef.close(true),
+      next: saved => this.dialogRef.close(saved),
       error: () => { this.submitting = false; }
     });
   }
