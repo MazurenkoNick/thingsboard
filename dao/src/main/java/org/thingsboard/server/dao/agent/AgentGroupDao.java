@@ -32,8 +32,6 @@ public interface AgentGroupDao extends Dao<AgentGroup> {
 
     PageData<AgentGroupInfo> findAgentGroupInfosByTenantId(UUID tenantId, PageLink pageLink);
 
-    PageData<AgentGroup> findByTenantIdAndCustomerId(UUID tenantId, UUID customerId, PageLink pageLink);
-
     Long countByTenantId(TenantId tenantId);
 
     AgentGroup findByProvisionKey(String provisionKey);

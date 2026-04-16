@@ -21,12 +21,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.thingsboard.server.common.data.BaseData;
-import org.thingsboard.server.common.data.HasCustomerId;
 import org.thingsboard.server.common.data.HasName;
 import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.HasVersion;
 import org.thingsboard.server.common.data.id.AgentGroupId;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.validation.Length;
@@ -36,10 +34,9 @@ import org.thingsboard.server.common.data.validation.NoXss;
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter
-public class AgentGroup extends BaseData<AgentGroupId> implements HasId<AgentGroupId>, HasTenantId, HasCustomerId, HasVersion, HasName {
+public class AgentGroup extends BaseData<AgentGroupId> implements HasId<AgentGroupId>, HasTenantId, HasVersion, HasName {
 
     private TenantId tenantId;
-    private CustomerId customerId;
     @NoXss
     @Length(fieldName = "name")
     private String name;
@@ -67,7 +64,6 @@ public class AgentGroup extends BaseData<AgentGroupId> implements HasId<AgentGro
     public AgentGroup(AgentGroup group) {
         super(group);
         this.tenantId = group.getTenantId();
-        this.customerId = group.getCustomerId();
         this.name = group.getName();
         this.description = group.getDescription();
         this.provisionKey = group.getProvisionKey();
@@ -92,12 +88,6 @@ public class AgentGroup extends BaseData<AgentGroupId> implements HasId<AgentGro
     @Override
     public TenantId getTenantId() {
         return tenantId;
-    }
-
-    @Schema(description = "JSON object with Customer Id.", accessMode = Schema.AccessMode.READ_ONLY)
-    @Override
-    public CustomerId getCustomerId() {
-        return customerId;
     }
 
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Unique group name within tenant")

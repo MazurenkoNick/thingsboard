@@ -19,7 +19,6 @@ import org.thingsboard.server.common.data.agent.AgentGroup;
 import org.thingsboard.server.common.data.agent.AgentGroupInfo;
 import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentGroupId;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -42,13 +41,7 @@ public interface AgentGroupService extends EntityDaoService {
 
     PageData<AgentGroupInfo> findGroupInfosByTenantId(TenantId tenantId, PageLink pageLink);
 
-    PageData<AgentGroup> findGroupsByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId, PageLink pageLink);
-
     void deleteGroup(TenantId tenantId, AgentGroupId groupId);
-
-    AgentGroup assignGroupToCustomer(TenantId tenantId, AgentGroupId groupId, CustomerId customerId);
-
-    AgentGroup unassignGroupFromCustomer(TenantId tenantId, AgentGroupId groupId);
 
     void assignProfileToGroup(TenantId tenantId, AgentGroupId groupId, AgentAppProfileId profileId);
 

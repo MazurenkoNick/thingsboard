@@ -340,7 +340,6 @@ public class ModelConstants {
      */
     public static final String AGENT_GROUP_TABLE_NAME = "agent_group";
     public static final String AGENT_GROUP_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
-    public static final String AGENT_GROUP_CUSTOMER_ID_PROPERTY = CUSTOMER_ID_PROPERTY;
     public static final String AGENT_GROUP_NAME_PROPERTY = NAME_PROPERTY;
     public static final String AGENT_GROUP_DESCRIPTION_PROPERTY = "description";
     public static final String AGENT_GROUP_PROVISION_KEY_PROPERTY = "provision_key";

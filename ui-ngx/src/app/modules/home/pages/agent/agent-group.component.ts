@@ -27,7 +27,6 @@ import {
   agentProvisionTypeTranslationMap
 } from '@shared/models/agent.models';
 import { TranslateService } from '@ngx-translate/core';
-import { NULL_UUID } from '@shared/models/id/has-uuid';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
 import { EntityTableConfig } from '@home/models/entity/entities-table-config.models';
 
@@ -58,10 +57,6 @@ export class AgentGroupComponent extends EntityComponent<AgentGroupInfo> {
     } else {
       return false;
     }
-  }
-
-  isAssignedToCustomer(entity: AgentGroupInfo): boolean {
-    return entity && entity.customerId && entity.customerId.id !== NULL_UUID;
   }
 
   buildForm(entity: AgentGroupInfo): UntypedFormGroup {

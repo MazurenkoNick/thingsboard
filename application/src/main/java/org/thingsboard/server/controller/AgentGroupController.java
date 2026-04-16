@@ -29,7 +29,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.agent.AgentBulkAction;
 import org.thingsboard.server.common.data.agent.AgentGroup;
 import org.thingsboard.server.common.data.agent.AgentGroupInfo;
@@ -38,14 +37,12 @@ import org.thingsboard.server.common.data.agent.BulkOperationRequest;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentGroupId;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.dao.agent.AgentBulkActionService;
-import org.thingsboard.server.dao.model.ModelConstants;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.agent.TbAgentGroupService;
 import org.thingsboard.server.service.security.permission.Operation;
@@ -53,7 +50,6 @@ import org.thingsboard.server.service.security.permission.Resource;
 
 import java.util.List;
 
-import static org.thingsboard.server.controller.ControllerConstants.CUSTOMER_ID;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
@@ -95,7 +91,7 @@ public class AgentGroupController extends BaseController {
     }
 
     @ApiOperation(value = "Create or Update Agent Group (saveAgentGroup)")
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @PostMapping("/agent/group")
     @ResponseBody
     public AgentGroup saveAgentGroup(@RequestBody AgentGroup group) throws Exception {
@@ -116,7 +112,7 @@ public class AgentGroupController extends BaseController {
     }
 
     @ApiOperation(value = "Get Tenant Agent Groups (getTenantAgentGroups)")
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/tenant/agent/groups", params = {"pageSize", "page"}, method = RequestMethod.GET)
     @ResponseBody
     public PageData<AgentGroup> getTenantAgentGroups(
@@ -131,7 +127,7 @@ public class AgentGroupController extends BaseController {
     }
 
     @ApiOperation(value = "Get Tenant Agent Group Infos (getTenantAgentGroupInfos)")
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/tenant/agent/groupInfos", params = {"pageSize", "page"}, method = RequestMethod.GET)
     @ResponseBody
     public PageData<AgentGroupInfo> getTenantAgentGroupInfos(
@@ -143,58 +139,6 @@ public class AgentGroupController extends BaseController {
         TenantId tenantId = getCurrentUser().getTenantId();
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         return checkNotNull(agentGroupService.findGroupInfosByTenantId(tenantId, pageLink));
-    }
-
-    @ApiOperation(value = "Get Customer Agent Groups (getCustomerAgentGroups)")
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/customer/{customerId}/agent/groups", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
-    public PageData<AgentGroup> getCustomerAgentGroups(
-            @PathVariable(CUSTOMER_ID) String strCustomerId,
-            @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true) @RequestParam int pageSize,
-            @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true) @RequestParam int page,
-            @RequestParam(required = false) String textSearch,
-            @Parameter(description = SORT_PROPERTY_DESCRIPTION) @RequestParam(required = false) String sortProperty,
-            @Parameter(description = SORT_ORDER_DESCRIPTION) @RequestParam(required = false) String sortOrder) throws ThingsboardException {
-        checkParameter("customerId", strCustomerId);
-        TenantId tenantId = getCurrentUser().getTenantId();
-        CustomerId customerId = new CustomerId(toUUID(strCustomerId));
-        checkCustomerId(customerId, Operation.READ);
-        PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
-        return checkNotNull(agentGroupService.findGroupsByTenantIdAndCustomerId(tenantId, customerId, pageLink));
-    }
-
-    @ApiOperation(value = "Assign Agent Group to Customer (assignAgentGroupToCustomer)")
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/customer/{customerId}/agent/group/{groupId}", method = RequestMethod.POST)
-    @ResponseBody
-    public AgentGroup assignAgentGroupToCustomer(
-            @PathVariable(CUSTOMER_ID) String strCustomerId,
-            @PathVariable(GROUP_ID) String strGroupId) throws ThingsboardException {
-        checkParameter("customerId", strCustomerId);
-        checkParameter(GROUP_ID, strGroupId);
-        CustomerId customerId = new CustomerId(toUUID(strCustomerId));
-        Customer customer = checkCustomerId(customerId, Operation.READ);
-        AgentGroupId groupId = new AgentGroupId(toUUID(strGroupId));
-        checkAgentGroupId(groupId, Operation.ASSIGN_TO_CUSTOMER);
-        return tbGroupService.assignGroupToCustomer(getTenantId(), groupId, customer, getCurrentUser());
-    }
-
-    @ApiOperation(value = "Unassign Agent Group from Customer (unassignAgentGroupFromCustomer)")
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/customer/agent/group/{groupId}", method = RequestMethod.DELETE)
-    @ResponseBody
-    public AgentGroup unassignAgentGroupFromCustomer(
-            @PathVariable(GROUP_ID) String strGroupId) throws ThingsboardException {
-        checkParameter(GROUP_ID, strGroupId);
-        AgentGroupId groupId = new AgentGroupId(toUUID(strGroupId));
-        AgentGroup group = checkAgentGroupId(groupId, Operation.UNASSIGN_FROM_CUSTOMER);
-        if (group.getCustomerId() == null || group.getCustomerId().getId().equals(ModelConstants.NULL_UUID)) {
-            throw new ThingsboardException("Agent group isn't assigned to any customer!",
-                    org.thingsboard.server.common.data.exception.ThingsboardErrorCode.BAD_REQUEST_PARAMS);
-        }
-        Customer customer = checkCustomerId(group.getCustomerId(), Operation.READ);
-        return tbGroupService.unassignGroupFromCustomer(getTenantId(), groupId, customer, getCurrentUser());
     }
 
     @ApiOperation(value = "Get Group Profile Relations (getGroupProfileRelations)")

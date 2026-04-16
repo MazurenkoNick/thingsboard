@@ -28,7 +28,6 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.agent.AgentGroupDao;
 import org.thingsboard.server.dao.model.sql.AgentGroupEntity;
-import org.thingsboard.server.dao.model.sql.AgentGroupInfoEntity;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
@@ -69,15 +68,6 @@ public class JpaAgentGroupDao extends JpaAbstractDao<AgentGroupEntity, AgentGrou
     public PageData<AgentGroupInfo> findAgentGroupInfosByTenantId(UUID tenantId, PageLink pageLink) {
         return DaoUtil.toPageData(groupRepository.findAgentGroupInfosByTenantId(
                 tenantId,
-                pageLink.getTextSearch(),
-                DaoUtil.toPageable(pageLink, AgentGroupInfoEntity.agentGroupInfoColumnMap)));
-    }
-
-    @Override
-    public PageData<AgentGroup> findByTenantIdAndCustomerId(UUID tenantId, UUID customerId, PageLink pageLink) {
-        return DaoUtil.toPageData(groupRepository.findByTenantIdAndCustomerId(
-                tenantId,
-                customerId,
                 pageLink.getTextSearch(),
                 DaoUtil.toPageable(pageLink)));
     }

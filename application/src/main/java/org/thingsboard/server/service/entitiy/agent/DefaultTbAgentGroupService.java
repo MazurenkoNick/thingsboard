@@ -19,14 +19,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.agent.AgentGroup;
 import org.thingsboard.server.common.data.audit.ActionType;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.id.AgentGroupId;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentGroupService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -61,40 +57,9 @@ public class DefaultTbAgentGroupService extends AbstractTbEntityService implemen
         TenantId tenantId = group.getTenantId();
         try {
             groupService.deleteGroup(tenantId, group.getId());
-            logEntityActionService.logEntityAction(tenantId, group.getId(), group, group.getCustomerId(), actionType, user, group.getId().toString());
+            logEntityActionService.logEntityAction(tenantId, group.getId(), group, actionType, user, group.getId().toString());
         } catch (Exception e) {
-            logEntityActionService.logEntityAction(tenantId, emptyId(EntityType.AGENT_GROUP), group, group.getCustomerId(), actionType, user, e, group.getId().toString());
-            throw e;
-        }
-    }
-
-    @Override
-    public AgentGroup assignGroupToCustomer(TenantId tenantId, AgentGroupId groupId, Customer customer, User user) throws ThingsboardException {
-        ActionType actionType = ActionType.ASSIGNED_TO_CUSTOMER;
-        CustomerId customerId = customer.getId();
-        try {
-            AgentGroup saved = checkNotNull(groupService.assignGroupToCustomer(tenantId, groupId, customerId));
-            logEntityActionService.logEntityAction(tenantId, groupId, saved, customerId, actionType, user,
-                    groupId.toString(), customerId.toString(), customer.getName());
-            return saved;
-        } catch (Exception e) {
-            logEntityActionService.logEntityAction(tenantId, emptyId(EntityType.AGENT_GROUP), actionType, user, e,
-                    groupId.toString(), customerId.toString());
-            throw e;
-        }
-    }
-
-    @Override
-    public AgentGroup unassignGroupFromCustomer(TenantId tenantId, AgentGroupId groupId, Customer customer, User user) throws ThingsboardException {
-        ActionType actionType = ActionType.UNASSIGNED_FROM_CUSTOMER;
-        try {
-            AgentGroup saved = checkNotNull(groupService.unassignGroupFromCustomer(tenantId, groupId));
-            CustomerId customerId = customer.getId();
-            logEntityActionService.logEntityAction(tenantId, groupId, saved, customerId, actionType, user,
-                    groupId.toString(), customerId.toString(), customer.getName());
-            return saved;
-        } catch (Exception e) {
-            logEntityActionService.logEntityAction(tenantId, emptyId(EntityType.AGENT_GROUP), actionType, user, e, groupId.toString());
+            logEntityActionService.logEntityAction(tenantId, emptyId(EntityType.AGENT_GROUP), group, actionType, user, e, group.getId().toString());
             throw e;
         }
     }

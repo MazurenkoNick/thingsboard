@@ -31,7 +31,6 @@ import org.thingsboard.server.common.data.agent.AgentGroupInfo;
 import org.thingsboard.server.common.data.agent.AgentProvisionType;
 import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentGroupId;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -61,7 +60,6 @@ public class BaseAgentGroupService extends AbstractCachedEntityService<AgentGrou
 
     public static final String INCORRECT_TENANT_ID = "Incorrect tenantId ";
     public static final String INCORRECT_GROUP_ID = "Incorrect groupId ";
-    public static final String INCORRECT_CUSTOMER_ID = "Incorrect customerId ";
 
     public static final String HAS_PROFILE_RELATION_TYPE = "HasProfile";
 
@@ -158,15 +156,6 @@ public class BaseAgentGroupService extends AbstractCachedEntityService<AgentGrou
     }
 
     @Override
-    public PageData<AgentGroup> findGroupsByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId, PageLink pageLink) {
-        log.trace("Executing findGroupsByTenantIdAndCustomerId, tenantId [{}], customerId [{}], pageLink [{}]", tenantId, customerId, pageLink);
-        validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
-        validateId(customerId, id -> INCORRECT_CUSTOMER_ID + id);
-        validatePageLink(pageLink);
-        return groupDao.findByTenantIdAndCustomerId(tenantId.getId(), customerId.getId(), pageLink);
-    }
-
-    @Override
     @Transactional
     public void deleteGroup(TenantId tenantId, AgentGroupId groupId) {
         log.trace("Executing deleteGroup [{}]", groupId);
@@ -179,26 +168,6 @@ public class BaseAgentGroupService extends AbstractCachedEntityService<AgentGrou
         groupDao.removeById(tenantId, groupId.getId());
         publishEvictEvent(new AgentGroupCacheEvictEvent(group.getTenantId(), group.getName(), null));
         eventPublisher.publishEvent(DeleteEntityEvent.builder().tenantId(tenantId).entityId(groupId).entity(group).build());
-    }
-
-    @Override
-    public AgentGroup assignGroupToCustomer(TenantId tenantId, AgentGroupId groupId, CustomerId customerId) {
-        AgentGroup group = findGroupById(tenantId, groupId);
-        if (customerId.equals(group.getCustomerId())) {
-            return group;
-        }
-        group.setCustomerId(customerId);
-        return saveGroup(group);
-    }
-
-    @Override
-    public AgentGroup unassignGroupFromCustomer(TenantId tenantId, AgentGroupId groupId) {
-        AgentGroup group = findGroupById(tenantId, groupId);
-        if (group.getCustomerId() == null) {
-            return group;
-        }
-        group.setCustomerId(null);
-        return saveGroup(group);
     }
 
     @Override

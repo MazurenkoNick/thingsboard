@@ -114,20 +114,6 @@ export class AgentService {
       defaultHttpOptionsFromConfig(config));
   }
 
-  public getCustomerAgentGroups(customerId: string, pageLink: PageLink, config?: RequestConfig): Observable<PageData<AgentGroup>> {
-    return this.http.get<PageData<AgentGroup>>(`/api/customer/${customerId}/agent/groups${pageLink.toQuery()}`,
-      defaultHttpOptionsFromConfig(config));
-  }
-
-  public assignAgentGroupToCustomer(customerId: string, groupId: string, config?: RequestConfig): Observable<AgentGroup> {
-    return this.http.post<AgentGroup>(`/api/customer/${customerId}/agent/group/${groupId}`, null,
-      defaultHttpOptionsFromConfig(config));
-  }
-
-  public unassignAgentGroupFromCustomer(groupId: string, config?: RequestConfig): Observable<any> {
-    return this.http.delete(`/api/customer/agent/group/${groupId}`, defaultHttpOptionsFromConfig(config));
-  }
-
   public getGroupProfileRelations(groupId: string, config?: RequestConfig): Observable<any[]> {
     return this.http.get<any[]>(`/api/agent/group/${groupId}/profiles`, defaultHttpOptionsFromConfig(config));
   }

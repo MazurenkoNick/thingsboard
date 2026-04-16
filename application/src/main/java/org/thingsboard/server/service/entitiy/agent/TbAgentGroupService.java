@@ -15,20 +15,12 @@
  */
 package org.thingsboard.server.service.entitiy.agent;
 
-import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.agent.AgentGroup;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.id.AgentGroupId;
-import org.thingsboard.server.common.data.id.TenantId;
 
 public interface TbAgentGroupService {
 
     AgentGroup save(AgentGroup group, User currentUser) throws Exception;
 
     void delete(AgentGroup group, User user);
-
-    AgentGroup assignGroupToCustomer(TenantId tenantId, AgentGroupId groupId, Customer customer, User user) throws ThingsboardException;
-
-    AgentGroup unassignGroupFromCustomer(TenantId tenantId, AgentGroupId groupId, Customer customer, User user) throws ThingsboardException;
 }

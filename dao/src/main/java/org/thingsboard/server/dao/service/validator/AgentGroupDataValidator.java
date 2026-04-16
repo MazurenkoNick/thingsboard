@@ -17,24 +17,18 @@ package org.thingsboard.server.dao.service.validator;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.agent.AgentGroup;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentGroupDao;
-import org.thingsboard.server.dao.customer.CustomerDao;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.exception.DataValidationException;
-
-import static org.thingsboard.server.dao.model.ModelConstants.NULL_UUID;
 
 @Component
 @AllArgsConstructor
 public class AgentGroupDataValidator extends DataValidator<AgentGroup> {
 
     private final AgentGroupDao groupDao;
-    private final CustomerDao customerDao;
     private final TenantService tenantService;
 
     @Override
@@ -51,21 +45,9 @@ public class AgentGroupDataValidator extends DataValidator<AgentGroup> {
         validateString("Agent group name", group.getName());
         if (group.getTenantId() == null) {
             throw new DataValidationException("Agent group should be assigned to tenant!");
-        } else {
-            if (!tenantService.tenantExists(group.getTenantId())) {
-                throw new DataValidationException("Agent group is referencing to non-existent tenant!");
-            }
         }
-        if (group.getCustomerId() == null) {
-            group.setCustomerId(new CustomerId(NULL_UUID));
-        } else if (!group.getCustomerId().getId().equals(NULL_UUID)) {
-            Customer customer = customerDao.findById(tenantId, group.getCustomerId().getId());
-            if (customer == null) {
-                throw new DataValidationException("Can't assign agent group to non-existent customer!");
-            }
-            if (!customer.getTenantId().equals(group.getTenantId())) {
-                throw new DataValidationException("Can't assign agent group to customer from different tenant!");
-            }
+        if (!tenantService.tenantExists(group.getTenantId())) {
+            throw new DataValidationException("Agent group is referencing to non-existent tenant!");
         }
     }
 }

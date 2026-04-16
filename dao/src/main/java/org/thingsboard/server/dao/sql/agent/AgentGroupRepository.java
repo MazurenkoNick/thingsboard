@@ -34,29 +34,18 @@ public interface AgentGroupRepository extends JpaRepository<AgentGroupEntity, UU
                                            @Param("textSearch") String textSearch,
                                            Pageable pageable);
 
-    @Query("SELECT new org.thingsboard.server.dao.model.sql.AgentGroupInfoEntity(g, c.title, c.additionalInfo) " +
+    @Query("SELECT new org.thingsboard.server.dao.model.sql.AgentGroupInfoEntity(g) " +
             "FROM AgentGroupEntity g " +
-            "LEFT JOIN CustomerEntity c on c.id = g.customerId " +
             "WHERE g.id = :groupId")
     AgentGroupInfoEntity findAgentGroupInfoById(@Param("groupId") UUID groupId);
 
-    @Query("SELECT new org.thingsboard.server.dao.model.sql.AgentGroupInfoEntity(g, c.title, c.additionalInfo) " +
+    @Query("SELECT new org.thingsboard.server.dao.model.sql.AgentGroupInfoEntity(g) " +
             "FROM AgentGroupEntity g " +
-            "LEFT JOIN CustomerEntity c on c.id = g.customerId " +
             "WHERE g.tenantId = :tenantId " +
-            "AND (:textSearch IS NULL OR ilike(g.name, CONCAT('%', :textSearch, '%')) = true " +
-            "  OR ilike(c.title, CONCAT('%', :textSearch, '%')) = true)")
+            "AND (:textSearch IS NULL OR ilike(g.name, CONCAT('%', :textSearch, '%')) = true)")
     Page<AgentGroupInfoEntity> findAgentGroupInfosByTenantId(@Param("tenantId") UUID tenantId,
                                                               @Param("textSearch") String textSearch,
                                                               Pageable pageable);
-
-    @Query("SELECT g FROM AgentGroupEntity g WHERE g.tenantId = :tenantId " +
-            "AND g.customerId = :customerId " +
-            "AND (:textSearch IS NULL OR ilike(g.name, CONCAT('%', :textSearch, '%')) = true)")
-    Page<AgentGroupEntity> findByTenantIdAndCustomerId(@Param("tenantId") UUID tenantId,
-                                                        @Param("customerId") UUID customerId,
-                                                        @Param("textSearch") String textSearch,
-                                                        Pageable pageable);
 
     @Query("SELECT count(*) FROM AgentGroupEntity g WHERE g.tenantId = :tenantId")
     Long countByTenantId(@Param("tenantId") UUID tenantId);

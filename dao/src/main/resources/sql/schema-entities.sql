@@ -762,7 +762,6 @@ CREATE TABLE IF NOT EXISTS agent_group (
     id uuid NOT NULL CONSTRAINT agent_group_pkey PRIMARY KEY,
     created_time bigint NOT NULL,
     tenant_id uuid NOT NULL,
-    customer_id uuid,
     name varchar(255) NOT NULL,
     description varchar(255),
     provision_key varchar(255),

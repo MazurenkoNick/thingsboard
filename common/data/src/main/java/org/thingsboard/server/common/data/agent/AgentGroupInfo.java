@@ -29,18 +29,11 @@ public class AgentGroupInfo extends AgentGroup {
     @Serial
     private static final long serialVersionUID = -5509870435345957907L;
 
-    @Schema(description = "Title of the Customer that owns the group.", accessMode = Schema.AccessMode.READ_ONLY)
-    private String customerTitle;
-    @Schema(description = "Indicates special 'Public' Customer.", accessMode = Schema.AccessMode.READ_ONLY)
-    private boolean customerIsPublic;
-
     public AgentGroupInfo() {
         super();
     }
 
-    public AgentGroupInfo(AgentGroup group, String customerTitle, boolean customerIsPublic) {
+    public AgentGroupInfo(AgentGroup group) {
         super(group);
-        this.customerTitle = customerTitle;
-        this.customerIsPublic = customerIsPublic;
     }
 }

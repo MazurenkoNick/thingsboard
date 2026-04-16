@@ -54,7 +54,6 @@ public class AgentProvisionService {
 
         Agent agent = new Agent();
         agent.setTenantId(group.getTenantId());
-        agent.setCustomerId(group.getCustomerId());
         agent.setAgentGroupId(group.getId());
         agent.setName("Agent-" + routingKey.substring(0, 8));
         agent.setRoutingKey(routingKey);

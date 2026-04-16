@@ -25,7 +25,6 @@ import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.agent.AgentGroup;
 import org.thingsboard.server.common.data.agent.AgentProvisionType;
 import org.thingsboard.server.common.data.id.AgentGroupId;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.model.BaseVersionedEntity;
 import org.thingsboard.server.dao.model.ModelConstants;
@@ -40,9 +39,6 @@ public class AgentGroupEntity extends BaseVersionedEntity<AgentGroup> {
 
     @Column(name = ModelConstants.AGENT_GROUP_TENANT_ID_PROPERTY)
     private UUID tenantId;
-
-    @Column(name = ModelConstants.AGENT_GROUP_CUSTOMER_ID_PROPERTY)
-    private UUID customerId;
 
     @Column(name = ModelConstants.AGENT_GROUP_NAME_PROPERTY)
     private String name;
@@ -69,9 +65,6 @@ public class AgentGroupEntity extends BaseVersionedEntity<AgentGroup> {
         if (group.getTenantId() != null) {
             this.tenantId = group.getTenantId().getId();
         }
-        if (group.getCustomerId() != null) {
-            this.customerId = group.getCustomerId().getId();
-        }
         this.name = group.getName();
         this.description = group.getDescription();
         this.provisionKey = group.getProvisionKey();
@@ -86,9 +79,6 @@ public class AgentGroupEntity extends BaseVersionedEntity<AgentGroup> {
         group.setVersion(version);
         if (tenantId != null) {
             group.setTenantId(TenantId.fromUUID(tenantId));
-        }
-        if (customerId != null) {
-            group.setCustomerId(new CustomerId(customerId));
         }
         group.setName(name);
         group.setDescription(description);

@@ -165,7 +165,6 @@ export interface AgentInfo extends Agent {
 
 export interface AgentGroup extends BaseData<AgentGroupId> {
   tenantId?: TenantId;
-  customerId?: CustomerId;
   name: string;
   description?: string;
   provisionKey?: string;
@@ -175,8 +174,6 @@ export interface AgentGroup extends BaseData<AgentGroupId> {
 }
 
 export interface AgentGroupInfo extends AgentGroup {
-  customerTitle: string;
-  customerIsPublic: boolean;
   // Derived counts (backend may populate).
   agentsCount?: number;
   profilesCount?: number;

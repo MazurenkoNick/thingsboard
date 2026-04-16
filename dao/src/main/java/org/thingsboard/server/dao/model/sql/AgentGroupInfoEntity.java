@@ -15,63 +15,42 @@
  */
 package org.thingsboard.server.dao.model.sql;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.agent.AgentGroup;
 import org.thingsboard.server.common.data.agent.AgentGroupInfo;
 import org.thingsboard.server.common.data.agent.AgentProvisionType;
 import org.thingsboard.server.common.data.id.AgentGroupId;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.model.BaseVersionedEntity;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class AgentGroupInfoEntity extends BaseVersionedEntity<AgentGroupInfo> {
 
-    public static final Map<String, String> agentGroupInfoColumnMap = new HashMap<>();
-    static {
-        agentGroupInfoColumnMap.put("customerTitle", "c.title");
-    }
-
     private UUID tenantId;
-    private UUID customerId;
     private String name;
     private String description;
     private String provisionKey;
     private String provisionSecret;
     private AgentProvisionType provisionType;
-    private String customerTitle;
-    private boolean customerIsPublic;
 
     public AgentGroupInfoEntity() {
         super();
     }
 
-    public AgentGroupInfoEntity(AgentGroupEntity groupEntity,
-                                String customerTitle,
-                                Object customerAdditionalInfo) {
+    public AgentGroupInfoEntity(AgentGroupEntity groupEntity) {
         this.id = groupEntity.getId();
         this.createdTime = groupEntity.getCreatedTime();
         this.version = groupEntity.getVersion();
         this.tenantId = groupEntity.getTenantId();
-        this.customerId = groupEntity.getCustomerId();
         this.name = groupEntity.getName();
         this.description = groupEntity.getDescription();
         this.provisionKey = groupEntity.getProvisionKey();
         this.provisionSecret = groupEntity.getProvisionSecret();
         this.provisionType = groupEntity.getProvisionType();
-        this.customerTitle = customerTitle;
-        if (customerAdditionalInfo != null && ((JsonNode) customerAdditionalInfo).has("isPublic")) {
-            this.customerIsPublic = ((JsonNode) customerAdditionalInfo).get("isPublic").asBoolean();
-        } else {
-            this.customerIsPublic = false;
-        }
     }
 
     @Override
@@ -82,14 +61,11 @@ public class AgentGroupInfoEntity extends BaseVersionedEntity<AgentGroupInfo> {
         if (tenantId != null) {
             group.setTenantId(TenantId.fromUUID(tenantId));
         }
-        if (customerId != null) {
-            group.setCustomerId(new CustomerId(customerId));
-        }
         group.setName(name);
         group.setDescription(description);
         group.setProvisionKey(provisionKey);
         group.setProvisionSecret(provisionSecret);
         group.setProvisionType(provisionType);
-        return new AgentGroupInfo(group, customerTitle, customerIsPublic);
+        return new AgentGroupInfo(group);
     }
 }
