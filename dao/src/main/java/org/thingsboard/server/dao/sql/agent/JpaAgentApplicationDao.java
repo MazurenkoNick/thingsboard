@@ -22,6 +22,8 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
+import org.thingsboard.server.common.data.id.AgentAppTemplateId;
+import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
@@ -120,5 +122,10 @@ public class JpaAgentApplicationDao extends JpaAbstractDao<AgentApplicationEntit
     public AgentApplication findByRelatedEntity(TenantId tenantId, UUID relatedEntityId, String relatedEntityType) {
         return DaoUtil.getData(agentApplicationRepository.findByRelatedEntityIdAndRelatedEntityType(
                 relatedEntityId, EntityType.valueOf(relatedEntityType)));
+    }
+
+    @Override
+    public int promoteDesiredTemplate(TenantId tenantId, AgentApplicationId applicationId, AgentAppTemplateId templateId) {
+        return agentApplicationRepository.promoteDesiredTemplate(applicationId.getId(), templateId.getId());
     }
 }

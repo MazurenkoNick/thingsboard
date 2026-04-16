@@ -51,7 +51,7 @@ public interface AgentAppProfileRepository extends JpaRepository<AgentAppProfile
             "                AND ((p.appType = org.thingsboard.server.common.data.agent.AgentApplicationType.GENERIC " +
             "                      AND a.applicationProfileId = p.id) " +
             "                  OR (p.appType <> org.thingsboard.server.common.data.agent.AgentApplicationType.GENERIC " +
-            "                      AND a.templateId = p.templateId)))")
+            "                      AND a.applicationProfileId = p.id OR a.templateId = p.templateId)))")
     List<AgentAppProfileEntity> findUninstalledProfilesForAgentInGroup(@Param("groupId") UUID groupId,
                                                                        @Param("agentId") UUID agentId);
 }

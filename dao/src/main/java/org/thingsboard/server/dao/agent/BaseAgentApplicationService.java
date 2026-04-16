@@ -30,6 +30,7 @@ import org.thingsboard.server.common.data.agent.AgentApplicationType;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
+import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -192,6 +193,37 @@ public class BaseAgentApplicationService extends AbstractCachedEntityService<Age
             agentApplicationDao.removeById(tenantId, agentApplicationId.getId());
             publishCacheEvictAndDeleteEvent(tenantId, application);
         }
+    }
+
+    @Override
+    @Transactional
+    public void promoteDesiredTemplate(TenantId tenantId, AgentApplicationId agentApplicationId, AgentAppTemplateId templateId) {
+        log.trace("Executing promoteDesiredTemplate, tenantId [{}], applicationId [{}], templateId [{}]",
+                tenantId, agentApplicationId, templateId);
+        validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
+        validateId(agentApplicationId, id -> INCORRECT_AGENT_APPLICATION_ID + id);
+        if (templateId == null) {
+            return;
+        }
+        AgentApplication old = agentApplicationDao.findById(tenantId, agentApplicationId.getId());
+        if (old == null) {
+            return;
+        }
+        int updated = agentApplicationDao.promoteDesiredTemplate(tenantId, agentApplicationId, templateId);
+        if (updated == 0) {
+            return;
+        }
+        AgentApplication promoted = new AgentApplication(old);
+        promoted.setTemplateId(templateId);
+        promoted.setDesiredTemplateId(null);
+        publishEvictEvent(new AgentApplicationCacheEvictEvent(agentApplicationId));
+        eventPublisher.publishEvent(SaveEntityEvent.builder()
+                .tenantId(tenantId)
+                .entityId(agentApplicationId)
+                .entity(promoted)
+                .oldEntity(old)
+                .created(false)
+                .build());
     }
 
     @Override

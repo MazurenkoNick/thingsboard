@@ -18,6 +18,7 @@ package org.thingsboard.server.dao.agent;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
+import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
 import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -37,5 +38,6 @@ public interface AgentApplicationService {
     AgentApplication findByRelatedEntity(TenantId tenantId, EntityId entityId);
     void delete(TenantId tenantId, AgentApplicationId agentApplicationId);
     void deleteByAgentId(TenantId tenantId, AgentId agentId);
+    void promoteDesiredTemplate(TenantId tenantId, AgentApplicationId agentApplicationId, AgentAppTemplateId templateId);
 
 }
