@@ -3230,6 +3230,7 @@
         "bulk-skipped-version-mismatch": "Skipped — template version mismatch",
         "bulk-skipped-active-event": "Skipped — another operation already running",
         "bulk-skipped-error": "Skipped — error while evaluating app",
+        "bulk-skipped-more": "…and {{count}} more — see run details",
         "bulk-no-eligible": "No applications are eligible for this operation.",
         "bulk-backup-volumes-hint": "Select volumes to back up before upgrading. Inputs apply to every eligible application.",
         "bulk-no-volumes-in-profile": "Profile's compose has no volumes.",

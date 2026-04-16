@@ -27,6 +27,7 @@ public class AgentApplicationInfoEntity extends AgentApplicationEntity {
     private String nextVersion;
     private Long profileVersion;
     private String profileName;
+    private String agentName;
 
     public AgentApplicationInfoEntity() {
         super();
@@ -37,6 +38,15 @@ public class AgentApplicationInfoEntity extends AgentApplicationEntity {
                                       String nextVersion,
                                       Long profileVersion,
                                       String profileName) {
+        this(entity, currentVersion, nextVersion, profileVersion, profileName, null);
+    }
+
+    public AgentApplicationInfoEntity(AgentApplicationEntity entity,
+                                      String currentVersion,
+                                      String nextVersion,
+                                      Long profileVersion,
+                                      String profileName,
+                                      String agentName) {
         super(entity.toData());
         this.id = entity.getId();
         this.createdTime = entity.getCreatedTime();
@@ -45,6 +55,7 @@ public class AgentApplicationInfoEntity extends AgentApplicationEntity {
         this.nextVersion = nextVersion;
         this.profileVersion = profileVersion;
         this.profileName = profileName;
+        this.agentName = agentName;
     }
 
     @Override
@@ -53,6 +64,7 @@ public class AgentApplicationInfoEntity extends AgentApplicationEntity {
         info.setProfileConfigOutdated(profileVersion != null
                 && !profileVersion.equals(info.getProfileConfigVersion()));
         info.setProfileName(profileName);
+        info.setAgentName(agentName);
         return info;
     }
 

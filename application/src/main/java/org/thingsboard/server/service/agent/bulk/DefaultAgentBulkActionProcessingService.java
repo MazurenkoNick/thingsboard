@@ -28,6 +28,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
 import org.thingsboard.server.common.data.agent.AgentBulkAction;
 import org.thingsboard.server.common.data.agent.AgentBulkActionStatus;
 import org.thingsboard.server.common.data.agent.BulkOperationPreview;
@@ -56,6 +57,7 @@ import org.thingsboard.server.service.entitiy.agent.TbAgentApplicationService;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +72,7 @@ import java.util.UUID;
 public class DefaultAgentBulkActionProcessingService implements AgentBulkActionProcessingService {
 
     private static final int BATCH_UPDATE_SIZE = 50;
+    private static final int PREVIEW_SAMPLE_PER_REASON = 20;
     private static final Set<AgentAppEventActionType> ALLOWED_BULK_ACTIONS = Set.of(
             AgentAppEventActionType.UPDATE,
             AgentAppEventActionType.DELETE,
@@ -129,12 +132,13 @@ public class DefaultAgentBulkActionProcessingService implements AgentBulkActionP
         AgentAppProfile profile = profileService.findProfileById(tenantId, profileId);
 
         BulkOperationResult result = new BulkOperationResult();
-        List<AgentApplication> eligibleApps = filterEligibleApps(groupId, result, profile, actionType, true);
+        List<AgentApplicationInfo> eligibleApps = filterEligibleApps(tenantId, groupId, result, profile, actionType, true);
 
         BulkOperationPreview preview = new BulkOperationPreview();
         preview.setTotal(result.getTotal().get());
         preview.setEligible(eligibleApps.size());
-        preview.setSkipped(new ArrayList<>(result.getSkipped()));
+        preview.setSkippedCountsByReason(buildSkipCounts(result));
+        preview.setSkippedSample(sampleSkippedPerReason(result.getSkipped()));
         return preview;
     }
 
@@ -186,9 +190,9 @@ public class DefaultAgentBulkActionProcessingService implements AgentBulkActionP
                                                     AgentAppProfile profile, AgentAppEventActionType actionType,
                                                     boolean force, Map<UUID, AgentAppStepState> stepInputs) {
         BulkOperationResult result = new BulkOperationResult();
-        List<AgentApplication> eligibleApps;
+        List<AgentApplicationInfo> eligibleApps;
         try {
-            eligibleApps = filterEligibleApps(groupId, result, profile, actionType, force);
+            eligibleApps = filterEligibleApps(tenantId, groupId, result, profile, actionType, force);
         } catch (Exception e) {
             log.error("Bulk operation {} failed during filtering for bulkAction {}", actionType, bulkAction.getId(), e);
             bulkAction.setStatus(AgentBulkActionStatus.START_FAILED);
@@ -213,7 +217,7 @@ public class DefaultAgentBulkActionProcessingService implements AgentBulkActionP
 
     private void execBulkOperationForEach(TenantId tenantId, AgentBulkAction bulkAction,
                                           AgentAppEventActionType actionType, Map<UUID, AgentAppStepState> stepInputs,
-                                          List<AgentApplication> eligibleApps, BulkOperationResult result) {
+                                          List<AgentApplicationInfo> eligibleApps, BulkOperationResult result) {
         final UUID bulkActionId = bulkAction.getId().getId();
         int processed = 0;
         for (var app : eligibleApps) {
@@ -262,23 +266,36 @@ public class DefaultAgentBulkActionProcessingService implements AgentBulkActionP
         return counts;
     }
 
-    private SkippedApp getSkippedOnFailure(Throwable throwable, AgentApplication app, AgentAppEventActionType actionType) {
+    private List<SkippedApp> sampleSkippedPerReason(Collection<SkippedApp> skipped) {
+        Map<SkipReason, Integer> perReason = new EnumMap<>(SkipReason.class);
+        List<SkippedApp> sample = new ArrayList<>();
+        for (SkippedApp s : skipped) {
+            int taken = perReason.getOrDefault(s.getReason(), 0);
+            if (taken < DefaultAgentBulkActionProcessingService.PREVIEW_SAMPLE_PER_REASON) {
+                sample.add(s);
+                perReason.put(s.getReason(), taken + 1);
+            }
+        }
+        return sample;
+    }
+
+    private SkippedApp getSkippedOnFailure(Throwable throwable, AgentApplicationInfo app, AgentAppEventActionType actionType) {
         log.warn("Failed to execute bulk {} for app {}: {}", actionType, app.getId(), throwable.getMessage());
         SkipReason reason = SkipReason.ERROR;
         if (throwable instanceof ThingsboardException tbe
                 && tbe.getErrorCode().equals(ThingsboardErrorCode.TOO_MANY_REQUESTS)) {
             reason = SkipReason.ACTIVE_EVENT;
         }
-        return new SkippedApp(app.getId().toString(), app.getName(), reason, throwable.getMessage());
+        return toSkippedApp(app, reason, throwable.getMessage());
     }
 
-    private List<AgentApplication> filterEligibleApps(AgentGroupId groupId, BulkOperationResult result, AgentAppProfile profile,
-                                                     AgentAppEventActionType actionType, boolean force) {
-        PageDataIterable<AgentApplication> it = new PageDataIterable<>(
+    private List<AgentApplicationInfo> filterEligibleApps(TenantId tenantId, AgentGroupId groupId, BulkOperationResult result,
+                                                          AgentAppProfile profile, AgentAppEventActionType actionType, boolean force) {
+        PageDataIterable<AgentApplicationInfo> it = new PageDataIterable<>(
                 link -> applicationDao.findByApplicationProfileIdAndAgentGroupId(profile.getId().getId(), groupId.getId(), link),
                 100);
 
-        List<AgentApplication> eligibleApps = new ArrayList<>();
+        List<AgentApplicationInfo> eligibleApps = new ArrayList<>();
         for (var app : it) {
             result.incrementTotal();
             Optional<SkipReason> skipReason = shouldSkipOperation(profile, actionType, app);
@@ -289,7 +306,7 @@ public class DefaultAgentBulkActionProcessingService implements AgentBulkActionP
                             "Bulk operation blocked: app " + app.getId() + " has blocker: " + skipReason.get() +
                                     ". Use force=true to skip problematic apps.");
                 }
-                result.getSkipped().add(new SkippedApp(app.getId().toString(), app.getName(), skipReason.get()));
+                result.getSkipped().add(toSkippedApp(app, skipReason.get(), null));
             } else {
                 eligibleApps.add(app);
             }
@@ -297,7 +314,18 @@ public class DefaultAgentBulkActionProcessingService implements AgentBulkActionP
         return eligibleApps;
     }
 
-    private Optional<SkipReason> shouldSkipOperation(AgentAppProfile profile, AgentAppEventActionType actionType, AgentApplication app) {
+    private SkippedApp toSkippedApp(AgentApplicationInfo app, SkipReason reason, String msg) {
+        return new SkippedApp(
+                app.getAgentId(),
+                app.getAgentName(),
+                app.getId(),
+                app.getName(),
+                reason,
+                msg
+        );
+    }
+
+    private Optional<SkipReason> shouldSkipOperation(AgentAppProfile profile, AgentAppEventActionType actionType, AgentApplicationInfo app) {
         SkipReason skipReason = null;
 
         if (actionType != AgentAppEventActionType.UPGRADE && !app.getTemplateId().equals(profile.getTemplateId())) {

@@ -19,6 +19,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentId;
 
 import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -49,19 +51,21 @@ public class BulkOperationResult {
     @AllArgsConstructor
     @Schema
     public static class SkippedApp {
-        @Schema(description = "Application Id")
-        private String applicationId;
+        @Schema(description = "Agent Id owning the application")
+        private AgentId agentId;
         @Schema(description = "Agent name")
         private String agentName;
+        @Schema(description = "Application Id")
+        private AgentApplicationId applicationId;
+        @Schema(description = "Application name")
+        private String applicationName;
         @Schema(description = "Reason for skipping")
         private SkipReason reason;
         @Schema(description = "Optional message in case of a failure")
         private String msg;
 
-        public SkippedApp(String applicationId, String agentName, SkipReason reason) {
-            this.applicationId = applicationId;
-            this.agentName = agentName;
-            this.reason = reason;
+        public SkippedApp(AgentId agentId, String agentName, AgentApplicationId applicationId, String applicationName, SkipReason reason) {
+            this(agentId, agentName, applicationId, applicationName, reason, null);
         }
     }
 

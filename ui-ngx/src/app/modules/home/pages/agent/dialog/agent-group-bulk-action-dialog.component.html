@@ -108,50 +108,71 @@
         <span class="value">{{ preview.eligible }}</span>
         <span class="label" translate>agent.bulk-preview-eligible</span>
       </div>
-      <div class="tb-bulk-count skipped" *ngIf="preview.skipped?.length">
-        <span class="value">{{ preview.skipped.length }}</span>
+      <div class="tb-bulk-count skipped" *ngIf="totalSkipped">
+        <span class="value">{{ totalSkipped }}</span>
         <span class="label" translate>agent.bulk-preview-skipped</span>
       </div>
     </div>
 
-    <div class="tb-bulk-skipped-block" *ngIf="skippedByReason(SkipReason.VERSION_MISMATCH).length">
+    <div class="tb-bulk-skipped-block" *ngIf="skippedCount(SkipReason.VERSION_MISMATCH)">
       <div class="tb-bulk-skipped-header">
         <mat-icon>info_outline</mat-icon>
         <span translate>agent.bulk-skipped-version-mismatch</span>
-        <span class="tb-bulk-skipped-count">{{ skippedByReason(SkipReason.VERSION_MISMATCH).length }}</span>
+        <span class="tb-bulk-skipped-count">{{ skippedCount(SkipReason.VERSION_MISMATCH) }}</span>
       </div>
       <ul>
         <li *ngFor="let s of skippedByReason(SkipReason.VERSION_MISMATCH)">
-          {{ s.agentName || s.applicationId }}<span *ngIf="s.msg">: {{ s.msg }}</span>
+          <ng-container *ngTemplateOutlet="skippedRow; context: { s: s }"></ng-container>
+        </li>
+        <li class="tb-bulk-skipped-more" *ngIf="skippedExtraCount(SkipReason.VERSION_MISMATCH)">
+          {{ 'agent.bulk-skipped-more' | translate: { count: skippedExtraCount(SkipReason.VERSION_MISMATCH) } }}
         </li>
       </ul>
     </div>
 
-    <div class="tb-bulk-skipped-block" *ngIf="skippedByReason(SkipReason.ACTIVE_EVENT).length">
+    <div class="tb-bulk-skipped-block" *ngIf="skippedCount(SkipReason.ACTIVE_EVENT)">
       <div class="tb-bulk-skipped-header">
         <mat-icon>hourglass_empty</mat-icon>
         <span translate>agent.bulk-skipped-active-event</span>
-        <span class="tb-bulk-skipped-count">{{ skippedByReason(SkipReason.ACTIVE_EVENT).length }}</span>
+        <span class="tb-bulk-skipped-count">{{ skippedCount(SkipReason.ACTIVE_EVENT) }}</span>
       </div>
       <ul>
         <li *ngFor="let s of skippedByReason(SkipReason.ACTIVE_EVENT)">
-          {{ s.agentName || s.applicationId }}<span *ngIf="s.msg">: {{ s.msg }}</span>
+          <ng-container *ngTemplateOutlet="skippedRow; context: { s: s }"></ng-container>
+        </li>
+        <li class="tb-bulk-skipped-more" *ngIf="skippedExtraCount(SkipReason.ACTIVE_EVENT)">
+          {{ 'agent.bulk-skipped-more' | translate: { count: skippedExtraCount(SkipReason.ACTIVE_EVENT) } }}
         </li>
       </ul>
     </div>
 
-    <div class="tb-bulk-skipped-block" *ngIf="skippedByReason(SkipReason.ERROR).length">
+    <div class="tb-bulk-skipped-block" *ngIf="skippedCount(SkipReason.ERROR)">
       <div class="tb-bulk-skipped-header error">
         <mat-icon>error_outline</mat-icon>
         <span translate>agent.bulk-skipped-error</span>
-        <span class="tb-bulk-skipped-count">{{ skippedByReason(SkipReason.ERROR).length }}</span>
+        <span class="tb-bulk-skipped-count">{{ skippedCount(SkipReason.ERROR) }}</span>
       </div>
       <ul>
         <li *ngFor="let s of skippedByReason(SkipReason.ERROR)">
-          {{ s.agentName || s.applicationId }}<span *ngIf="s.msg">: {{ s.msg }}</span>
+          <ng-container *ngTemplateOutlet="skippedRow; context: { s: s }"></ng-container>
+        </li>
+        <li class="tb-bulk-skipped-more" *ngIf="skippedExtraCount(SkipReason.ERROR)">
+          {{ 'agent.bulk-skipped-more' | translate: { count: skippedExtraCount(SkipReason.ERROR) } }}
         </li>
       </ul>
     </div>
+
+    <ng-template #skippedRow let-s="s">
+      <span class="tb-bulk-skipped-agent">{{ s.agentName || '—' }}</span>
+      <span class="tb-bulk-skipped-sep">/</span>
+      <a *ngIf="appLink(s) as link" class="tb-bulk-skipped-app" [routerLink]="link" (click)="cancel()">
+        {{ s.applicationName || s.applicationId?.id }}
+      </a>
+      <span *ngIf="!appLink(s)" class="tb-bulk-skipped-app">
+        {{ s.applicationName || s.applicationId?.id }}
+      </span>
+      <span *ngIf="s.msg" class="tb-bulk-skipped-msg">— {{ s.msg }}</span>
+    </ng-template>
 
     <div class="tb-bulk-no-eligible" *ngIf="preview.eligible === 0">
       <mat-icon>block</mat-icon>

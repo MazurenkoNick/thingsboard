@@ -149,6 +149,7 @@ export class AgentAppProfileComponent extends EntityComponent<AgentAppProfile>
   }
 
   canUpgrade(): boolean {
+    if (this.entity?.appType === AgentApplicationType.GENERIC) { return false; }
     return !!this.nextVersion;
   }
 

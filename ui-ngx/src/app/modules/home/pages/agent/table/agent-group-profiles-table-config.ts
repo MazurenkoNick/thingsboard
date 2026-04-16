@@ -32,6 +32,7 @@ import { AgentService } from '@core/http/agent.service';
 import {
   AgentAppEventActionType,
   AgentAppProfile,
+  AgentApplicationType,
   AgentGroupInfo,
   agentApplicationTypeTranslationMap
 } from '@shared/models/agent.models';
@@ -127,7 +128,7 @@ export class AgentGroupProfilesTableConfig extends EntityTableConfig<AgentAppPro
       {
         name: this.translate.instant('agent.bulk-upgrade'),
         icon: 'arrow_upward',
-        isEnabled: () => true,
+        isEnabled: (p) => p?.appType !== AgentApplicationType.GENERIC,
         onAction: ($event, p) => this.openBulk($event, p, AgentAppEventActionType.UPGRADE)
       },
       {

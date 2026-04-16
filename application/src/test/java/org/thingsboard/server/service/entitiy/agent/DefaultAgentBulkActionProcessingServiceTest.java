@@ -29,7 +29,7 @@ import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppProfile;
-import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationInfo;
 import org.thingsboard.server.common.data.agent.AgentBulkAction;
 import org.thingsboard.server.common.data.agent.AgentBulkActionStatus;
 import org.thingsboard.server.common.data.agent.BulkOperationRequest;
@@ -240,7 +240,7 @@ class DefaultAgentBulkActionProcessingServiceTest {
         AgentBulkAction bulkAction = createBulkAction(bulkActionId, AgentBulkActionStatus.QUEUED);
         AgentAppProfile profile = createProfile();
 
-        AgentApplication app = createApplication();
+        AgentApplicationInfo app = createApplication();
 
         AgentBulkOperationMsg msg = buildProtoMsg(bulkActionId, AgentAppEventActionType.UPDATE);
 
@@ -354,8 +354,8 @@ class DefaultAgentBulkActionProcessingServiceTest {
         return action;
     }
 
-    private AgentApplication createApplication() {
-        AgentApplication app = new AgentApplication();
+    private AgentApplicationInfo createApplication() {
+        AgentApplicationInfo app = new AgentApplicationInfo();
         app.setId(new AgentApplicationId(UUID.randomUUID()));
         app.setTenantId(TENANT_ID);
         app.setName("test-app");

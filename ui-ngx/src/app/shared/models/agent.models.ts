@@ -309,12 +309,15 @@ export interface BulkOperationRequest {
 export interface BulkOperationPreview {
   total: number;
   eligible: number;
-  skipped: SkippedApp[];
+  skippedCountsByReason: { [reason: string]: number };
+  skippedSample: SkippedApp[];
 }
 
 export interface SkippedApp {
-  applicationId: string;
-  agentName: string;
+  agentId?: AgentId;
+  agentName?: string;
+  applicationId: AgentApplicationId;
+  applicationName?: string;
   reason: SkipReason;
   msg?: string;
 }

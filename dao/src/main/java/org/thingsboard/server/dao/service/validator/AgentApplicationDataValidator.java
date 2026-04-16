@@ -87,6 +87,7 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
         return application.getApplicationProfileId() != null
                 && !application.getApplicationProfileId().equals(old.getApplicationProfileId());
     }
+
     // Block plain updates that also change the config when the app's profile was upgraded, app wasn't yet.
     // Upgrades (desiredTemplateId != null) are the correct path to resolve that drift, so we only enforce this on non-upgrade updates.
     // Template ids uniquely identify (appType, version), so UUID inequality is sufficient to detect a version drift.

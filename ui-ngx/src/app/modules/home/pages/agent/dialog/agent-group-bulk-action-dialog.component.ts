@@ -146,7 +146,28 @@ export class AgentGroupBulkActionDialogComponent
   }
 
   skippedByReason(reason: SkipReason): SkippedApp[] {
-    return (this.preview?.skipped || []).filter(s => s.reason === reason);
+    return (this.preview?.skippedSample || []).filter(s => s.reason === reason);
+  }
+
+  skippedCount(reason: SkipReason): number {
+    return this.preview?.skippedCountsByReason?.[reason] ?? 0;
+  }
+
+  skippedExtraCount(reason: SkipReason): number {
+    const shown = this.skippedByReason(reason).length;
+    return Math.max(0, this.skippedCount(reason) - shown);
+  }
+
+  get totalSkipped(): number {
+    const counts = this.preview?.skippedCountsByReason;
+    if (!counts) { return 0; }
+    return Object.values(counts).reduce((sum, n) => sum + (n || 0), 0);
+  }
+
+  appLink(s: SkippedApp): string[] | null {
+    return s.agentId?.id && s.applicationId?.id
+      ? ['/edgeManagement', 'agents', s.agentId.id, 'applications', s.applicationId.id]
+      : null;
   }
 
   toggleBackupVolume(v: VolumeChoice) {

@@ -78,12 +78,15 @@ public interface AgentApplicationRepository extends JpaRepository<AgentApplicati
                                                         @Param("textSearch") String textSearch,
                                                         Pageable pageable);
 
-    @Query("SELECT a FROM AgentApplicationEntity a " +
+    @Query("SELECT new org.thingsboard.server.dao.model.sql.AgentApplicationInfoEntity(a, t.currentVersion, t.nextVersion, p.version, p.name, ag.name) " +
+            "FROM AgentApplicationEntity a " +
             "JOIN AgentEntity ag ON a.agentId = ag.id " +
+            "LEFT JOIN AgentAppTemplateEntity t ON a.templateId = t.id " +
+            "LEFT JOIN AgentAppProfileEntity p ON a.applicationProfileId = p.id " +
             "WHERE a.applicationProfileId = :profileId AND ag.agentGroupId = :groupId")
-    Page<AgentApplicationEntity> findByApplicationProfileIdAndAgentGroupId(@Param("profileId") UUID profileId,
-                                                                           @Param("groupId") UUID groupId,
-                                                                           Pageable pageable);
+    Page<AgentApplicationInfoEntity> findByApplicationProfileIdAndAgentGroupId(@Param("profileId") UUID profileId,
+                                                                                @Param("groupId") UUID groupId,
+                                                                                Pageable pageable);
 
     AgentApplicationEntity findByRelatedEntityIdAndRelatedEntityType(UUID relatedEntityId, EntityType relatedEntityType);
 

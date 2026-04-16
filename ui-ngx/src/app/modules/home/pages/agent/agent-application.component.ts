@@ -351,6 +351,7 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
    * (or use the bulk action from the agent group).
    */
   canUpgrade(): boolean {
+    if (this.entity?.appType === AgentApplicationType.GENERIC) { return false; }
     if (!this.entity?.nextVersion) { return false; }
     const profileId = this.entity.applicationProfileId?.id;
     if (!profileId) { return true; }

@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Schema
@@ -30,6 +31,9 @@ public class BulkOperationPreview {
     @Schema(description = "Number of apps that would be submitted (total minus skipped)")
     private int eligible;
 
-    @Schema(description = "List of apps that would be skipped with reasons")
-    private List<BulkOperationResult.SkippedApp> skipped;
+    @Schema(description = "Skip count per reason for the targeted apps")
+    private Map<BulkOperationResult.SkipReason, Integer> skippedCountsByReason;
+
+    @Schema(description = "Sample of skipped apps, capped per reason. Use the run history to inspect the full list.")
+    private List<BulkOperationResult.SkippedApp> skippedSample;
 }
