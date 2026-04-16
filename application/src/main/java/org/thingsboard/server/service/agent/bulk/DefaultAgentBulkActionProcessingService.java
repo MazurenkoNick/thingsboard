@@ -300,7 +300,7 @@ public class DefaultAgentBulkActionProcessingService implements AgentBulkActionP
     private Optional<SkipReason> shouldSkipOperation(AgentAppProfile profile, AgentAppEventActionType actionType, AgentApplication app) {
         SkipReason skipReason = null;
 
-        if (actionType == AgentAppEventActionType.UPGRADE && !app.getTemplateId().equals(profile.getTemplateId())) {
+        if (actionType != AgentAppEventActionType.UPGRADE && !app.getTemplateId().equals(profile.getTemplateId())) {
             skipReason = SkipReason.VERSION_MISMATCH;
         } else if (agentAppEventService.hasActiveEventForApplication(app.getId())) {
             skipReason = SkipReason.ACTIVE_EVENT;
