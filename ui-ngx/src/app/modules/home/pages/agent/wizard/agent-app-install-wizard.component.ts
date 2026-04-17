@@ -46,6 +46,15 @@ import {
   normalizeCredValue,
   visibleCredentialFields as visibleCredFieldsFor
 } from '@home/pages/agent/util/agent-credentials';
+import {
+  buildBackupVolumeInput,
+  buildPullImagesInput,
+  extractComposeVolumeKeys,
+  findBackupVolumeStep,
+  findStartPullImagesStep,
+  findUpgradePullImagesStep,
+  readInitialPullImages
+} from '@home/pages/agent/util/agent-app-steps';
 
 export interface AgentAppInstallWizardData {
   agentId: string;
@@ -503,20 +512,14 @@ export class AgentAppInstallWizardComponent
     this.toVersion = template.currentVersion || null;
     this.upgradeSteps = (template.upgradeSteps || []).filter(s => !s.templateOnly);
 
-    // Scan upgradeSteps for input-required steps (backup volumes, pull images).
-    this.backupVolumeStep = this.upgradeSteps.find(s => s.type === AgentAppStepType.BACKUP_VOLUME) || null;
-    this.pullImagesStep = this.upgradeSteps.find(s =>
-      (s.type === AgentAppStepType.COMPOSE_MIGRATION || s.type === AgentAppStepType.COMPOSE)
-      && (s.state as any) && 'pullImages' in (s.state as any)
-    ) || null;
+    this.backupVolumeStep = findBackupVolumeStep(template);
+    this.pullImagesStep = findUpgradePullImagesStep(template);
     this.hasPullImagesStep = !!this.pullImagesStep;
-    if (this.pullImagesStep) {
-      this.pullImages = !!(this.pullImagesStep.state as any)?.pullImages;
-    }
+    this.pullImages = readInitialPullImages(this.pullImagesStep);
 
     // Volumes are backed up from the CURRENT app — the data we need to
     // preserve through the upgrade lives in the existing volumes.
-    this.backupVolumes = this.parseVolumeKeys(this.existingApplication!)
+    this.backupVolumes = extractComposeVolumeKeys(this.existingApplication!)
       .map(key => ({ key, selected: true }));
 
     // Side-by-side diff: left = raw new template compose (no mergeForPreview),
@@ -558,14 +561,6 @@ export class AgentAppInstallWizardComponent
     return compose ? (this.dumpYaml(compose, 0).trimEnd() + '\n') : '';
   }
 
-  private parseVolumeKeys(app: AgentApplication): string[] {
-    const compose: any = app?.config && (app.config as any).compose;
-    if (!compose || !compose.volumes || typeof compose.volumes !== 'object') {
-      return [];
-    }
-    return Object.keys(compose.volumes);
-  }
-
   toggleBackupVolume(v: VolumeChoice) {
     v.selected = !v.selected;
   }
@@ -596,10 +591,7 @@ export class AgentAppInstallWizardComponent
   }
 
   private scanStartSteps(template: AgentAppTemplate) {
-    const steps = (template.startSteps || []).filter(s => !s.templateOnly);
-    this.pullImagesStep = steps.find(s =>
-      s.type === AgentAppStepType.COMPOSE && s.state && 'pullImages' in s.state
-    ) || null;
+    this.pullImagesStep = findStartPullImagesStep(template);
     this.hasPullImagesStep = !!this.pullImagesStep;
   }
 
@@ -825,16 +817,13 @@ export class AgentAppInstallWizardComponent
       };
       const stepInputs: { [stepId: string]: any } = {};
       if (this.backupVolumeStep) {
-        stepInputs[this.backupVolumeStep.id] = {
-          backupVolumes: this.backupVolumes.filter(v => v.selected).map(v => v.key),
-          type: AgentAppStepType.BACKUP_VOLUME
-        };
+        stepInputs[this.backupVolumeStep.id] = buildBackupVolumeInput(
+          this.backupVolumeStep,
+          this.backupVolumes.filter(v => v.selected).map(v => v.key)
+        );
       }
       if (this.pullImagesStep) {
-        stepInputs[this.pullImagesStep.id] = {
-          pullImages: this.pullImages,
-          type: this.pullImagesStep.type
-        };
+        stepInputs[this.pullImagesStep.id] = buildPullImagesInput(this.pullImagesStep, this.pullImages);
       }
       this.agentService.createAgentAppEvent(this.existingApplication.id.id, {
         actionType: AgentAppEventActionType.UPGRADE,
@@ -900,10 +889,7 @@ export class AgentAppInstallWizardComponent
 
     const stepInputs: { [stepId: string]: any } = {};
     if (this.pullImagesStep) {
-      stepInputs[this.pullImagesStep.id] = {
-        pullImages: this.pullImages,
-        type: AgentAppStepType.COMPOSE
-      };
+      stepInputs[this.pullImagesStep.id] = buildPullImagesInput(this.pullImagesStep, this.pullImages);
     }
 
     if (this.mode === 'update' && this.existingApplication) {

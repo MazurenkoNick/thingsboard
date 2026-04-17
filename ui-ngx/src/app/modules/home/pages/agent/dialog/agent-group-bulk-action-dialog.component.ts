@@ -29,7 +29,6 @@ import {
   AgentAppProfile,
   AgentAppStep,
   AgentAppStepState,
-  AgentAppStepType,
   AgentAppTemplate,
   AgentBulkAction,
   AgentGroupInfo,
@@ -38,6 +37,17 @@ import {
   SkippedApp,
   SkipReason
 } from '@shared/models/agent.models';
+import {
+  buildBackupVolumeInput,
+  buildComposeDownInput,
+  buildPullImagesInput,
+  extractComposeVolumeKeys,
+  findBackupVolumeStep,
+  findComposeDownStep,
+  findStartPullImagesStep,
+  findUpgradePullImagesStep,
+  readInitialPullImages
+} from '@home/pages/agent/util/agent-app-steps';
 
 export interface AgentGroupBulkActionDialogData {
   group: AgentGroupInfo;
@@ -100,7 +110,7 @@ export class AgentGroupBulkActionDialogComponent
     this.group = data.group;
     this.profile = data.profile;
     this.actionType = data.actionType;
-    this.profileVolumeKeys = this.parseVolumeKeys(this.profile);
+    this.profileVolumeKeys = extractComposeVolumeKeys(this.profile);
   }
 
   ngOnDestroy(): void {
@@ -142,6 +152,7 @@ export class AgentGroupBulkActionDialogComponent
 
   get needsTemplate(): boolean {
     return this.actionType === AgentAppEventActionType.UPGRADE
+      || this.actionType === AgentAppEventActionType.UPDATE
       || this.actionType === AgentAppEventActionType.DELETE;
   }
 
@@ -243,21 +254,17 @@ export class AgentGroupBulkActionDialogComponent
 
   private initStepsFromTemplate(template: AgentAppTemplate) {
     if (this.actionType === AgentAppEventActionType.UPGRADE) {
-      const upgradeSteps = (template.upgradeSteps || []).filter(s => !s.templateOnly);
-      this.backupVolumeStep = upgradeSteps.find(s => s.type === AgentAppStepType.BACKUP_VOLUME) || null;
-      this.pullImagesStep = upgradeSteps.find(s =>
-        (s.type === AgentAppStepType.COMPOSE_MIGRATION || s.type === AgentAppStepType.COMPOSE)
-        && (s.state as any) && 'pullImages' in (s.state as any)
-      ) || null;
-      if (this.pullImagesStep) {
-        this.pullImages = !!(this.pullImagesStep.state as any)?.pullImages;
-      }
+      this.backupVolumeStep = findBackupVolumeStep(template);
+      this.pullImagesStep = findUpgradePullImagesStep(template);
+      this.pullImages = readInitialPullImages(this.pullImagesStep);
       if (this.backupVolumeStep) {
         this.backupVolumes = this.profileVolumeKeys.map(k => ({ key: k, selected: false }));
       }
+    } else if (this.actionType === AgentAppEventActionType.UPDATE) {
+      this.pullImagesStep = findStartPullImagesStep(template);
+      this.pullImages = readInitialPullImages(this.pullImagesStep);
     } else if (this.actionType === AgentAppEventActionType.DELETE) {
-      const deleteSteps = (template.deleteSteps || []).filter(s => !s.templateOnly);
-      this.composeDownStep = deleteSteps.find(s => s.type === AgentAppStepType.COMPOSE_DOWN) || null;
+      this.composeDownStep = findComposeDownStep(template);
     }
   }
 
@@ -265,33 +272,23 @@ export class AgentGroupBulkActionDialogComponent
     const stepInputs: { [stepId: string]: AgentAppStepState } = {};
     if (this.actionType === AgentAppEventActionType.UPGRADE) {
       if (this.backupVolumeStep) {
-        stepInputs[this.backupVolumeStep.id] = {
-          backupVolumes: this.backupVolumes.filter(v => v.selected).map(v => v.key),
-          type: AgentAppStepType.BACKUP_VOLUME
-        } as AgentAppStepState;
+        stepInputs[this.backupVolumeStep.id] = buildBackupVolumeInput(
+          this.backupVolumeStep,
+          this.backupVolumes.filter(v => v.selected).map(v => v.key)
+        );
       }
       if (this.pullImagesStep) {
-        stepInputs[this.pullImagesStep.id] = {
-          pullImages: this.pullImages,
-          type: this.pullImagesStep.type
-        } as AgentAppStepState;
+        stepInputs[this.pullImagesStep.id] = buildPullImagesInput(this.pullImagesStep, this.pullImages);
+      }
+    } else if (this.actionType === AgentAppEventActionType.UPDATE) {
+      if (this.pullImagesStep) {
+        stepInputs[this.pullImagesStep.id] = buildPullImagesInput(this.pullImagesStep, this.pullImages);
       }
     } else if (this.actionType === AgentAppEventActionType.DELETE) {
       if (this.composeDownStep) {
-        stepInputs[this.composeDownStep.id] = {
-          removeVolumes: this.removeVolumes,
-          type: AgentAppStepType.COMPOSE_DOWN
-        } as AgentAppStepState;
+        stepInputs[this.composeDownStep.id] = buildComposeDownInput(this.composeDownStep, this.removeVolumes);
       }
     }
     return stepInputs;
-  }
-
-  private parseVolumeKeys(profile: AgentAppProfile): string[] {
-    const compose: any = profile?.config && (profile.config as any).compose;
-    if (!compose || !compose.volumes || typeof compose.volumes !== 'object') {
-      return [];
-    }
-    return Object.keys(compose.volumes);
   }
 }

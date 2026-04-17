@@ -67,8 +67,10 @@
     </ng-template>
   </div>
 
-  <!-- UPGRADE: pull images step -->
-  <div class="tb-bulk-step" *ngIf="!loading && actionType === ActionType.UPGRADE && pullImagesStep">
+  <!-- UPGRADE/UPDATE: pull images step -->
+  <div class="tb-bulk-step"
+       *ngIf="!loading && pullImagesStep
+              && (actionType === ActionType.UPGRADE || actionType === ActionType.UPDATE)">
     <div class="tb-bulk-step-header">
       {{ pullImagesStep.title || ('agent.app-install-pull-images' | translate) }}
       <span class="tb-bulk-step-type">{{ pullImagesStep.type }}</span>

@@ -25,10 +25,13 @@ import { AgentService } from '@core/http/agent.service';
 import {
   AgentApplication,
   AgentAppEventActionType,
-  AgentAppStep,
-  AgentAppStepType,
-  AgentAppTemplate
+  AgentAppStep
 } from '@shared/models/agent.models';
+import {
+  buildComposeDownInput,
+  extractComposeVolumeKeys,
+  findComposeDownStep
+} from '@home/pages/agent/util/agent-app-steps';
 
 export interface AgentAppDeleteDialogData {
   application: AgentApplication;
@@ -61,15 +64,15 @@ export class AgentAppDeleteDialogComponent
     super(store, router, dialogRef);
     this.application = data.application;
     this.agentName = data.agentName || '';
-    this.volumeKeys = this.parseVolumeKeys(this.application);
+    this.volumeKeys = extractComposeVolumeKeys(this.application);
   }
 
   ngOnInit() {
     if (this.application?.templateId?.id) {
       this.loading = true;
       this.agentService.getAgentAppTemplateById(this.application.templateId.id).subscribe({
-        next: (template: AgentAppTemplate) => {
-          this.composeDownStep = this.findComposeDownStep(template);
+        next: template => {
+          this.composeDownStep = findComposeDownStep(template);
           this.loading = false;
         },
         error: () => {
@@ -79,19 +82,6 @@ export class AgentAppDeleteDialogComponent
         }
       });
     }
-  }
-
-  private findComposeDownStep(template: AgentAppTemplate): AgentAppStep | null {
-    const steps = template?.deleteSteps || [];
-    return steps.find(s => s.type === AgentAppStepType.COMPOSE_DOWN && !s.templateOnly) || null;
-  }
-
-  private parseVolumeKeys(app: AgentApplication): string[] {
-    const compose: any = app?.config && (app.config as any).compose;
-    if (!compose || !compose.volumes || typeof compose.volumes !== 'object') {
-      return [];
-    }
-    return Object.keys(compose.volumes);
   }
 
   cancel() {
@@ -105,10 +95,7 @@ export class AgentAppDeleteDialogComponent
     this.submitting = true;
     const stepInputs: { [stepId: string]: any } = {};
     if (this.composeDownStep) {
-      stepInputs[this.composeDownStep.id] = {
-        removeVolumes: this.removeVolumes,
-        type: AgentAppStepType.COMPOSE_DOWN
-      };
+      stepInputs[this.composeDownStep.id] = buildComposeDownInput(this.composeDownStep, this.removeVolumes);
     }
     this.agentService.createAgentAppEvent(this.application.id.id, {
       actionType: AgentAppEventActionType.DELETE,
