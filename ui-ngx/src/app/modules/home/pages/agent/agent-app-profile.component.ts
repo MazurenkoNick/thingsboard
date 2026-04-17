@@ -229,6 +229,11 @@ export class AgentAppProfileComponent extends EntityComponent<AgentAppProfile>
       this.pendingComposeValue = null;
       editor.getSession().on('change', () => {
         if (this.composeEditorSettingValue) { return; }
+        // Only treat focused-editor changes as user edits. Ace can still fire
+        // change events for programmatic writes (newline normalization, mode
+        // re-tokenization) where we don't want to dirty the form and trigger
+        // the "unsaved changes" guard on exit.
+        if (!editor.isFocused()) { return; }
         const ctrl = this.entityForm?.get('composeYaml');
         if (ctrl && ctrl.value !== editor.getValue()) {
           ctrl.setValue(editor.getValue());

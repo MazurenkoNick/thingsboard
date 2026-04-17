@@ -165,7 +165,8 @@
     <ng-template #skippedRow let-s="s">
       <span class="tb-bulk-skipped-agent">{{ s.agentName || '—' }}</span>
       <span class="tb-bulk-skipped-sep">/</span>
-      <a *ngIf="appLink(s) as link" class="tb-bulk-skipped-app" [routerLink]="link" (click)="cancel()">
+      <a *ngIf="appLink(s) as link" class="tb-bulk-skipped-app" href="#"
+         (click)="navigateToApp(link, $event)">
         {{ s.applicationName || s.applicationId?.id }}
       </a>
       <span *ngIf="!appLink(s)" class="tb-bulk-skipped-app">

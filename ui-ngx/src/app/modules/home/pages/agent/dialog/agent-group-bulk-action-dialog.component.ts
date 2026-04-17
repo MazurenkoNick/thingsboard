@@ -14,7 +14,7 @@
 /// limitations under the License.
 ///
 
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { Router } from '@angular/router';
@@ -22,6 +22,8 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '@shared/components/dialog.component';
 import { TranslateService } from '@ngx-translate/core';
 import { AgentService } from '@core/http/agent.service';
+import { of, Subject } from 'rxjs';
+import { catchError, switchMap, takeUntil, tap } from 'rxjs/operators';
 import {
   AgentAppEventActionType,
   AgentAppProfile,
@@ -55,7 +57,9 @@ interface VolumeChoice {
 })
 export class AgentGroupBulkActionDialogComponent
   extends DialogComponent<AgentGroupBulkActionDialogComponent, AgentBulkAction>
-  implements OnInit {
+  implements OnInit, OnDestroy {
+
+  private readonly destroy$ = new Subject<void>();
 
   group: AgentGroupInfo;
   profile: AgentAppProfile;
@@ -65,6 +69,12 @@ export class AgentGroupBulkActionDialogComponent
   submitting = false;
   previewLoaded = false;
   preview: BulkOperationPreview | null = null;
+
+  // Pre-computed from `preview.skippedSample` so the template doesn't re-filter
+  // on every change-detection cycle. Keys are SkipReason values.
+  skippedByReasonMap: Partial<Record<SkipReason, SkippedApp[]>> = {};
+  skippedLinkMap = new Map<string, string[]>();
+  totalSkipped = 0;
 
   // UPGRADE step inputs
   backupVolumeStep: AgentAppStep | null = null;
@@ -93,22 +103,41 @@ export class AgentGroupBulkActionDialogComponent
     this.profileVolumeKeys = this.parseVolumeKeys(this.profile);
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    super.ngOnDestroy();
+  }
+
   ngOnInit() {
     this.loading = true;
-    if (this.needsTemplate && this.profile?.templateId?.id) {
-      this.agentService.getAgentAppTemplateById(this.profile.templateId.id).subscribe({
-        next: (template) => {
-          this.initStepsFromTemplate(template);
-          this.loadPreview();
-        },
-        error: () => {
-          // No template: still allow confirm with empty stepInputs.
-          this.loadPreview();
-        }
-      });
-    } else {
-      this.loadPreview();
-    }
+
+    // Single chain: optional template fetch → preview fetch. One takeUntil on
+    // the whole pipe so cancel short-circuits both in-flight requests and no
+    // late callback can push state into a closed dialog.
+    const template$ = this.needsTemplate && this.profile?.templateId?.id
+      ? this.agentService.getAgentAppTemplateById(this.profile.templateId.id).pipe(
+          catchError(() => of(null as AgentAppTemplate))
+        )
+      : of(null as AgentAppTemplate);
+
+    const request: BulkOperationRequest = { actionType: this.actionType, stepInputs: {} };
+    template$.pipe(
+      tap(template => { if (template) { this.initStepsFromTemplate(template); } }),
+      switchMap(() => this.agentService.previewBulkOperation(this.group.id.id, this.profile.id.id, request)),
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (preview) => {
+        this.preview = preview;
+        this.hydratePreview(preview);
+        this.previewLoaded = true;
+        this.loading = false;
+      },
+      error: () => {
+        this.previewLoaded = true;
+        this.loading = false;
+      }
+    });
   }
 
   get needsTemplate(): boolean {
@@ -146,7 +175,7 @@ export class AgentGroupBulkActionDialogComponent
   }
 
   skippedByReason(reason: SkipReason): SkippedApp[] {
-    return (this.preview?.skippedSample || []).filter(s => s.reason === reason);
+    return this.skippedByReasonMap[reason] || [];
   }
 
   skippedCount(reason: SkipReason): number {
@@ -154,20 +183,37 @@ export class AgentGroupBulkActionDialogComponent
   }
 
   skippedExtraCount(reason: SkipReason): number {
-    const shown = this.skippedByReason(reason).length;
-    return Math.max(0, this.skippedCount(reason) - shown);
-  }
-
-  get totalSkipped(): number {
-    const counts = this.preview?.skippedCountsByReason;
-    if (!counts) { return 0; }
-    return Object.values(counts).reduce((sum, n) => sum + (n || 0), 0);
+    return Math.max(0, this.skippedCount(reason) - this.skippedByReason(reason).length);
   }
 
   appLink(s: SkippedApp): string[] | null {
-    return s.agentId?.id && s.applicationId?.id
-      ? ['/edgeManagement', 'agents', s.agentId.id, 'applications', s.applicationId.id]
-      : null;
+    const key = s.applicationId?.id;
+    return key ? (this.skippedLinkMap.get(key) ?? null) : null;
+  }
+
+  // Close the dialog first, then navigate. Using [routerLink] with an extra
+  // (click)="cancel()" races the close animation against the route change —
+  // the dialog fades out over the new page, looking like a stuck overlay.
+  navigateToApp(link: string[], $event: Event) {
+    if ($event) { $event.preventDefault(); }
+    this.dialogRef.close(null);
+    this.router.navigate(link);
+  }
+
+  private hydratePreview(preview: BulkOperationPreview) {
+    const byReason: Partial<Record<SkipReason, SkippedApp[]>> = {};
+    const linkMap = new Map<string, string[]>();
+    for (const s of preview.skippedSample || []) {
+      (byReason[s.reason] ||= []).push(s);
+      if (s.agentId?.id && s.applicationId?.id) {
+        linkMap.set(s.applicationId.id,
+          ['/edgeManagement', 'agents', s.agentId.id, 'applications', s.applicationId.id]);
+      }
+    }
+    this.skippedByReasonMap = byReason;
+    this.skippedLinkMap = linkMap;
+    const counts = preview.skippedCountsByReason || {};
+    this.totalSkipped = Object.values(counts).reduce((sum, n) => sum + (n || 0), 0);
   }
 
   toggleBackupVolume(v: VolumeChoice) {
@@ -187,28 +233,12 @@ export class AgentGroupBulkActionDialogComponent
       actionType: this.actionType,
       stepInputs: this.buildStepInputs()
     };
-    this.agentService.bulkOperation(this.group.id.id, this.profile.id.id, request).subscribe({
-      next: (action) => this.dialogRef.close(action as unknown as AgentBulkAction),
-      error: () => this.submitting = false
-    });
-  }
-
-  private loadPreview() {
-    const request: BulkOperationRequest = {
-      actionType: this.actionType,
-      stepInputs: {}
-    };
-    this.agentService.previewBulkOperation(this.group.id.id, this.profile.id.id, request).subscribe({
-      next: (preview) => {
-        this.preview = preview;
-        this.previewLoaded = true;
-        this.loading = false;
-      },
-      error: () => {
-        this.previewLoaded = true;
-        this.loading = false;
-      }
-    });
+    this.agentService.bulkOperation(this.group.id.id, this.profile.id.id, request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (action) => this.dialogRef.close(action as unknown as AgentBulkAction),
+        error: () => this.submitting = false
+      });
   }
 
   private initStepsFromTemplate(template: AgentAppTemplate) {
