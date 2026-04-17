@@ -38,15 +38,15 @@ import {
   SkipReason
 } from '@shared/models/agent.models';
 import {
+  actionUsesTemplate,
   buildBackupVolumeInput,
   buildComposeDownInput,
   buildPullImagesInput,
+  classifyStepsForAction,
+  ClassifiedStep,
   extractComposeVolumeKeys,
-  findBackupVolumeStep,
-  findComposeDownStep,
-  findStartPullImagesStep,
-  findUpgradePullImagesStep,
-  readInitialPullImages
+  readInitialPullImages,
+  StepInputKind
 } from '@home/pages/agent/util/agent-app-steps';
 
 export interface AgentGroupBulkActionDialogData {
@@ -58,6 +58,16 @@ export interface AgentGroupBulkActionDialogData {
 interface VolumeChoice {
   key: string;
   selected: boolean;
+}
+
+// One rendered input block per classified step. Per-kind local state lives on
+// optional fields; only the field matching `kind` is populated and read.
+export interface StepBinding {
+  kind: StepInputKind;
+  step: AgentAppStep;
+  backupVolumes?: VolumeChoice[];
+  pullImages?: boolean;
+  removeVolumes?: boolean;
 }
 
 @Component({
@@ -86,15 +96,9 @@ export class AgentGroupBulkActionDialogComponent
   skippedLinkMap = new Map<string, string[]>();
   totalSkipped = 0;
 
-  // UPGRADE step inputs
-  backupVolumeStep: AgentAppStep | null = null;
-  backupVolumes: VolumeChoice[] = [];
-  pullImagesStep: AgentAppStep | null = null;
-  pullImages = false;
-
-  // DELETE step inputs
-  composeDownStep: AgentAppStep | null = null;
-  removeVolumes = false;
+  // One binding per user-input step surfaced by the template, in BE order.
+  // Supports multiple steps of the same kind — each gets its own block.
+  bindings: StepBinding[] = [];
   profileVolumeKeys: string[] = [];
 
   readonly ActionType = AgentAppEventActionType;
@@ -151,9 +155,7 @@ export class AgentGroupBulkActionDialogComponent
   }
 
   get needsTemplate(): boolean {
-    return this.actionType === AgentAppEventActionType.UPGRADE
-      || this.actionType === AgentAppEventActionType.UPDATE
-      || this.actionType === AgentAppEventActionType.DELETE;
+    return actionUsesTemplate(this.actionType);
   }
 
   get titleKey(): string {
@@ -231,6 +233,10 @@ export class AgentGroupBulkActionDialogComponent
     v.selected = !v.selected;
   }
 
+  trackBinding(_idx: number, b: StepBinding): string {
+    return b.step.id;
+  }
+
   cancel() {
     this.dialogRef.close(null);
   }
@@ -253,42 +259,43 @@ export class AgentGroupBulkActionDialogComponent
   }
 
   private initStepsFromTemplate(template: AgentAppTemplate) {
-    if (this.actionType === AgentAppEventActionType.UPGRADE) {
-      this.backupVolumeStep = findBackupVolumeStep(template);
-      this.pullImagesStep = findUpgradePullImagesStep(template);
-      this.pullImages = readInitialPullImages(this.pullImagesStep);
-      if (this.backupVolumeStep) {
-        this.backupVolumes = this.profileVolumeKeys.map(k => ({ key: k, selected: false }));
-      }
-    } else if (this.actionType === AgentAppEventActionType.UPDATE) {
-      this.pullImagesStep = findStartPullImagesStep(template);
-      this.pullImages = readInitialPullImages(this.pullImagesStep);
-    } else if (this.actionType === AgentAppEventActionType.DELETE) {
-      this.composeDownStep = findComposeDownStep(template);
+    this.bindings = classifyStepsForAction(template, this.actionType)
+      .map(cs => this.createBinding(cs));
+  }
+
+  private createBinding({ kind, step }: ClassifiedStep): StepBinding {
+    switch (kind) {
+      case 'backupVolume':
+        return {
+          kind, step,
+          backupVolumes: this.profileVolumeKeys.map(k => ({ key: k, selected: false }))
+        };
+      case 'pullImages':
+        return { kind, step, pullImages: readInitialPullImages(step) };
+      case 'composeDown':
+        return { kind, step, removeVolumes: false };
     }
   }
 
   private buildStepInputs(): { [stepId: string]: AgentAppStepState } {
     const stepInputs: { [stepId: string]: AgentAppStepState } = {};
-    if (this.actionType === AgentAppEventActionType.UPGRADE) {
-      if (this.backupVolumeStep) {
-        stepInputs[this.backupVolumeStep.id] = buildBackupVolumeInput(
-          this.backupVolumeStep,
-          this.backupVolumes.filter(v => v.selected).map(v => v.key)
-        );
-      }
-      if (this.pullImagesStep) {
-        stepInputs[this.pullImagesStep.id] = buildPullImagesInput(this.pullImagesStep, this.pullImages);
-      }
-    } else if (this.actionType === AgentAppEventActionType.UPDATE) {
-      if (this.pullImagesStep) {
-        stepInputs[this.pullImagesStep.id] = buildPullImagesInput(this.pullImagesStep, this.pullImages);
-      }
-    } else if (this.actionType === AgentAppEventActionType.DELETE) {
-      if (this.composeDownStep) {
-        stepInputs[this.composeDownStep.id] = buildComposeDownInput(this.composeDownStep, this.removeVolumes);
-      }
+    for (const b of this.bindings) {
+      stepInputs[b.step.id] = this.buildBindingInput(b);
     }
     return stepInputs;
+  }
+
+  private buildBindingInput(b: StepBinding): AgentAppStepState {
+    switch (b.kind) {
+      case 'backupVolume':
+        return buildBackupVolumeInput(
+          b.step,
+          (b.backupVolumes || []).filter(v => v.selected).map(v => v.key)
+        );
+      case 'pullImages':
+        return buildPullImagesInput(b.step, !!b.pullImages);
+      case 'composeDown':
+        return buildComposeDownInput(b.step, !!b.removeVolumes);
+    }
   }
 }

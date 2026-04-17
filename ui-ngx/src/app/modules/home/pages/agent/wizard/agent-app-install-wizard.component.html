@@ -225,34 +225,41 @@
           </ng-container>
         </div>
 
-        <div class="config-section" *ngIf="backupVolumeStep">
+      </ng-container>
+
+      <!-- Step inputs. One block per classified step the template exposes for
+           the active mode's action. -->
+      <ng-container *ngFor="let binding of bindings; trackBy: trackBinding" [ngSwitch]="binding.kind">
+
+        <div class="config-section" *ngSwitchCase="'backupVolume'">
           <div class="config-section-header">
-            {{ backupVolumeStep.title }}
-            <span class="step-type-label">{{ backupVolumeStep.type }}</span>
+            {{ binding.step.title }}
+            <span class="step-type-label">{{ binding.step.type }}</span>
           </div>
           <p class="hint" translate>agent.app-upgrade-backup-volumes-hint</p>
-          <div class="volume-list" *ngIf="backupVolumes.length">
-            <label class="volume-row" *ngFor="let v of backupVolumes">
+          <div class="volume-list" *ngIf="binding.backupVolumes?.length">
+            <label class="volume-row" *ngFor="let v of binding.backupVolumes">
               <mat-checkbox [checked]="v.selected" (change)="toggleBackupVolume(v)">
                 <span class="volume-name">{{ v.key }}</span>
               </mat-checkbox>
             </label>
           </div>
-          <div class="volume-empty" *ngIf="!backupVolumes.length" translate>
+          <div class="volume-empty" *ngIf="!binding.backupVolumes?.length" translate>
             agent.app-upgrade-no-volumes
           </div>
         </div>
-      </ng-container>
 
-      <div class="config-section" *ngIf="hasPullImagesStep && pullImagesStep">
-        <div class="config-section-header">
-          {{ pullImagesStep.title || ('agent.app-install-pull-images' | translate) }}
-          <span class="step-type-label">{{ pullImagesStep.type }}</span>
+        <div class="config-section" *ngSwitchCase="'pullImages'">
+          <div class="config-section-header">
+            {{ binding.step.title || ('agent.app-install-pull-images' | translate) }}
+            <span class="step-type-label">{{ binding.step.type }}</span>
+          </div>
+          <mat-checkbox [(ngModel)]="binding.pullImages">
+            <span translate>agent.app-install-pull-images</span>
+          </mat-checkbox>
         </div>
-        <mat-checkbox [(ngModel)]="pullImages">
-          <span translate>agent.app-install-pull-images</span>
-        </mat-checkbox>
-      </div>
+
+      </ng-container>
 
       <div class="step-footer">
         <button mat-button matStepperPrevious [disabled]="submitting" *ngIf="mode === 'install'">
@@ -291,7 +298,7 @@
           <span class="label" translate>agent.app-upgrade-summary-versions</span>
           <span class="value">{{ fromVersion || '—' }} → {{ toVersion || '—' }}</span>
         </div>
-        <div class="summary-row" *ngIf="mode === 'upgrade' && backupVolumeStep">
+        <div class="summary-row" *ngIf="mode === 'upgrade' && hasBackupVolumeInput">
           <span class="label" translate>agent.app-upgrade-summary-volumes-label</span>
           <span class="value">
             {{ 'agent.app-upgrade-summary-volumes' | translate: { count: selectedBackupVolumeCount } }}

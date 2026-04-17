@@ -15,6 +15,7 @@
 ///
 
 import {
+  AgentAppEventActionType,
   AgentAppStep,
   AgentAppStepState,
   AgentAppStepType,
@@ -32,25 +33,10 @@ function visibleSteps(steps: AgentAppStep[] | undefined): AgentAppStep[] {
   return (steps || []).filter(s => !s.templateOnly);
 }
 
-export function findBackupVolumeStep(template: AgentAppTemplate | null | undefined): AgentAppStep | null {
-  return visibleSteps(template?.upgradeSteps).find(s => s.type === AgentAppStepType.BACKUP_VOLUME) || null;
-}
-
-export function findUpgradePullImagesStep(template: AgentAppTemplate | null | undefined): AgentAppStep | null {
-  return visibleSteps(template?.upgradeSteps).find(s =>
-    (s.type === AgentAppStepType.COMPOSE_MIGRATION || s.type === AgentAppStepType.COMPOSE)
-    && stateHas(s, 'pullImages')
-  ) || null;
-}
-
-export function findStartPullImagesStep(template: AgentAppTemplate | null | undefined): AgentAppStep | null {
-  return visibleSteps(template?.startSteps).find(s =>
-    s.type === AgentAppStepType.COMPOSE && stateHas(s, 'pullImages')
-  ) || null;
-}
-
 export function findComposeDownStep(template: AgentAppTemplate | null | undefined): AgentAppStep | null {
-  return visibleSteps(template?.deleteSteps).find(s => s.type === AgentAppStepType.COMPOSE_DOWN) || null;
+  return visibleSteps(template?.deleteSteps).find(s =>
+    s.type === AgentAppStepType.COMPOSE_DOWN && stateHas(s, 'removeVolumes')
+  ) || null;
 }
 
 export function readInitialPullImages(step: AgentAppStep | null | undefined): boolean {
@@ -84,4 +70,84 @@ export function buildComposeDownInput(step: AgentAppStep, removeVolumes: boolean
     removeVolumes,
     type: AgentAppStepType.COMPOSE_DOWN
   } as AgentAppStepState;
+}
+
+/**
+ * Kinds of user-facing step inputs the FE knows how to render + collect.
+ * The classifier maps an AgentAppStep → kind (or null if no user input).
+ * Rendering and payload-building stay per-kind; what varies per template
+ * is which steps of which kinds show up in which list — classification
+ * is structural (step type + state shape), not positional.
+ */
+export type StepInputKind = 'backupVolume' | 'pullImages' | 'composeDown';
+
+export interface ClassifiedStep {
+  kind: StepInputKind;
+  step: AgentAppStep;
+}
+
+// A step is classifiable as a user-facing input only when its state declares
+// the key the input writes. A COMPOSE_DOWN with state=null, for example,
+// means the server will run compose-down with defaults — no prompt needed.
+export function classifyStep(step: AgentAppStep): StepInputKind | null {
+  switch (step.type) {
+    case AgentAppStepType.BACKUP_VOLUME:
+      return stateHas(step, 'backupVolumes') ? 'backupVolume' : null;
+    case AgentAppStepType.COMPOSE_DOWN:
+      return stateHas(step, 'removeVolumes') ? 'composeDown' : null;
+    case AgentAppStepType.COMPOSE:
+    case AgentAppStepType.COMPOSE_MIGRATION:
+      return stateHas(step, 'pullImages') ? 'pullImages' : null;
+    default:
+      return null;
+  }
+}
+
+/**
+ * The template step-list the BE consults for a given action. UPDATE reuses
+ * startSteps (mirroring the single-app wizard's update mode). RESTART and
+ * ROLLBACK have no user-input steps today.
+ */
+export function stepsForAction(
+  template: AgentAppTemplate | null | undefined,
+  action: AgentAppEventActionType
+): AgentAppStep[] {
+  if (!template) { return []; }
+  switch (action) {
+    case AgentAppEventActionType.INSTALL:
+    case AgentAppEventActionType.UPDATE:
+      return template.startSteps || [];
+    case AgentAppEventActionType.UPGRADE:
+      return template.upgradeSteps || [];
+    case AgentAppEventActionType.DELETE:
+      return template.deleteSteps || [];
+    default:
+      return [];
+  }
+}
+
+export function classifyStepsForAction(
+  template: AgentAppTemplate | null | undefined,
+  action: AgentAppEventActionType
+): ClassifiedStep[] {
+  const out: ClassifiedStep[] = [];
+  for (const step of visibleSteps(stepsForAction(template, action))) {
+    const kind = classifyStep(step);
+    if (kind) {
+      out.push({ kind, step });
+    }
+  }
+  return out;
+}
+
+export function actionUsesTemplate(action: AgentAppEventActionType): boolean {
+  switch (action) {
+    case AgentAppEventActionType.INSTALL:
+    case AgentAppEventActionType.UPDATE:
+    case AgentAppEventActionType.UPGRADE:
+    case AgentAppEventActionType.DELETE:
+      return true;
+    default:
+      return false;
+  }
 }

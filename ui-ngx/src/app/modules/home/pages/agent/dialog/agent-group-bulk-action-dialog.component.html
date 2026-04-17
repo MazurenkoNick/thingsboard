@@ -48,55 +48,58 @@
     <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
   </div>
 
-  <!-- UPGRADE: backup volumes step -->
-  <div class="tb-bulk-step" *ngIf="!loading && actionType === ActionType.UPGRADE && backupVolumeStep">
-    <div class="tb-bulk-step-header">
-      {{ backupVolumeStep.title }}
-      <span class="tb-bulk-step-type">{{ backupVolumeStep.type }}</span>
-    </div>
-    <p class="tb-bulk-step-hint" translate>agent.bulk-backup-volumes-hint</p>
-    <div class="tb-bulk-volume-list" *ngIf="backupVolumes.length; else noVolumes">
-      <label class="tb-bulk-volume-row" *ngFor="let v of backupVolumes">
-        <mat-checkbox [checked]="v.selected" (change)="toggleBackupVolume(v)">
-          <span class="tb-bulk-volume-name">{{ v.key }}</span>
+  <!-- Step inputs. Rendered per binding, one block per classified step.
+       Ordering follows the BE step-list. -->
+  <ng-container *ngIf="!loading">
+    <ng-container *ngFor="let binding of bindings; trackBy: trackBinding" [ngSwitch]="binding.kind">
+
+      <div class="tb-bulk-step" *ngSwitchCase="'backupVolume'">
+        <div class="tb-bulk-step-header">
+          {{ binding.step.title }}
+          <span class="tb-bulk-step-type">{{ binding.step.type }}</span>
+        </div>
+        <p class="tb-bulk-step-hint" translate>agent.bulk-backup-volumes-hint</p>
+        <div class="tb-bulk-volume-list" *ngIf="binding.backupVolumes?.length; else noVolumes">
+          <label class="tb-bulk-volume-row" *ngFor="let v of binding.backupVolumes">
+            <mat-checkbox [checked]="v.selected" (change)="toggleBackupVolume(v)">
+              <span class="tb-bulk-volume-name">{{ v.key }}</span>
+            </mat-checkbox>
+          </label>
+        </div>
+        <ng-template #noVolumes>
+          <div class="tb-bulk-empty-hint" translate>agent.bulk-no-volumes-in-profile</div>
+        </ng-template>
+      </div>
+
+      <div class="tb-bulk-step" *ngSwitchCase="'pullImages'">
+        <div class="tb-bulk-step-header">
+          {{ binding.step.title || ('agent.app-install-pull-images' | translate) }}
+          <span class="tb-bulk-step-type">{{ binding.step.type }}</span>
+        </div>
+        <mat-checkbox [(ngModel)]="binding.pullImages">
+          <span translate>agent.app-install-pull-images</span>
         </mat-checkbox>
-      </label>
-    </div>
-    <ng-template #noVolumes>
-      <div class="tb-bulk-empty-hint" translate>agent.bulk-no-volumes-in-profile</div>
-    </ng-template>
-  </div>
+      </div>
 
-  <!-- UPGRADE/UPDATE: pull images step -->
-  <div class="tb-bulk-step"
-       *ngIf="!loading && pullImagesStep
-              && (actionType === ActionType.UPGRADE || actionType === ActionType.UPDATE)">
-    <div class="tb-bulk-step-header">
-      {{ pullImagesStep.title || ('agent.app-install-pull-images' | translate) }}
-      <span class="tb-bulk-step-type">{{ pullImagesStep.type }}</span>
-    </div>
-    <mat-checkbox [(ngModel)]="pullImages">
-      <span translate>agent.app-install-pull-images</span>
-    </mat-checkbox>
-  </div>
+      <div class="tb-bulk-step" *ngSwitchCase="'composeDown'">
+        <div class="tb-bulk-step-header">
+          {{ binding.step.title }}
+          <span class="tb-bulk-step-type">{{ binding.step.type }}</span>
+        </div>
+        <mat-checkbox [(ngModel)]="binding.removeVolumes" color="warn">
+          <span translate>agent.app-delete-remove-volumes</span>
+        </mat-checkbox>
+        <div class="tb-bulk-step-hint" translate>agent.app-delete-remove-volumes-hint</div>
+        <div class="tb-bulk-volume-chips" *ngIf="profileVolumeKeys.length">
+          <span class="tb-bulk-volume-chip" *ngFor="let k of profileVolumeKeys">{{ k }}</span>
+        </div>
+        <div class="tb-bulk-empty-hint" *ngIf="!profileVolumeKeys.length" translate>
+          agent.bulk-no-volumes-in-profile
+        </div>
+      </div>
 
-  <!-- DELETE: remove volumes step -->
-  <div class="tb-bulk-step" *ngIf="!loading && actionType === ActionType.DELETE && composeDownStep">
-    <div class="tb-bulk-step-header">
-      {{ composeDownStep.title }}
-      <span class="tb-bulk-step-type">{{ composeDownStep.type }}</span>
-    </div>
-    <mat-checkbox [(ngModel)]="removeVolumes" color="warn">
-      <span translate>agent.app-delete-remove-volumes</span>
-    </mat-checkbox>
-    <div class="tb-bulk-step-hint" translate>agent.app-delete-remove-volumes-hint</div>
-    <div class="tb-bulk-volume-chips" *ngIf="profileVolumeKeys.length">
-      <span class="tb-bulk-volume-chip" *ngFor="let k of profileVolumeKeys">{{ k }}</span>
-    </div>
-    <div class="tb-bulk-empty-hint" *ngIf="!profileVolumeKeys.length" translate>
-      agent.bulk-no-volumes-in-profile
-    </div>
-  </div>
+    </ng-container>
+  </ng-container>
 
   <!-- Preview summary -->
   <div class="tb-bulk-preview" *ngIf="!loading && preview">

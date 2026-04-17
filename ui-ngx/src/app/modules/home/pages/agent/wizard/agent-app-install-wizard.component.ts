@@ -48,12 +48,13 @@ import {
 } from '@home/pages/agent/util/agent-credentials';
 import {
   buildBackupVolumeInput,
+  buildComposeDownInput,
   buildPullImagesInput,
+  classifyStepsForAction,
+  ClassifiedStep,
   extractComposeVolumeKeys,
-  findBackupVolumeStep,
-  findStartPullImagesStep,
-  findUpgradePullImagesStep,
-  readInitialPullImages
+  readInitialPullImages,
+  StepInputKind
 } from '@home/pages/agent/util/agent-app-steps';
 
 export interface AgentAppInstallWizardData {
@@ -66,6 +67,16 @@ export interface AgentAppInstallWizardData {
 interface VolumeChoice {
   key: string;
   selected: boolean;
+}
+
+// One rendered user-input block per classified step. Per-kind local state
+// lives on optional fields; only the field matching `kind` is populated.
+export interface StepBinding {
+  kind: StepInputKind;
+  step: AgentAppStep;
+  backupVolumes?: VolumeChoice[];
+  pullImages?: boolean;
+  removeVolumes?: boolean;
 }
 
 interface TypeCard {
@@ -107,9 +118,11 @@ export class AgentAppInstallWizardComponent
   // Upgrade-mode state. Populated when mode === 'upgrade' in ngOnInit.
   fromVersion: string | null = null;
   toVersion: string | null = null;
-  upgradeSteps: AgentAppStep[] = [];
-  backupVolumeStep: AgentAppStep | null = null;
-  backupVolumes: VolumeChoice[] = [];
+
+  // One binding per user-input step surfaced by the template for the active
+  // mode's action. Multiple steps of the same kind each render their own
+  // block. Ordering follows the BE step-list.
+  bindings: StepBinding[] = [];
 
   // Update mode: side-by-side diff state.
   // Left (read-only): merged template preview (what the template would add).
@@ -133,9 +146,6 @@ export class AgentAppInstallWizardComponent
 
   appName = '';
   composeYaml = '';
-  pullImages = false;
-  hasPullImagesStep = false;
-  pullImagesStep: AgentAppStep | null = null;
 
   mergedApp: AgentApplication | null = null;
   submitting = false;
@@ -317,7 +327,7 @@ export class AgentAppInstallWizardComponent
       this.agentService.getAgentAppTemplateById(profile.templateId.id).subscribe({
         next: tpl => {
           this.template = tpl;
-          this.scanStartSteps(tpl);
+          this.initBindings(tpl);
           this.composeType = this.pickComposeType(tpl);
           this.composeYaml = this.dumpCompose(profile as any);
           this.initCredentialValues();
@@ -408,7 +418,7 @@ export class AgentAppInstallWizardComponent
   private applyTemplate(tpl: AgentAppTemplate) {
     this.loadingTemplate = false;
     this.template = tpl;
-    this.scanStartSteps(tpl);
+    this.initBindings(tpl);
     this.composeType = this.pickComposeType(tpl);
     // Profile-managed update: skip diff/preview merge — the user can only
     // edit credentials, so we hydrate the form from the existing app and
@@ -510,17 +520,7 @@ export class AgentAppInstallWizardComponent
   private applyUpgradeTemplate(template: AgentAppTemplate) {
     this.template = template;
     this.toVersion = template.currentVersion || null;
-    this.upgradeSteps = (template.upgradeSteps || []).filter(s => !s.templateOnly);
-
-    this.backupVolumeStep = findBackupVolumeStep(template);
-    this.pullImagesStep = findUpgradePullImagesStep(template);
-    this.hasPullImagesStep = !!this.pullImagesStep;
-    this.pullImages = readInitialPullImages(this.pullImagesStep);
-
-    // Volumes are backed up from the CURRENT app — the data we need to
-    // preserve through the upgrade lives in the existing volumes.
-    this.backupVolumes = extractComposeVolumeKeys(this.existingApplication!)
-      .map(key => ({ key, selected: true }));
+    this.initBindings(template);
 
     // Side-by-side diff: left = raw new template compose (no mergeForPreview),
     // right = current persisted compose. Both panes are read-only in upgrade
@@ -565,8 +565,25 @@ export class AgentAppInstallWizardComponent
     v.selected = !v.selected;
   }
 
+  trackBinding(_idx: number, b: StepBinding): string {
+    return b.step.id;
+  }
+
+  get hasBackupVolumeInput(): boolean {
+    return this.bindings.some(b => b.kind === 'backupVolume');
+  }
+
+  // Summed across all backup-volume bindings. The current template shape
+  // produces at most one such binding, but the BE could emit several and
+  // the summary row should reflect all selections, not the first one.
   get selectedBackupVolumeCount(): number {
-    return this.backupVolumes.filter(v => v.selected).length;
+    let count = 0;
+    for (const b of this.bindings) {
+      if (b.kind === 'backupVolume' && b.backupVolumes) {
+        count += b.backupVolumes.filter(v => v.selected).length;
+      }
+    }
+    return count;
   }
 
   /**
@@ -590,9 +607,61 @@ export class AgentAppInstallWizardComponent
     return 'default';
   }
 
-  private scanStartSteps(template: AgentAppTemplate) {
-    this.pullImagesStep = findStartPullImagesStep(template);
-    this.hasPullImagesStep = !!this.pullImagesStep;
+  private modeAction(): AgentAppEventActionType {
+    switch (this.mode) {
+      case 'update':  return AgentAppEventActionType.UPDATE;
+      case 'upgrade': return AgentAppEventActionType.UPGRADE;
+      default:        return AgentAppEventActionType.INSTALL;
+    }
+  }
+
+  private initBindings(template: AgentAppTemplate) {
+    this.bindings = classifyStepsForAction(template, this.modeAction())
+      .map(cs => this.createBinding(cs));
+  }
+
+  private createBinding({ kind, step }: ClassifiedStep): StepBinding {
+    switch (kind) {
+      case 'backupVolume':
+        return { kind, step, backupVolumes: this.seedBackupVolumes() };
+      case 'pullImages':
+        return { kind, step, pullImages: readInitialPullImages(step) };
+      case 'composeDown':
+        return { kind, step, removeVolumes: false };
+    }
+  }
+
+  // In upgrade mode the volumes we prompt to back up are the CURRENT app's —
+  // those hold the data we need to preserve. Pre-selected so the default is
+  // "don't lose anything." Non-upgrade modes don't currently surface a
+  // backup-volume input; seed empty defensively.
+  private seedBackupVolumes(): VolumeChoice[] {
+    if (this.mode === 'upgrade' && this.existingApplication) {
+      return extractComposeVolumeKeys(this.existingApplication).map(key => ({ key, selected: true }));
+    }
+    return [];
+  }
+
+  private buildStepInputs(): { [stepId: string]: any } {
+    const out: { [stepId: string]: any } = {};
+    for (const b of this.bindings) {
+      out[b.step.id] = this.buildStepPayload(b);
+    }
+    return out;
+  }
+
+  private buildStepPayload(b: StepBinding): any {
+    switch (b.kind) {
+      case 'backupVolume':
+        return buildBackupVolumeInput(
+          b.step,
+          (b.backupVolumes || []).filter(v => v.selected).map(v => v.key)
+        );
+      case 'pullImages':
+        return buildPullImagesInput(b.step, !!b.pullImages);
+      case 'composeDown':
+        return buildComposeDownInput(b.step, !!b.removeVolumes);
+    }
   }
 
   private defaultAppName(type: AgentApplicationType): string {
@@ -815,16 +884,7 @@ export class AgentAppInstallWizardComponent
           compose: outboundCompose
         }
       };
-      const stepInputs: { [stepId: string]: any } = {};
-      if (this.backupVolumeStep) {
-        stepInputs[this.backupVolumeStep.id] = buildBackupVolumeInput(
-          this.backupVolumeStep,
-          this.backupVolumes.filter(v => v.selected).map(v => v.key)
-        );
-      }
-      if (this.pullImagesStep) {
-        stepInputs[this.pullImagesStep.id] = buildPullImagesInput(this.pullImagesStep, this.pullImages);
-      }
+      const stepInputs = this.buildStepInputs();
       this.agentService.createAgentAppEvent(this.existingApplication.id.id, {
         actionType: AgentAppEventActionType.UPGRADE,
         application: outbound,
@@ -887,10 +947,7 @@ export class AgentAppInstallWizardComponent
       application.templateId = this.selectedProfile.templateId;
     }
 
-    const stepInputs: { [stepId: string]: any } = {};
-    if (this.pullImagesStep) {
-      stepInputs[this.pullImagesStep.id] = buildPullImagesInput(this.pullImagesStep, this.pullImages);
-    }
+    const stepInputs = this.buildStepInputs();
 
     if (this.mode === 'update' && this.existingApplication) {
       this.agentService.createAgentAppEvent(this.existingApplication.id.id, {
