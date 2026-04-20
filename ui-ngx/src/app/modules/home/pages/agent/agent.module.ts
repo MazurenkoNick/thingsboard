@@ -25,7 +25,6 @@ import { AgentTabsComponent } from '@home/pages/agent/agent-tabs.component';
 import { AgentGroupComponent } from '@home/pages/agent/agent-group.component';
 import { AgentGroupTabsComponent } from '@home/pages/agent/agent-group-tabs.component';
 import { AgentAppProfileComponent } from '@home/pages/agent/agent-app-profile.component';
-import { AgentAppProfileTabsComponent } from '@home/pages/agent/agent-app-profile-tabs.component';
 import {
   AgentInstallInstructionsDialogComponent
 } from '@home/pages/agent/agent-install-instructions-dialog.component';
@@ -86,7 +85,6 @@ import { AgentEventsPageComponent } from '@home/pages/agent/agent-events-page.co
     AgentGroupComponent,
     AgentGroupTabsComponent,
     AgentAppProfileComponent,
-    AgentAppProfileTabsComponent,
     AgentInstallInstructionsDialogComponent,
     AgentGroupCreatedDialogComponent,
     AgentGroupProfilesComponent,

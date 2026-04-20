@@ -35,7 +35,6 @@ import { AgentAppProfile, AgentAppTemplate } from '@shared/models/agent.models';
 import { versionTag } from '@home/pages/agent/util/version-tag';
 import { AgentService } from '@core/http/agent.service';
 import { AgentAppProfileComponent } from '@home/pages/agent/agent-app-profile.component';
-import { AgentAppProfileTabsComponent } from '@home/pages/agent/agent-app-profile-tabs.component';
 import { MatDialog } from '@angular/material/dialog';
 import {
   AgentAppProfileWizardComponent,
@@ -57,7 +56,6 @@ export class AgentAppProfilesTableConfigResolver {
 
     this.config.entityType = EntityType.AGENT_APP_PROFILE;
     this.config.entityComponent = AgentAppProfileComponent;
-    this.config.entityTabsComponent = AgentAppProfileTabsComponent;
     this.config.entityTranslations = entityTypeTranslations.get(EntityType.AGENT_APP_PROFILE);
     this.config.entityResources = entityTypeResources.get(EntityType.AGENT_APP_PROFILE);
 
