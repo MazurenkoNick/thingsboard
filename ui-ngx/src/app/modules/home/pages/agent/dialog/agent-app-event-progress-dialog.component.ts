@@ -33,12 +33,10 @@ import {
   AgentAppTemplate
 } from '@shared/models/agent.models';
 import { DialogService } from '@core/services/dialog.service';
-import { PageLink } from '@shared/models/page/page-link';
-import { Direction } from '@shared/models/page/sort-order';
 import { Subscription, timer } from 'rxjs';
 
 export interface AgentAppEventProgressDialogData {
-  application: AgentApplication;
+  application: AgentApplication | null;
   event: AgentAppEvent;
 }
 
@@ -62,7 +60,7 @@ export class AgentAppEventProgressDialogComponent
   extends DialogComponent<AgentAppEventProgressDialogComponent, boolean>
   implements OnInit, OnDestroy {
 
-  application: AgentApplication;
+  application: AgentApplication | null;
   event: AgentAppEvent;
   template: AgentAppTemplate | null = null;
   steps: ProgressStepView[] = [];
@@ -89,7 +87,8 @@ export class AgentAppEventProgressDialogComponent
   ngOnInit(): void {
     const templateId = this.application?.templateId?.id;
     if (!templateId) {
-      this.loadError = this.translate.instant('agent.app-event-progress-no-template');
+      // Orphan event (application removed) or missing template — render read-only
+      // with whatever the event already carries. No polling.
       this.loading = false;
       return;
     }
@@ -131,6 +130,7 @@ export class AgentAppEventProgressDialogComponent
   }
 
   get canCancel(): boolean {
+    if (!this.application?.id?.id) { return false; }
     const s = this.event?.status;
     return s === AgentAppEventStatus.PENDING
         || s === AgentAppEventStatus.QUEUED
@@ -143,7 +143,7 @@ export class AgentAppEventProgressDialogComponent
 
   viewInEvents($event: Event): void {
     if ($event) { $event.preventDefault(); $event.stopPropagation(); }
-    const agentId = (this.application?.agentId as any)?.id;
+    const agentId = (this.application?.agentId as any)?.id || (this.event?.agentId as any)?.id;
     if (!agentId) { return; }
     this.dialogRef.close(false);
     this.router.navigateByUrl(`/edgeManagement/agents/${agentId}/events`);
@@ -182,14 +182,9 @@ export class AgentAppEventProgressDialogComponent
   }
 
   private refreshEventOnce(): void {
-    if (!this.application?.id?.id || !this.event?.id?.id) { return; }
-    // Re-fetch the latest snapshot of the event from the server. We do not have
-    // a single-event GET, so we use the events list with a small page and pick
-    // the matching id by client-side filter.
-    const pageLink = new PageLink(50, 0, null, { property: 'createdTime', direction: Direction.DESC });
-    this.agentService.getAgentAppEvents(this.application.id.id, pageLink, undefined, undefined,
-      { ignoreLoading: true, ignoreErrors: true }).subscribe(page => {
-      const fresh = page?.data?.find(e => e.id.id === this.event.id.id);
+    if (!this.event?.id?.id) { return; }
+    this.agentService.getAgentAppEventById(this.event.id.id,
+      { ignoreLoading: true, ignoreErrors: true }).subscribe(fresh => {
       if (fresh) {
         this.event = fresh;
         this.rebuildSteps();

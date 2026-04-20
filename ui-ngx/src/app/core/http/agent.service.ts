@@ -180,6 +180,10 @@ export class AgentService {
       defaultHttpOptionsFromConfig(config));
   }
 
+  public getAgentAppEventById(eventId: string, config?: RequestConfig): Observable<AgentAppEvent> {
+    return this.http.get<AgentAppEvent>(`/api/agent/app/event/${eventId}`, defaultHttpOptionsFromConfig(config));
+  }
+
   public getAgentAppEvents(applicationId: string, pageLink: PageLink,
                            actionType?: string, status?: string,
                            config?: RequestConfig): Observable<PageData<AgentAppEvent>> {

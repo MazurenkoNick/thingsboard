@@ -18,7 +18,7 @@
 <mat-toolbar color="primary" class="tb-progress-toolbar">
   <div class="tb-progress-toolbar-content">
     <h2>{{ 'agent.app-event-progress-title' | translate }}</h2>
-    <span class="flex-1">{{ application?.name }}</span>
+    <span class="flex-1">{{ application?.name || event?.applicationName || ('agent.app-deleted' | translate) }}</span>
   </div>
   <button mat-icon-button (click)="cancel()" type="button" tabindex="-1">
     <mat-icon>close</mat-icon>
@@ -41,7 +41,7 @@
     <div class="tb-progress-summary">
       <div class="info-col">
         <div class="info-label" translate>agent.app-name</div>
-        <div class="info-value">{{ application?.name }}</div>
+        <div class="info-value">{{ application?.name || event?.applicationName || ('agent.app-deleted' | translate) }}</div>
       </div>
       <div class="info-col">
         <div class="info-label" translate>agent.app-event-action</div>

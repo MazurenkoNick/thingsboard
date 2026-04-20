@@ -50,6 +50,9 @@ public class AgentAppEventDataValidator extends DataValidator<AgentAppEvent> {
         if (event.getApplicationId() == null) {
             throw new DataValidationException("Agent app event applicationId must not be null!");
         }
+        if (event.getAgentId() == null) {
+            throw new DataValidationException("Agent app event agentId must not be null!");
+        }
         if (event.getActionType() == null) {
             throw new DataValidationException("Agent app event actionType must not be null!");
         }

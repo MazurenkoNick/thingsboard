@@ -188,6 +188,8 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         AgentAppEvent event = new AgentAppEvent();
         event.setTenantId(tenantId);
         event.setApplicationId(app.getId());
+        event.setAgentId(agent.getId());
+        event.setApplicationName(app.getName());
         event.setActionType(AgentAppEventActionType.INSTALL);
         event.setDeliveryState(AgentAppEventDeliveryState.PENDING);
         event.setStatus(AgentAppEventStatus.PENDING);
@@ -414,6 +416,8 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         AgentAppEvent event1 = new AgentAppEvent();
         event1.setTenantId(tenantId);
         event1.setApplicationId(app1.getId());
+        event1.setAgentId(agent.getId());
+        event1.setApplicationName(app1.getName());
         event1.setActionType(AgentAppEventActionType.INSTALL);
         event1.setDeliveryState(AgentAppEventDeliveryState.PENDING);
         event1.setUpdatedTime(System.currentTimeMillis());
@@ -422,6 +426,8 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         AgentAppEvent event2 = new AgentAppEvent();
         event2.setTenantId(tenantId);
         event2.setApplicationId(app2.getId());
+        event2.setAgentId(agent.getId());
+        event2.setApplicationName(app2.getName());
         event2.setActionType(AgentAppEventActionType.UPDATE);
         event2.setDeliveryState(AgentAppEventDeliveryState.PENDING);
         event2.setUpdatedTime(System.currentTimeMillis());
@@ -430,6 +436,8 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         AgentAppEvent event3 = new AgentAppEvent();
         event3.setTenantId(tenantId);
         event3.setApplicationId(app1.getId());
+        event3.setAgentId(agent.getId());
+        event3.setApplicationName(app1.getName());
         event3.setActionType(AgentAppEventActionType.RESTART);
         event3.setDeliveryState(AgentAppEventDeliveryState.PENDING);
         event3.setUpdatedTime(System.currentTimeMillis());
@@ -943,6 +951,7 @@ public class AgentApplicationServiceTest extends AbstractServiceTest {
         step.setTitle("start");
         template.setStartSteps(List.of(step));
         template.setUpgradeSteps(List.of(step));
+        template.setRestartSteps(List.of(step));
         return agentAppTemplateService.save(TenantId.SYS_TENANT_ID, template);
     }
 

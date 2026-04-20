@@ -294,9 +294,10 @@ export class AgentApplicationsTableConfigResolver {
         }
       }
     ).afterClosed().subscribe(event => {
-      if (event) {
-        this.config.updateData();
-      }
+      if (!event) { return; }
+      this.config.updateData();
+      openAgentAppEventProgress(this.dialog, application as AgentApplication, event)
+        .subscribe(() => this.config.updateData());
     });
   }
 

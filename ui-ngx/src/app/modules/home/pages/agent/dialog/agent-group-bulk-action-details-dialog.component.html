@@ -102,7 +102,7 @@
       </thead>
       <tbody>
         <tr *ngFor="let event of events; trackBy: trackByEventId" (click)="openEventProgress(event)">
-          <td>{{ event.applicationName || event.applicationId?.id }}</td>
+          <td>{{ event.applicationName || ('agent.app-deleted' | translate) }}</td>
           <td [style.color]="statusColor(event.status)" class="status-cell">
             {{ eventStatusTranslationMap.get(event.status) | translate }}
           </td>

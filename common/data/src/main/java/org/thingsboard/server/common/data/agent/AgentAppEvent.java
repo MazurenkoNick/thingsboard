@@ -25,6 +25,7 @@ import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.TenantId;
 
@@ -40,6 +41,8 @@ public class AgentAppEvent extends BaseData<AgentAppEventId> implements HasId<Ag
 
     private TenantId tenantId;
     private AgentApplicationId applicationId;
+    private AgentId agentId;
+    private String applicationName;
     private AgentAppEventActionType actionType;
     private AgentAppEventDeliveryState deliveryState;
     private AgentAppEventStatus status;
@@ -62,6 +65,8 @@ public class AgentAppEvent extends BaseData<AgentAppEventId> implements HasId<Ag
         super(event);
         this.tenantId = event.getTenantId();
         this.applicationId = event.getApplicationId();
+        this.agentId = event.getAgentId();
+        this.applicationName = event.getApplicationName();
         this.actionType = event.getActionType();
         this.deliveryState = event.getDeliveryState();
         this.status = event.getStatus();

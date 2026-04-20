@@ -81,7 +81,8 @@ export class AgentEventsTableConfig extends EntityTableConfig<AgentAppEventInfo>
     this.columns.push(
       new EntityTableColumn<AgentAppEventInfo>('applicationName',
         'agent.app-event-app-name', '25%',
-        (e) => e.applicationName || '', () => ({}), false),
+        (e) => e.applicationName || this.translate.instant('agent.app-deleted'),
+        () => ({}), false),
       new EntityTableColumn<AgentAppEventInfo>('actionType',
         'agent.app-event-action', '140px',
         (e) => {

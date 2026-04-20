@@ -3300,7 +3300,8 @@
         "app-event-view-in-events": "View in events",
         "app-save-update-hint-title": "Changes saved",
         "app-save-update-hint": "Changes have been saved in ThingsBoard, but the agent is still running the previous configuration. Click the 'Update' action button for this application to apply the changes on the agent.",
-        "app-save-update-hint-action": "Update now"
+        "app-save-update-hint-action": "Update now",
+        "app-deleted": "Application deleted"
     },
     "edge-event": {
         "type-dashboard": "Dashboard",

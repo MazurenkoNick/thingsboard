@@ -225,7 +225,9 @@ export interface AgentAppStepState {
 
 export interface AgentAppEvent extends BaseData<AgentAppEventId> {
   tenantId?: TenantId;
-  applicationId: AgentApplicationId;
+  applicationId?: AgentApplicationId;
+  agentId?: AgentId;
+  applicationName?: string;
   actionType: AgentAppEventActionType;
   deliveryState: AgentAppEventDeliveryState;
   status: AgentAppEventStatus;

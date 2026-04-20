@@ -866,7 +866,9 @@ CREATE TABLE IF NOT EXISTS agent_app_event (
     id uuid NOT NULL CONSTRAINT agent_app_event_pkey PRIMARY KEY,
     created_time bigint NOT NULL,
     tenant_id uuid NOT NULL,
-    application_id uuid NOT NULL,
+    application_id uuid,
+    agent_id uuid,
+    application_name varchar(255),
     action_type varchar(32) NOT NULL,
     delivery_state varchar(32) NOT NULL DEFAULT 'PENDING',
     status varchar(32),
@@ -876,11 +878,12 @@ CREATE TABLE IF NOT EXISTS agent_app_event (
     updated_time bigint NOT NULL,
     step_states jsonb,
     bulk_action_id uuid,
-    CONSTRAINT fk_agent_app_event_application FOREIGN KEY (application_id) REFERENCES agent_application(id) ON DELETE CASCADE,
+    CONSTRAINT fk_agent_app_event_application FOREIGN KEY (application_id) REFERENCES agent_application(id) ON DELETE SET NULL,
     CONSTRAINT fk_agent_app_event_bulk_action FOREIGN KEY (bulk_action_id) REFERENCES agent_bulk_action(id) ON DELETE SET NULL
 );
 CREATE INDEX IF NOT EXISTS idx_agent_app_event_app_delivery ON agent_app_event(application_id, delivery_state);
 CREATE INDEX IF NOT EXISTS idx_agent_app_event_bulk_action_status ON agent_app_event(bulk_action_id, status) WHERE bulk_action_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_agent_app_event_tenant_agent ON agent_app_event(tenant_id, agent_id);
 
 CREATE TABLE IF NOT EXISTS agent_app_unit (
     id uuid NOT NULL CONSTRAINT agent_app_unit_pkey PRIMARY KEY,

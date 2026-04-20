@@ -41,6 +41,7 @@ import org.thingsboard.server.queue.util.TbCoreComponent;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -87,8 +88,8 @@ public class AgentEventErrorHandler {
                 rollbackPendingDeletion(tenantId, event.getApplicationId());
             }
             if (shouldEnqueueRollbackEvent(event, errorOrigin)) {
-                appEventService.save(tenantId, buildRollbackEvent(tenantId, event));
-                dispatchNextEvent = false;
+                boolean rolledBack = trySaveRollbackEvent(tenantId, event);
+                dispatchNextEvent = !rolledBack;
             }
             if (shouldClearDesiredTemplateId(event, errorOrigin)) {
                 clearDesiredTemplateId(tenantId, event.getApplicationId());
@@ -98,17 +99,23 @@ public class AgentEventErrorHandler {
         }));
     }
 
+    private boolean trySaveRollbackEvent(TenantId tenantId, AgentAppEvent event) {
+        Optional<AgentAppEvent> rollback = buildRollbackEvent(tenantId, event);
+        rollback.ifPresent(e -> appEventService.save(tenantId, e));
+        return rollback.isPresent();
+    }
+
     private boolean isDelete(AgentAppEvent event) {
         return event != null && event.hasActionType(AgentAppEventActionType.DELETE);
     }
 
     private boolean shouldEnqueueRollbackEvent(AgentAppEvent event, ErrorOrigin errorOrigin) {
-        return errorOrigin == ErrorOrigin.SERVER && event != null
+        return errorOrigin == ErrorOrigin.SERVER && event != null && event.getApplicationId() != null
                 && (event.hasActionType(AgentAppEventActionType.UPDATE) || event.hasActionType(AgentAppEventActionType.UPGRADE));
     }
 
     private boolean shouldClearDesiredTemplateId(AgentAppEvent event, ErrorOrigin errorOrigin) {
-        return errorOrigin == ErrorOrigin.AGENT && event != null
+        return errorOrigin == ErrorOrigin.AGENT && event != null && event.getApplicationId() != null
                 && (event.hasActionType(AgentAppEventActionType.UPGRADE) || event.hasActionType(AgentAppEventActionType.ROLLBACK));
     }
 
@@ -131,6 +138,9 @@ public class AgentEventErrorHandler {
     }
 
     private void rollbackPendingDeletion(TenantId tenantId, AgentApplicationId applicationId) {
+        if (applicationId == null) {
+            return;
+        }
         try {
             AgentApplication app = appService.findById(tenantId, applicationId);
             if (app != null && app.isPendingDeletion()) {
@@ -143,16 +153,21 @@ public class AgentEventErrorHandler {
         }
     }
 
-    private AgentAppEvent buildRollbackEvent(TenantId tenantId, AgentAppEvent failedEvent) {
+    private Optional<AgentAppEvent> buildRollbackEvent(TenantId tenantId, AgentAppEvent failedEvent) {
         AgentAppEvent rollbackEvent = new AgentAppEvent();
         rollbackEvent.setTenantId(tenantId);
         rollbackEvent.setApplicationId(failedEvent.getApplicationId());
+        rollbackEvent.setAgentId(failedEvent.getAgentId());
+        rollbackEvent.setApplicationName(failedEvent.getApplicationName());
         rollbackEvent.setActionType(AgentAppEventActionType.ROLLBACK);
         rollbackEvent.setDeliveryState(AgentAppEventDeliveryState.DELIVERED);
         rollbackEvent.setStatus(AgentAppEventStatus.PENDING);
         rollbackEvent.setUpdatedTime(System.currentTimeMillis());
 
         AgentApplication app = appService.findById(tenantId, failedEvent.getApplicationId());
+        if (app == null) {
+            return Optional.empty();
+        }
         List<AgentAppStep> rollbackSteps = stepsResolver.resolveSteps(app, AgentAppEventActionType.ROLLBACK);
         UUID rollbackStepId = rollbackSteps.stream()
                 .filter(s -> s.getType() == AgentAppStepType.ROLLBACK)
@@ -161,6 +176,6 @@ public class AgentEventErrorHandler {
                 .orElseThrow(() -> new IllegalStateException("No rollback step found in template for application " + app.getId()));
 
         rollbackEvent.setStepStates(Map.of(rollbackStepId, new RollBackStepState(failedEvent.getId())));
-        return rollbackEvent;
+        return Optional.of(rollbackEvent);
     }
 }

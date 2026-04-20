@@ -129,13 +129,15 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
     public void processNextStepOrFinish(TenantId tenantId, AgentId agentId, AgentAppEvent event) {
         log.trace("[{}][{}] Processing next step or finish for event {}, currentStepId: {}", tenantId, agentId, event.getId(), event.getCurrentStepId());
         try {
+            if (event.getApplicationId() == null) {
+                log.warn("[{}] Orphaned event {}, application already removed", tenantId, event.getId());
+                updateWitStatus(event, AgentAppEventStatus.ERROR, event.getCurrentStepId());
+                return;
+            }
             AgentApplication application = appService.findById(tenantId, event.getApplicationId());
             if (application == null) {
                 log.warn("[{}] Application not found for event {}", tenantId, event.getApplicationId());
-                appEventService.updateStatus(event.getId(), AgentAppEventStatusUpdate.builder()
-                        .status(AgentAppEventStatus.ERROR)
-                        .currentStepId(event.getCurrentStepId())
-                        .build());
+                updateWitStatus(event, AgentAppEventStatus.ERROR, event.getCurrentStepId());
                 return;
             }
             List<AgentAppStep> steps = resolveSteps(application, event.getActionType());
@@ -153,10 +155,7 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
 
     private void finishEvent(TenantId tenantId, AgentId agentId, AgentAppEvent event, AgentApplication application) {
         log.trace("[{}][{}] Finishing event {} with action type {}", tenantId, agentId, event.getId(), event.getActionType());
-        appEventService.updateStatus(event.getId(), AgentAppEventStatusUpdate.builder()
-                .status(AgentAppEventStatus.FINISHED)
-                .currentStepId(event.getCurrentStepId())
-                .build());
+        updateWitStatus(event, AgentAppEventStatus.FINISHED, event.getCurrentStepId());
         eventWatchdog.cancel(agentId, event.getId());
         if (event.getActionType() == AgentAppEventActionType.DELETE) {
             log.trace("[{}][{}] Deleting application {} after DELETE event", tenantId, agentId, application.getId());
@@ -228,10 +227,7 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
         try {
             log.trace("[{}][{}] Sending step {} for event {}", application.getTenantId(), application.getAgentId(), step.getId(), event.getId());
             ServerToAgent msg = AgentMsgConstructorUtils.buildAppCommand(event, application, step, totalSteps);
-            appEventService.updateStatus(event.getId(), AgentAppEventStatusUpdate.builder()
-                    .status(AgentAppEventStatus.PENDING)
-                    .currentStepId(step.getId())
-                    .build());
+            updateWitStatus(event, AgentAppEventStatus.PENDING, step.getId());
             eventWatchdog.schedule(application, event, new DefaultAgentEventResender(totalSteps, event));
             trySend(application, event, msg);
         } catch (Exception e) {
@@ -271,6 +267,13 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
 
     private List<AgentAppStep> resolveSteps(AgentApplication application, AgentAppEventActionType actionType) {
         return eventStepsResolver.resolveSteps(application, actionType);
+    }
+
+    private void updateWitStatus(AgentAppEvent event, AgentAppEventStatus status, UUID stepId) {
+        appEventService.updateStatus(event.getId(), AgentAppEventStatusUpdate.builder()
+                .status(status)
+                .currentStepId(stepId)
+                .build());
     }
 
     private void forEachApplication(TenantId tenantId, AgentId agentId, Consumer<AgentApplication> action) {

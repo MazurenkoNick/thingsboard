@@ -289,6 +289,8 @@ public class ModelConstants {
     public static final String AGENT_APP_EVENT_TABLE_NAME = "agent_app_event";
     public static final String AGENT_APP_EVENT_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
     public static final String AGENT_APP_EVENT_APPLICATION_ID_PROPERTY = "application_id";
+    public static final String AGENT_APP_EVENT_AGENT_ID_PROPERTY = "agent_id";
+    public static final String AGENT_APP_EVENT_APPLICATION_NAME_PROPERTY = "application_name";
     public static final String AGENT_APP_EVENT_ACTION_TYPE_PROPERTY = "action_type";
     public static final String AGENT_APP_EVENT_DELIVERY_STATE_PROPERTY = "delivery_state";
     public static final String AGENT_APP_EVENT_STATUS_PROPERTY = "status";

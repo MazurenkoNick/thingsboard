@@ -109,7 +109,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
 
         AgentApplication savedApp = checkNotNull(applicationService.save(tenantId, application));
 
-        AgentAppEvent event = saveEvent(tenantId, savedApp.getId(), AgentAppEventActionType.INSTALL, request);
+        AgentAppEvent event = saveEvent(tenantId, savedApp, AgentAppEventActionType.INSTALL, request);
 
         logEntityActionService.logEntityAction(tenantId, savedApp.getId(), savedApp, ActionType.ADDED, user);
         return new AgentAppInstallResponse(savedApp, event);
@@ -143,7 +143,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         }
 
         applicationService.save(tenantId, application);
-        return saveEvent(tenantId, applicationId, actionType, request);
+        return saveEvent(tenantId, application, actionType, request);
     }
 
     @Override
@@ -175,10 +175,12 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         return application;
     }
 
-    private AgentAppEvent saveEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventActionType actionType, AgentAppEventRequest request) {
+    private AgentAppEvent saveEvent(TenantId tenantId, AgentApplication application, AgentAppEventActionType actionType, AgentAppEventRequest request) {
         AgentAppEvent event = new AgentAppEvent();
         event.setTenantId(tenantId);
-        event.setApplicationId(applicationId);
+        event.setApplicationId(application.getId());
+        event.setAgentId(application.getAgentId());
+        event.setApplicationName(application.getName());
         event.setActionType(actionType);
         event.setDeliveryState(AgentAppEventDeliveryState.PENDING);
         event.setUpdatedTime(System.currentTimeMillis());

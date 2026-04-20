@@ -51,7 +51,7 @@ import {
   AgentAppInstallWizardComponent,
   AgentAppInstallWizardData
 } from '@home/pages/agent/wizard/agent-app-install-wizard.component';
-import { mergeMap } from 'rxjs/operators';
+import { map, mergeMap } from 'rxjs/operators';
 import { confineWheelToAceEditor } from '@home/pages/agent/util/ace-wheel-confine';
 import {
   applyCredentialValuesToCompose,
@@ -553,17 +553,15 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
           panelClass: ['tb-dialog'],
           data: { application: full }
         }
-      ).afterClosed())
-    ).subscribe(event => {
-      if (event) {
-        const agentId = (this.entity.agentId as any)?.id;
+      ).afterClosed().pipe(map(event => ({ full, event }))))
+    ).subscribe(({ full, event }) => {
+      if (!event) { return; }
+      const agentId = (this.entity.agentId as any)?.id;
+      openAgentAppEventProgress(this.dialog, full, event).subscribe(() => {
         if (agentId) {
-          // Progress dialog opened by the delete dialog outlives this navigation
-          // (MatDialog survives route changes), so the user can monitor the
-          // delete from the list page.
           this.router.navigateByUrl(`/edgeManagement/agents/${agentId}/applications`);
         }
-      }
+      });
     });
   }
 

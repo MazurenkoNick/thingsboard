@@ -111,6 +111,8 @@ public class AgentAutoInstallService {
         AgentAppEvent event = new AgentAppEvent();
         event.setTenantId(tenantId);
         event.setApplicationId(savedApp.getId());
+        event.setAgentId(savedApp.getAgentId());
+        event.setApplicationName(savedApp.getName());
         event.setActionType(AgentAppEventActionType.INSTALL);
         event.setDeliveryState(AgentAppEventDeliveryState.PENDING);
         event.setUpdatedTime(System.currentTimeMillis());

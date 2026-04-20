@@ -225,6 +225,26 @@ public class AgentApplicationController extends BaseController {
         tbAgentApplicationService.cancelEvent(tenantId, agentAppEventId);
     }
 
+    @ApiOperation(value = "Get Agent Application Event (getAgentAppEventById)",
+            notes = "Fetches a single agent application event by id. Works for orphan events "
+                    + "whose application has been deleted (application_id is nullable)."
+                    + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @GetMapping("/agent/app/event/{agentAppEventId}")
+    @ResponseBody
+    public AgentAppEvent getAgentAppEventById(
+            @Parameter(description = AGENT_APP_EVENT_ID_PARAM_DESCRIPTION)
+            @PathVariable(AGENT_APP_EVENT_ID) String strAgentAppEventId) throws ThingsboardException {
+        checkParameter(AGENT_APP_EVENT_ID, strAgentAppEventId);
+        AgentAppEventId agentAppEventId = new AgentAppEventId(toUUID(strAgentAppEventId));
+        TenantId tenantId = getCurrentUser().getTenantId();
+        AgentAppEvent event = agentAppEventService.findById(tenantId, agentAppEventId);
+        if (event == null || !event.getTenantId().equals(tenantId)) {
+            throw new ThingsboardException("Agent app event not found", ThingsboardErrorCode.ITEM_NOT_FOUND);
+        }
+        return event;
+    }
+
     @ApiOperation(value = "Get Agent Application Units (getAgentAppUnits)",
             notes = "Returns a page of units (containers, volumes, networks) for the specified agent application. "
                     + "Live per-unit data such as `image` and `state` lives in server-scope attributes on each unit "

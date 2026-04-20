@@ -103,10 +103,6 @@ public class CommandFeedbackHandler {
                 eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.AGENT, result.getMessage());
                 return;
             }
-            if (event.getActionType() == AgentAppEventActionType.DELETE) {
-                appService.delete(tenantId, event.getApplicationId());
-                return;
-            }
             appEventService.updateStatus(eventId, AgentAppEventStatusUpdate.builder()
                     .status(AgentAppEventStatus.PROCESSING)
                     .currentActivity(result.hasMessage() ? result.getMessage() : null)

@@ -147,30 +147,29 @@ public interface AgentAppEventRepository extends JpaRepository<AgentAppEventEnti
 
     @Query("""
            SELECT e FROM AgentAppEventEntity e
-           JOIN AgentApplicationEntity a ON e.applicationId = a.id
-           WHERE e.tenantId = :tenantId AND a.agentId = :agentId
+           WHERE e.tenantId = :tenantId AND e.agentId = :agentId
            """)
     Page<AgentAppEventEntity> findByTenantIdAndAgentId(@Param("tenantId") UUID tenantId,
                                                        @Param("agentId") UUID agentId,
                                                        Pageable pageable);
 
     @Query(value = """
-           SELECT new org.thingsboard.server.dao.model.sql.AgentAppEventInfoEntity(e, a.name)
+           SELECT new org.thingsboard.server.dao.model.sql.AgentAppEventInfoEntity(e, COALESCE(a.name, e.applicationName))
            FROM AgentAppEventEntity e
-           JOIN AgentApplicationEntity a ON e.applicationId = a.id
-           WHERE e.tenantId = :tenantId AND a.agentId = :agentId
+           LEFT JOIN AgentApplicationEntity a ON e.applicationId = a.id
+           WHERE e.tenantId = :tenantId AND e.agentId = :agentId
            AND (:actionType IS NULL OR e.actionType = :actionType)
            AND (:status IS NULL OR e.status = :status)
-           AND (:textSearch IS NULL OR ilike(a.name, CONCAT('%', :textSearch, '%')) = true)
+           AND (:textSearch IS NULL OR ilike(COALESCE(a.name, e.applicationName), CONCAT('%', :textSearch, '%')) = true)
            """,
            countQuery = """
            SELECT COUNT(e)
            FROM AgentAppEventEntity e
-           JOIN AgentApplicationEntity a ON e.applicationId = a.id
-           WHERE e.tenantId = :tenantId AND a.agentId = :agentId
+           LEFT JOIN AgentApplicationEntity a ON e.applicationId = a.id
+           WHERE e.tenantId = :tenantId AND e.agentId = :agentId
            AND (:actionType IS NULL OR e.actionType = :actionType)
            AND (:status IS NULL OR e.status = :status)
-           AND (:textSearch IS NULL OR ilike(a.name, CONCAT('%', :textSearch, '%')) = true)
+           AND (:textSearch IS NULL OR ilike(COALESCE(a.name, e.applicationName), CONCAT('%', :textSearch, '%')) = true)
            """)
     Page<AgentAppEventInfoEntity> findInfosByTenantIdAndAgentId(@Param("tenantId") UUID tenantId,
                                                                 @Param("agentId") UUID agentId,

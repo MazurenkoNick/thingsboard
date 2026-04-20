@@ -35,6 +35,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.model.BaseSqlEntity;
 import org.thingsboard.server.dao.model.ModelConstants;
@@ -54,6 +55,12 @@ public class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
 
     @Column(name = ModelConstants.AGENT_APP_EVENT_APPLICATION_ID_PROPERTY)
     private UUID applicationId;
+
+    @Column(name = ModelConstants.AGENT_APP_EVENT_AGENT_ID_PROPERTY)
+    private UUID agentId;
+
+    @Column(name = ModelConstants.AGENT_APP_EVENT_APPLICATION_NAME_PROPERTY)
+    private String applicationName;
 
     @Enumerated(EnumType.STRING)
     @Column(name = ModelConstants.AGENT_APP_EVENT_ACTION_TYPE_PROPERTY)
@@ -99,6 +106,10 @@ public class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
         if (event.getApplicationId() != null) {
             this.applicationId = event.getApplicationId().getId();
         }
+        if (event.getAgentId() != null) {
+            this.agentId = event.getAgentId().getId();
+        }
+        this.applicationName = event.getApplicationName();
         this.actionType = event.getActionType();
         this.deliveryState = event.getDeliveryState();
         this.status = event.getStatus();
@@ -120,6 +131,10 @@ public class AgentAppEventEntity extends BaseSqlEntity<AgentAppEvent> {
         if (applicationId != null) {
             event.setApplicationId(new AgentApplicationId(applicationId));
         }
+        if (agentId != null) {
+            event.setAgentId(new AgentId(agentId));
+        }
+        event.setApplicationName(applicationName);
         event.setActionType(actionType);
         event.setDeliveryState(deliveryState);
         event.setStatus(status);
