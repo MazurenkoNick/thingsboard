@@ -28,7 +28,6 @@ import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared
 import { Observable, of } from 'rxjs';
 import { catchError, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { DialogService } from '@core/services/dialog.service';
 import {
   AgentApplication,
@@ -65,7 +64,6 @@ export class AgentApplicationsTableConfigResolver {
               private datePipe: DatePipe,
               private router: Router,
               private dialog: MatDialog,
-              private snackBar: MatSnackBar,
               private dialogService: DialogService) {
 
     this.config.entityType = EntityType.AGENT_APPLICATION;
@@ -80,10 +78,7 @@ export class AgentApplicationsTableConfigResolver {
     this.config.saveEntity = (app: any) => this.agentService.updateAgentApplication(app)
       .pipe(
         mergeMap((saved: any) => this.agentService.getAgentApplicationInfoById(saved.id.id)),
-        // The saved changes live only in ThingsBoard until the user dispatches
-        // an UPDATE action; nudge them toward the Update wizard so they don't
-        // leave the detail page thinking the agent already has the new config.
-        tap(saved => this.showUpdateHintToast(saved))
+        tap(saved => this.showUpdateHintDialog(saved))
       );
     this.config.addEntity = () => { this.openInstallWizard(); return of(null); };
     this.config.handleRowClick = ($event: Event, app) => {
@@ -346,16 +341,16 @@ export class AgentApplicationsTableConfigResolver {
     });
   }
 
-  private showUpdateHintToast(app: AgentApplicationInfo) {
-    const ref = this.snackBar.open(
+  private showUpdateHintDialog(app: AgentApplicationInfo) {
+    this.dialogService.confirm(
+      this.translate.instant('agent.app-save-update-hint-title'),
       this.translate.instant('agent.app-save-update-hint'),
-      this.translate.instant('agent.app-save-update-hint-action'),
-      {
-        duration: 10000,
-        horizontalPosition: 'end',
-        verticalPosition: 'bottom'
+      this.translate.instant('action.close'),
+      this.translate.instant('agent.app-save-update-hint-action')
+    ).subscribe(res => {
+      if (res) {
+        this.update(null, app);
       }
-    );
-    ref.onAction().subscribe(() => this.update(null, app));
+    });
   }
 }

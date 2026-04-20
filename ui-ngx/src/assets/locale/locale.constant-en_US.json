@@ -3298,8 +3298,9 @@
         "app-event-cancel-title": "Cancel event?",
         "app-event-cancel-text": "The in-progress event will be cancelled on the agent.",
         "app-event-view-in-events": "View in events",
-        "app-save-update-hint": "Changes saved. Sync them with the agent?",
-        "app-save-update-hint-action": "Update agent"
+        "app-save-update-hint-title": "Changes saved",
+        "app-save-update-hint": "Changes have been saved in ThingsBoard, but the agent is still running the previous configuration. Click the 'Update' action button for this application to apply the changes on the agent.",
+        "app-save-update-hint-action": "Update now"
     },
     "edge-event": {
         "type-dashboard": "Dashboard",
