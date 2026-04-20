@@ -31,6 +31,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentAppInstallResponse;
 import org.thingsboard.server.common.data.agent.AgentApplicationOrigin;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.state.ComposeDownStepState;
@@ -138,9 +139,9 @@ class DefaultTbAgentApplicationServiceTest {
         request.setActionType(AgentAppEventActionType.INSTALL);
         request.setApplication(app);
 
-        AgentApplication result = service.install(TENANT_ID, request, USER);
+        AgentAppInstallResponse result = service.install(TENANT_ID, request, USER);
 
-        assertThat(result.getId()).isEqualTo(APP_ID);
+        assertThat(result.getApplication().getId()).isEqualTo(APP_ID);
 
         ArgumentCaptor<AgentAppEvent> captor = ArgumentCaptor.forClass(AgentAppEvent.class);
         verify(agentAppEventService).save(eq(TENANT_ID), captor.capture());

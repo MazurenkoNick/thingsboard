@@ -168,6 +168,11 @@ export class AgentAppProfileComponent extends EntityComponent<AgentAppProfile>
         // on reloadEntity() alone to refresh templateVersion / nextVersion.
         this.entity = saved;
         this.reloadEntity();
+        // Also refresh the parent list — the row's template-version cell is
+        // rendered from the profile entity that was fetched before this upgrade
+        // and would otherwise keep showing the old version until the next page
+        // navigation.
+        this.entitiesTableConfig?.updateData();
       }
     });
   }

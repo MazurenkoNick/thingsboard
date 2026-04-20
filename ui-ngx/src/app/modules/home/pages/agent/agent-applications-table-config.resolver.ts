@@ -26,15 +26,19 @@ import { TranslateService } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared/models/entity-type.models';
 import { Observable, of } from 'rxjs';
-import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
+import { catchError, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { DialogService } from '@core/services/dialog.service';
 import {
+  AgentApplication,
   AgentApplicationInfo,
+  AgentAppEvent,
   AgentAppEventActionType,
   AgentAppTemplate,
   AgentInfo
 } from '@shared/models/agent.models';
+import { openAgentAppEventProgress } from '@home/pages/agent/util/agent-app-event-progress';
 import { versionTag } from '@home/pages/agent/util/version-tag';
 import { AgentService } from '@core/http/agent.service';
 import { AgentApplicationComponent } from '@home/pages/agent/agent-application.component';
@@ -61,6 +65,7 @@ export class AgentApplicationsTableConfigResolver {
               private datePipe: DatePipe,
               private router: Router,
               private dialog: MatDialog,
+              private snackBar: MatSnackBar,
               private dialogService: DialogService) {
 
     this.config.entityType = EntityType.AGENT_APPLICATION;
@@ -73,7 +78,13 @@ export class AgentApplicationsTableConfigResolver {
     this.config.selectionEnabled = false;
     this.config.loadEntity = id => this.agentService.getAgentApplicationInfoById(id.id);
     this.config.saveEntity = (app: any) => this.agentService.updateAgentApplication(app)
-      .pipe(mergeMap((saved: any) => this.agentService.getAgentApplicationInfoById(saved.id.id)));
+      .pipe(
+        mergeMap((saved: any) => this.agentService.getAgentApplicationInfoById(saved.id.id)),
+        // The saved changes live only in ThingsBoard until the user dispatches
+        // an UPDATE action; nudge them toward the Update wizard so they don't
+        // leave the detail page thinking the agent already has the new config.
+        tap(saved => this.showUpdateHintToast(saved))
+      );
     this.config.addEntity = () => { this.openInstallWizard(); return of(null); };
     this.config.handleRowClick = ($event: Event, app) => {
       if ($event) { $event.stopPropagation(); }
@@ -222,7 +233,7 @@ export class AgentApplicationsTableConfigResolver {
   private update($event: Event, app: AgentApplicationInfo) {
     if ($event) { $event.stopPropagation(); }
     this.agentService.getAgentApplicationById(app.id.id).subscribe(full => {
-      this.dialog.open<AgentAppInstallWizardComponent, AgentAppInstallWizardData, boolean>(
+      this.dialog.open<AgentAppInstallWizardComponent, AgentAppInstallWizardData, AgentAppEvent | null>(
         AgentAppInstallWizardComponent, {
           disableClose: false,
           panelClass: ['tb-dialog'],
@@ -233,8 +244,8 @@ export class AgentApplicationsTableConfigResolver {
             application: full
           }
         }
-      ).afterClosed().subscribe(confirmed => {
-        if (confirmed) {
+      ).afterClosed().subscribe(event => {
+        if (event) {
           this.config.updateData();
         }
       });
@@ -250,11 +261,20 @@ export class AgentApplicationsTableConfigResolver {
       this.translate.instant('action.yes'),
       true
     ).subscribe(res => {
-      if (res) {
-        this.agentService.createAgentAppEvent(app.id.id, {
-          actionType: AgentAppEventActionType.RESTART
-        }).subscribe(() => this.config.updateData());
-      }
+      if (!res) { return; }
+      // Need the full application for the progress dialog (it reads
+      // config.compose.volumes and templateId); the list row is trimmed.
+      this.agentService.getAgentApplicationById(app.id.id).pipe(
+        mergeMap(full =>
+          this.agentService.createAgentAppEvent(app.id.id, { actionType: AgentAppEventActionType.RESTART })
+            .pipe(map(event => ({ full, event })))
+        )
+      ).subscribe(({ full, event }) => {
+        this.config.updateData();
+        if (event) {
+          openAgentAppEventProgress(this.dialog, full, event).subscribe();
+        }
+      });
     });
   }
 
@@ -268,18 +288,18 @@ export class AgentApplicationsTableConfigResolver {
     });
   }
 
-  private showDeleteDialog(application: any) {
-    this.dialog.open<AgentAppDeleteDialogComponent, AgentAppDeleteDialogData, boolean>(
+  private showDeleteDialog(application: AgentApplication | AgentApplicationInfo) {
+    this.dialog.open<AgentAppDeleteDialogComponent, AgentAppDeleteDialogData, AgentAppEvent | null>(
       AgentAppDeleteDialogComponent, {
         disableClose: false,
         panelClass: ['tb-dialog'],
         data: {
-          application,
+          application: application as AgentApplication,
           agentName: this.agent?.name
         }
       }
-    ).afterClosed().subscribe(confirmed => {
-      if (confirmed) {
+    ).afterClosed().subscribe(event => {
+      if (event) {
         this.config.updateData();
       }
     });
@@ -294,7 +314,7 @@ export class AgentApplicationsTableConfigResolver {
   }
 
   private showUpgradeWizard(application: any) {
-    this.dialog.open<AgentAppInstallWizardComponent, AgentAppInstallWizardData, boolean>(
+    this.dialog.open<AgentAppInstallWizardComponent, AgentAppInstallWizardData, AgentAppEvent | null>(
       AgentAppInstallWizardComponent, {
         disableClose: false,
         panelClass: ['tb-dialog'],
@@ -305,24 +325,37 @@ export class AgentApplicationsTableConfigResolver {
           application
         }
       }
-    ).afterClosed().subscribe(confirmed => {
-      if (confirmed) {
+    ).afterClosed().subscribe(event => {
+      if (event) {
         this.config.updateData();
       }
     });
   }
 
   private openInstallWizard() {
-    this.dialog.open<AgentAppInstallWizardComponent, AgentAppInstallWizardData, boolean>(
+    this.dialog.open<AgentAppInstallWizardComponent, AgentAppInstallWizardData, AgentAppEvent | null>(
       AgentAppInstallWizardComponent, {
         disableClose: false,
         panelClass: ['tb-dialog'],
         data: { agentId: this.agentId, agent: this.agent }
       }
-    ).afterClosed().subscribe(confirmed => {
-      if (confirmed) {
+    ).afterClosed().subscribe(event => {
+      if (event) {
         this.config.updateData();
       }
     });
+  }
+
+  private showUpdateHintToast(app: AgentApplicationInfo) {
+    const ref = this.snackBar.open(
+      this.translate.instant('agent.app-save-update-hint'),
+      this.translate.instant('agent.app-save-update-hint-action'),
+      {
+        duration: 10000,
+        horizontalPosition: 'end',
+        verticalPosition: 'bottom'
+      }
+    );
+    ref.onAction().subscribe(() => this.update(null, app));
   }
 }

@@ -27,6 +27,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
+import org.thingsboard.server.common.data.agent.AgentAppInstallResponse;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.AgentApplicationOrigin;
 import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
@@ -100,7 +101,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
 
     @Transactional
     @Override
-    public AgentApplication install(TenantId tenantId, AgentAppEventRequest request, User user) throws Exception {
+    public AgentAppInstallResponse install(TenantId tenantId, AgentAppEventRequest request, User user) throws Exception {
         AgentApplication application = request.getApplication();
         application.setId(null);
         application.setTenantId(tenantId);
@@ -108,21 +109,21 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
 
         AgentApplication savedApp = checkNotNull(applicationService.save(tenantId, application));
 
-        saveEvent(tenantId, savedApp.getId(), AgentAppEventActionType.INSTALL, request);
+        AgentAppEvent event = saveEvent(tenantId, savedApp.getId(), AgentAppEventActionType.INSTALL, request);
 
         logEntityActionService.logEntityAction(tenantId, savedApp.getId(), savedApp, ActionType.ADDED, user);
-        return savedApp;
+        return new AgentAppInstallResponse(savedApp, event);
     }
 
     @Transactional
     @Override
-    public void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request) throws Exception {
-        execActionEvent(tenantId, applicationId, request, false);
+    public AgentAppEvent execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request) throws Exception {
+        return execActionEvent(tenantId, applicationId, request, false);
     }
 
     @Transactional
     @Override
-    public void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, boolean skipActiveEventCheck) throws Exception {
+    public AgentAppEvent execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, boolean skipActiveEventCheck) throws Exception {
         AgentAppEventActionType actionType = request.getActionType();
         if (!skipActiveEventCheck && appEventService.hasActiveEventForApplication(applicationId)) {
             throw new ThingsboardException("Cannot create event while another event is being processed", ThingsboardErrorCode.TOO_MANY_REQUESTS);
@@ -130,7 +131,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         UUID bulkActionId = request.getBulkActionId();
         if (bulkActionId != null && appEventService.existsByApplicationIdAndBulkActionId(applicationId, bulkActionId)) {
             log.info("[{}] Skipping duplicate bulk event for app {} (bulkActionId {})", tenantId, applicationId, bulkActionId);
-            return;
+            return null;
         }
 
         AgentApplication application = checkNotNull(applicationService.findById(tenantId, applicationId));
@@ -142,7 +143,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         }
 
         applicationService.save(tenantId, application);
-        saveEvent(tenantId, applicationId, actionType, request);
+        return saveEvent(tenantId, applicationId, actionType, request);
     }
 
     @Override
@@ -174,7 +175,7 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         return application;
     }
 
-    private void saveEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventActionType actionType, AgentAppEventRequest request) {
+    private AgentAppEvent saveEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventActionType actionType, AgentAppEventRequest request) {
         AgentAppEvent event = new AgentAppEvent();
         event.setTenantId(tenantId);
         event.setApplicationId(applicationId);
@@ -183,6 +184,6 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
         event.setUpdatedTime(System.currentTimeMillis());
         event.setStepStates(request.getStepInputs());
         event.setBulkActionId(request.getBulkActionId());
-        appEventService.save(tenantId, event);
+        return appEventService.save(tenantId, event);
     }
 }

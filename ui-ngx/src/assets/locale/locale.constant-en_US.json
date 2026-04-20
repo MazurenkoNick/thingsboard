@@ -3296,7 +3296,10 @@
         "app-event-updated": "Updated",
         "app-event-cancel": "Cancel",
         "app-event-cancel-title": "Cancel event?",
-        "app-event-cancel-text": "The in-progress event will be cancelled on the agent."
+        "app-event-cancel-text": "The in-progress event will be cancelled on the agent.",
+        "app-event-view-in-events": "View in events",
+        "app-save-update-hint": "Changes saved. Sync them with the agent?",
+        "app-save-update-hint-action": "Update agent"
     },
     "edge-event": {
         "type-dashboard": "Dashboard",

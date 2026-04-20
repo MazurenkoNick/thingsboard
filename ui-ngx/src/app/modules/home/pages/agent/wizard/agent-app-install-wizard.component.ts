@@ -18,12 +18,13 @@ import { Component, ElementRef, Inject, OnDestroy, OnInit, ViewChild } from '@an
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '@shared/components/dialog.component';
 import { TranslateService } from '@ngx-translate/core';
 import { AgentService } from '@core/http/agent.service';
 import {
   AgentApplication,
+  AgentAppEvent,
   AgentAppEventActionType,
   AgentAppProfile,
   AgentAppStep,
@@ -56,6 +57,7 @@ import {
   readInitialPullImages,
   StepInputKind
 } from '@home/pages/agent/util/agent-app-steps';
+import { openAgentAppEventProgress } from '@home/pages/agent/util/agent-app-event-progress';
 
 export interface AgentAppInstallWizardData {
   agentId: string;
@@ -93,7 +95,7 @@ interface TypeCard {
   styleUrls: ['./agent-app-install-wizard.component.scss']
 })
 export class AgentAppInstallWizardComponent
-  extends DialogComponent<AgentAppInstallWizardComponent, boolean>
+  extends DialogComponent<AgentAppInstallWizardComponent, AgentAppEvent | null>
   implements OnInit, OnDestroy {
 
   @ViewChild('diffViewer', { static: false })
@@ -186,8 +188,9 @@ export class AgentAppInstallWizardComponent
               protected router: Router,
               protected translate: TranslateService,
               private agentService: AgentService,
+              private dialog: MatDialog,
               @Inject(MAT_DIALOG_DATA) public data: AgentAppInstallWizardData,
-              public dialogRef: MatDialogRef<AgentAppInstallWizardComponent, boolean>) {
+              public dialogRef: MatDialogRef<AgentAppInstallWizardComponent, AgentAppEvent | null>) {
     super(store, router, dialogRef);
     this.agentId = data.agentId;
     this.agent = data.agent;
@@ -833,7 +836,7 @@ export class AgentAppInstallWizardComponent
   }
 
   cancel() {
-    this.dialogRef.close(false);
+    this.dialogRef.close(null);
   }
 
   canProceedFromType(): boolean {
@@ -890,7 +893,7 @@ export class AgentAppInstallWizardComponent
         application: outbound,
         stepInputs
       }).subscribe({
-        next: () => this.dialogRef.close(true),
+        next: event => this.finishWithProgress(this.existingApplication!, event),
         error: () => {
           this.submitting = false;
         }
@@ -956,7 +959,7 @@ export class AgentAppInstallWizardComponent
         stepInputs,
         ...(this.isProfileManagedUpdate ? { skipProfileRefetch: this.skipProfileRefetch } : {})
       }).subscribe({
-        next: () => this.dialogRef.close(true),
+        next: event => this.finishWithProgress(this.existingApplication!, event),
         error: () => {
           this.submitting = false;
         }
@@ -967,11 +970,21 @@ export class AgentAppInstallWizardComponent
         application,
         stepInputs
       }).subscribe({
-        next: () => this.dialogRef.close(true),
+        next: resp => this.finishWithProgress(resp?.application, resp?.event ?? null),
         error: () => {
           this.submitting = false;
         }
       });
+    }
+  }
+
+  // Close the wizard first, then open the progress dialog over the underlying
+  // page. Opening both simultaneously stacks dialogs and makes "close" feel
+  // ambiguous — the wizard fades out before the progress dialog appears.
+  private finishWithProgress(application: AgentApplication | null | undefined, event: AgentAppEvent | null) {
+    this.dialogRef.close(event);
+    if (application && event) {
+      openAgentAppEventProgress(this.dialog, application, event).subscribe();
     }
   }
 

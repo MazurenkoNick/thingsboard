@@ -241,6 +241,11 @@ export interface AgentAppEventInfo extends AgentAppEvent {
   applicationName?: string;
 }
 
+export interface AgentAppInstallResponse {
+  application: AgentApplication;
+  event: AgentAppEvent;
+}
+
 export interface AgentAppUnit extends BaseData<AgentAppUnitId> {
   agentApplicationId: AgentApplicationId;
   identifier: string;

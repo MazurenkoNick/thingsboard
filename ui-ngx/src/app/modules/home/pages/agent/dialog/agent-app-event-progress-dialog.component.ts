@@ -141,6 +141,14 @@ export class AgentAppEventProgressDialogComponent
     this.dialogRef.close(false);
   }
 
+  viewInEvents($event: Event): void {
+    if ($event) { $event.preventDefault(); $event.stopPropagation(); }
+    const agentId = (this.application?.agentId as any)?.id;
+    if (!agentId) { return; }
+    this.dialogRef.close(false);
+    this.router.navigateByUrl(`/edgeManagement/agents/${agentId}/events`);
+  }
+
   cancelEvent($event: Event): void {
     if ($event) { $event.stopPropagation(); }
     if (!this.event?.id?.id) { return; }

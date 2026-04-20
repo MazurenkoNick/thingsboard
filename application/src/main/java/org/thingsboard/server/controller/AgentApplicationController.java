@@ -36,6 +36,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
 import org.thingsboard.server.common.data.agent.AgentAppEventFilter;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
+import org.thingsboard.server.common.data.agent.AgentAppInstallResponse;
 import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.agent.AgentAppUnit;
 import org.thingsboard.server.common.data.agent.AgentAppUnitFilter;
@@ -163,12 +164,13 @@ public class AgentApplicationController extends BaseController {
 
     @ApiOperation(value = "Install Agent Application (installAgentApp)",
             notes = "Creates a new agent application and an INSTALL event in a single operation. " +
-                    "The request body must include the application object."
+                    "Returns both the created application and the INSTALL event so the caller can open "
+                    + "a progress view without a second round-trip. The request body must include the application object."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @PostMapping("/agent/app/event")
     @ResponseBody
-    public AgentApplication installAgentApp(
+    public AgentAppInstallResponse installAgentApp(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "A JSON value representing the install event request with the application.")
             @RequestBody AgentAppEventRequest request) throws Exception {
         if (request.getApplication() == null) {
@@ -180,12 +182,13 @@ public class AgentApplicationController extends BaseController {
 
     @ApiOperation(value = "Execute Agent Application Event (createAgentAppEvent)",
             notes = "Creates an event for the specified agent application. The action type determines the operation " +
-                    "(UPDATE, DELETE, RESTART, UPGRADE, ROLLBACK). Step inputs can be provided for actions that require them."
+                    "(UPDATE, DELETE, RESTART, UPGRADE, ROLLBACK). Step inputs can be provided for actions that require them. "
+                    + "Returns the created event so the caller can open a progress view."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @PostMapping("/agent/app/{agentApplicationId}/event")
-    @ResponseStatus(value = HttpStatus.OK)
-    public void createAgentAppEvent(
+    @ResponseBody
+    public AgentAppEvent createAgentAppEvent(
             @Parameter(description = AGENT_APP_ID_PARAM_DESCRIPTION)
             @PathVariable(AGENT_APP_ID) String strAgentAppId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "A JSON value representing the event request.")
@@ -201,7 +204,7 @@ public class AgentApplicationController extends BaseController {
         AgentApplicationId agentApplicationId = new AgentApplicationId(toUUID(strAgentAppId));
         checkAgentAppId(agentApplicationId, Operation.WRITE);
         TenantId tenantId = getCurrentUser().getTenantId();
-        tbAgentApplicationService.execActionEvent(tenantId, agentApplicationId, request);
+        return tbAgentApplicationService.execActionEvent(tenantId, agentApplicationId, request);
     }
 
     @ApiOperation(value = "Cancel Agent Application Event (cancelAgentAppEvent)",

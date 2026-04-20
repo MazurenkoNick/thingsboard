@@ -18,12 +18,13 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { Router } from '@angular/router';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '@shared/components/dialog.component';
 import { TranslateService } from '@ngx-translate/core';
 import { AgentService } from '@core/http/agent.service';
 import {
   AgentApplication,
+  AgentAppEvent,
   AgentAppEventActionType,
   AgentAppStep
 } from '@shared/models/agent.models';
@@ -32,6 +33,7 @@ import {
   extractComposeVolumeKeys,
   findComposeDownStep
 } from '@home/pages/agent/util/agent-app-steps';
+import { openAgentAppEventProgress } from '@home/pages/agent/util/agent-app-event-progress';
 
 export interface AgentAppDeleteDialogData {
   application: AgentApplication;
@@ -44,7 +46,7 @@ export interface AgentAppDeleteDialogData {
   styleUrls: ['./agent-app-delete-dialog.component.scss']
 })
 export class AgentAppDeleteDialogComponent
-  extends DialogComponent<AgentAppDeleteDialogComponent, boolean>
+  extends DialogComponent<AgentAppDeleteDialogComponent, AgentAppEvent | null>
   implements OnInit {
 
   application: AgentApplication;
@@ -59,8 +61,9 @@ export class AgentAppDeleteDialogComponent
               protected router: Router,
               protected translate: TranslateService,
               private agentService: AgentService,
+              private dialog: MatDialog,
               @Inject(MAT_DIALOG_DATA) public data: AgentAppDeleteDialogData,
-              public dialogRef: MatDialogRef<AgentAppDeleteDialogComponent, boolean>) {
+              public dialogRef: MatDialogRef<AgentAppDeleteDialogComponent, AgentAppEvent | null>) {
     super(store, router, dialogRef);
     this.application = data.application;
     this.agentName = data.agentName || '';
@@ -85,7 +88,7 @@ export class AgentAppDeleteDialogComponent
   }
 
   cancel() {
-    this.dialogRef.close(false);
+    this.dialogRef.close(null);
   }
 
   confirm() {
@@ -101,7 +104,14 @@ export class AgentAppDeleteDialogComponent
       actionType: AgentAppEventActionType.DELETE,
       stepInputs
     }).subscribe({
-      next: () => this.dialogRef.close(true),
+      next: event => {
+        // Close this dialog first, then open progress over the list page.
+        // Stacking dialogs here makes "close" ambiguous.
+        this.dialogRef.close(event);
+        if (event) {
+          openAgentAppEventProgress(this.dialog, this.application, event).subscribe();
+        }
+      },
       error: () => {
         this.submitting = false;
       }

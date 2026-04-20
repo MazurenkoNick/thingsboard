@@ -98,5 +98,9 @@
     {{ 'agent.app-event-cancel' | translate }}
   </button>
   <span class="flex-1"></span>
+  <button mat-button (click)="viewInEvents($event)">
+    <mat-icon>list_alt</mat-icon>
+    {{ 'agent.app-event-view-in-events' | translate }}
+  </button>
   <button mat-button (click)="cancel()">{{ 'action.close' | translate }}</button>
 </div>

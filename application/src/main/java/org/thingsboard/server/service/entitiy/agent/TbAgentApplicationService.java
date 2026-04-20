@@ -16,7 +16,9 @@
 package org.thingsboard.server.service.entitiy.agent;
 
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
+import org.thingsboard.server.common.data.agent.AgentAppInstallResponse;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
@@ -27,11 +29,11 @@ public interface TbAgentApplicationService {
 
     AgentApplication update(AgentApplication application, User user) throws Exception;
 
-    AgentApplication install(TenantId tenantId, AgentAppEventRequest request, User user) throws Exception;
+    AgentAppInstallResponse install(TenantId tenantId, AgentAppEventRequest request, User user) throws Exception;
 
-    void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request) throws Exception;
+    AgentAppEvent execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request) throws Exception;
 
-    void execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, boolean skipActiveEventCheck) throws Exception;
+    AgentAppEvent execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, boolean skipActiveEventCheck) throws Exception;
 
     void cancelEvent(TenantId tenantId, AgentAppEventId eventId) throws Exception;
 

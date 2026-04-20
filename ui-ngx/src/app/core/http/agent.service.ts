@@ -25,6 +25,7 @@ import {
   AgentAppEvent,
   AgentAppEventInfo,
   AgentAppEventRequest,
+  AgentAppInstallResponse,
   AgentAppProfile,
   AgentAppTemplate,
   AgentAppUnit,
@@ -166,12 +167,12 @@ export class AgentService {
     return this.http.put<AgentApplication>('/api/agent/app', application, defaultHttpOptionsFromConfig(config));
   }
 
-  public installAgentApp(request: AgentAppEventRequest, config?: RequestConfig): Observable<AgentApplication> {
-    return this.http.post<AgentApplication>('/api/agent/app/event', request, defaultHttpOptionsFromConfig(config));
+  public installAgentApp(request: AgentAppEventRequest, config?: RequestConfig): Observable<AgentAppInstallResponse> {
+    return this.http.post<AgentAppInstallResponse>('/api/agent/app/event', request, defaultHttpOptionsFromConfig(config));
   }
 
-  public createAgentAppEvent(applicationId: string, request: AgentAppEventRequest, config?: RequestConfig): Observable<void> {
-    return this.http.post<void>(`/api/agent/app/${applicationId}/event`, request, defaultHttpOptionsFromConfig(config));
+  public createAgentAppEvent(applicationId: string, request: AgentAppEventRequest, config?: RequestConfig): Observable<AgentAppEvent> {
+    return this.http.post<AgentAppEvent>(`/api/agent/app/${applicationId}/event`, request, defaultHttpOptionsFromConfig(config));
   }
 
   public cancelAgentAppEvent(applicationId: string, eventId: string, config?: RequestConfig): Observable<void> {

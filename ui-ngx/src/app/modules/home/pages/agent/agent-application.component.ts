@@ -23,12 +23,15 @@ import { EntityComponent } from '@home/components/entity/entity.component';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { EntityType } from '@shared/models/entity-type.models';
 import {
+  AgentApplication,
+  AgentAppEvent,
+  AgentAppEventActionType,
   AgentAppProfile,
   AgentApplicationInfo,
   AgentApplicationType,
-  agentApplicationTypeTranslationMap,
-  AgentAppEventActionType
+  agentApplicationTypeTranslationMap
 } from '@shared/models/agent.models';
+import { openAgentAppEventProgress } from '@home/pages/agent/util/agent-app-event-progress';
 import * as YAML from 'yaml';
 import { TranslateService } from '@ngx-translate/core';
 import { EntityTableConfig } from '@home/models/entity/entities-table-config.models';
@@ -474,7 +477,7 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
   onUpdate($event: Event) {
     if ($event) { $event.stopPropagation(); }
     this.agentService.getAgentApplicationById(this.entity.id.id).subscribe(full => {
-      this.dialog.open<AgentAppInstallWizardComponent, AgentAppInstallWizardData, boolean>(
+      this.dialog.open<AgentAppInstallWizardComponent, AgentAppInstallWizardData, AgentAppEvent | null>(
         AgentAppInstallWizardComponent, {
           disableClose: false,
           panelClass: ['tb-dialog'],
@@ -485,8 +488,8 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
             application: full
           }
         }
-      ).afterClosed().subscribe(confirmed => {
-        if (confirmed) {
+      ).afterClosed().subscribe(event => {
+        if (event) {
           this.reloadEntity();
         }
       });
@@ -502,18 +505,27 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
       this.translate.instant('action.yes'),
       true
     ).subscribe(res => {
-      if (res) {
-        this.agentService.createAgentAppEvent(this.entity.id.id, {
-          actionType: AgentAppEventActionType.RESTART
-        }).subscribe(() => this.reloadEntity());
-      }
+      if (!res) { return; }
+      // Need the full application for the progress dialog.
+      this.agentService.getAgentApplicationById(this.entity.id.id).pipe(
+        mergeMap(full =>
+          this.agentService.createAgentAppEvent(this.entity.id.id, { actionType: AgentAppEventActionType.RESTART })
+            .pipe(mergeMap(event => {
+              this.reloadEntity();
+              if (event) {
+                return openAgentAppEventProgress(this.dialog, full as AgentApplication, event);
+              }
+              return of(null);
+            }))
+        )
+      ).subscribe();
     });
   }
 
   onUpgrade($event: Event) {
     if ($event) { $event.stopPropagation(); }
     this.agentService.getAgentApplicationById(this.entity.id.id).subscribe(full => {
-      this.dialog.open<AgentAppInstallWizardComponent, AgentAppInstallWizardData, boolean>(
+      this.dialog.open<AgentAppInstallWizardComponent, AgentAppInstallWizardData, AgentAppEvent | null>(
         AgentAppInstallWizardComponent, {
           disableClose: false,
           panelClass: ['tb-dialog'],
@@ -524,8 +536,8 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
             application: full
           }
         }
-      ).afterClosed().subscribe(confirmed => {
-        if (confirmed) {
+      ).afterClosed().subscribe(event => {
+        if (event) {
           this.reloadEntity();
         }
       });
@@ -535,17 +547,20 @@ export class AgentApplicationComponent extends EntityComponent<AgentApplicationI
   onDelete($event: Event) {
     if ($event) { $event.stopPropagation(); }
     this.agentService.getAgentApplicationById(this.entity.id.id).pipe(
-      mergeMap(full => this.dialog.open<AgentAppDeleteDialogComponent, AgentAppDeleteDialogData, boolean>(
+      mergeMap(full => this.dialog.open<AgentAppDeleteDialogComponent, AgentAppDeleteDialogData, AgentAppEvent | null>(
         AgentAppDeleteDialogComponent, {
           disableClose: false,
           panelClass: ['tb-dialog'],
           data: { application: full }
         }
       ).afterClosed())
-    ).subscribe(confirmed => {
-      if (confirmed) {
+    ).subscribe(event => {
+      if (event) {
         const agentId = (this.entity.agentId as any)?.id;
         if (agentId) {
+          // Progress dialog opened by the delete dialog outlives this navigation
+          // (MatDialog survives route changes), so the user can monitor the
+          // delete from the list page.
           this.router.navigateByUrl(`/edgeManagement/agents/${agentId}/applications`);
         }
       }
