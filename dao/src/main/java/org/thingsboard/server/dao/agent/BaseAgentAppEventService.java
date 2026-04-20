@@ -116,6 +116,12 @@ public class BaseAgentAppEventService implements AgentAppEventService {
     }
 
     @Override
+    public int cleanUpExpiredEvents(long expirationTs) {
+        log.trace("Executing cleanUpExpiredEvents before [{}]", expirationTs);
+        return agentAppEventDao.cleanUpExpiredEvents(expirationTs);
+    }
+
+    @Override
     public PageData<AgentAppEvent> findByBulkActionId(AgentBulkActionId bulkActionId, AgentAppEventStatus status, PageLink pageLink) {
         log.trace("Executing findByBulkActionId [{}] status [{}]", bulkActionId, status);
         return agentAppEventDao.findByBulkActionId(bulkActionId.getId(), status, pageLink);

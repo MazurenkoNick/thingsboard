@@ -109,6 +109,11 @@ public class JpaAgentAppEventDao extends JpaAbstractDao<AgentAppEventEntity, Age
     }
 
     @Override
+    public int cleanUpExpiredEvents(long expirationTs) {
+        return repository.deleteEventsUpdatedBefore(expirationTs);
+    }
+
+    @Override
     public PageData<AgentAppEvent> findByBulkActionId(UUID bulkActionId, AgentAppEventStatus status, PageLink pageLink) {
         return DaoUtil.pageToPageData(
                 repository.findByBulkActionId(

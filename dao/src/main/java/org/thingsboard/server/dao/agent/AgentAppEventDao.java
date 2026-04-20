@@ -48,6 +48,8 @@ public interface AgentAppEventDao extends Dao<AgentAppEvent> {
 
     void deleteAllPendingByApplicationId(UUID applicationId);
 
+    int cleanUpExpiredEvents(long expirationTs);
+
     PageData<AgentAppEvent> findByBulkActionId(UUID bulkActionId, AgentAppEventStatus status, PageLink pageLink);
 
     PageData<AgentAppEvent> findByFilter(AgentAppEventFilter filter, PageLink pageLink);

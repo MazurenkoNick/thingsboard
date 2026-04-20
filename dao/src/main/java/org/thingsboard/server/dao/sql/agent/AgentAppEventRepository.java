@@ -92,6 +92,11 @@ public interface AgentAppEventRepository extends JpaRepository<AgentAppEventEnti
     @Query("DELETE FROM AgentAppEventEntity e WHERE e.applicationId = :appId AND e.deliveryState = 'PENDING'")
     void deleteAllPendingByApplicationId(@Param("appId") UUID applicationId);
 
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM AgentAppEventEntity e WHERE e.updatedTime < :expirationTs")
+    int deleteEventsUpdatedBefore(@Param("expirationTs") long expirationTs);
+
     @Query(value = """
            SELECT * FROM agent_app_event e
            WHERE e.bulk_action_id = :bulkActionId

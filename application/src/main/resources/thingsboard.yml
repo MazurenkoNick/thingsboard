@@ -443,6 +443,10 @@ sql:
       enabled: "${SQL_TTL_AGENT_BULK_ACTIONS_ENABLED:true}" # Enable/disable TTL (Time To Live) for agent bulk action records
       ttl: "${SQL_TTL_AGENT_BULK_ACTIONS_SECS:604800}" # Default value - 7 days
       execution_interval_ms: "${SQL_TTL_AGENT_BULK_ACTIONS_EXECUTION_INTERVAL_MS:86400000}" # Default value - 1 day
+    agent_app_events:
+      enabled: "${SQL_TTL_AGENT_APP_EVENTS_ENABLED:true}" # Enable/disable TTL (Time To Live) for agent app event records
+      ttl: "${SQL_TTL_AGENT_APP_EVENTS_SECS:604800}" # Default value - 7 days; all events older than TTL are removed regardless of status
+      execution_interval_ms: "${SQL_TTL_AGENT_APP_EVENTS_EXECUTION_INTERVAL_MS:86400000}" # Default value - 1 day
   relations:
     max_level: "${SQL_RELATIONS_MAX_LEVEL:50}" # This value has to be reasonably small to prevent infinite recursion as early as possible
     pool_size: "${SQL_RELATIONS_POOL_SIZE:4}" # This value has to be reasonably small to prevent the relation query from blocking all other DB calls

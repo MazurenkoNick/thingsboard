@@ -53,6 +53,8 @@ public interface AgentAppEventService {
 
     void deleteAllPendingByApplicationId(AgentApplicationId applicationId);
 
+    int cleanUpExpiredEvents(long expirationTs);
+
     PageData<AgentAppEvent> findByBulkActionId(AgentBulkActionId bulkActionId, AgentAppEventStatus status, PageLink pageLink);
 
     PageData<AgentAppEvent> findByFilter(AgentAppEventFilter filter, PageLink pageLink);
