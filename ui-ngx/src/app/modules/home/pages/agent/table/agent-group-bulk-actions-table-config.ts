@@ -95,7 +95,7 @@ export class AgentGroupBulkActionsTableConfig extends EntityTableConfig<AgentBul
 
     this.handleRowClick = ($event: Event, action: AgentBulkAction) => {
       if ($event) { $event.stopPropagation(); }
-      this.router.navigateByUrl(`/edgeManagement/agentGroups/bulk/${action.id.id}`);
+      this.router.navigateByUrl(`/edgeManagement/agentProfiles/bulk/${action.id.id}`);
       return true;
     };
 

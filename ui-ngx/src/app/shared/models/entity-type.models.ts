@@ -822,7 +822,7 @@ export const baseDetailsPageByEntityType = new Map<EntityType, string>([
   [EntityType.DOMAIN, '/security-settings/oauth2/clients/details'],
   [EntityType.MOBILE_APP, '/mobile-center/applications'],
   [EntityType.AGENT, '/edgeManagement/agents'],
-  [EntityType.AGENT_GROUP, '/edgeManagement/agentGroups'],
+  [EntityType.AGENT_GROUP, '/edgeManagement/agentProfiles'],
   [EntityType.AGENT_APPLICATION, '/edgeManagement/agents'],
   [EntityType.AGENT_APP_TEMPLATE, '/edgeManagement/agentTemplates'],
   [EntityType.AGENT_APP_PROFILE, '/edgeManagement/agentAppProfiles'],

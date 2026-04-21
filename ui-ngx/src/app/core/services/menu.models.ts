@@ -709,7 +709,7 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       id: MenuId.agent_groups,
       name: 'agent.agent-groups',
       type: 'link',
-      path: '/edgeManagement/agentGroups',
+      path: '/edgeManagement/agentProfiles',
       icon: 'group_work'
     }
   ],

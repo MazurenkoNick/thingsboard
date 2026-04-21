@@ -164,7 +164,7 @@ export class AgentsTableConfigResolver {
     if (!agent.groupName || !agent.agentGroupId?.id) {
       return `<span style="color:rgba(0,0,0,0.38);font-size:12px;">—</span>`;
     }
-    const href = `/edgeManagement/agentGroups/${agent.agentGroupId.id}`;
+    const href = `/edgeManagement/agentProfiles/${agent.agentGroupId.id}`;
     const safeName = String(agent.groupName).replace(/</g, '&lt;').replace(/>/g, '&gt;');
     return `<a href="${href}" onclick="event.stopPropagation();" style="color:#305680;font-weight:500;text-decoration:none;">${safeName}</a>`;
   }

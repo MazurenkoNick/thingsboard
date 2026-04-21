@@ -154,7 +154,7 @@ const routes: Routes = [
         ]
       },
       {
-        path: 'agentGroups',
+        path: 'agentProfiles',
         data: {
           breadcrumb: {
             menuId: MenuId.agent_groups

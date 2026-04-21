@@ -95,7 +95,7 @@ export class AgentGroupCreatedDialogComponent
 
   goToGroup() {
     if (this.group?.id?.id) {
-      this.router.navigateByUrl(`/edgeManagement/agentGroups/${this.group.id.id}`);
+      this.router.navigateByUrl(`/edgeManagement/agentProfiles/${this.group.id.id}`);
     }
     this.dialogRef.close();
   }
