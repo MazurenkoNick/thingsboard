@@ -17,19 +17,27 @@ package org.thingsboard.server.service.queue;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.actors.ActorSystemContext;
 import org.thingsboard.server.common.msg.queue.ServiceType;
 import org.thingsboard.server.common.msg.queue.TbCallback;
+import org.thingsboard.server.dao.resource.TbResourceDataCache;
+import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
 import org.thingsboard.server.gen.transport.TransportProtos.AgentAppEventNotificationProto;
 import org.thingsboard.server.gen.transport.TransportProtos.ToAgentNotificationMsg;
 import org.thingsboard.server.queue.TbQueueConsumer;
 import org.thingsboard.server.queue.common.TbProtoQueueMsg;
+import org.thingsboard.server.queue.discovery.PartitionService;
 import org.thingsboard.server.queue.discovery.event.PartitionChangeEvent;
 import org.thingsboard.server.queue.provider.TbCoreQueueFactory;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.agent.AgentContextComponent;
+import org.thingsboard.server.service.apiusage.TbApiUsageStateService;
+import org.thingsboard.server.service.profile.TbAssetProfileCache;
+import org.thingsboard.server.service.profile.TbDeviceProfileCache;
 import org.thingsboard.server.service.queue.processing.AbstractConsumerService;
+import org.thingsboard.server.service.security.auth.jwt.settings.JwtSettingsService;
 
 import java.util.UUID;
 
@@ -49,8 +57,18 @@ public class DefaultTbAgentConsumerService extends AbstractConsumerService<ToAge
 
     public DefaultTbAgentConsumerService(TbCoreQueueFactory queueFactory,
                                          ActorSystemContext actorContext,
-                                         AgentContextComponent ctx) {
-        super(actorContext, null, null, null, null, null, null, null, null, null);
+                                         AgentContextComponent ctx,
+                                         TbTenantProfileCache tenantProfileCache,
+                                         TbDeviceProfileCache deviceProfileCache,
+                                         TbAssetProfileCache assetProfileCache,
+                                         TbResourceDataCache tbResourceDataCache,
+                                         TbApiUsageStateService apiUsageStateService,
+                                         PartitionService partitionService,
+                                         ApplicationEventPublisher eventPublisher,
+                                         JwtSettingsService jwtSettingsService
+                                         ) {
+        super(actorContext, tenantProfileCache, deviceProfileCache, assetProfileCache, tbResourceDataCache, apiUsageStateService, partitionService,
+                eventPublisher, jwtSettingsService);
         this.queueFactory = queueFactory;
         this.ctx = ctx;
     }

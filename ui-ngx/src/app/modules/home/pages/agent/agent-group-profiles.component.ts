@@ -69,7 +69,8 @@ import { AgentGroupProfilesTableConfig } from '@home/pages/agent/table/agent-gro
       color: #305680;
     }
     tb-entities-table { flex: 1; }
-  `]
+  `],
+  standalone: false
 })
 export class AgentGroupProfilesComponent implements AfterViewInit, OnChanges {
 

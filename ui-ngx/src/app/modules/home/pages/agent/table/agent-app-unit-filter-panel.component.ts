@@ -32,7 +32,8 @@ export const AGENT_APP_UNIT_FILTER_PANEL_DATA =
 @Component({
   selector: 'tb-agent-app-unit-filter-panel',
   templateUrl: './agent-app-unit-filter-panel.component.html',
-  styleUrls: ['./agent-app-filter-panel.component.scss']
+  styleUrls: ['./agent-app-filter-panel.component.scss'],
+  standalone: false
 })
 export class AgentAppUnitFilterPanelComponent {
 

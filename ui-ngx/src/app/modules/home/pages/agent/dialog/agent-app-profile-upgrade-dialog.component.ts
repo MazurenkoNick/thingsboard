@@ -39,7 +39,8 @@ export interface AgentAppProfileUpgradeDialogData {
 @Component({
   selector: 'tb-agent-app-profile-upgrade-dialog',
   templateUrl: './agent-app-profile-upgrade-dialog.component.html',
-  styleUrls: ['../wizard/agent-app-install-wizard.component.scss']
+  styleUrls: ['../wizard/agent-app-install-wizard.component.scss'],
+  standalone: false
 })
 export class AgentAppProfileUpgradeDialogComponent
   extends DialogComponent<AgentAppProfileUpgradeDialogComponent, AgentAppProfile | null>

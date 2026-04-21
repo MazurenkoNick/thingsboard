@@ -73,7 +73,8 @@ export interface StepBinding {
 @Component({
   selector: 'tb-agent-group-bulk-action-dialog',
   templateUrl: './agent-group-bulk-action-dialog.component.html',
-  styleUrls: ['./agent-group-bulk-action-dialog.component.scss']
+  styleUrls: ['./agent-group-bulk-action-dialog.component.scss'],
+  standalone: false
 })
 export class AgentGroupBulkActionDialogComponent
   extends DialogComponent<AgentGroupBulkActionDialogComponent, AgentBulkAction>

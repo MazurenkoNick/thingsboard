@@ -54,7 +54,8 @@ const TERMINAL_STATUSES: ReadonlyArray<AgentAppEventStatus> = [
 @Component({
   selector: 'tb-agent-app-event-progress-dialog',
   templateUrl: './agent-app-event-progress-dialog.component.html',
-  styleUrls: ['./agent-app-event-progress-dialog.component.scss']
+  styleUrls: ['./agent-app-event-progress-dialog.component.scss'],
+  standalone: false
 })
 export class AgentAppEventProgressDialogComponent
   extends DialogComponent<AgentAppEventProgressDialogComponent, boolean>

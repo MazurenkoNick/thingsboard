@@ -23,7 +23,8 @@ import { EntityTabsComponent } from '@home/components/entity/entity-tabs.compone
 @Component({
   selector: 'tb-agent-group-tabs',
   templateUrl: './agent-group-tabs.component.html',
-  styleUrls: []
+  styleUrls: [],
+  standalone: false
 })
 export class AgentGroupTabsComponent extends EntityTabsComponent<AgentGroupInfo> {
 

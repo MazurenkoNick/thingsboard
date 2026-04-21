@@ -29,7 +29,8 @@ import { ActionNotificationShow } from '@core/notification/notification.actions'
 @Component({
   selector: 'tb-agent-group-provisioning',
   templateUrl: './agent-group-provisioning.component.html',
-  styleUrls: ['./agent-group-provisioning.component.scss']
+  styleUrls: ['./agent-group-provisioning.component.scss'],
+  standalone: false
 })
 export class AgentGroupProvisioningComponent implements OnChanges {
 

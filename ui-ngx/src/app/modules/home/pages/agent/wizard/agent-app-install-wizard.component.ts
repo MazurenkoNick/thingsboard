@@ -92,7 +92,8 @@ interface TypeCard {
 @Component({
   selector: 'tb-agent-app-install-wizard',
   templateUrl: './agent-app-install-wizard.component.html',
-  styleUrls: ['./agent-app-install-wizard.component.scss']
+  styleUrls: ['./agent-app-install-wizard.component.scss'],
+  standalone: false
 })
 export class AgentAppInstallWizardComponent
   extends DialogComponent<AgentAppInstallWizardComponent, AgentAppEvent | null>

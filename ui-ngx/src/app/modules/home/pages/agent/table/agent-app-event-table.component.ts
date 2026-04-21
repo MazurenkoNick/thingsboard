@@ -39,7 +39,8 @@ import { AgentAppEventTableConfig } from './agent-app-event-table-config';
       background-color: #fff8e1;
       cursor: pointer;
     }
-  `]
+  `],
+  standalone: false
 })
 export class AgentAppEventTableComponent implements AfterViewInit, OnChanges {
 

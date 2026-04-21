@@ -33,7 +33,8 @@ import { AgentGroupBulkActionsTableConfig } from '@home/pages/agent/table/agent-
 @Component({
   selector: 'tb-agent-group-bulk-actions',
   template: '<tb-entities-table [entitiesTableConfig]="tableConfig"></tb-entities-table>',
-  styles: [':host { display: block; height: 100%; }']
+  styles: [':host { display: block; height: 100%; }'],
+  standalone: false
 })
 export class AgentGroupBulkActionsComponent implements AfterViewInit, OnChanges {
 

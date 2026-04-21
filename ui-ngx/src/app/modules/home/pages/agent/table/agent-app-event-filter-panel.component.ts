@@ -36,7 +36,8 @@ export const AGENT_APP_EVENT_FILTER_PANEL_DATA =
 @Component({
   selector: 'tb-agent-app-event-filter-panel',
   templateUrl: './agent-app-event-filter-panel.component.html',
-  styleUrls: ['./agent-app-filter-panel.component.scss']
+  styleUrls: ['./agent-app-filter-panel.component.scss'],
+  standalone: false
 })
 export class AgentAppEventFilterPanelComponent {
 

@@ -41,7 +41,8 @@ import { resolveAgentIdParam } from '@home/pages/agent/util/agent-route-params';
       background-color: #fff8e1;
       cursor: pointer;
     }
-  `]
+  `],
+  standalone: false
 })
 export class AgentEventsPageComponent implements OnInit {
 

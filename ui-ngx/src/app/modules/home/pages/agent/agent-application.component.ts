@@ -66,7 +66,8 @@ import { of } from 'rxjs';
 @Component({
   selector: 'tb-agent-application',
   templateUrl: './agent-application.component.html',
-  styleUrls: ['./agent-application.component.scss']
+  styleUrls: ['./agent-application.component.scss'],
+  standalone: false
 })
 export class AgentApplicationComponent extends EntityComponent<AgentApplicationInfo>
   implements AfterViewInit, OnDestroy {

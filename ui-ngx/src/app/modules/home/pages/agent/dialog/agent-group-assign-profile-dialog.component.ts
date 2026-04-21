@@ -29,7 +29,8 @@ export interface AgentGroupAssignProfileDialogData {
 @Component({
   selector: 'tb-agent-group-assign-profile-dialog',
   templateUrl: './agent-group-assign-profile-dialog.component.html',
-  styleUrls: ['./agent-group-assign-profile-dialog.component.scss']
+  styleUrls: ['./agent-group-assign-profile-dialog.component.scss'],
+  standalone: false
 })
 export class AgentGroupAssignProfileDialogComponent
   extends DialogComponent<AgentGroupAssignProfileDialogComponent, AgentAppProfile> {

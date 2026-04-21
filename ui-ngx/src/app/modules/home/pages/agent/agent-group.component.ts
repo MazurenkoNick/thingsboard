@@ -33,7 +33,8 @@ import { EntityTableConfig } from '@home/models/entity/entities-table-config.mod
 @Component({
   selector: 'tb-agent-group',
   templateUrl: './agent-group.component.html',
-  styleUrls: ['./agent-group.component.scss']
+  styleUrls: ['./agent-group.component.scss'],
+  standalone: false
 })
 export class AgentGroupComponent extends EntityComponent<AgentGroupInfo> {
 

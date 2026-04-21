@@ -24,7 +24,8 @@ import { AttributeScope } from '@shared/models/telemetry/telemetry.models';
 @Component({
   selector: 'tb-agent-application-tabs',
   templateUrl: './agent-application-tabs.component.html',
-  styleUrls: ['./agent-application-tabs.component.scss']
+  styleUrls: ['./agent-application-tabs.component.scss'],
+  standalone: false
 })
 export class AgentApplicationTabsComponent extends EntityTabsComponent<AgentApplicationInfo> {
 

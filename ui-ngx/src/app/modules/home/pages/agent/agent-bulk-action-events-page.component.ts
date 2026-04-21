@@ -36,7 +36,8 @@ const NON_TERMINAL: ReadonlyArray<AgentBulkActionStatus> = [
 @Component({
   selector: 'tb-agent-bulk-action-events-page',
   templateUrl: './agent-bulk-action-events-page.component.html',
-  styleUrls: ['./agent-bulk-action-events-page.component.scss']
+  styleUrls: ['./agent-bulk-action-events-page.component.scss'],
+  standalone: false
 })
 export class AgentBulkActionEventsPageComponent implements OnInit, OnDestroy {
 

@@ -43,7 +43,8 @@ import {
 @Component({
   selector: 'tb-agent-app-profile',
   templateUrl: './agent-app-profile.component.html',
-  styleUrls: ['./agent-app-profile.component.scss']
+  styleUrls: ['./agent-app-profile.component.scss'],
+  standalone: false
 })
 export class AgentAppProfileComponent extends EntityComponent<AgentAppProfile>
   implements AfterViewInit, OnDestroy {

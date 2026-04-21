@@ -42,7 +42,8 @@ export interface AgentAppDeleteDialogData {
 @Component({
   selector: 'tb-agent-app-delete-dialog',
   templateUrl: './agent-app-delete-dialog.component.html',
-  styleUrls: ['./agent-app-delete-dialog.component.scss']
+  styleUrls: ['./agent-app-delete-dialog.component.scss'],
+  standalone: false
 })
 export class AgentAppDeleteDialogComponent
   extends DialogComponent<AgentAppDeleteDialogComponent, AgentAppEvent | null>

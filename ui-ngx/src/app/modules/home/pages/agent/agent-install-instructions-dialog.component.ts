@@ -32,7 +32,8 @@ export interface AgentInstallInstructionsDialogData {
 @Component({
   selector: 'tb-agent-install-instructions-dialog',
   templateUrl: './agent-install-instructions-dialog.component.html',
-  styleUrls: ['./agent-install-instructions-dialog.component.scss']
+  styleUrls: ['./agent-install-instructions-dialog.component.scss'],
+  standalone: false
 })
 export class AgentInstallInstructionsDialogComponent
   extends DialogComponent<AgentInstallInstructionsDialogComponent> {

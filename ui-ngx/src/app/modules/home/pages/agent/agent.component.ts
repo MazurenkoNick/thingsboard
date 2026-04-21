@@ -34,7 +34,8 @@ import { PageLink } from '@shared/models/page/page-link';
 @Component({
   selector: 'tb-agent',
   templateUrl: './agent.component.html',
-  styleUrls: []
+  styleUrls: [],
+  standalone: false
 })
 export class AgentComponent extends EntityComponent<AgentInfo> implements OnInit {
 

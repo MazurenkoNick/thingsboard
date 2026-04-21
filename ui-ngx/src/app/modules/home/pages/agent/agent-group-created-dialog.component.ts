@@ -35,7 +35,8 @@ export interface AgentGroupCreatedDialogData {
 @Component({
   selector: 'tb-agent-group-created-dialog',
   templateUrl: './agent-group-created-dialog.component.html',
-  styleUrls: ['./agent-group-created-dialog.component.scss']
+  styleUrls: ['./agent-group-created-dialog.component.scss'],
+  standalone: false
 })
 export class AgentGroupCreatedDialogComponent
   extends DialogComponent<AgentGroupCreatedDialogComponent> {

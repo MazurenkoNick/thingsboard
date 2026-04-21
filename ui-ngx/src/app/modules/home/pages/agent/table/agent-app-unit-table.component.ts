@@ -28,7 +28,8 @@ import { AgentAppUnitTableConfig } from './agent-app-unit-table-config';
 @Component({
   selector: 'tb-agent-app-unit-table',
   template: '<tb-entities-table [entitiesTableConfig]="tableConfig"></tb-entities-table>',
-  styles: [':host { display: block; height: 100%; }']
+  styles: [':host { display: block; height: 100%; }'],
+  standalone: false
 })
 export class AgentAppUnitTableComponent implements AfterViewInit, OnChanges, OnDestroy {
 

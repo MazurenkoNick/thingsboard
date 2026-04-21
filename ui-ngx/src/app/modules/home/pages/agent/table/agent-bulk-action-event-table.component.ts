@@ -38,7 +38,8 @@ import { AgentBulkActionEventsTableConfig } from './agent-bulk-action-events-tab
       background-color: #fff8e1;
       cursor: pointer;
     }
-  `]
+  `],
+  standalone: false
 })
 export class AgentBulkActionEventTableComponent implements OnInit, AfterViewInit, OnChanges {
 

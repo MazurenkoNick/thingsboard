@@ -47,7 +47,8 @@ interface TypeCard {
 @Component({
   selector: 'tb-agent-app-profile-wizard',
   templateUrl: './agent-app-profile-wizard.component.html',
-  styleUrls: ['./agent-app-install-wizard.component.scss']
+  styleUrls: ['./agent-app-install-wizard.component.scss'],
+  standalone: false
 })
 export class AgentAppProfileWizardComponent
   extends DialogComponent<AgentAppProfileWizardComponent, AgentAppProfile>
