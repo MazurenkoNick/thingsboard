@@ -100,6 +100,7 @@ public interface AgentAppEventRepository extends JpaRepository<AgentAppEventEnti
     @Query(value = """
            SELECT * FROM agent_app_event e
            WHERE e.bulk_action_id = :bulkActionId
+           AND (CAST(:actionType AS varchar) IS NULL OR e.action_type = CAST(:actionType AS varchar))
            AND (CAST(:status AS varchar) IS NULL OR e.status = CAST(:status AS varchar))
            AND (CAST(:textSearch AS varchar) IS NULL
                 OR LOWER(e.action_type) LIKE LOWER(CONCAT('%', CAST(:textSearch AS varchar), '%'))
@@ -108,6 +109,7 @@ public interface AgentAppEventRepository extends JpaRepository<AgentAppEventEnti
            countQuery = """
            SELECT count(*) FROM agent_app_event e
            WHERE e.bulk_action_id = :bulkActionId
+           AND (CAST(:actionType AS varchar) IS NULL OR e.action_type = CAST(:actionType AS varchar))
            AND (CAST(:status AS varchar) IS NULL OR e.status = CAST(:status AS varchar))
            AND (CAST(:textSearch AS varchar) IS NULL
                 OR LOWER(e.action_type) LIKE LOWER(CONCAT('%', CAST(:textSearch AS varchar), '%'))
@@ -115,6 +117,7 @@ public interface AgentAppEventRepository extends JpaRepository<AgentAppEventEnti
            """,
            nativeQuery = true)
     Page<AgentAppEventEntity> findByBulkActionId(@Param("bulkActionId") UUID bulkActionId,
+                                                 @Param("actionType") String actionType,
                                                  @Param("status") String status,
                                                  @Param("textSearch") String textSearch,
                                                  Pageable pageable);
@@ -154,9 +157,10 @@ public interface AgentAppEventRepository extends JpaRepository<AgentAppEventEnti
                                                        Pageable pageable);
 
     @Query(value = """
-           SELECT new org.thingsboard.server.dao.model.sql.AgentAppEventInfoEntity(e, COALESCE(a.name, e.applicationName))
+           SELECT new org.thingsboard.server.dao.model.sql.AgentAppEventInfoEntity(e, COALESCE(a.name, e.applicationName), ag.name)
            FROM AgentAppEventEntity e
            LEFT JOIN AgentApplicationEntity a ON e.applicationId = a.id
+           LEFT JOIN AgentEntity ag ON e.agentId = ag.id
            WHERE e.tenantId = :tenantId AND e.agentId = :agentId
            AND (:actionType IS NULL OR e.actionType = :actionType)
            AND (:status IS NULL OR e.status = :status)
@@ -177,4 +181,22 @@ public interface AgentAppEventRepository extends JpaRepository<AgentAppEventEnti
                                                                 @Param("status") AgentAppEventStatus status,
                                                                 @Param("textSearch") String textSearch,
                                                                 Pageable pageable);
+
+    @Query("""
+           SELECT new org.thingsboard.server.dao.model.sql.AgentAppEventInfoEntity(e, COALESCE(a.name, e.applicationName), ag.name)
+           FROM AgentAppEventEntity e
+           LEFT JOIN AgentApplicationEntity a ON e.applicationId = a.id
+           LEFT JOIN AgentEntity ag ON e.agentId = ag.id
+           WHERE e.bulkActionId = :bulkActionId
+           AND (:actionType IS NULL OR e.actionType = :actionType)
+           AND (:status IS NULL OR e.status = :status)
+           AND (:textSearch IS NULL
+                OR ilike(COALESCE(a.name, e.applicationName), CONCAT('%', :textSearch, '%')) = true
+                OR ilike(ag.name, CONCAT('%', :textSearch, '%')) = true)
+           """)
+    Page<AgentAppEventInfoEntity> findInfosByBulkActionId(@Param("bulkActionId") UUID bulkActionId,
+                                                          @Param("actionType") AgentAppEventActionType actionType,
+                                                          @Param("status") AgentAppEventStatus status,
+                                                          @Param("textSearch") String textSearch,
+                                                          Pageable pageable);
 }

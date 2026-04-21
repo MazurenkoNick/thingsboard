@@ -29,6 +29,9 @@ public class AgentAppEventInfo extends AgentAppEvent {
     @Schema(description = "Name of the Agent Application this event belongs to.", accessMode = Schema.AccessMode.READ_ONLY)
     private String applicationName;
 
+    @Schema(description = "Name of the Agent that owns the Application.", accessMode = Schema.AccessMode.READ_ONLY)
+    private String agentName;
+
     public AgentAppEventInfo() {
         super();
     }
@@ -36,5 +39,11 @@ public class AgentAppEventInfo extends AgentAppEvent {
     public AgentAppEventInfo(AgentAppEvent event, String applicationName) {
         super(event);
         this.applicationName = applicationName;
+    }
+
+    public AgentAppEventInfo(AgentAppEvent event, String applicationName, String agentName) {
+        super(event);
+        this.applicationName = applicationName;
+        this.agentName = agentName;
     }
 }

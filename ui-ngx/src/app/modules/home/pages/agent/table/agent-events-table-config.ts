@@ -35,7 +35,7 @@ import { PageData } from '@shared/models/page/page-data';
 import {
   AgentAppEventActionType,
   agentAppEventActionTypeTranslationMap,
-  AgentAppEventDeliveryState,
+  agentAppEventDeliveryStateTranslationMap,
   AgentAppEventInfo,
   AgentAppEventStatus,
   agentAppEventStatusTranslationMap,
@@ -92,10 +92,10 @@ export class AgentEventsTableConfig extends EntityTableConfig<AgentAppEventInfo>
         () => ({}), true),
       new EntityTableColumn<AgentAppEventInfo>('deliveryState',
         'agent.app-event-execution', '140px',
-        (e) => this.translate.instant(
-          e.deliveryState === AgentAppEventDeliveryState.DELIVERED
-            ? 'agent.app-event-execution-started'
-            : 'agent.app-event-execution-not-started'),
+        (e) => {
+          const key = agentAppEventDeliveryStateTranslationMap.get(e.deliveryState);
+          return key ? this.translate.instant(key) : '';
+        },
         () => ({}), true),
       new EntityTableColumn<AgentAppEventInfo>('status',
         'agent.app-event-status', '140px',

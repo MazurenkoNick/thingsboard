@@ -16,7 +16,7 @@
 
 import { TranslateService } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
-import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import {
   DateEntityTableColumn,
   EntityTableColumn,
@@ -25,14 +25,13 @@ import {
 import { Direction } from '@shared/models/page/sort-order';
 import { AgentService } from '@core/http/agent.service';
 import {
+  AgentAppEventActionType,
+  agentAppEventActionTypeTranslationMap,
   AgentBulkAction,
   AgentBulkActionStatus,
+  agentBulkActionStatusTranslationMap,
   AgentGroupInfo
 } from '@shared/models/agent.models';
-import {
-  AgentGroupBulkActionDetailsDialogComponent,
-  AgentGroupBulkActionDetailsDialogData
-} from '@home/pages/agent/dialog/agent-group-bulk-action-details-dialog.component';
 
 const statusConfig: Record<string, { color: string; icon: string }> = {
   QUEUED:       { color: '#616161', icon: 'schedule' },
@@ -49,16 +48,16 @@ const actionIcons: Record<string, string> = {
   ROLLBACK: 'undo'
 };
 
-function statusBadge(status: AgentBulkActionStatus): string {
+function statusBadge(status: AgentBulkActionStatus, label: string): string {
   const c = statusConfig[status] || { color: '#616161', icon: 'help_outline' };
   return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:500;color:${c.color};">`
-    + `<span class="material-icons" style="font-size:18px;">${c.icon}</span>${status}</span>`;
+    + `<span class="material-icons" style="font-size:18px;">${c.icon}</span>${label}</span>`;
 }
 
-function actionBadge(action: string): string {
+function actionBadge(action: string, label: string): string {
   const icon = actionIcons[action] || 'bolt';
   return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:13px;color:rgba(0,0,0,0.76);">`
-    + `<span class="material-icons" style="font-size:18px;">${icon}</span>${action}</span>`;
+    + `<span class="material-icons" style="font-size:18px;">${icon}</span>${label}</span>`;
 }
 
 function countsCell(action: AgentBulkAction): string {
@@ -79,7 +78,7 @@ export class AgentGroupBulkActionsTableConfig extends EntityTableConfig<AgentBul
               private readonly agentService: AgentService,
               private readonly translate: TranslateService,
               private readonly datePipe: DatePipe,
-              private readonly dialog: MatDialog) {
+              private readonly router: Router) {
     super();
 
     this.tableTitle = this.translate.instant('agent.bulk-actions');
@@ -96,16 +95,16 @@ export class AgentGroupBulkActionsTableConfig extends EntityTableConfig<AgentBul
 
     this.handleRowClick = ($event: Event, action: AgentBulkAction) => {
       if ($event) { $event.stopPropagation(); }
-      this.openDetails(action);
+      this.router.navigateByUrl(`/edgeManagement/agentGroups/bulk/${action.id.id}`);
       return true;
     };
 
     this.columns.push(
       new DateEntityTableColumn<AgentBulkAction>('createdTime', 'common.created-time', this.datePipe, '160px'),
       new EntityTableColumn<AgentBulkAction>('actionType', 'agent.bulk-action-type', '140px',
-        (a) => actionBadge(a.actionType), () => ({}), false),
+        (a) => actionBadge(a.actionType, this.actionLabel(a.actionType)), () => ({}), false),
       new EntityTableColumn<AgentBulkAction>('status', 'agent.bulk-action-status', '160px',
-        (a) => statusBadge(a.status), () => ({}), false),
+        (a) => statusBadge(a.status, this.statusLabel(a.status)), () => ({}), false),
       new EntityTableColumn<AgentBulkAction>('counts', 'agent.bulk-action-counts', '160px',
         (a) => countsCell(a), () => ({}), false),
       new EntityTableColumn<AgentBulkAction>('errorMsg', 'agent.bulk-action-error', '30%',
@@ -116,13 +115,13 @@ export class AgentGroupBulkActionsTableConfig extends EntityTableConfig<AgentBul
       this.agentService.getGroupBulkActions(this.group.id.id, pageLink);
   }
 
-  private openDetails(action: AgentBulkAction) {
-    this.dialog.open<AgentGroupBulkActionDetailsDialogComponent, AgentGroupBulkActionDetailsDialogData>(
-      AgentGroupBulkActionDetailsDialogComponent, {
-        disableClose: false,
-        panelClass: ['tb-dialog'],
-        data: { bulkAction: action }
-      }
-    );
+  private actionLabel(action: AgentAppEventActionType): string {
+    const key = agentAppEventActionTypeTranslationMap.get(action);
+    return key ? this.translate.instant(key) : action;
+  }
+
+  private statusLabel(status: AgentBulkActionStatus): string {
+    const key = agentBulkActionStatusTranslationMap.get(status);
+    return key ? this.translate.instant(key) : status;
   }
 }

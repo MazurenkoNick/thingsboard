@@ -827,8 +827,7 @@ public class DefaultTbClusterService implements TbClusterService {
                 .setGroupIdLSB(bulkAction.getGroupId().getLeastSignificantBits())
                 .setProfileIdMSB(bulkAction.getProfileId().getMostSignificantBits())
                 .setProfileIdLSB(bulkAction.getProfileId().getLeastSignificantBits())
-                .setActionType(bulkAction.getActionType().name())
-                .setForce(request.isForce());
+                .setActionType(bulkAction.getActionType().name());
 
         if (request.getStepInputs() != null) {
             builder.setStepInputs(com.google.protobuf.ByteString.copyFrom(

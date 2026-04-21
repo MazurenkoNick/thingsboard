@@ -45,9 +45,6 @@ import {
   AgentGroupBulkActionDialogComponent
 } from '@home/pages/agent/dialog/agent-group-bulk-action-dialog.component';
 import {
-  AgentGroupBulkActionDetailsDialogComponent
-} from '@home/pages/agent/dialog/agent-group-bulk-action-details-dialog.component';
-import {
   AgentAppDeleteDialogComponent
 } from '@home/pages/agent/dialog/agent-app-delete-dialog.component';
 import {
@@ -68,6 +65,9 @@ import {
   AgentAppEventTableComponent
 } from '@home/pages/agent/table/agent-app-event-table.component';
 import {
+  AgentBulkActionEventTableComponent
+} from '@home/pages/agent/table/agent-bulk-action-event-table.component';
+import {
   AgentAppEventFilterPanelComponent
 } from '@home/pages/agent/table/agent-app-event-filter-panel.component';
 import {
@@ -77,6 +77,7 @@ import {
   AgentAppUnitFilterPanelComponent
 } from '@home/pages/agent/table/agent-app-unit-filter-panel.component';
 import { AgentEventsPageComponent } from '@home/pages/agent/agent-events-page.component';
+import { AgentBulkActionEventsPageComponent } from '@home/pages/agent/agent-bulk-action-events-page.component';
 
 @NgModule({
   declarations: [
@@ -92,7 +93,6 @@ import { AgentEventsPageComponent } from '@home/pages/agent/agent-events-page.co
     AgentGroupBulkActionsComponent,
     AgentGroupAssignProfileDialogComponent,
     AgentGroupBulkActionDialogComponent,
-    AgentGroupBulkActionDetailsDialogComponent,
     AgentAppDeleteDialogComponent,
     AgentAppEventProgressDialogComponent,
     AgentAppProfileUpgradeDialogComponent,
@@ -101,10 +101,12 @@ import { AgentEventsPageComponent } from '@home/pages/agent/agent-events-page.co
     AgentApplicationComponent,
     AgentApplicationTabsComponent,
     AgentAppEventTableComponent,
+    AgentBulkActionEventTableComponent,
     AgentAppEventFilterPanelComponent,
     AgentAppUnitTableComponent,
     AgentAppUnitFilterPanelComponent,
     AgentEventsPageComponent,
+    AgentBulkActionEventsPageComponent,
   ],
   imports: [
     CommonModule,

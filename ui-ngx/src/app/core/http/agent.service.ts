@@ -317,9 +317,13 @@ export class AgentService {
       defaultHttpOptionsFromConfig(config));
   }
 
-  public getAgentBulkActionEvents(bulkActionId: string, pageLink: PageLink, status?: string,
+  public getAgentBulkActionEvents(bulkActionId: string, pageLink: PageLink,
+                                  actionType?: string, status?: string,
                                   config?: RequestConfig): Observable<PageData<AgentAppEvent>> {
     let url = `/api/agent/bulk/${bulkActionId}/events${pageLink.toQuery()}`;
+    if (actionType) {
+      url += `&actionType=${actionType}`;
+    }
     if (status) {
       url += `&status=${status}`;
     }

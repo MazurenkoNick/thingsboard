@@ -25,7 +25,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppEventActionType;
+import org.thingsboard.server.common.data.agent.AgentAppEventInfo;
 import org.thingsboard.server.common.data.agent.AgentBulkAction;
 import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
@@ -74,10 +75,12 @@ public class AgentBulkActionController extends BaseController {
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/agent/bulk/{bulkActionId}/events", params = {"pageSize", "page"})
     @ResponseBody
-    public PageData<AgentAppEvent> getAgentBulkActionEvents(
+    public PageData<AgentAppEventInfo> getAgentBulkActionEvents(
             @PathVariable(BULK_ACTION_ID) String strBulkActionId,
             @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true) @RequestParam int pageSize,
             @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true) @RequestParam int page,
+            @RequestParam(required = false) String textSearch,
+            @RequestParam(required = false) AgentAppEventActionType actionType,
             @RequestParam(required = false) AgentAppEventStatus status,
             @Parameter(description = SORT_PROPERTY_DESCRIPTION) @RequestParam(required = false) String sortProperty,
             @Parameter(description = SORT_ORDER_DESCRIPTION) @RequestParam(required = false) String sortOrder) throws ThingsboardException {
@@ -87,7 +90,7 @@ public class AgentBulkActionController extends BaseController {
         if (!getTenantId().equals(bulkAction.getTenantId())) {
             throw new ThingsboardException("You don't have permission to perform this operation!", ThingsboardErrorCode.PERMISSION_DENIED);
         }
-        PageLink pageLink = createPageLink(pageSize, page, null, sortProperty, sortOrder);
-        return agentAppEventService.findByBulkActionId(bulkActionId, status, pageLink);
+        PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
+        return agentAppEventService.findInfosByBulkActionId(bulkActionId, actionType, status, pageLink);
     }
 }

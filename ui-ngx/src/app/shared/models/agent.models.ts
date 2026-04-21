@@ -76,7 +76,8 @@ export enum AgentAppEventStatus {
   QUEUED = 'QUEUED',
   PROCESSING = 'PROCESSING',
   FINISHED = 'FINISHED',
-  ERROR = 'ERROR'
+  ERROR = 'ERROR',
+  START_FAILED = 'START_FAILED'
 }
 
 export const agentAppEventStatusTranslationMap = new Map<AgentAppEventStatus, string>([
@@ -85,12 +86,20 @@ export const agentAppEventStatusTranslationMap = new Map<AgentAppEventStatus, st
   [AgentAppEventStatus.PROCESSING, 'agent.event-status-processing'],
   [AgentAppEventStatus.FINISHED, 'agent.event-status-finished'],
   [AgentAppEventStatus.ERROR, 'agent.event-status-error'],
+  [AgentAppEventStatus.START_FAILED, 'agent.event-status-start-failed'],
 ]);
 
 export enum AgentAppEventDeliveryState {
+  DELIVERY_FAIL = 'DELIVERY_FAIL',
   PENDING = 'PENDING',
   DELIVERED = 'DELIVERED'
 }
+
+export const agentAppEventDeliveryStateTranslationMap = new Map<AgentAppEventDeliveryState, string>([
+  [AgentAppEventDeliveryState.DELIVERY_FAIL, 'agent.app-event-execution-delivery-failed'],
+  [AgentAppEventDeliveryState.PENDING, 'agent.app-event-execution-not-started'],
+  [AgentAppEventDeliveryState.DELIVERED, 'agent.app-event-execution-started'],
+]);
 
 export enum AgentAppUnitType {
   CONTAINER = 'CONTAINER',
@@ -141,6 +150,13 @@ export enum AgentBulkActionStatus {
   STARTED = 'STARTED',
   START_FAILED = 'START_FAILED'
 }
+
+export const agentBulkActionStatusTranslationMap = new Map<AgentBulkActionStatus, string>([
+  [AgentBulkActionStatus.QUEUED, 'agent.bulk-status-queued'],
+  [AgentBulkActionStatus.IN_PROGRESS, 'agent.bulk-status-in-progress'],
+  [AgentBulkActionStatus.STARTED, 'agent.bulk-status-started'],
+  [AgentBulkActionStatus.START_FAILED, 'agent.bulk-status-start-failed'],
+]);
 
 // --- Entities ---
 
@@ -241,6 +257,7 @@ export interface AgentAppEvent extends BaseData<AgentAppEventId> {
 
 export interface AgentAppEventInfo extends AgentAppEvent {
   applicationName?: string;
+  agentName?: string;
 }
 
 export interface AgentAppInstallResponse {

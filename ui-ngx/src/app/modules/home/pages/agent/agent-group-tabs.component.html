@@ -16,12 +16,12 @@
 
 -->
 <mat-tab *ngIf="entity"
-         label="{{ 'agent.application-profiles' | translate }}" #profilesTab="matTab">
-  <tb-agent-group-profiles [group]="entity" [active]="profilesTab.isActive"></tb-agent-group-profiles>
-</mat-tab>
-<mat-tab *ngIf="entity"
          label="{{ 'agent.provisioning' | translate }}" #provisioningTab="matTab">
   <tb-agent-group-provisioning [group]="entity" [active]="provisioningTab.isActive"></tb-agent-group-provisioning>
+</mat-tab>
+<mat-tab *ngIf="entity"
+         label="{{ 'agent.application-profiles' | translate }}" #profilesTab="matTab">
+  <tb-agent-group-profiles [group]="entity" [active]="profilesTab.isActive"></tb-agent-group-profiles>
 </mat-tab>
 <mat-tab *ngIf="entity"
          label="{{ 'agent.bulk-actions' | translate }}" #bulkActionsTab="matTab">

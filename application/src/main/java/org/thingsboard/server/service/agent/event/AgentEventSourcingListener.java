@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppEventStatus;
 import org.thingsboard.server.dao.agent.AgentApplicationService;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 
@@ -34,7 +35,9 @@ public class AgentEventSourcingListener {
 
     @TransactionalEventListener(fallbackExecution = true)
     public void handleEvent(SaveEntityEvent<?> event) {
-        if (!(event.getEntity() instanceof AgentAppEvent agentAppEvent)) {
+        if (!(event.getEntity() instanceof AgentAppEvent agentAppEvent) ||
+                (agentAppEvent.getStatus() != null && agentAppEvent.getStatus() != AgentAppEventStatus.PENDING) ||
+                !event.getCreated()) {
             return;
         }
         try {

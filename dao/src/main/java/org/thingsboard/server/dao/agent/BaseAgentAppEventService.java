@@ -57,8 +57,15 @@ public class BaseAgentAppEventService implements AgentAppEventService {
 
     @Override
     public AgentAppEvent save(TenantId tenantId, AgentAppEvent event) {
+        return save(tenantId, event, true);
+    }
+
+    @Override
+    public AgentAppEvent save(TenantId tenantId, AgentAppEvent event, boolean doValidate) {
         log.trace("Executing saveAgentAppEvent [{}]", event);
-        agentAppEventValidator.validate(event, AgentAppEvent::getTenantId);
+        if (doValidate) {
+            agentAppEventValidator.validate(event, AgentAppEvent::getTenantId);
+        }
         AgentAppEvent saved = agentAppEventDao.save(event.getTenantId(), event);
         eventPublisher.publishEvent(SaveEntityEvent.builder()
                 .tenantId(saved.getTenantId())
@@ -122,9 +129,17 @@ public class BaseAgentAppEventService implements AgentAppEventService {
     }
 
     @Override
-    public PageData<AgentAppEvent> findByBulkActionId(AgentBulkActionId bulkActionId, AgentAppEventStatus status, PageLink pageLink) {
-        log.trace("Executing findByBulkActionId [{}] status [{}]", bulkActionId, status);
-        return agentAppEventDao.findByBulkActionId(bulkActionId.getId(), status, pageLink);
+    public PageData<AgentAppEvent> findByBulkActionId(AgentBulkActionId bulkActionId, AgentAppEventActionType actionType,
+                                                      AgentAppEventStatus status, PageLink pageLink) {
+        log.trace("Executing findByBulkActionId [{}] actionType [{}] status [{}]", bulkActionId, actionType, status);
+        return agentAppEventDao.findByBulkActionId(bulkActionId.getId(), actionType, status, pageLink);
+    }
+
+    @Override
+    public PageData<AgentAppEventInfo> findInfosByBulkActionId(AgentBulkActionId bulkActionId, AgentAppEventActionType actionType,
+                                                                AgentAppEventStatus status, PageLink pageLink) {
+        log.trace("Executing findInfosByBulkActionId [{}] actionType [{}] status [{}]", bulkActionId, actionType, status);
+        return agentAppEventDao.findInfosByBulkActionId(bulkActionId.getId(), actionType, status, pageLink);
     }
 
     @Override

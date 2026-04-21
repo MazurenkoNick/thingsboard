@@ -121,7 +121,6 @@ class DefaultAgentBulkActionProcessingServiceTest {
     void enqueueBulkOperation_rejectsNullActionType() {
         BulkOperationRequest request = new BulkOperationRequest();
         request.setActionType(null);
-        request.setForce(false);
 
         assertThatThrownBy(() -> service.enqueueBulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request))
                 .isInstanceOf(DataValidationException.class)
@@ -134,7 +133,6 @@ class DefaultAgentBulkActionProcessingServiceTest {
     void enqueueBulkOperation_restrictedActionTypes(AgentAppEventActionType actionType) {
         BulkOperationRequest request = new BulkOperationRequest();
         request.setActionType(actionType);
-        request.setForce(false);
 
         assertThatThrownBy(() -> service.enqueueBulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request))
                 .isInstanceOf(DataValidationException.class)
@@ -147,7 +145,6 @@ class DefaultAgentBulkActionProcessingServiceTest {
     void enqueueBulkOperation_allowedActionTypes(AgentAppEventActionType actionType) {
         BulkOperationRequest request = new BulkOperationRequest();
         request.setActionType(actionType);
-        request.setForce(false);
 
         AgentBulkAction result = service.enqueueBulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request);
 
@@ -158,7 +155,6 @@ class DefaultAgentBulkActionProcessingServiceTest {
     @Test
     void enqueueBulkOperation_savesWithQueuedStatusAndPublishes() {
         BulkOperationRequest request = createRequest(AgentAppEventActionType.UPDATE);
-        request.setForce(true);
 
         AgentBulkAction result = service.enqueueBulkOperation(TENANT_ID, GROUP_ID, PROFILE_ID, request);
 
@@ -383,7 +379,6 @@ class DefaultAgentBulkActionProcessingServiceTest {
                 .setProfileIdMSB(profileUuid.getMostSignificantBits())
                 .setProfileIdLSB(profileUuid.getLeastSignificantBits())
                 .setActionType(actionType.name())
-                .setForce(false)
                 .build();
     }
 }

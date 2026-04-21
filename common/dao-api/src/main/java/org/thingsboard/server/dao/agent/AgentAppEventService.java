@@ -37,6 +37,8 @@ public interface AgentAppEventService {
 
     AgentAppEvent save(TenantId tenantId, AgentAppEvent event);
 
+    AgentAppEvent save(TenantId tenantId, AgentAppEvent event, boolean doValidate);
+
     AgentAppEvent findById(TenantId tenantId, AgentAppEventId id);
 
     Optional<AgentAppEvent> findOldestPendingByApplicationId(AgentApplicationId applicationId);
@@ -55,7 +57,11 @@ public interface AgentAppEventService {
 
     int cleanUpExpiredEvents(long expirationTs);
 
-    PageData<AgentAppEvent> findByBulkActionId(AgentBulkActionId bulkActionId, AgentAppEventStatus status, PageLink pageLink);
+    PageData<AgentAppEvent> findByBulkActionId(AgentBulkActionId bulkActionId, AgentAppEventActionType actionType,
+                                               AgentAppEventStatus status, PageLink pageLink);
+
+    PageData<AgentAppEventInfo> findInfosByBulkActionId(AgentBulkActionId bulkActionId, AgentAppEventActionType actionType,
+                                                        AgentAppEventStatus status, PageLink pageLink);
 
     PageData<AgentAppEvent> findByFilter(AgentAppEventFilter filter, PageLink pageLink);
 

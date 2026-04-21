@@ -24,7 +24,7 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { TranslateService } from '@ngx-translate/core';
-import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { AgentService } from '@core/http/agent.service';
 import { EntitiesTableComponent } from '@home/components/entity/entities-table.component';
 import { AgentGroupInfo } from '@shared/models/agent.models';
@@ -47,7 +47,7 @@ export class AgentGroupBulkActionsComponent implements AfterViewInit, OnChanges 
   constructor(private agentService: AgentService,
               private translate: TranslateService,
               private datePipe: DatePipe,
-              private dialog: MatDialog) {}
+              private router: Router) {}
 
   ngAfterViewInit(): void {
     this.rebuild();
@@ -56,6 +56,9 @@ export class AgentGroupBulkActionsComponent implements AfterViewInit, OnChanges 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.group && !changes.group.firstChange) {
       this.rebuild();
+    }
+    if (changes.active && this.active && !changes.active.firstChange && this.tableConfig) {
+      this.tableConfig.updateData();
     }
   }
 
@@ -66,7 +69,7 @@ export class AgentGroupBulkActionsComponent implements AfterViewInit, OnChanges 
       this.agentService,
       this.translate,
       this.datePipe,
-      this.dialog
+      this.router
     );
   }
 }

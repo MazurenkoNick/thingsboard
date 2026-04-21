@@ -1,0 +1,86 @@
+/**
+ * Copyright © 2016-2026 The Thingsboard Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+:host { display: block; height: 100%; }
+
+.tb-bulk-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px 24px;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.tb-bulk-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  h2 { font-size: 20px; font-weight: 400; margin: 0; }
+}
+
+.tb-bulk-summary {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 4px;
+  padding: 16px;
+
+  .tb-summary-main {
+    display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px;
+    .tb-summary-status { font-size: 16px; font-weight: 500; }
+    .tb-summary-action {
+      font-size: 13px; color: rgba(0, 0, 0, 0.54);
+      background: rgba(0, 0, 0, 0.06); padding: 2px 10px; border-radius: 10px;
+    }
+  }
+  .tb-summary-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 24px;
+  }
+  .tb-summary-cell {
+    display: flex; flex-direction: column;
+    .label {
+      font-size: 11px; letter-spacing: 0.3px; text-transform: uppercase;
+      color: rgba(0, 0, 0, 0.54);
+    }
+    .value { font-size: 13px; color: rgba(0, 0, 0, 0.87); }
+    .skipped-count { color: #ef6c00; font-weight: 500; }
+  }
+  .tb-skip-counts {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+  }
+  .tb-skip-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(239, 108, 0, 0.1); color: #ef6c00;
+    padding: 2px 10px; border-radius: 10px; font-size: 12px;
+    .count {
+      background: rgba(0, 0, 0, 0.08); color: rgba(0, 0, 0, 0.67);
+      padding: 0 6px; border-radius: 8px; font-size: 11px;
+    }
+  }
+  .tb-bulk-error {
+    display: flex; align-items: flex-start; gap: 8px;
+    margin-top: 12px; padding: 8px 12px;
+    background: rgba(198, 40, 40, 0.08); color: #c62828;
+    border-radius: 4px; font-size: 12px;
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  }
+}
+
+.tb-bulk-events {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  tb-agent-bulk-action-event-table { display: block; flex: 1 1 auto; }
+}

@@ -24,20 +24,26 @@ import org.thingsboard.server.common.data.agent.AgentAppEventInfo;
 public class AgentAppEventInfoEntity extends AgentAppEventEntity {
 
     private String applicationName;
+    private String agentName;
 
     public AgentAppEventInfoEntity() {
         super();
     }
 
     public AgentAppEventInfoEntity(AgentAppEventEntity entity, String applicationName) {
+        this(entity, applicationName, null);
+    }
+
+    public AgentAppEventInfoEntity(AgentAppEventEntity entity, String applicationName, String agentName) {
         super(entity.toData());
         this.id = entity.getId();
         this.createdTime = entity.getCreatedTime();
         this.applicationName = applicationName;
+        this.agentName = agentName;
     }
 
     @Override
     public AgentAppEventInfo toData() {
-        return new AgentAppEventInfo(super.toData(), applicationName);
+        return new AgentAppEventInfo(super.toData(), applicationName, agentName);
     }
 }

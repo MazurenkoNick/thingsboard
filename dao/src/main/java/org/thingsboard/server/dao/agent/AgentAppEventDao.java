@@ -50,7 +50,11 @@ public interface AgentAppEventDao extends Dao<AgentAppEvent> {
 
     int cleanUpExpiredEvents(long expirationTs);
 
-    PageData<AgentAppEvent> findByBulkActionId(UUID bulkActionId, AgentAppEventStatus status, PageLink pageLink);
+    PageData<AgentAppEvent> findByBulkActionId(UUID bulkActionId, AgentAppEventActionType actionType,
+                                               AgentAppEventStatus status, PageLink pageLink);
+
+    PageData<AgentAppEventInfo> findInfosByBulkActionId(UUID bulkActionId, AgentAppEventActionType actionType,
+                                                        AgentAppEventStatus status, PageLink pageLink);
 
     PageData<AgentAppEvent> findByFilter(AgentAppEventFilter filter, PageLink pageLink);
 

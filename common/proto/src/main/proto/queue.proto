@@ -1972,6 +1972,5 @@ message AgentBulkOperationMsg {
   int64 profileIdMSB = 7;
   int64 profileIdLSB = 8;
   string actionType = 9;
-  bool force = 10;
-  bytes stepInputs = 11;
+  bytes stepInputs = 10;
 }

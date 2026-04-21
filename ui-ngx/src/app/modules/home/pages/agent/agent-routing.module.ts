@@ -28,6 +28,7 @@ import { AgentGroupsTableConfigResolver } from '@home/pages/agent/agent-groups-t
 import { AgentAppProfilesTableConfigResolver } from '@home/pages/agent/agent-app-profiles-table-config.resolver';
 import { AgentApplicationsTableConfigResolver } from '@home/pages/agent/agent-applications-table-config.resolver';
 import { AgentEventsPageComponent } from '@home/pages/agent/agent-events-page.component';
+import { AgentBulkActionEventsPageComponent } from '@home/pages/agent/agent-bulk-action-events-page.component';
 import { RouterTabsComponent } from '@home/components/router-tabs.component';
 
 const routes: Routes = [
@@ -185,6 +186,19 @@ const routes: Routes = [
             },
             resolve: {
               entitiesTableConfig: AgentGroupsTableConfigResolver
+            }
+          },
+          {
+            path: 'bulk/:bulkActionId',
+            component: AgentBulkActionEventsPageComponent,
+            data: {
+              auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+              title: 'agent.bulk-action-details',
+              isPage: true,
+              breadcrumb: {
+                label: 'agent.bulk-action-details',
+                icon: 'playlist_play'
+              }
             }
           }
         ]

@@ -33,13 +33,12 @@ import { Direction } from '@shared/models/page/sort-order';
 import { PageLink } from '@shared/models/page/page-link';
 import { PageData } from '@shared/models/page/page-data';
 import {
-  AgentAppEvent,
   AgentAppEventActionType,
   agentAppEventActionTypeTranslationMap,
   agentAppEventDeliveryStateTranslationMap,
+  AgentAppEventInfo,
   AgentAppEventStatus,
-  agentAppEventStatusTranslationMap,
-  AgentApplicationInfo
+  agentAppEventStatusTranslationMap
 } from '@shared/models/agent.models';
 import {
   AgentAppEventProgressDialogComponent,
@@ -52,11 +51,11 @@ import {
   AgentAppEventFilterValue
 } from './agent-app-event-filter-panel.component';
 
-export class AgentAppEventTableConfig extends EntityTableConfig<AgentAppEvent> {
+export class AgentBulkActionEventsTableConfig extends EntityTableConfig<AgentAppEventInfo> {
 
   private filter: AgentAppEventFilterValue = { actionType: null, status: null };
 
-  constructor(private readonly application: AgentApplicationInfo,
+  constructor(private readonly bulkActionId: string,
               private readonly agentService: AgentService,
               private readonly dialogService: DialogService,
               private readonly dialog: MatDialog,
@@ -66,40 +65,41 @@ export class AgentAppEventTableConfig extends EntityTableConfig<AgentAppEvent> {
               private readonly viewContainerRef: ViewContainerRef) {
     super();
 
-    this.tableTitle = this.translate.instant('agent.app-events');
+    this.tableTitle = this.translate.instant('agent.bulk-events');
     this.detailsPanelEnabled = false;
     this.selectionEnabled = false;
     this.searchEnabled = true;
     this.addEnabled = false;
     this.entitiesDeleteEnabled = false;
-    // Per-tab table, not a page-level table — don't let router query params
-    // drive our paginator/sort (the parent Applications list shares the URL).
     this.pageMode = false;
     this.defaultSortOrder = { property: 'createdTime', direction: Direction.DESC };
 
-    this.entityTranslations = { noEntities: 'agent.app-no-events' } as any;
+    this.entityTranslations = { noEntities: 'agent.bulk-no-events' } as any;
     this.entityResources = {} as any;
 
-    // Emit a marker span in the status cell for in-flight rows. The wrapper
-    // component's SCSS uses `:has()` to detect this marker and paint the
-    // whole mat-row (including the action cell) amber with a hand cursor —
-    // no modifications to shared EntityTableConfig / entities-table needed.
     this.columns.push(
-      new EntityTableColumn<AgentAppEvent>('actionType',
-        'agent.app-event-action', '160px',
+      new EntityTableColumn<AgentAppEventInfo>('agentName',
+        'agent.app-event-agent-name', '20%',
+        (e) => e.agentName || '', () => ({}), false),
+      new EntityTableColumn<AgentAppEventInfo>('applicationName',
+        'agent.app-event-app-name', '25%',
+        (e) => e.applicationName || this.translate.instant('agent.app-deleted'),
+        () => ({}), false),
+      new EntityTableColumn<AgentAppEventInfo>('actionType',
+        'agent.app-event-action', '140px',
         (e) => {
           const key = agentAppEventActionTypeTranslationMap.get(e.actionType) || e.actionType;
           return key ? this.translate.instant(key) : '';
         },
         () => ({}), true),
-      new EntityTableColumn<AgentAppEvent>('deliveryState',
+      new EntityTableColumn<AgentAppEventInfo>('deliveryState',
         'agent.app-event-execution', '140px',
         (e) => {
           const key = agentAppEventDeliveryStateTranslationMap.get(e.deliveryState);
           return key ? this.translate.instant(key) : '';
         },
         () => ({}), true),
-      new EntityTableColumn<AgentAppEvent>('status',
+      new EntityTableColumn<AgentAppEventInfo>('status',
         'agent.app-event-status', '160px',
         (e) => {
           const key = agentAppEventStatusTranslationMap.get(e.status) || e.status;
@@ -109,17 +109,12 @@ export class AgentAppEventTableConfig extends EntityTableConfig<AgentAppEvent> {
             : label;
         },
         () => ({}), true),
-      new DateEntityTableColumn<AgentAppEvent>('createdTime',
+      new DateEntityTableColumn<AgentAppEventInfo>('createdTime',
         'agent.app-event-created', this.datePipe, '180px', 'yyyy-MM-dd HH:mm:ss'),
-      new DateEntityTableColumn<AgentAppEvent>('updatedTime',
+      new DateEntityTableColumn<AgentAppEventInfo>('updatedTime',
         'agent.app-event-updated', this.datePipe, '180px', 'yyyy-MM-dd HH:mm:ss')
     );
 
-    // One cell-action column with mutually exclusive semantics:
-    //   PENDING/QUEUED/PROCESSING → cancel button (red)
-    //   ERROR (with message)      → "more_horiz" → error dialog
-    //   FINISHED / other          → hidden (icon function returns empty,
-    //                               action disabled via isEnabled)
     this.cellActionDescriptors.push({
       name: this.translate.instant('agent.app-event-cancel'),
       nameFunction: (e) => this.isErrorRow(e)
@@ -162,13 +157,13 @@ export class AgentAppEventTableConfig extends EntityTableConfig<AgentAppEvent> {
     this.handleRowClick = ($event, e) => this.onRowClick($event, e);
   }
 
-  private fetch(pageLink: PageLink): Observable<PageData<AgentAppEvent>> {
-    return this.agentService.getAgentAppEvents(
-      this.application.id.id,
+  private fetch(pageLink: PageLink): Observable<PageData<AgentAppEventInfo>> {
+    return this.agentService.getAgentBulkActionEvents(
+      this.bulkActionId,
       pageLink,
       this.filter.actionType || undefined,
       this.filter.status || undefined
-    );
+    ) as Observable<PageData<AgentAppEventInfo>>;
   }
 
   private hasActiveFilter(): boolean {
@@ -221,18 +216,20 @@ export class AgentAppEventTableConfig extends EntityTableConfig<AgentAppEvent> {
     });
   }
 
-  private canCancel(e: AgentAppEvent): boolean {
+  private canCancel(e: AgentAppEventInfo): boolean {
     return e.status === AgentAppEventStatus.PENDING
       || e.status === AgentAppEventStatus.QUEUED
       || e.status === AgentAppEventStatus.PROCESSING;
   }
 
-  private isErrorRow(e: AgentAppEvent): boolean {
-    return e.status === AgentAppEventStatus.ERROR && !!e.errorMessage;
+  private isErrorRow(e: AgentAppEventInfo): boolean {
+    return (e.status === AgentAppEventStatus.ERROR || e.status === AgentAppEventStatus.START_FAILED)
+      && !!e.errorMessage;
   }
 
-  private cancelEvent($event: Event, e: AgentAppEvent): void {
+  private cancelEvent($event: Event, e: AgentAppEventInfo): void {
     if ($event) { $event.stopPropagation(); }
+    if (!e.applicationId) { return; }
     this.dialogService.confirm(
       this.translate.instant('agent.app-event-cancel-title'),
       this.translate.instant('agent.app-event-cancel-text'),
@@ -241,12 +238,12 @@ export class AgentAppEventTableConfig extends EntityTableConfig<AgentAppEvent> {
       true
     ).subscribe(res => {
       if (res) {
-        this.agentService.cancelAgentAppEvent(this.application.id.id, e.id.id).subscribe(() => this.updateData());
+        this.agentService.cancelAgentAppEvent(e.applicationId.id, e.id.id).subscribe(() => this.updateData());
       }
     });
   }
 
-  private showEventError($event: Event, e: AgentAppEvent): void {
+  private showEventError($event: Event, e: AgentAppEventInfo): void {
     if ($event) { $event.stopPropagation(); }
     this.dialogService.alert(
       this.translate.instant('agent.app-event-error-title'),
@@ -254,18 +251,25 @@ export class AgentAppEventTableConfig extends EntityTableConfig<AgentAppEvent> {
     );
   }
 
-  private onRowClick($event: Event, e: AgentAppEvent): boolean {
-    if (!this.canCancel(e)) {
+  private onRowClick($event: Event, e: AgentAppEventInfo): boolean {
+    if (!this.canCancel(e) || !e.applicationId) {
       return false;
     }
     if ($event) { $event.stopPropagation(); }
+    this.agentService.getAgentApplicationById(e.applicationId.id, { ignoreErrors: true }).subscribe({
+      next: application => this.openProgress(application, e),
+      error: () => this.openProgress(null, e)
+    });
+    return true;
+  }
+
+  private openProgress(application: any, event: AgentAppEventInfo): void {
     this.dialog.open<AgentAppEventProgressDialogComponent, AgentAppEventProgressDialogData, boolean>(
       AgentAppEventProgressDialogComponent, {
         disableClose: false,
         panelClass: ['tb-dialog'],
-        data: { application: this.application, event: e }
+        data: { application, event }
       }
     ).afterClosed().subscribe(() => this.updateData());
-    return true;
   }
 }

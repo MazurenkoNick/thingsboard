@@ -20,5 +20,7 @@ public enum AgentAppEventStatus {
     QUEUED,
     PROCESSING,
     FINISHED,
-    ERROR
+    ERROR,
+
+    START_FAILED
 }
