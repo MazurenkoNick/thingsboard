@@ -34,6 +34,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.FutureCallback;
 import io.netty.channel.EventLoopGroup;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.Arrays;
 import org.thingsboard.common.util.DebugModeUtil;
@@ -83,8 +85,8 @@ import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.IntegrationId;
+import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.RuleNodeId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -174,6 +176,8 @@ import org.thingsboard.server.service.executors.PubSubRuleNodeExecutorProvider;
 import org.thingsboard.server.service.script.RuleNodeJsScriptEngine;
 import org.thingsboard.server.service.script.RuleNodeTbelScriptEngine;
 
+import org.thingsboard.server.service.ruleenginemonitoring.RuleEngineMonitoringService;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -195,6 +199,12 @@ public class DefaultTbContext implements TbContext, TbPeContext {
     private final ActorSystemContext mainCtx;
     private final String ruleChainName;
     private final RuleNodeCtx nodeCtx;
+    @Getter
+    @Setter
+    private TbMsg processingMsg;
+    @Getter
+    @Setter
+    private long processingMsgStartTime;
 
     public DefaultTbContext(ActorSystemContext mainCtx, String ruleChainName, RuleNodeCtx nodeCtx) {
         this.mainCtx = mainCtx;
@@ -217,6 +227,10 @@ public class DefaultTbContext implements TbContext, TbPeContext {
         RuleNode ruleNode = nodeCtx.getSelf();
         persistDebugOutput(msg, relationTypes);
         msg.getCallback().onProcessingEnd(ruleNode.getId());
+
+        boolean failure = relationTypes.contains(TbNodeConnectionType.FAILURE);
+        recordExec(msg, failure);
+
         nodeCtx.getChainActor().tell(new RuleNodeToRuleChainTellNextMsg(ruleNode.getRuleChainId(), ruleNode.getId(), relationTypes, msg, null));
     }
 
@@ -259,6 +273,7 @@ public class DefaultTbContext implements TbContext, TbPeContext {
         if (item == null) {
             ack(msg);
         } else {
+            recordExec(msg, false);
             persistDebugOutput(msg, relationType);
             nodeCtx.getChainActor().tell(new RuleChainOutputMsg(item.getRuleChainId(), item.getRuleNodeId(), relationType, msg));
         }
@@ -409,6 +424,9 @@ public class DefaultTbContext implements TbContext, TbPeContext {
         RuleNode ruleNode = nodeCtx.getSelf();
         persistDebugOutput(tbMsg, TbNodeConnectionType.ACK);
         tbMsg.getCallback().onProcessingEnd(ruleNode.getId());
+
+        recordExec(tbMsg, false);
+
         tbMsg.getCallback().onSuccess();
     }
 
@@ -422,6 +440,7 @@ public class DefaultTbContext implements TbContext, TbPeContext {
         RuleNode ruleNode = nodeCtx.getSelf();
         persistDebugOutput(msg, Set.of(TbNodeConnectionType.FAILURE), th, null);
         String failureMessage = getFailureMessage(th);
+        recordExec(msg, true);
         nodeCtx.getChainActor().tell(new RuleNodeToRuleChainTellNextMsg(ruleNode.getRuleChainId(),
                 ruleNode.getId(), Collections.singleton(TbNodeConnectionType.FAILURE),
                 msg, failureMessage));
@@ -1389,6 +1408,25 @@ public class DefaultTbContext implements TbContext, TbPeContext {
         } else if (DebugModeUtil.isDebugFailuresAvailable(ruleNode, relationTypes)) {
             mainCtx.persistDebugOutput(getTenantId(), ruleNode.getId(), msg, TbNodeConnectionType.FAILURE, error, failureMessage);
         }
+    }
+
+    private void recordExec(TbMsg msg, boolean isFailure) {
+        try {
+            RuleEngineMonitoringService monitoringService = mainCtx.getRuleEngineMonitoringService();
+            if (monitoringService == null || !isProcessingMsg(msg)) {
+                return;
+            }
+            long duration = System.currentTimeMillis() - processingMsgStartTime;
+            monitoringService.recordRuleNodeExec(getTenantId().getId(), nodeCtx.getSelf(),
+                    msg.getQueueName(), mainCtx.getServiceInfoProvider().getServiceId(), duration, isFailure);
+        } catch (Exception e) {
+            log.error("Failed to record rule node execution stats: {}", e.getMessage(), e);
+        }
+    }
+
+    private boolean isProcessingMsg(TbMsg msg) {
+        TbMsg processingMsg = getProcessingMsg();
+        return processingMsg != null && processingMsg.getId().equals(msg.getId());
     }
 
 }

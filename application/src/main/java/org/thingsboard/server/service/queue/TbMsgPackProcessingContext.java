@@ -148,6 +148,16 @@ public class TbMsgPackProcessingContext {
         return lastRuleNodeMap.get(id);
     }
 
+    public UUID getMsgTenantId(UUID msgId) {
+        TbProtoQueueMsg<TransportProtos.ToRuleEngineMsg> msg = pendingMap.getOrDefault(msgId,
+                successMap.getOrDefault(msgId, failedMap.get(msgId)));
+        if (msg == null) {
+            return null;
+        }
+        TransportProtos.ToRuleEngineMsg proto = msg.getValue();
+        return new UUID(proto.getTenantIdMSB(), proto.getTenantIdLSB());
+    }
+
     public void printProfilerStats() {
         if (profilerEnabled) {
             log.debug("Top Rule Nodes by max execution time:");

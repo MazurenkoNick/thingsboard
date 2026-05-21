@@ -62,6 +62,7 @@ import org.thingsboard.server.service.queue.processing.TbRuleEngineProcessingDec
 import org.thingsboard.server.service.queue.processing.TbRuleEngineProcessingResult;
 import org.thingsboard.server.service.queue.processing.TbRuleEngineProcessingStrategy;
 import org.thingsboard.server.service.queue.processing.TbRuleEngineSubmitStrategy;
+import org.thingsboard.server.service.ruleenginemonitoring.RuleEngineMonitoringService;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -82,13 +83,15 @@ public class TbRuleEngineQueueConsumerManager extends MainQueueConsumerManager<T
 
     private final TbRuleEngineConsumerContext ctx;
     private final TbRuleEngineConsumerStats stats;
+    private final RuleEngineMonitoringService ruleEngineMonitoringService;
 
     @Builder(builderMethodName = "create") // not to conflict with super.builder()
     public TbRuleEngineQueueConsumerManager(TbRuleEngineConsumerContext ctx,
                                             QueueKey queueKey,
                                             ExecutorService consumerExecutor,
                                             ScheduledExecutorService scheduler,
-                                            ExecutorService taskExecutor) {
+                                            ExecutorService taskExecutor,
+                                            RuleEngineMonitoringService ruleEngineMonitoringService) {
         super(queueKey, null, null,
                 (queueConfig, tpi) -> {
                     Integer partitionId = tpi != null ? tpi.getPartition().orElse(-1) : null;
@@ -97,6 +100,7 @@ public class TbRuleEngineQueueConsumerManager extends MainQueueConsumerManager<T
                 consumerExecutor, scheduler, taskExecutor, null);
         this.ctx = ctx;
         this.stats = new TbRuleEngineConsumerStats(queueKey, ctx.getStatsFactory());
+        this.ruleEngineMonitoringService = ruleEngineMonitoringService;
     }
 
     public void delete(boolean drainQueue) {
@@ -168,6 +172,8 @@ public class TbRuleEngineQueueConsumerManager extends MainQueueConsumerManager<T
                 stats.log(result, decision.isCommit());
             }
 
+            reportToRuleEngineMonitoring(packCtx, queue);
+
             packCtx.cleanup();
 
             if (decision.isCommit()) {
@@ -177,6 +183,17 @@ public class TbRuleEngineQueueConsumerManager extends MainQueueConsumerManager<T
             } else {
                 submitStrategy.update(decision.getReprocessMap());
             }
+        }
+    }
+
+    private void reportToRuleEngineMonitoring(TbMsgPackProcessingContext packCtx, Queue queue) {
+        try {
+            if (ruleEngineMonitoringService == null) {
+                return;
+            }
+            ruleEngineMonitoringService.recordQueueOutcomes(packCtx, queue, ctx.getServiceInfoProvider().getServiceId());
+        } catch (Exception e) {
+            log.error("Failed to report queue outcome to monitoring service", e);
         }
     }
 

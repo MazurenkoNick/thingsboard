@@ -173,6 +173,7 @@ public class RuleNodeActorMessageProcessor extends ComponentMsgProcessor<RuleNod
                 apiUsageClient.report(tenantId, tbMsg.getCustomerId(), ApiUsageRecordKey.RE_EXEC_COUNT);
                 persistDebugInputIfAllowed(msg.getMsg(), msg.getFromRelationType());
                 try {
+                    prepareNodeExecution((DefaultTbContext) msg.getCtx(), tbMsg);
                     tbNode.onMsg(msg.getCtx(), msg.getMsg());
                 } catch (Exception e) {
                     msg.getCtx().tellFailure(msg.getMsg(), e);
@@ -244,6 +245,11 @@ public class RuleNodeActorMessageProcessor extends ComponentMsgProcessor<RuleNod
         if (componentService.getRuleNodeInfo(ruleNode.getType()).map(info -> info.getAnnotation().hasSecrets()).orElse(false)) {
             systemContext.getSecretConfigurationService().replaceSecretUsages(tenantId, ruleNode.getConfiguration());
         }
+    }
+
+    private void prepareNodeExecution(DefaultTbContext ctx, TbMsg tbMsg) {
+        ctx.setProcessingMsgStartTime(System.currentTimeMillis());
+        ctx.setProcessingMsg(tbMsg);
     }
 
 }

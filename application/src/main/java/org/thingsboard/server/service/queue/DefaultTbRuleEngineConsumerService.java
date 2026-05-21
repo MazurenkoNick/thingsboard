@@ -69,6 +69,7 @@ import org.thingsboard.server.service.queue.ruleengine.TbRuleEngineConsumerConte
 import org.thingsboard.server.service.queue.ruleengine.TbRuleEngineQueueConsumerManager;
 import org.thingsboard.server.service.rpc.TbRuleEngineDeviceRpcService;
 import org.thingsboard.server.service.security.auth.jwt.settings.JwtSettingsService;
+import org.thingsboard.server.service.ruleenginemonitoring.RuleEngineMonitoringService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -85,6 +86,7 @@ public class DefaultTbRuleEngineConsumerService extends AbstractPartitionBasedCo
     private final TbRuleEngineConsumerContext ctx;
     private final QueueService queueService;
     private final TbRuleEngineDeviceRpcService tbDeviceRpcService;
+    private final RuleEngineMonitoringService ruleEngineMonitoringService;
 
     private final ConcurrentMap<QueueKey, TbRuleEngineQueueConsumerManager> consumers = new ConcurrentHashMap<>();
 
@@ -100,11 +102,13 @@ public class DefaultTbRuleEngineConsumerService extends AbstractPartitionBasedCo
                                               PartitionService partitionService,
                                               ApplicationEventPublisher eventPublisher,
                                               JwtSettingsService jwtSettingsService,
-                                              CalculatedFieldCache calculatedFieldCache) {
+                                              CalculatedFieldCache calculatedFieldCache,
+                                              Optional<RuleEngineMonitoringService> ruleEngineMonitoringService) {
         super(actorContext, tenantProfileCache, deviceProfileCache, assetProfileCache, tbResourceDataCache, calculatedFieldCache, apiUsageStateService, partitionService, eventPublisher, jwtSettingsService);
         this.ctx = ctx;
         this.tbDeviceRpcService = tbDeviceRpcService;
         this.queueService = queueService;
+        this.ruleEngineMonitoringService = ruleEngineMonitoringService.orElse(null);
     }
 
     @Override
@@ -270,6 +274,7 @@ public class DefaultTbRuleEngineConsumerService extends AbstractPartitionBasedCo
                 .consumerExecutor(consumersExecutor)
                 .scheduler(scheduler)
                 .taskExecutor(mgmtExecutor)
+                .ruleEngineMonitoringService(ruleEngineMonitoringService)
                 .build();
         consumers.put(queueKey, consumer);
         consumer.init(queue);
