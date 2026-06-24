@@ -62,7 +62,7 @@ import java.util.function.Supplier;
 @Slf4j
 public abstract class RedisTbTransactionalCache<K extends Serializable, V extends Serializable> implements TbTransactionalCache<K, V> {
 
-    static final byte[] BINARY_NULL_VALUE = RedisSerializer.java().serialize(NullValue.INSTANCE);
+    protected static final byte[] BINARY_NULL_VALUE = RedisSerializer.java().serialize(NullValue.INSTANCE);
     static final JedisPool MOCK_POOL = new JedisPool(); //non-null pool required for JedisConnection to trigger closing jedis connection
 
     @Autowired
@@ -73,7 +73,7 @@ public abstract class RedisTbTransactionalCache<K extends Serializable, V extend
     @Getter
     private final JedisConnectionFactory connectionFactory;
     private final RedisSerializer<String> keySerializer = StringRedisSerializer.UTF_8;
-    private final TbRedisSerializer<K, V> valueSerializer;
+    protected final TbRedisSerializer<K, V> valueSerializer;
     protected final Expiration evictExpiration;
     protected final Expiration cacheTtl;
     protected final boolean cacheEnabled;

@@ -37,6 +37,8 @@ import org.thingsboard.server.gen.integration.ToCoreIntegrationMsg;
 import org.thingsboard.server.gen.integration.ToIntegrationExecutorDownlinkMsg;
 import org.thingsboard.server.gen.integration.ToIntegrationExecutorNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos;
+import org.thingsboard.server.gen.transport.TransportProtos.AgentBulkOperationMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.ToAgentNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCalculatedFieldMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCalculatedFieldNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCoreMsg;
@@ -74,6 +76,8 @@ public class TbRuleEngineProducerProvider implements TbQueueProducerProvider {
     private TbQueueProducer<TbProtoQueueMsg<ToEdgeEventNotificationMsg>> toEdgeEvents;
     private TbQueueProducer<TbProtoQueueMsg<ToCalculatedFieldMsg>> toCalculatedFields;
     private TbQueueProducer<TbProtoQueueMsg<ToCalculatedFieldNotificationMsg>> toCalculatedFieldNotifications;
+    private TbQueueProducer<TbProtoQueueMsg<ToAgentNotificationMsg>> toAgentNotifications;
+    private TbQueueProducer<TbProtoQueueMsg<AgentBulkOperationMsg>> toAgentBulkOps;
 
     public TbRuleEngineProducerProvider(TbRuleEngineQueueFactory tbQueueProvider) {
         this.tbQueueProvider = tbQueueProvider;
@@ -95,6 +99,8 @@ public class TbRuleEngineProducerProvider implements TbQueueProducerProvider {
         this.toEdgeEvents = tbQueueProvider.createEdgeEventMsgProducer();
         this.toCalculatedFields = tbQueueProvider.createToCalculatedFieldMsgProducer();
         this.toCalculatedFieldNotifications = tbQueueProvider.createToCalculatedFieldNotificationMsgProducer();
+        this.toAgentNotifications = tbQueueProvider.createAgentNotificationsMsgProducer();
+        this.toAgentBulkOps = tbQueueProvider.createAgentBulkOpsMsgProducer();
     }
 
     @Override
@@ -150,6 +156,16 @@ public class TbRuleEngineProducerProvider implements TbQueueProducerProvider {
     @Override
     public TbQueueProducer<TbProtoQueueMsg<ToIntegrationExecutorDownlinkMsg>> getTbIntegrationExecutorDownlinkMsgProducer() {
         return toIntegrationExecutorDownlinks;
+    }
+
+    @Override
+    public TbQueueProducer<TbProtoQueueMsg<ToAgentNotificationMsg>> getTbAgentNotificationsMsgProducer() {
+        return toAgentNotifications;
+    }
+
+    @Override
+    public TbQueueProducer<TbProtoQueueMsg<AgentBulkOperationMsg>> getAgentBulkOpsMsgProducer() {
+        return toAgentBulkOps;
     }
 
     @Override

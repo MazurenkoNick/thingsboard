@@ -40,6 +40,7 @@ import { EdgeComponent } from './edge.component';
 import { EDGE_GROUP_CONFIG_FACTORY } from '@home/models/group/group-entities-table-config.models';
 import { EdgeGroupConfigFactory } from '@home/pages/edge/edge-group-config.factory';
 import { EdgeInstructionsDialogComponent } from './edge-instructions-dialog.component';
+import { EdgeAutoProvisionDialogComponent } from './edge-auto-provision-dialog.component';
 import { RequestEdgeComponent } from '@home/pages/edge/request-edge.component';
 
 @NgModule({
@@ -47,7 +48,8 @@ import { RequestEdgeComponent } from '@home/pages/edge/request-edge.component';
     RequestEdgeComponent,
     EdgeComponent,
     EdgeTableHeaderComponent,
-    EdgeInstructionsDialogComponent
+    EdgeInstructionsDialogComponent,
+    EdgeAutoProvisionDialogComponent
   ],
   imports: [
     CommonModule,

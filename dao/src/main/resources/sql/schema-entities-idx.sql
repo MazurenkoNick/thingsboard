@@ -108,6 +108,14 @@ CREATE INDEX IF NOT EXISTS idx_blob_entity_created_time ON blob_entity(tenant_id
 
 CREATE INDEX IF NOT EXISTS idx_blob_entity_id ON blob_entity(id);
 
+CREATE INDEX IF NOT EXISTS idx_agent_application_agent_id ON agent_application(agent_id);
+
+CREATE INDEX IF NOT EXISTS idx_agent_application_template_id ON agent_application(template_id);
+
+CREATE INDEX IF NOT EXISTS idx_agent_application_application_profile_id ON agent_application(application_profile_id);
+
+CREATE INDEX IF NOT EXISTS idx_agent_bulk_action_status ON agent_bulk_action(status);
+
 CREATE INDEX IF NOT EXISTS idx_alarm_comment_alarm_id ON alarm_comment(alarm_id);
 
 CREATE INDEX IF NOT EXISTS idx_notification_target_tenant_id_created_time ON notification_target(tenant_id, created_time DESC);

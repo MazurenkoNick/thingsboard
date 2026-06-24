@@ -61,6 +61,7 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.wl.WhiteLabelingType;
+import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.blob.BlobEntityService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
@@ -126,6 +127,9 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
 
     @Autowired
     private DashboardService dashboardService;
+
+    @Autowired
+    private AgentService agentService;
 
     @Lazy
     @Autowired
@@ -351,6 +355,7 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
         entityGroupService.deleteAllEntityGroups(tenantId, customerId);
         roleService.deleteRolesByTenantIdAndCustomerId(customer.getTenantId(), customerId);
         apiUsageStateService.deleteApiUsageStateByEntityId(customerId);
+        agentService.deleteAgentsByTenantIdAndCustomerId(customer.getTenantId(), customerId);
         customerDao.removeById(tenantId, customerId.getId());
         publishEvictEvent(new CustomerCacheEvictEvent(customer.getTenantId(), customer.getTitle(), null));
         countService.publishCountEntityEvictEvent(tenantId, EntityType.CUSTOMER);

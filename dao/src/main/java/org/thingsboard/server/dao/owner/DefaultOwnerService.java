@@ -44,8 +44,10 @@ import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EntityView;
 import org.thingsboard.server.common.data.HasOwnerId;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.edge.Edge;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DashboardId;
@@ -62,6 +64,7 @@ import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.util.ProtoUtils;
+import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
@@ -108,6 +111,9 @@ public class DefaultOwnerService implements OwnerService {
 
     @Autowired
     private AssetService assetService;
+
+    @Autowired
+    private AgentService agentService;
 
     @Autowired
     private EntityViewService entityViewService;
@@ -254,6 +260,7 @@ public class DefaultOwnerService implements OwnerService {
         return switch (entityId.getEntityType()) {
             case DEVICE -> getOwnerId(getDeviceById(tenantId, entityId));
             case ASSET -> getOwnerId(getAssetById(tenantId, entityId));
+            case AGENT -> getOwnerId(getAgentById(tenantId, entityId));
             case CUSTOMER -> getOwnerId(getCustomerById(tenantId, entityId));
             case ENTITY_VIEW -> getOwnerId(getEntityViewById(tenantId, entityId));
             case EDGE -> getOwnerId(getEdgeById(tenantId, entityId));
@@ -272,6 +279,10 @@ public class DefaultOwnerService implements OwnerService {
 
     private Asset getAssetById(TenantId tenantId, EntityId entityId) {
         return assetService.findAssetById(tenantId, new AssetId(entityId.getId()));
+    }
+
+    private Agent getAgentById(TenantId tenantId, EntityId entityId) {
+        return agentService.findAgentById(tenantId, new AgentId(entityId.getId()));
     }
 
     private Customer getCustomerById(TenantId tenantId, EntityId entityId) {

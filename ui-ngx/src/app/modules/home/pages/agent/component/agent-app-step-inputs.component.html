@@ -1,0 +1,70 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<!-- Step inputs. One block per classified step the template exposes for the
+     active mode's action. Placed above compose comparison so user input is
+     collected first. -->
+<ng-container *ngFor="let binding of bindings; trackBy: trackBinding" [ngSwitch]="binding.kind">
+
+  <div class="config-section" *ngSwitchCase="'backupVolume'">
+    <div class="config-section-header">
+      {{ binding.step.title }}
+      <span class="step-type-label">{{ binding.step.type }}</span>
+    </div>
+    <p class="hint" translate>agent.app-upgrade-backup-volumes-hint</p>
+    <div class="volume-list" *ngIf="binding.backupVolumes?.length">
+      <label class="volume-row" *ngFor="let v of binding.backupVolumes">
+        <mat-checkbox [checked]="v.selected" (change)="toggleBackupVolume(v)">
+          <span class="volume-name">{{ v.key }}</span>
+        </mat-checkbox>
+      </label>
+    </div>
+    <div class="volume-empty" *ngIf="!binding.backupVolumes?.length" translate>
+      agent.app-upgrade-no-volumes
+    </div>
+    <p class="hint">{{ 'agent.app-step-applied-stage-hint' | translate: { stage: binding.step.title || binding.step.type } }}</p>
+  </div>
+
+  <div class="config-section" *ngSwitchCase="'pullImages'">
+    <div class="config-section-header">
+      {{ binding.step.title || ('agent.app-install-pull-images' | translate) }}
+      <span class="step-type-label">{{ binding.step.type }}</span>
+    </div>
+    <p class="hint" translate>agent.app-install-pull-images</p>
+    <tb-toggle-select class="pull-policy-toggle" [(ngModel)]="binding.pullImages" appearance="fill">
+      <tb-toggle-option [value]="false">{{ 'agent.app-image-pull-policy-if-not-present' | translate }}</tb-toggle-option>
+      <tb-toggle-option [value]="true">{{ 'agent.app-image-pull-policy-always' | translate }}</tb-toggle-option>
+    </tb-toggle-select>
+    <p class="hint">{{ 'agent.app-step-applied-stage-hint' | translate: { stage: binding.step.title || binding.step.type } }}</p>
+  </div>
+
+</ng-container>

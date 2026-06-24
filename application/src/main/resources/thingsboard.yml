@@ -532,6 +532,14 @@ sql:
     api_keys:
       enabled: "${SQL_TTL_API_KEYS_ENABLED:true}" # Enable/disable TTL (Time To Live) for expired api keys records
       checking_interval_ms: "${SQL_TTL_API_KEYS_CHECKING_INTERVAL_MS:86400000}" # Default value - 1 day
+    agent_bulk_actions:
+      enabled: "${SQL_TTL_AGENT_BULK_ACTIONS_ENABLED:true}" # Enable/disable TTL (Time To Live) for agent bulk action records
+      ttl: "${SQL_TTL_AGENT_BULK_ACTIONS_SECS:604800}" # Default value - 7 days
+      execution_interval_ms: "${SQL_TTL_AGENT_BULK_ACTIONS_EXECUTION_INTERVAL_MS:86400000}" # Default value - 1 day
+    agent_app_events:
+      enabled: "${SQL_TTL_AGENT_APP_EVENTS_ENABLED:true}" # Enable/disable TTL (Time To Live) for agent app event records
+      ttl: "${SQL_TTL_AGENT_APP_EVENTS_SECS:604800}" # Default value - 7 days; all events older than TTL are removed regardless of status
+      execution_interval_ms: "${SQL_TTL_AGENT_APP_EVENTS_EXECUTION_INTERVAL_MS:86400000}" # Default value - 1 day
   relations:
     max_level: "${SQL_RELATIONS_MAX_LEVEL:50}" # This value has to be reasonably small to prevent infinite recursion as early as possible
     pool_size: "${SQL_RELATIONS_POOL_SIZE:4}" # This value has to be reasonably small to prevent the relation query from blocking all other DB calls
@@ -821,6 +829,9 @@ cache:
     edgeSessions:
       timeToLiveInMinutes: "${CACHE_SPECS_EDGE_SESSIONS_TTL:0}" # Edge Sessions cache TTL; no expiration time if set to '0'
       maxSize: "${CACHE_SPECS_EDGE_SESSIONS_MAX_SIZE:10000}" # 0 means the cache is disabled
+    agentSessions:
+      timeToLiveInMinutes: "${CACHE_SPECS_AGENT_SESSIONS_TTL:0}" # Agent Sessions cache TTL; no expiration time if set to '0'
+      maxSize: "${CACHE_SPECS_AGENT_SESSIONS_MAX_SIZE:10000}" # 0 means the cache is disabled
     relatedEdges:
       timeToLiveInMinutes: "${CACHE_SPECS_RELATED_EDGES_TTL:1440}" # Related Edges cache TTL
       maxSize: "${CACHE_SPECS_RELATED_EDGES_MAX_SIZE:10000}" # 0 means the cache is disabled
@@ -866,6 +877,24 @@ cache:
     mailOauth2State:
       timeToLiveInMinutes: "${CACHE_SPECS_MAIL_OAUTH2_STATE_TTL:2}" # mail oauth2 state parameter TTL
       maxSize: "${CACHE_SPECS_MAIL_OAUTH2_STATE_SIZE:10000}" # 0 means the cache is disabled
+    agents:
+      timeToLiveInMinutes: "${CACHE_SPECS_AGENT_TTL:1440}" # agents cache TTL
+      maxSize: "${CACHE_SPECS_AGENT_MAX_SIZE:10000}" # 0 means the cache is disabled
+    agentApplications:
+      timeToLiveInMinutes: "${CACHE_SPECS_AGENT_APPLICATION_TTL:1440}" # Agent application cache TTL
+      maxSize: "${CACHE_SPECS_AGENT_APPLICATION_MAX_SIZE:10000}" # 0 means the cache is disabled
+    agentAppUnits:
+      timeToLiveInMinutes: "${CACHE_SPECS_AGENT_APP_UNIT_TTL:1440}" # Agent app unit cache TTL
+      maxSize: "${CACHE_SPECS_AGENT_APP_UNIT_MAX_SIZE:10000}" # 0 means the cache is disabled
+    agentAppProfiles:
+      timeToLiveInMinutes: "${CACHE_SPECS_AGENT_APP_PROFILE_TTL:1440}" # Agent application profile cache TTL
+      maxSize: "${CACHE_SPECS_AGENT_APP_PROFILE_MAX_SIZE:10000}" # 0 means the cache is disabled
+    agentAppTemplates:
+      timeToLiveInMinutes: "${CACHE_SPECS_AGENT_APP_TEMPLATE_TTL:1440}" # Agent application template cache TTL
+      maxSize: "${CACHE_SPECS_AGENT_APP_TEMPLATE_MAX_SIZE:10000}" # 0 means the cache is disabled
+    agentProfiles:
+      timeToLiveInMinutes: "${CACHE_SPECS_AGENT_PROFILE_TTL:1440}" # Agent profile cache TTL
+      maxSize: "${CACHE_SPECS_AGENT_PROFILE_MAX_SIZE:10000}" # 0 means the cache is disabled
     apiKeys:
       timeToLiveInMinutes: "${CACHE_SPECS_API_KEYS_TTL:1440}" # API keys cache TTL
       maxSize: "${CACHE_SPECS_API_KEYS_MAX_SIZE:10000}" # 0 means the cache is disabled
@@ -1720,6 +1749,44 @@ device:
       # The docker tag for thingsboard/tb-gateway image used in docker-compose file for gateway launch
       image_version: "${DEVICE_CONNECTIVITY_GATEWAY_IMAGE_VERSION:3.8-stable}"
 
+agents:
+  # Number of threads that are used to send downlink messages to agent over gRPC
+  write_pool_size: "${AGENTS_WRITE_POOL_SIZE:8}"
+  metrics:
+    # TTL (seconds) for per-unit, per-application, and per-agent metric timeseries persisted by tb-agent.
+    # Applied uniformly across all three levels
+    ttl: "${TB_AGENT_METRICS_TTL_SECONDS:1800}"
+  appTemplates:
+    sync:
+      # Enable/disable periodic synchronization of agent application templates from a Git repository
+      enabled: "${AGENT_APP_TEMPLATE_SYNC_ENABLED:true}"
+      # Git repository URI to fetch agent application templates from
+      repoUri: "${AGENT_APP_TEMPLATE_SYNC_REPO_URI:https://github.com/MazurenkoNick/agent-app-templates}"
+      # Git branch to use when fetching agent application templates
+      branch: "${AGENT_APP_TEMPLATE_SYNC_BRANCH:main}"
+      # Base path within the Git repository where template files are located
+      basePath: "${AGENT_APP_TEMPLATE_SYNC_BASE_PATH:templates}"
+      # How often to fetch updates from the Git repository, in milliseconds
+      fetchFrequencyMs: "${AGENT_APP_TEMPLATE_SYNC_FETCH_FREQUENCY_MS:3600000}"
+  event:
+    # Delay in milliseconds before retrying a push that failed due to backpressure
+    retry_send_delay_ms: "${AGENTS_EVENT_RETRY_SEND_DELAY_MS:1000}"
+    # Delay in milliseconds before the first staleness check for an event
+    watchdog_initial_delay_ms: "${AGENTS_EVENT_WATCHDOG_INITIAL_DELAY_MS:30000}"
+    # Thread pool size for agent event processing executor
+    executor_pool_size: "${AGENTS_EVENT_EXECUTOR_POOL_SIZE:4}"
+    # Thread pool size for the event scheduler (retries and watchdogs)
+    scheduler_pool_size: "${AGENTS_EVENT_SCHEDULER_POOL_SIZE:4}"
+
+external:
+  logStream:
+    # TTL of a per-entity log chunk buffer (seconds). The buffer serves both the catch-up window for late watermarks and the tail replay on subscribe.
+    bufferTtlSeconds: "${EXTERNAL_LOG_STREAM_BUFFER_TTL_SECONDS:900}"
+    # Max number of chunks retained per entity (oldest chunks are evicted past this cap). Also bounds the tail replayed to a new subscriber.
+    bufferMaxChunksPerUnit: "${EXTERNAL_LOG_STREAM_BUFFER_MAX_CHUNKS_PER_UNIT:10}"
+    # Max number of distinct entities whose buffers are retained in-process at once (in-memory cache only). Safety cap on heap; least-recently-used buffers are evicted past this. Redis is bounded by per-key TTL instead.
+    bufferMaxUnits: "${EXTERNAL_LOG_STREAM_BUFFER_MAX_UNITS:100000}"
+
 # Edges parameters
 edges:
   # Enable/disable Edge instance
@@ -2023,6 +2090,8 @@ queue:
       edqs-state: "${TB_QUEUE_KAFKA_EDQS_STATE_TOPIC_PROPERTIES:retention.ms:-1;segment.bytes:52428800;retention.bytes:-1;partitions:1;min.insync.replicas:1;cleanup.policy:compact}"
       # Kafka properties for tasks topics
       tasks: "${TB_QUEUE_KAFKA_TASKS_TOPIC_PROPERTIES:retention.ms:604800000;segment.bytes:52428800;retention.bytes:104857600;partitions:1;min.insync.replicas:1}"
+      # Kafka properties for agent bulk operations topic
+      agent-bulk-ops: "${TB_QUEUE_KAFKA_AGENT_BULK_OPS_TOPIC_PROPERTIES:retention.ms:604800000;segment.bytes:52428800;retention.bytes:104857600;partitions:10;min.insync.replicas:1}"
     consumer-stats:
       # Prints lag between consumer group offset and last messages offset in Kafka topics
       enabled: "${TB_QUEUE_KAFKA_CONSUMER_STATS_ENABLED:true}"
@@ -2282,6 +2351,25 @@ queue:
     request_poll_interval: "${TB_QUEUE_INTEGRATION_EXECUTOR_REQUEST_POLL_INTERVAL_MS:25}"
     # Interval in milliseconds to poll api response from integration executor microservices
     response_poll_interval: "${TB_QUEUE_INTEGRATION_EXECUTOR_RESPONSE_POLL_INTERVAL_MS:25}"
+  agent:
+    # Topic prefix for agent notifications. Each tb-core has its own topic: PREFIX.SERVICE_ID
+    notifications-topic: "${TB_QUEUE_AGENT_NOTIFICATIONS_TOPIC:tb_agent.notifications}"
+    # Poll interval for agent notification topics
+    poll-interval: "${TB_QUEUE_AGENT_NOTIFICATIONS_POLL_INTERVAL_MS:25}"
+    # Timeout for processing a message pack by agent notification consumer
+    pack-processing-timeout: "${TB_QUEUE_AGENT_NOTIFICATIONS_PACK_PROCESSING_TIMEOUT_MS:10000}"
+    # Topic for agent bulk operations (shared across all tb-core nodes)
+    bulk-ops-topic: "${TB_QUEUE_AGENT_BULK_OPS_TOPIC:tb_agent_bulk_ops}"
+    # Poll interval for agent bulk operations consumer
+    bulk-ops-poll-interval: "${TB_QUEUE_AGENT_BULK_OPS_POLL_INTERVAL_MS:1000}"
+    # Timeout for processing a bulk operation message
+    bulk-ops-pack-processing-timeout: "${TB_QUEUE_AGENT_BULK_OPS_PACK_PROCESSING_TIMEOUT_MS:600000}"
+    # Interval for checking and failing stuck bulk actions (in milliseconds)
+    bulk-ops-stuck-check-interval-ms: "${TB_QUEUE_AGENT_BULK_OPS_STUCK_CHECK_INTERVAL_MS:600000}"
+    # Number of threads for processing bulk operations concurrently
+    bulk-ops-processing-threads: "${TB_QUEUE_AGENT_BULK_OPS_PROCESSING_THREADS:2}"
+    # Max queue size for pending bulk operations before backpressure kicks in
+    bulk-ops-processing-queue-size: "${TB_QUEUE_AGENT_BULK_OPS_PROCESSING_QUEUE_SIZE:20}"
   tasks:
     # Poll interval in milliseconds for tasks topics
     poll_interval: "${TB_QUEUE_TASKS_POLL_INTERVAL_MS:500}"

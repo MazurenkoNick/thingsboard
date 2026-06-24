@@ -83,6 +83,14 @@ import org.thingsboard.server.common.data.TenantInfo;
 import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.UserInfo;
+import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppProfile;
+import org.thingsboard.server.common.data.agent.AgentAppUnit;
+import org.thingsboard.server.common.data.agent.AgentBulkAction;
+import org.thingsboard.server.common.data.agent.AgentProfile;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
+import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.ai.AiModel;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmComment;
@@ -103,6 +111,14 @@ import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.group.EntityGroupInfo;
+import org.thingsboard.server.common.data.id.AgentAppTemplateId;
+import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentAppEventId;
+import org.thingsboard.server.common.data.id.AgentAppProfileId;
+import org.thingsboard.server.common.data.id.AgentAppUnitId;
+import org.thingsboard.server.common.data.id.AgentBulkActionId;
+import org.thingsboard.server.common.data.id.AgentProfileId;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.AiModelId;
 import org.thingsboard.server.common.data.id.AlarmCommentId;
 import org.thingsboard.server.common.data.id.AlarmId;
@@ -191,6 +207,14 @@ import org.thingsboard.server.common.data.util.ThrowingBiFunction;
 import org.thingsboard.server.common.data.widget.WidgetTypeDetails;
 import org.thingsboard.server.common.data.widget.WidgetTypeInfo;
 import org.thingsboard.server.common.data.widget.WidgetsBundle;
+import org.thingsboard.server.dao.agent.AgentAppEventService;
+import org.thingsboard.server.dao.agent.AgentAppTemplateService;
+import org.thingsboard.server.dao.agent.AgentAppProfileService;
+import org.thingsboard.server.dao.agent.AgentAppUnitService;
+import org.thingsboard.server.dao.agent.AgentApplicationService;
+import org.thingsboard.server.dao.agent.AgentBulkActionService;
+import org.thingsboard.server.dao.agent.AgentProfileService;
+import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.ai.AiModelService;
 import org.thingsboard.server.dao.alarm.AlarmCommentService;
 import org.thingsboard.server.dao.asset.AssetProfileService;
@@ -256,6 +280,7 @@ import org.thingsboard.server.service.action.EntityActionService;
 import org.thingsboard.server.service.component.ComponentDiscoveryService;
 import org.thingsboard.server.service.edge.EdgeLicenseService;
 import org.thingsboard.server.service.entitiy.TbLogEntityActionService;
+import org.thingsboard.server.service.agent.bulk.AgentBulkActionProcessingService;
 import org.thingsboard.server.service.entitiy.ai.TbAiModelService;
 import org.thingsboard.server.service.entitiy.ota.group.TbDeviceGroupOtaPackageService;
 import org.thingsboard.server.service.entitiy.user.TbUserSettingsService;
@@ -536,6 +561,33 @@ public abstract class BaseController {
     @Autowired
     protected ApiKeyService apiKeyService;
 
+    @Autowired
+    protected AgentService agentService;
+
+    @Autowired
+    protected AgentApplicationService agentAppService;
+
+    @Autowired
+    protected AgentAppTemplateService agentAppTemplateService;
+
+    @Autowired
+    protected AgentAppProfileService agentAppProfileService;
+
+    @Autowired
+    protected AgentProfileService agentProfileService;
+
+    @Autowired
+    protected AgentBulkActionProcessingService agentBulkActionProcessingService;
+
+    @Autowired
+    protected AgentAppUnitService agentAppUnitService;
+
+    @Autowired
+    protected AgentAppEventService agentAppEventService;
+
+    @Autowired
+    protected AgentBulkActionService agentBulkActionService;
+
     @Value("${server.log_controller_error_stack_trace}")
     @Getter
     private boolean logControllerErrorStackTrace;
@@ -705,7 +757,7 @@ public abstract class BaseController {
         try {
             groupType = EntityType.valueOf(strGroupType);
         } catch (IllegalArgumentException e) {
-            throw new ThingsboardException("Unsupported entityGroup type '" + strGroupType + "'! Only 'CUSTOMER', 'ASSET', 'DEVICE', 'USER', 'ENTITY_VIEW' or 'DASHBOARD' types are allowed.", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+            throw new ThingsboardException("Unsupported entityGroup type '" + strGroupType + "'! Only 'CUSTOMER', 'ASSET', 'DEVICE', 'USER', 'ENTITY_VIEW', 'DASHBOARD', 'EDGE' or 'AGENT' types are allowed.", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
         return checkEntityGroupType(groupType);
     }
@@ -730,8 +782,9 @@ public abstract class BaseController {
         if (groupType != EntityType.CUSTOMER && groupType != EntityType.ASSET
                 && groupType != EntityType.DEVICE && groupType != EntityType.USER
                 && groupType != EntityType.ENTITY_VIEW && groupType != EntityType.EDGE
-                && groupType != EntityType.DASHBOARD) {
-            throw new ThingsboardException("Unsupported entityGroup type '" + groupType + "'! Only 'CUSTOMER', 'ASSET', 'DEVICE', 'USER', 'ENTITY_VIEW' or 'DASHBOARD' types are allowed.", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+                && groupType != EntityType.DASHBOARD
+                && groupType != EntityType.AGENT) {
+            throw new ThingsboardException("Unsupported entityGroup type '" + groupType + "'! Only 'CUSTOMER', 'ASSET', 'DEVICE', 'USER', 'ENTITY_VIEW', 'DASHBOARD', 'EDGE' or 'AGENT' types are allowed.", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
         return groupType;
     }
@@ -996,6 +1049,14 @@ public abstract class BaseController {
                 case REPORT_TEMPLATE -> checkReportTemplateInfoId(new ReportTemplateId(entityId.getId()), operation);
                 case AI_MODEL -> checkAiModelId(new AiModelId(entityId.getId()), operation);
                 case API_KEY -> checkApiKeyId(new ApiKeyId(entityId.getId()), operation);
+                case AGENT -> checkAgentId(new AgentId(entityId.getId()), operation);
+                case AGENT_APPLICATION -> checkAgentAppId(new AgentApplicationId(entityId.getId()), operation);
+                case AGENT_APP_UNIT -> checkAgentAppUnitId(new AgentAppUnitId(entityId.getId()), operation);
+                case AGENT_APP_EVENT -> checkAgentAppEventId(new AgentAppEventId(entityId.getId()), operation);
+                case AGENT_BULK_ACTION -> checkAgentBulkActionId(new AgentBulkActionId(entityId.getId()), operation);
+                case AGENT_APP_TEMPLATE -> checkAgentAppTemplateId(new AgentAppTemplateId(entityId.getId()), operation);
+                case AGENT_APP_PROFILE -> checkAgentAppProfileId(new AgentAppProfileId(entityId.getId()), operation);
+                case AGENT_PROFILE -> checkAgentProfileId(new AgentProfileId(entityId.getId()), operation);
                 default -> (HasId<? extends EntityId>) checkEntityId(entityId, entitiesService::findEntityByTenantIdAndId, operation);
             };
         } catch (Exception e) {
@@ -1284,6 +1345,56 @@ public abstract class BaseController {
 
     ApiKey checkApiKeyId(ApiKeyId apiKeyId, Operation operation) throws ThingsboardException {
         return checkEntityId(apiKeyId, apiKeyService::findApiKeyById, operation);
+    }
+
+    Agent checkAgentId(AgentId agentId, Operation operation) throws ThingsboardException {
+        return checkEntityId(agentId, agentService::findAgentById, operation);
+    }
+
+
+    AgentApplication checkAgentAppId(AgentApplicationId agentApplicationId, Operation operation) throws ThingsboardException {
+        validateId(agentApplicationId, id -> "Incorrect agentApplicationId " + id);
+        AgentApplication app = agentAppService.findById(getTenantId(), agentApplicationId);
+        checkNotNull(app, "Agent application with id [" + agentApplicationId + "] is not found");
+        checkAgentId(app.getAgentId(), operation);
+        return app;
+    }
+
+    AgentAppUnit checkAgentAppUnitId(AgentAppUnitId agentAppUnitId, Operation operation) throws ThingsboardException {
+        validateId(agentAppUnitId, id -> "Incorrect agentAppUnitId " + id);
+        AgentAppUnit unit = agentAppUnitService.findAgentAppUnitById(getTenantId(), agentAppUnitId);
+        checkNotNull(unit, "Agent application unit with id [" + agentAppUnitId + "] is not found");
+        checkAgentAppId(unit.getAgentApplicationId(), operation);
+        return unit;
+    }
+
+    AgentAppEvent checkAgentAppEventId(AgentAppEventId agentAppEventId, Operation operation) throws ThingsboardException {
+        validateId(agentAppEventId, id -> "Incorrect agentAppEventId " + id);
+        AgentAppEvent event = agentAppEventService.findById(getTenantId(), agentAppEventId);
+        checkNotNull(event, "Agent application event with id [" + agentAppEventId + "] is not found");
+        checkAgentId(event.getAgentId(), operation);
+        return event;
+    }
+
+    AgentBulkAction checkAgentBulkActionId(AgentBulkActionId agentBulkActionId, Operation operation) throws ThingsboardException {
+        validateId(agentBulkActionId, id -> "Incorrect agentBulkActionId " + id);
+        AgentBulkAction bulkAction = agentBulkActionService.findById(getTenantId(), agentBulkActionId);
+        checkNotNull(bulkAction, "Agent bulk action with id [" + agentBulkActionId + "] is not found");
+        checkAgentProfileId(new AgentProfileId(bulkAction.getAgentProfileId()), operation);
+        checkAgentAppProfileId(new AgentAppProfileId(bulkAction.getApplicationProfileId()), operation);
+        return bulkAction;
+    }
+
+    AgentAppTemplate checkAgentAppTemplateId(AgentAppTemplateId agentAppTemplateId, Operation operation) throws ThingsboardException {
+        return checkEntityId(agentAppTemplateId, agentAppTemplateService::findById, operation);
+    }
+
+    AgentAppProfile checkAgentAppProfileId(AgentAppProfileId profileId, Operation operation) throws ThingsboardException {
+        return checkEntityId(profileId, agentAppProfileService::findProfileById, operation);
+    }
+
+    AgentProfile checkAgentProfileId(AgentProfileId profileId, Operation operation) throws ThingsboardException {
+        return checkEntityId(profileId, agentProfileService::findProfileById, operation);
     }
 
     protected <I extends EntityId> I emptyId(EntityType entityType) {

@@ -290,7 +290,7 @@ export class EdgeGroupConfigFactory implements EntityGroupStateConfigFactory<Edg
     }
     if (params.hierarchyView) {
       const url = this.router.createUrlTree(['customers', 'groups', params.entityGroupId,
-          params.customerId, 'edgeManagement', 'instances', 'groups', params.childEntityGroupId, edge.id.id]);
+          params.customerId, 'edgeManagement', 'edges', 'groups', params.childEntityGroupId, edge.id.id]);
       this.window.open(window.location.origin + url, '_blank');
     } else {
       const url = this.router.createUrlTree([edge.id.id], {relativeTo: config.getActivatedRoute()});
@@ -399,14 +399,14 @@ export class EdgeGroupConfigFactory implements EntityGroupStateConfigFactory<Edg
       if (config.groupParams.childEntityGroupId) {
         const targetGroups = config.groupParams.shared ? 'shared' : 'groups';
         this.router.navigateByUrl(`customers/${targetGroups}/${config.groupParams.entityGroupId}/${config.groupParams.customerId}` +
-      `/edgeManagement/instances/groups/${config.groupParams.childEntityGroupId}/${edge.id.id}${page}`);
+      `/edgeManagement/edges/groups/${config.groupParams.childEntityGroupId}/${edge.id.id}${page}`);
       } else {
         this.router.navigateByUrl(`customers/all/${config.groupParams.customerId}` +
-      `/edgeManagement/instances/groups/${config.groupParams.entityGroupId}/${edge.id.id}${page}`);
+      `/edgeManagement/edges/groups/${config.groupParams.entityGroupId}/${edge.id.id}${page}`);
       }
     } else {
       const targetGroups = config.groupParams.shared ? 'shared' : 'groups';
-      this.router.navigateByUrl(`edgeManagement/instances/${targetGroups}/${config.entityGroup.id.id}/${edge.id.id}${page}`);
+      this.router.navigateByUrl(`edgeManagement/edges/${targetGroups}/${config.entityGroup.id.id}/${edge.id.id}${page}`);
     }
   }
 

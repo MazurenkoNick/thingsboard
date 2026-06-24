@@ -1,0 +1,111 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<section class="tb-deploy-status">
+
+  <div class="tb-deploy-card" [class.tb-deploy-card-offline]="!online">
+    <div class="tb-deploy-card-icon">
+      <mat-icon>{{ online ? 'check_circle' : 'cancel' }}</mat-icon>
+    </div>
+    <div class="tb-deploy-card-body">
+      <h3>{{ (online ? 'agent.deploy-status-online-title' : 'agent.deploy-status-offline-title') | translate }}</h3>
+      <p class="tb-deploy-card-desc">
+        <span class="tb-deploy-agent-name">{{ agent?.name }}</span>
+        <ng-container *ngIf="online && managingDuration">
+          {{ 'agent.deploy-status-managing-for' | translate: { duration: managingDuration } }}
+        </ng-container>
+        <ng-container *ngIf="online && !managingDuration">
+          {{ 'agent.deploy-status-managing' | translate }}
+        </ng-container>
+        <ng-container *ngIf="!online">
+          {{ 'agent.deploy-status-offline-desc' | translate }}
+        </ng-container>
+      </p>
+    </div>
+    <div class="tb-deploy-card-meta">
+      <span class="tb-deploy-pill" [class.healthy]="online" [class.unhealthy]="!online">
+        <span class="tb-deploy-pill-dot"></span>
+        {{ (online ? 'agent.deploy-status-healthy' : 'agent.deploy-status-unhealthy') | translate }}
+      </span>
+    </div>
+  </div>
+
+  <div class="tb-deploy-install-block" *ngIf="!online || showInstallCommand">
+    <div class="tb-deploy-install-header" *ngIf="online">
+      <button mat-button type="button" class="tb-deploy-install-hide"
+              (click)="showInstallCommand = false">
+        <mat-icon>close</mat-icon>
+        <span translate>agent.deploy-status-hide-install</span>
+      </button>
+    </div>
+    <tb-agent-install-instructions [agent]="agent"></tb-agent-install-instructions>
+  </div>
+
+  <div class="tb-deploy-where">
+    <div class="tb-deploy-where-header" *ngIf="online && !showInstallCommand">
+      <button type="button" class="tb-deploy-reinstall-link" (click)="showInstallCommand = true">
+        <span translate>agent.deploy-status-need-reinstall</span>
+        <span class="tb-deploy-reinstall-cta" translate>agent.deploy-status-show-install</span>
+      </button>
+    </div>
+
+    <div class="tb-deploy-where-cards">
+      <button type="button" class="tb-deploy-where-card" (click)="goToAgent.emit()">
+        <span class="tb-deploy-where-card-icon"><mat-icon>memory</mat-icon></span>
+        <span class="tb-deploy-where-card-title">
+          <span translate>agent.deploy-status-card-agent-title</span>
+          <mat-icon class="tb-deploy-where-card-arrow">arrow_forward</mat-icon>
+        </span>
+        <span class="tb-deploy-where-card-desc" translate>agent.deploy-status-card-agent-desc</span>
+      </button>
+
+      <button type="button" class="tb-deploy-where-card" (click)="goToAgentApplication.emit()">
+        <span class="tb-deploy-where-card-icon"><mat-icon>apps</mat-icon></span>
+        <span class="tb-deploy-where-card-title">
+          <span translate>agent.deploy-status-card-app-title</span>
+          <mat-icon class="tb-deploy-where-card-arrow">arrow_forward</mat-icon>
+        </span>
+        <span class="tb-deploy-where-card-desc" translate>agent.deploy-status-card-app-desc</span>
+      </button>
+
+      <button type="button" class="tb-deploy-where-card" (click)="goToAgentEvents.emit()">
+        <span class="tb-deploy-where-card-icon"><mat-icon>bolt</mat-icon></span>
+        <span class="tb-deploy-where-card-title">
+          <span translate>agent.deploy-status-card-events-title</span>
+          <mat-icon class="tb-deploy-where-card-arrow">arrow_forward</mat-icon>
+        </span>
+        <span class="tb-deploy-where-card-desc" translate>agent.deploy-status-card-events-desc</span>
+      </button>
+    </div>
+  </div>
+
+</section>

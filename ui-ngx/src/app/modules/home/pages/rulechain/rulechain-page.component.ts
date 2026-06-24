@@ -352,7 +352,7 @@ export class RuleChainPageComponent extends PageComponent
     if (this.ruleChainType === RuleChainType.CORE) {
       this.router.navigateByUrl(`ruleChains/${ruleChainId}`);
     } else {
-      this.router.navigateByUrl(`edgeManagement/ruleChains/${ruleChainId}`);
+      this.router.navigateByUrl(`edgeManagement/templates/ruleChains/${ruleChainId}`);
     }
   }
 
@@ -1575,7 +1575,7 @@ export class RuleChainPageComponent extends PageComponent
             if (this.ruleChainType !== RuleChainType.EDGE) {
               this.router.navigateByUrl(`ruleChains/${this.ruleChain.id.id}`);
             } else {
-              this.router.navigateByUrl(`edgeManagement/ruleChains/${this.ruleChain.id.id}`);
+              this.router.navigateByUrl(`edgeManagement/templates/ruleChains/${this.ruleChain.id.id}`);
             }
           } else {
             this.createRuleChainModel();

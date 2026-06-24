@@ -109,6 +109,7 @@ import org.thingsboard.server.common.msg.edge.EdgeHighPriorityMsg;
 import org.thingsboard.server.common.msg.edge.FromEdgeSyncResponse;
 import org.thingsboard.server.common.msg.edge.ToEdgeSyncRequest;
 import org.thingsboard.server.common.msg.gen.MsgProtos;
+import org.thingsboard.server.common.msg.gen.MsgProtos.TbMsgProto;
 import org.thingsboard.server.common.msg.plugin.ComponentLifecycleMsg;
 import org.thingsboard.server.common.msg.queue.TbMsgCallback;
 import org.thingsboard.server.common.msg.rpc.FromDeviceRpcResponse;
@@ -126,7 +127,43 @@ import org.thingsboard.server.gen.integration.IntegrationInfoProto;
 import org.thingsboard.server.gen.integration.IntegrationProto;
 import org.thingsboard.server.gen.transport.TransportProtos;
 import org.thingsboard.server.gen.transport.TransportProtos.ApiUsageRecordKeyProto;
+import org.thingsboard.server.gen.transport.TransportProtos.ApiUsageStateProto;
+import org.thingsboard.server.gen.transport.TransportProtos.AttributeScopeProto;
+import org.thingsboard.server.gen.transport.TransportProtos.AttributeValueProto;
+import org.thingsboard.server.gen.transport.TransportProtos.ComponentLifecycleMsgProto;
+import org.thingsboard.server.gen.transport.TransportProtos.CredentialsType;
+import org.thingsboard.server.gen.transport.TransportProtos.DeviceAttributesEventMsgProto;
+import org.thingsboard.server.gen.transport.TransportProtos.DeviceCredentialsProto;
+import org.thingsboard.server.gen.transport.TransportProtos.DeviceCredentialsUpdateMsgProto;
+import org.thingsboard.server.gen.transport.TransportProtos.DeviceDeleteMsgProto;
+import org.thingsboard.server.gen.transport.TransportProtos.DeviceEdgeUpdateMsgProto;
+import org.thingsboard.server.gen.transport.TransportProtos.DeviceInfoProto;
+import org.thingsboard.server.gen.transport.TransportProtos.DeviceNameOrTypeUpdateMsgProto;
+import org.thingsboard.server.gen.transport.TransportProtos.DeviceProfileProto;
+import org.thingsboard.server.gen.transport.TransportProtos.DeviceProto;
+import org.thingsboard.server.gen.transport.TransportProtos.EdgeEventMsgProto;
+import org.thingsboard.server.gen.transport.TransportProtos.EdgeEventMsgProto.Builder;
+import org.thingsboard.server.gen.transport.TransportProtos.EdgeEventUpdateMsgProto;
+import org.thingsboard.server.gen.transport.TransportProtos.EdgeHighPriorityMsgProto;
+import org.thingsboard.server.gen.transport.TransportProtos.EntityIdProto;
+import org.thingsboard.server.gen.transport.TransportProtos.EntityTypeProto;
+import org.thingsboard.server.gen.transport.TransportProtos.EntityUpdateMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.FromDeviceRPCResponseProto;
+import org.thingsboard.server.gen.transport.TransportProtos.FromDeviceRpcResponseActorMsgProto;
+import org.thingsboard.server.gen.transport.TransportProtos.FromEdgeSyncResponseMsgProto;
 import org.thingsboard.server.gen.transport.TransportProtos.KeyValueProto;
+import org.thingsboard.server.gen.transport.TransportProtos.KeyValueType;
+import org.thingsboard.server.gen.transport.TransportProtos.RemoveRpcActorMsgProto;
+import org.thingsboard.server.gen.transport.TransportProtos.RepositorySettingsProto;
+import org.thingsboard.server.gen.transport.TransportProtos.TbResourceProto;
+import org.thingsboard.server.gen.transport.TransportProtos.TenantProfileProto;
+import org.thingsboard.server.gen.transport.TransportProtos.TenantProto;
+import org.thingsboard.server.gen.transport.TransportProtos.ToDeviceActorNotificationMsgProto;
+import org.thingsboard.server.gen.transport.TransportProtos.ToDeviceRpcRequestActorMsgProto;
+import org.thingsboard.server.gen.transport.TransportProtos.ToDeviceRpcRequestMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.ToEdgeSyncRequestMsgProto;
+import org.thingsboard.server.gen.transport.TransportProtos.ToRuleEngineMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.TsKvProto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -140,8 +177,8 @@ import static org.thingsboard.server.common.data.DataConstants.GATEWAY_PARAMETER
 @Slf4j
 public class ProtoUtils {
 
-    public static TransportProtos.ComponentLifecycleMsgProto toProto(ComponentLifecycleMsg msg) {
-        var builder = TransportProtos.ComponentLifecycleMsgProto.newBuilder()
+    public static ComponentLifecycleMsgProto toProto(ComponentLifecycleMsg msg) {
+        var builder = ComponentLifecycleMsgProto.newBuilder()
                 .setTenantIdMSB(msg.getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(msg.getTenantId().getId().getLeastSignificantBits())
                 .setEntityType(toProto(msg.getEntityId().getEntityType()))
@@ -169,11 +206,11 @@ public class ProtoUtils {
         return builder.build();
     }
 
-    public static TransportProtos.EntityTypeProto toProto(EntityType entityType) {
-        return TransportProtos.EntityTypeProto.forNumber(entityType.getProtoNumber());
+    public static EntityTypeProto toProto(EntityType entityType) {
+        return EntityTypeProto.forNumber(entityType.getProtoNumber());
     }
 
-    public static ComponentLifecycleMsg fromProto(TransportProtos.ComponentLifecycleMsgProto proto) {
+    public static ComponentLifecycleMsg fromProto(ComponentLifecycleMsgProto proto) {
         EntityId entityId = EntityIdFactory.getByTypeAndUuid(fromProto(proto.getEntityType()), new UUID(proto.getEntityIdMSB(), proto.getEntityIdLSB()));
         var builder = ComponentLifecycleMsg.builder()
                 .tenantId(TenantId.fromUUID(new UUID(proto.getTenantIdMSB(), proto.getTenantIdLSB())))
@@ -200,7 +237,7 @@ public class ProtoUtils {
         return builder.build();
     }
 
-    public static EntityType fromProto(TransportProtos.EntityTypeProto entityType) {
+    public static EntityType fromProto(EntityTypeProto entityType) {
         return EntityType.forProtoNumber(entityType.getNumber());
     }
 
@@ -212,8 +249,8 @@ public class ProtoUtils {
         return ComponentLifecycleEvent.forProtoNumber(eventProto.getNumber());
     }
 
-    public static TransportProtos.ToEdgeSyncRequestMsgProto toProto(ToEdgeSyncRequest request) {
-        return TransportProtos.ToEdgeSyncRequestMsgProto.newBuilder()
+    public static ToEdgeSyncRequestMsgProto toProto(ToEdgeSyncRequest request) {
+        return ToEdgeSyncRequestMsgProto.newBuilder()
                 .setTenantIdMSB(request.getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(request.getTenantId().getId().getLeastSignificantBits())
                 .setRequestIdMSB(request.getId().getMostSignificantBits())
@@ -224,7 +261,7 @@ public class ProtoUtils {
                 .build();
     }
 
-    public static ToEdgeSyncRequest fromProto(TransportProtos.ToEdgeSyncRequestMsgProto proto) {
+    public static ToEdgeSyncRequest fromProto(ToEdgeSyncRequestMsgProto proto) {
         return new ToEdgeSyncRequest(
                 new UUID(proto.getRequestIdMSB(), proto.getRequestIdLSB()),
                 TenantId.fromUUID(new UUID(proto.getTenantIdMSB(), proto.getTenantIdLSB())),
@@ -233,8 +270,8 @@ public class ProtoUtils {
         );
     }
 
-    public static TransportProtos.FromEdgeSyncResponseMsgProto toProto(FromEdgeSyncResponse response) {
-        return TransportProtos.FromEdgeSyncResponseMsgProto.newBuilder()
+    public static FromEdgeSyncResponseMsgProto toProto(FromEdgeSyncResponse response) {
+        return FromEdgeSyncResponseMsgProto.newBuilder()
                 .setTenantIdMSB(response.getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(response.getTenantId().getId().getLeastSignificantBits())
                 .setResponseIdMSB(response.getId().getMostSignificantBits())
@@ -246,7 +283,7 @@ public class ProtoUtils {
                 .build();
     }
 
-    public static FromEdgeSyncResponse fromProto(TransportProtos.FromEdgeSyncResponseMsgProto proto) {
+    public static FromEdgeSyncResponse fromProto(FromEdgeSyncResponseMsgProto proto) {
         return new FromEdgeSyncResponse(
                 new UUID(proto.getResponseIdMSB(), proto.getResponseIdLSB()),
                 TenantId.fromUUID(new UUID(proto.getTenantIdMSB(), proto.getTenantIdLSB())),
@@ -256,8 +293,8 @@ public class ProtoUtils {
         );
     }
 
-    public static TransportProtos.EdgeEventMsgProto toProto(EdgeEvent edgeEvent) {
-        TransportProtos.EdgeEventMsgProto.Builder builder = TransportProtos.EdgeEventMsgProto.newBuilder();
+    public static EdgeEventMsgProto toProto(EdgeEvent edgeEvent) {
+        Builder builder = EdgeEventMsgProto.newBuilder();
 
         builder.setTenantIdMSB(edgeEvent.getTenantId().getId().getMostSignificantBits());
         builder.setTenantIdLSB(edgeEvent.getTenantId().getId().getLeastSignificantBits());
@@ -283,7 +320,7 @@ public class ProtoUtils {
         return builder.build();
     }
 
-    public static EdgeEvent fromProto(TransportProtos.EdgeEventMsgProto proto) {
+    public static EdgeEvent fromProto(EdgeEventMsgProto proto) {
         EdgeEvent edgeEvent = new EdgeEvent();
         TenantId tenantId = TenantId.fromUUID(new UUID(proto.getTenantIdMSB(), proto.getTenantIdLSB()));
         edgeEvent.setTenantId(tenantId);
@@ -307,8 +344,8 @@ public class ProtoUtils {
         return edgeEvent;
     }
 
-    public static TransportProtos.EdgeHighPriorityMsgProto toProto(EdgeHighPriorityMsg msg) {
-        TransportProtos.EdgeHighPriorityMsgProto.Builder builder = TransportProtos.EdgeHighPriorityMsgProto.newBuilder()
+    public static EdgeHighPriorityMsgProto toProto(EdgeHighPriorityMsg msg) {
+        EdgeHighPriorityMsgProto.Builder builder = EdgeHighPriorityMsgProto.newBuilder()
                 .setTenantIdMSB(msg.getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(msg.getTenantId().getId().getLeastSignificantBits())
                 .setType(msg.getEdgeEvent().getType().name())
@@ -329,7 +366,7 @@ public class ProtoUtils {
         return builder.build();
     }
 
-    public static EdgeHighPriorityMsg fromProto(TransportProtos.EdgeHighPriorityMsgProto proto) {
+    public static EdgeHighPriorityMsg fromProto(EdgeHighPriorityMsgProto proto) {
         EdgeEventType type = EdgeEventType.valueOf(proto.getType());
         EdgeEventActionType actionType = EdgeEventActionType.valueOf(proto.getAction());
         JsonNode body = proto.hasBody() ? JacksonUtil.toJsonNode(proto.getBody()) : null;
@@ -351,8 +388,8 @@ public class ProtoUtils {
         );
     }
 
-    public static TransportProtos.EdgeEventUpdateMsgProto toProto(EdgeEventUpdateMsg msg) {
-        return TransportProtos.EdgeEventUpdateMsgProto.newBuilder()
+    public static EdgeEventUpdateMsgProto toProto(EdgeEventUpdateMsg msg) {
+        return EdgeEventUpdateMsgProto.newBuilder()
                 .setTenantIdMSB(msg.getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(msg.getTenantId().getId().getLeastSignificantBits())
                 .setEdgeIdMSB(msg.getEdgeId().getId().getMostSignificantBits())
@@ -360,15 +397,15 @@ public class ProtoUtils {
                 .build();
     }
 
-    public static EdgeEventUpdateMsg fromProto(TransportProtos.EdgeEventUpdateMsgProto proto) {
+    public static EdgeEventUpdateMsg fromProto(EdgeEventUpdateMsgProto proto) {
         return new EdgeEventUpdateMsg(
                 TenantId.fromUUID(new UUID(proto.getTenantIdMSB(), proto.getTenantIdLSB())),
                 EdgeId.fromUUID(new UUID(proto.getEdgeIdMSB(), proto.getEdgeIdLSB()))
         );
     }
 
-    private static TransportProtos.DeviceEdgeUpdateMsgProto toProto(DeviceEdgeUpdateMsg msg) {
-        TransportProtos.DeviceEdgeUpdateMsgProto.Builder builder = TransportProtos.DeviceEdgeUpdateMsgProto.newBuilder()
+    private static DeviceEdgeUpdateMsgProto toProto(DeviceEdgeUpdateMsg msg) {
+        DeviceEdgeUpdateMsgProto.Builder builder = DeviceEdgeUpdateMsgProto.newBuilder()
                 .setTenantIdMSB(msg.getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(msg.getTenantId().getId().getLeastSignificantBits())
                 .setDeviceIdMSB(msg.getDeviceId().getId().getMostSignificantBits())
@@ -382,7 +419,7 @@ public class ProtoUtils {
         return builder.build();
     }
 
-    private static DeviceEdgeUpdateMsg fromProto(TransportProtos.DeviceEdgeUpdateMsgProto proto) {
+    private static DeviceEdgeUpdateMsg fromProto(DeviceEdgeUpdateMsgProto proto) {
         EdgeId edgeId = null;
         if (proto.hasEdgeIdMSB() && proto.hasEdgeIdLSB()) {
             edgeId = EdgeId.fromUUID(new UUID(proto.getEdgeIdMSB(), proto.getEdgeIdLSB()));
@@ -393,8 +430,8 @@ public class ProtoUtils {
                 edgeId);
     }
 
-    private static TransportProtos.DeviceNameOrTypeUpdateMsgProto toProto(DeviceNameOrTypeUpdateMsg msg) {
-        return TransportProtos.DeviceNameOrTypeUpdateMsgProto.newBuilder()
+    private static DeviceNameOrTypeUpdateMsgProto toProto(DeviceNameOrTypeUpdateMsg msg) {
+        return DeviceNameOrTypeUpdateMsgProto.newBuilder()
                 .setTenantIdMSB(msg.getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(msg.getTenantId().getId().getLeastSignificantBits())
                 .setDeviceIdMSB(msg.getDeviceId().getId().getMostSignificantBits())
@@ -404,7 +441,7 @@ public class ProtoUtils {
                 .build();
     }
 
-    private static DeviceNameOrTypeUpdateMsg fromProto(TransportProtos.DeviceNameOrTypeUpdateMsgProto proto) {
+    private static DeviceNameOrTypeUpdateMsg fromProto(DeviceNameOrTypeUpdateMsgProto proto) {
         return new DeviceNameOrTypeUpdateMsg(
                 TenantId.fromUUID(new UUID(proto.getTenantIdMSB(), proto.getTenantIdLSB())),
                 new DeviceId(new UUID(proto.getDeviceIdMSB(), proto.getDeviceIdLSB())),
@@ -413,8 +450,8 @@ public class ProtoUtils {
         );
     }
 
-    private static TransportProtos.DeviceAttributesEventMsgProto toProto(DeviceAttributesEventNotificationMsg msg) {
-        TransportProtos.DeviceAttributesEventMsgProto.Builder builder = TransportProtos.DeviceAttributesEventMsgProto.newBuilder();
+    private static DeviceAttributesEventMsgProto toProto(DeviceAttributesEventNotificationMsg msg) {
+        DeviceAttributesEventMsgProto.Builder builder = DeviceAttributesEventMsgProto.newBuilder();
         builder.setTenantIdMSB(msg.getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(msg.getTenantId().getId().getLeastSignificantBits())
                 .setDeviceIdMSB(msg.getDeviceId().getId().getMostSignificantBits())
@@ -422,13 +459,13 @@ public class ProtoUtils {
                 .setDeleted(msg.isDeleted());
 
         if (msg.getScope() != null) {
-            builder.setScope(TransportProtos.AttributeScopeProto.valueOf(msg.getScope()));
+            builder.setScope(AttributeScopeProto.valueOf(msg.getScope()));
         }
 
         if (msg.getDeletedKeys() != null) {
             for (AttributeKey key : msg.getDeletedKeys()) {
                 builder.addDeletedKeys(TransportProtos.AttributeKey.newBuilder()
-                        .setScope(TransportProtos.AttributeScopeProto.valueOf(key.getScope()))
+                        .setScope(AttributeScopeProto.valueOf(key.getScope()))
                         .setAttributeKey(key.getAttributeKey())
                         .build());
             }
@@ -442,35 +479,35 @@ public class ProtoUtils {
         return builder.build();
     }
 
-    public static TransportProtos.AttributeValueProto toProto(AttributeKvEntry attributeKvEntry) {
-        TransportProtos.AttributeValueProto.Builder builder = TransportProtos.AttributeValueProto.newBuilder()
+    public static AttributeValueProto toProto(AttributeKvEntry attributeKvEntry) {
+        AttributeValueProto.Builder builder = AttributeValueProto.newBuilder()
                 .setLastUpdateTs(attributeKvEntry.getLastUpdateTs())
                 .setKey(attributeKvEntry.getKey());
         switch (attributeKvEntry.getDataType()) {
             case BOOLEAN:
                 attributeKvEntry.getBooleanValue().ifPresent(builder::setBoolV);
                 builder.setHasV(attributeKvEntry.getBooleanValue().isPresent());
-                builder.setType(TransportProtos.KeyValueType.BOOLEAN_V);
+                builder.setType(KeyValueType.BOOLEAN_V);
                 break;
             case STRING:
                 attributeKvEntry.getStrValue().ifPresent(builder::setStringV);
                 builder.setHasV(attributeKvEntry.getStrValue().isPresent());
-                builder.setType(TransportProtos.KeyValueType.STRING_V);
+                builder.setType(KeyValueType.STRING_V);
                 break;
             case DOUBLE:
                 attributeKvEntry.getDoubleValue().ifPresent(builder::setDoubleV);
                 builder.setHasV(attributeKvEntry.getDoubleValue().isPresent());
-                builder.setType(TransportProtos.KeyValueType.DOUBLE_V);
+                builder.setType(KeyValueType.DOUBLE_V);
                 break;
             case LONG:
                 attributeKvEntry.getLongValue().ifPresent(builder::setLongV);
                 builder.setHasV(attributeKvEntry.getLongValue().isPresent());
-                builder.setType(TransportProtos.KeyValueType.LONG_V);
+                builder.setType(KeyValueType.LONG_V);
                 break;
             case JSON:
                 attributeKvEntry.getJsonValue().ifPresent(builder::setJsonV);
                 builder.setHasV(attributeKvEntry.getJsonValue().isPresent());
-                builder.setType(TransportProtos.KeyValueType.JSON_V);
+                builder.setType(KeyValueType.JSON_V);
                 break;
         }
 
@@ -516,7 +553,7 @@ public class ProtoUtils {
         };
     }
 
-    private static ToDeviceActorNotificationMsg fromProto(TransportProtos.DeviceAttributesEventMsgProto proto) {
+    private static ToDeviceActorNotificationMsg fromProto(DeviceAttributesEventMsgProto proto) {
         return new DeviceAttributesEventNotificationMsg(
                 TenantId.fromUUID(new UUID(proto.getTenantIdMSB(), proto.getTenantIdLSB())),
                 new DeviceId(new UUID(proto.getDeviceIdMSB(), proto.getDeviceIdLSB())),
@@ -527,18 +564,18 @@ public class ProtoUtils {
         );
     }
 
-    private static TransportProtos.DeviceCredentialsUpdateMsgProto toProto(DeviceCredentialsUpdateNotificationMsg msg) {
-        TransportProtos.DeviceCredentialsProto.Builder protoBuilder = TransportProtos.DeviceCredentialsProto.newBuilder()
+    private static DeviceCredentialsUpdateMsgProto toProto(DeviceCredentialsUpdateNotificationMsg msg) {
+        DeviceCredentialsProto.Builder protoBuilder = DeviceCredentialsProto.newBuilder()
                 .setDeviceIdMSB(msg.getDeviceCredentials().getDeviceId().getId().getMostSignificantBits())
                 .setDeviceIdLSB(msg.getDeviceCredentials().getDeviceId().getId().getLeastSignificantBits())
                 .setCredentialsId(msg.getDeviceCredentials().getCredentialsId())
-                .setCredentialsType(TransportProtos.CredentialsType.valueOf(msg.getDeviceCredentials().getCredentialsType().name()));
+                .setCredentialsType(CredentialsType.valueOf(msg.getDeviceCredentials().getCredentialsType().name()));
 
         if (msg.getDeviceCredentials().getCredentialsValue() != null) {
             protoBuilder.setCredentialsValue(msg.getDeviceCredentials().getCredentialsValue());
         }
 
-        return TransportProtos.DeviceCredentialsUpdateMsgProto.newBuilder()
+        return DeviceCredentialsUpdateMsgProto.newBuilder()
                 .setTenantIdMSB(msg.getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(msg.getTenantId().getId().getLeastSignificantBits())
                 .setDeviceIdMSB(msg.getDeviceId().getId().getMostSignificantBits())
@@ -547,7 +584,7 @@ public class ProtoUtils {
                 .build();
     }
 
-    private static ToDeviceActorNotificationMsg fromProto(TransportProtos.DeviceCredentialsUpdateMsgProto proto) {
+    private static ToDeviceActorNotificationMsg fromProto(DeviceCredentialsUpdateMsgProto proto) {
         DeviceCredentials deviceCredentials = new DeviceCredentials();
         deviceCredentials.setDeviceId(new DeviceId(new UUID(proto.getDeviceCredentials().getDeviceIdMSB(), proto.getDeviceCredentials().getDeviceIdLSB())));
         deviceCredentials.setCredentialsId(proto.getDeviceCredentials().getCredentialsId());
@@ -560,8 +597,8 @@ public class ProtoUtils {
         );
     }
 
-    private static TransportProtos.ToDeviceRpcRequestActorMsgProto toProto(ToDeviceRpcRequestActorMsg msg) {
-        TransportProtos.ToDeviceRpcRequestMsg.Builder builder = TransportProtos.ToDeviceRpcRequestMsg.newBuilder()
+    private static ToDeviceRpcRequestActorMsgProto toProto(ToDeviceRpcRequestActorMsg msg) {
+        ToDeviceRpcRequestMsg.Builder builder = ToDeviceRpcRequestMsg.newBuilder()
                 .setMethodName(msg.getMsg().getBody().getMethod())
                 .setParams(msg.getMsg().getBody().getParams())
                 .setExpirationTime(msg.getMsg().getExpirationTime())
@@ -575,9 +612,9 @@ public class ProtoUtils {
         if (msg.getMsg().getRetries() != null) {
             builder.setRetries(msg.getMsg().getRetries());
         }
-        TransportProtos.ToDeviceRpcRequestMsg proto = builder.build();
+        ToDeviceRpcRequestMsg proto = builder.build();
 
-        return TransportProtos.ToDeviceRpcRequestActorMsgProto.newBuilder()
+        return ToDeviceRpcRequestActorMsgProto.newBuilder()
                 .setTenantIdMSB(msg.getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(msg.getTenantId().getId().getLeastSignificantBits())
                 .setDeviceIdMSB(msg.getDeviceId().getId().getMostSignificantBits())
@@ -587,8 +624,8 @@ public class ProtoUtils {
                 .build();
     }
 
-    private static ToDeviceActorNotificationMsg fromProto(TransportProtos.ToDeviceRpcRequestActorMsgProto proto) {
-        TransportProtos.ToDeviceRpcRequestMsg toDeviceRpcRequestMsg = proto.getToDeviceRpcRequestMsg();
+    private static ToDeviceActorNotificationMsg fromProto(ToDeviceRpcRequestActorMsgProto proto) {
+        ToDeviceRpcRequestMsg toDeviceRpcRequestMsg = proto.getToDeviceRpcRequestMsg();
         ToDeviceRpcRequest toDeviceRpcRequest = new ToDeviceRpcRequest(
                 new UUID(toDeviceRpcRequestMsg.getRequestIdMSB(), toDeviceRpcRequestMsg.getRequestIdLSB()),
                 TenantId.fromUUID(new UUID(proto.getTenantIdMSB(), proto.getTenantIdLSB())),
@@ -602,8 +639,8 @@ public class ProtoUtils {
         return new ToDeviceRpcRequestActorMsg(proto.getServiceId(), toDeviceRpcRequest);
     }
 
-    private static TransportProtos.FromDeviceRpcResponseActorMsgProto toProto(FromDeviceRpcResponseActorMsg msg) {
-        TransportProtos.FromDeviceRPCResponseProto.Builder builder = TransportProtos.FromDeviceRPCResponseProto.newBuilder()
+    private static FromDeviceRpcResponseActorMsgProto toProto(FromDeviceRpcResponseActorMsg msg) {
+        FromDeviceRPCResponseProto.Builder builder = FromDeviceRPCResponseProto.newBuilder()
                 .setRequestIdMSB(msg.getMsg().getId().getMostSignificantBits())
                 .setRequestIdLSB(msg.getMsg().getId().getLeastSignificantBits())
                 .setError(msg.getMsg().getError().isPresent() ? msg.getMsg().getError().get().ordinal() : -1);
@@ -611,7 +648,7 @@ public class ProtoUtils {
             builder.setResponse(msg.getMsg().getResponse().get());
         }
 
-        return TransportProtos.FromDeviceRpcResponseActorMsgProto.newBuilder()
+        return FromDeviceRpcResponseActorMsgProto.newBuilder()
                 .setRequestId(msg.getRequestId())
                 .setTenantIdMSB(msg.getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(msg.getTenantId().getId().getLeastSignificantBits())
@@ -621,7 +658,7 @@ public class ProtoUtils {
                 .build();
     }
 
-    private static ToDeviceActorNotificationMsg fromProto(TransportProtos.FromDeviceRpcResponseActorMsgProto proto) {
+    private static ToDeviceActorNotificationMsg fromProto(FromDeviceRpcResponseActorMsgProto proto) {
         FromDeviceRpcResponse fromDeviceRpcResponse = new FromDeviceRpcResponse(
                 new UUID(proto.getRpcResponse().getRequestIdMSB(), proto.getRpcResponse().getRequestIdLSB()),
                 proto.getRpcResponse().getResponse(),
@@ -634,8 +671,8 @@ public class ProtoUtils {
         );
     }
 
-    private static TransportProtos.RemoveRpcActorMsgProto toProto(RemoveRpcActorMsg msg) {
-        return TransportProtos.RemoveRpcActorMsgProto.newBuilder()
+    private static RemoveRpcActorMsgProto toProto(RemoveRpcActorMsg msg) {
+        return RemoveRpcActorMsgProto.newBuilder()
                 .setTenantIdMSB(msg.getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(msg.getTenantId().getId().getLeastSignificantBits())
                 .setDeviceIdMSB(msg.getDeviceId().getId().getMostSignificantBits())
@@ -645,7 +682,7 @@ public class ProtoUtils {
                 .build();
     }
 
-    private static ToDeviceActorNotificationMsg fromProto(TransportProtos.RemoveRpcActorMsgProto proto) {
+    private static ToDeviceActorNotificationMsg fromProto(RemoveRpcActorMsgProto proto) {
         return new RemoveRpcActorMsg(
                 TenantId.fromUUID(new UUID(proto.getTenantIdMSB(), proto.getTenantIdLSB())),
                 new DeviceId(new UUID(proto.getDeviceIdMSB(), proto.getDeviceIdLSB())),
@@ -653,8 +690,8 @@ public class ProtoUtils {
         );
     }
 
-    private static TransportProtos.DeviceDeleteMsgProto toProto(DeviceDeleteMsg msg) {
-        return TransportProtos.DeviceDeleteMsgProto.newBuilder()
+    private static DeviceDeleteMsgProto toProto(DeviceDeleteMsg msg) {
+        return DeviceDeleteMsgProto.newBuilder()
                 .setTenantIdMSB(msg.getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(msg.getTenantId().getId().getLeastSignificantBits())
                 .setDeviceIdMSB(msg.getDeviceId().getId().getMostSignificantBits())
@@ -662,42 +699,42 @@ public class ProtoUtils {
                 .build();
     }
 
-    private static DeviceDeleteMsg fromProto(TransportProtos.DeviceDeleteMsgProto proto) {
+    private static DeviceDeleteMsg fromProto(DeviceDeleteMsgProto proto) {
         return new DeviceDeleteMsg(
                 TenantId.fromUUID(new UUID(proto.getTenantIdMSB(), proto.getTenantIdLSB())),
                 new DeviceId(new UUID(proto.getDeviceIdMSB(), proto.getDeviceIdLSB())));
     }
 
-    public static TransportProtos.ToDeviceActorNotificationMsgProto toProto(ToDeviceActorNotificationMsg msg) {
+    public static ToDeviceActorNotificationMsgProto toProto(ToDeviceActorNotificationMsg msg) {
         if (msg instanceof DeviceEdgeUpdateMsg updateMsg) {
-            TransportProtos.DeviceEdgeUpdateMsgProto proto = toProto(updateMsg);
-            return TransportProtos.ToDeviceActorNotificationMsgProto.newBuilder().setDeviceEdgeUpdateMsg(proto).build();
+            DeviceEdgeUpdateMsgProto proto = toProto(updateMsg);
+            return ToDeviceActorNotificationMsgProto.newBuilder().setDeviceEdgeUpdateMsg(proto).build();
         } else if (msg instanceof DeviceNameOrTypeUpdateMsg updateMsg) {
-            TransportProtos.DeviceNameOrTypeUpdateMsgProto proto = toProto(updateMsg);
-            return TransportProtos.ToDeviceActorNotificationMsgProto.newBuilder().setDeviceNameOrTypeMsg(proto).build();
+            DeviceNameOrTypeUpdateMsgProto proto = toProto(updateMsg);
+            return ToDeviceActorNotificationMsgProto.newBuilder().setDeviceNameOrTypeMsg(proto).build();
         } else if (msg instanceof DeviceAttributesEventNotificationMsg updateMsg) {
-            TransportProtos.DeviceAttributesEventMsgProto proto = toProto(updateMsg);
-            return TransportProtos.ToDeviceActorNotificationMsgProto.newBuilder().setDeviceAttributesEventMsg(proto).build();
+            DeviceAttributesEventMsgProto proto = toProto(updateMsg);
+            return ToDeviceActorNotificationMsgProto.newBuilder().setDeviceAttributesEventMsg(proto).build();
         } else if (msg instanceof DeviceCredentialsUpdateNotificationMsg updateMsg) {
-            TransportProtos.DeviceCredentialsUpdateMsgProto proto = toProto(updateMsg);
-            return TransportProtos.ToDeviceActorNotificationMsgProto.newBuilder().setDeviceCredentialsUpdateMsg(proto).build();
+            DeviceCredentialsUpdateMsgProto proto = toProto(updateMsg);
+            return ToDeviceActorNotificationMsgProto.newBuilder().setDeviceCredentialsUpdateMsg(proto).build();
         } else if (msg instanceof ToDeviceRpcRequestActorMsg updateMsg) {
-            TransportProtos.ToDeviceRpcRequestActorMsgProto proto = toProto(updateMsg);
-            return TransportProtos.ToDeviceActorNotificationMsgProto.newBuilder().setToDeviceRpcRequestMsg(proto).build();
+            ToDeviceRpcRequestActorMsgProto proto = toProto(updateMsg);
+            return ToDeviceActorNotificationMsgProto.newBuilder().setToDeviceRpcRequestMsg(proto).build();
         } else if (msg instanceof FromDeviceRpcResponseActorMsg updateMsg) {
-            TransportProtos.FromDeviceRpcResponseActorMsgProto proto = toProto(updateMsg);
-            return TransportProtos.ToDeviceActorNotificationMsgProto.newBuilder().setFromDeviceRpcResponseMsg(proto).build();
+            FromDeviceRpcResponseActorMsgProto proto = toProto(updateMsg);
+            return ToDeviceActorNotificationMsgProto.newBuilder().setFromDeviceRpcResponseMsg(proto).build();
         } else if (msg instanceof RemoveRpcActorMsg updateMsg) {
-            TransportProtos.RemoveRpcActorMsgProto proto = toProto(updateMsg);
-            return TransportProtos.ToDeviceActorNotificationMsgProto.newBuilder().setRemoveRpcActorMsg(proto).build();
+            RemoveRpcActorMsgProto proto = toProto(updateMsg);
+            return ToDeviceActorNotificationMsgProto.newBuilder().setRemoveRpcActorMsg(proto).build();
         } else if (msg instanceof DeviceDeleteMsg updateMsg) {
-            TransportProtos.DeviceDeleteMsgProto proto = toProto(updateMsg);
-            return TransportProtos.ToDeviceActorNotificationMsgProto.newBuilder().setDeviceDeleteMsg(proto).build();
+            DeviceDeleteMsgProto proto = toProto(updateMsg);
+            return ToDeviceActorNotificationMsgProto.newBuilder().setDeviceDeleteMsg(proto).build();
         }
         return null;
     }
 
-    public static ToDeviceActorNotificationMsg fromProto(TransportProtos.ToDeviceActorNotificationMsgProto proto) {
+    public static ToDeviceActorNotificationMsg fromProto(ToDeviceActorNotificationMsgProto proto) {
         if (proto.hasDeviceEdgeUpdateMsg()) {
             return fromProto(proto.getDeviceEdgeUpdateMsg());
         } else if (proto.hasDeviceNameOrTypeMsg()) {
@@ -727,18 +764,18 @@ public class ProtoUtils {
                 .collect(Collectors.toSet());
     }
 
-    private static List<AttributeKvEntry> getAttributesKvEntryFromProto(List<TransportProtos.AttributeValueProto> valuesList) {
+    private static List<AttributeKvEntry> getAttributesKvEntryFromProto(List<AttributeValueProto> valuesList) {
         if (valuesList.isEmpty()) {
             return null;
         }
         List<AttributeKvEntry> result = new ArrayList<>();
-        for (TransportProtos.AttributeValueProto kvEntry : valuesList) {
+        for (AttributeValueProto kvEntry : valuesList) {
             result.add(fromProto(kvEntry));
         }
         return result;
     }
 
-    public static AttributeKvEntry fromProto(TransportProtos.AttributeValueProto proto) {
+    public static AttributeKvEntry fromProto(AttributeValueProto proto) {
         boolean hasValue = proto.getHasV();
         String key = proto.getKey();
         KvEntry entry = switch (proto.getType()) {
@@ -752,7 +789,7 @@ public class ProtoUtils {
         return new BaseAttributeKvEntry(entry, proto.getLastUpdateTs(), proto.hasVersion() ? proto.getVersion() : null);
     }
 
-    public static BasicKvEntry basicKvEntryFromProto(TransportProtos.AttributeValueProto proto) {
+    public static BasicKvEntry basicKvEntryFromProto(AttributeValueProto proto) {
         boolean hasValue = proto.getHasV();
         String key = proto.getKey();
         return switch (proto.getType()) {
@@ -788,8 +825,8 @@ public class ProtoUtils {
         };
     }
 
-    public static TsKvEntry fromProto(TransportProtos.TsKvProto proto) {
-        TransportProtos.KeyValueProto kvProto = proto.getKv();
+    public static TsKvEntry fromProto(TsKvProto proto) {
+        KeyValueProto kvProto = proto.getKv();
         String key = kvProto.getKey();
         KvEntry entry = switch (kvProto.getType()) {
             case BOOLEAN_V -> new BooleanDataEntry(key, kvProto.getBoolV());
@@ -802,8 +839,8 @@ public class ProtoUtils {
         return new BasicTsKvEntry(proto.getTs(), entry, proto.hasVersion() ? proto.getVersion() : null);
     }
 
-    public static TransportProtos.TsKvProto toTsKvProto(TsKvEntry tsKvEntry) {
-        var builder = TransportProtos.TsKvProto.newBuilder()
+    public static TsKvProto toTsKvProto(TsKvEntry tsKvEntry) {
+        var builder = TsKvProto.newBuilder()
                 .setTs(tsKvEntry.getTs())
                 .setKv(toKeyValueProto(tsKvEntry));
         if (tsKvEntry.getVersion() != null) {
@@ -812,28 +849,28 @@ public class ProtoUtils {
         return builder.build();
     }
 
-    public static TransportProtos.KeyValueProto toKeyValueProto(KvEntry kvEntry) {
-        TransportProtos.KeyValueProto.Builder builder = TransportProtos.KeyValueProto.newBuilder();
+    public static KeyValueProto toKeyValueProto(KvEntry kvEntry) {
+        KeyValueProto.Builder builder = KeyValueProto.newBuilder();
         builder.setKey(kvEntry.getKey());
         switch (kvEntry.getDataType()) {
             case BOOLEAN:
-                builder.setType(TransportProtos.KeyValueType.BOOLEAN_V)
+                builder.setType(KeyValueType.BOOLEAN_V)
                         .setBoolV(kvEntry.getBooleanValue().orElse(false));
                 break;
             case LONG:
-                builder.setType(TransportProtos.KeyValueType.LONG_V)
+                builder.setType(KeyValueType.LONG_V)
                         .setLongV(kvEntry.getLongValue().orElse(0L));
                 break;
             case DOUBLE:
-                builder.setType(TransportProtos.KeyValueType.DOUBLE_V)
+                builder.setType(KeyValueType.DOUBLE_V)
                         .setDoubleV(kvEntry.getDoubleValue().orElse(0.0));
                 break;
             case STRING:
-                builder.setType(TransportProtos.KeyValueType.STRING_V)
+                builder.setType(KeyValueType.STRING_V)
                         .setStringV(kvEntry.getStrValue().orElse(""));
                 break;
             case JSON:
-                builder.setType(TransportProtos.KeyValueType.JSON_V)
+                builder.setType(KeyValueType.JSON_V)
                         .setJsonV(kvEntry.getJsonValue().orElse("{}"));
                 break;
             default:
@@ -842,8 +879,8 @@ public class ProtoUtils {
         return builder.build();
     }
 
-    public static TransportProtos.DeviceProto toProto(Device device) {
-        var builder = TransportProtos.DeviceProto.newBuilder()
+    public static DeviceProto toProto(Device device) {
+        var builder = DeviceProto.newBuilder()
                 .setTenantIdMSB(device.getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(device.getTenantId().getId().getLeastSignificantBits())
                 .setDeviceIdMSB(device.getId().getId().getMostSignificantBits())
@@ -885,7 +922,7 @@ public class ProtoUtils {
         return builder.build();
     }
 
-    public static Device fromProto(TransportProtos.DeviceProto proto) {
+    public static Device fromProto(DeviceProto proto) {
         Device device = new Device(getEntityId(proto.getDeviceIdMSB(), proto.getDeviceIdLSB(), DeviceId::new));
         device.setCreatedTime(proto.getCreatedTime());
         device.setTenantId(getEntityId(proto.getTenantIdMSB(), proto.getTenantIdLSB(), TenantId::fromUUID));
@@ -919,8 +956,8 @@ public class ProtoUtils {
         return device;
     }
 
-    public static TransportProtos.DeviceProfileProto toProto(DeviceProfile deviceProfile) {
-        var builder = TransportProtos.DeviceProfileProto.newBuilder()
+    public static DeviceProfileProto toProto(DeviceProfile deviceProfile) {
+        var builder = DeviceProfileProto.newBuilder()
                 .setTenantIdMSB(getMsb(deviceProfile.getTenantId()))
                 .setTenantIdLSB(getLsb(deviceProfile.getTenantId()))
                 .setDeviceProfileIdMSB(getMsb(deviceProfile.getId()))
@@ -977,7 +1014,7 @@ public class ProtoUtils {
         return builder.build();
     }
 
-    public static DeviceProfile fromProto(TransportProtos.DeviceProfileProto proto) {
+    public static DeviceProfile fromProto(DeviceProfileProto proto) {
         DeviceProfile deviceProfile = new DeviceProfile(getEntityId(proto.getDeviceProfileIdMSB(), proto.getDeviceProfileIdLSB(), DeviceProfileId::new));
         deviceProfile.setCreatedTime(proto.getCreatedTime());
         deviceProfile.setTenantId(getEntityId(proto.getTenantIdMSB(), proto.getTenantIdLSB(), TenantId::fromUUID));
@@ -1025,8 +1062,8 @@ public class ProtoUtils {
         return deviceProfile;
     }
 
-    public static TransportProtos.TenantProto toProto(Tenant tenant) {
-        var builder = TransportProtos.TenantProto.newBuilder()
+    public static TenantProto toProto(Tenant tenant) {
+        var builder = TenantProto.newBuilder()
                 .setTenantIdMSB(getMsb(tenant.getTenantId()))
                 .setTenantIdLSB(getLsb(tenant.getTenantId()))
                 .setCreatedTime(tenant.getCreatedTime())
@@ -1070,7 +1107,7 @@ public class ProtoUtils {
         return builder.build();
     }
 
-    public static Tenant fromProto(TransportProtos.TenantProto proto) {
+    public static Tenant fromProto(TenantProto proto) {
         Tenant tenant = new Tenant(getEntityId(proto.getTenantIdMSB(), proto.getTenantIdLSB(), TenantId::fromUUID));
         tenant.setCreatedTime(proto.getCreatedTime());
         tenant.setTenantProfileId(getEntityId(proto.getTenantProfileIdMSB(), proto.getTenantProfileIdLSB(), TenantProfileId::new));
@@ -1112,8 +1149,8 @@ public class ProtoUtils {
         return tenant;
     }
 
-    public static TransportProtos.TenantProfileProto toProto(TenantProfile tenantProfile) {
-        var builder = TransportProtos.TenantProfileProto.newBuilder()
+    public static TenantProfileProto toProto(TenantProfile tenantProfile) {
+        var builder = TenantProfileProto.newBuilder()
                 .setTenantProfileIdMSB(getMsb(tenantProfile.getId()))
                 .setTenantProfileIdLSB(getLsb(tenantProfile.getId()))
                 .setCreatedTime(tenantProfile.getCreatedTime())
@@ -1130,7 +1167,7 @@ public class ProtoUtils {
         return builder.build();
     }
 
-    public static TenantProfile fromProto(TransportProtos.TenantProfileProto proto) {
+    public static TenantProfile fromProto(TenantProfileProto proto) {
         TenantProfile tenantProfile = new TenantProfile(getEntityId(proto.getTenantProfileIdMSB(), proto.getTenantProfileIdLSB(), TenantProfileId::new));
         tenantProfile.setCreatedTime(proto.getCreatedTime());
         tenantProfile.setName(proto.getName());
@@ -1145,8 +1182,8 @@ public class ProtoUtils {
         return tenantProfile;
     }
 
-    public static TransportProtos.TbResourceProto toProto(TbResource resource) {
-        var builder = TransportProtos.TbResourceProto.newBuilder()
+    public static TbResourceProto toProto(TbResource resource) {
+        var builder = TbResourceProto.newBuilder()
                 .setTenantIdMSB(getMsb(resource.getTenantId()))
                 .setTenantIdLSB(getLsb(resource.getTenantId()))
                 .setResourceIdMSB(getMsb(resource.getId()))
@@ -1187,7 +1224,7 @@ public class ProtoUtils {
         return builder.build();
     }
 
-    public static TbResource fromProto(TransportProtos.TbResourceProto proto) {
+    public static TbResource fromProto(TbResourceProto proto) {
         TbResource resource = new TbResource(getEntityId(proto.getResourceIdMSB(), proto.getResourceIdLSB(), TbResourceId::new));
         resource.setTenantId(getEntityId(proto.getTenantIdMSB(), proto.getTenantIdLSB(), TenantId::fromUUID));
         resource.setCreatedTime(proto.getCreatedTime());
@@ -1224,8 +1261,8 @@ public class ProtoUtils {
         return resource;
     }
 
-    public static TransportProtos.ApiUsageStateProto toProto(ApiUsageState apiUsageState) {
-        return TransportProtos.ApiUsageStateProto.newBuilder()
+    public static ApiUsageStateProto toProto(ApiUsageState apiUsageState) {
+        return ApiUsageStateProto.newBuilder()
                 .setTenantProfileIdMSB(getMsb(apiUsageState.getTenantId()))
                 .setTenantProfileIdLSB(getLsb(apiUsageState.getTenantId()))
                 .setApiUsageStateIdMSB(getMsb(apiUsageState.getId()))
@@ -1247,7 +1284,7 @@ public class ProtoUtils {
                 .build();
     }
 
-    public static ApiUsageState fromProto(TransportProtos.ApiUsageStateProto proto) {
+    public static ApiUsageState fromProto(ApiUsageStateProto proto) {
         ApiUsageState apiUsageState = new ApiUsageState(getEntityId(proto.getApiUsageStateIdMSB(), proto.getApiUsageStateIdLSB(), ApiUsageStateId::new));
         apiUsageState.setTenantId(getEntityId(proto.getTenantProfileIdMSB(), proto.getTenantProfileIdLSB(), TenantId::fromUUID));
         apiUsageState.setCreatedTime(proto.getCreatedTime());
@@ -1265,8 +1302,8 @@ public class ProtoUtils {
         return apiUsageState;
     }
 
-    public static TransportProtos.RepositorySettingsProto toProto(RepositorySettings repositorySettings) {
-        var builder = TransportProtos.RepositorySettingsProto.newBuilder()
+    public static RepositorySettingsProto toProto(RepositorySettings repositorySettings) {
+        var builder = RepositorySettingsProto.newBuilder()
                 .setRepositoryUri(repositorySettings.getRepositoryUri())
                 .setAuthMethod(repositorySettings.getAuthMethod().name())
                 .setReadOnly(repositorySettings.isReadOnly())
@@ -1294,7 +1331,7 @@ public class ProtoUtils {
         return builder.build();
     }
 
-    public static RepositorySettings fromProto(TransportProtos.RepositorySettingsProto proto) {
+    public static RepositorySettings fromProto(RepositorySettingsProto proto) {
         RepositorySettings repositorySettings = new RepositorySettings();
         repositorySettings.setRepositoryUri(proto.getRepositoryUri());
         repositorySettings.setAuthMethod(RepositoryAuthMethod.valueOf(proto.getAuthMethod()));
@@ -1322,15 +1359,15 @@ public class ProtoUtils {
         return repositorySettings;
     }
 
-    public static TransportProtos.DeviceCredentialsProto toProto(DeviceCredentials deviceCredentials) {
-        TransportProtos.DeviceCredentialsProto.Builder builder = TransportProtos.DeviceCredentialsProto.newBuilder()
+    public static DeviceCredentialsProto toProto(DeviceCredentials deviceCredentials) {
+        DeviceCredentialsProto.Builder builder = DeviceCredentialsProto.newBuilder()
                 .setCredentialsIdMSB(deviceCredentials.getId().getId().getMostSignificantBits())
                 .setCredentialsIdLSB(deviceCredentials.getId().getId().getLeastSignificantBits())
                 .setCreatedTime(deviceCredentials.getCreatedTime())
                 .setDeviceIdMSB(getMsb(deviceCredentials.getDeviceId()))
                 .setDeviceIdLSB(getLsb(deviceCredentials.getDeviceId()))
                 .setCredentialsId(deviceCredentials.getCredentialsId())
-                .setCredentialsType(TransportProtos.CredentialsType.valueOf(deviceCredentials.getCredentialsType().name()));
+                .setCredentialsType(CredentialsType.valueOf(deviceCredentials.getCredentialsType().name()));
 
         if (deviceCredentials.getCredentialsValue() != null) {
             builder.setCredentialsValue(deviceCredentials.getCredentialsValue());
@@ -1341,7 +1378,7 @@ public class ProtoUtils {
         return builder.build();
     }
 
-    public static DeviceCredentials fromProto(TransportProtos.DeviceCredentialsProto proto) {
+    public static DeviceCredentials fromProto(DeviceCredentialsProto proto) {
         DeviceCredentials deviceCredentials =
                 new DeviceCredentials(new DeviceCredentialsId(new UUID(proto.getCredentialsIdMSB(), proto.getCredentialsIdLSB())));
         deviceCredentials.setCreatedTime(proto.getCreatedTime());
@@ -1353,8 +1390,8 @@ public class ProtoUtils {
         return deviceCredentials;
     }
 
-    public static <T> TransportProtos.EntityUpdateMsg toEntityUpdateProto(T entity) {
-        var builder = TransportProtos.EntityUpdateMsg.newBuilder();
+    public static <T> EntityUpdateMsg toEntityUpdateProto(T entity) {
+        var builder = EntityUpdateMsg.newBuilder();
         if (entity instanceof Device) {
             builder.setDevice(toProto((Device) entity));
         } else if (entity instanceof DeviceProfile) {
@@ -1371,8 +1408,8 @@ public class ProtoUtils {
         return builder.build();
     }
 
-    public static TransportProtos.DeviceInfoProto toDeviceInfoProto(Device device) throws JsonProcessingException {
-        TransportProtos.DeviceInfoProto.Builder builder = TransportProtos.DeviceInfoProto.newBuilder()
+    public static DeviceInfoProto toDeviceInfoProto(Device device) throws JsonProcessingException {
+        DeviceInfoProto.Builder builder = DeviceInfoProto.newBuilder()
                 .setTenantIdMSB(device.getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(device.getTenantId().getId().getLeastSignificantBits())
                 .setCustomerIdMSB(getMsb(device.getCustomerId()))
@@ -1578,32 +1615,32 @@ public class ProtoUtils {
     }
 
     @Deprecated(forRemoval = true, since = "4.1")
-    public static MsgProtos.TbMsgProto getTbMsgProto(TransportProtos.ToRuleEngineMsg ruleEngineMsg) throws InvalidProtocolBufferException {
+    public static TbMsgProto getTbMsgProto(ToRuleEngineMsg ruleEngineMsg) throws InvalidProtocolBufferException {
         if (ruleEngineMsg.getTbMsg().isEmpty()) {
             return ruleEngineMsg.getTbMsgProto();
         } else {
-            return MsgProtos.TbMsgProto.parseFrom(ruleEngineMsg.getTbMsg());
+            return TbMsgProto.parseFrom(ruleEngineMsg.getTbMsg());
         }
     }
 
     @SneakyThrows
     @Deprecated(forRemoval = true, since = "4.1") // inline to TbMsg.fromProto(queueName, ruleEngineMsg.getTbMsgProto(), callback)
-    public static TbMsg fromTbMsgProto(String queueName, TransportProtos.ToRuleEngineMsg ruleEngineMsg, TbMsgCallback callback) {
+    public static TbMsg fromTbMsgProto(String queueName, ToRuleEngineMsg ruleEngineMsg, TbMsgCallback callback) {
         return TbMsg.fromProto(queueName, getTbMsgProto(ruleEngineMsg), callback);
     }
 
-    public static TransportProtos.EntityIdProto toProto(EntityId entityId) {
-        return TransportProtos.EntityIdProto.newBuilder()
+    public static EntityIdProto toProto(EntityId entityId) {
+        return EntityIdProto.newBuilder()
                 .setEntityIdMSB(getMsb(entityId))
                 .setEntityIdLSB(getLsb(entityId))
                 .setType(toProto(entityId.getEntityType()))
                 .build();
     }
 
-    public static EntityId fromProto(TransportProtos.EntityIdProto entityIdProto) {
+    public static EntityId fromProto(EntityIdProto entityIdProto) {
         UUID uuid = new UUID(entityIdProto.getEntityIdMSB(), entityIdProto.getEntityIdLSB());
-        if (TransportProtos.EntityTypeProto.UNSPECIFIED.equals(entityIdProto.getType()) ||
-            TransportProtos.EntityTypeProto.UNRECOGNIZED.equals(entityIdProto.getType())) {
+        if (EntityTypeProto.UNSPECIFIED.equals(entityIdProto.getType()) ||
+            EntityTypeProto.UNRECOGNIZED.equals(entityIdProto.getType())) {
             return EntityIdFactory.getByTypeAndUuid(entityIdProto.getEntityType(), uuid);
         }
         return EntityIdFactory.getByTypeAndUuid(fromProto(entityIdProto.getType()), uuid);

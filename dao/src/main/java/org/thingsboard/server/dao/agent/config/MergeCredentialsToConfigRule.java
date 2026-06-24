@@ -1,0 +1,194 @@
+/**
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+ *
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of ThingsBoard, Inc. and its suppliers,
+ * if any.  The intellectual and technical concepts contained
+ * herein are proprietary to ThingsBoard, Inc.
+ * and its suppliers and may be covered by U.S. and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law.
+ *
+ * Dissemination of this information or reproduction of this material is strictly forbidden
+ * unless prior written permission is obtained from COMPANY.
+ *
+ * Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+ * managers or contractors who have executed Confidentiality and Non-disclosure agreements
+ * explicitly covering such access.
+ *
+ * The copyright notice above does not evidence any actual or intended publication
+ * or disclosure  of  this source code, which includes
+ * information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+ * ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+ * OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+ * THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+ * AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+ * THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+ * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+ * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+ */
+package org.thingsboard.server.dao.agent.config;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.AppConfigMergeCtx;
+import org.thingsboard.server.common.data.agent.HasAgentAppConfig;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
+import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
+import org.thingsboard.server.common.data.agent.config.DockerComposeUtils;
+import org.thingsboard.server.common.data.device.credentials.BasicMqttCredentials;
+import org.thingsboard.server.common.data.edge.Edge;
+import org.thingsboard.server.common.data.id.DeviceId;
+import org.thingsboard.server.common.data.id.EdgeId;
+import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.security.DeviceCredentials;
+import org.thingsboard.server.dao.device.DeviceCredentialsService;
+import org.thingsboard.server.dao.edge.EdgeService;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Merge rule that injects entity credentials into the compose configuration.
+ * Must run after {@link MergeTemplateComposeRule} (which has {@code @Order(Ordered.HIGHEST_PRECEDENCE)})
+ * because it operates on the already-populated compose config.
+ * <p>
+ * For EDGE applications: injects CLOUD_ROUTING_KEY and CLOUD_ROUTING_SECRET from the selected Edge entity.
+ * For GATEWAY applications: injects credentials based on type — ACCESS_TOKEN for token auth,
+ * or TB_GW_CLIENT_ID/TB_GW_USERNAME/TB_GW_PASSWORD for MQTT_BASIC auth.
+ * Host/port env vars (CLOUD_RPC_HOST/PORT for EDGE, TB_GW_HOST/PORT for GATEWAY) are injected separately
+ * by the application-module {@code MergeHostValuesRule} when the caller opts in via {@link AppConfigMergeCtx#isSetHostValues()}.
+ */
+@Component
+@Slf4j
+@RequiredArgsConstructor
+public class MergeCredentialsToConfigRule implements AppConfigMergeRule {
+
+    private static final String CLOUD_ROUTING_KEY = "CLOUD_ROUTING_KEY";
+    private static final String CLOUD_ROUTING_SECRET = "CLOUD_ROUTING_SECRET";
+
+    private static final String TB_GW_SECURITY_TYPE = "TB_GW_SECURITY_TYPE";
+    private static final String TB_GW_ACCESS_TOKEN = "TB_GW_ACCESS_TOKEN";
+    private static final String TB_GW_CLIENT_ID = "TB_GW_CLIENT_ID";
+    private static final String TB_GW_USERNAME = "TB_GW_USERNAME";
+    private static final String TB_GW_PASSWORD = "TB_GW_PASSWORD";
+
+    private static final List<String> GATEWAY_CRED_KEYS = List.of(
+            TB_GW_ACCESS_TOKEN, TB_GW_CLIENT_ID, TB_GW_USERNAME, TB_GW_PASSWORD);
+
+    private final EdgeService edgeService;
+    private final DeviceCredentialsService deviceCredentialsService;
+
+    @Override
+    public boolean supports(HasAgentAppConfig data, AppConfigMergeCtx ctx) {
+        return ctx != null
+                && ctx.getRelatedEntityId() != null
+                && data instanceof AgentApplication agentApp
+                && agentApp.getAppType() != null
+                && (agentApp.getAppType() == AgentApplicationType.EDGE || agentApp.getAppType() == AgentApplicationType.GATEWAY);
+    }
+
+    @Override
+    public void apply(HasAgentAppConfig data, AppConfigMergeCtx ctx) {
+        if (!(data instanceof AgentApplication agentApp)) {
+            log.warn("MergeCredentialsToConfigRule called with non-AgentApplication data [{}], skipping", data.getClass().getSimpleName());
+            return;
+        }
+        AgentAppConfig config = agentApp.getConfig();
+        if (!(config instanceof DockerComposeConfig composeConfig)) {
+            log.trace("Skipping credentials merge: config is not DockerComposeConfig");
+            return;
+        }
+
+        JsonNode compose = composeConfig.getCompose();
+        if (compose == null || compose.isNull()) {
+            log.trace("Skipping credentials merge: compose is null");
+            return;
+        }
+
+        AgentApplicationType appType = agentApp.getAppType();
+        TenantId tenantId = agentApp.getTenantId();
+
+        if (appType == AgentApplicationType.EDGE) {
+            applyEdgeCredentials(compose, tenantId, ctx);
+        } else if (appType == AgentApplicationType.GATEWAY) {
+            applyGatewayCredentials(compose, tenantId, ctx);
+        }
+    }
+
+    private void applyEdgeCredentials(JsonNode compose, TenantId tenantId, AppConfigMergeCtx ctx) {
+        EntityId rId = ctx.getRelatedEntityId();
+        if (rId.getEntityType() != EntityType.EDGE) {
+            throw new IllegalArgumentException("Related entity id with EDGE entity type is expected, but found: " + rId.getEntityType());
+        }
+        EdgeId edgeId = (EdgeId) rId;
+        Edge edge = edgeService.findEdgeById(tenantId, edgeId);
+        if (edge == null) {
+            log.warn("Edge not found for id [{}], skipping credentials merge", edgeId);
+            return;
+        }
+        Map<String, String> envVars = new LinkedHashMap<>();
+        if (StringUtils.isNotEmpty(edge.getRoutingKey())) {
+            envVars.put(CLOUD_ROUTING_KEY, edge.getRoutingKey());
+        }
+        if (StringUtils.isNotEmpty(edge.getSecret())) {
+            envVars.put(CLOUD_ROUTING_SECRET, edge.getSecret());
+        }
+        DockerComposeUtils.upsertEnvVariables(compose, AgentApplicationType.EDGE.getMainImagePattern(), envVars);
+    }
+
+    private void applyGatewayCredentials(JsonNode compose, TenantId tenantId, AppConfigMergeCtx ctx) {
+        EntityId rId = ctx.getRelatedEntityId();
+        if (rId.getEntityType() != EntityType.DEVICE) {
+            throw new IllegalArgumentException("Related entity id with DEVICE type is expected, but found: " + rId.getEntityType());
+        }
+        DeviceId deviceId = (DeviceId) rId;
+        DeviceCredentials credentials = deviceCredentialsService.findDeviceCredentialsByDeviceId(tenantId, deviceId);
+        if (credentials == null) {
+            log.warn("Device credentials not found for device [{}], skipping credentials merge", deviceId);
+            return;
+        }
+        Map<String, String> envVars = new LinkedHashMap<>();
+        switch (credentials.getCredentialsType()) {
+            case ACCESS_TOKEN:
+                envVars.put(TB_GW_SECURITY_TYPE, "accessToken");
+                envVars.put(TB_GW_ACCESS_TOKEN, credentials.getCredentialsId());
+                break;
+            case MQTT_BASIC:
+                envVars.put(TB_GW_SECURITY_TYPE, "usernamePassword");
+                BasicMqttCredentials mqttCredentials = JacksonUtil.fromString(
+                        credentials.getCredentialsValue(), BasicMqttCredentials.class);
+                if (mqttCredentials != null) {
+                    if (StringUtils.isNotEmpty(mqttCredentials.getClientId())) {
+                        envVars.put(TB_GW_CLIENT_ID, mqttCredentials.getClientId());
+                    }
+                    if (StringUtils.isNotEmpty(mqttCredentials.getUserName())) {
+                        envVars.put(TB_GW_USERNAME, mqttCredentials.getUserName());
+                    }
+                    if (StringUtils.isNotEmpty(mqttCredentials.getPassword())) {
+                        envVars.put(TB_GW_PASSWORD, mqttCredentials.getPassword());
+                    }
+                }
+                break;
+            default:
+                log.warn("Unsupported credentials type [{}] for gateway auto-fill", credentials.getCredentialsType());
+                return;
+        }
+        var imagePattern = AgentApplicationType.GATEWAY.getMainImagePattern();
+        List<String> staleKeys = GATEWAY_CRED_KEYS.stream()
+                .filter(k -> !envVars.containsKey(k))
+                .toList();
+        DockerComposeUtils.removeEnvVariables(compose, imagePattern, staleKeys);
+        DockerComposeUtils.upsertEnvVariables(compose, imagePattern, envVars);
+    }
+}

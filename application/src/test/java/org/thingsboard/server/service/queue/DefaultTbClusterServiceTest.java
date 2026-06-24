@@ -50,6 +50,7 @@ import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.AssetProfileId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.DeviceProfileId;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.EdgeId;
 import org.thingsboard.server.common.data.id.QueueId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -124,6 +125,8 @@ public class DefaultTbClusterServiceTest {
     protected TbRuleEngineProducerService ruleEngineProducerService;
     @MockBean
     protected TbTransactionalCache<EdgeId, String> edgeCache;
+    @MockBean
+    protected TbTransactionalCache<AgentId, String> agentIdServiceIdCache;
     @MockBean
     protected CalculatedFieldService calculatedFieldService;
 

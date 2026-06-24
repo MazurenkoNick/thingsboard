@@ -89,6 +89,14 @@ enum EntityTypeProto {
   ADMIN_SETTINGS        = 42;
   AI_MODEL              = 43;
   API_KEY               = 44;
+  AGENT                 = 45;
+  AGENT_APPLICATION     = 46;
+  AGENT_APP_TEMPLATE    = 47;
+  AGENT_APP_EVENT       = 48;
+  AGENT_APP_UNIT        = 49;
+  AGENT_APP_PROFILE     = 50;
+  AGENT_PROFILE           = 51;
+  AGENT_BULK_ACTION     = 52;
 }
 
 enum ApiUsageRecordKeyProto {
@@ -1081,6 +1089,7 @@ message TbEntitySubEventProto {
   repeated string tsKeys = 12;
   bool attrAllKeys = 13;
   repeated string attrKeys = 14;
+  bool logs = 15;
 }
 
 message TbEntitySubEventCallbackProto {
@@ -1291,6 +1300,15 @@ message TbTimeSeriesUpdateProto {
   repeated TsKvProto data = 6;
 }
 
+message TbLogStreamUpdateProto {
+  int64 tenantIdMSB = 1;
+  int64 tenantIdLSB = 2;
+  string entityType = 3;
+  int64 entityIdMSB = 4;
+  int64 entityIdLSB = 5;
+  int64 latestSeq = 6;
+}
+
 // DEPRECATED. FOR REMOVAL
 message TbSubscriptionCloseProto {
   option deprecated = true;
@@ -1343,6 +1361,7 @@ message SubscriptionMgrMsgProto {
   NotificationUpdateProto notificationUpdate = 13;
   NotificationRequestUpdateProto notificationRequestUpdate = 14;
   TbEntitySubEventProto subEvent = 15;
+  TbLogStreamUpdateProto logUpdate = 16;
 }
 
 message LocalSubscriptionServiceMsgProto {
@@ -1354,6 +1373,7 @@ message LocalSubscriptionServiceMsgProto {
   TbSubUpdateProto attrUpdate = 6;
   TbAlarmSubUpdateProto alarmUpdate = 7;
   NotificationsSubUpdateProto notificationsUpdate = 8;
+  TbLogStreamUpdateProto logUpdate = 9;
 }
 
 message FromDeviceRPCResponseProto {
@@ -2058,4 +2078,51 @@ message AlarmRuleStateProto {
   int64 eventCount = 2;
   int64 firstEventTs = 3;
   int64 lastCheckTs = 4;
+}
+
+/**
+ * Agent notification messages
+ */
+message ToAgentNotificationMsg {
+  AgentAppEventNotificationProto agentAppEventNotification = 1;
+  LogStreamRequestProto logStreamRequest = 2;
+}
+
+message LogStreamRequestProto {
+  int64 tenantIdMSB = 1;
+  int64 tenantIdLSB = 2;
+  int64 agentIdMSB = 3;
+  int64 agentIdLSB = 4;
+  int64 agentUnitIdMSB = 5;
+  int64 agentUnitIdLSB = 6;
+  string unitIdentifier = 7;
+  string projectName = 8;
+  bool stop = 9;                 // false = StartLogStream, true = StopLogStream
+}
+
+message AgentAppEventNotificationProto {
+  int64 tenantIdMSB = 1;
+  int64 tenantIdLSB = 2;
+  int64 agentIdMSB = 3;
+  int64 agentIdLSB = 4;
+  int64 applicationIdMSB = 5;
+  int64 applicationIdLSB = 6;
+  int64 eventIdMSB = 7;
+  int64 eventIdLSB = 8;
+  string actionType = 9;
+  bool delivered = 10;
+  bool cancelled = 11;
+}
+
+message AgentBulkOperationMsg {
+  int64 bulkActionIdMSB = 1;
+  int64 bulkActionIdLSB = 2;
+  int64 tenantIdMSB = 3;
+  int64 tenantIdLSB = 4;
+  int64 agentProfileIdMSB = 5;
+  int64 agentProfileIdLSB = 6;
+  int64 applicationProfileIdMSB = 7;
+  int64 applicationProfileIdLSB = 8;
+  string actionType = 9;
+  bytes stepInputs = 10;
 }

@@ -1,0 +1,121 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<mat-toolbar color="primary" class="tb-progress-toolbar">
+  <div class="tb-progress-toolbar-content">
+    <h2>{{ 'agent.app-event-progress-title' | translate }}</h2>
+    <span class="flex-1">{{ application?.name || event?.applicationName || ('agent.app-deleted' | translate) }}</span>
+  </div>
+  <button mat-icon-button (click)="cancel()" type="button" tabindex="-1">
+    <mat-icon>close</mat-icon>
+  </button>
+</mat-toolbar>
+
+<div mat-dialog-content class="tb-progress-body">
+  <div *ngIf="loading" class="tb-progress-loading">
+    <mat-spinner diameter="20"></mat-spinner>
+    <span translate>agent.app-event-progress-loading</span>
+  </div>
+
+  <div *ngIf="!loading && loadError" class="tb-progress-error">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ loadError }}</span>
+  </div>
+
+  <ng-container *ngIf="!loading && !loadError">
+    <!-- Event summary -->
+    <div class="tb-progress-summary">
+      <div class="info-col">
+        <div class="info-label" translate>agent.app-name</div>
+        <div class="info-value">{{ application?.name || event?.applicationName || ('agent.app-deleted' | translate) }}</div>
+      </div>
+      <div class="info-col">
+        <div class="info-label" translate>agent.app-event-action</div>
+        <div class="info-value">{{ actionKey | translate }}</div>
+      </div>
+      <div class="info-col">
+        <div class="info-label" translate>agent.app-event-status</div>
+        <div class="info-value">
+          <span class="tb-status-badge" [ngClass]="statusBadgeClass">{{ statusKey | translate }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Current activity banner -->
+    <div *ngIf="event?.currentActivity && !isTerminal" class="tb-progress-current">
+      <div class="progress-spinner"></div>
+      <div class="progress-body">
+        <div class="progress-label" translate>agent.app-event-current-activity</div>
+        <div class="progress-text">{{ event.currentActivity }}</div>
+      </div>
+    </div>
+
+    <!-- Step list -->
+    <ul class="tb-step-progress">
+      <li *ngFor="let s of steps" class="tb-step-item" [ngClass]="s.state">
+        <div class="step-icon">
+          <mat-icon *ngIf="s.state === 'completed'" class="step-check">check</mat-icon>
+          <span *ngIf="s.state === 'processing'" class="step-spinner"></span>
+          <mat-icon *ngIf="s.state === 'error'">close</mat-icon>
+          <span *ngIf="s.state === 'pending'" class="step-num">{{ s.index }}</span>
+        </div>
+        <div class="step-content">
+          <div class="step-title">
+            {{ s.step.title }}
+            <span class="step-type-label">{{ s.step.type }}</span>
+          </div>
+          <div class="step-meta">
+            <ng-container [ngSwitch]="s.state">
+              <span *ngSwitchCase="'completed'" translate>agent.app-event-step-completed</span>
+              <span *ngSwitchCase="'processing'" translate>agent.app-event-step-processing</span>
+              <span *ngSwitchCase="'error'" translate>agent.app-event-step-error</span>
+              <span *ngSwitchDefault translate>agent.app-event-step-waiting</span>
+            </ng-container>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </ng-container>
+</div>
+
+<div mat-dialog-actions class="tb-progress-actions">
+  <button *ngIf="canCancel" mat-button color="warn" (click)="cancelEvent($event)">
+    <mat-icon>cancel</mat-icon>
+    {{ 'agent.app-event-cancel' | translate }}
+  </button>
+  <span class="flex-1"></span>
+  <button mat-button (click)="viewInEvents($event)">
+    <mat-icon>list_alt</mat-icon>
+    {{ 'agent.app-event-view-in-events' | translate }}
+  </button>
+  <button mat-button (click)="cancel()">{{ 'action.close' | translate }}</button>
+</div>

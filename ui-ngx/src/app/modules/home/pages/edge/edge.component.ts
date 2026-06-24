@@ -46,6 +46,14 @@ import { AuthUser } from '@shared/models/user.model';
 import { EntityTableConfig } from '@home/models/entity/entities-table-config.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import {EdgeService} from "@core/http/edge.service";
+import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { AgentService } from '@core/http/agent.service';
+import { AgentApplication, AgentAppEvent } from '@shared/models/agent.models';
+import {
+  AgentAppInstallWizardComponent,
+  AgentAppInstallWizardData
+} from '@home/pages/agent/wizard/agent-app-install-wizard.component';
 
 @Component({
     selector: 'tb-edge',
@@ -60,12 +68,18 @@ export class EdgeComponent extends GroupEntityComponent<EdgeInfo> {
   // edgeScope: 'tenant' | 'customer' | 'customer_user';
   upgradeAvailable: boolean = false;
 
+  managedApp: AgentApplication | null = null;
+  managedAppUpgradeAvailable = false;
+
   licenseVersion: number;
   legacyLicenseFields: boolean;
 
   constructor(protected store: Store<AppState>,
               protected translate: TranslateService,
               private edgeService: EdgeService,
+              private agentService: AgentService,
+              private router: Router,
+              private dialog: MatDialog,
               @Inject('entity') protected entityValue: EdgeInfo,
               @Inject('entitiesTableConfig')
               protected entitiesTableConfigValue: EntityTableConfig<EdgeInfo> | GroupEntityTableConfig<EdgeInfo>,
@@ -191,7 +205,62 @@ export class EdgeComponent extends GroupEntityComponent<EdgeInfo> {
         .subscribe(isUpgradeAvailable => {
           this.upgradeAvailable = isUpgradeAvailable;
         });
+      if (this.entity?.id?.id) {
+        this.loadManagedApp(this.entity.id.id);
+      }
     }
+  }
+
+  private loadManagedApp(edgeId: string) {
+    this.managedApp = null;
+    this.managedAppUpgradeAvailable = false;
+    this.agentService.getAgentApplicationByRelatedEntity(EntityType.EDGE, edgeId,
+      { ignoreErrors: true, ignoreLoading: true }).subscribe({
+      next: app => {
+        this.managedApp = app || null;
+        if (app?.templateId?.id) {
+          this.agentService.getAgentAppTemplateById(app.templateId.id, { ignoreLoading: true })
+            .subscribe(tpl => {
+              this.managedAppUpgradeAvailable = !!tpl?.nextVersion;
+              this.cd.markForCheck();
+            });
+        }
+        this.cd.markForCheck();
+      },
+      error: () => {
+        this.managedApp = null;
+        this.managedAppUpgradeAvailable = false;
+      }
+    });
+  }
+
+  openManagedApp($event: Event) {
+    if ($event) { $event.stopPropagation(); }
+    if (!this.managedApp) { return; }
+    const agentId = (this.managedApp.agentId as any)?.id;
+    this.router.navigateByUrl(`/edgeManagement/agents/all/${agentId}/applications/${this.managedApp.id.id}`);
+  }
+
+  onUpgradeManagedApp($event: Event) {
+    if ($event) { $event.stopPropagation(); }
+    if (!this.managedApp) { return; }
+    this.agentService.getAgentApplicationById(this.managedApp.id.id).subscribe(full => {
+      this.dialog.open<AgentAppInstallWizardComponent, AgentAppInstallWizardData, AgentAppEvent | null>(
+        AgentAppInstallWizardComponent, {
+          disableClose: false,
+          panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+          data: {
+            agentId: (full.agentId as any)?.id,
+            agent: null as any,
+            mode: 'upgrade',
+            application: full
+          }
+        }).afterClosed().subscribe(event => {
+          if (event && this.entity?.id?.id) {
+            this.loadManagedApp(this.entity.id.id);
+          }
+        });
+    });
   }
 
   updateFormState() {

@@ -132,6 +132,8 @@ import { MobileAppService } from '@core/http/mobile-app.service';
 import { PlatformType } from '@shared/models/oauth2.models';
 import { DomainService } from '@core/http/domain.service';
 import { AiModelService } from '@core/http/ai-model.service';
+import { AgentService } from '@core/http/agent.service';
+import { Agent } from '@shared/models/agent.models';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { ReportTemplate, ReportTemplateQuery, ReportTemplateType } from '@shared/models/report.models';
 import { ReportService } from './report.service';
@@ -179,6 +181,7 @@ export class EntityService {
     private mobileAppService: MobileAppService,
     private domainService: DomainService,
     private aiModelService: AiModelService,
+    private agentService: AgentService,
   ) { }
 
   private getEntityObservable(entityType: EntityType, entityId: string,
@@ -277,6 +280,9 @@ export class EntityService {
         break;
       case EntityType.ASSET_PROFILE:
         observable = this.assetProfileService.getAssetProfile(entityId, config);
+        break;
+      case EntityType.AGENT_APP_PROFILE:
+        observable = this.agentService.getAgentAppProfileById(entityId, config);
         break;
     }
     return observable;
@@ -392,6 +398,9 @@ export class EntityService {
       case EntityType.USER:
         observable = this.userService.saveUser(entity as User, false, entityGroupIds, config);
         break;
+      case EntityType.AGENT:
+        observable = this.agentService.saveAgent(entity as Agent, entityGroupIds, config);
+        break;
     }
     return observable;
   }
@@ -493,6 +502,9 @@ export class EntityService {
         break;
       case EntityType.ASSET_PROFILE:
         observable = this.assetProfileService.getAssetProfilesByIds(entityIds, config);
+        break;
+      case EntityType.AGENT_APP_PROFILE:
+        observable = this.agentService.getAgentAppProfilesByIds(entityIds, config);
         break;
       case EntityType.WIDGETS_BUNDLE:
         observable = this.widgetService.getWidgetsBundlesByIds(entityIds, config);
@@ -680,6 +692,10 @@ export class EntityService {
       case EntityType.ASSET_PROFILE:
         pageLink.sortOrder.property = 'name';
         entitiesObservable = this.assetProfileService.getAssetProfileInfos(pageLink, config);
+        break;
+      case EntityType.AGENT_APP_PROFILE:
+        pageLink.sortOrder.property = 'name';
+        entitiesObservable = this.agentService.getTenantAgentAppProfiles(pageLink, config);
         break;
       case EntityType.WIDGETS_BUNDLE:
         pageLink.sortOrder.property = 'title';
@@ -1080,6 +1096,7 @@ export class EntityService {
         if (authState.edgesSupportEnabled) {
           entityTypes.push(EntityType.EDGE);
         }
+        entityTypes.push(EntityType.AGENT);
         if (useAliasEntityTypes) {
           entityTypes.push(EntityType.QUEUE_STATS);
 

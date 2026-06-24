@@ -1,0 +1,152 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<div class="tb-log-monitor" [class.tb-log-monitor--paused]="paused">
+  <div class="tb-log-toolbar">
+    <div class="tb-log-toolbar-status">
+      <span class="tb-log-stream-dot" [class.tb-log-stream-dot--paused]="paused"
+            [attr.aria-label]="paused ? 'paused' : 'live'"></span>
+      <span class="tb-log-stream-label">{{ paused ? 'Paused' : 'Live' }}</span>
+      <span class="tb-log-stream-sep">·</span>
+      <span class="tb-log-stream-count">
+        {{ lines.length | number }} <span class="tb-log-stream-count-unit">{{ lines.length === 1 ? 'line' : 'lines' }}</span>
+      </span>
+      <span class="tb-log-stream-buffered" *ngIf="paused && pendingCount > 0">
+        + {{ pendingCount | number }} buffered
+      </span>
+      <span class="tb-log-stream-dropped"
+            *ngIf="droppedTotal > 0"
+            matTooltip="Log lines the agent dropped before reaching this viewer"
+            aria-label="Total dropped lines">
+        {{ droppedTotal | number }} dropped
+      </span>
+    </div>
+    <div class="tb-log-toolbar-actions">
+      <div class="tb-log-search" [class.tb-log-search--active]="search.length > 0">
+        <mat-icon class="tb-log-search-icon">search</mat-icon>
+        <input class="tb-log-search-input"
+               type="text"
+               spellcheck="false"
+               autocomplete="off"
+               placeholder="Filter…"
+               [value]="search"
+               (input)="onSearchInput($event)"
+               aria-label="Filter log lines"/>
+        <button mat-icon-button
+                *ngIf="search"
+                class="tb-log-search-clear"
+                (click)="clearSearch()"
+                aria-label="Clear filter">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <span class="tb-log-toolbar-divider"></span>
+      <button mat-icon-button
+              class="tb-log-tool"
+              [matTooltip]="paused ? 'Resume stream' : 'Pause stream'"
+              (click)="togglePause()"
+              [attr.aria-pressed]="paused"
+              aria-label="Pause or resume stream">
+        <mat-icon>{{ paused ? 'play_arrow' : 'pause' }}</mat-icon>
+      </button>
+      <button mat-icon-button
+              class="tb-log-tool"
+              [class.tb-log-tool--active]="followTail"
+              matTooltip="Follow latest"
+              (click)="toggleFollow()"
+              [attr.aria-pressed]="followTail"
+              aria-label="Follow latest">
+        <mat-icon>keyboard_double_arrow_down</mat-icon>
+      </button>
+      <button mat-icon-button
+              class="tb-log-tool"
+              [disabled]="lines.length === 0"
+              matTooltip="Copy all"
+              (click)="copyAll()"
+              aria-label="Copy all log lines">
+        <mat-icon>content_copy</mat-icon>
+      </button>
+      <button mat-icon-button
+              class="tb-log-tool"
+              [disabled]="lines.length === 0"
+              matTooltip="Download log"
+              (click)="download()"
+              aria-label="Download log">
+        <mat-icon>download</mat-icon>
+      </button>
+      <button mat-icon-button
+              class="tb-log-tool tb-log-tool--danger"
+              [disabled]="lines.length === 0 && pendingCount === 0"
+              matTooltip="Clear log"
+              (click)="clear()"
+              aria-label="Clear log">
+        <mat-icon>delete_sweep</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="tb-log-monitor-body">
+    <cdk-virtual-scroll-viewport itemSize="20"
+                                 class="tb-log-viewport"
+                                 data-test="log-viewport">
+      <div *cdkVirtualFor="let entry of lines; let i = index; trackBy: trackByIndex"
+           class="tb-log-row"
+           [class.tb-log-row--gap]="entry.kind === 'gap'"
+           [class.tb-log-row--line]="entry.kind === 'line'"
+           data-test="log-entry">
+        <ng-container *ngIf="entry.kind === 'line'; else gapTpl">
+          <span class="tb-log-row-num">{{ i + 1 }}</span>
+          <span class="tb-log-row-text" *ngIf="!search">{{ entry.text }}</span>
+          <span class="tb-log-row-text" *ngIf="search" [innerHTML]="entry.text | tbLogHighlight: search"></span>
+        </ng-container>
+        <ng-template #gapTpl>
+          <span class="tb-log-row-gap-rule"></span>
+          <span class="tb-log-row-gap-text">{{ entry.text }}</span>
+          <span class="tb-log-row-gap-rule"></span>
+        </ng-template>
+      </div>
+    </cdk-virtual-scroll-viewport>
+
+    <div class="tb-log-empty" *ngIf="lines.length === 0">
+      <div class="tb-log-empty-pulse"></div>
+      <div class="tb-log-empty-text">{{ paused ? 'Stream paused' : 'Waiting for log lines…' }}</div>
+    </div>
+
+    <button class="tb-log-jump"
+            *ngIf="!followTail && lines.length > 0"
+            type="button"
+            (click)="jumpToLatest()">
+      <mat-icon>arrow_downward</mat-icon>
+      <span>Jump to latest</span>
+    </button>
+  </div>
+</div>

@@ -94,6 +94,14 @@ class LimitedApiTest {
                         verify(config).getEdgeUplinkMessagesRateLimits()),
                 Map.entry(LimitedApi.EDGE_UPLINK_MESSAGES_PER_EDGE, () ->
                         verify(config).getEdgeUplinkMessagesRateLimitsPerEdge()),
+                Map.entry(LimitedApi.AGENT_EVENTS, () ->
+                        verify(config).getAgentEventRateLimits()),
+                Map.entry(LimitedApi.AGENT_EVENTS_PER_AGENT, () ->
+                        verify(config).getAgentEventRateLimitsPerAgent()),
+                Map.entry(LimitedApi.AGENT_LOG_CHUNKS, () ->
+                        verify(config).getAgentLogChunkRateLimits()),
+                Map.entry(LimitedApi.AGENT_LOG_CHUNKS_PER_AGENT, () ->
+                        verify(config).getAgentLogChunkRateLimitsPerAgent()),
                 Map.entry(LimitedApi.INTEGRATION_MSGS_PER_TENANT, () ->
                         verify(config).getIntegrationMsgsPerTenantRateLimit()),
                 Map.entry(LimitedApi.INTEGRATION_MSGS_PER_DEVICE, () ->

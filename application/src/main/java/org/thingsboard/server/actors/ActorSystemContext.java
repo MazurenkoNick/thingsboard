@@ -129,6 +129,14 @@ import org.thingsboard.server.dao.notification.NotificationTemplateService;
 import org.thingsboard.server.dao.oauth2.OAuth2ClientService;
 import org.thingsboard.server.dao.ota.DeviceGroupOtaPackageService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
+import org.thingsboard.server.dao.agent.AgentAppEventService;
+import org.thingsboard.server.dao.agent.AgentAppProfileService;
+import org.thingsboard.server.dao.agent.AgentAppTemplateService;
+import org.thingsboard.server.dao.agent.AgentAppUnitService;
+import org.thingsboard.server.dao.agent.AgentApplicationService;
+import org.thingsboard.server.dao.agent.AgentBulkActionService;
+import org.thingsboard.server.dao.agent.AgentProfileService;
+import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.ota.OtaPackageStateService;
 import org.thingsboard.server.dao.owner.OwnerService;
 import org.thingsboard.server.dao.pat.ApiKeyService;
@@ -709,6 +717,38 @@ public class ActorSystemContext {
     @Autowired
     @Getter
     private ApiKeyService apiKeyService;
+
+    @Autowired
+    @Getter
+    private AgentService agentService;
+
+    @Autowired
+    @Getter
+    private AgentApplicationService agentApplicationService;
+
+    @Autowired
+    @Getter
+    private AgentAppTemplateService agentAppTemplateService;
+
+    @Autowired
+    @Getter
+    private AgentAppEventService agentAppEventService;
+
+    @Autowired
+    @Getter
+    private AgentAppUnitService agentAppUnitService;
+
+    @Autowired
+    @Getter
+    private AgentAppProfileService agentAppProfileService;
+
+    @Autowired
+    @Getter
+    private AgentProfileService agentProfileService;
+
+    @Autowired
+    @Getter
+    private AgentBulkActionService agentBulkActionService;
 
     @Value("${actors.session.max_concurrent_sessions_per_device:1}")
     @Getter

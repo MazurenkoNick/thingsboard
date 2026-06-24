@@ -176,11 +176,25 @@ public class DeviceConnectivityServiceImpl implements DeviceConnectivityService 
 
     @Override
     public Resource createGatewayDockerComposeFile(String baseUrl, Device device, DockerComposeParams params) throws URISyntaxException {
-        String mqttType = isEnabled(MQTTS) ? MQTTS : MQTT;
-        DeviceConnectivityInfo properties = getConnectivity(mqttType);
         DeviceCredentials creds = deviceCredentialsService.findDeviceCredentialsByDeviceId(device.getTenantId(), device.getId());
-        String host = getHost(baseUrl, properties, mqttType);
+        String host = resolveGatewayHost(baseUrl);
         return DeviceConnectivityUtil.getGatewayDockerComposeFile(host, gatewayImageVersion, creds, params);
+    }
+
+    @Override
+    public String resolveGatewayHost(String baseUrl) {
+        if (StringUtils.isBlank(baseUrl)) {
+            return null;
+        }
+        try {
+            String mqttType = isEnabled(MQTTS) ? MQTTS : MQTT;
+            DeviceConnectivityInfo properties = getConnectivity(mqttType);
+            String host = DeviceConnectivityUtil.getHost(baseUrl, properties, mqttType);
+            return DeviceConnectivityUtil.isLocalhost(host) ? DeviceConnectivityUtil.HOST_DOCKER_INTERNAL : host;
+        } catch (URISyntaxException e) {
+            log.warn("Failed to resolve gateway host for baseUrl [{}]", baseUrl, e);
+            return null;
+        }
     }
 
     private DeviceConnectivityInfo getConnectivity(String protocol) {

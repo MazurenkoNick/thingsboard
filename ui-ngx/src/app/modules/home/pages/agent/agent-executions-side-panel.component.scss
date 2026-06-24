@@ -1,0 +1,259 @@
+/**
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+ *
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of ThingsBoard, Inc. and its suppliers,
+ * if any.  The intellectual and technical concepts contained
+ * herein are proprietary to ThingsBoard, Inc.
+ * and its suppliers and may be covered by U.S. and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law.
+ *
+ * Dissemination of this information or reproduction of this material is strictly forbidden
+ * unless prior written permission is obtained from COMPANY.
+ *
+ * Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+ * managers or contractors who have executed Confidentiality and Non-disclosure agreements
+ * explicitly covering such access.
+ *
+ * The copyright notice above does not evidence any actual or intended publication
+ * or disclosure  of  this source code, which includes
+ * information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+ * ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+ * OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+ * THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+ * AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+ * THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+ * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+ * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+ */
+:host {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 440px;
+  max-width: 100%;
+  background: #fff;
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  z-index: 200;
+}
+
+.tb-side-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.tb-side-panel-header {
+  padding: 12px 8px 12px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  .tb-side-panel-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: rgba(0, 0, 0, 0.54);
+    font-size: 12px;
+
+    .tb-side-panel-profile {
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.78);
+    }
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .tb-side-panel-spacer {
+    flex: 1;
+  }
+
+  .tb-side-panel-title {
+    font-size: 18px;
+    font-weight: 500;
+    margin-top: 4px;
+    color: rgba(0, 0, 0, 0.87);
+  }
+}
+
+.tb-side-panel-summary {
+  padding: 16px 20px 18px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  .tb-side-panel-summary-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: rgba(0, 0, 0, 0.6);
+    margin-bottom: 8px;
+  }
+
+  .tb-side-panel-pct {
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .tb-side-panel-bar {
+    display: flex;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.06);
+
+    .tb-side-panel-bar-done    { background: #2e7d32; transition: width .25s; }
+    .tb-side-panel-bar-error   { background: #c62828; transition: width .25s; }
+    .tb-side-panel-bar-running { background: #1565c0; transition: width .25s; }
+  }
+
+  .tb-side-panel-stats {
+    display: flex;
+    gap: 14px;
+    margin-top: 12px;
+    font-size: 12.5px;
+
+    .tb-side-panel-stat {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: rgba(0, 0, 0, 0.78);
+    }
+
+    .tb-side-panel-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .tb-dot-done    { background: #2e7d32; }
+    .tb-dot-error   { background: #c62828; }
+    .tb-dot-running { background: #1565c0; }
+    .tb-dot-pending { background: rgba(0, 0, 0, 0.4); }
+  }
+}
+
+.tb-side-panel-filters {
+  display: flex;
+  gap: 8px;
+  padding: 10px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  .tb-side-panel-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 12px;
+    border-radius: 14px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+
+    &.tb-side-panel-chip-active {
+      background: color-mix(in srgb, var(--tb-primary-500) 10%, transparent);
+      color: var(--tb-primary-500);
+      border-color: transparent;
+    }
+  }
+}
+
+.tb-side-panel-events {
+  flex: 1;
+  overflow: auto;
+}
+
+.tb-side-panel-paginator {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: #fff;
+
+  ::ng-deep .mat-mdc-paginator-container {
+    padding: 0 8px;
+    min-height: 48px;
+  }
+}
+
+.tb-side-panel-loading,
+.tb-side-panel-empty {
+  padding: 24px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.tb-side-panel-loading {
+  display: flex;
+  justify-content: center;
+}
+
+.tb-side-panel-event {
+  padding: 10px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+
+  &.tb-side-panel-event-clickable {
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.03);
+    }
+  }
+
+  .tb-side-panel-event-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+  }
+
+  .tb-side-panel-event-app {
+    color: rgba(0, 0, 0, 0.78);
+    font-weight: 500;
+  }
+
+  .tb-side-panel-event-sep {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: rgba(0, 0, 0, 0.38);
+  }
+
+  .tb-side-panel-event-name {
+    color: var(--tb-primary-500);
+    font-weight: 500;
+  }
+
+  .tb-side-panel-event-status {
+    font-weight: 500;
+    font-size: 12.5px;
+  }
+
+  .tb-side-panel-event-time {
+    font-family: 'Roboto Mono', monospace;
+    color: rgba(0, 0, 0, 0.54);
+    font-size: 12px;
+    min-width: 56px;
+    text-align: right;
+  }
+
+  .tb-side-panel-spacer { flex: 1; }
+
+  .tb-side-panel-event-error {
+    margin-top: 6px;
+    padding: 6px 10px;
+    background: #fdecea;
+    color: #c62828;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    border-radius: 2px;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+}

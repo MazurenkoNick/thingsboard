@@ -37,5 +37,6 @@ public enum CmdUpdateType {
     ALARM_STATUS,
     COUNT_DATA,
     NOTIFICATIONS,
-    NOTIFICATIONS_COUNT
+    NOTIFICATIONS_COUNT,
+    LOGS
 }

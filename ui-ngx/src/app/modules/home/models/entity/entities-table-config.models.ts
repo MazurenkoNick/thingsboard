@@ -279,6 +279,10 @@ export class EntityTableConfig<T extends BaseData<HasId>, P extends PageLink = P
   entityUpdated: EntityVoidFunction<T> = () => {};
   entitiesDeleted: EntityIdsVoidFunction<T> = () => {};
   defaultEntity: () => T = null;
+  // Invoked by the entities-table component when it is destroyed. Lets a config
+  // tear down long-lived resources (e.g. websocket subscriptions) it opened
+  // while the table was visible.
+  onDestroy: () => void = () => {};
 
   getTable(): IEntitiesTableComponent {
     return this.table;

@@ -1,0 +1,127 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<div class="tb-side-panel">
+  <div class="tb-side-panel-header">
+    <div class="tb-side-panel-breadcrumb">
+      <span class="tb-side-panel-profile">{{ appProfile.name }}</span>
+      <mat-icon>chevron_right</mat-icon>
+      <span class="tb-side-panel-time">{{ formatTime(bulkAction.createdTime) }}</span>
+      <span class="tb-side-panel-spacer"></span>
+      <button mat-icon-button type="button" (click)="refreshNow()"
+              matTooltip="{{ 'action.refresh' | translate }}">
+        <mat-icon>refresh</mat-icon>
+      </button>
+      <button mat-icon-button type="button" (click)="openDetails()"
+              matTooltip="{{ 'agent.view-bulk-action-details' | translate }}">
+        <mat-icon>open_in_new</mat-icon>
+      </button>
+      <button mat-icon-button type="button" (click)="close()"
+              matTooltip="{{ 'action.close' | translate }}">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    <div class="tb-side-panel-title">
+      {{ 'agent.executions' | translate }}
+    </div>
+  </div>
+
+  <div class="tb-side-panel-summary">
+    <div class="tb-side-panel-summary-header">
+      <span>{{ 'agent.agents-reporting-success' | translate: { ok: counts.done, total: counts.total } }}</span>
+      <span class="tb-side-panel-pct">{{ successPct }}%</span>
+    </div>
+    <div class="tb-side-panel-bar">
+      <div class="tb-side-panel-bar-done" [style.width.%]="donePct"></div>
+      <div class="tb-side-panel-bar-error" [style.width.%]="errorPct"></div>
+      <div class="tb-side-panel-bar-running" [style.width.%]="runningPct"></div>
+    </div>
+    <div class="tb-side-panel-stats">
+      <div class="tb-side-panel-stat"><span class="tb-side-panel-dot tb-dot-done"></span>{{ counts.done }} Done</div>
+      <div class="tb-side-panel-stat"><span class="tb-side-panel-dot tb-dot-error"></span>{{ counts.error }} Error</div>
+      <div class="tb-side-panel-stat"><span class="tb-side-panel-dot tb-dot-running"></span>{{ counts.running }} Running</div>
+      <div class="tb-side-panel-stat"><span class="tb-side-panel-dot tb-dot-pending"></span>{{ counts.pending }} Pending</div>
+    </div>
+  </div>
+
+  <div class="tb-side-panel-filters">
+    <span class="tb-side-panel-chip" [class.tb-side-panel-chip-active]="filter === 'ALL'"
+          (click)="setFilter('ALL')">All ({{ counts.total }})</span>
+    <span class="tb-side-panel-chip" [class.tb-side-panel-chip-active]="filter === 'ERROR'"
+          (click)="setFilter('ERROR')">Errors ({{ counts.error }})</span>
+    <span class="tb-side-panel-chip" [class.tb-side-panel-chip-active]="filter === 'RUNNING'"
+          (click)="setFilter('RUNNING')">Running ({{ counts.running }})</span>
+  </div>
+
+  <div class="tb-side-panel-events">
+    @if (loading && events.length === 0) {
+      <div class="tb-side-panel-loading"><mat-spinner diameter="24"></mat-spinner></div>
+    } @else if (filteredEvents.length === 0) {
+      <div class="tb-side-panel-empty">{{ 'agent.bulk-no-events' | translate }}</div>
+    } @else {
+      @for (event of pagedEvents; track event.id.id) {
+        <div class="tb-side-panel-event"
+             [class.tb-side-panel-event-clickable]="isEventClickable(event)"
+             (click)="openEventProgress(event)">
+          <div class="tb-side-panel-event-row">
+            <span class="tb-side-panel-event-name">
+              {{ event.agentName || event.agentId?.id }}
+            </span>
+            @if (event.applicationName) {
+              <mat-icon class="tb-side-panel-event-sep">chevron_right</mat-icon>
+              <span class="tb-side-panel-event-app">{{ event.applicationName }}</span>
+            }
+            <span class="tb-side-panel-spacer"></span>
+            <span class="tb-side-panel-event-status" [ngStyle]="{ color: statusColor(event.status) }">
+              {{ statusLabel(event.status) }}
+            </span>
+            <span class="tb-side-panel-event-time">{{ formatTime(event.updatedTime) }}</span>
+          </div>
+          @if (event.errorMessage) {
+            <div class="tb-side-panel-event-error">{{ event.errorMessage }}</div>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  @if (filteredEvents.length > 0) {
+    <mat-paginator class="tb-side-panel-paginator"
+                   [length]="filteredEvents.length"
+                   [pageSize]="pageSize"
+                   [pageIndex]="pageIndex"
+                   [pageSizeOptions]="pageSizeOptions"
+                   [showFirstLastButtons]="true"
+                   (page)="onPageChange($event)">
+    </mat-paginator>
+  }
+</div>

@@ -1,0 +1,207 @@
+/**
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+ *
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of ThingsBoard, Inc. and its suppliers,
+ * if any.  The intellectual and technical concepts contained
+ * herein are proprietary to ThingsBoard, Inc.
+ * and its suppliers and may be covered by U.S. and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law.
+ *
+ * Dissemination of this information or reproduction of this material is strictly forbidden
+ * unless prior written permission is obtained from COMPANY.
+ *
+ * Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+ * managers or contractors who have executed Confidentiality and Non-disclosure agreements
+ * explicitly covering such access.
+ *
+ * The copyright notice above does not evidence any actual or intended publication
+ * or disclosure  of  this source code, which includes
+ * information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+ * ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+ * OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+ * THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+ * AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+ * THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+ * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+ * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+ */
+syntax = "proto3";
+
+option go_package = "github.com/thingsboard/tb-agent/gen/agent/v1;agentv1";
+
+option java_package = "org.thingsboard.server.gen.agent.v1";
+option java_multiple_files = true;
+
+option java_outer_classname = "AgentProtos";
+
+service AgentRpcService {
+  rpc controlStream(stream AgentToServer) returns (stream ServerToAgent);
+}
+
+message AgentToServer {
+  oneof msg {
+    Hello hello = 1;
+    CommandAck commandAck = 2;
+    CommandProgress progress = 3;
+    CommandResult result = 4;
+    ProjectStateSync projectSync = 5;
+    ProvisionRequest provision = 6;
+    InitialSyncComplete initialSyncComplete = 7;
+    AgentMetricsSync agentMetricsSync = 8;
+    AgentLogChunk logChunk = 9;
+  }
+}
+
+message InitialSyncComplete {}
+
+message ProvisionRequest {
+  string provisionKey = 1;
+  string provisionSecret = 2;
+}
+
+message ProvisionResponse {
+  bool success = 1;
+  string routingKey = 2;
+  string routingSecret = 3;
+  optional string errorMessage = 4;
+}
+
+message ProjectStateSync {
+  string projectName = 1;
+  bool removed = 2;
+  oneof state {
+    ComposeState compose = 3;
+  }
+}
+
+message ComposeState {
+  optional string composeJson = 1;
+  map<string, ContainerInfo> containerStates = 2;
+  optional ApplicationMetrics applicationMetrics = 3;
+  map<string, VolumeInfo> volumeStates = 4;
+}
+
+message ApplicationMetrics {
+  double cpuPercent = 1;
+  uint64 memoryBytes = 2;
+  optional uint64 volumeBytes = 3;
+}
+
+message ContainerInfo {
+  string state = 1;
+  string imageDigest = 2;
+  optional double cpuPercent = 3;
+  optional uint64 memoryBytes = 4;
+}
+
+message VolumeInfo {
+  optional uint64 sizeBytes = 1;
+}
+
+message AgentMetricsSync {
+  double cpuPercent = 1;
+  uint64 memoryBytes = 2;
+  uint32 onlineCpus = 3;
+  optional uint64 hostMemoryBytes = 4;
+  optional uint64 hostDiskTotal = 5;
+  optional uint64 diskBytes = 6;
+}
+
+message StartLogStream {
+  string unitId = 1;
+  string projectName = 2;
+  int64 lastSeenTs = 3;
+}
+
+message StopLogStream {
+  string unitId = 1;
+  string projectName = 2;
+}
+
+message AgentLogChunk {
+  string unitId = 1;
+  string projectName = 2;
+  repeated string lines = 3;
+  uint32 dropped = 4;
+  int64 lastLineTs = 5;
+}
+
+message ServerToAgent {
+  oneof msg {
+    HelloAck helloAck = 1;
+    AppCommand appCommand = 2;
+    ProvisionResponse provisionResponse = 3;
+    StartLogStream startLogStream = 4;
+    StopLogStream stopLogStream = 5;
+  }
+}
+
+message AppCommand {
+  CommandId commandId = 1;
+  AppCommandAction action = 2;
+  StepId stepId = 3;
+  string appName = 4;
+  ConfigType configType = 5;
+  map<string, string> metadata = 6;
+  int32 totalSteps = 7;
+}
+
+enum AppCommandAction {
+  APP_INSTALL = 0;
+  APP_UPDATE = 1;
+  APP_DELETE = 2;
+  APP_RESTART = 3;
+  APP_ROLLBACK = 4;
+  APP_UPGRADE = 5;
+}
+
+enum ConfigType {
+  DOCKER_COMPOSE = 0;
+}
+
+message Hello {
+  string routingKey = 1;
+  string routingSecret = 2;
+}
+
+message HelloAck {
+  bool success = 1;
+}
+
+message CommandAck {
+  CommandId commandId = 1;
+  AckStatus status = 2;
+  optional string message = 3;
+}
+
+enum AckStatus {
+  ACCEPTED = 0;
+  REJECTED = 1;
+}
+
+message CommandProgress {
+  CommandId commandId = 1;
+  optional string stage = 2;
+  optional string message = 3;
+  StepId step = 4;
+}
+
+message CommandResult {
+  CommandId commandId = 1;
+  bool success = 2;
+  optional string message = 3;
+  StepId step = 4;
+}
+
+message StepId {
+  int64 idMSB = 1;
+  int64 idLSB = 2;
+}
+
+message CommandId {
+  int64 idMSB = 1;
+  int64 idLSB = 2;
+}

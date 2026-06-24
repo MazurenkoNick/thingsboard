@@ -1,0 +1,129 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<div class="tb-details-buttons xs:flex xs:flex-col" [class.!hidden]="standalone">
+  <button mat-raised-button color="primary"
+          [disabled]="(isLoading$ | async)"
+          (click)="onEntityAction($event, 'open')"
+          [class.!hidden]="isEdit || isDetailsPage">
+    {{'common.open-details-page' | translate }}
+  </button>
+  <button mat-raised-button color="primary"
+          [disabled]="(isLoading$ | async)"
+          (click)="onEntityAction($event, 'setDefault')"
+          [class.!hidden]="isEdit || entity?.default">
+    {{'agent.set-default-profile' | translate }}
+  </button>
+  <button mat-raised-button color="primary"
+          [disabled]="(isLoading$ | async)"
+          (click)="onEntityAction($event, 'delete')"
+          [class.!hidden]="hideDelete() || isEdit">
+    {{'agent.delete-profile' | translate }}
+  </button>
+  <div class="flex flex-row flex-wrap xs:flex-col">
+    <button mat-raised-button
+            ngxClipboard
+            (cbOnSuccess)="onProfileIdCopied()"
+            [cbContent]="entity?.id?.id"
+            [disabled]="(isLoading$ | async)"
+            [class.!hidden]="isEdit">
+      <mat-icon svgIcon="mdi:clipboard-arrow-left"></mat-icon>
+      <span translate>agent.copy-profile-id</span>
+    </button>
+  </div>
+</div>
+<div class="mat-padding flex flex-col">
+  <form [formGroup]="entityForm">
+    <fieldset [disabled]="(isLoading$ | async) || !isEdit">
+      <mat-form-field class="mat-block" appearance="outline">
+        <mat-label translate>agent.profile-name</mat-label>
+        <input matInput formControlName="name" required>
+        <mat-error *ngIf="entityForm.get('name').hasError('required')">
+          {{ 'agent.profile-name-required' | translate }}
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field class="mat-block" appearance="outline">
+        <mat-label translate>agent.description</mat-label>
+        <textarea matInput formControlName="description" rows="2"></textarea>
+      </mat-form-field>
+      <mat-form-field class="mat-block" appearance="outline">
+        <mat-label translate>agent.provisioning-strategy</mat-label>
+        <mat-select formControlName="provisionType">
+          <mat-option *ngFor="let type of agentProvisionTypes" [value]="type">
+            {{ agentProvisionTypeTranslationMap.get(type) | translate }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </fieldset>
+    <div class="tb-agent-profile-strategy-hint">
+      <mat-icon class="hint-icon">help_outline</mat-icon>
+      <div>
+        <div class="hint-title">
+          {{ 'agent.provisioning-strategy-label' | translate: {
+            strategy: agentProvisionTypeTranslationMap.get(entityForm.get('provisionType').value) | translate
+          } }}
+        </div>
+        <div class="hint-body">
+          {{ agentProvisionTypeDescriptionMap.get(entityForm.get('provisionType').value) | translate }}
+        </div>
+      </div>
+    </div>
+
+    <ng-container *ngIf="!standalone && entity?.id?.id
+                         && entity?.provisionType === AgentProvisionType.ALLOW_CREATE_NEW_AGENTS">
+      <div class="tb-section-title" translate>agent.docker-run-command</div>
+
+      <div class="tb-command-block">
+        <button mat-flat-button class="tb-copy-command-btn"
+                ngxClipboard
+                [cbContent]="dockerCommand"
+                (cbOnSuccess)="onProvisioningCopied()">
+          <mat-icon>content_copy</mat-icon>
+          <span translate>action.copy</span>
+        </button>
+        <pre>{{ dockerCommand }}</pre>
+      </div>
+
+      <div class="tb-hint-note info">
+        <mat-icon>info_outline</mat-icon>
+        <div>
+          <div>{{ 'agent.agent-profile-created-hint' | translate }}</div>
+          <ol>
+            <li>{{ 'agent.agent-profile-created-step-1' | translate }}</li>
+            <li>{{ 'agent.agent-profile-created-step-2' | translate }}</li>
+            <li>{{ 'agent.agent-profile-created-step-3' | translate }}</li>
+          </ol>
+        </div>
+      </div>
+    </ng-container>
+  </form>
+</div>

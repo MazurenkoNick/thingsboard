@@ -45,7 +45,8 @@ class EntityTypeTest {
             EntityType.CUSTOMER,
             EntityType.ENTITY_VIEW,
             EntityType.DASHBOARD,
-            EntityType.EDGE
+            EntityType.EDGE,
+            EntityType.AGENT
     );
 
 

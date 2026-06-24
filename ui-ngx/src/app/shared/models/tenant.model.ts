@@ -121,6 +121,11 @@ export interface DefaultTenantProfileConfiguration {
   edgeUplinkMessagesRateLimits?: string;
   edgeUplinkMessagesRateLimitsPerEdge?: string;
 
+  agentEventRateLimits?: string;
+  agentEventRateLimitsPerAgent?: string;
+  agentLogChunkRateLimits?: string;
+  agentLogChunkRateLimitsPerAgent?: string;
+
   defaultStorageTtlDays: number;
   alarmsTtlDays: number;
   rpcTtlDays: number;

@@ -83,6 +83,8 @@ import { DashboardReportService } from '@core/http/dashboard-report.service';
 import { ReportService } from '@core/http/report.service';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { CustomTranslationService } from '@core/http/custom-translation.service';
+import { AgentAutoProvisionDialogService } from '@home/pages/edge/agent-auto-provision-dialog.service';
+import { AgentDeployDialogService } from '@home/pages/agent/agent-deploy-dialog.service';
 
 export const ServicesMap = new Map<string, Type<any>>(
   [
@@ -139,6 +141,8 @@ export const ServicesMap = new Map<string, Type<any>>(
    ['actionNotificationHide', ActionNotificationHide],
    ['store', Store],
    ['secretStorageService', SecretStorageService],
-   ['aiModelService', AiModelService]
+   ['aiModelService', AiModelService],
+   ['agentAutoProvisionDialogService', AgentAutoProvisionDialogService],
+   ['agentDeployDialogService', AgentDeployDialogService]
   ]
 );

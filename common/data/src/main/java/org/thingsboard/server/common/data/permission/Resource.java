@@ -75,6 +75,7 @@ public enum Resource {
     ENTITY_VIEW_GROUP(EntityType.ENTITY_GROUP),
     EDGE_GROUP(EntityType.ENTITY_GROUP),
     DASHBOARD_GROUP(EntityType.ENTITY_GROUP),
+    AGENT_GROUP(EntityType.ENTITY_GROUP),
     ROLE(EntityType.ROLE),
     GROUP_PERMISSION(EntityType.GROUP_PERMISSION),
     WHITE_LABELING(),
@@ -94,6 +95,10 @@ public enum Resource {
     REPORT_TEMPLATE(EntityType.REPORT_TEMPLATE),
     REPORT(EntityType.REPORT),
     AI_MODEL(EntityType.AI_MODEL),
+    AGENT(EntityType.AGENT),
+    AGENT_APP_TEMPLATE(EntityType.AGENT_APP_TEMPLATE),
+    AGENT_APP_PROFILE(EntityType.AGENT_APP_PROFILE),
+    AGENT_PROFILE(EntityType.AGENT_PROFILE),
     API_KEY(EntityType.API_KEY);
 
     private static final Map<EntityType, Resource> groupResourceByGroupType = new HashMap<>();
@@ -109,6 +114,7 @@ public enum Resource {
         groupResourceByGroupType.put(EntityType.ENTITY_VIEW, ENTITY_VIEW_GROUP);
         groupResourceByGroupType.put(EntityType.EDGE, EDGE_GROUP);
         groupResourceByGroupType.put(EntityType.DASHBOARD, DASHBOARD_GROUP);
+        groupResourceByGroupType.put(EntityType.AGENT, AGENT_GROUP);
 
         for (EntityType entityType : EntityType.values()) {
             if (entityType.equals(EntityType.ENTITY_GROUP)) {
@@ -164,6 +170,7 @@ public enum Resource {
         operationsByResource.put(Resource.ENTITY_VIEW_GROUP, Operation.defaultEntityGroupOperations);
         operationsByResource.put(Resource.EDGE_GROUP, Operation.defaultEntityGroupOperations);
         operationsByResource.put(Resource.DASHBOARD_GROUP, Operation.defaultEntityGroupOperations);
+        operationsByResource.put(Resource.AGENT_GROUP, Operation.defaultEntityGroupOperations);
         operationsByResource.put(Resource.ROLE, Operation.defaultEntityOperations);
         operationsByResource.put(Resource.GROUP_PERMISSION, Operation.crudOperations);
         operationsByResource.put(Resource.WHITE_LABELING, Set.of(Operation.ALL, Operation.READ, Operation.WRITE));
@@ -179,6 +186,10 @@ public enum Resource {
         operationsByResource.put(Resource.REPORT, Operation.crudOperations);
         operationsByResource.put(Resource.AI_MODEL, Operation.crudOperations);
         operationsByResource.put(Resource.API_KEY, Operation.crudOperations);
+        operationsByResource.put(Resource.AGENT, Operation.defaultEntityOperations);
+        operationsByResource.put(Resource.AGENT_APP_TEMPLATE, Set.of(Operation.ALL, Operation.READ));
+        operationsByResource.put(Resource.AGENT_APP_PROFILE, Operation.crudOperations);
+        operationsByResource.put(Resource.AGENT_PROFILE, Operation.crudOperations);
 
         resourcesByAuthority.put(Authority.SYS_ADMIN, Set.of(
                 Resource.ALL,
@@ -256,6 +267,11 @@ public enum Resource {
                 Resource.REPORT_TEMPLATE,
                 Resource.REPORT,
                 Resource.AI_MODEL,
+                Resource.AGENT,
+                Resource.AGENT_APP_TEMPLATE,
+                Resource.AGENT_APP_PROFILE,
+                Resource.AGENT_PROFILE,
+                Resource.AGENT_GROUP,
                 Resource.API_KEY
         ));
 

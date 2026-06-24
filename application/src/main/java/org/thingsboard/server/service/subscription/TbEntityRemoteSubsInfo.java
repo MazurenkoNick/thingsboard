@@ -30,7 +30,10 @@
  */
 package org.thingsboard.server.service.subscription;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -52,12 +55,13 @@ public class TbEntityRemoteSubsInfo {
     @Getter
     private final Map<String, TbSubscriptionsInfo> subs = new ConcurrentHashMap<>(); // By service ID
 
-    public boolean updateAndCheckIsEmpty(String serviceId, TbEntitySubEvent event) {
+    public TbEntitySubsUpdateInfo updateAndCheckIsEmpty(String serviceId, TbEntitySubEvent event) {
         var current = subs.get(serviceId);
         if (current != null && current.seqNumber > event.getSeqNumber()) {
             log.warn("[{}][{}] Duplicate subscription event received. Current: {}, Event: {}",
                     tenantId, entityId, current, event.getInfo());
-            return false;
+            boolean isDuplicate = true;
+            return new TbEntitySubsUpdateInfo(isDuplicate, isEmpty());
         }
         switch (event.getType()) {
             case CREATED:
@@ -67,16 +71,16 @@ public class TbEntityRemoteSubsInfo {
                 var newSubInfo = event.getInfo();
                 if (newSubInfo.isEmpty()) {
                     subs.remove(serviceId);
-                    return isEmpty();
                 } else {
                     subs.put(serviceId, newSubInfo);
                 }
                 break;
             case DELETED:
                 subs.remove(serviceId);
-                return isEmpty();
+                break;
         }
-        return false;
+        boolean isDuplicate = false;
+        return new TbEntitySubsUpdateInfo(isDuplicate, isEmpty());
     }
 
     public boolean removeAndCheckIsEmpty(String serviceId) {
@@ -89,5 +93,14 @@ public class TbEntityRemoteSubsInfo {
 
     public boolean isEmpty() {
         return subs.isEmpty();
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static sealed class TbEntitySubsUpdateInfo permits TbAgentUnitRemoteSubsInfo.TbAgentUnitSubsUpdateInfo {
+
+        private boolean isDuplicate;
+        private boolean isEmpty;
     }
 }

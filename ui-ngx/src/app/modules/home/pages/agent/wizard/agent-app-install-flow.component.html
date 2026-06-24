@@ -1,0 +1,308 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<mat-toolbar color="primary" class="tb-install-wizard-toolbar" *ngIf="!embedded">
+  <button mat-icon-button (click)="back.emit()" type="button" tabindex="-1" *ngIf="showBack">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+  <div class="tb-install-wizard-toolbar-content">
+    <h2>{{ 'agent.app-install-title' | translate }}<ng-container *ngIf="agent">:</ng-container></h2>
+    <span class="flex-1" *ngIf="agent">
+      {{ 'agent.app-install-on-agent' | translate: { name: agent?.name } }}
+    </span>
+  </div>
+  <button mat-icon-button (click)="cancel()" type="button" tabindex="-1">
+    <mat-icon>close</mat-icon>
+  </button>
+</mat-toolbar>
+
+<div mat-dialog-content class="tb-install-wizard-body" [class.tb-install-wizard-embedded]="embedded">
+
+  <div class="loading-state" *ngIf="checkingManaged">
+    <mat-spinner diameter="24"></mat-spinner>
+  </div>
+
+  <div class="managed-block" *ngIf="!checkingManaged && managedApp">
+    <tb-agent-deploy-status
+      [agent]="managedAgent"
+      [application]="managedApp"
+      (goToAgent)="goToAgent()"
+      (goToAgentApplication)="goToAgentApplication()"
+      (goToAgentEvents)="goToAgentEvents()">
+    </tb-agent-deploy-status>
+
+    <div class="step-footer">
+      <span class="flex-1"></span>
+      <button mat-button (click)="cancel()" *ngIf="!embedded">{{ 'action.close' | translate }}</button>
+    </div>
+  </div>
+
+  <div class="tb-agent-deploy-note"
+       *ngIf="selectAgent && !embedded && !checkingManaged && !managedApp">
+    <mat-icon>auto_awesome</mat-icon>
+    <span translate>agent.deploy-via-agent-desc</span>
+  </div>
+
+  <mat-stepper linear #stepper
+               *ngIf="!checkingManaged && !managedApp"
+               [class.tb-steps-locked]="!!installedApplication"
+               [orientation]="(stepperOrientation | async)"
+               [labelPosition]="(stepperLabelPosition | async)">
+
+    <mat-step [label]="'agent.deploy-select-agent-step' | translate"
+              *ngIf="selectAgent"
+              [completed]="canProceedFromAgent()"
+              [editable]="!installedApplication">
+      <p class="hint" translate>agent.deploy-intro</p>
+      <tb-agent-autocomplete
+        [ngModel]="agent"
+        (ngModelChange)="onSelectedAgentChange($event)">
+      </tb-agent-autocomplete>
+
+      <div class="step-footer">
+        <button mat-raised-button color="primary" matStepperNext [disabled]="!canProceedFromAgent()">
+          {{ 'action.next' | translate }}
+          <mat-icon iconPositionEnd>chevron_right</mat-icon>
+        </button>
+      </div>
+    </mat-step>
+
+    <mat-step [label]="'agent.app-install-step1' | translate" *ngIf="!lockedType">
+      <p class="hint" translate>agent.app-install-pick-type</p>
+      <div class="type-cards">
+        <div class="type-card" *ngFor="let card of typeCards"
+             [class.selected]="selectedType === card.type"
+             (click)="selectType(card.type)">
+          <mat-icon>{{ card.icon }}</mat-icon>
+          <h4>{{ card.labelKey | translate }}</h4>
+          <p>{{ card.descKey | translate }}</p>
+        </div>
+      </div>
+
+      <div class="loading-state" *ngIf="loadingTemplate">
+        <mat-spinner diameter="20"></mat-spinner>
+        <span translate>agent.app-install-loading-template</span>
+      </div>
+
+      <div class="error-state" *ngIf="loadError">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ loadError }}</span>
+      </div>
+
+      <div class="step-footer">
+        <button mat-button matStepperPrevious *ngIf="selectAgent">
+          <mat-icon>chevron_left</mat-icon>
+          {{ 'action.back' | translate }}
+        </button>
+        <button mat-raised-button color="primary" matStepperNext [disabled]="!canProceedFromType()">
+          {{ 'action.next' | translate }}
+          <mat-icon iconPositionEnd>chevron_right</mat-icon>
+        </button>
+      </div>
+    </mat-step>
+
+    <mat-step [label]="'agent.app-install-step3' | translate" [editable]="!installedApplication">
+
+      <div class="config-toggle">
+        <tb-toggle-select [(ngModel)]="useProfile" (ngModelChange)="toggleUseProfile($event)" appearance="fill">
+          <tb-toggle-option [value]="true">{{ 'agent.app-install-from-profile' | translate }}</tb-toggle-option>
+          <tb-toggle-option [value]="false">{{ 'agent.app-install-custom-config' | translate }}</tb-toggle-option>
+        </tb-toggle-select>
+      </div>
+
+      <mat-form-field class="mat-block" appearance="outline">
+        <mat-label translate>agent.app-install-name</mat-label>
+        <input matInput [(ngModel)]="appName" required>
+      </mat-form-field>
+
+      <ng-container *ngIf="canHaveRelatedEntity">
+        <tb-agent-related-entity-autocomplete
+            [appType]="selectedType"
+            [disabled]="!!lockedRelatedEntity"
+            [required]="relatedEntityRequired"
+            allowCreate
+            [ngModel]="relatedEntityId"
+            (ngModelChange)="relatedEntityId = $event; onRelatedEntityChange($event)"
+            (relatedEntityNameChange)="onRelatedEntityName($event)">
+        </tb-agent-related-entity-autocomplete>
+      </ng-container>
+
+      <mat-form-field class="mat-block" appearance="outline" *ngIf="useProfile" [formGroup]="profileSelectFormGroup">
+        <mat-label translate>agent.app-install-select-profile</mat-label>
+        <input matInput type="text" required
+               #profileInput
+               formControlName="profile"
+               [matAutocomplete]="profileAutocomplete">
+        <button *ngIf="profileSelectFormGroup.get('profile').value" type="button"
+                matSuffix mat-icon-button aria-label="Clear"
+                (click)="clearProfile()">
+          <mat-icon class="material-icons">close</mat-icon>
+        </button>
+        <button *ngIf="!profileSelectFormGroup.get('profile').value"
+                mat-button color="primary" matSuffix type="button"
+                (mousedown)="$event.preventDefault()"
+                (click)="createProfile($event)">
+          <span style="white-space: nowrap">{{ 'agent.deploy-create-new' | translate }}</span>
+        </button>
+        <mat-autocomplete class="tb-autocomplete"
+                          #profileAutocomplete="matAutocomplete"
+                          [displayWith]="displayProfileFn">
+          <ng-container *ngIf="filteredProfiles | async as profiles">
+            <mat-option *ngFor="let p of profiles" [value]="p">
+              <span>{{ p.name }}</span>
+            </mat-option>
+            <mat-option *ngIf="!profiles.length" [value]="null" disabled class="tb-not-found">
+              <span translate>agent.app-install-no-profiles</span>
+            </mat-option>
+          </ng-container>
+        </mat-autocomplete>
+      </mat-form-field>
+
+      <div class="loading-state" *ngIf="loadingProfiles">
+        <mat-spinner diameter="20"></mat-spinner>
+        <span translate>agent.app-install-loading-template</span>
+      </div>
+
+      <tb-agent-app-step-inputs [bindings]="bindings"></tb-agent-app-step-inputs>
+
+      <ng-container *ngIf="useProfile && selectedProfile">
+        <label class="yaml-label" translate>agent.app-install-yaml</label>
+        <tb-agent-compose-editor [value]="composeYaml" [readOnly]="useProfile && !!selectedProfile"></tb-agent-compose-editor>
+      </ng-container>
+
+      <ng-container *ngIf="!useProfile">
+        <mat-form-field class="mat-block" appearance="outline" *ngIf="composeTypeKeys.length > 1">
+          <mat-label translate>agent.app-compose-template-select</mat-label>
+          <mat-select [value]="composeType" (selectionChange)="onComposeTypeChange($event.value)">
+            <mat-option *ngFor="let key of composeTypeKeys" [value]="key">
+              {{ composeTypeLabel(key) }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <div class="tb-app-compose-hint" *ngIf="relatedEntityId">
+          <mat-icon class="tb-app-compose-hint-icon">info_outline</mat-icon>
+          <span translate>agent.app-compose-creds-overridden-hint</span>
+        </div>
+        <div class="diff-header-row">
+          <div class="diff-header added" translate>agent.app-install-diff-template</div>
+          <div class="diff-header removed" translate>agent.app-install-diff-editable</div>
+          <button type="button" class="diff-sync-toggle"
+                  [class.active]="diffSyncScroll"
+                  [matTooltip]="'agent.app-diff-sync-scroll' | translate"
+                  (click)="diffSyncScroll = !diffSyncScroll">
+            <mat-icon>{{ diffSyncScroll ? 'link' : 'link_off' }}</mat-icon>
+          </button>
+        </div>
+        <tb-agent-compose-diff [left]="proposedYaml" [right]="currentYaml" [syncScroll]="diffSyncScroll" (rightChange)="composeYaml = $event"></tb-agent-compose-diff>
+        <p class="diff-hint" translate>agent.app-install-diff-hint</p>
+      </ng-container>
+
+      <div class="step-footer">
+        <button mat-button matStepperPrevious [disabled]="submitting" *ngIf="!installedApplication">
+          <mat-icon>chevron_left</mat-icon>
+          {{ 'action.back' | translate }}
+        </button>
+        <button mat-raised-button color="primary" matStepperNext [disabled]="!canSubmit()">
+          {{ 'action.next' | translate }}
+          <mat-icon iconPositionEnd>chevron_right</mat-icon>
+        </button>
+      </div>
+    </mat-step>
+
+    <mat-step [label]="'agent.app-install-step4' | translate" [completed]="!!installedApplication"
+              [editable]="!installedApplication">
+
+      <div class="summary-card">
+        <div class="summary-row">
+          <span class="label" translate>agent.app-name</span>
+          <span class="value">{{ appName }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="label" translate>agent.app-type</span>
+          <span class="value"><span class="tb-type-badge"
+            [class.edge]="selectedType === 'EDGE'"
+            [class.gateway]="selectedType === 'GATEWAY'"
+            [class.generic]="selectedType === 'GENERIC'">{{ selectedType }}</span></span>
+        </div>
+        <div class="summary-row" *ngIf="template">
+          <span class="label" translate>agent.app-template</span>
+          <span class="value">{{ template.appType }} {{ template.currentVersion }}</span>
+        </div>
+        <div class="summary-row" *ngIf="useProfile && selectedProfile">
+          <span class="label" translate>agent.app-install-select-profile</span>
+          <span class="value">{{ selectedProfile.name }}</span>
+        </div>
+        <div class="summary-row" *ngIf="agent">
+          <span class="label" translate>agent.agents</span>
+          <span class="value">{{ agent.name }}</span>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <mat-icon>info</mat-icon>
+        <span translate>agent.app-install-confirm-info</span>
+      </div>
+
+      <div class="step-footer">
+        <button mat-button matStepperPrevious [disabled]="submitting" *ngIf="!installedApplication">
+          <mat-icon>chevron_left</mat-icon>
+          {{ 'action.back' | translate }}
+        </button>
+        <button mat-raised-button color="primary" *ngIf="!installedApplication"
+                (click)="submit()" [disabled]="!canSubmit()">
+          <mat-icon>save</mat-icon>
+          <span>{{ 'agent.app-install-cta' | translate }}</span>
+        </button>
+        <button mat-raised-button color="primary" *ngIf="installedApplication" matStepperNext>
+          {{ 'action.next' | translate }}
+          <mat-icon iconPositionEnd>chevron_right</mat-icon>
+        </button>
+      </div>
+    </mat-step>
+
+    <mat-step [label]="'agent.deploy-install-step' | translate" *ngIf="selectAgent">
+      <tb-agent-deploy-status
+        [agent]="agent"
+        [application]="installedApplication"
+        (goToAgent)="goToAgent()"
+        (goToAgentApplication)="goToAgentApplication()"
+        (goToAgentEvents)="goToAgentEvents()">
+      </tb-agent-deploy-status>
+
+      <div class="step-footer">
+        <span class="flex-1"></span>
+        <button mat-button (click)="cancel()" *ngIf="!embedded">{{ 'action.close' | translate }}</button>
+      </div>
+    </mat-step>
+
+  </mat-stepper>
+</div>

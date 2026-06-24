@@ -77,6 +77,11 @@ import { CustomerId } from '@shared/models/id/customer-id';
 import { UtilsService } from '@core/services/utils.service';
 import { AddGroupEntityDialogComponent } from '@home/components/group/add-group-entity-dialog.component';
 import { AddGroupEntityDialogData } from '@home/models/group/group-entity-component.models';
+import {
+  AgentAutoProvisionDialogData,
+  EdgeAutoProvisionDialogComponent
+} from '@home/pages/edge/edge-auto-provision-dialog.component';
+import { AgentApplicationType } from '@shared/models/agent.models';
 
 @Injectable()
 export class EdgesTableConfigResolver  {
@@ -296,6 +301,12 @@ export class EdgesTableConfigResolver  {
         onAction: ($event) => config.getTable().addEntity($event)
       },
       {
+        name: this.translate.instant('edge.auto-provision'),
+        icon: 'auto_fix_high',
+        isEnabled: () => true,
+        onAction: ($event) => this.autoProvisionEdge($event, config)
+      },
+      {
         name: this.translate.instant('edge.import'),
         icon: 'file_upload',
         isEnabled: () => true,
@@ -303,6 +314,23 @@ export class EdgesTableConfigResolver  {
       }
     );
     return actions;
+  }
+
+  autoProvisionEdge($event: Event, config: EntityTableConfig<EdgeInfo>) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    this.dialog.open<EdgeAutoProvisionDialogComponent, AgentAutoProvisionDialogData, boolean>(
+      EdgeAutoProvisionDialogComponent, {
+        disableClose: true,
+        panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+        data: { appType: AgentApplicationType.EDGE }
+      }
+    ).afterClosed().subscribe(result => {
+      if (result) {
+        config.updateData();
+      }
+    });
   }
 
   importEdges($event: Event, config: EntityTableConfig<EdgeInfo>) {
@@ -380,7 +408,7 @@ export class EdgesTableConfigResolver  {
   }
 
   private navigateToChildEdgePage(config: EntityTableConfig<EdgeInfo>, edge: EdgeInfo, page: string) {
-    let url = `edgeManagement/instances/all/${edge.id.id}${page}`;
+    let url = `edgeManagement/edges/all/${edge.id.id}${page}`;
     if (config.customerId) {
       if (config.groupParams.childEntityGroupId) {
         const targetGroups = config.groupParams.shared ? 'shared' : 'groups';

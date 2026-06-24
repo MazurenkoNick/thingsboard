@@ -171,7 +171,7 @@ export class RuleChainAutocompleteComponent implements ControlValueAccessor, OnI
           this.modelValue = entity.id.id;
           this.ruleChainURL = getEntityDetailsPageURL(this.modelValue,EntityType.RULE_CHAIN);
           if (this.ruleChainType === RuleChainType.EDGE) {
-            this.ruleChainURL = '/edgeManagement' + this.ruleChainURL;
+            this.ruleChainURL = '/edgeManagement/templates' + this.ruleChainURL;
           }
           this.selectRuleChainFormGroup.get('ruleChainId').patchValue(entity, {emitEvent: false});
         },

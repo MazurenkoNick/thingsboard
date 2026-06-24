@@ -315,3 +315,29 @@ FROM
         LEFT JOIN report_template rt ON rt.id = r.template_id
         LEFT JOIN tb_user u ON u.id = r.user_id
         LEFT JOIN customer c ON c.id = r.customer_id;
+
+DROP VIEW IF EXISTS agent_info_view CASCADE;
+CREATE OR REPLACE VIEW agent_info_view as
+SELECT a.*,
+       c.title as customer_title,
+       (CASE
+            WHEN c.additional_info is not null and c.additional_info::json ->> 'isPublic' = 'true' THEN true
+            ELSE false END) as customer_is_public,
+       g.name as agent_profile_name,
+       COALESCE(c.title, t.title) as owner_name,
+       array_to_json(ARRAY(select json_build_object('id', from_id, 'name', eg.name)
+                           from relation re,
+               entity_group eg
+                           where re.to_id = a.id
+                             and re.to_type = 'AGENT'
+                             and re.relation_type_group = 'FROM_ENTITY_GROUP'
+                             and re.relation_type = 'Contains'
+                             and eg.id = re.from_id
+                             and eg.name != 'All'
+                           order by eg.name)) as groups,
+       COALESCE(aa.bool_v, FALSE) as active
+FROM agent a
+         LEFT JOIN customer c ON c.id = a.customer_id
+         LEFT JOIN tenant t ON t.id = a.tenant_id
+         LEFT JOIN agent_profile g ON g.id = a.agent_profile_id
+         LEFT JOIN attribute_kv aa ON aa.entity_id = a.id AND aa.attribute_type = 2 AND aa.attribute_key = (select key_id from key_dictionary where key = 'active');

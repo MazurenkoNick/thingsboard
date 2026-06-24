@@ -425,8 +425,10 @@ const edgeSharedGroupsRoute = (root: boolean): Route => ({
 const edgeRuleChainTemplatesRoute: Route = {
   path: 'ruleChains',
   data: {
+    auth: [Authority.TENANT_ADMIN],
     breadcrumb: {
-      menuId: MenuId.rulechain_templates
+      label: 'edge.rule-chain',
+      icon: 'settings_ethernet'
     }
   },
   children: [
@@ -492,8 +494,10 @@ const edgeRuleChainTemplatesRoute: Route = {
 const edgeConverterTemplatesRoute: Route = {
   path: 'converters',
   data: {
+    auth: [Authority.TENANT_ADMIN],
     breadcrumb: {
-      menuId: MenuId.converter_templates
+      label: 'edge.converter',
+      icon: 'transform'
     }
   },
   children: [
@@ -532,8 +536,10 @@ const edgeConverterTemplatesRoute: Route = {
 const edgeIntegrationTemplatesRoute: Route = {
   path: 'integrations',
   data: {
+    auth: [Authority.TENANT_ADMIN],
     breadcrumb: {
-      menuId: MenuId.integration_templates
+      label: 'edge.integration',
+      icon: 'input'
     }
   },
   children: [
@@ -570,6 +576,28 @@ const edgeIntegrationTemplatesRoute: Route = {
   ]
 };
 
+const edgeTemplatesRoute: Route = {
+  path: 'templates',
+  component: RouterTabsComponent,
+  data: {
+    auth: [Authority.TENANT_ADMIN],
+    useChildrenRoutesForTabs: true,
+    breadcrumb: {
+      menuId: MenuId.edge_templates
+    }
+  },
+  children: [
+    {
+      path: '',
+      pathMatch: 'full',
+      redirectTo: 'ruleChains'
+    },
+    edgeRuleChainTemplatesRoute,
+    edgeIntegrationTemplatesRoute,
+    edgeConverterTemplatesRoute
+  ]
+};
+
 export const edgesRoute = (root = false): Route => {
   const routeConfig: Route = {
     path: 'edgeManagement',
@@ -584,20 +612,20 @@ export const edgesRoute = (root = false): Route => {
         children: [],
         data: {
           auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-          redirectTo: 'instances'
+          redirectTo: 'edges'
         }
       }
     ]
   };
-  const edgeInstancesRoute: Route = {
-    path: 'instances',
+  const edgesRouteSection: Route = {
+    path: 'edges',
     component: RouterTabsComponent,
     data: {
       auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
       breadcrumb: {
         labelFunction: (route, translate) =>
           (route.data.customerTitle ? (route.data.customerTitle + ': ') : '') +
-          translate.instant(root ? 'edge.instances' : 'edge.edge-instances'),
+          translate.instant(root ? 'edge.edges' : 'edge.edge-instances'),
         icon: 'router'
       },
       replaceComponent: disabledEdgeReplaceComponentFunction
@@ -639,14 +667,12 @@ export const edgesRoute = (root = false): Route => {
       ...edgeChildrenRoutes()
     ]
   };
-  routeConfig.children.push(edgeInstancesRoute);
-  edgeInstancesRoute.children.push(allEdgesRoute);
-  edgeInstancesRoute.children.push(edgeGroupsRoute(root));
+  routeConfig.children.push(edgesRouteSection);
+  edgesRouteSection.children.push(allEdgesRoute);
+  edgesRouteSection.children.push(edgeGroupsRoute(root));
   if (root) {
-    edgeInstancesRoute.children.push(edgeSharedGroupsRoute(root));
-    routeConfig.children.push(edgeRuleChainTemplatesRoute);
-    routeConfig.children.push(edgeIntegrationTemplatesRoute);
-    routeConfig.children.push(edgeConverterTemplatesRoute);
+    edgesRouteSection.children.push(edgeSharedGroupsRoute(root));
+    routeConfig.children.push(edgeTemplatesRoute);
   }
   return routeConfig;
 };

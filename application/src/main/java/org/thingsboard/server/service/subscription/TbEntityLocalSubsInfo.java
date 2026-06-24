@@ -95,6 +95,12 @@ public class TbEntityLocalSubsInfo {
                     stateChanged = true;
                 }
                 break;
+            case LOGS:
+                if (!newState.logs) {
+                    newState.logs = true;
+                    stateChanged = true;
+                }
+                break;
             case ATTRIBUTES:
                 var attrSub = (TbAttributeSubscription) subscription;
                 if (!newState.attrAllKeys) {
@@ -186,6 +192,9 @@ public class TbEntityLocalSubsInfo {
             case ALARMS:
                 state.alarms = false;
                 break;
+            case LOGS:
+                state.logs = false;
+                break;
             case ATTRIBUTES:
                 state.attrAllKeys = false;
                 state.attrKeys = null;
@@ -212,6 +221,11 @@ public class TbEntityLocalSubsInfo {
                 case ALARMS:
                     if (!newState.alarms) {
                         newState.alarms = true;
+                    }
+                    break;
+                case LOGS:
+                    if (!newState.logs) {
+                        newState.logs = true;
                     }
                     break;
                 case ATTRIBUTES:

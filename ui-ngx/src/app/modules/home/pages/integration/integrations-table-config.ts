@@ -305,7 +305,7 @@ export class IntegrationsTableConfig extends EntityTableConfig<Integration, Page
         this.router.navigateByUrl(url);
       }
     } else if (this.componentsData.integrationScope === 'edges') {
-      this.router.navigateByUrl(`edgeManagement/integrations/${integration.id.id}`);
+      this.router.navigateByUrl(`edgeManagement/templates/integrations/${integration.id.id}`);
     } else {
       this.router.navigateByUrl(`integrations/${integration.id.id}`);
     }

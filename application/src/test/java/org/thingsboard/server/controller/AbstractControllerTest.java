@@ -44,6 +44,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.User;
@@ -51,13 +52,25 @@ import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.group.EntityGroupInfo;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.RoleId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.permission.GroupPermission;
+import org.thingsboard.server.common.data.permission.Operation;
+import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.permission.ShareGroupRequest;
+import org.thingsboard.server.common.data.role.Role;
+import org.thingsboard.server.common.data.role.RoleType;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.wl.LoginWhiteLabelingParams;
 import org.thingsboard.server.common.data.wl.WhiteLabelingParams;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -205,5 +218,58 @@ public abstract class AbstractControllerTest extends AbstractNotifyEntityTest {
         doPost("/api/entityGroup/" + tmpEntityGroup.getUuidId() + "/makePublic").andExpect(status().isOk());
 
         doDelete("/api/entityGroup/" + tmpEntityGroup.getId().getId().toString()).andExpect(status().isOk());
+    }
+
+    protected GroupPermission createGroupPermission(EntityGroupId userGroupId, RoleId genericRoleId) {
+        return createGroupPermission(userGroupId, genericRoleId, null, null);
+    }
+
+    protected GroupPermission createGroupPermission(EntityGroupId userGroupId, RoleId roleId, EntityGroupId entityGroupId, EntityType entityGroupType) {
+        GroupPermission groupPermission = new GroupPermission();
+        groupPermission.setUserGroupId(userGroupId);
+        groupPermission.setRoleId(roleId);
+        groupPermission.setEntityGroupId(entityGroupId);
+        groupPermission.setEntityGroupType(entityGroupType);
+        return doPost("/api/groupPermission", groupPermission, GroupPermission.class);
+    }
+
+    protected User loginAsRestrictedTenantAdmin(TenantId tenantId, Map<Resource, List<Operation>> permissions) throws Exception {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+
+        EntityGroup userGroup = new EntityGroup();
+        userGroup.setName("Restricted Admins " + suffix);
+        userGroup.setType(EntityType.USER);
+        userGroup.setOwnerId(tenantId);
+        userGroup = doPost("/api/entityGroup", userGroup, EntityGroup.class);
+
+        Role role = new Role();
+        role.setName("Restricted Role " + suffix);
+        role.setType(RoleType.GENERIC);
+        role.setPermissions(JacksonUtil.valueToTree(permissions));
+        role = doPost("/api/role", role, Role.class);
+
+        createGroupPermission(userGroup.getId(), role.getId());
+
+        String email = "restricted-admin-" + suffix + "@thingsboard.org";
+        String password = "restricted-" + suffix;
+        User user = new User();
+        user.setAuthority(Authority.TENANT_ADMIN);
+        user.setTenantId(tenantId);
+        user.setEmail(email);
+        User saved = createUser(user, password, userGroup.getId());
+
+        login(email, password);
+        return saved;
+    }
+
+    protected User loginAsRestrictedTenantAdmin(TenantId tenantId, Set<Resource> readableResources, Set<Resource> writableResources) throws Exception {
+        Map<Resource, List<Operation>> permissions = new LinkedHashMap<>();
+        for (Resource resource : readableResources) {
+            permissions.put(resource, List.of(Operation.READ));
+        }
+        for (Resource resource : writableResources) {
+            permissions.put(resource, List.of(Operation.READ, Operation.CREATE, Operation.WRITE, Operation.DELETE));
+        }
+        return loginAsRestrictedTenantAdmin(tenantId, permissions);
     }
 }

@@ -64,4 +64,6 @@ public interface SubscriptionManagerService extends ApplicationListener<Partitio
 
     void onNotificationUpdate(TenantId tenantId, UserId recipientId, NotificationUpdate notificationUpdate, TbCallback callback);
 
+    void onLogStreamUpdate(TenantId tenantId, EntityId entityId, long latestSeq, TbCallback callback);
+
 }

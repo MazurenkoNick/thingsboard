@@ -35,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.alarm.AlarmInfo;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -59,6 +60,8 @@ import org.thingsboard.server.queue.discovery.event.OtherServiceShutdownEvent;
 import org.thingsboard.server.queue.discovery.event.PartitionChangeEvent;
 import org.thingsboard.server.queue.provider.TbQueueProducerProvider;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.log.LogStreamDispatcher;
+import org.thingsboard.server.service.subscription.TbEntityRemoteSubsInfo.TbEntitySubsUpdateInfo;
 import org.thingsboard.server.service.ws.notification.sub.NotificationUpdate;
 import org.thingsboard.server.service.ws.notification.sub.NotificationsSubscriptionUpdate;
 
@@ -85,6 +88,8 @@ public class DefaultSubscriptionManagerService extends TbApplicationEventListene
     private final TbQueueProducerProvider producerProvider;
     private final TbLocalSubscriptionService localSubscriptionService;
     private final SubscriptionSchedulerComponent scheduler;
+    private final List<SubEventObserver> subEventObservers;
+    private final LogStreamDispatcher logStreamDispatcher;
 
     private final Lock subsLock = new ReentrantLock();
     private final ConcurrentMap<EntityId, TbEntityRemoteSubsInfo> entitySubscriptions = new ConcurrentHashMap<>();
@@ -111,15 +116,11 @@ public class DefaultSubscriptionManagerService extends TbApplicationEventListene
         log.trace("[{}][{}][{}] Processing subscription event {}", tenantId, entityId, serviceId, event);
         TopicPartitionInfo tpi = partitionService.resolve(ServiceType.TB_CORE, tenantId, entityId);
         if (tpi.isMyPartition()) {
-            subsLock.lock();
-            try {
-                var entitySubs = entitySubscriptions.computeIfAbsent(entityId, id -> new TbEntityRemoteSubsInfo(tenantId, entityId));
-                boolean empty = entitySubs.updateAndCheckIsEmpty(serviceId, event);
-                if (empty) {
-                    entitySubscriptions.remove(entityId);
+            TbEntitySubsUpdateInfo subsUpdInfo = addOrRemoveEntitySubEvent(serviceId, event);
+            for (SubEventObserver o : subEventObservers) {
+                if (o.entityType() == entityId.getEntityType()) {
+                    o.onSubEvent(event, subsUpdInfo);
                 }
-            } finally {
-                subsLock.unlock();
             }
             callback.onSuccess();
             if (event.hasTsOrAttrSub()) {
@@ -130,6 +131,28 @@ public class DefaultSubscriptionManagerService extends TbApplicationEventListene
                     , tenantId, entityId, serviceId, tpi.getFullTopicName());
             callback.onFailure(new RuntimeException("Entity belongs to external partition " + tpi.getFullTopicName() + "!"));
         }
+    }
+
+    private TbEntitySubsUpdateInfo addOrRemoveEntitySubEvent(String serviceId, TbEntitySubEvent event) {
+        subsLock.lock();
+        try {
+            EntityId entityId = event.getEntityId();
+            var entitySubs = entitySubscriptions.computeIfAbsent(entityId, __ -> initEntityRemoteSubsInfo(event));
+            var entitySubsInfo = entitySubs.updateAndCheckIsEmpty(serviceId, event);
+            if (entitySubsInfo.isEmpty()) {
+                entitySubscriptions.remove(entityId);
+            }
+            return entitySubsInfo;
+        } finally {
+            subsLock.unlock();
+        }
+    }
+
+    private static TbEntityRemoteSubsInfo initEntityRemoteSubsInfo(TbEntitySubEvent event) {
+        if (event.getEntityId().getEntityType() == EntityType.AGENT_APP_UNIT) {
+            return new TbAgentUnitRemoteSubsInfo(event.getTenantId(), event.getEntityId());
+        }
+        return new TbEntityRemoteSubsInfo(event.getTenantId(), event.getEntityId());
     }
 
     @Override
@@ -203,6 +226,28 @@ public class DefaultSubscriptionManagerService extends TbApplicationEventListene
         } else {
             sendCoreNotification(targetId, entityId, TbSubscriptionUtils.toProto(entityId, update));
         }
+    }
+
+    @Override
+    public void onLogStreamUpdate(TenantId tenantId, EntityId entityId, long latestSeq, TbCallback callback) {
+        TbEntityRemoteSubsInfo subInfo = entitySubscriptions.get(entityId);
+        if (subInfo == null) {
+            log.trace("[{}] No subscriptions for log stream update.", entityId);
+            callback.onSuccess();
+            return;
+        }
+        log.trace("[{}] Handling log stream update: latestSeq={}", entityId, latestSeq);
+        subInfo.getSubs().forEach((targetId, sub) -> {
+            if (!sub.isLogs()) {
+                return;
+            }
+            if (serviceId.equals(targetId)) {
+                logStreamDispatcher.onWatermark(tenantId, entityId, latestSeq, TbCallback.EMPTY);
+            } else {
+                sendCoreNotification(targetId, entityId, TbSubscriptionUtils.toLogStreamUpdateProtoNf(tenantId, entityId, latestSeq));
+            }
+        });
+        callback.onSuccess();
     }
 
     @Override

@@ -1,0 +1,108 @@
+/**
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+ *
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of ThingsBoard, Inc. and its suppliers,
+ * if any.  The intellectual and technical concepts contained
+ * herein are proprietary to ThingsBoard, Inc.
+ * and its suppliers and may be covered by U.S. and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law.
+ *
+ * Dissemination of this information or reproduction of this material is strictly forbidden
+ * unless prior written permission is obtained from COMPANY.
+ *
+ * Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+ * managers or contractors who have executed Confidentiality and Non-disclosure agreements
+ * explicitly covering such access.
+ *
+ * The copyright notice above does not evidence any actual or intended publication
+ * or disclosure  of  this source code, which includes
+ * information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+ * ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+ * OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+ * THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+ * AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+ * THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+ * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+ * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+ */
+tb-agent-compose-diff {
+  display: block;
+
+  .diff-viewer {
+    position: relative;
+    overflow: hidden;
+    height: clamp(220px, calc(85vh - 280px), 520px);
+    width: 100%;
+
+    .acediff__wrap {
+      overflow: hidden !important;
+    }
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-bottom-left-radius: 4px; border-bottom-right-radius: 4px;
+    background: #fafafa;
+
+    .acediff__gutter {
+      flex: 0 0 40px !important;
+      width: 40px !important;
+      background: #ffffff !important;
+      border-left: 1px solid rgba(0, 0, 0, 0.08) !important;
+      border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+      overflow: visible !important;
+      contain: layout paint style;
+      will-change: transform;
+      svg { width: 40px !important; background: transparent !important; }
+    }
+    .ace_editor {
+      font-family: "JetBrains Mono", "Fira Code", "Roboto Mono", "Menlo", "Courier New", monospace !important;
+    }
+    .ace_gutter { width: 44px !important; background: #f5f5f5; color: rgba(0, 0, 0, 0.42); }
+    .ace_gutter-layer { width: 44px !important; }
+
+    .acediff__right .ace_gutter {
+      left: auto !important;
+      right: 0 !important;
+      border-left: 1px solid rgba(0, 0, 0, 0.08);
+    }
+    .acediff__right .ace_scroller {
+      left: 0 !important;
+      right: 44px !important;
+    }
+    .acediff__right .ace_scrollbar-v {
+      right: 44px !important;
+    }
+
+    .acediff__left .ace_scrollbar,
+    .acediff__left .ace_scrollbar-v {
+      display: none !important;
+      width: 0 !important;
+    }
+    .acediff__left .ace_scroller {
+      right: 0 !important;
+    }
+    .acediff__gutter {
+      z-index: 10;
+    }
+    .acediff__gutter svg,
+    .acediff__copy {
+      z-index: 11;
+      position: relative;
+    }
+    .acediff__gutter svg { pointer-events: none !important; }
+    &.readonly {
+      .ace_editor { background-color: #f7f9fa !important; }
+      .ace_gutter { background: #eef1f2; }
+      .acediff__gutter { background: #f7f9fa !important; }
+    }
+    .acediff__copy,
+    .acediff__copy--left,
+    .acediff__copy--right,
+    .acediff__copy--left div,
+    .acediff__copy--right div {
+      pointer-events: auto !important;
+      z-index: 12 !important;
+    }
+  }
+}

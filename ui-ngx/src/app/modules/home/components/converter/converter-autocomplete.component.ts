@@ -182,7 +182,7 @@ export class ConverterAutocompleteComponent implements ControlValueAccessor, OnI
           this.modelValue = this.useFullEntityId ? entity.id : entity.id.id;
           this.converterURL = getEntityDetailsPageURL(entity.id.id, entity.id.entityType);
           if (entity.edgeTemplate) {
-            this.converterURL = `/edgeManagement${this.converterURL.replace(/^\/integrationsCenter/, '')}`;
+            this.converterURL = `/edgeManagement${this.converterURL.replace(/^\/integrationsCenter/, '/templates')}`;
           }
           this.selectConverterFormGroup.get('entity').patchValue(entity, {emitEvent: false});
         }

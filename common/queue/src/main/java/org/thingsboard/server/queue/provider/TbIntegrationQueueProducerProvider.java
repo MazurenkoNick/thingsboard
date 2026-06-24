@@ -161,4 +161,14 @@ public class TbIntegrationQueueProducerProvider implements TbQueueProducerProvid
         throw new RuntimeException(NOT_IMPLEMENTED);
     }
 
+    @Override
+    public TbQueueProducer<TbProtoQueueMsg<TransportProtos.ToAgentNotificationMsg>> getTbAgentNotificationsMsgProducer() {
+        throw new RuntimeException(NOT_IMPLEMENTED);
+    }
+
+    @Override
+    public TbQueueProducer<TbProtoQueueMsg<TransportProtos.AgentBulkOperationMsg>> getAgentBulkOpsMsgProducer() {
+        throw new RuntimeException(NOT_IMPLEMENTED);
+    }
+
 }

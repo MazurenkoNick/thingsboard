@@ -180,7 +180,7 @@ export class DashboardGroupConfigFactory implements EntityGroupStateConfigFactor
       let url: UrlTree;
       if (params.groupType === EntityType.EDGE) {
         url = this.router.createUrlTree(['customers', 'groups', params.entityGroupId, params.customerId,
-          'edgeManagement', 'instances', 'groups',
+          'edgeManagement', 'edges', 'groups',
           params.childEntityGroupId, params.edgeId, 'dashboardGroups', params.edgeEntitiesGroupId, dashboard.id.id]);
       } else {
         url = this.router.createUrlTree(['customers', 'groups', params.entityGroupId,

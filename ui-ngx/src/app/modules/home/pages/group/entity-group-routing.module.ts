@@ -110,7 +110,7 @@ const redirectEntityDetailsRoutes: Routes = [
     }
   },
   {
-    path: 'edgeManagement/instances/:entityId',
+    path: 'edgeManagement/edges/:entityId',
     pathMatch: 'full',
     children: [],
     canActivate: [RedirectToEntityGroup],
@@ -253,16 +253,16 @@ const redirectEdgeGroupsRoutes: Routes = [
   {
     path: 'edgeGroups',
     pathMatch: 'full',
-    redirectTo: '/edgeManagement/instances/groups'
+    redirectTo: '/edgeManagement/edges/groups'
   },
   {
     path: 'edgeGroups/:entityGroupId',
     pathMatch: 'full',
-    redirectTo: '/edgeManagement/instances/groups/:entityGroupId'
+    redirectTo: '/edgeManagement/edges/groups/:entityGroupId'
   },
   {
     path: 'edgeGroups/:entityGroupId/:entityId',
-    redirectTo: '/edgeManagement/instances/groups/:entityGroupId/:entityId'
+    redirectTo: '/edgeManagement/edges/groups/:entityGroupId/:entityId'
   }
 ];
 

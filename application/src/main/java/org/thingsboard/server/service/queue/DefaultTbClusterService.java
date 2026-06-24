@@ -59,10 +59,16 @@ import org.thingsboard.server.common.data.TbResourceInfo;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
+import org.thingsboard.server.common.data.agent.AgentAppUnitInfo;
+import org.thingsboard.server.common.data.agent.AgentBulkAction;
+import org.thingsboard.server.common.data.agent.BulkOperationRequest;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.edge.EdgeEventActionType;
 import org.thingsboard.server.common.data.edge.EdgeEventType;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.AssetProfileId;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -98,6 +104,8 @@ import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.gen.integration.ToIntegrationExecutorNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos;
+import org.thingsboard.server.gen.transport.TransportProtos.AgentAppEventNotificationProto;
+import org.thingsboard.server.gen.transport.TransportProtos.LogStreamRequestProto;
 import org.thingsboard.server.gen.transport.TransportProtos.ComponentLifecycleMsgProto;
 import org.thingsboard.server.gen.transport.TransportProtos.DeviceStateServiceMsgProto;
 import org.thingsboard.server.gen.transport.TransportProtos.EdgeNotificationMsgProto;
@@ -108,6 +116,7 @@ import org.thingsboard.server.gen.transport.TransportProtos.QueueDeleteMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.QueueUpdateMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ResourceDeleteMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ResourceUpdateMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.ToAgentNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCalculatedFieldMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCalculatedFieldNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCoreMsg;
@@ -133,6 +142,7 @@ import org.thingsboard.server.dao.ota.OtaPackageStateService;
 import org.thingsboard.server.service.profile.TbAssetProfileCache;
 import org.thingsboard.server.service.profile.TbDeviceProfileCache;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -183,6 +193,7 @@ public class DefaultTbClusterService implements TbClusterService {
     private final EdgeService edgeService;
     private final TbTransactionalCache<EdgeId, String> edgeIdServiceIdCache;
     private final DbCallbackExecutorService dbCallbackExecutor;
+    private final TbTransactionalCache<AgentId, String> agentIdServiceIdCache;
 
     @Override
     public void pushMsgToCore(TenantId tenantId, EntityId entityId, ToCoreMsg msg, TbQueueCallback callback) {
@@ -904,6 +915,104 @@ public class DefaultTbClusterService implements TbClusterService {
         if (entityId != null && (EntityType.DEVICE.equals(entityGroupType) || EntityType.DEVICE.equals(entityId.getEntityType()))) {
             pushDeviceUpdateMessage(tenantId, edgeId, entityId, action, entityGroupType);
         }
+    }
+
+    @Override
+    public void onAgentAppEvent(TenantId tenantId, AgentId agentId, AgentAppEvent event) {
+        AgentAppEventNotificationProto proto = buildAgentAppEventProto(tenantId, agentId, event,
+                event.getDeliveryState() == AgentAppEventDeliveryState.DELIVERED, false);
+        sendAgentAppEventNotification(agentId, proto);
+    }
+
+    @Override
+    public void onAgentAppEventCancelled(TenantId tenantId, AgentId agentId, AgentAppEvent event) {
+        AgentAppEventNotificationProto proto = buildAgentAppEventProto(tenantId, agentId, event, false, true);
+        sendAgentAppEventNotification(agentId, proto);
+    }
+
+    @Override
+    public void onAgentLogStreamRequest(TenantId tenantId, AgentId agentId, AgentAppUnitInfo unitInfo, boolean stop) {
+        LogStreamRequestProto proto = LogStreamRequestProto.newBuilder()
+                .setTenantIdMSB(tenantId.getId().getMostSignificantBits())
+                .setTenantIdLSB(tenantId.getId().getLeastSignificantBits())
+                .setAgentIdMSB(agentId.getId().getMostSignificantBits())
+                .setAgentIdLSB(agentId.getId().getLeastSignificantBits())
+                .setAgentUnitIdMSB(unitInfo.getId().getId().getMostSignificantBits())
+                .setAgentUnitIdLSB(unitInfo.getId().getId().getLeastSignificantBits())
+                .setProjectName(unitInfo.getProjectName())
+                .setUnitIdentifier(unitInfo.getIdentifier())
+                .setStop(stop)
+                .build();
+        routeToAgent(agentId, ToAgentNotificationMsg.newBuilder().setLogStreamRequest(proto).build());
+    }
+
+    private void sendAgentAppEventNotification(AgentId agentId, AgentAppEventNotificationProto proto) {
+        routeToAgent(agentId, ToAgentNotificationMsg.newBuilder().setAgentAppEventNotification(proto).build());
+    }
+
+    private void routeToAgent(AgentId agentId, ToAgentNotificationMsg msg) {
+        var cached = agentIdServiceIdCache.get(agentId);
+        String serviceId = cached == null ? null : cached.get();
+        if (serviceId != null) {
+            pushMsgToAgentNotification(msg, serviceId);
+        } else {
+            broadcastAgentNotification(msg);
+        }
+    }
+
+    private void broadcastAgentNotification(ToAgentNotificationMsg msg) {
+        Set<String> serviceIds = partitionService.getAllServiceIds(ServiceType.TB_CORE);
+        for (String serviceId : serviceIds) {
+            pushMsgToAgentNotification(msg, serviceId);
+        }
+    }
+
+    private AgentAppEventNotificationProto buildAgentAppEventProto(TenantId tenantId, AgentId agentId,
+                                                                   AgentAppEvent event, boolean delivered, boolean cancelled) {
+        return AgentAppEventNotificationProto.newBuilder()
+                .setTenantIdMSB(tenantId.getId().getMostSignificantBits())
+                .setTenantIdLSB(tenantId.getId().getLeastSignificantBits())
+                .setAgentIdMSB(agentId.getId().getMostSignificantBits())
+                .setAgentIdLSB(agentId.getId().getLeastSignificantBits())
+                .setApplicationIdMSB(event.getApplicationId().getId().getMostSignificantBits())
+                .setApplicationIdLSB(event.getApplicationId().getId().getLeastSignificantBits())
+                .setEventIdMSB(event.getId().getId().getMostSignificantBits())
+                .setEventIdLSB(event.getId().getId().getLeastSignificantBits())
+                .setActionType(event.getActionType().name())
+                .setDelivered(delivered)
+                .setCancelled(cancelled)
+                .build();
+    }
+
+    private void pushMsgToAgentNotification(ToAgentNotificationMsg msg, String serviceId) {
+        TopicPartitionInfo tpi = topicService.getAgentNotificationsTopic(serviceId);
+        TbQueueProducer<TbProtoQueueMsg<ToAgentNotificationMsg>> producer = producerProvider.getTbAgentNotificationsMsgProducer();
+        producer.send(tpi, new TbProtoQueueMsg<>(UUID.randomUUID(), msg), null);
+    }
+
+    @Override
+    public void pushMsgToAgentBulkOps(AgentBulkAction bulkAction, BulkOperationRequest request) {
+        UUID bulkActionId = bulkAction.getId().getId();
+        UUID tenantId = bulkAction.getTenantId().getId();
+
+        TransportProtos.AgentBulkOperationMsg.Builder builder = TransportProtos.AgentBulkOperationMsg.newBuilder()
+                .setBulkActionIdMSB(bulkActionId.getMostSignificantBits())
+                .setBulkActionIdLSB(bulkActionId.getLeastSignificantBits())
+                .setTenantIdMSB(tenantId.getMostSignificantBits())
+                .setTenantIdLSB(tenantId.getLeastSignificantBits())
+                .setAgentProfileIdMSB(bulkAction.getAgentProfileId().getMostSignificantBits())
+                .setAgentProfileIdLSB(bulkAction.getAgentProfileId().getLeastSignificantBits())
+                .setApplicationProfileIdMSB(bulkAction.getApplicationProfileId().getMostSignificantBits())
+                .setApplicationProfileIdLSB(bulkAction.getApplicationProfileId().getLeastSignificantBits())
+                .setActionType(bulkAction.getActionType().name());
+
+        if (request.getStepInputs() != null) {
+            builder.setStepInputs(com.google.protobuf.ByteString.copyFrom(
+                    JacksonUtil.toString(request.getStepInputs()).getBytes(StandardCharsets.UTF_8)));
+        }
+
+        producerProvider.getAgentBulkOpsMsgProducer().send(topicService.getAgentBulkOpsTopic(),
+                new TbProtoQueueMsg<>(bulkActionId, builder.build()), null);
     }
 
     private void pushDeviceUpdateMessage(TenantId tenantId, EdgeId edgeId, EntityId entityId, EdgeEventActionType action, EntityType entityGroupType) {

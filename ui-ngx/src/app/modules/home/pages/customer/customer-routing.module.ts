@@ -51,6 +51,7 @@ import { CustomerTitleResolver } from '@home/pages/customer/customer.shared';
 import { usersRoute } from '@home/pages/user/user-routing.module';
 import { entityGroupsTitle } from '@shared/models/entity-group.models';
 import { edgesRoute } from '@home/pages/edge/edge-routing.module';
+import { agentsRoute } from '@home/pages/agent/agent-routing.module';
 import { MenuId } from '@core/services/menu.models';
 
 const customerRoute = (entityGroup: any, entitiesTableConfig: any): Route =>
@@ -131,16 +132,20 @@ const customerChildrenRoutes = (): Routes =>
         }
       }
     },
-    { ...edgesRoute(), ...{
-        path: ':customerId/edgeManagement',
-        data: {
-          backNavigationCommands: ['../../../..']
-        },
-        resolve: {
-          customerTitle: CustomerTitleResolver
-        }
-      }
-    },
+    (() => {
+        const edges = edgesRoute();
+        return {
+          ...edges,
+          path: ':customerId/edgeManagement',
+          data: {
+            backNavigationCommands: ['../../../..']
+          },
+          resolve: {
+            customerTitle: CustomerTitleResolver
+          },
+          children: [...edges.children, agentsRoute()]
+        };
+    })(),
 ]);
 
 const customerGroupsChildrenRoutesTemplate = (root: boolean, shared: boolean): Routes => {

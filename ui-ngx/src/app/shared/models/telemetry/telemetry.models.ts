@@ -163,12 +163,15 @@ export enum WsCmdType {
   MARK_NOTIFICATIONS_AS_READ = 'MARK_NOTIFICATIONS_AS_READ',
   MARK_ALL_NOTIFICATIONS_AS_READ = 'MARK_ALL_NOTIFICATIONS_AS_READ',
 
+  LOGS = 'LOGS',
+
   ALARM_DATA_UNSUBSCRIBE = 'ALARM_DATA_UNSUBSCRIBE',
   ALARM_COUNT_UNSUBSCRIBE = 'ALARM_COUNT_UNSUBSCRIBE',
   ALARM_STATUS_UNSUBSCRIBE = 'ALARM_STATUS_UNSUBSCRIBE',
   ENTITY_DATA_UNSUBSCRIBE = 'ENTITY_DATA_UNSUBSCRIBE',
   ENTITY_COUNT_UNSUBSCRIBE = 'ENTITY_COUNT_UNSUBSCRIBE',
-  NOTIFICATIONS_UNSUBSCRIBE = 'NOTIFICATIONS_UNSUBSCRIBE'
+  NOTIFICATIONS_UNSUBSCRIBE = 'NOTIFICATIONS_UNSUBSCRIBE',
+  LOGS_UNSUBSCRIBE = 'LOGS_UNSUBSCRIBE'
 }
 
 export interface WebsocketCmd {
@@ -387,6 +390,19 @@ export class UnsubscribeCmd implements WebsocketCmd {
   type = WsCmdType.NOTIFICATIONS_UNSUBSCRIBE;
 }
 
+export class LogsSubscriptionCmd implements WebsocketCmd {
+  cmdId: number;
+  entityType: EntityType;
+  entityId: string;
+  lastSeenSeq = 0;
+  type = WsCmdType.LOGS;
+}
+
+export class LogsUnsubscribeCmd implements WebsocketCmd {
+  cmdId: number;
+  type = WsCmdType.LOGS_UNSUBSCRIBE;
+}
+
 export class AuthCmd implements WebsocketCmd {
   cmdId = 0;
   type: WsCmdType.AUTH;
@@ -465,7 +481,8 @@ export enum CmdUpdateType {
   ALARM_STATUS = 'ALARM_STATUS',
   COUNT_DATA = 'COUNT_DATA',
   NOTIFICATIONS_COUNT = 'NOTIFICATIONS_COUNT',
-  NOTIFICATIONS = 'NOTIFICATIONS'
+  NOTIFICATIONS = 'NOTIFICATIONS',
+  LOGS = 'LOGS'
 }
 
 export interface CmdUpdateMsg {
@@ -519,8 +536,16 @@ export interface NotificationsUpdateMsg extends CmdUpdateMsg {
   sequenceNumber: number;
 }
 
+export interface LogsUpdateMsg extends CmdUpdateMsg {
+  cmdUpdateType: CmdUpdateType.LOGS;
+  latestSeq: number;
+  lines: string[];
+  droppedLines: number;
+  evictedChunks: number;
+}
+
 export type WebsocketDataMsg = AlarmDataUpdateMsg | AlarmCountUpdateMsg |
-  EntityDataUpdateMsg | EntityCountUpdateMsg | SubscriptionUpdateMsg | NotificationCountUpdateMsg | NotificationsUpdateMsg;
+  EntityDataUpdateMsg | EntityCountUpdateMsg | SubscriptionUpdateMsg | NotificationCountUpdateMsg | NotificationsUpdateMsg | LogsUpdateMsg;
 
 export const isEntityDataUpdateMsg = (message: WebsocketDataMsg): message is EntityDataUpdateMsg => {
   const updateMsg = (message as CmdUpdateMsg);
@@ -555,6 +580,11 @@ export const isNotificationCountUpdateMsg = (message: WebsocketDataMsg): message
 export const isNotificationsUpdateMsg = (message: WebsocketDataMsg): message is NotificationsUpdateMsg => {
   const updateMsg = (message as CmdUpdateMsg);
   return updateMsg.cmdId !== undefined && updateMsg.cmdUpdateType === CmdUpdateType.NOTIFICATIONS;
+};
+
+export const isLogsUpdateMsg = (message: WebsocketDataMsg): message is LogsUpdateMsg => {
+  const updateMsg = (message as CmdUpdateMsg);
+  return updateMsg.cmdId !== undefined && updateMsg.cmdUpdateType === CmdUpdateType.LOGS;
 };
 
 export class SubscriptionUpdate implements SubscriptionUpdateMsg {
@@ -755,6 +785,21 @@ export class AlarmStatusUpdate extends CmdUpdate {
   }
 }
 
+export class LogsUpdate extends CmdUpdate {
+  latestSeq: number;
+  lines: string[];
+  droppedLines: number;
+  evictedChunks: number;
+
+  constructor(msg: LogsUpdateMsg) {
+    super(msg);
+    this.latestSeq = msg.latestSeq || 0;
+    this.lines = msg.lines || [];
+    this.droppedLines = msg.droppedLines || 0;
+    this.evictedChunks = msg.evictedChunks || 0;
+  }
+}
+
 export class NotificationCountUpdate extends CmdUpdate {
   totalUnreadCount: number;
   sequenceNumber: number;
@@ -912,6 +957,7 @@ export class TelemetrySubscriber extends WsSubscriber {
   private entityCountSubject = new ReplaySubject<EntityCountUpdate>(1);
   private alarmCountSubject = new ReplaySubject<AlarmCountUpdate>(1);
   private alarmStatusSubject = new ReplaySubject<AlarmStatusUpdate>(1);
+  private logsSubject = new ReplaySubject<LogsUpdate>(1);
   private tsOffset = undefined;
 
   public data$ = this.dataSubject.asObservable();
@@ -920,6 +966,7 @@ export class TelemetrySubscriber extends WsSubscriber {
   public entityCount$ = this.entityCountSubject.asObservable();
   public alarmCount$ = this.alarmCountSubject.asObservable();
   public alarmStatus$ = this.alarmStatusSubject.asObservable();
+  public logs$ = this.logsSubject.asObservable();
 
   public static createEntityAttributesSubscription(telemetryService: TelemetryWebsocketService,
                                                    entityId: EntityId, attributeScope: TelemetryType,
@@ -947,6 +994,19 @@ export class TelemetrySubscriber extends WsSubscriber {
     subscriptionCommand.originatorId = deepClone(entityId);
     subscriptionCommand.severityList = severityList;
     subscriptionCommand.typeList = typeList;
+    const subscriber = new TelemetrySubscriber(telemetryService, zone);
+    subscriber.subscriptionCommands.push(subscriptionCommand);
+    return subscriber;
+  }
+
+  public static createLogsSubscription(telemetryService: TelemetryWebsocketService,
+                                       entityId: EntityId,
+                                       zone: NgZone,
+                                       lastSeenSeq = 0): TelemetrySubscriber {
+    const subscriptionCommand = new LogsSubscriptionCmd();
+    subscriptionCommand.entityType = entityId.entityType as EntityType;
+    subscriptionCommand.entityId = entityId.id;
+    subscriptionCommand.lastSeenSeq = lastSeenSeq;
     const subscriber = new TelemetrySubscriber(telemetryService, zone);
     subscriber.subscriptionCommands.push(subscriptionCommand);
     return subscriber;
@@ -984,6 +1044,7 @@ export class TelemetrySubscriber extends WsSubscriber {
     this.entityCountSubject.complete();
     this.alarmCountSubject.complete();
     this.alarmStatusSubject.complete();
+    this.logsSubject.complete();
     super.complete();
   }
 
@@ -1082,6 +1143,18 @@ export class TelemetrySubscriber extends WsSubscriber {
       );
     } else {
       this.alarmStatusSubject.next(message);
+    }
+  }
+
+  public onLogs(message: LogsUpdate) {
+    if (this.zone) {
+      this.zone.run(
+        () => {
+          this.logsSubject.next(message);
+        }
+      );
+    } else {
+      this.logsSubject.next(message);
     }
   }
 

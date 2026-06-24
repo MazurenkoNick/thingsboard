@@ -71,6 +71,7 @@ import org.thingsboard.server.common.stats.StatsFactory;
 import org.thingsboard.server.common.util.KvProtoUtil;
 import org.thingsboard.server.common.util.ProtoUtils;
 import org.thingsboard.server.dao.menu.CustomMenuCacheKey;
+import org.thingsboard.server.dao.ota.OtaPackageStateService;
 import org.thingsboard.server.dao.resource.ImageCacheKey;
 import org.thingsboard.server.dao.resource.TbResourceDataCache;
 import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
@@ -116,8 +117,8 @@ import org.thingsboard.server.service.custommenu.TbCustomMenuService;
 import org.thingsboard.server.service.integration.IntegrationManagerService;
 import org.thingsboard.server.service.integration.TbCoreIntegrationApiService;
 import org.thingsboard.server.service.integration.TbIntegrationDownlinkService;
+import org.thingsboard.server.service.log.LogStreamDispatcher;
 import org.thingsboard.server.service.notification.NotificationSchedulerService;
-import org.thingsboard.server.dao.ota.OtaPackageStateService;
 import org.thingsboard.server.service.profile.TbAssetProfileCache;
 import org.thingsboard.server.service.profile.TbDeviceProfileCache;
 import org.thingsboard.server.service.queue.processing.AbstractConsumerService;
@@ -185,6 +186,7 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
     private final TbCustomTranslationService translationService;
     private final TbCustomMenuService customMenuService;
     private final EdqsService edqsService;
+    private final LogStreamDispatcher logStreamDispatcher;
     private final TbCoreConsumerStats stats;
 
     private MainQueueConsumerManager<TbProtoQueueMsg<ToCoreMsg>, QueueConfig> mainConsumer;
@@ -216,7 +218,8 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
                                         TbCustomTranslationService translationService,
                                         TbCustomMenuService customMenuService,
                                         CalculatedFieldCache calculatedFieldCache,
-                                        EdqsService edqsService) {
+                                        EdqsService edqsService,
+                                        LogStreamDispatcher logStreamDispatcher) {
         super(actorContext, tenantProfileCache, deviceProfileCache, assetProfileCache, tbResourceDataCache, calculatedFieldCache, apiUsageStateService, partitionService,
                 eventPublisher, jwtSettingsService);
         this.stateService = stateService;
@@ -238,6 +241,7 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
         this.customMenuService = customMenuService;
         this.queueFactory = tbCoreQueueFactory;
         this.edqsService = edqsService;
+        this.logStreamDispatcher = logStreamDispatcher;
     }
 
     @PostConstruct
@@ -571,6 +575,8 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
             localSubscriptionService.onAlarmUpdate(msg.getAlarmUpdate(), callback);
         } else if (msg.hasNotificationsUpdate()) {
             localSubscriptionService.onNotificationUpdate(msg.getNotificationsUpdate(), callback);
+        } else if (msg.hasLogUpdate()) {
+            logStreamDispatcher.onWatermark(msg.getLogUpdate(), callback);
         } else if (msg.hasSubUpdate() || msg.hasAlarmSubUpdate() || msg.hasNotificationsSubUpdate()) {
             //OLD CODE -> Do NOTHING.
             callback.onSuccess();
@@ -680,6 +686,12 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
             TenantId tenantId = toTenantId(updateProto.getTenantIdMSB(), updateProto.getTenantIdLSB());
             NotificationRequestUpdate update = JacksonUtil.fromString(updateProto.getUpdate(), NotificationRequestUpdate.class);
             localSubscriptionService.onNotificationRequestUpdate(tenantId, update, callback);
+        } else if (msg.hasLogUpdate()) {
+            TransportProtos.TbLogStreamUpdateProto proto = msg.getLogUpdate();
+            subscriptionManagerService.onLogStreamUpdate(
+                    toTenantId(proto.getTenantIdMSB(), proto.getTenantIdLSB()),
+                    TbSubscriptionUtils.toEntityId(proto.getEntityType(), proto.getEntityIdMSB(), proto.getEntityIdLSB()),
+                    proto.getLatestSeq(), callback);
         } else {
             throwNotHandled(msg, callback);
         }

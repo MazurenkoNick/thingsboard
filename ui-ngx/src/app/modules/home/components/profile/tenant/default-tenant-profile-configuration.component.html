@@ -958,6 +958,22 @@
           </tb-rate-limits>
         </div>
         <div class="flex flex-1 flex-row xs:flex-col gt-xs:gap-4">
+          <tb-rate-limits class="flex-1" formControlName="agentEventRateLimits"
+            [type]="rateLimitsType.AGENT_EVENTS_RATE_LIMIT">
+          </tb-rate-limits>
+          <tb-rate-limits class="flex-1" formControlName="agentEventRateLimitsPerAgent"
+            [type]="rateLimitsType.AGENT_EVENTS_PER_AGENT_RATE_LIMIT">
+          </tb-rate-limits>
+        </div>
+        <div class="flex flex-1 flex-row xs:flex-col gt-xs:gap-4">
+          <tb-rate-limits class="flex-1" formControlName="agentLogChunkRateLimits"
+            [type]="rateLimitsType.AGENT_LOG_CHUNKS_RATE_LIMIT">
+          </tb-rate-limits>
+          <tb-rate-limits class="flex-1" formControlName="agentLogChunkRateLimitsPerAgent"
+            [type]="rateLimitsType.AGENT_LOG_CHUNKS_PER_AGENT_RATE_LIMIT">
+          </tb-rate-limits>
+        </div>
+        <div class="flex flex-1 flex-row xs:flex-col gt-xs:gap-4">
           <tb-rate-limits class="flex-1" formControlName="wsUpdatesPerSessionRateLimit"
                           [type]="rateLimitsType.WS_UPDATE_PER_SESSION_RATE_LIMIT">
           </tb-rate-limits>

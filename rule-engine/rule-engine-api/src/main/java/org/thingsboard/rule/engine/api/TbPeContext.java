@@ -43,6 +43,14 @@ import org.thingsboard.server.common.data.id.IntegrationId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.script.ScriptLanguage;
 import org.thingsboard.server.common.msg.TbMsg;
+import org.thingsboard.server.dao.agent.AgentAppEventService;
+import org.thingsboard.server.dao.agent.AgentAppProfileService;
+import org.thingsboard.server.dao.agent.AgentAppTemplateService;
+import org.thingsboard.server.dao.agent.AgentAppUnitService;
+import org.thingsboard.server.dao.agent.AgentApplicationService;
+import org.thingsboard.server.dao.agent.AgentBulkActionService;
+import org.thingsboard.server.dao.agent.AgentProfileService;
+import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.blob.BlobEntityService;
 import org.thingsboard.server.dao.converter.ConverterService;
 import org.thingsboard.server.dao.group.EntityGroupService;
@@ -83,6 +91,22 @@ public interface TbPeContext {
     SchedulerEventService getSchedulerEventService();
 
     SecretService getSecretService();
+
+    AgentService getAgentService();
+
+    AgentApplicationService getAgentApplicationService();
+
+    AgentAppTemplateService getAgentAppTemplateService();
+
+    AgentAppEventService getAgentAppEventService();
+
+    AgentAppUnitService getAgentAppUnitService();
+
+    AgentAppProfileService getAgentAppProfileService();
+
+    AgentProfileService getAgentProfileService();
+
+    AgentBulkActionService getAgentBulkActionService();
 
     DeviceGroupOtaPackageService getDeviceGroupOtaPackageService();
 

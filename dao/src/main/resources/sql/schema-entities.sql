@@ -973,6 +973,143 @@ CREATE TABLE IF NOT EXISTS edge (
     CONSTRAINT edge_routing_key_unq_key UNIQUE (routing_key)
 );
 
+CREATE TABLE IF NOT EXISTS agent_profile (
+    id uuid NOT NULL CONSTRAINT agent_profile_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    tenant_id uuid NOT NULL,
+    name varchar(255) NOT NULL,
+    description varchar(255),
+    provision_key varchar(255),
+    provision_secret varchar(255),
+    provision_type varchar(32) NOT NULL DEFAULT 'DISABLED',
+    is_default boolean NOT NULL DEFAULT false,
+    version BIGINT DEFAULT 1,
+    CONSTRAINT agent_profile_name_unq_key UNIQUE (tenant_id, name),
+    CONSTRAINT agent_profile_provision_key_unq_key UNIQUE (provision_key)
+);
+
+CREATE TABLE IF NOT EXISTS agent (
+    id uuid NOT NULL CONSTRAINT agent_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    customer_id uuid,
+    name varchar(255),
+    description varchar(255),
+    routing_key varchar(255),
+    secret varchar(255),
+    tenant_id uuid,
+    agent_profile_id uuid NOT NULL,
+    version BIGINT DEFAULT 1,
+    CONSTRAINT agent_name_unq_key UNIQUE (tenant_id, name),
+    CONSTRAINT agent_routing_key_unq_key UNIQUE (routing_key),
+    CONSTRAINT fk_agent_agent_profile FOREIGN KEY (agent_profile_id) REFERENCES agent_profile(id)
+);
+
+CREATE TABLE IF NOT EXISTS agent_app_template (
+    id uuid NOT NULL CONSTRAINT agent_app_template_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    tenant_id uuid,
+    app_type varchar(32) NOT NULL,
+    current_version varchar(255) NOT NULL,
+    next_version varchar(255),
+    image_digest varchar(255),
+    config_type varchar(32),
+    start_steps jsonb,
+    upgrade_steps jsonb,
+    delete_steps jsonb,
+    rollback_steps jsonb,
+    restart_steps jsonb,
+    version BIGINT DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS agent_app_profile (
+    id uuid NOT NULL CONSTRAINT agent_app_profile_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    tenant_id uuid NOT NULL,
+    name varchar(255) NOT NULL,
+    description varchar(255),
+    app_type varchar(32) NOT NULL,
+    template_id uuid NOT NULL,
+    config jsonb,
+    version BIGINT DEFAULT 1,
+    CONSTRAINT agent_app_profile_name_unq_key UNIQUE (tenant_id, name),
+    CONSTRAINT fk_agent_app_profile_template FOREIGN KEY (template_id) REFERENCES agent_app_template(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS agent_application (
+    id uuid NOT NULL CONSTRAINT agent_application_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    tenant_id uuid,
+    agent_id uuid NOT NULL,
+    app_type varchar(255) NOT NULL,
+    name varchar(255),
+    template_id uuid,
+    desired_template_id uuid,
+    config jsonb,
+    project_name varchar(255),
+    pending_deletion boolean NOT NULL DEFAULT false,
+    origin varchar(32),
+    application_profile_id uuid,
+    profile_config_version BIGINT,
+    version BIGINT DEFAULT 1,
+    CONSTRAINT agent_application_project_name_unq_key UNIQUE (agent_id, project_name),
+    CONSTRAINT fk_agent_application_agent FOREIGN KEY (agent_id) REFERENCES agent(id) ON DELETE CASCADE,
+    CONSTRAINT fk_agent_application_template FOREIGN KEY (template_id) REFERENCES agent_app_template(id) ON DELETE CASCADE,
+    CONSTRAINT fk_agent_application_desired_template FOREIGN KEY (desired_template_id) REFERENCES agent_app_template(id) ON DELETE SET NULL,
+    CONSTRAINT fk_agent_app_profile FOREIGN KEY (application_profile_id) REFERENCES agent_app_profile(id)
+);
+
+CREATE TABLE IF NOT EXISTS agent_bulk_action (
+    id uuid NOT NULL CONSTRAINT agent_bulk_action_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    tenant_id uuid NOT NULL,
+    agent_profile_id uuid,
+    application_profile_id uuid,
+    action_type varchar(32) NOT NULL,
+    status varchar(32) NOT NULL DEFAULT 'COMPLETED',
+    error_msg varchar(1024),
+    processing_started_time bigint,
+    total int NOT NULL DEFAULT 0,
+    submitted int NOT NULL DEFAULT 0,
+    skip_counts jsonb,
+    CONSTRAINT fk_agent_bulk_action_agent_profile FOREIGN KEY (agent_profile_id) REFERENCES agent_profile(id) ON DELETE CASCADE,
+    CONSTRAINT fk_agent_bulk_action_application_profile FOREIGN KEY (application_profile_id) REFERENCES agent_app_profile(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS agent_app_event (
+    id uuid NOT NULL CONSTRAINT agent_app_event_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    tenant_id uuid NOT NULL,
+    application_id uuid,
+    agent_id uuid,
+    application_name varchar(255),
+    action_type varchar(32) NOT NULL,
+    delivery_state varchar(32) NOT NULL DEFAULT 'PENDING',
+    status varchar(32),
+    current_step_id uuid,
+    current_activity varchar,
+    error_message varchar,
+    updated_time bigint NOT NULL,
+    step_states jsonb,
+    bulk_action_id uuid,
+    resolved_arguments jsonb,
+    CONSTRAINT fk_agent_app_event_application FOREIGN KEY (application_id) REFERENCES agent_application(id) ON DELETE SET NULL,
+    CONSTRAINT fk_agent_app_event_bulk_action FOREIGN KEY (bulk_action_id) REFERENCES agent_bulk_action(id) ON DELETE SET NULL
+);
+CREATE INDEX IF NOT EXISTS idx_agent_app_event_app_delivery ON agent_app_event(application_id, delivery_state);
+CREATE INDEX IF NOT EXISTS idx_agent_app_event_bulk_action_status ON agent_app_event(bulk_action_id, status) WHERE bulk_action_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_agent_app_event_tenant_agent ON agent_app_event(tenant_id, agent_id);
+
+CREATE TABLE IF NOT EXISTS agent_app_unit (
+    id uuid NOT NULL CONSTRAINT agent_app_unit_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    tenant_id uuid NOT NULL,
+    agent_application_id uuid NOT NULL,
+    identifier varchar(255) NOT NULL,
+    type varchar(255) NOT NULL,
+    CONSTRAINT fk_agent_app_unit_agent_application FOREIGN KEY (agent_application_id) REFERENCES agent_application(id) ON DELETE CASCADE,
+    CONSTRAINT uq_agent_app_unit_app_id_identifier_type UNIQUE (agent_application_id, identifier, type)
+);
+
 CREATE TABLE IF NOT EXISTS edge_event (
     seq_id INT GENERATED ALWAYS AS IDENTITY,
     id uuid NOT NULL,

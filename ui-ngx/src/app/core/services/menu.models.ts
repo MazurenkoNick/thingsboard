@@ -155,6 +155,12 @@ export enum MenuId {
   edges = 'edges',
   edge_instances = 'edge_instances',
   rulechain_templates = 'rulechain_templates',
+  agents = 'agents',
+  agent_all = 'agent_all',
+  agent_groups = 'agent_groups',
+  agent_shared = 'agent_shared',
+  edge_profiles = 'edge_profiles',
+  edge_templates = 'edge_templates',
   features = 'features',
   otaUpdates = 'otaUpdates',
   version_control = 'version_control',
@@ -766,10 +772,10 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
     MenuId.edges,
     {
       id: MenuId.edges,
-      name: 'edge.instances',
+      name: 'edge.edges',
       fullName: 'edge.edge-instances',
       type: 'link',
-      path: '/edgeManagement/instances',
+      path: '/edgeManagement/edges',
       icon: 'router'
     }
   ],
@@ -780,7 +786,7 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       name: 'edge.edge-instances',
       fullName: 'edge.edge-instances',
       type: 'link',
-      path: '/edgeManagement/instances',
+      path: '/edgeManagement/edges',
       icon: 'router'
     }
   ],
@@ -791,8 +797,73 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       name: 'edge.rulechain-templates',
       fullName: 'edge.edge-rulechain-templates',
       type: 'link',
-      path: '/edgeManagement/ruleChains',
+      path: '/edgeManagement/templates/ruleChains',
       icon: 'settings_ethernet'
+    }
+  ],
+  [
+    MenuId.agents,
+    {
+      id: MenuId.agents,
+      name: 'agent.agents',
+      fullName: 'agent.agents',
+      type: 'link',
+      path: '/edgeManagement/agents',
+      icon: 'memory'
+    }
+  ],
+  [
+    MenuId.agent_all,
+    {
+      id: MenuId.agent_all,
+      name: 'agent.all',
+      fullName: 'agent.all-agents',
+      type: 'link',
+      path: '/edgeManagement/agents/all',
+      icon: 'memory'
+    }
+  ],
+  [
+    MenuId.agent_groups,
+    {
+      id: MenuId.agent_groups,
+      name: 'agent.groups',
+      fullName: 'entity-group.agent-groups',
+      type: 'link',
+      path: '/edgeManagement/agents/groups',
+      icon: 'memory'
+    }
+  ],
+  [
+    MenuId.agent_shared,
+    {
+      id: MenuId.agent_shared,
+      name: 'agent.shared',
+      fullName: 'entity-group.shared-agent-groups',
+      type: 'link',
+      path: '/edgeManagement/agents/shared',
+      icon: 'memory',
+      rootOnly: true
+    }
+  ],
+  [
+    MenuId.edge_profiles,
+    {
+      id: MenuId.edge_profiles,
+      name: 'edge.profiles',
+      type: 'link',
+      path: '/edgeManagement/profiles',
+      icon: 'badge'
+    }
+  ],
+  [
+    MenuId.edge_templates,
+    {
+      id: MenuId.edge_templates,
+      name: 'edge.templates',
+      type: 'link',
+      path: '/edgeManagement/templates',
+      icon: 'dashboard'
     }
   ],
   [
@@ -1158,7 +1229,7 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       name: 'edge.all',
       fullName: 'edge.all-edges',
       type: 'link',
-      path: '/edgeManagement/instances/all',
+      path: '/edgeManagement/edges/all',
       icon: 'router'
     }
   ],
@@ -1169,7 +1240,7 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       name: 'edge.groups',
       fullName: 'entity-group.edge-groups',
       type: 'link',
-      path: '/edgeManagement/instances/groups',
+      path: '/edgeManagement/edges/groups',
       icon: 'router'
     }
   ],
@@ -1180,7 +1251,7 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       name: 'edge.shared',
       fullName: 'entity-group.shared-edge-groups',
       type: 'link',
-      path: '/edgeManagement/instances/shared',
+      path: '/edgeManagement/edges/shared',
       icon: 'router',
       rootOnly: true
     }
@@ -1192,7 +1263,7 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       name: 'edge.integration-templates',
       fullName: 'edge.edge-integration-templates',
       type: 'link',
-      path: '/edgeManagement/integrations',
+      path: '/edgeManagement/templates/integrations',
       icon: 'input'
     }
   ],
@@ -1203,7 +1274,7 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       name: 'edge.converter-templates',
       fullName: 'edge.edge-converter-templates',
       type: 'link',
-      path: '/edgeManagement/converters',
+      path: '/edgeManagement/templates/converters',
       icon: 'transform'
     }
   ],
@@ -1452,6 +1523,30 @@ const menuFilters = new Map<MenuId, MenuFilter>([
   [
     MenuId.edge_shared, (authState, userPermissionsService) =>
           authState.edgesSupportEnabled && userPermissionsService.hasSharedReadGroupsPermission(EntityType.EDGE)
+  ],
+  [
+    MenuId.agent_all, (_authState, userPermissionsService) =>
+          userPermissionsService.hasReadGenericPermission(Resource.AGENT)
+  ],
+  [
+    MenuId.agent_groups, (_authState, userPermissionsService) =>
+          userPermissionsService.hasGenericReadGroupsPermission(EntityType.AGENT)
+  ],
+  [
+    MenuId.agent_shared, (_authState, userPermissionsService) =>
+          userPermissionsService.hasSharedReadGroupsPermission(EntityType.AGENT)
+  ],
+  [
+    MenuId.edge_profiles, (_authState, userPermissionsService) =>
+          userPermissionsService.hasReadGenericPermission(Resource.AGENT_PROFILE) ||
+          userPermissionsService.hasReadGenericPermission(Resource.AGENT_APP_PROFILE)
+  ],
+  [
+    MenuId.edge_templates, (authState, userPermissionsService) =>
+          authState.edgesSupportEnabled && authState.authUser.authority === Authority.TENANT_ADMIN &&
+          (userPermissionsService.hasReadGenericPermission(Resource.RULE_CHAIN) ||
+            userPermissionsService.hasReadGenericPermission(Resource.INTEGRATION) ||
+            userPermissionsService.hasReadGenericPermission(Resource.CONVERTER))
   ],
   [
     MenuId.rulechain_templates, (authState, userPermissionsService) =>
@@ -1829,6 +1924,14 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
         id: MenuId.edge_management,
         pages: [
           {
+            id: MenuId.agents,
+            pages: [
+              {id: MenuId.agent_all},
+              {id: MenuId.agent_groups},
+              {id: MenuId.agent_shared}
+            ]
+          },
+          {
             id: MenuId.edges,
             pages: [
               {id: MenuId.edge_all},
@@ -1836,9 +1939,8 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
               {id: MenuId.edge_shared},
             ]
           },
-          {id: MenuId.rulechain_templates},
-          {id: MenuId.integration_templates},
-          {id: MenuId.converter_templates}
+          {id: MenuId.edge_profiles},
+          {id: MenuId.edge_templates}
         ]
       },
       {id: MenuId.trendz_analytics},

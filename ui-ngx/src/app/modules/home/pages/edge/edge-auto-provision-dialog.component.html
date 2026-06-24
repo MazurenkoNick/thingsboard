@@ -1,0 +1,181 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<mat-toolbar color="primary" class="tb-auto-provision-toolbar">
+  <div class="tb-auto-provision-toolbar-content">
+    <h2>{{ titleKey | translate }}</h2>
+  </div>
+  <button mat-icon-button (click)="cancel()" type="button" tabindex="-1">
+    <mat-icon>close</mat-icon>
+  </button>
+</mat-toolbar>
+
+<div mat-dialog-content class="tb-auto-provision-body">
+  <mat-stepper linear #stepper [labelPosition]="(stepperLabelPosition | async)">
+
+    <mat-step [completed]="canProceed()"
+              [label]="stepSelectKey | translate">
+      <div class="tb-step-content">
+
+        <div class="tb-info-box info">
+          <mat-icon>auto_awesome</mat-icon>
+          <div>
+            <p class="info-title">{{ infoTitleKey | translate }}</p>
+            <p>{{ infoBodyKey | translate }}</p>
+          </div>
+        </div>
+
+        <form [formGroup]="selectForm" autocomplete="off" class="select-form">
+          <mat-form-field class="mat-block profile-field" subscriptSizing="dynamic">
+            <mat-label translate>edge.auto-provision-agent-profile-label</mat-label>
+            <input matInput
+                   type="text"
+                   formControlName="agentProfile"
+                   [matAutocomplete]="auto"
+                   (focusin)="onProfileFocus()"
+                   [placeholder]="'edge.auto-provision-agent-profile-placeholder' | translate">
+            <button matSuffix mat-button color="primary" type="button"
+                    class="create-profile-btn"
+                    (mousedown)="$event.preventDefault()"
+                    (click)="createNewProfile($event)">
+              <mat-icon>add</mat-icon>
+              <span translate>edge.auto-provision-create-profile</span>
+            </button>
+            <mat-autocomplete #auto="matAutocomplete"
+                              [displayWith]="displayProfile"
+                              (optionSelected)="onProfileSelected($event.option.value)">
+              <mat-option *ngFor="let profile of filteredProfiles$ | async" [value]="profile">
+                <div class="profile-option">
+                  <span class="profile-name">{{ profile.name }}</span>
+                  <span class="profile-meta" *ngIf="profile.default">{{ 'agent.default-profile' | translate }}</span>
+                </div>
+              </mat-option>
+              <mat-option *ngIf="(filteredProfiles$ | async)?.length === 0" disabled>
+                <span class="empty-hint" translate>edge.auto-provision-no-eligible-profiles</span>
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+
+          <div class="validation-row" [ngSwitch]="validation">
+            <div *ngSwitchCase="'validating'" class="validation-msg muted">
+              <mat-spinner diameter="16"></mat-spinner>
+              <span translate>edge.auto-provision-validating</span>
+            </div>
+            <div *ngSwitchCase="'valid'" class="validation-msg valid">
+              <mat-icon>check_circle</mat-icon>
+              <span>{{ validKey | translate: { profile: selectedProfile?.name } }}</span>
+            </div>
+            <div *ngSwitchCase="'invalid-strategy'" class="validation-msg invalid">
+              <mat-icon>error_outline</mat-icon>
+              <span translate>edge.auto-provision-invalid-strategy</span>
+            </div>
+            <div *ngSwitchCase="'invalid-no-edge-app'" class="validation-msg invalid">
+              <mat-icon>error_outline</mat-icon>
+              <span>{{ invalidNoAppKey | translate }}</span>
+              <button mat-button color="primary" type="button" (click)="assignProfileToSelected($event)">
+                <mat-icon>link</mat-icon>
+                <span translate>agent.assign-profile</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="step-footer">
+        <button mat-button type="button" (click)="cancel()">{{ 'action.cancel' | translate }}</button>
+        <button mat-raised-button color="primary" type="button"
+                [disabled]="!canProceed() || loading"
+                (click)="proceedToScript()">
+          <span>{{ 'action.next' | translate }}</span>
+          <mat-icon iconPositionEnd>chevron_right</mat-icon>
+        </button>
+      </div>
+    </mat-step>
+
+    <mat-step [label]="stepScriptKey | translate">
+      <div class="tb-step-content">
+
+        <div class="success-banner">
+          <mat-icon class="success-icon">check_circle</mat-icon>
+          <div>
+            <p class="banner-title">{{ successMessageKey | translate }}</p>
+          </div>
+        </div>
+
+        <ng-container *ngIf="hasCredentials(); else noCredentials">
+          <section class="script-section">
+            <h3>
+              <mat-icon class="section-icon">terminal</mat-icon>
+              <span translate>agent.docker-run-command</span>
+            </h3>
+
+            <div class="command-block">
+              <button mat-flat-button class="copy-command-btn"
+                      ngxClipboard
+                      [cbContent]="dockerCommand"
+                      (cbOnSuccess)="onCopied()">
+                <mat-icon>content_copy</mat-icon>
+                <span translate>action.copy</span>
+              </button>
+              <pre>{{ dockerCommand }}</pre>
+            </div>
+
+            <div class="tb-info-box info">
+              <mat-icon>info</mat-icon>
+              <div>
+                <p>{{ infoBodyKey | translate }}</p>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
+        <ng-template #noCredentials>
+          <div class="tb-info-box invalid">
+            <mat-icon>error_outline</mat-icon>
+            <div>
+              <p translate>edge.auto-provision-no-script</p>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="step-footer">
+        <button mat-button type="button" (click)="cancel()">{{ 'action.close' | translate }}</button>
+        <button mat-raised-button color="primary" type="button" (click)="goToProfile()">
+          <mat-icon>open_in_new</mat-icon>
+          <span translate>agent.go-to-profile</span>
+        </button>
+      </div>
+    </mat-step>
+
+  </mat-stepper>
+</div>

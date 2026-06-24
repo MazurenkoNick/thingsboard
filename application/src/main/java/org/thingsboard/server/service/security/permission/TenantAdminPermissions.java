@@ -90,6 +90,7 @@ public class TenantAdminPermissions extends AbstractPermissions {
         put(Resource.ENTITY_VIEW_GROUP, tenantEntityGroupPermissionChecker);
         put(Resource.EDGE_GROUP, tenantEntityGroupPermissionChecker);
         put(Resource.DASHBOARD_GROUP, tenantEntityGroupPermissionChecker);
+        put(Resource.AGENT_GROUP, tenantEntityGroupPermissionChecker);
         put(Resource.WHITE_LABELING, tenantWhiteLabelingPermissionChecker);
         put(Resource.GROUP_PERMISSION, tenantStandaloneEntityPermissionChecker);
         put(Resource.AUDIT_LOG, genericPermissionChecker);
@@ -114,6 +115,10 @@ public class TenantAdminPermissions extends AbstractPermissions {
         put(Resource.REPORT, tenantStandaloneEntityPermissionChecker);
         put(Resource.AI_MODEL, tenantStandaloneEntityPermissionChecker);
         put(Resource.API_KEY, tenantStandaloneEntityPermissionChecker);
+        put(Resource.AGENT, tenantGroupEntityPermissionChecker);
+        put(Resource.AGENT_APP_TEMPLATE, new PermissionChecker.GenericPermissionChecker(Operation.READ));
+        put(Resource.AGENT_APP_PROFILE, tenantStandaloneEntityPermissionChecker);
+        put(Resource.AGENT_PROFILE, tenantStandaloneEntityPermissionChecker);
     }
 
     public static final PermissionChecker tenantStandaloneEntityPermissionChecker = new PermissionChecker() {
@@ -341,5 +346,4 @@ public class TenantAdminPermissions extends AbstractPermissions {
             }
         }
     };
-
 }

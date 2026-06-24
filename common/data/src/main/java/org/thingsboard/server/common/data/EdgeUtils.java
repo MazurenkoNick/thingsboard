@@ -53,6 +53,8 @@ import java.util.regex.Pattern;
 @Slf4j
 public final class EdgeUtils {
 
+    public static final String DEFAULT_EDGE_LICENSE_KEY = "6qcGys6gz4M2ZuIqZ6hRDjWT";
+
     private static final Pattern ATTRIBUTE_PATTERN = Pattern.compile("(\\$\\{\\{)(.*?)(}})");
     private static final String ATTRIBUTE_PLACEHOLDER_PATTERN = "${{%s}}";
     private static final String ATTRIBUTE_REGEXP_PLACEHOLDER_PATTERN = "\\$\\{\\{%s}}";

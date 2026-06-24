@@ -96,6 +96,19 @@ import org.thingsboard.server.common.data.UpdateMessage;
 import org.thingsboard.server.common.data.UsageInfo;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.UserEmailInfo;
+import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppEventRequest;
+import org.thingsboard.server.common.data.agent.AgentAppInstallResponse;
+import org.thingsboard.server.common.data.agent.AgentAppProfile;
+import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.agent.AgentBulkAction;
+import org.thingsboard.server.common.data.agent.AgentProfile;
+import org.thingsboard.server.common.data.agent.AgentInfo;
+import org.thingsboard.server.common.data.agent.BulkOperationRequest;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfigType;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.ai.AiModel;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmComment;
@@ -128,6 +141,12 @@ import org.thingsboard.server.common.data.entityview.EntityViewSearchQuery;
 import org.thingsboard.server.common.data.event.EventType;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.group.EntityGroupInfo;
+import org.thingsboard.server.common.data.id.AgentAppEventId;
+import org.thingsboard.server.common.data.id.AgentAppProfileId;
+import org.thingsboard.server.common.data.id.AgentAppTemplateId;
+import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentProfileId;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.AiModelId;
 import org.thingsboard.server.common.data.id.AlarmCommentId;
 import org.thingsboard.server.common.data.id.AlarmId;
@@ -3437,6 +3456,310 @@ public class RestClient implements Closeable {
         ResponseEntity<EdgeInstructions> edgeUpgradeInstructionsResult =
                 restTemplate.getForEntity(baseURL + "/api/edge/instructions/upgrade/{edgeVersion}/{method}", EdgeInstructions.class, edgeVersion, method);
         return Optional.ofNullable(edgeUpgradeInstructionsResult.getBody());
+    }
+
+    // Agent Controller
+
+    public Agent saveAgent(Agent agent) {
+        return restTemplate.postForEntity(baseURL + "/api/agent", agent, Agent.class).getBody();
+    }
+
+    public void deleteAgent(AgentId agentId) {
+        restTemplate.delete(baseURL + "/api/agent/{agentId}", agentId.getId());
+    }
+
+    public Optional<Agent> getAgentById(AgentId agentId) {
+        try {
+            ResponseEntity<Agent> agent = restTemplate.getForEntity(baseURL + "/api/agent/{agentId}", Agent.class, agentId.getId());
+            return Optional.ofNullable(agent.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public Optional<AgentInfo> getAgentInfoById(AgentId agentId) {
+        try {
+            ResponseEntity<AgentInfo> agentInfo = restTemplate.getForEntity(baseURL + "/api/agent/info/{agentId}", AgentInfo.class, agentId.getId());
+            return Optional.ofNullable(agentInfo.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public PageData<Agent> getTenantAgents(PageLink pageLink) {
+        Map<String, String> params = new HashMap<>();
+        addPageLinkToParam(params, pageLink);
+        return restTemplate.exchange(
+                baseURL + "/api/tenant/agents?" + getUrlParams(pageLink),
+                HttpMethod.GET, HttpEntity.EMPTY,
+                new ParameterizedTypeReference<PageData<Agent>>() {},
+                params).getBody();
+    }
+
+    public PageData<AgentInfo> getTenantAgentInfos(PageLink pageLink) {
+        Map<String, String> params = new HashMap<>();
+        addPageLinkToParam(params, pageLink);
+        return restTemplate.exchange(
+                baseURL + "/api/tenant/agentInfos?" + getUrlParams(pageLink),
+                HttpMethod.GET, HttpEntity.EMPTY,
+                new ParameterizedTypeReference<PageData<AgentInfo>>() {},
+                params).getBody();
+    }
+
+    public PageData<Agent> getCustomerAgents(CustomerId customerId, PageLink pageLink) {
+        Map<String, String> params = new HashMap<>();
+        params.put("customerId", customerId.getId().toString());
+        addPageLinkToParam(params, pageLink);
+        return restTemplate.exchange(
+                baseURL + "/api/customer/{customerId}/agents?" + getUrlParams(pageLink),
+                HttpMethod.GET, HttpEntity.EMPTY,
+                new ParameterizedTypeReference<PageData<Agent>>() {},
+                params).getBody();
+    }
+
+    public PageData<AgentInfo> getCustomerAgentInfos(CustomerId customerId, PageLink pageLink) {
+        Map<String, String> params = new HashMap<>();
+        params.put("customerId", customerId.getId().toString());
+        addPageLinkToParam(params, pageLink);
+        return restTemplate.exchange(
+                baseURL + "/api/customer/{customerId}/agentInfos?" + getUrlParams(pageLink),
+                HttpMethod.GET, HttpEntity.EMPTY,
+                new ParameterizedTypeReference<PageData<AgentInfo>>() {},
+                params).getBody();
+    }
+
+    // Agent Application Controller
+
+    public Optional<AgentApplication> getAgentApplicationById(AgentApplicationId agentApplicationId) {
+        try {
+            ResponseEntity<AgentApplication> app = restTemplate.getForEntity(
+                    baseURL + "/api/agent/app/{agentApplicationId}", AgentApplication.class, agentApplicationId.getId());
+            return Optional.ofNullable(app.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public PageData<AgentApplication> getAgentApplicationsByAgentId(AgentId agentId, PageLink pageLink) {
+        Map<String, String> params = new HashMap<>();
+        params.put("agentId", agentId.getId().toString());
+        addPageLinkToParam(params, pageLink);
+        return restTemplate.exchange(
+                baseURL + "/api/agent/{agentId}/apps?" + getUrlParams(pageLink),
+                HttpMethod.GET, HttpEntity.EMPTY,
+                new ParameterizedTypeReference<PageData<AgentApplication>>() {},
+                params).getBody();
+    }
+
+    public Optional<AgentApplication> getAgentApplicationByRelatedEntity(String entityType, String entityId) {
+        try {
+            ResponseEntity<AgentApplication> app = restTemplate.getForEntity(
+                    baseURL + "/api/agent/apps/{entityType}/{entityId}", AgentApplication.class, entityType, entityId);
+            return Optional.ofNullable(app.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public AgentApplication updateAgentApplication(AgentApplication agentApplication) {
+        return restTemplate.exchange(
+                baseURL + "/api/agent/app", HttpMethod.PUT,
+                new HttpEntity<>(agentApplication), AgentApplication.class).getBody();
+    }
+
+    public AgentAppInstallResponse installAgentApp(AgentAppEventRequest request) {
+        return restTemplate.postForEntity(baseURL + "/api/agent/app/event", request, AgentAppInstallResponse.class).getBody();
+    }
+
+    public AgentAppEvent createAgentAppEvent(AgentApplicationId agentApplicationId, AgentAppEventRequest request) {
+        return restTemplate.postForEntity(
+                baseURL + "/api/agent/app/{agentApplicationId}/event", request, AgentAppEvent.class,
+                agentApplicationId.getId()).getBody();
+    }
+
+    public void cancelAgentAppEvent(AgentApplicationId agentApplicationId, AgentAppEventId agentAppEventId) {
+        restTemplate.postForEntity(
+                baseURL + "/api/agent/app/{agentApplicationId}/event/{agentAppEventId}/cancel",
+                null, Void.class, agentApplicationId.getId(), agentAppEventId.getId());
+    }
+
+    public PageData<AgentAppEvent> getAgentAppEvents(AgentApplicationId agentApplicationId, PageLink pageLink) {
+        Map<String, String> params = new HashMap<>();
+        params.put("agentApplicationId", agentApplicationId.getId().toString());
+        addPageLinkToParam(params, pageLink);
+        return restTemplate.exchange(
+                baseURL + "/api/agent/app/{agentApplicationId}/events?" + getUrlParams(pageLink),
+                HttpMethod.GET, HttpEntity.EMPTY,
+                new ParameterizedTypeReference<PageData<AgentAppEvent>>() {},
+                params).getBody();
+    }
+
+    public PageData<AgentAppEvent> getAgentAppEventsByAgentId(AgentId agentId, PageLink pageLink) {
+        Map<String, String> params = new HashMap<>();
+        params.put("agentId", agentId.getId().toString());
+        addPageLinkToParam(params, pageLink);
+        return restTemplate.exchange(
+                baseURL + "/api/agent/{agentId}/events?" + getUrlParams(pageLink),
+                HttpMethod.GET, HttpEntity.EMPTY,
+                new ParameterizedTypeReference<PageData<AgentAppEvent>>() {},
+                params).getBody();
+    }
+
+    public AgentApplication mergeForPreview(AgentAppTemplateId templateId, String composeType, AgentApplication application) {
+        return mergeForPreview(templateId, composeType, null, application);
+    }
+
+    public AgentApplication mergeForPreview(AgentAppTemplateId templateId, String composeType, EntityId relatedEntityId, AgentApplication application) {
+        String url = baseURL + "/api/agent/app/merge/{agentAppTemplateId}/preview?composeType={composeType}";
+        Map<String, String> params = new HashMap<>();
+        params.put("agentAppTemplateId", templateId.getId().toString());
+        params.put("composeType", composeType);
+        if (relatedEntityId != null) {
+            url += "&relatedEntityType={relatedEntityType}&relatedEntityId={relatedEntityId}";
+            params.put("relatedEntityType", relatedEntityId.getEntityType().name());
+            params.put("relatedEntityId", relatedEntityId.getId().toString());
+        }
+        return restTemplate.postForEntity(url, application, AgentApplication.class, params).getBody();
+    }
+
+    public AgentApplication assignRelatedEntityToAgentApp(AgentApplicationId agentApplicationId, EntityId relatedEntityId) {
+        Map<String, String> params = new HashMap<>();
+        params.put("agentApplicationId", agentApplicationId.getId().toString());
+        params.put("entityType", relatedEntityId.getEntityType().name());
+        params.put("entityId", relatedEntityId.getId().toString());
+        return restTemplate.postForEntity(
+                baseURL + "/api/agent/app/{agentApplicationId}/relatedEntity/{entityType}/{entityId}",
+                HttpEntity.EMPTY, AgentApplication.class, params).getBody();
+    }
+
+    public AgentApplication unassignRelatedEntityFromAgentApp(AgentApplicationId agentApplicationId) {
+        return restTemplate.exchange(
+                baseURL + "/api/agent/app/{agentApplicationId}/relatedEntity",
+                HttpMethod.DELETE, HttpEntity.EMPTY, AgentApplication.class,
+                agentApplicationId.getId().toString()).getBody();
+    }
+
+    // Agent App Template Controller
+
+    public Optional<AgentAppTemplate> getAgentAppTemplateById(AgentAppTemplateId templateId) {
+        try {
+            ResponseEntity<AgentAppTemplate> template = restTemplate.getForEntity(
+                    baseURL + "/api/agent/app/template/{templateId}", AgentAppTemplate.class, templateId.getId());
+            return Optional.ofNullable(template.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public Optional<AgentAppTemplate> getLatestAgentAppTemplate(AgentApplicationType appType, AgentAppConfigType configType) {
+        try {
+            ResponseEntity<AgentAppTemplate> template = restTemplate.getForEntity(
+                    baseURL + "/api/agent/app/template/{appType}/{configType}/latest", AgentAppTemplate.class,
+                    appType.name(), configType.name());
+            return Optional.ofNullable(template.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public List<AgentAppTemplate> getAgentAppTemplates() {
+        return restTemplate.exchange(
+                baseURL + "/api/agent/app/templates", HttpMethod.GET, HttpEntity.EMPTY,
+                new ParameterizedTypeReference<List<AgentAppTemplate>>() {}).getBody();
+    }
+
+    // Agent App Profile Controller
+
+    public AgentAppProfile saveAgentAppProfile(AgentAppProfile profile) {
+        return restTemplate.postForEntity(baseURL + "/api/agent/app/profile", profile, AgentAppProfile.class).getBody();
+    }
+
+    public Optional<AgentAppProfile> getAgentAppProfileById(AgentAppProfileId profileId) {
+        try {
+            ResponseEntity<AgentAppProfile> profile = restTemplate.getForEntity(
+                    baseURL + "/api/agent/app/profile/{profileId}", AgentAppProfile.class, profileId.getId());
+            return Optional.ofNullable(profile.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public void deleteAgentAppProfile(AgentAppProfileId profileId) {
+        restTemplate.delete(baseURL + "/api/agent/app/profile/{profileId}", profileId.getId());
+    }
+
+    // Agent Profile Controller
+
+    public AgentProfile saveAgentProfile(AgentProfile agentProfile) {
+        return restTemplate.postForEntity(baseURL + "/api/agent/profile", agentProfile, AgentProfile.class).getBody();
+    }
+
+    public Optional<AgentProfile> getAgentProfileById(AgentProfileId agentProfileId) {
+        try {
+            ResponseEntity<AgentProfile> agentProfile = restTemplate.getForEntity(
+                    baseURL + "/api/agent/profile/{agentProfileId}", AgentProfile.class, agentProfileId.getId());
+            return Optional.ofNullable(agentProfile.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public void deleteAgentProfile(AgentProfileId agentProfileId) {
+        restTemplate.delete(baseURL + "/api/agent/profile/{agentProfileId}", agentProfileId.getId());
+    }
+
+    public void assignAppProfileToAgentProfile(AgentProfileId agentProfileId, AgentAppProfileId profileId) {
+        restTemplate.postForEntity(
+                baseURL + "/api/agent/profile/{agentProfileId}/appProfile/{applicationProfileId}",
+                null, Void.class, agentProfileId.getId(), profileId.getId());
+    }
+
+    public void setAppProfileRelatesOnAutoDiscovery(AgentProfileId agentProfileId, AgentAppProfileId profileId, boolean relate) {
+        restTemplate.postForEntity(
+                baseURL + "/api/agent/profile/{agentProfileId}/appProfile/{applicationProfileId}/autoDiscovery?relate={relate}",
+                null, Void.class, agentProfileId.getId(), profileId.getId(), relate);
+    }
+
+    public AgentBulkAction bulkOperation(AgentProfileId agentProfileId, AgentAppProfileId appProfileId, BulkOperationRequest request, boolean force) {
+        return restTemplate.postForEntity(
+                baseURL + "/api/agent/profile/{agentProfileId}/appProfile/{applicationProfileId}/bulk?force={force}",
+                request, AgentBulkAction.class, agentProfileId.getId(), appProfileId.getId(), force).getBody();
+    }
+
+    public AgentBulkAction getAgentBulkAction(UUID bulkActionId) {
+        return restTemplate.getForObject(baseURL + "/api/agent/bulk/{bulkActionId}", AgentBulkAction.class, bulkActionId);
     }
 
     public UUID saveEntitiesVersion(VersionCreateRequest request) {

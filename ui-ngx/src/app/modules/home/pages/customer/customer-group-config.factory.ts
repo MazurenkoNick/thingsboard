@@ -274,7 +274,7 @@ export class CustomerGroupConfigFactory implements EntityGroupStateConfigFactory
     if (params.hierarchyView) {
       params.hierarchyCallbacks.customerGroupsSelected(params.nodeId, customer.id.id, EntityType.EDGE);
     } else {
-      this.navigateToChildCustomerPage(config, customer, '/edgeManagement/instances');
+      this.navigateToChildCustomerPage(config, customer, '/edgeManagement/edges');
     }
   }
 

@@ -139,6 +139,14 @@ import org.thingsboard.server.dao.notification.NotificationTargetService;
 import org.thingsboard.server.dao.notification.NotificationTemplateService;
 import org.thingsboard.server.dao.oauth2.OAuth2ClientService;
 import org.thingsboard.server.dao.ota.DeviceGroupOtaPackageService;
+import org.thingsboard.server.dao.agent.AgentAppEventService;
+import org.thingsboard.server.dao.agent.AgentAppProfileService;
+import org.thingsboard.server.dao.agent.AgentAppTemplateService;
+import org.thingsboard.server.dao.agent.AgentAppUnitService;
+import org.thingsboard.server.dao.agent.AgentApplicationService;
+import org.thingsboard.server.dao.agent.AgentBulkActionService;
+import org.thingsboard.server.dao.agent.AgentProfileService;
+import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.ota.OtaPackageStateService;
 import org.thingsboard.server.dao.pat.ApiKeyService;
@@ -1263,6 +1271,46 @@ public class DefaultTbContext implements TbContext, TbPeContext {
     @Override
     public SecretService getSecretService() {
         return mainCtx.getSecretService();
+    }
+
+    @Override
+    public AgentService getAgentService() {
+        return mainCtx.getAgentService();
+    }
+
+    @Override
+    public AgentApplicationService getAgentApplicationService() {
+        return mainCtx.getAgentApplicationService();
+    }
+
+    @Override
+    public AgentAppTemplateService getAgentAppTemplateService() {
+        return mainCtx.getAgentAppTemplateService();
+    }
+
+    @Override
+    public AgentAppEventService getAgentAppEventService() {
+        return mainCtx.getAgentAppEventService();
+    }
+
+    @Override
+    public AgentAppUnitService getAgentAppUnitService() {
+        return mainCtx.getAgentAppUnitService();
+    }
+
+    @Override
+    public AgentAppProfileService getAgentAppProfileService() {
+        return mainCtx.getAgentAppProfileService();
+    }
+
+    @Override
+    public AgentProfileService getAgentProfileService() {
+        return mainCtx.getAgentProfileService();
+    }
+
+    @Override
+    public AgentBulkActionService getAgentBulkActionService() {
+        return mainCtx.getAgentBulkActionService();
     }
 
     @Override

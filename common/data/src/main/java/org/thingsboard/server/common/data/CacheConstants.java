@@ -39,6 +39,13 @@ public final class CacheConstants {
     public static final String DEVICE_CACHE = "devices";
     public static final String SESSIONS_CACHE = "sessions";
     public static final String ASSET_CACHE = "assets";
+    public static final String AGENT_CACHE = "agents";
+    public static final String AGENT_APPLICATION_CACHE = "agentApplications";
+    public static final String AGENT_APP_PROFILE_CACHE = "agentAppProfiles";
+    public static final String AGENT_PROFILE_CACHE = "agentProfiles";
+    public static final String AGENT_SESSIONS_CACHE = "agentSessions";
+    public static final String AGENT_APP_UNIT_CACHE = "agentAppUnits";
+    public static final String AGENT_APP_TEMPLATE_CACHE = "agentAppTemplates";
     public static final String CUSTOMER_CACHE = "customers";
     public static final String USER_CACHE = "users";
     public static final String DOWNLINK_CACHE = "downlink";

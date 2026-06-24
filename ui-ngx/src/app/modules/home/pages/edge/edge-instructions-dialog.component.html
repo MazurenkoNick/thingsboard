@@ -40,9 +40,29 @@
   </button>
 </mat-toolbar>
 <div mat-dialog-content>
-  <section *ngIf="loadedInstructions; else loadingInstructions" class="tb-form-panel no-padding no-border">
+  <section class="tb-form-panel no-padding no-border">
     <div class="tb-form-panel no-padding no-border">
       <mat-tab-group [(selectedIndex)]="tabIndex" (selectedTabChange)="selectedTabChange(tabIndex)">
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tabs-icon">smart_toy</mat-icon>
+            {{ 'agent.deploy-via-agent' | translate }}
+          </ng-template>
+          <div class="tb-agent-tab-desc">
+            <mat-icon>auto_awesome</mat-icon>
+            <span translate>agent.deploy-via-agent-desc</span>
+          </div>
+          <tb-agent-app-install-wizard
+            [embedded]="true"
+            [selectAgent]="true"
+            mode="install"
+            [lockedType]="agentAppType"
+            [lockedRelatedEntity]="relatedEntity"
+            [navigateToAgentOnFinish]="true"
+            (finished)="close()"
+            (cancelled)="close()">
+          </tb-agent-app-install-wizard>
+        </mat-tab>
         <mat-tab>
           <ng-template mat-tab-label>
             <mat-icon class="tabs-icon" svgIcon="docker"></mat-icon>
@@ -51,7 +71,13 @@
           <ng-template matTabContent>
             <div class="tb-form-panel no-padding no-border">
               <div class="tb-form-panel no-padding stroked">
-                <tb-markdown [data]='contentData.docker'></tb-markdown>
+                @if (contentData.docker) {
+                  <tb-markdown [data]='contentData.docker'></tb-markdown>
+                } @else {
+                  <div class="tb-loader">
+                    <mat-spinner color="accent" diameter="48" strokeWidth="4"></mat-spinner>
+                  </div>
+                }
               </div>
             </div>
           </ng-template>
@@ -64,7 +90,13 @@
           <ng-template matTabContent>
             <div class="tb-form-panel no-padding no-border">
               <div class="tb-form-panel no-padding stroked">
-                <tb-markdown [data]='contentData.ubuntu'></tb-markdown>
+                @if (contentData.ubuntu) {
+                  <tb-markdown [data]='contentData.ubuntu'></tb-markdown>
+                } @else {
+                  <div class="tb-loader">
+                    <mat-spinner color="accent" diameter="48" strokeWidth="4"></mat-spinner>
+                  </div>
+                }
               </div>
             </div>
           </ng-template>
@@ -77,7 +109,13 @@
           <ng-template matTabContent>
             <div class="tb-form-panel no-padding no-border">
               <div class="tb-form-panel no-padding stroked">
-                <tb-markdown [data]='contentData.centos'></tb-markdown>
+                @if (contentData.centos) {
+                  <tb-markdown [data]='contentData.centos'></tb-markdown>
+                } @else {
+                  <div class="tb-loader">
+                    <mat-spinner color="accent" diameter="48" strokeWidth="4"></mat-spinner>
+                  </div>
+                }
               </div>
             </div>
           </ng-template>
@@ -86,18 +124,7 @@
     </div>
   </section>
 </div>
-<div mat-dialog-actions class="tb-dialog-actions">
-  <mat-slide-toggle [class.!hidden]="!showDontShowAgain" [(ngModel)]="notShowAgain">{{ 'action.dont-show-again' | translate}}</mat-slide-toggle>
+<div mat-dialog-actions class="tb-dialog-actions" *ngIf="showDontShowAgain">
+  <mat-slide-toggle [(ngModel)]="notShowAgain">{{ 'action.dont-show-again' | translate}}</mat-slide-toggle>
   <span class="flex-1"></span>
-  <button mat-button
-          [disabled]="(isLoading$ | async)"
-          (click)="close()">{{ 'action.close' | translate }}</button>
 </div>
-<ng-template #loadingInstructions>
-  <div class="tb-loader">
-    <mat-spinner color="accent" diameter="65" strokeWidth="4"></mat-spinner>
-    <span class="mat-subtitle-1 label">
-        {{ 'edge.loading-edge-instructions' | translate }}
-      </span>
-  </div>
-</ng-template>

@@ -190,6 +190,15 @@ public class DefaultTenantProfileConfiguration implements TenantProfileConfigura
     @RateLimit(fieldName = "Edge uplink messages per edge")
     private String edgeUplinkMessagesRateLimitsPerEdge;
 
+    @RateLimit(fieldName = "Agent events")
+    private String agentEventRateLimits;
+    @RateLimit(fieldName = "Agent events per agent")
+    private String agentEventRateLimitsPerAgent;
+    @RateLimit(fieldName = "Agent log chunks")
+    private String agentLogChunkRateLimits;
+    @RateLimit(fieldName = "Agent log chunks per agent")
+    private String agentLogChunkRateLimitsPerAgent;
+
     private int defaultStorageTtlDays;
     private int alarmsTtlDays;
     private int rpcTtlDays;

@@ -36,7 +36,8 @@ import {
   HostBinding,
   Injector,
   OnDestroy,
-  OnInit
+  OnInit,
+  TemplateRef
 } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
@@ -85,6 +86,11 @@ export class EntityDetailsPageComponent extends EntityDetailsPanelComponent impl
     return this.entitiesTableConfigValue;
   }
 
+  get headerExtensionTemplate(): TemplateRef<unknown> | null {
+    return (this.entityComponent as unknown as { headerExtensionTemplate?: TemplateRef<unknown> })
+      ?.headerExtensionTemplate ?? null;
+  }
+
   @HostBinding('class') 'tb-absolute-fill';
 
   constructor(private route: ActivatedRoute,
@@ -113,6 +119,8 @@ export class EntityDetailsPageComponent extends EntityDetailsPanelComponent impl
     this.subscriptions.push(this.entityAction.subscribe((action) => {
       if (action.action === 'delete') {
         this.deleteEntity(action.event, action.entity);
+      } else if (action.action === 'reload') {
+        this.reload();
       }
     }));
     this.subscriptions.push(this.route.paramMap.subscribe( paramMap => {

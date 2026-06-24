@@ -337,6 +337,125 @@ public class ModelConstants {
     public static final String INTEGRATION_VIEW_STATUS_PROPERTY = "status";
 
     /**
+     * Agent constants.
+     */
+    public static final String AGENT_TABLE_NAME = "agent";
+    public static final String AGENT_INFO_VIEW_TABLE_NAME = "agent_info_view";
+    public static final String AGENT_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String AGENT_CUSTOMER_ID_PROPERTY = CUSTOMER_ID_PROPERTY;
+    public static final String AGENT_NAME_PROPERTY = NAME_PROPERTY;
+    public static final String AGENT_DESCRIPTION_PROPERTY = "description";
+    public static final String AGENT_ROUTING_KEY_PROPERTY = "routing_key";
+    public static final String AGENT_SECRET_PROPERTY = "secret";
+    public static final String AGENT_CUSTOMER_TITLE_PROPERTY = "customer_title";
+    public static final String AGENT_CUSTOMER_IS_PUBLIC_PROPERTY = "customer_is_public";
+    public static final String AGENT_PROFILE_NAME_VIEW_PROPERTY = "agent_profile_name";
+
+    /**
+     * Agent application constants.
+     */
+    public static final String AGENT_APPLICATION_TABLE_NAME = "agent_application";
+    public static final String AGENT_APPLICATION_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String AGENT_APPLICATION_AGENT_ID_PROPERTY = "agent_id";
+    public static final String AGENT_APPLICATION_APP_TYPE_PROPERTY = "app_type";
+    public static final String AGENT_APPLICATION_NAME_PROPERTY = "name";
+    public static final String AGENT_APPLICATION_TEMPLATE_ID_PROPERTY = "template_id";
+    public static final String AGENT_APPLICATION_DESIRED_TEMPLATE_ID_PROPERTY = "desired_template_id";
+    public static final String AGENT_APPLICATION_CONFIG_PROPERTY = "config";
+    public static final String AGENT_APPLICATION_PROJECT_NAME_PROPERTY = "project_name";
+    public static final String AGENT_APPLICATION_PENDING_DELETION_PROPERTY = "pending_deletion";
+    public static final String AGENT_APPLICATION_ORIGIN_PROPERTY = "origin";
+
+    /**
+     * Agent bulk action constants.
+     */
+    public static final String AGENT_BULK_ACTION_TABLE_NAME = "agent_bulk_action";
+    public static final String AGENT_BULK_ACTION_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String AGENT_BULK_ACTION_AGENT_PROFILE_ID_PROPERTY = "agent_profile_id";
+    public static final String AGENT_BULK_ACTION_APPLICATION_PROFILE_ID_PROPERTY = "application_profile_id";
+    public static final String AGENT_BULK_ACTION_ACTION_TYPE_PROPERTY = "action_type";
+    public static final String AGENT_BULK_ACTION_STATUS_PROPERTY = "status";
+    public static final String AGENT_BULK_ACTION_ERROR_MSG_PROPERTY = "error_msg";
+    public static final String AGENT_BULK_ACTION_PROCESSING_STARTED_TIME_PROPERTY = "processing_started_time";
+    public static final String AGENT_BULK_ACTION_TOTAL_PROPERTY = "total";
+    public static final String AGENT_BULK_ACTION_SUBMITTED_PROPERTY = "submitted";
+    public static final String AGENT_BULK_ACTION_SKIP_COUNTS_PROPERTY = "skip_counts";
+
+    /**
+     * Agent app event constants.
+     */
+    public static final String AGENT_APP_EVENT_TABLE_NAME = "agent_app_event";
+    public static final String AGENT_APP_EVENT_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String AGENT_APP_EVENT_APPLICATION_ID_PROPERTY = "application_id";
+    public static final String AGENT_APP_EVENT_AGENT_ID_PROPERTY = "agent_id";
+    public static final String AGENT_APP_EVENT_APPLICATION_NAME_PROPERTY = "application_name";
+    public static final String AGENT_APP_EVENT_ACTION_TYPE_PROPERTY = "action_type";
+    public static final String AGENT_APP_EVENT_DELIVERY_STATE_PROPERTY = "delivery_state";
+    public static final String AGENT_APP_EVENT_STATUS_PROPERTY = "status";
+    public static final String AGENT_APP_EVENT_CURRENT_STEP_ID_PROPERTY = "current_step_id";
+    public static final String AGENT_APP_EVENT_CURRENT_ACTIVITY_PROPERTY = "current_activity";
+    public static final String AGENT_APP_EVENT_ERROR_MESSAGE_PROPERTY = "error_message";
+    public static final String AGENT_APP_EVENT_UPDATED_TIME_PROPERTY = "updated_time";
+    public static final String AGENT_APP_EVENT_STEP_STATES_PROPERTY = "step_states";
+    public static final String AGENT_APP_EVENT_BULK_ACTION_ID_PROPERTY = "bulk_action_id";
+    public static final String AGENT_APP_EVENT_RESOLVED_ARGUMENTS_PROPERTY = "resolved_arguments";
+
+    /**
+     * Agent app template constants.
+     */
+    public static final String AGENT_APP_TEMPLATE_TABLE_NAME = "agent_app_template";
+    public static final String AGENT_APP_TEMPLATE_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String AGENT_APP_TEMPLATE_APP_TYPE_PROPERTY = "app_type";
+    public static final String AGENT_APP_TEMPLATE_CURRENT_VERSION_PROPERTY = "current_version";
+    public static final String AGENT_APP_TEMPLATE_NEXT_VERSION_PROPERTY = "next_version";
+    public static final String AGENT_APP_TEMPLATE_CONFIG_TYPE_PROPERTY = "config_type";
+    public static final String AGENT_APP_TEMPLATE_START_STEPS_PROPERTY = "start_steps";
+    public static final String AGENT_APP_TEMPLATE_UPGRADE_STEPS_PROPERTY = "upgrade_steps";
+    public static final String AGENT_APP_TEMPLATE_DELETE_STEPS_PROPERTY = "delete_steps";
+    public static final String AGENT_APP_TEMPLATE_IMAGE_DIGEST_PROPERTY = "image_digest";
+    public static final String AGENT_APP_TEMPLATE_ROLLBACK_STEPS_PROPERTY = "rollback_steps";
+    public static final String AGENT_APP_TEMPLATE_RESTART_STEPS_PROPERTY = "restart_steps";
+
+    /**
+     * Agent app unit constants.
+     */
+    public static final String AGENT_APP_UNIT_TABLE_NAME = "agent_app_unit";
+    public static final String AGENT_APP_UNIT_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String AGENT_APP_UNIT_AGENT_APPLICATION_ID_PROPERTY = "agent_application_id";
+    public static final String AGENT_APP_UNIT_IDENTIFIER_PROPERTY = "identifier";
+    public static final String AGENT_APP_UNIT_TYPE_PROPERTY = "type";
+
+    /**
+     * Agent application profile constants.
+     */
+    public static final String AGENT_APP_PROFILE_TABLE_NAME = "agent_app_profile";
+    public static final String AGENT_APP_PROFILE_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String AGENT_APP_PROFILE_NAME_PROPERTY = NAME_PROPERTY;
+    public static final String AGENT_APP_PROFILE_DESCRIPTION_PROPERTY = "description";
+    public static final String AGENT_APP_PROFILE_APP_TYPE_PROPERTY = "app_type";
+    public static final String AGENT_APP_PROFILE_TEMPLATE_ID_PROPERTY = "template_id";
+    public static final String AGENT_APP_PROFILE_CONFIG_PROPERTY = "config";
+
+    /**
+     * Agent profile constants.
+     */
+    public static final String AGENT_PROFILE_TABLE_NAME = "agent_profile";
+    public static final String AGENT_PROFILE_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String AGENT_PROFILE_NAME_PROPERTY = NAME_PROPERTY;
+    public static final String AGENT_PROFILE_DESCRIPTION_PROPERTY = "description";
+    public static final String AGENT_PROFILE_PROVISION_KEY_PROPERTY = "provision_key";
+    public static final String AGENT_PROFILE_PROVISION_SECRET_PROPERTY = "provision_secret";
+    public static final String AGENT_PROFILE_PROVISION_TYPE_PROPERTY = "provision_type";
+    public static final String AGENT_PROFILE_IS_DEFAULT_PROPERTY = "is_default";
+
+    /**
+     * Agent additional FK columns.
+     */
+    public static final String AGENT_PROFILE_ID_PROPERTY = "agent_profile_id";
+    public static final String AGENT_APP_PROFILE_ID_PROPERTY = "application_profile_id";
+    public static final String AGENT_APPLICATION_PROFILE_CONFIG_VERSION_PROPERTY = "profile_config_version";
+
+    /**
      * Alarm constants.
      */
     public static final String ENTITY_ALARM_TABLE_NAME = "entity_alarm";

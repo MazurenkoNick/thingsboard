@@ -49,6 +49,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.TenantProfileId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.dao.agent.AgentProfileService;
 import org.thingsboard.server.dao.asset.AssetProfileService;
 import org.thingsboard.server.dao.device.DeviceProfileService;
 import org.thingsboard.server.dao.encryptionkey.EncryptionService;
@@ -94,6 +95,8 @@ public class TenantServiceImpl extends AbstractCachedEntityService<TenantId, Ten
     private AssetProfileService assetProfileService;
     @Autowired
     private DeviceProfileService deviceProfileService;
+    @Autowired
+    private AgentProfileService agentProfileService;
     @Lazy
     @Autowired
     private ApiUsageStateService apiUsageStateService;
@@ -198,6 +201,7 @@ public class TenantServiceImpl extends AbstractCachedEntityService<TenantId, Ten
         if (create) {
             deviceProfileService.createDefaultDeviceProfile(tenantId);
             assetProfileService.createDefaultAssetProfile(tenantId);
+            agentProfileService.createDefaultAgentProfile(tenantId);
             apiUsageStateService.createDefaultApiUsageState(tenantId, null);
             notificationSettingsService.createDefaultNotificationConfigs(tenantId);
             encryptionService.createEncryptionKey(tenantId);
@@ -227,14 +231,15 @@ public class TenantServiceImpl extends AbstractCachedEntityService<TenantId, Ten
         cleanUpService.removeTenantEntities(tenantId, // remember to implement deleteEntity from EntityDaoService when adding an entity type to this list
                 EntityType.ADMIN_SETTINGS, EntityType.JOB, EntityType.ENTITY_VIEW, EntityType.WIDGETS_BUNDLE, EntityType.WIDGET_TYPE,
                 EntityType.ASSET, EntityType.ASSET_PROFILE, EntityType.DEVICE, EntityType.DEVICE_PROFILE,
-                EntityType.DASHBOARD, EntityType.EDGE, EntityType.RULE_CHAIN, EntityType.INTEGRATION,
+                EntityType.AGENT, EntityType.DASHBOARD, EntityType.EDGE, EntityType.RULE_CHAIN, EntityType.INTEGRATION,
                 EntityType.CONVERTER, EntityType.SCHEDULER_EVENT, EntityType.BLOB_ENTITY, EntityType.REPORT,
                 EntityType.REPORT_TEMPLATE, EntityType.ENTITY_GROUP,
                 EntityType.GROUP_PERMISSION, EntityType.ROLE, EntityType.API_USAGE_STATE, EntityType.TB_RESOURCE,
                 EntityType.OTA_PACKAGE, EntityType.RPC, EntityType.QUEUE, EntityType.NOTIFICATION_REQUEST,
                 EntityType.NOTIFICATION_RULE, EntityType.NOTIFICATION_TEMPLATE, EntityType.NOTIFICATION_TARGET,
                 EntityType.QUEUE_STATS, EntityType.CUSTOMER, EntityType.DOMAIN, EntityType.MOBILE_APP_BUNDLE,
-                EntityType.MOBILE_APP, EntityType.OAUTH2_CLIENT, EntityType.SECRET, EntityType.AI_MODEL
+                EntityType.MOBILE_APP, EntityType.OAUTH2_CLIENT, EntityType.SECRET, EntityType.AI_MODEL,
+                EntityType.AGENT_PROFILE, EntityType.AGENT_APP_PROFILE
         );
     }
 

@@ -194,7 +194,7 @@ export class ConvertersTableConfigResolver  {
       $event.stopPropagation();
     }
     if (this.config.componentsData.converterScope === 'edges') {
-      this.router.navigateByUrl(`edgeManagement/converters/${converter.id.id}`).then(() => {});
+      this.router.navigateByUrl(`edgeManagement/templates/converters/${converter.id.id}`).then(() => {});
     } else {
       this.router.navigateByUrl(`converters/${converter.id.id}`).then(() => {});
     }

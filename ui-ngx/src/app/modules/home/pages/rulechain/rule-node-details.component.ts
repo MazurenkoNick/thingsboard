@@ -199,7 +199,7 @@ export class RuleNodeDetailsComponent extends PageComponent implements OnInit, O
     const ruleChainId = this.ruleNodeFormGroup.get('configuration')?.value?.ruleChainId;
     if (ruleChainId) {
       if (this.ruleChainType === RuleChainType.EDGE) {
-        this.router.navigateByUrl(`/edgeManagement/ruleChains/${ruleChainId}`);
+        this.router.navigateByUrl(`/edgeManagement/templates/ruleChains/${ruleChainId}`);
       } else {
         this.router.navigateByUrl(`/ruleChains/${ruleChainId}`);
       }

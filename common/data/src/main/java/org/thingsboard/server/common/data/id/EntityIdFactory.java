@@ -113,6 +113,14 @@ public class EntityIdFactory {
             case ADMIN_SETTINGS -> new AdminSettingsId(uuid);
             case AI_MODEL -> new AiModelId(uuid);
             case API_KEY -> new ApiKeyId(uuid);
+            case AGENT -> new AgentId(uuid);
+            case AGENT_APPLICATION -> new AgentApplicationId(uuid);
+            case AGENT_APP_TEMPLATE -> new AgentAppTemplateId(uuid);
+            case AGENT_APP_EVENT -> new AgentAppEventId(uuid);
+            case AGENT_APP_UNIT -> new AgentAppUnitId(uuid);
+            case AGENT_APP_PROFILE -> new AgentAppProfileId(uuid);
+            case AGENT_PROFILE -> new AgentProfileId(uuid);
+            case AGENT_BULK_ACTION -> new AgentBulkActionId(uuid);
         };
     }
 

@@ -127,6 +127,13 @@ export enum Resource {
   JOB = 'JOB',
   AI_MODEL = 'AI_MODEL',
   API_KEY = 'API_KEY',
+  AGENT = 'AGENT',
+  AGENT_APPLICATION = 'AGENT_APPLICATION',
+  AGENT_APP_TEMPLATE = 'AGENT_APP_TEMPLATE',
+  AGENT_APP_UNIT = 'AGENT_APP_UNIT',
+  AGENT_APP_PROFILE = 'AGENT_APP_PROFILE',
+  AGENT_PROFILE = 'AGENT_PROFILE',
+  AGENT_GROUP = 'AGENT_GROUP',
 }
 
 const resourceTypeTranslations = new Map<Resource, string>();
@@ -175,6 +182,12 @@ export const resourceByEntityType = new Map<EntityType, Resource>(
     [EntityType.JOB, Resource.JOB],
     [EntityType.AI_MODEL, Resource.AI_MODEL],
     [EntityType.API_KEY, Resource.API_KEY],
+    [EntityType.AGENT, Resource.AGENT],
+    [EntityType.AGENT_APPLICATION, Resource.AGENT_APPLICATION],
+    [EntityType.AGENT_APP_TEMPLATE, Resource.AGENT_APP_TEMPLATE],
+    [EntityType.AGENT_APP_UNIT, Resource.AGENT_APP_UNIT],
+    [EntityType.AGENT_APP_PROFILE, Resource.AGENT_APP_PROFILE],
+    [EntityType.AGENT_PROFILE, Resource.AGENT_PROFILE],
   ]
 );
 
@@ -187,6 +200,7 @@ export const groupResourceByGroupType = new Map<EntityType, Resource>(
     [EntityType.ENTITY_VIEW, Resource.ENTITY_VIEW_GROUP],
     [EntityType.DASHBOARD, Resource.DASHBOARD_GROUP],
     [EntityType.EDGE, Resource.EDGE_GROUP],
+    [EntityType.AGENT, Resource.AGENT_GROUP],
   ]
 );
 
@@ -207,7 +221,8 @@ export const publicGroupTypes = new Set<EntityType>(
     EntityType.DEVICE,
     EntityType.ENTITY_VIEW,
     EntityType.DASHBOARD,
-    EntityType.EDGE
+    EntityType.EDGE,
+    EntityType.AGENT
   ]
 );
 

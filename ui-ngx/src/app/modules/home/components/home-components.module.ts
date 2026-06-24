@@ -32,6 +32,20 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SharedModule } from '@app/shared/shared.module';
+import { AgentAppInstallWizardComponent } from '@home/pages/agent/wizard/agent-app-install-wizard.component';
+import { AgentAppInstallFlowComponent } from '@home/pages/agent/wizard/agent-app-install-flow.component';
+import { AgentAppUpdateFlowComponent } from '@home/pages/agent/wizard/agent-app-update-flow.component';
+import { AgentAppUpgradeFlowComponent } from '@home/pages/agent/wizard/agent-app-upgrade-flow.component';
+import { AgentAppStepInputsComponent } from '@home/pages/agent/component/agent-app-step-inputs.component';
+import { AgentComposeDiffComponent } from '@home/pages/agent/component/agent-compose-diff.component';
+import { AgentComposeEditorComponent } from '@home/pages/agent/component/agent-compose-editor.component';
+import { AgentRelatedEntityAutocompleteComponent } from '@home/pages/agent/agent-related-entity-autocomplete.component';
+import {
+  AgentGatewayCreateDialogComponent
+} from '@home/pages/agent/dialog/agent-gateway-create-dialog.component';
+import { AgentAutocompleteComponent } from '@home/pages/agent/agent-autocomplete.component';
+import { AgentInstallInstructionsComponent } from '@home/pages/agent/agent-install-instructions.component';
+import { AgentDeployStatusComponent } from '@home/pages/agent/agent-deploy-status.component';
 import { AddEntityDialogComponent } from '@home/components/entity/add-entity-dialog.component';
 import { EntitiesTableComponent } from '@home/components/entity/entities-table.component';
 import { DetailsPanelComponent } from '@home/components/details-panel.component';
@@ -304,6 +318,18 @@ import {
     [
       RouterTabsComponent,
       EntitiesTableComponent,
+      AgentAppInstallWizardComponent,
+      AgentAppInstallFlowComponent,
+      AgentAppUpdateFlowComponent,
+      AgentAppUpgradeFlowComponent,
+      AgentAppStepInputsComponent,
+      AgentComposeDiffComponent,
+      AgentComposeEditorComponent,
+      AgentRelatedEntityAutocompleteComponent,
+      AgentGatewayCreateDialogComponent,
+      AgentAutocompleteComponent,
+      AgentInstallInstructionsComponent,
+      AgentDeployStatusComponent,
       AddEntityDialogComponent,
       DetailsPanelComponent,
       EntityDetailsPanelComponent,
@@ -513,6 +539,14 @@ import {
     SharedHomeComponentsModule,
     RouterTabsComponent,
     EntitiesTableComponent,
+    AgentAppInstallWizardComponent,
+    AgentComposeDiffComponent,
+    AgentComposeEditorComponent,
+    AgentRelatedEntityAutocompleteComponent,
+    AgentGatewayCreateDialogComponent,
+    AgentAutocompleteComponent,
+    AgentInstallInstructionsComponent,
+    AgentDeployStatusComponent,
     AddEntityDialogComponent,
     DetailsPanelComponent,
     EntityDetailsPanelComponent,

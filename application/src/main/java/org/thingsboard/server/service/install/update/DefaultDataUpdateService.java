@@ -39,9 +39,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.AttributeScope;
-import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
@@ -73,6 +73,7 @@ import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.trendz.TrendzSettings;
+import org.thingsboard.server.dao.agent.AgentProfileService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.customer.CustomerService;
@@ -106,6 +107,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Service
@@ -132,6 +135,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
     private final DashboardService dashboardService;
     private final EntityViewService entityViewService;
     private final EdgeService edgeService;
+    private final AgentProfileService agentProfileService;
     private final SystemDataLoaderService systemDataLoaderService;
     private final ComponentDiscoveryService componentDiscoveryService;
     private final DbUpgradeExecutorService executorService;
@@ -146,6 +150,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
             updateDataFromCe();
         } else {
             //TODO: should be cleaned after each release
+            backfillForExistingTenants();
             EdqsSyncState state = attributesService.find(TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID, AttributeScope.SERVER_SCOPE, "edqsSyncState")
                     .get(15, TimeUnit.SECONDS)
                     .flatMap(KvEntry::getJsonValue)
@@ -159,6 +164,63 @@ public class DefaultDataUpdateService implements DataUpdateService {
             }
         }
         log.info("Data updated.");
+    }
+
+    private void backfillForExistingTenants() throws Exception {
+        log.info("Starting backfill for existing tenants ...");
+
+        List<Consumer<TenantId>> tenantBackfillTasks = List.of(
+                this::backfillAgentGroupAllForTenant,
+                this::ensureDefaultAgentProfile
+        );
+
+        PageDataIterable<TenantId> tenants = new PageDataIterable<>(tenantService::findTenantsIds, 500);
+        List<ListenableFuture<?>> backfillFutures = new ArrayList<>();
+        AtomicInteger count = new AtomicInteger();
+
+        for (TenantId tenantId : tenants) {
+            backfillFutures.add(executorService.submit(() -> {
+                for (Consumer<TenantId> task : tenantBackfillTasks) {
+                    try {
+                        task.accept(tenantId);
+                    } catch (Exception e) {
+                        log.error("Backfill task failed for tenant [{}]", tenantId, e);
+                    }
+                }
+                int n = count.incrementAndGet();
+                if (n % 500 == 0) {
+                    log.info("{} tenants processed", n);
+                }
+            }));
+        }
+
+        Futures.allAsList(backfillFutures).get();
+
+        log.info("Backfill for existing tenants completed. Processed {} tenants.", count.get());
+    }
+
+    private void backfillAgentGroupAllForTenant(TenantId tenantId) {
+        ensureAgentGroupAll(tenantId);
+        new PageDataIterable<>(
+                pageLink -> customerService.findCustomersByTenantId(tenantId, pageLink), DEFAULT_PAGE_SIZE
+        ).forEach(customer -> {
+            if (customer.getId() == null || customer.getId().isNullUid() || customer.isSubCustomer()) {
+                return;
+            }
+            ensureAgentGroupAll(customer.getId());
+        });
+    }
+
+    private void ensureAgentGroupAll(EntityId parentId) {
+        Optional<EntityGroup> existing = entityGroupService.findEntityGroupByTypeAndName(
+                TenantId.SYS_TENANT_ID, parentId, EntityType.AGENT, EntityGroup.GROUP_ALL_NAME);
+        if (existing.isEmpty()) {
+            entityGroupService.createEntityGroupAll(TenantId.SYS_TENANT_ID, parentId, EntityType.AGENT);
+        }
+    }
+
+    private void ensureDefaultAgentProfile(TenantId tenantId) {
+        agentProfileService.findOrCreateAgentProfile(tenantId, "default");
     }
 
     @Override
@@ -363,7 +425,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 @Override
                 protected void updateEntity(Tenant tenant) {
                     try {
-                        EntityType[] entityGroupTypes = new EntityType[]{EntityType.USER, EntityType.ASSET, EntityType.DEVICE, EntityType.DASHBOARD, EntityType.ENTITY_VIEW, EntityType.EDGE};
+                        EntityType[] entityGroupTypes = new EntityType[]{EntityType.USER, EntityType.ASSET, EntityType.DEVICE, EntityType.DASHBOARD, EntityType.ENTITY_VIEW, EntityType.EDGE, EntityType.AGENT};
                         for (EntityType groupType : entityGroupTypes) {
                             EntityGroup entityGroup;
                             Optional<EntityGroup> entityGroupOptional =
@@ -562,7 +624,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
             }
             entityGroupService.addEntityToEntityGroup(TenantId.SYS_TENANT_ID, groupAll.getId(), customer.getId());
             new EntityGroupsOwnerUpdater(customer.getId()).updateEntities(customer.getId());
-            EntityType[] entityGroupTypes = new EntityType[]{EntityType.USER, EntityType.CUSTOMER, EntityType.ASSET, EntityType.DEVICE, EntityType.DASHBOARD, EntityType.ENTITY_VIEW, EntityType.EDGE};
+            EntityType[] entityGroupTypes = new EntityType[]{EntityType.USER, EntityType.CUSTOMER, EntityType.ASSET, EntityType.DEVICE, EntityType.DASHBOARD, EntityType.ENTITY_VIEW, EntityType.EDGE, EntityType.AGENT};
             for (EntityType groupType : entityGroupTypes) {
                 Optional<EntityGroup> entityGroupOptional =
                         entityGroupService.findEntityGroupByTypeAndName(TenantId.SYS_TENANT_ID, customer.getId(), groupType, EntityGroup.GROUP_ALL_NAME);

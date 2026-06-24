@@ -234,6 +234,16 @@ export class CustomersTableConfigResolver  {
         }
       );
     }
+    if (this.userPermissionsService.hasGenericPermission(Resource.AGENT, Operation.READ)) {
+      actions.push(
+        {
+          name: this.translate.instant('customer.manage-customer-agents'),
+          icon: 'memory',
+          isEnabled: (customer) => true,
+          onAction: ($event, entity) => this.manageCustomerAgents($event, entity, config)
+        }
+      );
+    }
     if (this.userPermissionsService.hasGenericPermission(Resource.DASHBOARD, Operation.READ)) {
       actions.push(
         {
@@ -311,7 +321,14 @@ export class CustomersTableConfigResolver  {
     if ($event) {
       $event.stopPropagation();
     }
-    this.router.navigateByUrl(`customers/all/${customer.id.id}/edgeManagement/instances`);
+    this.router.navigateByUrl(`customers/all/${customer.id.id}/edgeManagement/edges`);
+  }
+
+  manageCustomerAgents($event: Event, customer: CustomerInfo, config: EntityTableConfig<CustomerInfo>) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    this.router.navigateByUrl(`customers/all/${customer.id.id}/edgeManagement/agents/all`);
   }
 
   private navigateToChildCustomerPage(config: EntityTableConfig<CustomerInfo>,
@@ -354,6 +371,9 @@ export class CustomersTableConfigResolver  {
         return true;
       case 'manageEdges':
         this.manageCustomerEdges(action.event, action.entity, config);
+        return true;
+      case 'manageAgents':
+        this.manageCustomerAgents(action.event, action.entity, config);
         return true;
       case 'manageOwnerAndGroups':
         this.manageOwnerAndGroups(action.event, action.entity, config);

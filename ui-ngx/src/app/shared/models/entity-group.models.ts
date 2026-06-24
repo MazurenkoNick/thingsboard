@@ -52,7 +52,8 @@ export const entityGroupTypes: EntityType[] = [
   EntityType.USER,
   EntityType.ENTITY_VIEW,
   EntityType.DASHBOARD,
-  EntityType.EDGE
+  EntityType.EDGE,
+  EntityType.AGENT
 ];
 
 export const entityGroupActionTypes: WidgetActionType[] = [
@@ -487,6 +488,8 @@ export const entityGroupsTitle = (groupType: EntityType, shared = false) => {
       return `entity-group.${prefix}dashboard-groups`;
     case EntityType.EDGE:
       return `entity-group.${prefix}edge-groups`;
+    case EntityType.AGENT:
+      return `entity-group.${prefix}agent-groups`;
   }
 };
 

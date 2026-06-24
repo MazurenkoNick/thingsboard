@@ -56,7 +56,6 @@ import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.common.transport.config.ssl.PemSslCredentials;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.edge.EdgeEvent;
 import org.thingsboard.server.common.data.id.EdgeId;
@@ -73,6 +72,7 @@ import org.thingsboard.server.common.msg.edge.EdgeHighPriorityMsg;
 import org.thingsboard.server.common.msg.edge.EdgeSessionMsg;
 import org.thingsboard.server.common.msg.edge.FromEdgeSyncResponse;
 import org.thingsboard.server.common.msg.edge.ToEdgeSyncRequest;
+import org.thingsboard.server.common.transport.config.ssl.PemSslCredentials;
 import org.thingsboard.server.gen.edge.v1.EdgeRpcServiceGrpc;
 import org.thingsboard.server.gen.edge.v1.RequestMsg;
 import org.thingsboard.server.gen.edge.v1.ResponseMsg;
@@ -82,6 +82,7 @@ import org.thingsboard.server.queue.kafka.KafkaAdmin;
 import org.thingsboard.server.queue.provider.TbCoreQueueFactory;
 import org.thingsboard.server.queue.util.AfterStartUp;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.agent.AgentGrpcService;
 import org.thingsboard.server.service.edge.EdgeContextComponent;
 import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
 
@@ -176,6 +177,9 @@ public class EdgeGrpcService extends EdgeRpcServiceGrpc.EdgeRpcServiceImplBase i
     @Autowired
     private Optional<KafkaAdmin> kafkaAdmin;
 
+    @Autowired
+    private AgentGrpcService agentRpcService;
+
     private Server server;
 
     private ScheduledExecutorService edgeEventProcessingExecutorService;
@@ -193,7 +197,8 @@ public class EdgeGrpcService extends EdgeRpcServiceGrpc.EdgeRpcServiceImplBase i
                 .keepAliveTimeout(keepAliveTimeoutSec, TimeUnit.SECONDS)
                 .permitKeepAliveWithoutCalls(true)
                 .maxInboundMessageSize(maxInboundMessageSize)
-                .addService(this);
+                .addService(this)
+                .addService(agentRpcService);
         if (sslEnabled) {
             try {
                 setupSsl(builder);

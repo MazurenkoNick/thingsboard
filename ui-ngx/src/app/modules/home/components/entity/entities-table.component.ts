@@ -198,6 +198,7 @@ export class EntitiesTableComponent extends PageComponent implements IEntitiesTa
     if (this.widgetResize$) {
       this.widgetResize$.disconnect();
     }
+    this.entitiesTableConfig?.onDestroy();
     this.destroy$.next();
     this.destroy$.complete();
   }

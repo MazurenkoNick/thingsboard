@@ -46,12 +46,14 @@ import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EntityView;
 import org.thingsboard.server.common.data.HasOwnerId;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DashboardId;
@@ -70,6 +72,7 @@ import org.thingsboard.server.common.data.permission.MergedGroupTypePermissionIn
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.security.Authority;
+import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
@@ -116,6 +119,9 @@ public class DefaultOwnersCacheService implements OwnersCacheService {
 
     @Autowired
     private EdgeService edgeService;
+
+    @Autowired
+    private AgentService agentService;
 
     @Autowired
     private DashboardService dashboardService;
@@ -216,6 +222,11 @@ public class DefaultOwnersCacheService implements OwnersCacheService {
         changeEntityOwner(tenantId, targetOwnerId, device.getId(), device, d -> deviceService.saveDevice(d));
     }
 
+    @Override
+    public void changeAgentOwner(TenantId tenantId, EntityId targetOwnerId, Agent agent) throws ThingsboardException {
+        changeEntityOwner(tenantId, targetOwnerId, agent.getId(), agent, agentService::saveAgent);
+    }
+
     @Transactional
     @Override
     public void changeEntityOwner(TenantId tenantId, EntityId targetOwnerId, EntityId entityId) throws ThingsboardException {
@@ -240,6 +251,9 @@ public class DefaultOwnersCacheService implements OwnersCacheService {
                 break;
             case EDGE:
                 changeEdgeOwner(tenantId, targetOwnerId, getEdgeById(tenantId, entityId));
+                break;
+            case AGENT:
+                changeAgentOwner(tenantId, targetOwnerId, getAgentById(tenantId, entityId));
                 break;
             default:
                 throw new RuntimeException("EntityType does not support owner change: " + entityId.getEntityType());
@@ -274,6 +288,8 @@ public class DefaultOwnersCacheService implements OwnersCacheService {
                     return (PageData<E>) entityViewService.findEntityViewByTenantId(tenantId, pageLink);
                 case EDGE:
                     return (PageData<E>) edgeService.findEdgesByTenantId(tenantId, pageLink);
+                case AGENT:
+                    return (PageData<E>) agentService.findAgentsByTenantId(tenantId, pageLink);
                 default:
                     throw new RuntimeException("EntityType does not supported: " + entityType);
             }
@@ -345,6 +361,10 @@ public class DefaultOwnersCacheService implements OwnersCacheService {
         return edgeService.findEdgeById(tenantId, new EdgeId(entityId.getId()));
     }
 
+    private Agent getAgentById(TenantId tenantId, EntityId entityId) {
+        return agentService.findAgentById(tenantId, new AgentId(entityId.getId()));
+    }
+
     private void fetchChildOwners(TenantId tenantId, EntityId entityId, Set<EntityId> result) throws Exception {
         result.add(entityId);
         Optional<EntityGroup> entityGroup = entityGroupService.findEntityGroupByTypeAndName(tenantId, entityId, EntityType.CUSTOMER, EntityGroup.GROUP_ALL_NAME);
@@ -406,6 +426,9 @@ public class DefaultOwnersCacheService implements OwnersCacheService {
             PageDataIterable<Asset> assets = new PageDataIterable<>(pageLink -> assetService.findAssetsByTenantIdAndCustomerId(tenantId, (CustomerId) ownerId, pageLink), 1000);
             assets.forEach(asset -> ownedEntities.add(asset.getId()));
 
+            PageDataIterable<Agent> agents = new PageDataIterable<>(pageLink -> agentService.findAgentsByTenantIdAndCustomerId(tenantId, (CustomerId) ownerId, pageLink), 1000);
+            agents.forEach(agent -> ownedEntities.add(agent.getId()));
+
             PageDataIterable<Customer> customers = new PageDataIterable<>(pageLink ->
                     customerService.findCustomersByTenantIdAndParentCustomerId(tenantId, (CustomerId) ownerId, pageLink), 1000);
             customers.forEach(customer -> ownedEntities.add(customer.getId()));
@@ -415,6 +438,9 @@ public class DefaultOwnersCacheService implements OwnersCacheService {
 
             PageDataIterable<Asset> assets = new PageDataIterable<>(pageLink -> assetService.findAssetsByTenantIdAndCustomerId((TenantId) ownerId, new CustomerId(CustomerId.NULL_UUID), pageLink), 1000);
             assets.forEach(asset -> ownedEntities.add(asset.getId()));
+
+            PageDataIterable<Agent> agents = new PageDataIterable<>(pageLink -> agentService.findAgentsByTenantIdAndCustomerId((TenantId) ownerId, new CustomerId(CustomerId.NULL_UUID), pageLink), 1000);
+            agents.forEach(agent -> ownedEntities.add(agent.getId()));
 
             PageDataIterable<Customer> customers = new PageDataIterable<>(pageLink ->
                     customerService.findCustomersByTenantIdAndParentCustomerId(tenantId, null, pageLink), 1000);

@@ -34,6 +34,14 @@ import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.id.AgentAppEventId;
+import org.thingsboard.server.common.data.id.AgentAppProfileId;
+import org.thingsboard.server.common.data.id.AgentAppTemplateId;
+import org.thingsboard.server.common.data.id.AgentAppUnitId;
+import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentBulkActionId;
+import org.thingsboard.server.common.data.id.AgentId;
+import org.thingsboard.server.common.data.id.AgentProfileId;
 import org.thingsboard.server.common.data.id.AiModelId;
 import org.thingsboard.server.common.data.id.AlarmId;
 import org.thingsboard.server.common.data.id.ApiKeyId;
@@ -239,6 +247,30 @@ public class TenantIdLoader {
                 break;
             case API_KEY:
                 tenantEntity = ctx.getApiKeyService().findApiKeyById(ctxTenantId, new ApiKeyId(id));
+                break;
+            case AGENT:
+                tenantEntity = ctx.getPeContext().getAgentService().findAgentById(ctxTenantId, new AgentId(id));
+                break;
+            case AGENT_APPLICATION:
+                tenantEntity = ctx.getPeContext().getAgentApplicationService().findById(ctxTenantId, new AgentApplicationId(id));
+                break;
+            case AGENT_APP_TEMPLATE:
+                tenantEntity = ctx.getPeContext().getAgentAppTemplateService().findById(ctxTenantId, new AgentAppTemplateId(id));
+                break;
+            case AGENT_APP_EVENT:
+                tenantEntity = ctx.getPeContext().getAgentAppEventService().findById(ctxTenantId, new AgentAppEventId(id));
+                break;
+            case AGENT_APP_UNIT:
+                tenantEntity = ctx.getPeContext().getAgentAppUnitService().findAgentAppUnitById(ctxTenantId, new AgentAppUnitId(id));
+                break;
+            case AGENT_APP_PROFILE:
+                tenantEntity = ctx.getPeContext().getAgentAppProfileService().findProfileById(ctxTenantId, new AgentAppProfileId(id));
+                break;
+            case AGENT_PROFILE:
+                tenantEntity = ctx.getPeContext().getAgentProfileService().findProfileById(ctxTenantId, new AgentProfileId(id));
+                break;
+            case AGENT_BULK_ACTION:
+                tenantEntity = ctx.getPeContext().getAgentBulkActionService().findById(ctxTenantId, new AgentBulkActionId(id));
                 break;
             default:
                 throw new RuntimeException("Unexpected entity type: " + entityId.getEntityType());

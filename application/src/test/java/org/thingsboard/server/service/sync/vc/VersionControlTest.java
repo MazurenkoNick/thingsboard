@@ -726,7 +726,7 @@ public class VersionControlTest extends AbstractControllerTest {
     public void testEntityGroupVc_betweenTenants() throws Exception {
         List<EntityGroup> entityGroups = new ArrayList<>();
         for (EntityType groupType : EntityGroup.groupTypes) {
-            if (groupType == EntityType.EDGE) {
+            if (groupType == EntityType.EDGE || groupType == EntityType.AGENT) {
                 continue;
             }
             EntityGroup entityGroup = createEntityGroup(tenantId1, groupType, groupType + " group");
@@ -748,7 +748,7 @@ public class VersionControlTest extends AbstractControllerTest {
     public void testEntityGroupVc_sameTenant() throws Exception {
         List<EntityGroup> entityGroups = new ArrayList<>();
         for (EntityType groupType : EntityGroup.groupTypes) {
-            if (groupType == EntityType.EDGE) {
+            if (groupType == EntityType.EDGE || groupType == EntityType.AGENT) {
                 continue;
             }
             EntityGroup entityGroup = createEntityGroup(tenantId1, groupType, groupType + " group");

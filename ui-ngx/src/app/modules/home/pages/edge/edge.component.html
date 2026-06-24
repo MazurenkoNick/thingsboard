@@ -143,6 +143,15 @@
       <mat-icon svgIcon="mdi:sync"></mat-icon>
       <span translate>edge.sync</span>
     </button>
+    @if (isTenantAdmin() && managedApp) {
+      <button mat-raised-button
+        [disabled]="(isLoading$ | async)"
+        (click)="openManagedApp($event)"
+        [class.!hidden]="isEdit">
+        <mat-icon>apps</mat-icon>
+        <span>{{ 'edge.managed-application' | translate }}</span>
+      </button>
+    }
   </div>
   <div class="flex flex-row xs:flex-col" *ngIf="isTenantAdmin()">
     <div [ngSwitch]="upgradeAvailable">
@@ -166,6 +175,17 @@
       </ng-container>
     </div>
   </div>
+  @if (isTenantAdmin() && managedApp && managedAppUpgradeAvailable) {
+    <div class="flex flex-row flex-wrap xs:flex-col">
+      <button mat-raised-button color="accent"
+        [disabled]="(isLoading$ | async)"
+        (click)="onUpgradeManagedApp($event)"
+        [class.!hidden]="isEdit">
+        <mat-icon>arrow_upward</mat-icon>
+        <span>{{ 'edge.app-upgrade-available' | translate }}</span>
+      </button>
+    </div>
+  }
 </div>
 <div class="mat-padding flex flex-col">
   <form [formGroup]="entityForm">

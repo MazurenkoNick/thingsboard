@@ -1,0 +1,234 @@
+/**
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+ *
+ * Copyright © 2016-2026 ThingsBoard, Inc. All Rights Reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of ThingsBoard, Inc. and its suppliers,
+ * if any.  The intellectual and technical concepts contained
+ * herein are proprietary to ThingsBoard, Inc.
+ * and its suppliers and may be covered by U.S. and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law.
+ *
+ * Dissemination of this information or reproduction of this material is strictly forbidden
+ * unless prior written permission is obtained from COMPANY.
+ *
+ * Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+ * managers or contractors who have executed Confidentiality and Non-disclosure agreements
+ * explicitly covering such access.
+ *
+ * The copyright notice above does not evidence any actual or intended publication
+ * or disclosure  of  this source code, which includes
+ * information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+ * ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+ * OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+ * THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+ * AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+ * THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+ * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+ * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+ */
+
+$mono: 'JetBrains Mono', 'Fira Code', 'Roboto Mono', 'Menlo', 'Consolas', monospace;
+
+$ink-87: rgba(0, 0, 0, 0.87);
+$ink-60: rgba(0, 0, 0, 0.60);
+$ink-42: rgba(0, 0, 0, 0.42);
+$ink-12: rgba(0, 0, 0, 0.12);
+$ink-08: rgba(0, 0, 0, 0.08);
+$ink-04: rgba(0, 0, 0, 0.04);
+
+:host {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.tb-log-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  padding: 16px 24px 20px;
+  gap: 14px;
+  background: #ffffff;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.tb-log-page-header {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid $ink-08;
+}
+
+.tb-log-page-header-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.tb-log-page-back {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  color: $ink-60;
+  transition: background 120ms ease, color 120ms ease;
+
+  &:hover { color: $ink-87; background: $ink-04; }
+
+  ::ng-deep mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.tb-log-page-header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.tb-log-page-header-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: $ink-42;
+  line-height: 1.2;
+}
+
+.tb-log-page-header-subject {
+  font-family: $mono;
+  font-size: 18px;
+  font-weight: 500;
+  color: $ink-87;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.tb-log-page-header-spacer {
+  flex: 1 1 auto;
+}
+
+.tb-log-page-status {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 12px 0 10px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+
+  &--online {
+    color: #1b5e20;
+    background: rgba(46, 125, 50, 0.10);
+    .tb-log-page-status-dot {
+      background: #2e7d32;
+      box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.5);
+      animation: tbLogPageStatusPulse 1.6s ease-out infinite;
+    }
+  }
+
+  &--offline {
+    color: #b71c1c;
+    background: rgba(198, 40, 40, 0.10);
+    .tb-log-page-status-dot { background: #c62828; }
+  }
+}
+
+.tb-log-page-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.tb-log-page-status-label {
+  line-height: 1;
+}
+
+@keyframes tbLogPageStatusPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.45); }
+  70%  { box-shadow: 0 0 0 6px rgba(46, 125, 50, 0);   }
+  100% { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0);     }
+}
+
+.tb-log-page-header-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  padding-left: 46px;
+}
+
+.tb-log-page-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 10px 0 4px;
+  background: $ink-04;
+  border-radius: 11px;
+  font-size: 12px;
+  color: $ink-87;
+  line-height: 1;
+
+  .tb-log-page-chip-label {
+    display: inline-flex;
+    align-items: center;
+    height: 16px;
+    padding: 0 6px;
+    background: #ffffff;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: $ink-60;
+    box-shadow: inset 0 0 0 1px $ink-08;
+  }
+
+  .tb-log-page-chip-value {
+    line-height: 1;
+  }
+
+  .tb-log-page-chip-value--mono {
+    font-family: $mono;
+    font-size: 11.5px;
+  }
+
+  .tb-log-page-chip-value[data-state="running"]    { color: #2e7d32; font-weight: 500; }
+  .tb-log-page-chip-value[data-state="exited"],
+  .tb-log-page-chip-value[data-state="dead"]       { color: #c62828; font-weight: 500; }
+  .tb-log-page-chip-value[data-state="paused"],
+  .tb-log-page-chip-value[data-state="restarting"],
+  .tb-log-page-chip-value[data-state="created"]    { color: #ef6c00; font-weight: 500; }
+}
+
+.tb-log-page-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+}
+
+tb-log-viewer {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  display: block;
+}

@@ -52,6 +52,7 @@ import { Dashboard } from '@shared/models/dashboard.models';
 import { User } from '@shared/models/user.model';
 import { Customer } from '@shared/models/customer.model';
 import { Edge } from '@shared/models/edge.models';
+import { AgentInfo } from '@shared/models/agent.models';
 import { isDefinedAndNotNull } from '@core/utils';
 
 export const ASSET_GROUP_CONFIG_FACTORY = new InjectionToken<EntityGroupStateConfigFactory<Asset>>(EntityType.ASSET);
@@ -61,6 +62,7 @@ export const EDGE_GROUP_CONFIG_FACTORY = new InjectionToken<EntityGroupStateConf
 export const DASHBOARD_GROUP_CONFIG_FACTORY = new InjectionToken<EntityGroupStateConfigFactory<Dashboard>>(EntityType.DASHBOARD);
 export const USER_GROUP_CONFIG_FACTORY = new InjectionToken<EntityGroupStateConfigFactory<User>>(EntityType.USER);
 export const CUSTOMER_GROUP_CONFIG_FACTORY = new InjectionToken<EntityGroupStateConfigFactory<Customer>>(EntityType.CUSTOMER);
+export const AGENT_GROUP_CONFIG_FACTORY = new InjectionToken<EntityGroupStateConfigFactory<AgentInfo>>(EntityType.AGENT);
 
 export const groupConfigFactoryTokenMap = new Map<EntityType, InjectionToken<EntityGroupStateConfigFactory<BaseData<HasId>>>>(
   [
@@ -70,7 +72,8 @@ export const groupConfigFactoryTokenMap = new Map<EntityType, InjectionToken<Ent
     [EntityType.EDGE, EDGE_GROUP_CONFIG_FACTORY],
     [EntityType.DASHBOARD, DASHBOARD_GROUP_CONFIG_FACTORY],
     [EntityType.USER, USER_GROUP_CONFIG_FACTORY],
-    [EntityType.CUSTOMER, CUSTOMER_GROUP_CONFIG_FACTORY]
+    [EntityType.CUSTOMER, CUSTOMER_GROUP_CONFIG_FACTORY],
+    [EntityType.AGENT, AGENT_GROUP_CONFIG_FACTORY]
   ]
 );
 

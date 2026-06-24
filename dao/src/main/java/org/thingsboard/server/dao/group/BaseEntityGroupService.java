@@ -472,6 +472,10 @@ public class BaseEntityGroupService extends AbstractCachedEntityService<EntityGr
                 groupName += " Dashboards";
                 description += "Dashboard";
             }
+            case AGENT -> {
+                groupName += " Agents";
+                description += "Agent";
+            }
             default -> throw new RuntimeException("Invalid entity group type '" + groupType + "' specified for read-only entity group for customer!");
         }
         if (customer.isPublic()) {

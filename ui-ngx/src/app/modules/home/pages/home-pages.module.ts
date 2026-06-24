@@ -78,6 +78,7 @@ import { AiModelModule } from '@home/pages/ai-model/ai-model.module';
 import { ReportingModule } from '@home/pages/reporting/reporting.module';
 import { TrendzAnalyticsModule } from '@home/pages/trendz-analytics/trendz-analytics.module';
 import { TrendzSettingsModule } from '@home/pages/trendz-settings/trendz-settings.module';
+import { AgentModule } from '@home/pages/agent/agent.module';
 
 @NgModule({
   exports: [
@@ -98,6 +99,7 @@ import { TrendzSettingsModule } from '@home/pages/trendz-settings/trendz-setting
     AssetModule,
     AlarmModule,
     EdgeModule,
+    AgentModule,
     EntityViewModule,
     CustomerModule,
     CalculatedFieldPageModule,

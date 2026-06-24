@@ -257,7 +257,7 @@ export class RuleChainsTableConfig extends EntityTableConfig<RuleChain> {
       if (ruleChainImport) {
         this.itembuffer.storeRuleChainImport(ruleChainImport);
         if (this.componentsData.ruleChainScope === 'edges') {
-          this.router.navigateByUrl(`edgeManagement/ruleChains/ruleChain/import`);
+          this.router.navigateByUrl(`edgeManagement/templates/ruleChains/ruleChain/import`);
         } else {
           this.router.navigateByUrl(`ruleChains/ruleChain/import`);
         }
@@ -469,7 +469,7 @@ export class RuleChainsTableConfig extends EntityTableConfig<RuleChain> {
         this.router.navigateByUrl(url);
       }
     } else if (this.componentsData.ruleChainScope === 'edges') {
-      this.router.navigateByUrl(`edgeManagement/ruleChains/${ruleChain.id.id}`);
+      this.router.navigateByUrl(`edgeManagement/templates/ruleChains/${ruleChain.id.id}`);
     } else {
       this.router.navigateByUrl(`ruleChains/${ruleChain.id.id}`);
     }

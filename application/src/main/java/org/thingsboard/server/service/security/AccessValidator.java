@@ -53,6 +53,9 @@ import org.thingsboard.server.common.data.OtaPackageInfo;
 import org.thingsboard.server.common.data.TbResourceInfo;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentAppUnit;
+import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetProfile;
 import org.thingsboard.server.common.data.blob.BlobEntityInfo;
@@ -60,6 +63,9 @@ import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroupInfo;
+import org.thingsboard.server.common.data.id.AgentAppUnitId;
+import org.thingsboard.server.common.data.id.AgentApplicationId;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.ApiUsageStateId;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.AssetProfileId;
@@ -93,6 +99,9 @@ import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.controller.HttpValidationCallback;
+import org.thingsboard.server.dao.agent.AgentAppUnitService;
+import org.thingsboard.server.dao.agent.AgentApplicationService;
+import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.alarm.AlarmService;
 import org.thingsboard.server.dao.asset.AssetProfileService;
 import org.thingsboard.server.dao.asset.AssetService;
@@ -136,6 +145,9 @@ public class AccessValidator {
     public static final String SYSTEM_ADMINISTRATOR_IS_NOT_ALLOWED_TO_PERFORM_THIS_OPERATION = "System administrator is not allowed to perform this operation!";
     public static final String DEVICE_WITH_REQUESTED_ID_NOT_FOUND = "Device with requested id wasn't found!";
     public static final String USER_WITH_REQUESTED_ID_NOT_FOUND = "User with requested id wasn't found!";
+    public static final String AGENT_WITH_REQUESTED_ID_NOT_FOUND = "Agent with requested id wasn't found!";
+    public static final String AGENT_APP_UNIT_WITH_REQUESTED_ID_NOT_FOUND = "Agent app unit with requested id wasn't found!";
+    public static final String AGENT_APPLICATION_WITH_REQUESTED_ID_NOT_FOUND = "Agent application with requested id wasn't found!";
     public static final String ENTITY_VIEW_WITH_REQUESTED_ID_NOT_FOUND = "Entity-view with requested id wasn't found!";
     public static final String ROLE_WITH_REQUESTED_ID_NOT_FOUND = "Role with requested id wasn't found!";
     public static final String DASHBOARD_WITH_REQUESTED_ID_NOT_FOUND = "Dashboard with requested id wasn't found!";
@@ -194,6 +206,15 @@ public class AccessValidator {
 
     @Autowired(required = false)
     protected EdgeService edgeService;
+
+    @Autowired(required = false)
+    protected AgentService agentService;
+
+    @Autowired(required = false)
+    protected AgentAppUnitService agentAppUnitService;
+
+    @Autowired(required = false)
+    protected AgentApplicationService agentApplicationService;
 
     @Autowired
     protected AccessControlService accessControlService;
@@ -287,6 +308,9 @@ public class AccessValidator {
             case ROLE -> validateRole(currentUser, operation, entityId, callback);
             case DASHBOARD -> validateDashboard(currentUser, operation, entityId, callback);
             case EDGE -> validateEdge(currentUser, operation, entityId, callback);
+            case AGENT -> validateAgent(currentUser, operation, entityId, callback);
+            case AGENT_APPLICATION -> validateAgentApplication(currentUser, operation, entityId, callback);
+            case AGENT_APP_UNIT -> validateAgentAppUnit(currentUser, operation, entityId, callback);
             case API_USAGE_STATE -> validateApiUsageState(currentUser, operation, entityId, callback);
             case TB_RESOURCE -> validateResource(currentUser, operation, entityId, callback);
             case OTA_PACKAGE -> validateOtaPackage(currentUser, operation, entityId, callback);
@@ -737,6 +761,76 @@ public class AccessValidator {
                         return ValidationResult.accessDenied(e.getMessage());
                     }
                     return ValidationResult.ok(dashboard);
+                }
+            }), executor);
+        }
+    }
+
+    private void validateAgentApplication(final SecurityUser currentUser, Operation operation, EntityId entityId, FutureCallback<ValidationResult> callback) {
+        if (currentUser.isSystemAdmin()) {
+            callback.onSuccess(ValidationResult.accessDenied(SYSTEM_ADMINISTRATOR_IS_NOT_ALLOWED_TO_PERFORM_THIS_OPERATION));
+            return;
+        }
+        AgentApplication app = agentApplicationService.findById(currentUser.getTenantId(), new AgentApplicationId(entityId.getId()));
+        Futures.addCallback(Futures.immediateFuture(app), getCallback(callback, a -> {
+            if (a == null) {
+                return ValidationResult.entityNotFound(AGENT_APPLICATION_WITH_REQUESTED_ID_NOT_FOUND);
+            }
+            Agent agent = agentService.findAgentById(currentUser.getTenantId(), a.getAgentId());
+            if (agent == null) {
+                return ValidationResult.entityNotFound(AGENT_WITH_REQUESTED_ID_NOT_FOUND);
+            }
+            try {
+                accessControlService.checkPermission(currentUser, Resource.AGENT, operation, agent.getId(), agent);
+            } catch (ThingsboardException e) {
+                return ValidationResult.accessDenied(e.getMessage());
+            }
+            return ValidationResult.ok(a);
+        }), executor);
+    }
+
+    private void validateAgentAppUnit(final SecurityUser currentUser, Operation operation, EntityId entityId, FutureCallback<ValidationResult> callback) {
+        if (currentUser.isSystemAdmin()) {
+            callback.onSuccess(ValidationResult.accessDenied(SYSTEM_ADMINISTRATOR_IS_NOT_ALLOWED_TO_PERFORM_THIS_OPERATION));
+            return;
+        }
+        AgentAppUnit unit = agentAppUnitService.findAgentAppUnitById(currentUser.getTenantId(), new AgentAppUnitId(entityId.getId()));
+        Futures.addCallback(Futures.immediateFuture(unit), getCallback(callback, u -> {
+            if (u == null) {
+                return ValidationResult.entityNotFound(AGENT_APP_UNIT_WITH_REQUESTED_ID_NOT_FOUND);
+            }
+            AgentApplication app = agentApplicationService.findById(currentUser.getTenantId(), u.getAgentApplicationId());
+            if (app == null) {
+                return ValidationResult.entityNotFound(AGENT_APPLICATION_WITH_REQUESTED_ID_NOT_FOUND);
+            }
+            Agent agent = agentService.findAgentById(currentUser.getTenantId(), app.getAgentId());
+            if (agent == null) {
+                return ValidationResult.entityNotFound(AGENT_WITH_REQUESTED_ID_NOT_FOUND);
+            }
+            try {
+                accessControlService.checkPermission(currentUser, Resource.AGENT, operation, agent.getId(), agent);
+            } catch (ThingsboardException e) {
+                return ValidationResult.accessDenied(e.getMessage());
+            }
+            return ValidationResult.ok(u);
+        }), executor);
+    }
+
+    private void validateAgent(final SecurityUser currentUser, Operation operation, EntityId entityId, FutureCallback<ValidationResult> callback) {
+        if (currentUser.isSystemAdmin()) {
+            callback.onSuccess(ValidationResult.accessDenied(SYSTEM_ADMINISTRATOR_IS_NOT_ALLOWED_TO_PERFORM_THIS_OPERATION));
+        } else {
+            Agent agent = agentService.findAgentById(currentUser.getTenantId(), new AgentId(entityId.getId()));
+            Futures.addCallback(Futures.immediateFuture(agent), getCallback(callback, a -> {
+                if (a == null) {
+                    return ValidationResult.entityNotFound(AGENT_WITH_REQUESTED_ID_NOT_FOUND);
+                } else {
+                    try {
+                        accessControlService.checkPermission(currentUser, Resource.AGENT, operation, entityId, a);
+                    } catch (ThingsboardException e) {
+                        return ValidationResult.accessDenied(e.getMessage());
+                    }
+                    return ValidationResult.ok(a);
                 }
             }), executor);
         }

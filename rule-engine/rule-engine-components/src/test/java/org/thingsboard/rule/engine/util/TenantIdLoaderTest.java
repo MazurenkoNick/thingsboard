@@ -56,6 +56,14 @@ import org.thingsboard.server.common.data.OtaPackage;
 import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentAppEvent;
+import org.thingsboard.server.common.data.agent.AgentAppProfile;
+import org.thingsboard.server.common.data.agent.AgentAppUnit;
+import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.AgentBulkAction;
+import org.thingsboard.server.common.data.agent.AgentProfile;
+import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.ai.AiModel;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.asset.Asset;
@@ -95,6 +103,14 @@ import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.secret.Secret;
 import org.thingsboard.server.common.data.widget.WidgetType;
 import org.thingsboard.server.common.data.widget.WidgetsBundle;
+import org.thingsboard.server.dao.agent.AgentAppEventService;
+import org.thingsboard.server.dao.agent.AgentAppProfileService;
+import org.thingsboard.server.dao.agent.AgentAppTemplateService;
+import org.thingsboard.server.dao.agent.AgentAppUnitService;
+import org.thingsboard.server.dao.agent.AgentApplicationService;
+import org.thingsboard.server.dao.agent.AgentBulkActionService;
+import org.thingsboard.server.dao.agent.AgentProfileService;
+import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.ai.AiModelService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.blob.BlobEntityService;
@@ -229,6 +245,22 @@ public class TenantIdLoaderTest {
     private SecretService secretService;
     @Mock
     private ApiKeyService apiKeyService;
+    @Mock
+    private AgentService agentService;
+    @Mock
+    private AgentApplicationService agentApplicationService;
+    @Mock
+    private AgentAppTemplateService agentAppTemplateService;
+    @Mock
+    private AgentAppEventService agentAppEventService;
+    @Mock
+    private AgentAppUnitService agentAppUnitService;
+    @Mock
+    private AgentAppProfileService agentAppProfileService;
+    @Mock
+    private AgentProfileService agentProfileService;
+    @Mock
+    private AgentBulkActionService agentBulkActionService;
 
     private TenantId tenantId;
     private TenantProfileId tenantProfileId;
@@ -522,6 +554,54 @@ public class TenantIdLoaderTest {
                 apiKey.setTenantId(tenantId);
                 when(ctx.getApiKeyService()).thenReturn(apiKeyService);
                 doReturn(apiKey).when(apiKeyService).findApiKeyById(eq(tenantId), any());
+                break;
+            case AGENT:
+                Agent agent = new Agent();
+                agent.setTenantId(tenantId);
+                when(tbPeContext.getAgentService()).thenReturn(agentService);
+                doReturn(agent).when(agentService).findAgentById(eq(tenantId), any());
+                break;
+            case AGENT_APPLICATION:
+                AgentApplication agentApplication = new AgentApplication();
+                agentApplication.setTenantId(tenantId);
+                when(tbPeContext.getAgentApplicationService()).thenReturn(agentApplicationService);
+                doReturn(agentApplication).when(agentApplicationService).findById(eq(tenantId), any());
+                break;
+            case AGENT_APP_TEMPLATE:
+                AgentAppTemplate agentAppTemplate = new AgentAppTemplate();
+                agentAppTemplate.setTenantId(tenantId);
+                when(tbPeContext.getAgentAppTemplateService()).thenReturn(agentAppTemplateService);
+                doReturn(agentAppTemplate).when(agentAppTemplateService).findById(eq(tenantId), any());
+                break;
+            case AGENT_APP_EVENT:
+                AgentAppEvent agentAppEvent = new AgentAppEvent();
+                agentAppEvent.setTenantId(tenantId);
+                when(tbPeContext.getAgentAppEventService()).thenReturn(agentAppEventService);
+                doReturn(agentAppEvent).when(agentAppEventService).findById(eq(tenantId), any());
+                break;
+            case AGENT_APP_UNIT:
+                AgentAppUnit agentAppUnit = new AgentAppUnit();
+                agentAppUnit.setTenantId(tenantId);
+                when(tbPeContext.getAgentAppUnitService()).thenReturn(agentAppUnitService);
+                doReturn(agentAppUnit).when(agentAppUnitService).findAgentAppUnitById(eq(tenantId), any());
+                break;
+            case AGENT_APP_PROFILE:
+                AgentAppProfile agentAppProfile = new AgentAppProfile();
+                agentAppProfile.setTenantId(tenantId);
+                when(tbPeContext.getAgentAppProfileService()).thenReturn(agentAppProfileService);
+                doReturn(agentAppProfile).when(agentAppProfileService).findProfileById(eq(tenantId), any());
+                break;
+            case AGENT_PROFILE:
+                AgentProfile agentProfile = new AgentProfile();
+                agentProfile.setTenantId(tenantId);
+                when(tbPeContext.getAgentProfileService()).thenReturn(agentProfileService);
+                doReturn(agentProfile).when(agentProfileService).findProfileById(eq(tenantId), any());
+                break;
+            case AGENT_BULK_ACTION:
+                AgentBulkAction agentBulkAction = new AgentBulkAction();
+                agentBulkAction.setTenantId(tenantId);
+                when(tbPeContext.getAgentBulkActionService()).thenReturn(agentBulkActionService);
+                doReturn(agentBulkAction).when(agentBulkActionService).findById(eq(tenantId), any());
                 break;
             default:
                 throw new RuntimeException("Unexpected originator EntityType " + entityType);

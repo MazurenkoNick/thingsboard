@@ -47,12 +47,14 @@ import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EntityView;
 import org.thingsboard.server.common.data.HasName;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.id.AgentId;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DashboardId;
@@ -210,6 +212,12 @@ public class OwnerController extends AutoCommitController {
                     previousOwnerId = dashboard.getOwnerId();
                     ownersCacheService.changeDashboardOwner(tenantId, targetOwnerId, dashboard);
                     logChangeOwnerAction(dashboard.getId(), dashboard, targetOwnerId);
+                    break;
+                case AGENT:
+                    Agent agent = checkAgentId(new AgentId(entityId.getId()), Operation.CHANGE_OWNER);
+                    previousOwnerId = agent.getOwnerId();
+                    ownersCacheService.changeAgentOwner(tenantId, targetOwnerId, agent);
+                    logChangeOwnerAction(agent.getId(), agent, targetOwnerId);
                     break;
                 default:
                     throw new ThingsboardException("EntityType does not support owner change: " + entityId.getEntityType(), ThingsboardErrorCode.BAD_REQUEST_PARAMS);

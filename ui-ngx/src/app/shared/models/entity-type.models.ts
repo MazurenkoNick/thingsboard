@@ -80,6 +80,14 @@ export enum EntityType {
   SECRET = 'SECRET',
   AI_MODEL = 'AI_MODEL',
   API_KEY = 'API_KEY',
+  AGENT = 'AGENT',
+  AGENT_PROFILE = 'AGENT_PROFILE',
+  AGENT_APPLICATION = 'AGENT_APPLICATION',
+  AGENT_APP_EVENT = 'AGENT_APP_EVENT',
+  AGENT_APP_UNIT = 'AGENT_APP_UNIT',
+  AGENT_APP_TEMPLATE = 'AGENT_APP_TEMPLATE',
+  AGENT_APP_PROFILE = 'AGENT_APP_PROFILE',
+  AGENT_BULK_ACTION = 'AGENT_BULK_ACTION',
 }
 
 export enum AliasEntityType {
@@ -728,6 +736,99 @@ export const entityTypeTranslations = new Map<EntityType | AliasEntityType, Enti
         selectedEntities: 'api-key.selected-api-keys'
       }
     ],
+    [
+      EntityType.AGENT,
+      {
+        type: 'entity.type-agent',
+        typePlural: 'entity.type-agents',
+        list: 'entity.list-of-agents',
+        nameStartsWith: 'entity.agent-name-starts-with',
+        details: 'agent.agent-details',
+        add: 'agent.add',
+        noEntities: 'agent.no-agents-text',
+        search: 'agent.search',
+        selectedEntities: 'agent.selected-agents',
+        group: 'agent.group',
+        groupList: 'agent.list-of-groups',
+        groupNameStartsWith: 'agent.group-name-starts-with'
+      }
+    ],
+    [
+      EntityType.AGENT_PROFILE,
+      {
+        type: 'entity.type-agent-profile',
+        typePlural: 'entity.type-agent-profiles',
+        list: 'entity.list-of-agent-profiles',
+        nameStartsWith: 'entity.agent-profile-name-starts-with',
+        details: 'agent.profile-details',
+        add: 'agent.add-profile',
+        noEntities: 'agent.no-agent-profiles-text',
+        search: 'agent.search-profiles',
+        selectedEntities: 'agent.selected-agent-profiles'
+      }
+    ],
+    [
+      EntityType.AGENT_APPLICATION,
+      {
+        type: 'entity.type-agent-application',
+        typePlural: 'entity.type-agent-applications',
+        list: 'entity.list-of-agent-applications',
+        nameStartsWith: 'entity.agent-application-name-starts-with',
+        details: 'agent.application-details',
+        add: 'agent.add-application',
+        noEntities: 'agent.no-applications-text',
+        search: 'agent.search-applications',
+        selectedEntities: 'agent.selected-applications'
+      }
+    ],
+    [
+      EntityType.AGENT_APP_TEMPLATE,
+      {
+        type: 'entity.type-agent-app-template',
+        typePlural: 'entity.type-agent-app-templates',
+        list: 'entity.list-of-agent-app-templates',
+        details: 'agent.template-details',
+        noEntities: 'agent.no-templates-text',
+        search: 'agent.search-templates'
+      }
+    ],
+    [
+      EntityType.AGENT_APP_PROFILE,
+      {
+        type: 'entity.type-agent-app-profile',
+        typePlural: 'entity.type-agent-app-profiles',
+        list: 'entity.list-of-agent-app-profiles',
+        nameStartsWith: 'entity.agent-app-profile-name-starts-with',
+        details: 'agent.app-profile-details',
+        add: 'agent.add-app-profile',
+        noEntities: 'agent.no-app-profiles-text',
+        search: 'agent.search-app-profiles',
+        selectedEntities: 'agent.selected-app-profiles'
+      }
+    ],
+    [
+      EntityType.AGENT_APP_EVENT,
+      {
+        type: 'entity.type-agent-app-event',
+        typePlural: 'entity.type-agent-app-events',
+        noEntities: 'agent.no-events-text',
+        search: 'agent.search-events'
+      }
+    ],
+    [
+      EntityType.AGENT_APP_UNIT,
+      {
+        type: 'entity.type-agent-app-unit',
+        typePlural: 'entity.type-agent-app-units'
+      }
+    ],
+    [
+      EntityType.AGENT_BULK_ACTION,
+      {
+        type: 'entity.type-agent-bulk-action',
+        typePlural: 'entity.type-agent-bulk-actions'
+      }
+    ],
   ]
 );
 
@@ -914,6 +1015,36 @@ export const entityTypeResources = new Map<EntityType, EntityTypeResource<BaseDa
         helpLinkId: 'apiKeys'
       }
     ],
+    [
+      EntityType.AGENT,
+      {
+        helpLinkId: 'agents'
+      }
+    ],
+    [
+      EntityType.AGENT_PROFILE,
+      {
+        helpLinkId: 'agentProfiles'
+      }
+    ],
+    [
+      EntityType.AGENT_APPLICATION,
+      {
+        helpLinkId: 'agentApplications'
+      }
+    ],
+    [
+      EntityType.AGENT_APP_TEMPLATE,
+      {
+        helpLinkId: 'agentAppTemplates'
+      }
+    ],
+    [
+      EntityType.AGENT_APP_PROFILE,
+      {
+        helpLinkId: 'agentAppProfiles'
+      }
+    ],
   ]
 );
 
@@ -930,7 +1061,7 @@ export const baseDetailsPageByEntityType = new Map<EntityType, string>([
   [EntityType.CONVERTER, '/integrationsCenter/converters'],
   [EntityType.INTEGRATION, '/integrationsCenter/integrations'],
   [EntityType.RULE_CHAIN, '/ruleChains'],
-  [EntityType.EDGE, '/edgeManagement/instances/all'],
+  [EntityType.EDGE, '/edgeManagement/edges/all'],
   [EntityType.ENTITY_VIEW, '/entities/entityViews/all'],
   [EntityType.ROLE, '/security-settings/roles'],
   [EntityType.TB_RESOURCE, '/resources/resources-library'],
@@ -941,7 +1072,12 @@ export const baseDetailsPageByEntityType = new Map<EntityType, string>([
   [EntityType.OAUTH2_CLIENT, '/security-settings/oauth2/clients/details'],
   [EntityType.DOMAIN, '/security-settings/oauth2/clients/details'],
   [EntityType.MOBILE_APP, '/mobile-center/applications'],
-  [EntityType.REPORT_TEMPLATE, '/reporting/templates']
+  [EntityType.REPORT_TEMPLATE, '/reporting/templates'],
+  [EntityType.AGENT, '/edgeManagement/agents/all'],
+  [EntityType.AGENT_PROFILE, '/edgeManagement/profiles/agent'],
+  [EntityType.AGENT_APPLICATION, '/edgeManagement/agents/all'],
+  [EntityType.AGENT_APP_TEMPLATE, '/edgeManagement/agentTemplates'],
+  [EntityType.AGENT_APP_PROFILE, '/edgeManagement/profiles/application']
 ]);
 
 export const groupUrlPrefixByEntityType = new Map<EntityType, string>([
@@ -950,8 +1086,9 @@ export const groupUrlPrefixByEntityType = new Map<EntityType, string>([
   [EntityType.DASHBOARD, '/dashboards/groups'],
   [EntityType.ASSET, '/entities/assets/groups'],
   [EntityType.DEVICE, '/entities/devices/groups'],
-  [EntityType.EDGE, '/edgeManagement/instances/groups'],
+  [EntityType.EDGE, '/edgeManagement/edges/groups'],
   [EntityType.ENTITY_VIEW, '/entities/entityViews/groups'],
+  [EntityType.AGENT, '/edgeManagement/agents/groups'],
 ]);
 
 export interface EntitySubtype {

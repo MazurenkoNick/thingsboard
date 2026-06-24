@@ -32,6 +32,7 @@ package org.thingsboard.server.service.subscription;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
@@ -45,10 +46,12 @@ import java.util.Set;
 @AllArgsConstructor
 @EqualsAndHashCode(exclude = {"seqNumber"})
 @ToString
+@Getter
 public class TbSubscriptionsInfo {
 
     protected boolean notifications;
     protected boolean alarms;
+    protected boolean logs;
     protected boolean tsAllKeys;
     protected Set<String> tsKeys;
     protected boolean attrAllKeys;
@@ -56,7 +59,7 @@ public class TbSubscriptionsInfo {
     protected int seqNumber;
 
     public boolean isEmpty() {
-        return !notifications && !alarms && !tsAllKeys && !attrAllKeys && tsKeys == null && attrKeys == null;
+        return !notifications && !alarms && !logs && !tsAllKeys && !attrAllKeys && tsKeys == null && attrKeys == null;
     }
 
     protected TbSubscriptionsInfo copy() {
@@ -64,7 +67,7 @@ public class TbSubscriptionsInfo {
     }
 
     protected TbSubscriptionsInfo copy(int seqNumber) {
-        return new TbSubscriptionsInfo(notifications, alarms, tsAllKeys, tsKeys != null ? new HashSet<>(tsKeys) : null, attrAllKeys, attrKeys != null ? new HashSet<>(attrKeys) : null, seqNumber);
+        return new TbSubscriptionsInfo(notifications, alarms, logs, tsAllKeys, tsKeys != null ? new HashSet<>(tsKeys) : null, attrAllKeys, attrKeys != null ? new HashSet<>(attrKeys) : null, seqNumber);
     }
 
 }

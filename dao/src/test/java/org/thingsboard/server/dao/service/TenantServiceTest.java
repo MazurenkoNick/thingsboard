@@ -57,6 +57,9 @@ import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.TenantInfo;
 import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.agent.Agent;
+import org.thingsboard.server.common.data.agent.AgentInfo;
+import org.thingsboard.server.common.data.agent.AgentProfile;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.device.profile.DeviceProfileData;
 import org.thingsboard.server.common.data.device.profile.MqttDeviceProfileTransportConfiguration;
@@ -70,6 +73,8 @@ import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainType;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.widget.WidgetsBundle;
+import org.thingsboard.server.dao.agent.AgentProfileService;
+import org.thingsboard.server.dao.agent.AgentService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
@@ -139,6 +144,10 @@ public class TenantServiceTest extends AbstractServiceTest {
     UserService userService;
     @Autowired
     WidgetsBundleService widgetsBundleService;
+    @Autowired
+    AgentService agentService;
+    @Autowired
+    AgentProfileService agentProfileService;
 
     private final IdComparator<Tenant> idComparator = new IdComparator<>();
 
@@ -471,6 +480,37 @@ public class TenantServiceTest extends AbstractServiceTest {
     }
 
     @Test
+    public void testSaveTenantCreatesDefaultAgentProfile() {
+        TenantProfile profile = createAndSaveTenantProfile();
+        Tenant tenant = createAndSaveTenant(profile);
+        try {
+            AgentProfile defaultProfile = agentProfileService.findDefaultAgentProfile(tenant.getId());
+            Assert.assertNotNull(defaultProfile);
+            Assert.assertEquals(tenant.getId(), defaultProfile.getTenantId());
+            Assert.assertEquals("default", defaultProfile.getName());
+            Assert.assertTrue(defaultProfile.isDefault());
+        } finally {
+            tenantService.deleteTenant(tenant.getId());
+            tenantProfileService.deleteTenantProfile(TenantId.SYS_TENANT_ID, profile.getId());
+        }
+    }
+
+    @Test
+    public void testDeleteDefaultAgentProfileIsProhibited() {
+        TenantProfile profile = createAndSaveTenantProfile();
+        Tenant tenant = createAndSaveTenant(profile);
+        try {
+            AgentProfile defaultProfile = agentProfileService.findDefaultAgentProfile(tenant.getId());
+            Assert.assertNotNull(defaultProfile);
+            Assertions.assertThrows(DataValidationException.class,
+                    () -> agentProfileService.deleteProfile(tenant.getId(), defaultProfile.getId()));
+        } finally {
+            tenantService.deleteTenant(tenant.getId());
+            tenantProfileService.deleteTenantProfile(TenantId.SYS_TENANT_ID, profile.getId());
+        }
+    }
+
+    @Test
     public void testDeleteTenantDeletingAllRelatedEntities() throws Exception {
         TenantProfile profile = createAndSaveTenantProfile();
         Tenant tenant = createAndSaveTenant(profile);
@@ -487,6 +527,7 @@ public class TenantServiceTest extends AbstractServiceTest {
         OtaPackage otaPackage = createAndSaveOtaPackageFor(tenant, deviceProfile);
         TbResource resource = createAndSaveResourceFor(tenant);
         Rpc rpc = createAndSaveRpcFor(tenant, device);
+        Agent agent = createAndSaveAgentFor(tenant);
 
         tenantService.deleteTenant(tenant.getId());
 
@@ -506,8 +547,26 @@ public class TenantServiceTest extends AbstractServiceTest {
         assertResourceIsDeleted(tenant, resource);
         assertOtaPackageIsDeleted(tenant, otaPackage);
         Assert.assertNull(rpcService.findById(tenant.getId(), rpc.getId()));
+        assertAgentIsDeleted(tenant, agent);
+        assertAgentProfileIsDeleted(tenant);
 
         tenantProfileService.deleteTenantProfile(TenantId.SYS_TENANT_ID, profile.getId());
+    }
+
+    private void assertAgentProfileIsDeleted(Tenant tenant) {
+        PageData<AgentProfile> profiles =
+                agentProfileService.findAgentProfilesByTenantId(tenant.getId(), new PageLink(1));
+        Assert.assertEquals(0, profiles.getTotalElements());
+    }
+
+    private void assertAgentIsDeleted(Tenant tenant, Agent agent) {
+        assertThat(agentService.findAgentById(tenant.getId(), agent.getId()))
+                .as("agent").isNull();
+        PageLink pageLink = new PageLink(1);
+        PageData<AgentInfo> agents =
+                agentService.findAgentInfosByTenantId(tenant.getId(), pageLink);
+        Assert.assertEquals(0, agents.getTotalElements());
+
     }
 
     private void assertOtaPackageIsDeleted(Tenant tenant, OtaPackage otaPackage) {
@@ -622,6 +681,15 @@ public class TenantServiceTest extends AbstractServiceTest {
         rpc.setStatus(RpcStatus.QUEUED);
         rpc.setRequest(JacksonUtil.toJsonNode("{}"));
         return rpcService.save(rpc);
+    }
+
+    private Agent createAndSaveAgentFor(Tenant tenant) {
+        Agent agent = new Agent();
+        agent.setTenantId(tenant.getId());
+        agent.setName("Test Agent");
+        agent.setRoutingKey(StringUtils.randomAlphanumeric(15));
+        agent.setSecret(StringUtils.randomAlphanumeric(20));
+        return agentService.saveAgent(agent);
     }
 
     private TbResource createAndSaveResourceFor(Tenant tenant) {

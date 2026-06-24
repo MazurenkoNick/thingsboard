@@ -86,6 +86,7 @@ public enum EntityField {
         defaultFieldsByEntityType.put(EntityType.ENTITY_VIEW, new EntityField[]{CREATED_TIME, NAME, TYPE});
         defaultFieldsByEntityType.put(EntityType.EDGE, new EntityField[]{CREATED_TIME, NAME, TYPE, LABEL});
         defaultFieldsByEntityType.put(EntityType.DASHBOARD, new EntityField[]{CREATED_TIME, TITLE});
+        defaultFieldsByEntityType.put(EntityType.AGENT, new EntityField[]{CREATED_TIME, NAME});
     }
 
 }

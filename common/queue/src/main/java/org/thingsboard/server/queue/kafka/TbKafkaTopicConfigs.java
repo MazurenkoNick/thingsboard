@@ -81,6 +81,8 @@ public class TbKafkaTopicConfigs {
     private String edqsStateProperties;
     @Value("${queue.kafka.topic-properties.tasks:}")
     private String tasksProperties;
+    @Value("${queue.kafka.topic-properties.agent-bulk-ops:}")
+    private String agentBulkOpsProperties;
 
     @Getter
     private Map<String, String> coreConfigs;
@@ -124,6 +126,8 @@ public class TbKafkaTopicConfigs {
     private Map<String, String> edqsStateConfigs;
     @Getter
     private Map<String, String> tasksConfigs;
+    @Getter
+    private Map<String, String> agentBulkOpsConfigs;
 
     @PostConstruct
     private void init() {
@@ -151,6 +155,7 @@ public class TbKafkaTopicConfigs {
         edqsRequestsConfigs = PropertyUtils.getProps(edqsRequestsProperties);
         edqsStateConfigs = PropertyUtils.getProps(edqsStateProperties);
         tasksConfigs = PropertyUtils.getProps(tasksProperties);
+        agentBulkOpsConfigs = PropertyUtils.getProps(agentBulkOpsProperties);
     }
 
 }
