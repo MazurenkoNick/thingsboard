@@ -262,7 +262,6 @@ class DefaultAgentEventProcessorTest {
         when(appEventService.hasActiveEventForApplication(APP_ID)).thenReturn(false);
         when(appEventService.findOldestPendingByApplicationId(APP_ID)).thenReturn(Optional.of(pendingEvent));
         when(appEventService.markDelivered(EVENT_ID)).thenReturn(true);
-        when(argumentResolver.resolve(eq(TENANT_ID), eq(app))).thenReturn(Futures.immediateFuture(Map.of()));
         when(eventStepsResolver.resolveSteps(app, AgentAppEventActionType.INSTALL)).thenReturn(List.of(step));
 
         try (MockedStatic<AgentMsgConstructorUtils> utils = mockStatic(AgentMsgConstructorUtils.class)) {
@@ -278,6 +277,31 @@ class DefaultAgentEventProcessorTest {
     }
 
     @Test
+    void processNextEventForApp_resolvesCustomArguments_whenStepRequiresThem() throws Exception {
+        AgentApplication app = newApplication();
+        AgentAppEvent pendingEvent = newEvent(AgentAppEventActionType.INSTALL);
+        AgentAppStep step = newStep(STEP_1_ID, null, AgentAppStepType.COMPOSE);
+        Map<String, String> resolvedArgs = Map.of("KEY", "VALUE");
+
+        when(appEventService.hasActiveEventForApplication(APP_ID)).thenReturn(false);
+        when(appEventService.findOldestPendingByApplicationId(APP_ID)).thenReturn(Optional.of(pendingEvent));
+        when(appEventService.markDelivered(EVENT_ID)).thenReturn(true);
+        when(argumentResolver.resolve(eq(TENANT_ID), eq(app))).thenReturn(Futures.immediateFuture(resolvedArgs));
+        when(eventStepsResolver.resolveSteps(app, AgentAppEventActionType.INSTALL)).thenReturn(List.of(step));
+
+        try (MockedStatic<AgentMsgConstructorUtils> utils = mockStatic(AgentMsgConstructorUtils.class)) {
+            utils.when(() -> AgentMsgConstructorUtils.buildAppCommand(any(), any(), any(), eq(1)))
+                    .thenReturn(ServerToAgent.getDefaultInstance());
+            when(agentRpcService.push(eq(AGENT_ID), any())).thenReturn(true);
+
+            processor.processNextEventForApp(TENANT_ID, AGENT_ID, app);
+        }
+
+        verify(argumentResolver).resolve(eq(TENANT_ID), eq(app));
+        verify(appEventService).updateResolvedArguments(EVENT_ID, resolvedArgs);
+    }
+
+    @Test
     void processNextEventForApp_dispatchException_callsOnFailure() {
         AgentApplication app = newApplication();
         AgentAppEvent pendingEvent = newEvent(AgentAppEventActionType.INSTALL);
@@ -285,7 +309,6 @@ class DefaultAgentEventProcessorTest {
         when(appEventService.hasActiveEventForApplication(APP_ID)).thenReturn(false);
         when(appEventService.findOldestPendingByApplicationId(APP_ID)).thenReturn(Optional.of(pendingEvent));
         when(appEventService.markDelivered(EVENT_ID)).thenReturn(true);
-        when(argumentResolver.resolve(eq(TENANT_ID), eq(app))).thenReturn(Futures.immediateFuture(Map.of()));
         when(eventStepsResolver.resolveSteps(app, AgentAppEventActionType.INSTALL)).thenThrow(new RuntimeException("bad steps"));
 
         processor.processNextEventForApp(TENANT_ID, AGENT_ID, app);
@@ -467,10 +490,14 @@ class DefaultAgentEventProcessorTest {
     }
 
     private AgentAppStep newStep(UUID id, UUID nextId) {
+        return newStep(id, nextId, AgentAppStepType.COMPOSE_START);
+    }
+
+    private AgentAppStep newStep(UUID id, UUID nextId, AgentAppStepType type) {
         return new AgentAppStep(nextId, id, "Step " + id, false) {
             @Override
             public AgentAppStepType getType() {
-                return AgentAppStepType.COMPOSE_START;
+                return type;
             }
         };
     }

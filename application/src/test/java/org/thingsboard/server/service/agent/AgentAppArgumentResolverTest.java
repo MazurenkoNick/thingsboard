@@ -52,10 +52,9 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
 import org.thingsboard.server.common.data.kv.BasicTsKvEntry;
 import org.thingsboard.server.common.data.kv.StringDataEntry;
-import org.thingsboard.server.dao.agent.AgentAppRelationService;
+import org.thingsboard.server.dao.agent.AgentAppArgumentSourceResolver;
 import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
-import org.thingsboard.server.service.security.permission.OwnersCacheService;
 
 import java.util.List;
 import java.util.Map;
@@ -64,6 +63,7 @@ import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
@@ -78,9 +78,7 @@ class AgentAppArgumentResolverTest {
     @Mock
     private TimeseriesService timeseriesService;
     @Mock
-    private OwnersCacheService ownersCacheService;
-    @Mock
-    private AgentAppRelationService agentAppRelationService;
+    private AgentAppArgumentSourceResolver sourceEntityResolver;
 
     @InjectMocks
     private AgentAppArgumentResolver resolver;
@@ -92,6 +90,8 @@ class AgentAppArgumentResolverTest {
     void setUp() {
         tenantId = TenantId.fromUUID(UUID.randomUUID());
         agentId = new AgentId(UUID.randomUUID());
+        lenient().when(sourceEntityResolver.resolveContextSource(eq(tenantId), any(), eq(AgentAppArgumentSource.AGENT)))
+                .thenReturn(agentId);
     }
 
     @Test
@@ -166,7 +166,8 @@ class AgentAppArgumentResolverTest {
         AgentApplication app = application(
                 argument("r", AgentAppArgumentSource.RELATED_ENTITY, AgentAppArgumentValueType.ATTRIBUTE, AttributeScope.SERVER_SCOPE, "kr", null)
         );
-        lenient().when(agentAppRelationService.findRelatedEntity(tenantId, app)).thenReturn(null);
+        lenient().when(sourceEntityResolver.resolveContextSource(eq(tenantId), any(), eq(AgentAppArgumentSource.RELATED_ENTITY)))
+                .thenReturn(null);
 
         assertThatThrownBy(() -> resolver.resolve(tenantId, app))
                 .isInstanceOf(IllegalStateException.class)
@@ -181,8 +182,10 @@ class AgentAppArgumentResolverTest {
                 argument("o", AgentAppArgumentSource.OWNER, AgentAppArgumentValueType.ATTRIBUTE, AttributeScope.SHARED_SCOPE, "ko", null),
                 argument("r", AgentAppArgumentSource.RELATED_ENTITY, AgentAppArgumentValueType.ATTRIBUTE, AttributeScope.SERVER_SCOPE, "kr", null)
         );
-        lenient().when(ownersCacheService.getOwner(tenantId, agentId)).thenReturn(ownerId);
-        lenient().when(agentAppRelationService.findRelatedEntity(tenantId, app)).thenReturn(relatedId);
+        lenient().when(sourceEntityResolver.resolveContextSource(eq(tenantId), any(), eq(AgentAppArgumentSource.OWNER)))
+                .thenReturn(ownerId);
+        lenient().when(sourceEntityResolver.resolveContextSource(eq(tenantId), any(), eq(AgentAppArgumentSource.RELATED_ENTITY)))
+                .thenReturn(relatedId);
         lenient().when(attributesService.find(eq(tenantId), eq(ownerId), eq(AttributeScope.SHARED_SCOPE), anyCollection()))
                 .thenReturn(Futures.immediateFuture(List.of(new BaseAttributeKvEntry(new StringDataEntry("ko", "ownerVal"), 1L))));
         lenient().when(attributesService.find(eq(tenantId), eq(relatedId), eq(AttributeScope.SERVER_SCOPE), anyCollection()))
@@ -213,6 +216,8 @@ class AgentAppArgumentResolverTest {
     void resolvesTenantSource() throws ExecutionException, InterruptedException {
         AgentApplication app = application(
                 argument("t", AgentAppArgumentSource.TENANT, AgentAppArgumentValueType.ATTRIBUTE, AttributeScope.SERVER_SCOPE, "kt", null));
+        lenient().when(sourceEntityResolver.resolveContextSource(eq(tenantId), any(), eq(AgentAppArgumentSource.TENANT)))
+                .thenReturn(tenantId);
         lenient().when(attributesService.find(eq(tenantId), eq(tenantId), eq(AttributeScope.SERVER_SCOPE), anyCollection()))
                 .thenReturn(Futures.immediateFuture(List.of(new BaseAttributeKvEntry(new StringDataEntry("kt", "tenantVal"), 1L))));
 

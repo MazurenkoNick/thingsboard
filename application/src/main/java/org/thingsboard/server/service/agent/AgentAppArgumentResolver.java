@@ -48,11 +48,10 @@ import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.kv.KvEntry;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.util.CollectionsUtil;
-import org.thingsboard.server.dao.agent.AgentAppRelationService;
+import org.thingsboard.server.dao.agent.AgentAppArgumentSourceResolver;
 import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
-import org.thingsboard.server.service.security.permission.OwnersCacheService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -78,8 +77,7 @@ public class AgentAppArgumentResolver {
 
     private final AttributesService attributesService;
     private final TimeseriesService timeseriesService;
-    private final OwnersCacheService ownersCacheService;
-    private final AgentAppRelationService agentAppRelationService;
+    private final AgentAppArgumentSourceResolver sourceEntityResolver;
 
     public ListenableFuture<Map<String, String>> resolve(TenantId tenantId, AgentApplication application) {
         AgentAppConfig config = application.getConfig();
@@ -87,12 +85,15 @@ public class AgentAppArgumentResolver {
             return Futures.immediateFuture(Collections.emptyMap());
         }
 
-        Map<AgentAppArgumentSource, EntityId> sourceCache = new EnumMap<>(AgentAppArgumentSource.class);
+        Map<AgentAppArgumentSource, EntityId> contextSourceCache = new EnumMap<>(AgentAppArgumentSource.class);
         Map<EntityId, List<AgentAppArgument>> argsByEntity = new LinkedHashMap<>();
         Map<String, String> baseValues = new HashMap<>();
 
         for (AgentAppArgument argument : config.getArguments()) {
-            EntityId sourceEntity = resolveSourceEntity(tenantId, application, argument, sourceCache);
+            AgentAppArgumentSource sourceType = argument.getSourceType();
+            EntityId sourceEntity = sourceType != null && !sourceType.isConcreteEntityRef()
+                    ? contextSourceCache.computeIfAbsent(sourceType, type -> sourceEntityResolver.resolveContextSource(tenantId, application, type))
+                    : argument.getSourceEntityId();
             if (sourceEntity == null) {
                 baseValues.put(argument.getName(), resolveValue(null, argument));
             } else {
@@ -112,25 +113,6 @@ public class AgentAppArgumentResolver {
             resolvedKvs.forEach(result::putAll);
             return result;
         }, MoreExecutors.directExecutor());
-    }
-
-    private EntityId resolveSourceEntity(TenantId tenantId, AgentApplication application,
-                                         AgentAppArgument argument,
-                                         Map<AgentAppArgumentSource, EntityId> cache) {
-        AgentAppArgumentSource sourceType = argument.getSourceType();
-        if (sourceType == null) {
-            return null;
-        }
-        if (sourceType.isConcreteEntityRef()) {
-            return argument.getSourceEntityId();
-        }
-        return cache.computeIfAbsent(sourceType, type -> switch (type) {
-            case AGENT -> application.getAgentId();
-            case OWNER -> ownersCacheService.getOwner(tenantId, application.getAgentId());
-            case RELATED_ENTITY -> agentAppRelationService.findRelatedEntity(tenantId, application);
-            case TENANT -> tenantId;
-            default -> null;
-        });
     }
 
     private List<ListenableFuture<Map<String, String>>> fetchForEntity(TenantId tenantId, EntityId entityId,

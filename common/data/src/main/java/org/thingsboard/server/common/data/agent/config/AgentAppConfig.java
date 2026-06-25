@@ -37,6 +37,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.agent.AgentApplicationType;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.ArrayList;
@@ -110,10 +111,11 @@ public abstract class AgentAppConfig {
                 throw new DataValidationException("Custom argument '" + name + "' source type must be specified!");
             }
             if (sourceType.isConcreteEntityRef()) {
-                if (argument.getSourceEntityId() == null) {
+                EntityId sourceEntityId = argument.getSourceEntityId();
+                if (sourceEntityId == null) {
                     throw new DataValidationException("Custom argument '" + name + "' source entity id must be specified!");
                 }
-                if (argument.getSourceEntityId().getEntityType() != sourceType.getSearchEntityType()) {
+                if (sourceEntityId.getEntityType() != sourceType.getSearchEntityType()) {
                     throw new DataValidationException("Custom argument '" + name + "' source entity id type must be "
                             + sourceType.getSearchEntityType() + "!");
                 }

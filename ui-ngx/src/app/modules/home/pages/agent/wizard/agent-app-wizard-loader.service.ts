@@ -124,8 +124,9 @@ export class AgentAppWizardLoaderService {
   }
 
   merge(templateId: string, draft: AgentApplication, composeType?: string,
-        relatedEntityId?: EntityId, actionType?: AgentAppEventActionType): Observable<AgentApplication> {
-    return this.agentService.mergeForPreview(templateId, draft, composeType, relatedEntityId, actionType);
+        relatedEntityId?: EntityId, actionType?: AgentAppEventActionType,
+        setHostValues?: boolean): Observable<AgentApplication> {
+    return this.agentService.mergeForPreview(templateId, draft, composeType, relatedEntityId, actionType, setHostValues);
   }
 
   loadManagedApp(entityType: string, entityId: string): Observable<AgentApplication | null> {

@@ -28,34 +28,36 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.agent.step;
+package org.thingsboard.server.dao.agent;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.config.AgentAppArgumentSource;
+import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.dao.owner.OwnerService;
 
-public enum AgentAppStepType {
-    COMPOSE_TEMPLATE,
-    COMPOSE(true),
-    COMPOSE_START,
-    COMPOSE_DOWN,
-    ROLLBACK,
-    BACKUP_VOLUME,
-    BACKUP_VOLUME_REMOVE,
-    COMPOSE_MIGRATION(true),
-    COMPOSE_RESTART;
+@Service
+@RequiredArgsConstructor
+public class AgentAppArgumentSourceResolver {
 
-    private final boolean containsCustomArguments;
+    private final OwnerService ownerService;
+    private final AgentAppRelationService agentAppRelationService;
 
-    AgentAppStepType() {
-        this.containsCustomArguments = false;
+    public EntityId resolveContextSource(TenantId tenantId, AgentApplication application, AgentAppArgumentSource sourceType) {
+        return switch (sourceType) {
+            case AGENT -> application.getAgentId();
+            case OWNER -> ownerService.getOwner(tenantId, application.getAgentId());
+            case RELATED_ENTITY -> resolveRelatedEntity(tenantId, application);
+            case TENANT -> tenantId;
+            default -> null;
+        };
     }
 
-    AgentAppStepType(boolean containsCustomArguments) {
-        this.containsCustomArguments = containsCustomArguments;
+    private EntityId resolveRelatedEntity(TenantId tenantId, AgentApplication application) {
+        EntityId related = agentAppRelationService.findRelatedEntity(tenantId, application);
+        return related != null ? related : agentAppRelationService.findRelatedEntityByConfig(tenantId, application);
     }
 
-    @JsonIgnore
-    public boolean containsCustomArguments() {
-        return containsCustomArguments;
-    }
 }
-

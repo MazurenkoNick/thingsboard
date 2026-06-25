@@ -273,6 +273,7 @@ export class AgentService {
   public mergeForPreview(templateId: string, application?: AgentApplication,
                           composeType?: string, relatedEntityId?: EntityId,
                           actionType?: AgentAppEventActionType,
+                          setHostValues?: boolean,
                           config?: RequestConfig): Observable<AgentApplication> {
     let url = `/api/agent/app/merge/${templateId}/preview`;
     const params: string[] = [];
@@ -281,6 +282,9 @@ export class AgentService {
     }
     if (actionType) {
       params.push(`actionType=${encodeURIComponent(actionType)}`);
+    }
+    if (setHostValues) {
+      params.push('setHostValues=true');
     }
     if (relatedEntityId?.entityType && relatedEntityId?.id) {
       params.push(`relatedEntityType=${encodeURIComponent(relatedEntityId.entityType)}`);

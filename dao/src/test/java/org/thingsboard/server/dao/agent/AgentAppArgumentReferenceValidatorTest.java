@@ -32,11 +32,13 @@ package org.thingsboard.server.dao.agent;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.config.AgentAppArgument;
 import org.thingsboard.server.common.data.agent.config.AgentAppArgumentSource;
 import org.thingsboard.server.common.data.agent.config.AgentAppArgumentValueType;
@@ -56,28 +58,33 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AgentAppArgumentReferenceValidatorTest {
 
     @Mock
+    private AgentAppArgumentSourceResolver sourceEntityResolver;
+    @Mock
     private EntityServiceRegistry entityServiceRegistry;
     @Mock
     private EntityDaoService entityDaoService;
 
+    @InjectMocks
+    private AgentAppArgumentReferenceValidator validator;
+
     private final TenantId tenantId = TenantId.fromUUID(UUID.randomUUID());
+    private final AgentApplication application = new AgentApplication();
 
     @Test
     void passesWhenReferencedEntityExists() {
         DeviceId deviceId = new DeviceId(UUID.randomUUID());
         Optional<HasId<?>> found = Optional.of(new Device(deviceId));
-        lenient().when(entityServiceRegistry.getServiceByEntityType(EntityType.DEVICE)).thenReturn(entityDaoService);
+        when(entityServiceRegistry.getServiceByEntityType(EntityType.DEVICE)).thenReturn(entityDaoService);
         when(entityDaoService.findEntity(eq(tenantId), any())).thenReturn(found);
 
         assertThatNoException().isThrownBy(() ->
-                AgentAppArgumentReferenceValidator.validate(tenantId, configWith(deviceId), entityServiceRegistry));
+                validator.validate(tenantId, configWith(deviceId), null));
     }
 
     @Test
@@ -86,19 +93,66 @@ class AgentAppArgumentReferenceValidatorTest {
         when(entityServiceRegistry.getServiceByEntityType(EntityType.DEVICE)).thenReturn(entityDaoService);
         when(entityDaoService.findEntity(eq(tenantId), any())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() ->
-                AgentAppArgumentReferenceValidator.validate(tenantId, configWith(deviceId), entityServiceRegistry))
+        assertThatThrownBy(() -> validator.validate(tenantId, configWith(deviceId), null))
                 .isInstanceOf(DataValidationException.class)
                 .hasMessageContaining("non-existent");
     }
 
     @Test
-    void skipsContextDerivedSources() {
+    void skipsContextDerivedSourcesForProfile() {
         DockerComposeConfig config = new DockerComposeConfig();
         config.setArguments(List.of(argument(AgentAppArgumentSource.AGENT, null)));
 
-        assertThatNoException().isThrownBy(() ->
-                AgentAppArgumentReferenceValidator.validate(tenantId, config, entityServiceRegistry));
+        assertThatNoException().isThrownBy(() -> validator.validate(tenantId, config, null));
+    }
+
+    @Test
+    void passesWhenContextDerivedSourceResolvesToExistingEntity() {
+        DeviceId deviceId = new DeviceId(UUID.randomUUID());
+        Optional<HasId<?>> found = Optional.of(new Device(deviceId));
+        when(sourceEntityResolver.resolveContextSource(any(), any(), eq(AgentAppArgumentSource.RELATED_ENTITY))).thenReturn(deviceId);
+        when(entityServiceRegistry.getServiceByEntityType(EntityType.DEVICE)).thenReturn(entityDaoService);
+        when(entityDaoService.findEntity(eq(tenantId), any())).thenReturn(found);
+
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setArguments(List.of(argument(AgentAppArgumentSource.RELATED_ENTITY, null)));
+
+        assertThatNoException().isThrownBy(() -> validator.validate(tenantId, config, application));
+    }
+
+    @Test
+    void rejectsWhenContextDerivedResolvedEntityMissing() {
+        DeviceId deviceId = new DeviceId(UUID.randomUUID());
+        when(sourceEntityResolver.resolveContextSource(any(), any(), eq(AgentAppArgumentSource.RELATED_ENTITY))).thenReturn(deviceId);
+        when(entityServiceRegistry.getServiceByEntityType(EntityType.DEVICE)).thenReturn(entityDaoService);
+        when(entityDaoService.findEntity(eq(tenantId), any())).thenReturn(Optional.empty());
+
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setArguments(List.of(argument(AgentAppArgumentSource.RELATED_ENTITY, null)));
+
+        assertThatThrownBy(() -> validator.validate(tenantId, config, application))
+                .isInstanceOf(DataValidationException.class)
+                .hasMessageContaining("non-existent");
+    }
+
+    @Test
+    void rejectsUnresolvableContextDerivedSourceWithoutDefault() {
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setArguments(List.of(argument(AgentAppArgumentSource.RELATED_ENTITY, null)));
+
+        assertThatThrownBy(() -> validator.validate(tenantId, config, application))
+                .isInstanceOf(DataValidationException.class)
+                .hasMessageContaining("could not resolve");
+    }
+
+    @Test
+    void passesUnresolvableContextDerivedSourceWhenDefaultPresent() {
+        AgentAppArgument arg = argument(AgentAppArgumentSource.RELATED_ENTITY, null);
+        arg.setDefaultValue("fallback");
+        DockerComposeConfig config = new DockerComposeConfig();
+        config.setArguments(List.of(arg));
+
+        assertThatNoException().isThrownBy(() -> validator.validate(tenantId, config, application));
     }
 
     private DockerComposeConfig configWith(DeviceId deviceId) {
