@@ -357,7 +357,7 @@ export class AgentAppInstallFlowComponent extends PageComponent implements OnIni
       this.agentId, this.selectedType!, this.appName, tpl,
       this.composeYaml, (this.mergedApp?.config as any)?.compose);
     this.loader.merge(
-      tpl.id.id, draft, this.composeType || undefined, this.relatedEntityId || undefined
+      tpl.id.id, draft, this.composeType || undefined, this.relatedEntityId || undefined, undefined, true
     ).subscribe({
       next: merged => {
         this.mergedApp = merged;
@@ -465,7 +465,7 @@ export class AgentAppInstallFlowComponent extends PageComponent implements OnIni
 
   private runMergeForPreview(tpl: AgentAppTemplate) {
     const draft = buildInstallMergeDraft(this.agentId, this.selectedType!, this.appName, tpl);
-    this.loader.merge(tpl.id.id, draft, this.composeType || undefined, this.relatedEntityId || undefined).subscribe({
+    this.loader.merge(tpl.id.id, draft, this.composeType || undefined, this.relatedEntityId || undefined, undefined, true).subscribe({
       next: merged => {
         this.mergedApp = merged;
         if (!this.useProfile) {

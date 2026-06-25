@@ -159,6 +159,9 @@ public class AgentAppProfileController extends BaseController {
             @RequestParam(required = false) String composeType,
             @Parameter(description = "The event action this merge previews (e.g. UPGRADE). Drives action-specific merge rules.")
             @RequestParam(required = false) AgentAppEventActionType actionType,
+            @Parameter(description = "Whether to auto-fill host values (e.g. CLOUD_RPC_HOST) from the platform base URL. " +
+                    "Should be true only for the install preview; keep false when previewing the saved compose of an existing profile to preserve user-configured host values.")
+            @RequestParam(required = false, defaultValue = "false") boolean setHostValues,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Agent application profile to merge template with")
             @RequestBody AgentAppProfile appProfile,
             HttpServletRequest request) throws ThingsboardException {
@@ -172,7 +175,7 @@ public class AgentAppProfileController extends BaseController {
         AppConfigMergeCtx ctx = AppConfigMergeCtx.builder()
                 .template(template)
                 .selectedComposeType(composeType)
-                .setHostValues(true)
+                .setHostValues(setHostValues)
                 .actionType(actionType)
                 .baseUrl(baseUrl)
                 .build();

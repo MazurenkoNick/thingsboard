@@ -31,13 +31,11 @@
 package org.thingsboard.server.dao.service.validator;
 
 import lombok.AllArgsConstructor;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.agent.AgentAppProfile;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppArgumentReferenceValidator;
 import org.thingsboard.server.dao.agent.AgentAppProfileDao;
-import org.thingsboard.server.dao.entity.EntityServiceRegistry;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.exception.DataValidationException;
@@ -48,8 +46,7 @@ public class AgentAppProfileDataValidator extends DataValidator<AgentAppProfile>
 
     private final AgentAppProfileDao profileDao;
     private final TenantService tenantService;
-    @Lazy
-    private final EntityServiceRegistry entityServiceRegistry;
+    private final AgentAppArgumentReferenceValidator argumentReferenceValidator;
 
     @Override
     protected AgentAppProfile validateUpdate(TenantId tenantId, AgentAppProfile profile) {
@@ -80,7 +77,7 @@ public class AgentAppProfileDataValidator extends DataValidator<AgentAppProfile>
         }
         profile.getConfig().validate();
         profile.getConfig().validateForProfile(profile.getAppType());
-        AgentAppArgumentReferenceValidator.validate(profile.getTenantId(), profile.getConfig(), entityServiceRegistry);
+        argumentReferenceValidator.validate(profile.getTenantId(), profile.getConfig(), null);
         if (!tenantService.tenantExists(profile.getTenantId())) {
             throw new DataValidationException("Agent application profile is referencing to non-existent tenant!");
         }

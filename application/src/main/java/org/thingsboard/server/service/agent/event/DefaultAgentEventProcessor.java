@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.service.agent.event;
 
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import lombok.RequiredArgsConstructor;
@@ -64,6 +65,7 @@ import org.thingsboard.server.service.agent.AgentRpcService;
 import org.thingsboard.server.service.agent.AgentSessionNotFoundException;
 import org.thingsboard.server.service.agent.session.AgentSessionRegistry;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -242,26 +244,29 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
             return;
         }
         try {
-            ListenableFuture<Map<String, String>> argumentsFuture = argumentResolver.resolve(tenantId, application);
-            DonAsynchron.withCallback(argumentsFuture,
-                    resolvedArguments -> dispatchFirstStep(tenantId, agentId, application, event, resolvedArguments),
-                    t -> {
-                        eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.SERVER, t.getMessage());
-                    }, MoreExecutors.directExecutor());
+            resolveArgsAndDispatchFirstStep(tenantId, agentId, application, event);
         } catch (Exception e) {
             log.error("[{}][{}] Failed to dispatch event {}, marking as ERROR", tenantId, agentId, event.getId(), e);
             eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.SERVER, e.getMessage());
         }
     }
 
-    private void dispatchFirstStep(TenantId tenantId, AgentId agentId, AgentApplication application,
-                                   AgentAppEvent event, Map<String, String> resolvedArguments) {
+    private void resolveArgsAndDispatchFirstStep(TenantId tenantId, AgentId agentId, AgentApplication application, AgentAppEvent event) {
+        List<AgentAppStep> steps = resolveSteps(application, event.getActionType());
+        DonAsynchron.withCallback(
+                findCustomArgumentsIfRequired(tenantId, application, steps),
+                args -> dispatchFirstStep(tenantId, agentId, application, steps, args, event),
+                t -> eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.SERVER, t.getMessage()),
+                MoreExecutors.directExecutor());
+    }
+
+    private void dispatchFirstStep(TenantId tenantId, AgentId agentId, AgentApplication application, List<AgentAppStep> steps,
+                                   Map<String, String> resolvedArguments, AgentAppEvent event) {
         try {
             if (resolvedArguments != null && !resolvedArguments.isEmpty()) {
                 appEventService.updateResolvedArguments(event.getId(), resolvedArguments);
                 event.setResolvedArguments(resolvedArguments);
             }
-            List<AgentAppStep> steps = resolveSteps(application, event.getActionType());
             AgentAppStep firstStep = StepLinkedListUtils.findFirstStep(steps);
             log.trace("[{}][{}] Resolved {} steps for event {}, first step: {}", tenantId, agentId, steps.size(), event.getId(), firstStep.getId());
             sendStep(event, application, firstStep, steps.size());
@@ -269,6 +274,16 @@ public class DefaultAgentEventProcessor implements AgentEventProcessor {
             log.error("[{}][{}] Failed to dispatch event {}, marking as ERROR", tenantId, agentId, event.getId(), e);
             eventErrorHandler.onFailure(tenantId, agentId, event.getId(), ErrorOrigin.SERVER, e.getMessage());
         }
+    }
+
+    private ListenableFuture<Map<String, String>> findCustomArgumentsIfRequired(
+            TenantId tenantId, AgentApplication application, List<AgentAppStep> steps) {
+
+        boolean findCustomArguments = steps.stream().anyMatch(s -> s.getType().containsCustomArguments());
+        if (!findCustomArguments) {
+            return Futures.immediateFuture(Collections.emptyMap());
+        }
+        return argumentResolver.resolve(tenantId, application);
     }
 
     private void sendStep(AgentAppEvent event, AgentApplication application, AgentAppStep step, int totalSteps) {

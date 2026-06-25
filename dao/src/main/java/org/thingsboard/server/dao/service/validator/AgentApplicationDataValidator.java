@@ -31,7 +31,6 @@
 package org.thingsboard.server.dao.service.validator;
 
 import lombok.AllArgsConstructor;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.agent.Agent;
 import org.thingsboard.server.common.data.agent.AgentAppProfile;
@@ -46,7 +45,6 @@ import org.thingsboard.server.dao.agent.AgentAppProfileService;
 import org.thingsboard.server.dao.agent.AgentAppTemplateDao;
 import org.thingsboard.server.dao.agent.AgentApplicationDao;
 import org.thingsboard.server.dao.agent.AgentService;
-import org.thingsboard.server.dao.entity.EntityServiceRegistry;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.exception.DataValidationException;
 
@@ -60,8 +58,7 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
     private final AgentApplicationDao agentApplicationDao;
     private final AgentAppTemplateDao agentAppTemplateDao;
     private final AgentAppProfileService agentAppProfileService;
-    @Lazy
-    private final EntityServiceRegistry entityServiceRegistry;
+    private final AgentAppArgumentReferenceValidator argumentReferenceValidator;
 
     @Override
     protected AgentApplication validateUpdate(TenantId tenantId, AgentApplication application) {
@@ -184,8 +181,10 @@ public class AgentApplicationDataValidator extends DataValidator<AgentApplicatio
         }
         if (agentApplication.getConfig() != null) {
             agentApplication.getConfig().validate();
-            agentApplication.getConfig().validateForProfile(agentApplication.getAppType());
-            AgentAppArgumentReferenceValidator.validate(tenantId, agentApplication.getConfig(), entityServiceRegistry);
+            if (agentApplication.getApplicationProfileId() != null) {
+                agentApplication.getConfig().validateForProfile(agentApplication.getAppType());
+            }
+            argumentReferenceValidator.validate(tenantId, agentApplication.getConfig(), agentApplication);
         }
     }
 

@@ -30,6 +30,10 @@
  */
 package org.thingsboard.server.dao.agent;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.config.AgentAppArgument;
 import org.thingsboard.server.common.data.agent.config.AgentAppArgumentSource;
 import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
@@ -39,33 +43,58 @@ import org.thingsboard.server.common.data.util.CollectionsUtil;
 import org.thingsboard.server.dao.entity.EntityServiceRegistry;
 import org.thingsboard.server.exception.DataValidationException;
 
-public final class AgentAppArgumentReferenceValidator {
+@Component
+@RequiredArgsConstructor
+public class AgentAppArgumentReferenceValidator {
 
-    private AgentAppArgumentReferenceValidator() {
-    }
+    private final AgentAppArgumentSourceResolver sourceEntityResolver;
+    @Lazy
+    private final EntityServiceRegistry entityServiceRegistry;
 
-    public static void validate(TenantId tenantId, AgentAppConfig config, EntityServiceRegistry entityServiceRegistry) {
+    public void validate(TenantId tenantId, AgentAppConfig config, AgentApplication application) {
         if (config == null || CollectionsUtil.isEmpty(config.getArguments())) {
             return;
         }
         for (AgentAppArgument argument : config.getArguments()) {
             AgentAppArgumentSource sourceType = argument.getSourceType();
-            if (sourceType == null || !sourceType.isConcreteEntityRef()) {
+            if (sourceType == null) {
                 continue;
             }
+            EntityId entityId = resolveReferencedEntity(tenantId, application, argument, sourceType);
+            if (entityId != null) {
+                requireEntityExists(tenantId, argument, entityId);
+            }
+        }
+    }
+
+    private EntityId resolveReferencedEntity(TenantId tenantId, AgentApplication application,
+                                             AgentAppArgument argument, AgentAppArgumentSource sourceType) {
+        if (sourceType.isConcreteEntityRef()) {
             EntityId entityId = argument.getSourceEntityId();
             if (entityId == null) {
                 throw new DataValidationException("Custom argument '" + argument.getName()
                         + "' is missing its referenced " + sourceType.getSearchEntityType() + " id!");
             }
-            boolean exists = entityServiceRegistry.getServiceByEntityType(sourceType.getSearchEntityType())
-                    .findEntity(tenantId, entityId)
-                    .isPresent();
-            if (!exists) {
-                throw new DataValidationException("Custom argument '" + argument.getName()
-                        + "' is referencing non-existent " + sourceType.getSearchEntityType() + "!");
-            }
+            return entityId;
         }
+        if (application == null) {
+            return null;
+        }
+        EntityId entityId = sourceEntityResolver.resolveContextSource(tenantId, application, sourceType);
+        if (entityId == null && argument.getDefaultValue() == null) {
+            throw new DataValidationException("Custom argument '" + argument.getName()
+                    + "' could not resolve its " + sourceType + " source and no default value is set!");
+        }
+        return entityId;
     }
 
+    private void requireEntityExists(TenantId tenantId, AgentAppArgument argument, EntityId entityId) {
+        boolean exists = entityServiceRegistry.getServiceByEntityType(entityId.getEntityType())
+                .findEntity(tenantId, entityId)
+                .isPresent();
+        if (!exists) {
+            throw new DataValidationException("Custom argument '" + argument.getName()
+                    + "' is referencing non-existent " + entityId.getEntityType() + "!");
+        }
+    }
 }

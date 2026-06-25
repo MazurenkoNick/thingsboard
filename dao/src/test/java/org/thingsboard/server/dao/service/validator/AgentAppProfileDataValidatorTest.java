@@ -47,6 +47,8 @@ import org.thingsboard.server.common.data.id.AgentAppProfileId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.dao.agent.AgentAppArgumentReferenceValidator;
+import org.thingsboard.server.dao.agent.AgentAppArgumentSourceResolver;
 import org.thingsboard.server.dao.agent.AgentAppProfileDao;
 import org.thingsboard.server.dao.entity.EntityDaoService;
 import org.thingsboard.server.dao.entity.EntityServiceRegistry;
@@ -73,6 +75,8 @@ class AgentAppProfileDataValidatorTest {
     @Mock
     private TenantService tenantService;
     @Mock
+    private AgentAppArgumentSourceResolver sourceEntityResolver;
+    @Mock
     private EntityServiceRegistry entityServiceRegistry;
     @Mock
     private EntityDaoService entityDaoService;
@@ -83,7 +87,9 @@ class AgentAppProfileDataValidatorTest {
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
-        validator = new AgentAppProfileDataValidator(profileDao, tenantService, entityServiceRegistry);
+        AgentAppArgumentReferenceValidator argumentReferenceValidator =
+                new AgentAppArgumentReferenceValidator(sourceEntityResolver, entityServiceRegistry);
+        validator = new AgentAppProfileDataValidator(profileDao, tenantService, argumentReferenceValidator);
     }
 
     @Test
