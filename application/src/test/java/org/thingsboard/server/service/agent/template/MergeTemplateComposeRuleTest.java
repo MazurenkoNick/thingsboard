@@ -44,7 +44,9 @@ import org.thingsboard.server.common.data.agent.step.ComposeStartStep;
 import org.thingsboard.server.common.data.agent.step.ComposeStep;
 import org.thingsboard.server.common.data.agent.step.ComposeTypeChoiceStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.dao.agent.config.MergeTemplateComposeRule;
+import org.thingsboard.server.exception.ThingsboardRuntimeException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -460,9 +462,10 @@ class MergeTemplateComposeRuleTest {
         AgentAppTemplate template = createTemplate(List.of(choiceStep));
         AppConfigMergeCtx ctx = createCtx(template,"nonexistent-type");
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        ThingsboardRuntimeException ex = assertThrows(ThingsboardRuntimeException.class,
                 () -> rule.apply(app, ctx));
 
+        assertEquals(ThingsboardErrorCode.BAD_REQUEST_PARAMS, ex.getErrorCode());
         assertTrue(ex.getMessage().contains("nonexistent-type"));
     }
 

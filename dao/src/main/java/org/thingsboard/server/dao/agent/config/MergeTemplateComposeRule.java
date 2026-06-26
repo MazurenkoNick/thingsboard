@@ -44,7 +44,9 @@ import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
 import org.thingsboard.server.common.data.agent.step.ComposeTypeChoiceStep;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.dao.agent.StepLinkedListUtils;
+import org.thingsboard.server.exception.ThingsboardRuntimeException;
 
 import java.util.Iterator;
 import java.util.Optional;
@@ -126,8 +128,9 @@ public class MergeTemplateComposeRule implements AppConfigMergeRule {
 
     private JsonNode getTemplateComposeByType(ComposeTypeChoiceStep choiceStep, String selectedComposeType) {
         return choiceStep.getTemplateByType(selectedComposeType)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        String.format("There's no '%s' compose type in: %s", selectedComposeType, choiceStep.getComposeTypes())
-                ));
+                .orElseThrow(() -> new ThingsboardRuntimeException(
+                        String.format("There's no '%s' compose type in: %s", selectedComposeType, choiceStep.getComposeTypes()),
+                        ThingsboardErrorCode.BAD_REQUEST_PARAMS)
+                );
     }
 }

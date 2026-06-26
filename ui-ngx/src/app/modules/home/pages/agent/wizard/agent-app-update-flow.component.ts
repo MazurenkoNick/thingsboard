@@ -169,8 +169,11 @@ export class AgentAppUpdateFlowComponent extends PageComponent implements OnInit
     this.loadingTemplate = false;
     this.template = tpl;
     this.initBindings(tpl);
-    this.composeType = (this.existingApplication?.config as any)?.composeType || pickComposeType(tpl);
     this.composeTypeKeys = composeTemplateKeys(tpl);
+    const savedComposeType = (this.existingApplication?.config as any)?.composeType;
+    this.composeType = savedComposeType && this.composeTypeKeys.includes(savedComposeType)
+      ? savedComposeType
+      : pickComposeType(tpl);
     // Profile-managed update: skip diff/preview merge — the user can only edit
     // credentials, so hydrate from the existing app and expose skip-refetch.
     if (this.existingApplication?.applicationProfileId) {
