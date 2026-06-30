@@ -41,22 +41,19 @@ import java.util.Map;
 public abstract class StatefulStep<T extends AgentAppStepState> extends AgentAppStep {
 
     /**
-     * Template-defined state that describes what fields the frontend should render for user input (stepInputs).
-     * When present, the step is considered stateful and the validator may require the user to provide
-     * corresponding stepInputs in the event, unless a {@link StepWithDefaultState#getDefaultState() defaultState}
-     * is available as a server-side fallback.
+     * Template-defined state. Each field carries a value plus a {@code userChoice} flag (see {@link AgentAppStepState}).
+     * Fields with {@code userChoice == true} are rendered for user input and required; the validator enforces a
+     * corresponding stepInput in the event. Fields with {@code userChoice == false} are applied silently.
      * <p>
-     * This is NOT used in command metadata resolution — only resolvedState (from user stepInputs)
-     * or defaultState contribute to the command sent to the agent.
+     * In command metadata resolution the resolvedState (from user stepInputs) is used when present; otherwise the
+     * step's own template state values are the fallback.
      */
     public abstract @Nullable T getState();
 
     @Override
     @JsonIgnore
     public Map<String, String> getCommandMetadata(AgentApplication application, @Nullable AgentAppStepState resolvedState) {
-        if (resolvedState != null) {
-            return resolvedState.getCommandMetadata();
-        }
-        return Collections.emptyMap();
+        T base = getState();
+        return base != null ? base.getCommandMetadata(resolvedState) : Collections.emptyMap();
     }
 }

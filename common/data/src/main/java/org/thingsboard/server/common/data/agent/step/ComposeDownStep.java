@@ -39,22 +39,14 @@ import org.thingsboard.server.common.data.agent.step.state.ComposeDownStepState;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ComposeDownStep extends StepWithDefaultState<ComposeDownStepState> {
+public class ComposeDownStep extends StatefulStep<ComposeDownStepState> {
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
     private ComposeDownStepState state;
 
-    @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
-    private ComposeDownStepState defaultState;
-
     @Override
     public AgentAppStepType getType() {
         return AgentAppStepType.COMPOSE_DOWN;
-    }
-
-    @Override
-    protected ComposeDownStepState copyState(ComposeDownStepState state) {
-        return new ComposeDownStepState(state);
     }
 
 }

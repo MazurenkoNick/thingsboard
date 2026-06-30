@@ -244,7 +244,7 @@ class AgentEventErrorHandlerTest {
         assertThat(rollback.getStatus()).isEqualTo(AgentAppEventStatus.PENDING);
         assertThat(rollback.getStepStates()).containsKey(ROLLBACK_STEP_ID);
         RollBackStepState stepState = (RollBackStepState) rollback.getStepStates().get(ROLLBACK_STEP_ID);
-        assertThat(stepState.getFailedEventId()).isEqualTo(EVENT_ID);
+        assertThat(stepState.getFailedEventId().getValue()).isEqualTo(EVENT_ID);
     }
 
     @Test

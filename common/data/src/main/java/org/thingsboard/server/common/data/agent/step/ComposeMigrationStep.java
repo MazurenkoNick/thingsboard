@@ -52,23 +52,15 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ComposeMigrationStep extends StepWithDefaultState<ComposeMigrationStepState> {
+public class ComposeMigrationStep extends StatefulStep<ComposeMigrationStepState> {
 
     private List<ServiceOverride> serviceOverrides;
     @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
     private ComposeMigrationStepState state;
 
-    @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
-    private ComposeMigrationStepState defaultState;
-
     @Override
     public AgentAppStepType getType() {
         return AgentAppStepType.COMPOSE_MIGRATION;
-    }
-
-    @Override
-    protected ComposeMigrationStepState copyState(ComposeMigrationStepState state) {
-        return new ComposeMigrationStepState(state);
     }
 
     @Override

@@ -40,6 +40,9 @@ import lombok.Data;
 import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
 import org.thingsboard.server.exception.DataValidationException;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -58,7 +61,63 @@ public abstract class AgentAppStepState {
 
     public abstract void validate() throws DataValidationException;
 
+    /**
+     * This state's fields keyed by their JSON property name. Single-field today, so
+     * {@link java.util.Collections#singletonMap(Object, Object)} (which tolerates a null field value) suffices;
+     * a multi-field state should return a {@code LinkedHashMap}.
+     */
     @JsonIgnore
-    public abstract Map<String, String> getCommandMetadata();
+    protected abstract Map<String, StepField<?>> fields();
+
+    /**
+     * Command metadata for this state. The {@code overlay} (user-submitted state) wins per field when it provides a
+     * non-null value; otherwise this (template) state's value is used — see {@link #effectiveValue(String, AgentAppStepState)}.
+     */
+    @JsonIgnore
+    public abstract Map<String, String> getCommandMetadata(@Nullable AgentAppStepState overlay);
+
+    /**
+     * Whether this state declares at least one field the user is expected to choose ({@code userChoice == true}).
+     * Such steps require a corresponding stepInput in the event; {@code userChoice == false} fields are applied
+     * silently (template value or, for ROLLBACK, the server-injected value).
+     */
+    @JsonIgnore
+    public boolean hasUserChoice() {
+        return fields().values().stream().anyMatch(f -> f != null && f.isUserChoice());
+    }
+
+    /**
+     * Field names this (template) state marks {@code userChoice == true} for which {@code submitted} provides no
+     * non-null value. Required-ness is driven by the template; the submitted state's own {@code userChoice} flags are ignored.
+     */
+    @JsonIgnore
+    public List<String> missingRequiredUserInputs(@Nullable AgentAppStepState submitted) {
+        Map<String, StepField<?>> provided = submitted != null ? submitted.fields() : Map.of();
+        List<String> missing = new ArrayList<>();
+        fields().forEach((name, field) -> {
+            if (field != null && field.isUserChoice()) {
+                StepField<?> got = provided.get(name);
+                if (got == null || got.getValue() == null) {
+                    missing.add(name);
+                }
+            }
+        });
+        return missing;
+    }
+
+    /**
+     * Effective value for {@code name}: the overlay's value when present and non-null, else this (template) value.
+     */
+    @SuppressWarnings("unchecked")
+    protected <V> V effectiveValue(String name, @Nullable AgentAppStepState overlay) {
+        if (overlay != null) {
+            StepField<?> o = overlay.fields().get(name);
+            if (o != null && o.getValue() != null) {
+                return (V) o.getValue();
+            }
+        }
+        StepField<?> t = fields().get(name);
+        return t != null ? (V) t.getValue() : null;
+    }
 
 }

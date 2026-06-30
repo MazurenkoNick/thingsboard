@@ -50,6 +50,7 @@ import org.thingsboard.server.common.data.agent.AgentAppInstallResponse;
 import org.thingsboard.server.common.data.agent.AgentApplicationOrigin;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.state.ComposeDownStepState;
+import org.thingsboard.server.common.data.agent.step.state.StepField;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.common.data.id.AgentAppTemplateId;
@@ -233,7 +234,7 @@ class DefaultTbAgentApplicationServiceTest {
 
         UUID stepId = UUID.randomUUID();
         ComposeDownStepState stepState = new ComposeDownStepState();
-        stepState.setRemoveVolumes(true);
+        stepState.setRemoveVolumes(new StepField<>(true, true));
 
         AgentAppEventRequest request = new AgentAppEventRequest();
         request.setActionType(AgentAppEventActionType.DELETE);

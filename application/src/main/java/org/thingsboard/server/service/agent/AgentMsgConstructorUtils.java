@@ -100,7 +100,7 @@ public class AgentMsgConstructorUtils {
     }
 
     private static Map<String, String> buildStepMetadata(AgentAppEvent event, AgentAppStep step, AgentApplication application) {
-        Map<UUID, AgentAppStepState> stateSteps = event.getStepStates();
+        Map<UUID, AgentAppStepState> stepIdToUserStateSteps = event.getStepStates();
         Map<String, String> metadata = new java.util.HashMap<>();
         metadata.put("stepTitle", step.getTitle() != null ? step.getTitle() : "");
         metadata.put("stepType", step.getType() != null ? step.getType().name() : "");
@@ -109,7 +109,8 @@ public class AgentMsgConstructorUtils {
             metadata.put("projectName", application.getProjectName());
         }
 
-        AgentAppStepState resolvedState = CollectionUtils.isEmpty(stateSteps) ? null : stateSteps.get(step.getId());
+        AgentAppStepState resolvedState = CollectionUtils.isEmpty(stepIdToUserStateSteps)
+                ? null : stepIdToUserStateSteps.get(step.getId());
         metadata.putAll(step.getCommandMetadata(application, resolvedState));
 
         var arguments = application.getConfig() != null ? application.getConfig().getArguments() : null;

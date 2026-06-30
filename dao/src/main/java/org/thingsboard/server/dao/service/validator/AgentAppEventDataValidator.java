@@ -38,6 +38,7 @@ import org.thingsboard.server.common.data.agent.AgentAppEvent;
 import org.thingsboard.server.common.data.agent.AgentAppEventDeliveryState;
 import org.thingsboard.server.common.data.agent.AgentApplication;
 import org.thingsboard.server.common.data.agent.step.AgentAppStep;
+import org.thingsboard.server.common.data.agent.step.StatefulStep;
 import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.agent.AgentAppEventStepsResolver;
@@ -87,22 +88,28 @@ public class AgentAppEventDataValidator extends DataValidator<AgentAppEvent> {
             stepStates.values().forEach(AgentAppStepState::validate);
         }
 
-        List<AgentAppStep> statefulAppStepsWithoutDefaultState = stepsResolver.resolveSteps(app, event.getActionType())
+        List<AgentAppStep> stepsRequiringUserInput = stepsResolver.resolveSteps(app, event.getActionType())
                 .stream()
                 .filter(AgentAppStep::isStateful)
-                .filter(step -> !step.hasDefaultState())
+                .filter(step -> ((StatefulStep<?>) step).getState() != null)
+                .filter(step -> ((StatefulStep<?>) step).getState().hasUserChoice())
                 .toList();
 
-        if (!CollectionUtils.isEmpty(statefulAppStepsWithoutDefaultState) && CollectionUtils.isEmpty(stepStates)) {
+        if (!CollectionUtils.isEmpty(stepsRequiringUserInput) && CollectionUtils.isEmpty(stepStates)) {
                 throw new DataValidationException("Agent app step states must not be null!");
         }
 
-        statefulAppStepsWithoutDefaultState.stream()
-                .filter(s -> !stepStates.containsKey(s.getId()))
-                .findAny()
-                .ifPresent(s -> {
-                    log.trace("Step state is missing!, {}", s.getId());
-                    throw new DataValidationException("Step state is missing!");
-                });
+        for (AgentAppStep step : stepsRequiringUserInput) {
+            AgentAppStepState templateState = ((StatefulStep<?>) step).getState();
+            if (templateState == null) {
+                continue;
+            }
+            AgentAppStepState userSubmittedState = stepStates.get(step.getId());
+            List<String> missing = templateState.missingRequiredUserInputs(userSubmittedState);
+            if (!missing.isEmpty()) {
+                log.trace("Step state is missing required user inputs {} for step {}", missing, step.getId());
+                throw new DataValidationException("Step state is missing required user inputs " + missing + "!");
+            }
+        }
     }
 }

@@ -80,10 +80,6 @@ public abstract class AgentAppStep {
         return this instanceof StatefulStep<?> ss && ss.getState() != null;
     }
 
-    public boolean hasDefaultState() {
-        return this instanceof StepWithDefaultState<?> ss && ss.getDefaultState() != null;
-    }
-
     @JsonIgnore
     public Map<String, String> getCommandMetadata(AgentApplication application, @Nullable AgentAppStepState resolvedState) {
         return Collections.emptyMap();

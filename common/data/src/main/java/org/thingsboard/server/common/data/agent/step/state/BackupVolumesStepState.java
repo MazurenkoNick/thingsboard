@@ -33,11 +33,11 @@ package org.thingsboard.server.common.data.agent.step.state;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.util.CollectionUtils;
 import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
 import org.thingsboard.server.exception.DataValidationException;
 
-import java.util.ArrayList;
+import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -46,11 +46,7 @@ import java.util.Map;
 @NoArgsConstructor
 public class BackupVolumesStepState extends AgentAppStepState {
 
-    private List<String> backupVolumes;
-
-    public BackupVolumesStepState(BackupVolumesStepState other) {
-        this.backupVolumes = other.backupVolumes != null ? new ArrayList<>(other.backupVolumes) : null;
-    }
+    private StepField<List<String>> backupVolumes;
 
     @Override
     public AgentAppStepType getType() {
@@ -59,13 +55,19 @@ public class BackupVolumesStepState extends AgentAppStepState {
 
     @Override
     public void validate() throws DataValidationException {
-        if (backupVolumes == null) {
+        if (backupVolumes == null || backupVolumes.getValue() == null) {
             throw new DataValidationException("Validation error: backupVolumes must not be null");
         }
     }
 
     @Override
-    public Map<String, String> getCommandMetadata() {
-        return Map.of("backupVolumes", String.join(",", backupVolumes));
+    protected Map<String, StepField<?>> fields() {
+        return Collections.singletonMap("backupVolumes", backupVolumes);
+    }
+
+    @Override
+    public Map<String, String> getCommandMetadata(@Nullable AgentAppStepState overlay) {
+        List<String> volumes = effectiveValue("backupVolumes", overlay);
+        return Map.of("backupVolumes", volumes != null ? String.join(",", volumes) : "");
     }
 }

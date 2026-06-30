@@ -39,9 +39,11 @@ import {
 
 type HasCompose = { config?: any };
 
-function stateHas(step: AgentAppStep, key: string): boolean {
-  const state = step.state as any;
-  return !!state && key in state;
+// A step field is user-facing only when it is present AND declares userChoice === true.
+// userChoice === false fields (e.g. ROLLBACK failedEventId) are applied silently and never rendered.
+function isUserChoice(step: AgentAppStep, key: string): boolean {
+  const field = (step?.state as any)?.[key];
+  return !!field && field.userChoice === true;
 }
 
 function visibleSteps(steps: AgentAppStep[] | undefined): AgentAppStep[] {
@@ -50,12 +52,12 @@ function visibleSteps(steps: AgentAppStep[] | undefined): AgentAppStep[] {
 
 export function findComposeDownStep(template: AgentAppTemplate | null | undefined): AgentAppStep | null {
   return visibleSteps(template?.deleteSteps).find(s =>
-    s.type === AgentAppStepType.COMPOSE_DOWN && stateHas(s, 'removeVolumes')
+    s.type === AgentAppStepType.COMPOSE_DOWN && isUserChoice(s, 'removeVolumes')
   ) || null;
 }
 
 export function readInitialPullImages(step: AgentAppStep | null | undefined): boolean {
-  return !!(step?.state as any)?.pullImages;
+  return !!(step?.state as any)?.pullImages?.value;
 }
 
 export function extractComposeVolumeKeys(source: HasCompose | null | undefined): string[] {
@@ -68,21 +70,21 @@ export function extractComposeVolumeKeys(source: HasCompose | null | undefined):
 
 export function buildBackupVolumeInput(step: AgentAppStep, selectedKeys: string[]): AgentAppStepState {
   return {
-    backupVolumes: selectedKeys,
+    backupVolumes: { value: selectedKeys, userChoice: true },
     type: AgentAppStepType.BACKUP_VOLUME
   } as AgentAppStepState;
 }
 
 export function buildPullImagesInput(step: AgentAppStep, pullImages: boolean): AgentAppStepState {
   return {
-    pullImages,
+    pullImages: { value: pullImages, userChoice: true },
     type: step.type
   } as AgentAppStepState;
 }
 
 export function buildComposeDownInput(step: AgentAppStep, removeVolumes: boolean): AgentAppStepState {
   return {
-    removeVolumes,
+    removeVolumes: { value: removeVolumes, userChoice: true },
     type: AgentAppStepType.COMPOSE_DOWN
   } as AgentAppStepState;
 }
@@ -102,17 +104,17 @@ export interface ClassifiedStep {
 }
 
 // A step is classifiable as a user-facing input only when its state declares
-// the key the input writes. A COMPOSE_DOWN with state=null, for example,
-// means the server will run compose-down with defaults — no prompt needed.
+// the field with userChoice === true. A COMPOSE_DOWN without such a field,
+// for example, means the server runs compose-down with the template value — no prompt needed.
 export function classifyStep(step: AgentAppStep): StepInputKind | null {
   switch (step.type) {
     case AgentAppStepType.BACKUP_VOLUME:
-      return stateHas(step, 'backupVolumes') ? 'backupVolume' : null;
+      return isUserChoice(step, 'backupVolumes') ? 'backupVolume' : null;
     case AgentAppStepType.COMPOSE_DOWN:
-      return stateHas(step, 'removeVolumes') ? 'composeDown' : null;
+      return isUserChoice(step, 'removeVolumes') ? 'composeDown' : null;
     case AgentAppStepType.COMPOSE:
     case AgentAppStepType.COMPOSE_MIGRATION:
-      return stateHas(step, 'pullImages') ? 'pullImages' : null;
+      return isUserChoice(step, 'pullImages') ? 'pullImages' : null;
     default:
       return null;
   }

@@ -36,6 +36,8 @@ import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
 import org.thingsboard.server.exception.DataValidationException;
 
+import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.Map;
 
 @Data
@@ -43,15 +45,7 @@ import java.util.Map;
 @NoArgsConstructor
 public class ComposeDownStepState extends AgentAppStepState {
 
-    private boolean removeVolumes;
-
-    public ComposeDownStepState(boolean removeVolumes) {
-        this.removeVolumes = removeVolumes;
-    }
-
-    public ComposeDownStepState(ComposeDownStepState other) {
-        this.removeVolumes = other.removeVolumes;
-    }
+    private StepField<Boolean> removeVolumes;
 
     @Override
     public AgentAppStepType getType() {
@@ -62,8 +56,14 @@ public class ComposeDownStepState extends AgentAppStepState {
     public void validate() throws DataValidationException {}
 
     @Override
-    public Map<String, String> getCommandMetadata() {
-        return Map.of("removeVolumes", String.valueOf(removeVolumes));
+    protected Map<String, StepField<?>> fields() {
+        return Collections.singletonMap("removeVolumes", removeVolumes);
+    }
+
+    @Override
+    public Map<String, String> getCommandMetadata(@Nullable AgentAppStepState overlay) {
+        boolean remove = Boolean.TRUE.equals(effectiveValue("removeVolumes", overlay));
+        return Map.of("removeVolumes", String.valueOf(remove));
     }
 
 }

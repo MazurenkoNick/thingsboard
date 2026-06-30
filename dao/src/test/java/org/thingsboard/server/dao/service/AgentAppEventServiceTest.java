@@ -53,6 +53,7 @@ import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
 import org.thingsboard.server.common.data.agent.step.ComposeStartStep;
 import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 import org.thingsboard.server.common.data.agent.step.state.ComposeStepState;
+import org.thingsboard.server.common.data.agent.step.state.StepField;
 import org.thingsboard.server.common.data.agent.template.AgentAppTemplate;
 import org.thingsboard.server.common.data.id.AgentBulkActionId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -94,7 +95,9 @@ public class AgentAppEventServiceTest extends AbstractServiceTest {
         AgentApplication app = createApp(agent, "round-trip-app");
 
         UUID stepId = UUID.randomUUID();
-        Map<UUID, AgentAppStepState> stepStates = Map.of(stepId, new ComposeStepState());
+        ComposeStepState composeStepState = new ComposeStepState();
+        composeStepState.setPullImages(new StepField<>(true, true));
+        Map<UUID, AgentAppStepState> stepStates = Map.of(stepId, composeStepState);
 
         AgentAppEvent event = newEvent(agent, app, AgentAppEventActionType.INSTALL,
                 AgentAppEventDeliveryState.PENDING, AgentAppEventStatus.QUEUED);

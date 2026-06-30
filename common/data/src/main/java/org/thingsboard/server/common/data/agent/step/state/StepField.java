@@ -28,48 +28,21 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.agent.step;
+package org.thingsboard.server.common.data.agent.step.state;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.Map;
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class StepField<T> {
 
-public abstract class StepWithDefaultState<T extends AgentAppStepState> extends StatefulStep<T> {
+    private T value;
+    private boolean userChoice;
 
-    /**
-     * Returns the default state for this step, used as a fallback in
-     * {@link #getCommandMetadata(AgentApplication, AgentAppStepState)} when the user-defined {@code resolvedState}
-     * parameter is {@code null}.
-     *
-     * @return the default state, or {@code null} if no default is defined
-     */
-    @JsonIgnore
-    protected abstract T getDefaultState();
-
-    @JsonIgnore
-    protected abstract T copyState(T state);
-
-    @JsonIgnore
-    protected final T resolveDefaultState() {
-        T raw = getDefaultState();
-        return raw != null ? copyState(raw) : null;
+    public StepField(T value) {
+        this.value = value;
     }
-
-    @Override
-    @JsonIgnore
-    public Map<String, String> getCommandMetadata(AgentApplication application, @Nullable AgentAppStepState resolvedState) {
-        if (resolvedState != null) {
-            return resolvedState.getCommandMetadata();
-        }
-        T def = resolveDefaultState();
-        if (def != null) {
-            return def.getCommandMetadata();
-        }
-        return Collections.emptyMap();
-    }
-
 }

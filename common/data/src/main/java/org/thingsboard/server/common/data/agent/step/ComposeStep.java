@@ -47,13 +47,10 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ComposeStep extends StepWithDefaultState<ComposeStepState> {
+public class ComposeStep extends StatefulStep<ComposeStepState> {
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
     private ComposeStepState state;
-
-    @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
-    private ComposeStepState defaultState;
 
     @Override
     public AgentAppStepType getType() {
@@ -70,11 +67,6 @@ public class ComposeStep extends StepWithDefaultState<ComposeStepState> {
         res.putAll(super.getCommandMetadata(application, resolvedState));
 
         return res;
-    }
-
-    @Override
-    protected ComposeStepState copyState(ComposeStepState state) {
-        return new ComposeStepState(state);
     }
 
 }

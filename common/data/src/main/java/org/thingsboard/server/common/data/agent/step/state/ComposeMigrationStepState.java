@@ -36,6 +36,8 @@ import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
 import org.thingsboard.server.exception.DataValidationException;
 
+import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.Map;
 
 @Data
@@ -43,11 +45,7 @@ import java.util.Map;
 @NoArgsConstructor
 public class ComposeMigrationStepState extends AgentAppStepState {
 
-    private boolean pullImages = false;
-
-    public ComposeMigrationStepState(ComposeMigrationStepState other) {
-        this.pullImages = other.pullImages;
-    }
+    private StepField<Boolean> pullImages;
 
     @Override
     public AgentAppStepType getType() {
@@ -58,9 +56,13 @@ public class ComposeMigrationStepState extends AgentAppStepState {
     public void validate() throws DataValidationException {}
 
     @Override
-    public Map<String, String> getCommandMetadata() {
-        return Map.of(
-                "pullImages", String.valueOf(pullImages)
-        );
+    protected Map<String, StepField<?>> fields() {
+        return Collections.singletonMap("pullImages", pullImages);
+    }
+
+    @Override
+    public Map<String, String> getCommandMetadata(@Nullable AgentAppStepState overlay) {
+        boolean pull = Boolean.TRUE.equals(effectiveValue("pullImages", overlay));
+        return Map.of("pullImages", String.valueOf(pull));
     }
 }

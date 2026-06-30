@@ -315,14 +315,19 @@ export interface AgentApplicationInfo extends AgentApplication {
   relatedEntityId?: EntityId;
 }
 
+export interface StepField<T = any> {
+  value: T;
+  userChoice: boolean;
+}
+
 export interface AgentAppStep {
   id: string;
   title: string;
   type: AgentAppStepType;
   templateOnly?: boolean;
   nextStepId?: string;
-  state?: any;
-  defaultState?: any;
+  // map keyed by field name: { [field]: { value, userChoice } }
+  state?: { [field: string]: StepField };
 }
 
 export interface AgentAppStepState {

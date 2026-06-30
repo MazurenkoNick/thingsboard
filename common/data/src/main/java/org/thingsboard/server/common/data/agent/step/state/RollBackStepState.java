@@ -37,6 +37,7 @@ import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.exception.DataValidationException;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.Map;
 
@@ -45,10 +46,10 @@ import java.util.Map;
 @NoArgsConstructor
 public class RollBackStepState extends AgentAppStepState {
 
-    private AgentAppEventId failedEventId;
+    private StepField<AgentAppEventId> failedEventId;
 
     public RollBackStepState(AgentAppEventId failedEventId) {
-        this.failedEventId = failedEventId;
+        this.failedEventId = new StepField<>(failedEventId, false);
     }
 
     @Override
@@ -58,17 +59,23 @@ public class RollBackStepState extends AgentAppStepState {
 
     @Override
     public void validate() throws DataValidationException {
-        if (failedEventId == null) {
+        if (failedEventId == null || failedEventId.getValue() == null) {
             throw new DataValidationException("Rollback event must have RollBackStepState with failedEventId!");
         }
     }
 
     @Override
-    public Map<String, String> getCommandMetadata() {
-        if (failedEventId == null) {
+    protected Map<String, StepField<?>> fields() {
+        return Collections.singletonMap("failedEventId", failedEventId);
+    }
+
+    @Override
+    public Map<String, String> getCommandMetadata(@Nullable AgentAppStepState overlay) {
+        AgentAppEventId id = effectiveValue("failedEventId", overlay);
+        if (id == null) {
             return Collections.emptyMap();
         }
-        return Map.of("failedCommandId", failedEventId.getId().toString());
+        return Map.of("failedCommandId", id.getId().toString());
     }
 
 }
