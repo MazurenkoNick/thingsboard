@@ -31,57 +31,52 @@
 package org.thingsboard.server.common.data.agent.step;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
+import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
+import org.thingsboard.server.common.data.agent.config.DockerComposeUtils;
 import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
+import org.thingsboard.server.common.data.agent.step.state.ComposeServicesStepState;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
-@JsonSubTypes({
-        @JsonSubTypes.Type(name = "COMPOSE_TEMPLATE", value = ComposeTypeChoiceStep.class),
-        @JsonSubTypes.Type(name = "COMPOSE", value = ComposeStep.class),
-        @JsonSubTypes.Type(name = "COMPOSE_START", value = ComposeStartStep.class),
-        @JsonSubTypes.Type(name = "COMPOSE_DOWN", value = ComposeDownStep.class),
-        @JsonSubTypes.Type(name = "COMPOSE_RESTART", value = ComposeRestartStep.class),
-        @JsonSubTypes.Type(name = "ROLLBACK", value = RollBackStep.class),
-        @JsonSubTypes.Type(name = "BACKUP_VOLUME", value = BackupVolumesStep.class),
-        @JsonSubTypes.Type(name = "BACKUP_VOLUME_REMOVE", value = BackupVolumesRemoveStep.class),
-        @JsonSubTypes.Type(name = "RUN_JOB", value = RunJobStep.class),
-})
-@Data
-@NoArgsConstructor
-public abstract class AgentAppStep {
+public abstract class ComposeServicesStep<T extends ComposeServicesStepState> extends StatefulStep<T> {
 
-    protected UUID id;
-    protected UUID nextId;
-    protected String title;
-    protected boolean templateOnly;
+    public static final String COMPOSE = "compose";
+    public static final String SERVICES = "services";
 
-    public AgentAppStep(UUID nextId, UUID id, String title, boolean templateOnly) {
-        this.nextId = nextId;
-        this.id = id;
-        this.title = title;
-        this.templateOnly = templateOnly;
-    }
-
-    public abstract AgentAppStepType getType();
-
-    public boolean isStateful() {
-        return this instanceof StatefulStep<?> ss && ss.getState() != null;
-    }
-
+    @Override
     @JsonIgnore
     public Map<String, String> getCommandMetadata(AgentApplication application, @Nullable AgentAppStepState resolvedState) {
-        return Collections.emptyMap();
+        HashMap<String, String> res = new HashMap<>();
+        AgentAppConfig config = application.getConfig();
+        if (config instanceof DockerComposeConfig d && d.getCompose() != null) {
+            if (includeCompose()) {
+                res.put(COMPOSE, d.getCompose().toString());
+            }
+            T base = getState();
+            if (base != null) {
+                List<String> servicesRegex =
+                        base.effectiveValue(ComposeServicesStepState.SERVICES_IMAGE_REGEX_PATTERNS, resolvedState);
+                String services = DockerComposeUtils.resolveServiceNames(d.getCompose(), servicesRegex);
+                if (!services.isEmpty()) {
+                    res.put(SERVICES, services);
+                }
+            }
+        }
+        res.putAll(super.getCommandMetadata(application, resolvedState));
+
+        return res;
+    }
+
+    /**
+     * Whether the raw compose document should be emitted as command metadata. Service-name resolution always reads the
+     * compose from {@link DockerComposeConfig}; this only controls the {@link #COMPOSE} output key.
+     */
+    protected boolean includeCompose() {
+        return false;
     }
 }

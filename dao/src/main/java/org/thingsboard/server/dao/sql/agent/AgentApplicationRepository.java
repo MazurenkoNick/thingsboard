@@ -45,7 +45,7 @@ import java.util.UUID;
 
 public interface AgentApplicationRepository extends JpaRepository<AgentApplicationEntity, UUID> {
 
-    @Query(value = "SELECT * FROM agent_application a WHERE a.id = :id FOR UPDATE", nativeQuery = true)
+    @Query(value = "SELECT * FROM agent_application a WHERE a.id = :id FOR UPDATE NOWAIT", nativeQuery = true)
     AgentApplicationEntity findByIdForUpdate(@Param("id") UUID id);
 
     List<AgentApplicationEntity> findByTenantIdAndAgentId(UUID tenantId, UUID agentId);

@@ -33,6 +33,7 @@ package org.thingsboard.server.common.data.agent.step.state;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
 import org.thingsboard.server.common.data.id.AgentAppEventId;
 import org.thingsboard.server.exception.DataValidationException;
@@ -45,6 +46,9 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public class RollBackStepState extends AgentAppStepState {
+
+    public static final String FAILED_EVENT_ID = "failedEventId";
+    public static final String FAILED_COMMAND_ID = "failedCommandId";
 
     private StepField<AgentAppEventId> failedEventId;
 
@@ -65,17 +69,17 @@ public class RollBackStepState extends AgentAppStepState {
     }
 
     @Override
-    protected Map<String, StepField<?>> fields() {
-        return Collections.singletonMap("failedEventId", failedEventId);
+    protected @NonNull Map<String, StepField<?>> fields() {
+        return Collections.singletonMap(FAILED_EVENT_ID, failedEventId);
     }
 
     @Override
     public Map<String, String> getCommandMetadata(@Nullable AgentAppStepState overlay) {
-        AgentAppEventId id = effectiveValue("failedEventId", overlay);
+        AgentAppEventId id = effectiveValue(FAILED_EVENT_ID, overlay);
         if (id == null) {
             return Collections.emptyMap();
         }
-        return Map.of("failedCommandId", id.getId().toString());
+        return Map.of(FAILED_COMMAND_ID, id.getId().toString());
     }
 
 }

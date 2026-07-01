@@ -30,39 +30,36 @@
  */
 package org.thingsboard.server.common.data.agent.step.state;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
-import org.thingsboard.server.exception.DataValidationException;
+import org.jspecify.annotations.NonNull;
 
-import javax.annotation.Nullable;
-import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class ComposeMigrationStepState extends AgentAppStepState {
+public abstract class ComposeServicesStepState extends AgentAppStepState {
 
-    private StepField<Boolean> pullImages;
+    public static final String SERVICES_IMAGE_REGEX_PATTERNS = "serviceImageRegexPatterns";
 
+    @JsonProperty(SERVICES_IMAGE_REGEX_PATTERNS)
+    private StepField<List<String>> servicesImagesRegexPatterns;
+
+    @JsonIgnore
     @Override
-    public AgentAppStepType getType() {
-        return AgentAppStepType.COMPOSE_MIGRATION;
+    protected final @NonNull Map<String, StepField<?>> fields() {
+        Map<String, StepField<?>> fields = new LinkedHashMap<>();
+        fields.put(SERVICES_IMAGE_REGEX_PATTERNS, servicesImagesRegexPatterns);
+        fields.putAll(ownFields());
+        return fields;
     }
 
-    @Override
-    public void validate() throws DataValidationException {}
-
-    @Override
-    protected Map<String, StepField<?>> fields() {
-        return Collections.singletonMap("pullImages", pullImages);
-    }
-
-    @Override
-    public Map<String, String> getCommandMetadata(@Nullable AgentAppStepState overlay) {
-        boolean pull = Boolean.TRUE.equals(effectiveValue("pullImages", overlay));
-        return Map.of("pullImages", String.valueOf(pull));
-    }
+    @JsonIgnore
+    protected abstract Map<String, StepField<?>> ownFields();
 }

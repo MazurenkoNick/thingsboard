@@ -43,7 +43,9 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class ComposeStepState extends AgentAppStepState {
+public class ComposeStepState extends ComposeServicesStepState {
+
+    public static final String PULL_IMAGES = "pullImages";
 
     private StepField<Boolean> pullImages;
 
@@ -56,13 +58,13 @@ public class ComposeStepState extends AgentAppStepState {
     public void validate() throws DataValidationException {}
 
     @Override
-    protected Map<String, StepField<?>> fields() {
-        return Collections.singletonMap("pullImages", pullImages);
+    protected Map<String, StepField<?>> ownFields() {
+        return Collections.singletonMap(PULL_IMAGES, pullImages);
     }
 
     @Override
     public Map<String, String> getCommandMetadata(@Nullable AgentAppStepState overlay) {
-        boolean pull = Boolean.TRUE.equals(effectiveValue("pullImages", overlay));
-        return Map.of("pullImages", String.valueOf(pull));
+        boolean pull = Boolean.TRUE.equals(effectiveValue(PULL_IMAGES, overlay));
+        return Map.of(PULL_IMAGES, String.valueOf(pull));
     }
 }

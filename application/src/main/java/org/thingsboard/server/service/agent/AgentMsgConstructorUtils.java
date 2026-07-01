@@ -109,13 +109,16 @@ public class AgentMsgConstructorUtils {
             metadata.put("projectName", application.getProjectName());
         }
 
-        AgentAppStepState resolvedState = CollectionUtils.isEmpty(stepIdToUserStateSteps)
+        AgentAppStepState resolvedUserState = CollectionUtils.isEmpty(stepIdToUserStateSteps)
                 ? null : stepIdToUserStateSteps.get(step.getId());
-        metadata.putAll(step.getCommandMetadata(application, resolvedState));
+        metadata.putAll(step.getCommandMetadata(application, resolvedUserState));
 
         var arguments = application.getConfig() != null ? application.getConfig().getArguments() : null;
         metadata.computeIfPresent("compose", (k, compose) ->
                 AgentArgumentUtils.substitute(compose, event.getResolvedArguments(), arguments));
+        // A RUN_JOB copies env/volumes from a compose service, which may carry ${tb.x} args — resolve them here too.
+        metadata.computeIfPresent("job", (_, job) ->
+                AgentArgumentUtils.substitute(job, event.getResolvedArguments(), arguments));
 
         return metadata;
     }

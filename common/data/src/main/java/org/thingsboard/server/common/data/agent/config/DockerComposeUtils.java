@@ -37,11 +37,14 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -54,11 +57,8 @@ public class DockerComposeUtils {
      * @return the environment node, or {@code null} if no matching service has an env block
      */
     public static JsonNode findServiceEnvironment(JsonNode compose, Pattern imagePattern) {
-        if (compose == null || compose.isNull() || imagePattern == null) {
-            return null;
-        }
-        JsonNode services = compose.get("services");
-        if (services == null || !services.isObject()) {
+        JsonNode services = getServices(compose, imagePattern);
+        if (services == null) {
             return null;
         }
         Iterator<Map.Entry<String, JsonNode>> it = services.fields();
@@ -112,20 +112,55 @@ public class DockerComposeUtils {
         }
     }
 
-    private static JsonNode findServiceByImage(JsonNode compose, Pattern imagePattern) {
-        if (compose == null || compose.isNull() || imagePattern == null) {
-            return null;
+    public static JsonNode findServiceByImage(JsonNode compose, Pattern imagePattern) {
+        Map.Entry<String, JsonNode> entry = findServiceEntryByImage(compose, imagePattern);
+        return entry != null ? entry.getValue() : null;
+    }
+
+    /**
+     * Reads the name (service key) of the first service whose image matches the given pattern.
+     *
+     * @return the service name, or {@code null} if no matching service is found
+     */
+    public static String findServiceNameByImage(JsonNode compose, Pattern imagePattern) {
+        Map.Entry<String, JsonNode> entry = findServiceEntryByImage(compose, imagePattern);
+        return entry != null ? entry.getKey() : null;
+    }
+
+    /**
+     * Resolves the distinct service names whose image matches any of the given regex patterns, preserving pattern order.
+     *
+     * @return a comma-separated list of matched service names, or an empty string when no patterns are given or none match
+     */
+    public static String resolveServiceNames(JsonNode compose, @Nullable List<String> serviceImageRegexPatterns) {
+        if (serviceImageRegexPatterns == null) {
+            return "";
         }
-        JsonNode services = compose.get("services");
-        if (services == null || !services.isObject()) {
+        Set<String> names = new LinkedHashSet<>();
+        for (String pattern : serviceImageRegexPatterns) {
+            if (pattern == null || pattern.isBlank()) {
+                continue;
+            }
+            String name = findServiceNameByImage(compose, Pattern.compile(pattern));
+            if (name != null) {
+                names.add(name);
+            }
+        }
+        return String.join(",", names);
+    }
+
+    private static Map.Entry<String, JsonNode> findServiceEntryByImage(JsonNode compose, Pattern imagePattern) {
+        JsonNode services = getServices(compose, imagePattern);
+        if (services == null) {
             return null;
         }
         Iterator<Map.Entry<String, JsonNode>> it = services.fields();
         while (it.hasNext()) {
-            JsonNode service = it.next().getValue();
+            Map.Entry<String, JsonNode> entry = it.next();
+            JsonNode service = entry.getValue();
             if (service.isObject() && service.has("image")
                     && imagePattern.matcher(service.get("image").asText()).matches()) {
-                return service;
+                return entry;
             }
         }
         return null;
@@ -275,11 +310,8 @@ public class DockerComposeUtils {
      */
     public static List<String> findRelativeVolumeSources(JsonNode compose) {
         List<String> relative = new ArrayList<>();
-        if (compose == null || compose.isNull()) {
-            return relative;
-        }
-        JsonNode services = compose.get("services");
-        if (services == null || !services.isObject()) {
+        JsonNode services = getServices(compose);
+        if (services == null) {
             return relative;
         }
         Iterator<Map.Entry<String, JsonNode>> it = services.fields();
@@ -349,6 +381,18 @@ public class DockerComposeUtils {
         // Windows absolute path, e.g. 'C:\...' or 'C:/...'.
         return source.length() >= 3 && Character.isLetter(source.charAt(0))
                 && source.charAt(1) == ':' && (source.charAt(2) == '\\' || source.charAt(2) == '/');
+    }
+
+    private static JsonNode getServices(JsonNode compose, Pattern imagePattern) {
+        return imagePattern != null ? getServices(compose) : null;
+    }
+
+    private static JsonNode getServices(JsonNode compose) {
+        if (compose == null || compose.isNull()) {
+            return null;
+        }
+        JsonNode services = compose.get("services");
+        return services != null && services.isObject() ? services : null;
     }
 
     private static int findArrayEntryIndex(ArrayNode arr, String key) {

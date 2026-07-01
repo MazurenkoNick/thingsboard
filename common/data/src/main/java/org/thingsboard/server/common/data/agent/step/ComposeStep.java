@@ -34,20 +34,12 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.agent.AgentApplication;
-import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
-import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
-import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
 import org.thingsboard.server.common.data.agent.step.state.ComposeStepState;
-
-import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
 
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ComposeStep extends StatefulStep<ComposeStepState> {
+public class ComposeStep extends ComposeServicesStep<ComposeStepState> {
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
     private ComposeStepState state;
@@ -58,15 +50,7 @@ public class ComposeStep extends StatefulStep<ComposeStepState> {
     }
 
     @Override
-    public Map<String, String> getCommandMetadata(AgentApplication application, @Nullable AgentAppStepState resolvedState) {
-        HashMap<String, String> res = new HashMap<>();
-        AgentAppConfig config = application.getConfig();
-        if (config instanceof DockerComposeConfig d && d.getCompose() != null) {
-            res.put("compose", d.getCompose().toString());
-        }
-        res.putAll(super.getCommandMetadata(application, resolvedState));
-
-        return res;
+    protected boolean includeCompose() {
+        return true;
     }
-
 }

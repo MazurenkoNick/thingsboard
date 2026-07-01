@@ -40,8 +40,9 @@ public enum AgentAppStepType {
     ROLLBACK,
     BACKUP_VOLUME,
     BACKUP_VOLUME_REMOVE,
-    COMPOSE_MIGRATION(true),
-    COMPOSE_RESTART;
+    COMPOSE_RESTART,
+    RUN_JOB(true)
+    ;
 
     private final boolean containsCustomArguments;
 

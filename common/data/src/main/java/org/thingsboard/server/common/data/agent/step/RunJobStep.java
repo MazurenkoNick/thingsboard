@@ -30,100 +30,83 @@
  */
 package org.thingsboard.server.common.data.agent.step;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.util.CollectionUtils;
 import org.thingsboard.server.common.data.agent.AgentApplication;
+import org.thingsboard.server.common.data.agent.config.AgentAppConfig;
+import org.thingsboard.server.common.data.agent.config.AgentComposeRefUtils;
 import org.thingsboard.server.common.data.agent.config.DockerComposeConfig;
+import org.thingsboard.server.common.data.agent.config.DockerComposeUtils;
 import org.thingsboard.server.common.data.agent.step.state.AgentAppStepState;
-import org.thingsboard.server.common.data.agent.step.state.ComposeMigrationStepState;
+import org.thingsboard.server.common.data.agent.step.state.RunJobStepState;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ComposeMigrationStep extends StatefulStep<ComposeMigrationStepState> {
+public class RunJobStep extends StatefulStep<RunJobStepState> {
 
-    private List<ServiceOverride> serviceOverrides;
     @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
-    private ComposeMigrationStepState state;
+    private RunJobStepState state;
 
     @Override
     public AgentAppStepType getType() {
-        return AgentAppStepType.COMPOSE_MIGRATION;
+        return AgentAppStepType.RUN_JOB;
     }
 
     @Override
+    @JsonIgnore
     public Map<String, String> getCommandMetadata(AgentApplication application, @Nullable AgentAppStepState resolvedState) {
-        if (!(application.getConfig() instanceof DockerComposeConfig d) || d.getCompose() == null) {
+        if (state == null) {
             return Collections.emptyMap();
         }
-        HashMap<String, String> res = new HashMap<>();
-        JsonNode compose = d.getCompose().deepCopy();
-        if (!CollectionUtils.isEmpty(serviceOverrides)) {
-            applyOverrides(compose);
-        }
-        res.put("compose", compose.toString());
-        res.put("abortOnContainerExit", "true");
+        ObjectNode job = state.buildJob(resolvedState);
+        AgentAppConfig config = application.getConfig();
+        if (config instanceof DockerComposeConfig d && d.getCompose() != null) {
+            JsonNode compose = d.getCompose();
+            resolveComposeRefs(job, RunJobStepState.BINDS, compose);
+            resolveComposeRefs(job, RunJobStepState.ENVIRONMENT, compose);
 
-        res.putAll(super.getCommandMetadata(application, resolvedState));
-        return res;
-    }
-
-    private void applyOverrides(JsonNode compose) {
-        JsonNode services = compose.get("services");
-        if (services == null || !services.isObject() || services.isEmpty()) {
-            throw new IllegalStateException("Compose has no services defined");
-        }
-        for (ServiceOverride override : serviceOverrides) {
-            applyOverride(services, override);
-        }
-    }
-
-    private void applyOverride(JsonNode services, ServiceOverride override) {
-        boolean found = false;
-        Iterator<Map.Entry<String, JsonNode>> it = services.fields();
-        while (it.hasNext()) {
-            JsonNode service = it.next().getValue();
-            if (service.isObject() && service.has("image")
-                    && imageMatches(service.get("image").asText(), override.getServiceImageName())) {
-                if (!CollectionUtils.isEmpty(override.getProperties())) {
-                    override.getProperties().forEach(((ObjectNode) service)::put);
+            String serviceRegexForNetwork = state.effectiveValue(RunJobStepState.NETWORK_FROM_SERVICE_IMAGE_REGEX_PATTERN, resolvedState);
+            if (serviceRegexForNetwork != null && !serviceRegexForNetwork.isBlank()) {
+                String serviceName = DockerComposeUtils.findServiceNameByImage(compose, Pattern.compile(serviceRegexForNetwork));
+                if (serviceName != null) {
+                    job.put(RunJobStepState.SERVICE, serviceName);
                 }
-                found = true;
-                break;
             }
         }
-        if (!found) {
-            throw new IllegalStateException("Service with image '" + override.getServiceImageName() + "' not found in compose");
-        }
+        return Map.of(RunJobStepState.JOB, job.toString());
     }
 
-    private boolean imageMatches(String image, String serviceImageName) {
-        if (image.equals(serviceImageName)) {
-            return true;
+    // Expands ${compose...} entries in a job string-array field against the compose node, leaving other entries as-is.
+    private static void resolveComposeRefs(ObjectNode job, String field, JsonNode compose) {
+        JsonNode array = job.get(field);
+        if (array == null || !array.isArray()) {
+            return;
         }
-        if (!image.startsWith(serviceImageName)) {
-            return false;
+        List<String> resolved = new ArrayList<>();
+        for (JsonNode element : array) {
+            String value = element.asText();
+            if (AgentComposeRefUtils.isComposeRef(value)) {
+                resolved.addAll(AgentComposeRefUtils.resolveAsList(compose, value));
+            } else {
+                resolved.add(value);
+            }
         }
-        char boundary = image.charAt(serviceImageName.length());
-        return boundary == ':' || boundary == '@';
+        ArrayNode replacement = job.putArray(field);
+        resolved.forEach(replacement::add);
     }
 
-    @Data
-    @NoArgsConstructor
-    public static class ServiceOverride {
-        private String serviceImageName;
-        private Map<String, String> properties;
-    }
 }

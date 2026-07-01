@@ -113,7 +113,6 @@ export function classifyStep(step: AgentAppStep): StepInputKind | null {
     case AgentAppStepType.COMPOSE_DOWN:
       return isUserChoice(step, 'removeVolumes') ? 'composeDown' : null;
     case AgentAppStepType.COMPOSE:
-    case AgentAppStepType.COMPOSE_MIGRATION:
       return isUserChoice(step, 'pullImages') ? 'pullImages' : null;
     default:
       return null;

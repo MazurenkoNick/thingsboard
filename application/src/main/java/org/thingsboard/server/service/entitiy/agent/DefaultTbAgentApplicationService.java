@@ -32,6 +32,7 @@ package org.thingsboard.server.service.entitiy.agent;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.cluster.TbClusterService;
@@ -149,7 +150,13 @@ public class DefaultTbAgentApplicationService extends AbstractTbEntityService im
     @Override
     public AgentAppEvent execActionEvent(TenantId tenantId, AgentApplicationId applicationId, AgentAppEventRequest request, boolean skipActiveEventCheck) throws Exception {
         AgentAppEventActionType actionType = request.getActionType();
-        AgentApplication application = checkNotNull(applicationService.findByIdForUpdate(tenantId, applicationId));
+        AgentApplication application;
+        try {
+            application = applicationService.findByIdForUpdate(tenantId, applicationId);
+        } catch (PessimisticLockingFailureException e) {
+            throw new ThingsboardException(EVENT_IN_PROGRESS_ERROR_MSG, ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        }
+        checkNotNull(application);
         if (!skipActiveEventCheck && appEventService.hasActiveOrPendingEventForApplication(applicationId)) {
             throw new ThingsboardException(EVENT_IN_PROGRESS_ERROR_MSG, ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }

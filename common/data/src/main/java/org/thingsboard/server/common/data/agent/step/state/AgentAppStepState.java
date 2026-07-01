@@ -40,6 +40,7 @@ import lombok.Data;
 import org.thingsboard.server.common.data.agent.step.AgentAppStepType;
 import org.thingsboard.server.exception.DataValidationException;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,10 +50,10 @@ import java.util.Map;
 @JsonTypeInfo(use = Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({
         @Type(name = "COMPOSE", value = ComposeStepState.class),
-        @Type(name = "COMPOSE_MIGRATION", value = ComposeMigrationStepState.class),
         @Type(name = "COMPOSE_DOWN", value = ComposeDownStepState.class),
         @Type(name = "ROLLBACK", value = RollBackStepState.class),
         @Type(name = "BACKUP_VOLUME", value = BackupVolumesStepState.class),
+        @Type(name = "RUN_JOB", value = RunJobStepState.class),
 })
 @Data
 public abstract class AgentAppStepState {
@@ -62,11 +63,12 @@ public abstract class AgentAppStepState {
     public abstract void validate() throws DataValidationException;
 
     /**
-     * This state's fields keyed by their JSON property name. Single-field today, so
-     * {@link java.util.Collections#singletonMap(Object, Object)} (which tolerates a null field value) suffices;
-     * a multi-field state should return a {@code LinkedHashMap}.
+     * This state's fields keyed by their JSON property name. Never null; a state with no fields returns an empty map.
+     * Field values may be null, so build with {@link java.util.Collections#singletonMap(Object, Object)} or a
+     * {@code LinkedHashMap} rather than {@link Map#of} (which rejects null values).
      */
     @JsonIgnore
+    @Nonnull
     protected abstract Map<String, StepField<?>> fields();
 
     /**
@@ -109,7 +111,7 @@ public abstract class AgentAppStepState {
      * Effective value for {@code name}: the overlay's value when present and non-null, else this (template) value.
      */
     @SuppressWarnings("unchecked")
-    protected <V> V effectiveValue(String name, @Nullable AgentAppStepState overlay) {
+    public <V> V effectiveValue(String name, @Nullable AgentAppStepState overlay) {
         if (overlay != null) {
             StepField<?> o = overlay.fields().get(name);
             if (o != null && o.getValue() != null) {

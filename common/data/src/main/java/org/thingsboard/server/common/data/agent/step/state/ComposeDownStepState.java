@@ -43,7 +43,9 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class ComposeDownStepState extends AgentAppStepState {
+public class ComposeDownStepState extends ComposeServicesStepState {
+
+    public static final String REMOVE_VOLUMES = "removeVolumes";
 
     private StepField<Boolean> removeVolumes;
 
@@ -56,14 +58,14 @@ public class ComposeDownStepState extends AgentAppStepState {
     public void validate() throws DataValidationException {}
 
     @Override
-    protected Map<String, StepField<?>> fields() {
-        return Collections.singletonMap("removeVolumes", removeVolumes);
+    protected Map<String, StepField<?>> ownFields() {
+        return Collections.singletonMap(REMOVE_VOLUMES, removeVolumes);
     }
 
     @Override
     public Map<String, String> getCommandMetadata(@Nullable AgentAppStepState overlay) {
-        boolean remove = Boolean.TRUE.equals(effectiveValue("removeVolumes", overlay));
-        return Map.of("removeVolumes", String.valueOf(remove));
+        boolean remove = Boolean.TRUE.equals(effectiveValue(REMOVE_VOLUMES, overlay));
+        return Map.of(REMOVE_VOLUMES, String.valueOf(remove));
     }
 
 }
