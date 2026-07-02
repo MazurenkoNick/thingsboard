@@ -47,6 +47,7 @@ import { EntityTableConfig } from '@home/models/entity/entities-table-config.mod
 import { AgentService } from '@core/http/agent.service';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
 import { MatDialog } from '@angular/material/dialog';
+import { DialogService } from '@core/services/dialog.service';
 import { getAce } from '@shared/models/ace/ace.models';
 import { Ace } from 'ace-builds';
 import * as YAML from 'yaml';
@@ -91,6 +92,7 @@ export class AgentAppProfileComponent extends EntityComponent<AgentAppProfile>
               protected cd: ChangeDetectorRef,
               private agentService: AgentService,
               private dialog: MatDialog,
+              private dialogService: DialogService,
               private hostElementRef: ElementRef) {
     super(store, fb, entityValue, entitiesTableConfigValue, cd);
   }
@@ -216,8 +218,16 @@ export class AgentAppProfileComponent extends EntityComponent<AgentAppProfile>
         // and would otherwise keep showing the old version until the next page
         // navigation.
         this.entitiesTableConfig?.updateData();
+        this.showAssignedAppsPropagationHint();
       }
     });
+  }
+
+  private showAssignedAppsPropagationHint() {
+    this.dialogService.alert(
+      this.translate.instant('agent.app-profile-saved-title'),
+      this.translate.instant('agent.app-profile-saved-propagation-text')
+    );
   }
 
   onProfileIdCopied() {

@@ -55,6 +55,7 @@ import {
   parseComposeYaml,
   pickComposeType
 } from '@home/pages/agent/util/agent-compose-yaml';
+import { orderTemplatesNewestFirst } from '@home/pages/agent/util/template-version-order';
 
 export interface AgentAppProfileWizardData {
   profile?: AgentAppProfile;
@@ -208,8 +209,7 @@ export class AgentAppProfileWizardComponent
   private loadTemplatesForType(type: AgentApplicationType) {
     const cached = this.templatesByTypeCache.get(type);
     if (cached) {
-      this.availableTemplates = [...cached]
-        .sort((a, b) => (b.currentVersion || '').localeCompare(a.currentVersion || ''));
+      this.availableTemplates = orderTemplatesNewestFirst(cached);
       this.selectLatestTemplate();
       return;
     }
@@ -217,8 +217,7 @@ export class AgentAppProfileWizardComponent
     this.agentService.getAgentAppTemplatesByAppType(type).subscribe({
       next: templates => {
         this.templatesByTypeCache.set(type, templates);
-        this.availableTemplates = [...templates]
-          .sort((a, b) => (b.currentVersion || '').localeCompare(a.currentVersion || ''));
+        this.availableTemplates = orderTemplatesNewestFirst(templates);
         this.loadingTemplates = false;
         this.selectLatestTemplate();
       },
@@ -283,7 +282,7 @@ export class AgentAppProfileWizardComponent
       name: this.profileName?.trim() || 'preview',
       appType: this.selectedType
     } as any;
-    this.agentService.mergeProfileForPreview(tpl.id.id, draft, this.composeType || undefined).subscribe({
+    this.agentService.mergeProfileForPreview(tpl.id.id, draft, this.composeType || undefined, undefined, !this.editMode).subscribe({
       next: merged => {
         const compose: any = (merged as any)?.config?.compose;
         if (compose) {

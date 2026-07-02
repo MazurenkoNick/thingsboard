@@ -385,6 +385,7 @@ export class AgentService {
 
   public mergeProfileForPreview(templateId: string, profile?: AgentAppProfile,
                                 composeType?: string, actionType?: AgentAppEventActionType,
+                                setHostValues?: boolean,
                                 config?: RequestConfig): Observable<AgentAppProfile> {
     let url = `/api/agent/app/profiles/merge/${templateId}/preview`;
     const params: string[] = [];
@@ -393,6 +394,9 @@ export class AgentService {
     }
     if (actionType) {
       params.push(`actionType=${encodeURIComponent(actionType)}`);
+    }
+    if (setHostValues) {
+      params.push('setHostValues=true');
     }
     if (params.length) {
       url += `?${params.join('&')}`;

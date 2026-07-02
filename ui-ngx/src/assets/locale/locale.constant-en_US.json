@@ -3736,6 +3736,8 @@
         "app-upgrade-load-failed": "Failed to load the upgrade template.",
         "app-upgrade-merge-failed": "Failed to compute the upgrade preview.",
         "app-compose-invalid-yaml": "Docker Compose configuration is not valid YAML. Fix it before saving.",
+        "app-profile-saved-title": "Application profile saved",
+        "app-profile-saved-propagation-text": "Applications already assigned to this profile were not updated automatically. To apply the changes, run a bulk update/upgrade from the agent profile page, or update each application individually from its own page.",
         "app-upgrade-profile-step": "Upgrade Profile",
         "app-upgrade-profile-loading": "Loading profile…",
         "app-upgrade-profile-name": "Profile",

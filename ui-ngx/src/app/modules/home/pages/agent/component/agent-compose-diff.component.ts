@@ -67,6 +67,7 @@ export class AgentComposeDiffComponent implements AfterViewInit, OnChanges, OnDe
   private differ: any = null;
   private resizeObserver: ResizeObserver | null = null;
   private building = false;
+  private ready = false;
   private destroyed = false;
   private settling = false;
   private settleFrames = 0;
@@ -97,6 +98,7 @@ export class AgentComposeDiffComponent implements AfterViewInit, OnChanges, OnDe
 
   ngOnDestroy(): void {
     this.destroyed = true;
+    this.ready = false;
     if (this.gutterRedrawHandle != null) {
       cancelAnimationFrame(this.gutterRedrawHandle);
       this.gutterRedrawHandle = null;
@@ -168,6 +170,7 @@ export class AgentComposeDiffComponent implements AfterViewInit, OnChanges, OnDe
     }
     this.settleFrames = 0;
     this.building = true;
+    this.ready = false;
     if (this.differ) {
       try { this.differ.destroy(); } catch (e) { /* no-op */ }
       this.differ = null;
@@ -183,6 +186,12 @@ export class AgentComposeDiffComponent implements AfterViewInit, OnChanges, OnDe
         element: el,
         mode: 'ace/mode/text',
         lockScrolling: false,
+        // AceDiff wires up the gutter SVG, the copy-arrow containers and the
+        // measured lineHeight in a deferred setTimeout, then calls this once
+        // its first diff() completes. Any diff()/realign() we fire before this
+        // throws in addCopyArrows and draws connectors with a NaN lineHeight —
+        // the blank-gutter/"stuck" render. Gate our own realigns on it.
+        onDiffReady: () => { this.ready = true; },
         left: {
           copyLinkEnabled: !this.readOnly,
           editable: false,
@@ -216,8 +225,28 @@ export class AgentComposeDiffComponent implements AfterViewInit, OnChanges, OnDe
         });
       }
       this.bindScrollSync(leftEditor, rightEditor);
-      setTimeout(() => this.resizeEditors(), 50);
+      // Our forceFontSize() changes lineHeight after construction, so the diff
+      // AceDiff computed in its deferred init is aligned to the wrong height.
+      // Re-resize + realign, but only once AceDiff has finished that init.
+      this.whenReady(() => this.resizeEditors());
     });
+  }
+
+  // Runs cb once AceDiff has fired onDiffReady (gutter + copy containers exist,
+  // lineHeight is measured). Polls a bounded number of frames so a diff that
+  // never readies (e.g. host torn down) can't spin forever.
+  private whenReady(cb: () => void, frames = 60): void {
+    if (this.destroyed || !this.differ) {
+      return;
+    }
+    if (this.ready) {
+      cb();
+      return;
+    }
+    if (frames <= 0) {
+      return;
+    }
+    requestAnimationFrame(() => this.whenReady(cb, frames - 1));
   }
 
   private scheduleRebuild(): void {
@@ -233,7 +262,7 @@ export class AgentComposeDiffComponent implements AfterViewInit, OnChanges, OnDe
   }
 
   private realign(editor: Ace.Editor): void {
-    if (!this.differ) {
+    if (!this.differ || !this.ready) {
       return;
     }
     const lineHeight = editor?.renderer?.lineHeight;
@@ -287,12 +316,12 @@ export class AgentComposeDiffComponent implements AfterViewInit, OnChanges, OnDe
   // scroll until it settles. Coalesce a redraw into the next animation frame so
   // the connectors repaint in lockstep with the editors' own scroll render.
   private scheduleGutterRedraw(): void {
-    if (this.gutterRedrawHandle != null || !this.differ || this.destroyed) {
+    if (this.gutterRedrawHandle != null || !this.differ || !this.ready || this.destroyed) {
       return;
     }
     this.gutterRedrawHandle = requestAnimationFrame(() => {
       this.gutterRedrawHandle = null;
-      if (this.differ && !this.destroyed) {
+      if (this.differ && this.ready && !this.destroyed) {
         try { this.differ.diff(); } catch (e) { /* no-op */ }
       }
     });

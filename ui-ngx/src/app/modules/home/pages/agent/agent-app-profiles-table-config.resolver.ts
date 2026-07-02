@@ -43,7 +43,7 @@ import { EntityAction } from '@home/models/entity/entity-component.models';
 import { Observable, of } from 'rxjs';
 import { select, Store } from '@ngrx/store';
 import { selectAuthUser } from '@core/auth/auth.selectors';
-import { catchError, map, switchMap, take } from 'rxjs/operators';
+import { catchError, map, switchMap, take, tap } from 'rxjs/operators';
 import { AppState } from '@core/core.state';
 import { Authority } from '@shared/models/authority.enum';
 import { AgentAppProfile, AgentAppTemplate } from '@shared/models/agent.models';
@@ -51,6 +51,7 @@ import { versionTag } from '@home/pages/agent/util/version-tag';
 import { AgentService } from '@core/http/agent.service';
 import { AgentAppProfileComponent } from '@home/pages/agent/agent-app-profile.component';
 import { MatDialog } from '@angular/material/dialog';
+import { DialogService } from '@core/services/dialog.service';
 import {
   AgentAppProfileWizardComponent,
   AgentAppProfileWizardData
@@ -67,7 +68,8 @@ export class AgentAppProfilesTableConfigResolver {
               private translate: TranslateService,
               private datePipe: DatePipe,
               private router: Router,
-              private dialog: MatDialog) {
+              private dialog: MatDialog,
+              private dialogService: DialogService) {
 
     this.config.entityType = EntityType.AGENT_APP_PROFILE;
     this.config.entityComponent = AgentAppProfileComponent;
@@ -81,7 +83,13 @@ export class AgentAppProfilesTableConfigResolver {
     this.config.deleteEntitiesContent = () => this.translate.instant('agent.delete-app-profiles-text');
 
     this.config.loadEntity = id => this.agentService.getAgentAppProfileById(id.id);
-    this.config.saveEntity = profile => this.agentService.saveAgentAppProfile(profile);
+    this.config.saveEntity = profile => this.agentService.saveAgentAppProfile(profile).pipe(
+      tap(saved => {
+        if (saved?.id?.id) {
+          this.showAssignedAppsPropagationHint();
+        }
+      })
+    );
     this.config.onEntityAction = action => this.onProfileAction(action);
     this.config.addEntity = () => { this.openProfileWizard(); return of(null); };
   }
@@ -163,6 +171,13 @@ export class AgentAppProfilesTableConfigResolver {
         this.config.updateData();
       }
     });
+  }
+
+  private showAssignedAppsPropagationHint() {
+    this.dialogService.alert(
+      this.translate.instant('agent.app-profile-saved-title'),
+      this.translate.instant('agent.app-profile-saved-propagation-text')
+    );
   }
 
   onProfileAction(action: EntityAction<AgentAppProfile>): boolean {

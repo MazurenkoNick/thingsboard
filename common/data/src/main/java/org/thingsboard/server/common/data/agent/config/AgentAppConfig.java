@@ -144,7 +144,9 @@ public abstract class AgentAppConfig {
         if (!(a instanceof DockerComposeConfig aDc) || !(b instanceof DockerComposeConfig bDc)) {
             return Objects.equals(a, b);
         }
-        if (!Objects.equals(aDc.getArguments(), bDc.getArguments())) {
+        aDc.setComposeType(null);
+        bDc.setComposeType(null);
+        if (!argumentsEqual(aDc.getArguments(), bDc.getArguments())) {
             return false;
         }
         if (appType == null) {
@@ -153,5 +155,13 @@ public abstract class AgentAppConfig {
         return DockerComposeUtils.equalsIgnoringEnvKeys(
                 aDc.getCompose(), bDc.getCompose(),
                 appType.getMainImagePattern(), appType.getCredentialEnvKeys());
+    }
+
+    private static boolean argumentsEqual(List<AgentAppArgument> a, List<AgentAppArgument> b) {
+        return normalizeArguments(a).equals(normalizeArguments(b));
+    }
+
+    private static List<AgentAppArgument> normalizeArguments(List<AgentAppArgument> arguments) {
+        return arguments == null ? List.of() : arguments;
     }
 }
