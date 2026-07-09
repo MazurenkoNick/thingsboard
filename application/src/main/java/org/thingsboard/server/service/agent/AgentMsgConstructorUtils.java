@@ -117,7 +117,7 @@ public class AgentMsgConstructorUtils {
         metadata.computeIfPresent("compose", (k, compose) ->
                 AgentArgumentUtils.substitute(compose, event.getResolvedArguments(), arguments));
         // A RUN_JOB copies env/volumes from a compose service, which may carry ${tb.x} args — resolve them here too.
-        metadata.computeIfPresent("job", (_, job) ->
+        metadata.computeIfPresent("job", (k, job) ->
                 AgentArgumentUtils.substitute(job, event.getResolvedArguments(), arguments));
 
         return metadata;
