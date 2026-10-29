@@ -17,6 +17,8 @@ import { RequestEdgeComponent } from '@home/pages/edge/request-edge.component';
 import { EdgeMonitoringTableService } from '@home/pages/edge/monitoring/edge-monitoring-table.service';
 import { EdgeMonitoringCardsComponent } from '@home/pages/edge/monitoring/edge-monitoring-cards.component';
 import { EdgeStatusPageComponent } from '@home/pages/edge/monitoring/edge-status-page.component';
+import { EdgeTrafficChartComponent } from '@home/pages/edge/monitoring/edge-traffic-chart.component';
+import { EdgeLogsPanelComponent } from '@home/pages/edge/monitoring/edge-logs-panel.component';
 
 @NgModule({
   declarations: [
@@ -25,7 +27,9 @@ import { EdgeStatusPageComponent } from '@home/pages/edge/monitoring/edge-status
     EdgeTableHeaderComponent,
     EdgeInstructionsDialogComponent,
     EdgeMonitoringCardsComponent,
-    EdgeStatusPageComponent
+    EdgeStatusPageComponent,
+    EdgeTrafficChartComponent,
+    EdgeLogsPanelComponent
   ],
   imports: [
     CommonModule,

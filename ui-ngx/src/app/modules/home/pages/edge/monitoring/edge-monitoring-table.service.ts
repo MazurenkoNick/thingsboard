@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 import { Injectable, NgZone } from '@angular/core';
 import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import { Store } from '@ngrx/store';
 import { forkJoin, Observable, of } from 'rxjs';
@@ -16,6 +17,11 @@ import { TelemetryWebsocketService } from '@core/ws/telemetry-websocket.service'
 import { Operation, Resource } from '@shared/models/security.models';
 import { EntityType } from '@shared/models/entity-type.models';
 import { AgentApplicationInfo } from '@shared/models/agent.models';
+import {
+  AgentAppInstallWizardComponent,
+  AgentAppInstallWizardData,
+  AgentAppInstallWizardResult
+} from '@home/components/agent/wizard/agent-app-install-wizard.component';
 import {
   EntityKey,
   EntityKeyType,
@@ -37,11 +43,13 @@ import {
   EDGE_MONITORING_PROP,
   EDGE_UPLINK_LAG_KEY,
   EdgeManagedBy,
+  AGENTS_URL,
   EdgeMonitoringContext,
   edgeHasLag,
   EdgeMonitoringState,
   EdgeStatsDirection,
   EdgeTrafficStats,
+  formatCount,
   formatEdgeVersion,
   isEdgeUpgradeAvailable
 } from '@home/pages/edge/monitoring/edge-monitoring.models';
@@ -64,7 +72,6 @@ const EDGE_DOWNLINK_LAG_COLUMN = 'downlinkLag';
 
 const AGENT_APP_LOOKUP_MAX_IDS = 100;
 const EDGE_GROUP_ALL_NAME = 'All';
-const AGENTS_URL = '/edgeManagement/agents/all';
 
 // Cells are plain HTML; clicks on elements carrying this attribute are routed by handleCellClick().
 const ACTION_ATTR = 'data-edge-monitoring-action';
@@ -90,16 +97,6 @@ const escapeHtml = (value: string): string =>
 const MUTED = 'color: rgba(0,0,0,0.54)';
 const EMPTY_CELL = `<span style="${MUTED}">—</span>`;
 
-const formatCount = (value: number): string => {
-  if (value >= 1000000) {
-    return (value / 1000000).toFixed(1) + 'M';
-  }
-  if (value >= 10000) {
-    return Math.round(value / 1000) + 'k';
-  }
-  return value.toLocaleString();
-};
-
 @Injectable()
 export class EdgeMonitoringTableService {
 
@@ -107,6 +104,7 @@ export class EdgeMonitoringTableService {
               private zone: NgZone,
               private store: Store<AppState>,
               private router: Router,
+              private dialog: MatDialog,
               private edgeService: EdgeService,
               private agentService: AgentService,
               private userPermissionsService: UserPermissionsService,
@@ -268,9 +266,15 @@ export class EdgeMonitoringTableService {
     $event.preventDefault();
     $event.stopPropagation();
     switch (target.getAttribute(ACTION_ATTR)) {
-      case CellAction.UPGRADE:
-        actions.openUpgradeInstructions($event, entity);
+      case CellAction.UPGRADE: {
+        const managedBy = (entity as unknown as EdgeMonitoringRow)[EDGE_MANAGED_BY_PROP];
+        if (managedBy) {
+          this.openAgentAppUpgrade(managedBy.appId);
+        } else {
+          actions.openUpgradeInstructions($event, entity);
+        }
         break;
+      }
       case CellAction.STATUS_PAGE:
         actions.openStatusPage($event, entity);
         break;
@@ -309,6 +313,27 @@ export class EdgeMonitoringTableService {
       });
       rows.forEach(row => row[EDGE_MANAGED_BY_PROP] = byEdgeId.get(row.id.id) ?? null);
       refresh();
+    });
+  }
+
+  /** Agent-managed edges are upgraded by their agent application, the same wizard as on the edge details page. */
+  openAgentAppUpgrade(appId: string, onUpgraded?: () => void) {
+    this.agentService.getAgentApplicationInfoById(appId).subscribe(application => {
+      this.dialog.open<AgentAppInstallWizardComponent, AgentAppInstallWizardData, AgentAppInstallWizardResult>(
+        AgentAppInstallWizardComponent, {
+          disableClose: false,
+          panelClass: ['tb-dialog', 'tb-fullscreen-dialog', 'tb-agent-wizard-dialog'],
+          data: {
+            agentId: application.agentId?.id,
+            agent: null,
+            mode: 'upgrade',
+            application
+          }
+        }).afterClosed().subscribe(result => {
+          if (result) {
+            onUpgraded?.();
+          }
+        });
     });
   }
 

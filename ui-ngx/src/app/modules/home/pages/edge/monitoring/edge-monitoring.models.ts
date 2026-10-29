@@ -12,7 +12,8 @@ import {
   StringOperation
 } from '@shared/models/query/query.models';
 import { IntervalType, TimeSeriesCmd } from '@shared/models/telemetry/telemetry.models';
-import { AggregationType, DAY, getDefaultTimezone, HOUR } from '@shared/models/time/time.models';
+import { AggregationType, DAY, getDefaultTimezone, HOUR, MINUTE } from '@shared/models/time/time.models';
+import { NotificationInfo } from '@shared/models/notification.models';
 import { isDefinedAndNotNull } from '@core/utils';
 import { Subject } from 'rxjs';
 import type { EdgeMonitoringQuery } from '@home/pages/edge/monitoring/edge-monitoring-datasource';
@@ -24,6 +25,8 @@ export const EDGE_VERSION_KEY = 'edgeVersion';
 export const EDGE_SYNC_IN_PROGRESS_KEY = 'syncInProgress';
 
 export const EDGE_MIN_UPGRADABLE_VERSION = '3.6.0';
+
+export const AGENTS_URL = '/edgeManagement/agents/all';
 
 // Row properties holding the monitoring data. Prefixed so they never clash with group column properties.
 export const EDGE_MONITORING_PROP = '$edgeMonitoring';
@@ -208,6 +211,16 @@ export const mergeEdgeMonitoringData = (prev: EdgeMonitoringState | undefined, e
   return state;
 };
 
+export const formatCount = (value: number): string => {
+  if (value >= 1000000) {
+    return (value / 1000000).toFixed(1) + 'M';
+  }
+  if (value >= 10000) {
+    return Math.round(value / 1000) + 'k';
+  }
+  return value.toLocaleString();
+};
+
 export const edgeHasLag = (state: EdgeMonitoringState): boolean =>
   !!state && ((state.uplinkLag ?? 0) > 0 || (state.downlinkLag ?? 0) > 0);
 
@@ -344,4 +357,33 @@ export class EdgeMonitoringContext {
       }
     }
   }
+}
+
+export interface EdgeStatusRange {
+  id: string;
+  window: number;
+  interval: number;
+  label: string;
+}
+
+// Downlink stats are reported every 10 min, so a shorter bucket would leave most of them empty.
+export const EDGE_DOWNLINK_MIN_INTERVAL = 10 * MINUTE;
+
+export const edgeStatusRanges: EdgeStatusRange[] = [
+  {id: '1h', window: HOUR, interval: 5 * MINUTE, label: 'edge.monitoring.range-1h'},
+  {id: '6h', window: 6 * HOUR, interval: 15 * MINUTE, label: 'edge.monitoring.range-6h'},
+  {id: '24h', window: DAY, interval: HOUR, label: 'edge.monitoring.range-24h'},
+  {id: '7d', window: 7 * DAY, interval: 6 * HOUR, label: 'edge.monitoring.range-7d'}
+];
+
+export const EDGE_STATUS_DEFAULT_RANGE = '24h';
+
+export const edgeStatsMetrics = [EdgeStatsMetric.ADDED, EdgeStatsMetric.PUSHED, EdgeStatsMetric.TMP_FAILED,
+  EdgeStatsMetric.PERMANENTLY_FAILED, EdgeStatsMetric.LAG];
+
+/** Parameters of the EDGE_CONNECTION and EDGE_COMMUNICATION_FAILURE notifications. */
+export interface EdgeNotificationInfo extends NotificationInfo {
+  eventType?: string;
+  edgeName?: string;
+  failureMsg?: string;
 }
