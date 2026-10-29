@@ -14,6 +14,9 @@ import { EDGE_GROUP_CONFIG_FACTORY } from '@home/models/group/group-entities-tab
 import { EdgeGroupConfigFactory } from '@home/pages/edge/edge-group-config.factory';
 import { EdgeInstructionsDialogComponent } from './edge-instructions-dialog.component';
 import { RequestEdgeComponent } from '@home/pages/edge/request-edge.component';
+import { EdgeMonitoringTableService } from '@home/pages/edge/monitoring/edge-monitoring-table.service';
+import { EdgeMonitoringCardsComponent } from '@home/pages/edge/monitoring/edge-monitoring-cards.component';
+import { EdgeStatusPageComponent } from '@home/pages/edge/monitoring/edge-status-page.component';
 
 @NgModule({
   declarations: [
@@ -21,6 +24,8 @@ import { RequestEdgeComponent } from '@home/pages/edge/request-edge.component';
     EdgeComponent,
     EdgeTableHeaderComponent,
     EdgeInstructionsDialogComponent,
+    EdgeMonitoringCardsComponent,
+    EdgeStatusPageComponent
   ],
   imports: [
     CommonModule,
@@ -31,6 +36,7 @@ import { RequestEdgeComponent } from '@home/pages/edge/request-edge.component';
     EdgeRoutingModule
   ],
   providers: [
+    EdgeMonitoringTableService,
     {
       provide: EDGE_GROUP_CONFIG_FACTORY,
       useClass: EdgeGroupConfigFactory

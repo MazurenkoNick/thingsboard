@@ -5,25 +5,18 @@ import { Injectable } from '@angular/core';
 
 import { ActivatedRouteSnapshot, Router } from '@angular/router';
 import {
-  CellActionDescriptor,
-  DateEntityTableColumn,
-  EntityChipsEntityTableColumn,
-  EntityColumn,
-  EntityTableColumn,
   EntityTableConfig,
   GroupActionDescriptor,
   HeaderActionDescriptor
 } from '@home/models/entity/entities-table-config.models';
 import { TranslateService } from '@ngx-translate/core';
-import { DatePipe } from '@angular/common';
 import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared/models/entity-type.models';
 import { EntityAction } from '@home/models/entity/entity-component.models';
-import { Observable, of } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
 import { select, Store } from '@ngrx/store';
 import { getCurrentAuthUser, selectUserSettingsProperty } from '@core/auth/auth.selectors';
 import { map, mergeMap, take, tap } from 'rxjs/operators';
 import { AppState } from '@core/core.state';
-import { Authority } from '@app/shared/models/authority.enum';
 import { CustomerService } from '@core/http/customer.service';
 import { Customer } from '@app/shared/models/customer.model';
 import { BroadcastService } from '@core/services/broadcast.service';
@@ -43,8 +36,6 @@ import { GroupEntityTabsComponent } from '@home/components/group/group-entity-ta
 import { EdgeComponent } from '@home/pages/edge/edge.component';
 import { EdgeTableHeaderComponent } from '@home/pages/edge/edge-table-header.component';
 import { AuthUser } from '@shared/models/user.model';
-import { Operation, Resource } from '@shared/models/security.models';
-import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { CustomerId } from '@shared/models/id/customer-id';
 import { UtilsService } from '@core/services/utils.service';
 import { AddGroupEntityDialogComponent } from '@home/components/group/add-group-entity-dialog.component';
@@ -54,12 +45,16 @@ import {
   AgentAutoProvisionDialogComponent
 } from '@home/components/agent/dialog/agent-auto-provision-dialog.component';
 import { AgentApplicationType } from '@shared/models/agent.models';
+import {
+  EdgeMonitoringActions,
+  EdgeMonitoringTableService
+} from '@home/pages/edge/monitoring/edge-monitoring-table.service';
+import { EdgeMonitoringContext } from '@home/pages/edge/monitoring/edge-monitoring.models';
 
 @Injectable()
 export class EdgesTableConfigResolver  {
 
   constructor(private allEntitiesTableConfigService: AllEntitiesTableConfigService<EdgeInfo>,
-              private userPermissionsService: UserPermissionsService,
               private store: Store<AppState>,
               private broadcast: BroadcastService,
               private edgeService: EdgeService,
@@ -68,9 +63,9 @@ export class EdgesTableConfigResolver  {
               private homeDialogs: HomeDialogsService,
               private translate: TranslateService,
               private utils: UtilsService,
-              private datePipe: DatePipe,
               private router: Router,
-              private dialog: MatDialog) {
+              private dialog: MatDialog,
+              private edgeMonitoring: EdgeMonitoringTableService) {
   }
 
   resolve(route: ActivatedRouteSnapshot): Observable<EntityTableConfig<EdgeInfo>> {
@@ -83,22 +78,23 @@ export class EdgesTableConfigResolver  {
       edgeType: '',
       includeCustomersChanged: (includeCustomers: boolean) => {
         config.componentsData.includeCustomers = includeCustomers;
-        config.columns = this.configureColumns(authUser, config);
-        config.getTable().columnsUpdated();
+        config.componentsData.edgeMonitoring.changed$.next();
         config.getTable().resetSortAndFilter(true);
       }
     };
-    return (config.customerId ?
-      this.customerService.getCustomer(config.customerId) : of(null as Customer)).pipe(
-      map((parentCustomer) => {
+    return forkJoin([
+      config.customerId ? this.customerService.getCustomer(config.customerId) : of(null as Customer),
+      this.edgeMonitoring.createContext()
+    ]).pipe(
+      map(([parentCustomer, monitoringContext]) => {
+
         if (parentCustomer) {
           config.tableTitle = parentCustomer.title + ': ' + this.translate.instant('edge.edge-instances');
         } else {
           config.tableTitle = this.translate.instant('edge.edge-instances');
         }
-        config.columns = this.configureColumns(authUser, config);
+        this.configureColumns(config, monitoringContext);
         this.configureEntityFunctions(config);
-        config.cellActionDescriptors = this.configureCellActions(authUser, config);
         config.groupActionDescriptors = this.configureGroupActions(config);
         config.addActionDescriptors = this.configureAddActions(config);
         config.addEntity = () => { this.addEdge(config); return of(null); };
@@ -123,6 +119,8 @@ export class EdgesTableConfigResolver  {
       this.utils.customTranslation(edge.name, edge.name) : '';
 
     config.rowPointer = true;
+    // Row actions (manage groups, rule chains, delete, ...) live on the edge details page; the list keeps the status page action only.
+    config.entitiesDeleteEnabled = false;
 
     config.deleteEntityTitle = edge => this.translate.instant('edge.delete-edge-title', {edgeName: edge.name});
     config.deleteEntityContent = () => this.translate.instant('edge.delete-edge-text');
@@ -140,122 +138,16 @@ export class EdgesTableConfigResolver  {
     config.headerComponent = EdgeTableHeaderComponent;
   }
 
-  configureColumns(authUser: AuthUser, config: EntityTableConfig<EdgeInfo>): Array<EntityColumn<EdgeInfo>> {
-    const columns: Array<EntityColumn<EdgeInfo>> = [
-      new DateEntityTableColumn<EdgeInfo>('createdTime', 'common.created-time', this.datePipe, '150px'),
-      new EntityTableColumn<EdgeInfo>('name', 'edge.name', '20%', config.entityTitle),
-      new EntityTableColumn<EdgeInfo>('type', 'edge.edge-type', '20%'),
-      new EntityTableColumn<EdgeInfo>('label', 'edge.label', '15%')
-    ];
-    if (config.componentsData.includeCustomers) {
-      const title = (authUser.authority === Authority.CUSTOMER_USER || config.customerId)
-        ? 'entity.sub-customer-name' : 'entity.customer-name';
-      columns.push(new EntityTableColumn<EdgeInfo>('ownerName', title, '20%'));
-    }
-    columns.push(
-      new EntityChipsEntityTableColumn<EdgeInfo>( 'groups', 'entity.groups', '25%')
-    );
-    return columns;
+  configureColumns(config: EntityTableConfig<EdgeInfo>, monitoringContext: EdgeMonitoringContext) {
+    const actions: EdgeMonitoringActions<EdgeInfo> = {
+      openStatusPage: ($event, edge) => this.openStatusPage($event, edge, config),
+      openUpgradeInstructions: ($event, edge) => this.openInstructions($event, edge, false, config, true)
+    };
+    this.edgeMonitoring.setupEdgesTable(config, monitoringContext, actions);
   }
 
   configureEntityFunctions(config: EntityTableConfig<EdgeInfo>): void {
-    if (config.customerId) {
-      config.entitiesFetchFunction = pageLink =>
-        this.edgeService.getCustomerEdgeInfos(config.componentsData.includeCustomers,
-          config.customerId, pageLink, config.componentsData.edgeType);
-    } else {
-      config.entitiesFetchFunction = pageLink =>
-        this.edgeService.getAllEdgeInfos(config.componentsData.includeCustomers, pageLink,
-          config.componentsData.edgeType);
-    }
     config.deleteEntity = id => this.edgeService.deleteEdge(id.id);
-  }
-
-  configureCellActions(authUser: AuthUser, config: EntityTableConfig<EdgeInfo>): Array<CellActionDescriptor<EdgeInfo>> {
-    const actions: Array<CellActionDescriptor<EdgeInfo>> = [];
-    if (this.userPermissionsService.hasGenericPermission(Resource.USER_GROUP, Operation.READ)) {
-      actions.push(
-        {
-          name: this.translate.instant('edge.manage-edge-user-groups'),
-          icon: 'account_circle',
-          isEnabled: (entity) => true,
-          onAction: ($event, entity) => this.manageUsers($event, entity, config)
-        }
-      );
-    }
-    if (this.userPermissionsService.hasGenericPermission(Resource.ASSET_GROUP, Operation.READ)) {
-      actions.push(
-        {
-          name: this.translate.instant('edge.manage-edge-asset-groups'),
-          icon: 'domain',
-          isEnabled: (entity) => true,
-          onAction: ($event, entity) => this.manageAssets($event, entity, config)
-        }
-      );
-    }
-    if (this.userPermissionsService.hasGenericPermission(Resource.DEVICE_GROUP, Operation.READ)) {
-      actions.push(
-        {
-          name: this.translate.instant('edge.manage-edge-device-groups'),
-          icon: 'devices_other',
-          isEnabled: (entity) => true,
-          onAction: ($event, entity) => this.manageDevices($event, entity, config)
-        }
-      );
-    }
-    if (this.userPermissionsService.hasGenericPermission(Resource.ENTITY_VIEW_GROUP, Operation.READ)) {
-      actions.push(
-        {
-          name: this.translate.instant('edge.manage-edge-entity-view-groups'),
-          icon: 'view_quilt',
-          isEnabled: (entity) => true,
-          onAction: ($event, entity) => this.manageEntityViews($event, entity, config)
-        }
-      );
-    }
-    if (this.userPermissionsService.hasGenericPermission(Resource.DASHBOARD_GROUP, Operation.READ)) {
-      actions.push(
-        {
-          name: this.translate.instant('edge.manage-edge-dashboard-groups'),
-          icon: 'dashboard',
-          isEnabled: (entity) => true,
-          onAction: ($event, entity) => this.manageDashboards($event, entity, config)
-        }
-      );
-    }
-    if (this.userPermissionsService.hasGenericPermission(Resource.SCHEDULER_EVENT, Operation.READ)) {
-      actions.push(
-        {
-          name: this.translate.instant('edge.manage-edge-scheduler-events'),
-          icon: 'schedule',
-          isEnabled: (entity) => true,
-          onAction: ($event, entity) => this.manageSchedulerEvents($event, entity, config)
-        }
-      );
-    }
-    if (this.userPermissionsService.hasGenericPermission(Resource.RULE_CHAIN, Operation.READ) &&
-      authUser.authority === Authority.TENANT_ADMIN) {
-      actions.push(
-        {
-          name: this.translate.instant('edge.manage-edge-rule-chains'),
-          icon: 'settings_ethernet',
-          isEnabled: () => true,
-          onAction: ($event, entity) => this.manageRuleChains($event, entity, config)
-        }
-      );
-    }
-    if (this.userPermissionsService.hasGenericPermission(Resource.INTEGRATION, Operation.READ) &&
-      authUser.authority === Authority.TENANT_ADMIN) {
-      actions.push(
-        {
-          name: this.translate.instant('edge.manage-edge-integrations'),
-          icon: 'input',
-          isEnabled: () => true,
-          onAction: ($event, entity) => this.manageIntegrations($event, entity, config)
-        }
-      );
-    }
-    return actions;
   }
 
   configureGroupActions(config: EntityTableConfig<EdgeInfo>): Array<GroupActionDescriptor<EdgeInfo>> {
@@ -321,6 +213,13 @@ export class EdgesTableConfigResolver  {
     }
     const url = this.router.createUrlTree([edge.id.id], {relativeTo: config.getActivatedRoute()});
     this.router.navigateByUrl(url);
+  }
+
+  openStatusPage($event: Event, edge: EdgeInfo, config: EntityTableConfig<EdgeInfo>) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    this.navigateToChildEdgePage(config, edge, '/status');
   }
 
   manageUsers($event: Event, edge: EdgeInfo, config: EntityTableConfig<EdgeInfo>) {

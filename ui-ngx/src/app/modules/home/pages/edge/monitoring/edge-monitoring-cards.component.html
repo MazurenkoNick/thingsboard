@@ -1,0 +1,20 @@
+<!--
+
+    SPDX-FileCopyrightText: Copyright ThingsBoard, Inc.
+    SPDX-License-Identifier: BUSL-1.1
+
+-->
+<div class="tb-edge-monitoring-cards" role="group" [attr.aria-label]="'edge.monitoring.filter-by-health' | translate">
+  @for (info of cards; track info.card) {
+    <button type="button" class="tb-edge-monitoring-card"
+            [class.tb-selected]="isSelected(info)"
+            [attr.aria-pressed]="isSelected(info)"
+            (click)="select(info)">
+      <span class="tb-card-label">
+        <span class="tb-card-dot" [style.background]="info.color"></span>{{ info.label | translate }}
+      </span>
+      <span class="tb-card-count">{{ counts[info.card] ?? '—' }}</span>
+      <span class="tb-card-hint">{{ info.hint | translate:{version: ctx.latestVersion} }}</span>
+    </button>
+  }
+</div>

@@ -13,10 +13,13 @@
     [ngModel]="entitiesTableConfig.componentsData.edgeType"
     (ngModelChange)="edgeTypeChanged($event)">
   </tb-entity-subtype-select>
-  <mat-slide-toggle
-    style="margin-left: 32px;"
-    [ngModel]="entitiesTableConfig.componentsData.includeCustomers"
-    (ngModelChange)="includeCustomersChanged($event)">
-    {{ includeCustomersLabel | translate }}
-  </mat-slide-toggle>
+  <!-- The monitoring query can't follow a customer hierarchy, so the customer view lists the customer's own edges only. -->
+  @if (!entitiesTableConfig.customerId) {
+    <mat-slide-toggle
+      style="margin-left: 32px;"
+      [ngModel]="entitiesTableConfig.componentsData.includeCustomers"
+      (ngModelChange)="includeCustomersChanged($event)">
+      {{ includeCustomersLabel | translate }}
+    </mat-slide-toggle>
+  }
 </div>
