@@ -82,10 +82,6 @@ import {
 import { AgentEventsPageComponent } from '@home/pages/agent/agent-events-page.component';
 import { AgentBulkActionEventsPageComponent } from '@home/pages/agent/agent-bulk-action-events-page.component';
 import {
-  LogHighlightPipe,
-  LogViewerComponent
-} from '@home/pages/agent/log-viewer/log-viewer.component';
-import {
   AgentAppUnitLogViewerPageComponent
 } from '@home/pages/agent/log-viewer/agent-app-unit-log-viewer-page.component';
 import {
@@ -142,8 +138,6 @@ import {
     AgentAppUnitFilterPanelComponent,
     AgentEventsPageComponent,
     AgentBulkActionEventsPageComponent,
-    LogViewerComponent,
-    LogHighlightPipe,
     AgentAppUnitLogViewerPageComponent,
     AgentMetricsStripComponent,
     AgentApplicationsPageComponent,

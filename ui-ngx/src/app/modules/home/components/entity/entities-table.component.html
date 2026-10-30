@@ -27,8 +27,9 @@
     </mat-drawer>
   }
   <mat-drawer-content>
-    <div class="mat-padding tb-entity-table tb-absolute-fill">
-      <div class="tb-entity-table-content tb-outlined-border flex flex-col">
+    <div class="mat-padding tb-entity-table tb-absolute-fill flex flex-col">
+      <tb-anchor #entityTableTopPanel></tb-anchor>
+      <div class="tb-entity-table-content tb-outlined-border flex min-h-0 flex-1 flex-col">
         <mat-toolbar class="mat-mdc-table-toolbar" [class.!hidden]="textSearchMode || !dataSource.selection.isEmpty()">
           <div class="mat-toolbar-tools">
             <div class="title-container flex flex-row items-center justify-start xs:flex-col xs:items-start xs:justify-center">
@@ -405,6 +406,7 @@
                      [class.mat-selected]="dataSource.selection.isSelected(entity)"
                      [class.tb-current-entity]="dataSource.isCurrentEntity(entity)"
                      [class.tb-pointer]="entitiesTableConfig.rowPointer"
+                     [style]="entitiesTableConfig.rowStyleFunction ? entitiesTableConfig.rowStyleFunction(entity) : null"
             *matRowDef="let entity; columns: displayedColumns;" (click)="onRowClick($event, entity)"></mat-row>
           </table>
           <span [class.!hidden]="(isLoading$ | async) || (dataSource.isEmpty() | async) === false || dataSource.dataLoading"

@@ -91,3 +91,8 @@
     }
   }
 }
+
+// Sticky cells (e.g. the checkbox) paint their own background over the row; a row style can pass its color to them.
+.mat-mdc-row .mat-mdc-cell.mat-mdc-table-sticky {
+  background-color: var(--tb-row-sticky-background, var(--mat-table-background-color, #fff));
+}

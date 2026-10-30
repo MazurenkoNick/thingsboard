@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: Copyright ThingsBoard, Inc.
 // SPDX-License-Identifier: BUSL-1.1
-import { Observable } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
 import { UtilsService } from '@core/services/utils.service';
 import {
@@ -10,7 +10,7 @@ import {
 } from '@home/models/group/group-entities-table-config.models';
 import { Inject, Injectable } from '@angular/core';
 import { EntityType } from '@shared/models/entity-type.models';
-import { mergeMap, tap } from 'rxjs/operators';
+import { map, mergeMap, tap } from 'rxjs/operators';
 import { BroadcastService } from '@core/services/broadcast.service';
 import { EntityAction } from '@home/models/entity/entity-component.models';
 import { MatDialog } from '@angular/material/dialog';
@@ -35,6 +35,7 @@ import {
   EdgeInstructionsDialogComponent,
   EdgeInstructionsDialogData
 } from '@home/pages/edge/edge-instructions-dialog.component';
+import { EdgeMonitoringTableService } from '@home/pages/edge/monitoring/edge-monitoring-table.service';
 
 @Injectable()
 export class EdgeGroupConfigFactory implements EntityGroupStateConfigFactory<EdgeInfo> {
@@ -49,6 +50,7 @@ export class EdgeGroupConfigFactory implements EntityGroupStateConfigFactory<Edg
               private edgeService: EdgeService,
               private broadcast: BroadcastService,
               private router: Router,
+              private edgeMonitoring: EdgeMonitoringTableService,
               @Inject(WINDOW) private window: Window) {
   }
 
@@ -192,11 +194,19 @@ export class EdgeGroupConfigFactory implements EntityGroupStateConfigFactory<Edg
       );
     }
 
-    return this.groupConfigTableConfigService.prepareConfiguration(params, config).pipe(
-      tap((preparedConfig) => {
+    return forkJoin([
+      this.groupConfigTableConfigService.prepareConfiguration(params, config),
+      this.edgeMonitoring.createContext()
+    ]).pipe(
+      map(([preparedConfig, monitoringContext]) => {
+        this.edgeMonitoring.setupGroupTable(preparedConfig, monitoringContext, {
+          openStatusPage: ($event, edge) => this.openStatusPage($event, edge, preparedConfig, params),
+          openUpgradeInstructions: ($event, edge) => this.openInstructions($event, edge, true)
+        });
         if (!edgeCreationAllowed(authUser)) {
           preparedConfig.addEnabled = false;
         }
+        return preparedConfig;
       })
     );
   }
@@ -272,6 +282,20 @@ export class EdgeGroupConfigFactory implements EntityGroupStateConfigFactory<Edg
     } else {
       const url = this.router.createUrlTree([edge.id.id], {relativeTo: config.getActivatedRoute()});
       this.router.navigateByUrl(url);
+    }
+  }
+
+  private openStatusPage($event: Event, edge: EdgeInfo | ShortEntityView, config: GroupEntityTableConfig<EdgeInfo>,
+                         params: EntityGroupParams) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    if (params.hierarchyView) {
+      const url = this.router.createUrlTree(['customers', 'groups', params.entityGroupId,
+        params.customerId, 'edgeManagement', 'edges', 'groups', params.childEntityGroupId, edge.id.id, 'status']);
+      this.window.open(window.location.origin + url, '_blank');
+    } else {
+      this.navigateToChildEdgePage(config, edge, '/status');
     }
   }
 

@@ -1,0 +1,184 @@
+<!--
+
+    SPDX-FileCopyrightText: Copyright ThingsBoard, Inc.
+    SPDX-License-Identifier: BUSL-1.1
+
+-->
+@if (edge && ctx) {
+  <div class="tb-edge-status-page">
+    <section class="tb-edge-status-panel tb-header">
+      <div class="tb-header-row">
+        <div class="tb-header-title">
+          <button mat-icon-button type="button" class="tb-back" (click)="goBack()"
+                  [matTooltip]="'action.back' | translate" matTooltipPosition="above"
+                  [attr.aria-label]="'action.back' | translate">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <h1>{{ edge.name }}</h1>
+          <span class="tb-chip">{{ edge.type }}</span>
+          @if (statusText) {
+            <span class="tb-pill" [class.tb-active]="state.active" [class.tb-inactive]="!state.active">
+              <span class="tb-dot"></span>{{ statusText }}
+            </span>
+          }
+          @if (uplink?.lagGrowingFor) {
+            <span class="tb-pill tb-warn">{{ 'edge.monitoring.uplink-lag-growing' | translate }}</span>
+          }
+          @if (downlink?.lagGrowingFor) {
+            <span class="tb-pill tb-warn">{{ 'edge.monitoring.downlink-lag-growing' | translate }}</span>
+          }
+        </div>
+        <div class="tb-header-actions">
+          <button mat-stroked-button color="primary" type="button" (click)="syncEdge()">
+            <mat-icon>sync</mat-icon>{{ 'edge.sync' | translate }}
+          </button>
+          <button mat-stroked-button color="primary" type="button" (click)="openEdgeDetails()">
+            {{ 'edge.edge-details' | translate }}
+          </button>
+          @if (upgradeAvailable) {
+            <button mat-flat-button color="primary" type="button" (click)="upgrade()">
+              <mat-icon>arrow_upward</mat-icon>{{ 'edge.monitoring.upgrade-to' | translate:{version: ctx.latestVersion} }}
+            </button>
+          }
+        </div>
+      </div>
+      <dl class="tb-facts">
+        <div>
+          <dt>{{ 'edge.monitoring.version' | translate }}</dt>
+          <dd>
+            <span class="tb-mono">{{ version ?? (state?.version ? ('edge.monitoring.version-unknown' | translate) : '—') }}</span>
+            @if (upgradeAvailable) {
+              <span class="tb-available"> · {{ 'edge.monitoring.version-available' | translate:{version: ctx.latestVersion} }}</span>
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>{{ 'edge.monitoring.last-connected' | translate }}</dt>
+          <dd>{{ state?.lastConnectTime ? (state.lastConnectTime | date:'MMM d, HH:mm') : '—' }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'edge.monitoring.last-disconnected' | translate }}</dt>
+          <dd>
+            {{ state?.lastDisconnectTime ? (state.lastDisconnectTime | date:'MMM d, HH:mm') : '—' }}
+            @if (offlineFor) {
+              <span class="tb-muted"> · {{ 'edge.monitoring.offline-for' | translate:{time: offlineFor} }}</span>
+            }
+          </dd>
+        </div>
+        @if (ctx.agentsEnabled) {
+          <div>
+            <dt>{{ 'edge.monitoring.managed-by' | translate }}</dt>
+            <dd>
+              @if (managedBy) {
+                <a [routerLink]="[agentsUrl, managedBy.agentId]">{{ managedBy.agentName }}</a>
+                <span class="tb-muted"> / </span>
+                <a [routerLink]="[agentsUrl, managedBy.agentId, 'applications', managedBy.appId]">{{ managedBy.appName }}</a>
+              } @else if (managedBy === null) {
+                <span class="tb-muted">{{ 'edge.monitoring.not-managed' | translate }}</span>
+              }
+            </dd>
+          </div>
+        }
+        <div>
+          <dt>{{ 'edge.monitoring.sync' | translate }}</dt>
+          <dd>{{ (state?.syncInProgress ? 'edge.monitoring.sync-state-in-progress' : 'edge.monitoring.sync-state-idle') | translate }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'edge.monitoring.stats-reporting' | translate }}</dt>
+          <dd>{{ 'edge.monitoring.stats-reporting-intervals' | translate }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <div class="tb-toolbar">
+      <div class="tb-ranges" role="group" [attr.aria-label]="'edge.monitoring.time-range' | translate">
+        @for (r of ranges; track r.id) {
+          <button type="button" [class.tb-selected]="r === range" [attr.aria-pressed]="r === range" (click)="selectRange(r)">
+            {{ r.id }}
+          </button>
+        }
+      </div>
+      @if (updatedTime) {
+        <span class="tb-muted">{{ 'edge.monitoring.updated-at' | translate:{time: (updatedTime | date:'HH:mm')} }}</span>
+      }
+    </div>
+
+    <div class="tb-kpis">
+      @for (dir of ['uplink', 'downlink']; track dir) {
+        <div class="tb-kpi" [class.tb-warn]="lag(dir) > 0">
+          <div class="tb-kpi-label">{{ ('edge.monitoring.' + dir + '-lag-title') | translate }}</div>
+          <div class="tb-kpi-value">{{ format(lag(dir)) }} <span class="tb-kpi-unit">{{ 'edge.monitoring.msgs' | translate }}</span></div>
+          @let view = dir === 'uplink' ? uplink : downlink;
+          @if (view?.lagGrowingFor) {
+            <div class="tb-kpi-note">{{ 'edge.monitoring.lag-growing-for' | translate:{minutes: view.lagGrowingFor} }}</div>
+          } @else if (lag(dir) > 0) {
+            <div class="tb-kpi-note">{{ 'edge.monitoring.lag-pending' | translate }}</div>
+          } @else if (lag(dir) === 0) {
+            <div class="tb-kpi-note tb-ok">{{ 'edge.monitoring.in-sync' | translate }}</div>
+          }
+        </div>
+      }
+      @for (dir of ['uplink', 'downlink']; track dir) {
+        @let view = dir === 'uplink' ? uplink : downlink;
+        <div class="tb-kpi">
+          <div class="tb-kpi-label">{{ ('edge.monitoring.' + dir + '-pushed') | translate }} · {{ range.label | translate }}</div>
+          <div class="tb-kpi-value">{{ format(view?.pushed) }}</div>
+          @if (view) {
+            @if (view.tmpFailed + view.permanentlyFailed > 0) {
+              <div class="tb-kpi-note tb-fail">
+                {{ 'edge.monitoring.failures-summary' | translate:{tmp: format(view.tmpFailed), permanent: format(view.permanentlyFailed)} }}
+              </div>
+            } @else {
+              <div class="tb-kpi-note">{{ 'edge.monitoring.no-failures' | translate }}</div>
+            }
+          }
+        </div>
+      }
+    </div>
+
+    <div class="tb-panels" [class.tb-single]="!ctx.isTenantAdmin">
+      <tb-edge-traffic-chart [title]="'edge.monitoring.uplink-chart-title' | translate"
+                             [hint]="'edge.monitoring.uplink-chart-hint' | translate"
+                             [data]="uplink?.chart"></tb-edge-traffic-chart>
+      @if (ctx.agentsEnabled) {
+        <tb-edge-logs-panel [managedBy]="managedBy" (installWithAgent)="openInstructions(false)"></tb-edge-logs-panel>
+      }
+      <tb-edge-traffic-chart [title]="'edge.monitoring.downlink-chart-title' | translate"
+                             [hint]="'edge.monitoring.downlink-chart-hint' | translate"
+                             [data]="downlink?.chart"></tb-edge-traffic-chart>
+      @if (ctx.isTenantAdmin) {
+        <section class="tb-edge-status-panel">
+          <div class="tb-panel-header">
+            <h2>{{ 'edge.monitoring.notifications' | translate }}</h2>
+            <a routerLink="/notification/sent">{{ 'edge.monitoring.notification-center' | translate }}</a>
+          </div>
+          <div class="tb-panel-hint">{{ 'edge.monitoring.notifications-hint' | translate }} · {{ range.label | translate }}</div>
+          <div class="tb-notifications">
+            @if (notifications?.length) {
+              <table>
+                <thead>
+                  <tr>
+                    <th>{{ 'edge.monitoring.notification-time' | translate }}</th>
+                    <th>{{ 'edge.monitoring.notification-type' | translate }}</th>
+                    <th>{{ 'edge.monitoring.notification-message' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (n of notifications; track $index) {
+                    <tr>
+                      <td class="tb-time">{{ n.time | date:'MMM d, HH:mm' }}</td>
+                      <td><span [class]="'tb-badge tb-' + n.kind">{{ ('edge.monitoring.notification-' + n.kind) | translate }}</span></td>
+                      <td>{{ n.message }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            } @else if (notifications) {
+              <div class="tb-empty">{{ 'edge.monitoring.no-notifications' | translate }}</div>
+            }
+          </div>
+        </section>
+      }
+    </div>
+  </div>
+}

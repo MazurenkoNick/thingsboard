@@ -1,0 +1,63 @@
+<!--
+
+    SPDX-FileCopyrightText: Copyright ThingsBoard, Inc.
+    SPDX-License-Identifier: BUSL-1.1
+
+-->
+<section class="tb-edge-status-panel">
+  <div class="tb-panel-header">
+    <h2>{{ 'edge.monitoring.application-logs' | translate }}</h2>
+    @if (unit) {
+      <div class="tb-logs-actions">
+        @if (units.length > 1) {
+          <div class="tb-segmented" role="group" [attr.aria-label]="'edge.monitoring.log-container' | translate">
+            @for (u of units; track u.id.id) {
+              <button type="button" [class.tb-selected]="u.id.id === unit.id.id" [attr.aria-pressed]="u.id.id === unit.id.id"
+                      (click)="selectUnit(u)">{{ u.identifier }}</button>
+            }
+          </div>
+        }
+        <div class="tb-segmented" role="group" [attr.aria-label]="'edge.monitoring.log-level' | translate">
+          @for (filter of levelFilters; track filter.value) {
+            <button type="button" [class.tb-selected]="level === filter.value" [attr.aria-pressed]="level === filter.value"
+                    (click)="setLevel(filter.value)">{{ filter.label | translate }}</button>
+          }
+        </div>
+        <a [routerLink]="logViewerUrl" [queryParams]="{identifier: unit.identifier}">{{ 'edge.monitoring.open-log-viewer' | translate }}</a>
+      </div>
+    }
+  </div>
+  @if (managedBy === null) {
+    <div class="tb-logs-empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#5f6b7a" stroke-width="1.6" aria-hidden="true">
+        <rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 9l3 3-3 3M12 15h5"></path>
+      </svg>
+      <div class="tb-logs-empty-title">{{ 'edge.monitoring.no-logs-title' | translate }}</div>
+      <div class="tb-logs-empty-text">{{ 'edge.monitoring.no-logs-text' | translate }}</div>
+      <div class="tb-logs-empty-actions">
+        <button mat-flat-button color="primary" type="button" (click)="installWithAgent.emit()">
+          {{ 'edge.monitoring.install-with-agent' | translate }}
+        </button>
+        <a mat-stroked-button color="primary" [routerLink]="agentsUrl">{{ 'edge.monitoring.link-existing-agent-app' | translate }}</a>
+      </div>
+      <div class="tb-logs-host">
+        <div class="tb-panel-hint">{{ 'edge.monitoring.host-logs-hint' | translate }}</div>
+        <pre class="tb-logs-host-commands"><span class="tb-comment"># Docker</span>
+docker compose logs -f mytbedge
+<span class="tb-comment"># Ubuntu / CentOS service</span>
+tail -f /var/log/tb-edge/tb-edge.log</pre>
+      </div>
+    </div>
+  } @else if (managedBy) {
+    @if (unit) {
+      @if (!agentOnline) {
+        <div class="tb-panel-hint tb-agent-offline">{{ 'edge.monitoring.logs-agent-offline' | translate }}</div>
+      }
+      <tb-log-viewer class="tb-logs-viewer" [filenamePrefix]="unit.identifier"></tb-log-viewer>
+    } @else if (unitsLoaded) {
+      <div class="tb-logs-empty">
+        <div class="tb-logs-empty-text">{{ 'edge.monitoring.no-log-units' | translate }}</div>
+      </div>
+    }
+  }
+</section>

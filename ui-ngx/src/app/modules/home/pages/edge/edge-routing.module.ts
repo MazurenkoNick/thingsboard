@@ -44,6 +44,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { getCurrentAuthState } from '@core/auth/auth.selectors';
 import { RequestEdgeComponent } from '@home/pages/edge/request-edge.component';
+import { EdgeStatusPageComponent } from '@home/pages/edge/monitoring/edge-status-page.component';
 
 @Injectable()
 export class EdgeTitleResolver  {
@@ -109,6 +110,24 @@ const edgeSchedulerRoute: Route = {
   },
   resolve: {
     entityGroup: EntityGroupResolver,
+    edgeTitle: EdgeTitleResolver
+  }
+};
+
+const edgeStatusRoute: Route = {
+  path: ':edgeId/status',
+  component: EdgeStatusPageComponent,
+  data: {
+    auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+    breadcrumb: {
+      labelFunction: (route, translate) =>
+        route.data.edgeTitle + ': ' + translate.instant('edge.monitoring.status-page'),
+      icon: 'monitor_heart'
+    },
+    backNavigationCommands: ['../..'],
+    hideTabs: true
+  },
+  resolve: {
     edgeTitle: EdgeTitleResolver
   }
 };
@@ -312,6 +331,7 @@ const edgeChildrenRoutes = (): Routes =>
       }
     },
     edgeSchedulerRoute,
+    edgeStatusRoute,
     edgeRuleChainsRoute,
     edgeIntegrationsRoute
   ]);

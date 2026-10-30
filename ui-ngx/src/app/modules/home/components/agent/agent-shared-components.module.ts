@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 import { SharedModule } from '@app/shared/shared.module';
 import { AgentAppInstallWizardComponent } from '@home/components/agent/wizard/agent-app-install-wizard.component';
 import { AgentAppInstallFlowComponent } from '@home/components/agent/wizard/agent-app-install-flow.component';
@@ -17,6 +18,7 @@ import { AgentAutocompleteComponent } from '@home/components/agent/agent-autocom
 import { AgentInstallInstructionsComponent } from '@home/components/agent/agent-install-instructions.component';
 import { AgentDeployStatusComponent } from '@home/components/agent/agent-deploy-status.component';
 import { AgentAppProfileListComponent } from '@home/components/agent/agent-app-profile-list.component';
+import { LogHighlightPipe, LogViewerComponent } from '@home/pages/agent/log-viewer/log-viewer.component';
 
 @NgModule({
   declarations: [
@@ -33,10 +35,13 @@ import { AgentAppProfileListComponent } from '@home/components/agent/agent-app-p
     AgentAutocompleteComponent,
     AgentInstallInstructionsComponent,
     AgentDeployStatusComponent,
-    AgentAppProfileListComponent
+    AgentAppProfileListComponent,
+    LogViewerComponent,
+    LogHighlightPipe
   ],
   imports: [
     CommonModule,
+    ScrollingModule,
     SharedModule
   ],
   exports: [
@@ -53,7 +58,9 @@ import { AgentAppProfileListComponent } from '@home/components/agent/agent-app-p
     AgentAutocompleteComponent,
     AgentInstallInstructionsComponent,
     AgentDeployStatusComponent,
-    AgentAppProfileListComponent
+    AgentAppProfileListComponent,
+    LogViewerComponent,
+    LogHighlightPipe
   ]
 })
 export class AgentSharedComponentsModule {

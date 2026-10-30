@@ -274,8 +274,11 @@ $lvl-error: $agent-color-error;
   line-height: $row-h;
   color: $ink-87;
 
+  // Rows have a fixed height for virtual scrolling, so long lines can't wrap: the content grows to the widest
+  // rendered line and the viewport scrolls horizontally.
   ::ng-deep .cdk-virtual-scroll-content-wrapper {
-    width: 100%;
+    width: max-content;
+    min-width: 100%;
   }
 }
 
@@ -308,6 +311,9 @@ $lvl-error: $agent-color-error;
 }
 
 .tb-log-row-num {
+  position: sticky;
+  left: 0;
+  z-index: 1;
   flex: 0 0 $num-w;
   padding-right: 12px;
   text-align: right;
@@ -319,11 +325,8 @@ $lvl-error: $agent-color-error;
 }
 
 .tb-log-row-text {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 1 0 auto;
   padding-left: 16px;
-  overflow: hidden;
-  text-overflow: ellipsis;
 
   ::ng-deep .tb-log-mark {
     background: #fff59d;

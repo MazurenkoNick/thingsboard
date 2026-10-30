@@ -1,0 +1,24 @@
+<!--
+
+    SPDX-FileCopyrightText: Copyright ThingsBoard, Inc.
+    SPDX-License-Identifier: BUSL-1.1
+
+-->
+<section class="tb-edge-status-panel">
+  <div class="tb-panel-header">
+    <h2>{{ title }}</h2>
+    <span class="tb-panel-hint">{{ hint }}</span>
+  </div>
+  <div class="tb-legend" role="group" [attr.aria-label]="title">
+    @for (info of seriesInfos; track info.metric) {
+      <button type="button" class="tb-legend-chip"
+              [class.tb-off]="hidden.has(info.metric)"
+              [attr.aria-pressed]="!hidden.has(info.metric)"
+              (click)="toggle(info.metric)">
+        <span class="tb-swatch" [style]="info.swatch"></span>{{ info.label | translate }}
+        <span class="tb-total">{{ totals[info.metric] ?? '—' }}</span>
+      </button>
+    }
+  </div>
+  <div #chart class="tb-chart"></div>
+</section>
