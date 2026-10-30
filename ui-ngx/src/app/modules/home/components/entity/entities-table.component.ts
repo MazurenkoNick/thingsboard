@@ -728,7 +728,10 @@ export class EntitiesTableComponent extends PageComponent implements IEntitiesTa
         this.displayedColumns.push(column.key);
       }
     );
-    this.displayedColumns.push('actions');
+    // The actions column is sticky: when empty it would only cover the row's last columns.
+    if (this.cellActionDescriptors.length) {
+      this.displayedColumns.push('actions');
+    }
     this.headerCellStyleCache.length = 0;
     this.cellContentCache.length = 0;
     this.cellTooltipCache.length = 0;
@@ -740,6 +743,7 @@ export class EntitiesTableComponent extends PageComponent implements IEntitiesTa
 
   cellActionDescriptorsUpdated() {
     this.cellActionDescriptors = [...this.entitiesTableConfig.cellActionDescriptors];
+    this.columnsUpdated();
   }
 
   headerCellStyle(column: EntityColumnType) {
