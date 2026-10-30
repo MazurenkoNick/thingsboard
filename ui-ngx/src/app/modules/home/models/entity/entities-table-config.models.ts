@@ -238,6 +238,7 @@ export class EntityTableConfig<T extends BaseData<HasId>, P extends PageLink = P
   headerButtonDescriptors: Array<HeaderActionDescriptor> = [];
   headerComponent: Type<EntityTableHeaderComponent<T, P, L>>;
   topPanelComponent: Type<EntityTableHeaderComponent<T, P, L>>;
+  rowStyleFunction: (entity: L) => {[key: string]: any} = null;
   addEntity: CreateEntityOperation<T> = null;
   addDialogOwnerAndGroupWizard = true;
   dataSource: (dataLoadedFunction: (col?: number, row?: number) => void)

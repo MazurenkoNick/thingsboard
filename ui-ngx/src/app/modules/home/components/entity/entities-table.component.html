@@ -406,6 +406,7 @@
                      [class.mat-selected]="dataSource.selection.isSelected(entity)"
                      [class.tb-current-entity]="dataSource.isCurrentEntity(entity)"
                      [class.tb-pointer]="entitiesTableConfig.rowPointer"
+                     [style]="entitiesTableConfig.rowStyleFunction ? entitiesTableConfig.rowStyleFunction(entity) : null"
             *matRowDef="let entity; columns: displayedColumns;" (click)="onRowClick($event, entity)"></mat-row>
           </table>
           <span [class.!hidden]="(isLoading$ | async) || (dataSource.isEmpty() | async) === false || dataSource.dataLoading"
