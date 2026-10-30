@@ -190,6 +190,11 @@ export class EdgeStatusPageComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Back to the list the page was opened from; the route declares ['../..'] as its back navigation.
+  goBack() {
+    this.router.navigate(['../..'], {relativeTo: this.route});
+  }
+
   openEdgeDetails() {
     this.router.navigate(['..'], {relativeTo: this.route});
   }

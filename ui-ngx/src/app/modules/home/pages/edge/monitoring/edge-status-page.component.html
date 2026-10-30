@@ -9,6 +9,11 @@
     <section class="tb-edge-status-panel tb-header">
       <div class="tb-header-row">
         <div class="tb-header-title">
+          <button mat-icon-button type="button" class="tb-back" (click)="goBack()"
+                  [matTooltip]="'action.back' | translate" matTooltipPosition="above"
+                  [attr.aria-label]="'action.back' | translate">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
           <h1>{{ edge.name }}</h1>
           <span class="tb-chip">{{ edge.type }}</span>
           @if (statusText) {

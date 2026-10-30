@@ -43,6 +43,10 @@
     align-items: center;
     gap: 12px;
 
+    .tb-back {
+      margin-right: -4px;
+    }
+
     h1 {
       margin: 0;
       font-size: 24px;
@@ -232,7 +236,12 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
+    }
+
+    // Set on the cells: the global styles give every td and th 16px, which wins over a size inherited from the table.
+    th, td {
+      font-size: 12px;
+      line-height: 16px;
     }
 
     th {
@@ -264,7 +273,7 @@
     .tb-badge {
       padding: 2px 8px;
       border-radius: 4px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 500;
       white-space: nowrap;
 

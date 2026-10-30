@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: Copyright ThingsBoard, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 import { Injectable, NgZone } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
@@ -31,7 +32,6 @@ import {
   StringOperation
 } from '@shared/models/query/query.models';
 import { AliasFilterType } from '@shared/models/alias.models';
-import { MillisecondsToTimeStringPipe } from '@shared/pipe/milliseconds-to-time-string.pipe';
 import { Direction } from '@shared/models/page/sort-order';
 import { EntityColumn, EntityTableColumn, EntityTableConfig } from '@home/models/entity/entities-table-config.models';
 import { GroupEntityTableConfig } from '@home/models/group/group-entities-table-config.models';
@@ -95,6 +95,7 @@ const escapeHtml = (value: string): string =>
   (value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const MUTED = 'color: rgba(0,0,0,0.54)';
+const LAGGING_ROW_COLOR = '#fff8eb';
 const EMPTY_CELL = `<span style="${MUTED}">—</span>`;
 
 @Injectable()
@@ -109,7 +110,7 @@ export class EdgeMonitoringTableService {
               private agentService: AgentService,
               private userPermissionsService: UserPermissionsService,
               private translate: TranslateService,
-              private millisecondsToTimeString: MillisecondsToTimeStringPipe) {
+              private datePipe: DatePipe) {
   }
 
   createContext(): Observable<EdgeMonitoringContext> {
@@ -133,7 +134,7 @@ export class EdgeMonitoringTableService {
   setupEdgesTable<T extends EdgeMonitoringRow>(config: EntityTableConfig<any, any, T>, ctx: EdgeMonitoringContext,
                                                actions: EdgeMonitoringActions<T>) {
     this.setupContext(config, ctx, () => this.allEdgesQuery(config));
-    config.columns = [this.edgeColumn<T>(), ...this.monitoringColumns<T>(ctx)];
+    config.columns = [this.edgeColumn<T>(!ctx.agentsEnabled), ...this.monitoringColumns<T>(ctx)];
     config.defaultSortOrder = {property: EDGE_DOWNLINK_LAG_COLUMN, direction: Direction.DESC};
     config.handleRowClick = ($event, entity) => this.handleCellClick($event, entity, actions);
     config.dataSource = dataLoadedFunction => new EdgeMonitoringDataSource<T>(
@@ -173,6 +174,8 @@ export class EdgeMonitoringTableService {
 
   private setupContext(config: EntityTableConfig<any, any, any>, ctx: EdgeMonitoringContext, baseQuery: () => EdgeMonitoringQuery) {
     config.componentsData = {...(config.componentsData ?? {}), edgeMonitoring: ctx};
+    // On the row, not the cells, so the checkbox and the group's own columns are highlighted too.
+    config.rowStyleFunction = entity => this.rowStyle(entity);
     config.topPanelComponent = EdgeMonitoringCardsComponent;
     ctx.baseQuery = baseQuery;
     ctx.reload = () => {
@@ -215,22 +218,33 @@ export class EdgeMonitoringTableService {
     return {entityFilter, keyFilters};
   }
 
-  private edgeColumn<T extends EdgeMonitoringRow>(): EntityColumn<T> {
-    // Takes whatever width the fixed monitoring columns leave.
-    return new EntityTableColumn<T>('name', 'edge.monitoring.edge', '0px',
-      entity => `<div style="font-weight: 500">${escapeHtml(entity.name)}</div>` +
-        `<div style="font-size: 12px; ${MUTED}">${escapeHtml(entity['type'])}</div>`,
-      entity => ({...this.rowStyle(entity), minWidth: '140px'}), true,
-      () => ({minWidth: '140px'}));
+  // Fixed when the Managed by column is shown, which then takes the remaining width; otherwise the Edge column takes it.
+  private edgeColumn<T extends EdgeMonitoringRow>(flexible: boolean): EntityColumn<T> {
+    const minWidth = flexible ? {minWidth: '240px'} : {};
+    return new EntityTableColumn<T>('name', 'edge.monitoring.edge', flexible ? '0px' : '240px',
+      entity => this.edgeCell(entity),
+      () => minWidth, true,
+      () => minWidth);
+  }
+
+  // Name, then the label when set, then the profile with the creation date.
+  private edgeCell(entity: EdgeMonitoringRow): string {
+    const label = entity['label'] ?
+      `<div style="font-size: 12px; color: #4a5563">${escapeHtml(entity['label'])}</div>` : '';
+    const createdTime = entity['createdTime'] ?
+      ' · ' + escapeHtml(this.translate.instant('edge.monitoring.created-at',
+        {time: this.datePipe.transform(entity['createdTime'], 'yyyy-MM-dd HH:mm')})) : '';
+    return `<div style="font-weight: 500">${escapeHtml(entity.name)}</div>${label}` +
+      `<div style="font-size: 12px; ${MUTED}">${escapeHtml(entity['type'])}${createdTime}</div>`;
   }
 
   private monitoringColumns<T extends EdgeMonitoringRow>(ctx: EdgeMonitoringContext): EntityColumn<T>[] {
     const state = (entity: T) => entity[EDGE_MONITORING_PROP];
     // Tighter than the table's default 28px right padding so all columns fit a laptop screen.
     const compact = {paddingRight: '16px'};
-    const style = (entity: T) => ({...this.rowStyle(entity), ...compact});
+    const style = () => compact;
     const headerStyle = () => compact;
-    const numberStyle = (entity: T) => ({...style(entity), justifyContent: 'flex-end', textAlign: 'right'});
+    const numberStyle = () => ({...style(), justifyContent: 'flex-end', textAlign: 'right'});
     const numberHeaderStyle = () => ({...compact, justifyContent: 'flex-end'});
     const columns: EntityColumn<T>[] = [
       new EntityTableColumn<T>('edgeStatus', 'edge.monitoring.status', '124px',
@@ -243,17 +257,19 @@ export class EdgeMonitoringTableService {
       new EntityTableColumn<T>(EDGE_DOWNLINK_LAG_COLUMN, 'edge.monitoring.downlink-lag', '112px',
         entity => this.lagCell(state(entity)?.downlinkLag, false), numberStyle, true,
         numberHeaderStyle),
-      new EntityTableColumn<T>('uplinkTraffic', 'edge.monitoring.uplink-24h', '104px',
+      new EntityTableColumn<T>('uplinkTraffic', 'edge.monitoring.uplink-24h', '96px',
         entity => this.trafficCell(state(entity)?.uplink, EdgeStatsDirection.UPLINK), style, false, headerStyle),
-      new EntityTableColumn<T>('downlinkTraffic', 'edge.monitoring.downlink-24h', '104px',
+      new EntityTableColumn<T>('downlinkTraffic', 'edge.monitoring.downlink-24h', '96px',
         entity => this.trafficCell(state(entity)?.downlink, EdgeStatsDirection.DOWNLINK), style, false, headerStyle)
     ];
     if (ctx.agentsEnabled) {
-      columns.push(new EntityTableColumn<T>('managedBy', 'edge.monitoring.managed-by', '140px',
-        entity => this.managedByCell(entity[EDGE_MANAGED_BY_PROP]), style, false, headerStyle));
+      // Takes whatever width the fixed columns leave: agent application names are long.
+      columns.push(new EntityTableColumn<T>('managedBy', 'edge.monitoring.managed-by', '0px',
+        entity => this.managedByCell(entity[EDGE_MANAGED_BY_PROP]), () => ({...style(), minWidth: '200px'}), false,
+        () => ({...headerStyle(), minWidth: '200px'})));
     }
     columns.push(new EntityTableColumn<T>('statusPage', 'edge.monitoring.status-page', '120px',
-      entity => this.statusPageCell(state(entity)), entity => ({...this.rowStyle(entity), justifyContent: 'flex-end'}), false,
+      entity => this.statusPageCell(state(entity)), () => ({justifyContent: 'flex-end'}), false,
       () => ({justifyContent: 'flex-end'})));
     return columns;
   }
@@ -285,8 +301,10 @@ export class EdgeMonitoringTableService {
     return true;
   }
 
-  private rowStyle(entity: EdgeMonitoringRow): object {
-    return edgeHasLag(entity[EDGE_MONITORING_PROP]) ? {backgroundColor: 'rgba(255, 168, 0, 0.08)'} : {};
+  // Opaque, because sticky cells (the checkbox) take the same color through the variable and must hide what scrolls under them.
+  private rowStyle(entity: EdgeMonitoringRow): {[key: string]: string} {
+    return edgeHasLag(entity[EDGE_MONITORING_PROP]) ?
+      {backgroundColor: LAGGING_ROW_COLOR, '--tb-row-sticky-background': LAGGING_ROW_COLOR} : {};
   }
 
   private loadManagedBy(ctx: EdgeMonitoringContext, rows: EdgeMonitoringRow[], refresh: () => void) {
@@ -342,27 +360,18 @@ export class EdgeMonitoringTableService {
       return EMPTY_CELL;
     }
     const pill = state.active ?
-      this.pill(this.translate.instant('edge.monitoring.active'), '#e6f4ea', '#1b6e2f', '#2e9e4f') :
-      this.pill(this.translate.instant('edge.monitoring.inactive'), '#fdecea', '#b3261e', '#d93025');
-    const details: string[] = [];
-    const now = Date.now();
-    if (state.active && state.lastConnectTime) {
-      details.push(this.translate.instant('edge.monitoring.since', {time: this.duration(now - state.lastConnectTime)}));
-    } else if (!state.active && state.lastDisconnectTime) {
-      details.push(this.translate.instant('edge.monitoring.last-seen', {time: this.duration(now - state.lastDisconnectTime)}));
-    }
-    if (state.syncInProgress) {
-      details.push(this.translate.instant('edge.monitoring.sync-in-progress'));
-    }
-    const detailsHtml = details.length ?
-      `<div style="font-size: 12px; ${MUTED}; margin-top: 4px">${escapeHtml(details.join(' · '))}</div>` : '';
-    return `<div>${pill}${detailsHtml}</div>`;
+      this.stateLabel(this.translate.instant('edge.monitoring.active'), 'rgba(25, 128, 56, 0.06)', 'rgb(25, 128, 56)') :
+      this.stateLabel(this.translate.instant('edge.monitoring.inactive'), 'rgba(203, 37, 48, 0.06)', 'rgb(203, 37, 48)');
+    const syncHtml = state.syncInProgress ?
+      `<div style="font-size: 12px; ${MUTED}; margin-top: 4px">` +
+      `${escapeHtml(this.translate.instant('edge.monitoring.sync-in-progress'))}</div>` : '';
+    return `<div>${pill}${syncHtml}</div>`;
   }
 
-  private pill(text: string, background: string, color: string, dot: string): string {
-    return `<span style="display: inline-flex; align-items: center; gap: 6px; background: ${background}; color: ${color}; ` +
-      `border-radius: 12px; padding: 2px 10px; font-size: 12px; font-weight: 500">` +
-      `<span style="width: 8px; height: 8px; border-radius: 50%; background: ${dot}"></span>${escapeHtml(text)}</span>`;
+  // Same look as the state column of the gateways list.
+  private stateLabel(text: string, background: string, color: string): string {
+    return `<div style="width: fit-content; padding: 5px 15px; border-radius: 16px; text-align: center; ` +
+      `font-weight: 500; background: ${background}; color: ${color}">${escapeHtml(text)}</div>`;
   }
 
   private versionCell(state: EdgeMonitoringState, ctx: EdgeMonitoringContext): string {
@@ -424,6 +433,7 @@ export class EdgeMonitoringTableService {
     const chart = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" aria-hidden="true">` +
       `<path d="${line} L${width},${height} L0,${height} Z" fill="${colors.fill}"></path>` +
       `<path d="${line}" fill="none" stroke="${colors.line}" stroke-width="1.5"></path></svg>`;
+    // formatCount keeps it short (999k, 1.2M), so the text fits under the 72px chart.
     const pushed = traffic.pushed ?
       `<div>${escapeHtml(this.translate.instant('edge.monitoring.pushed-count', {count: formatCount(traffic.pushed)}))}</div>` :
       `<div style="${MUTED}">${escapeHtml(this.translate.instant('edge.monitoring.no-traffic'))}</div>`;
@@ -445,12 +455,17 @@ export class EdgeMonitoringTableService {
         this.link(AGENTS_URL, this.translate.instant('edge.monitoring.link-to-app')) + '</span>';
     }
     const agentUrl = `${AGENTS_URL}/${managedBy.agentId}`;
-    return `<span style="font-size: 13px">${this.link(agentUrl, managedBy.agentName)}` +
-      `<span style="${MUTED}"> / </span>${this.link(`${agentUrl}/applications/${managedBy.appId}`, managedBy.appName)}</span>`;
+    // App names are long image-based identifiers that would widen the column (table layout keeps a cell as wide as its
+    // longest unbreakable text), so the app link has a fixed text and the full name in its tooltip.
+    return `<div style="font-size: 13px; line-height: 20px; overflow-wrap: anywhere">` +
+      `<div>${this.link(agentUrl, managedBy.agentName)}</div>` +
+      `<div>${this.link(`${agentUrl}/applications/${managedBy.appId}`, this.translate.instant('edge.monitoring.open-app'),
+        managedBy.appName)}</div></div>`;
   }
 
-  private link(url: string, text: string): string {
-    return `<a href="${escapeHtml(url)}" ${ACTION_ATTR}="${CellAction.NAVIGATE}">${escapeHtml(text)}</a>`;
+  private link(url: string, text: string, title?: string): string {
+    const titleAttr = title ? ` title="${escapeHtml(title)}"` : '';
+    return `<a href="${escapeHtml(url)}" ${ACTION_ATTR}="${CellAction.NAVIGATE}"${titleAttr}>${escapeHtml(text)}</a>`;
   }
 
   private statusPageCell(state: EdgeMonitoringState): string {
@@ -466,9 +481,5 @@ export class EdgeMonitoringTableService {
       `style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; ` +
       `border: 1px solid rgba(0,0,0,0.12); border-radius: 6px; background: #fff; color: #305680; cursor: pointer">` +
       `<span class="material-icons" style="font-size: 18px; width: 18px; height: 18px">monitor_heart</span></button>`;
-  }
-
-  private duration(millis: number): string {
-    return this.millisecondsToTimeString.transform(Math.max(millis, 0), true, true).trim();
   }
 }

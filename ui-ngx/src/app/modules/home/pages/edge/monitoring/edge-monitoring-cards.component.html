@@ -9,6 +9,7 @@
     <button type="button" class="tb-edge-monitoring-card"
             [class.tb-selected]="isSelected(info)"
             [attr.aria-pressed]="isSelected(info)"
+            [attr.title]="info.hint | translate:{version: ctx.latestVersion}"
             (click)="select(info)">
       <span class="tb-card-label">
         <span class="tb-card-dot" [style.background]="info.color"></span>{{ info.label | translate }}
